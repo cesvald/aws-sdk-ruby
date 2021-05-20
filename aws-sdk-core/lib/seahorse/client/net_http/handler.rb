@@ -148,7 +148,7 @@ module Seahorse
         # @return Returns a base `Net::HTTP::Request` class, e.g.,
         #   `Net::HTTP::Get`, `Net::HTTP::Post`, etc.
         def net_http_request_class(request)
-          Net::HTTP.const_get(request.http_method.capitalize)
+          Net::HTTP.const_get(request.http_method.titleize)
         rescue NameError
           msg = "`#{request.http_method}` is not a valid http verb"
           raise InvalidHttpVerbError, msg
