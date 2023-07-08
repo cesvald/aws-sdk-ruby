@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:textract)
@@ -73,8 +77,13 @@ module Aws::Textract
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::Textract::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::Textract
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::Textract
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::Textract
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::Textract
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::Textract
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::Textract::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::Textract::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::Textract
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::Textract
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -342,7 +399,7 @@ module Aws::Textract
     # The types of information returned are as follows:
     #
     # * Form data (key-value pairs). The related information is returned in
-    #   two Block objects, each of type `KEY_VALUE_SET`\: a KEY `Block`
+    #   two Block objects, each of type `KEY_VALUE_SET`: a KEY `Block`
     #   object and a VALUE `Block` object. For example, *Name: Ana Silva
     #   Carolina* contains a key and value. *Name:* is the key. *Ana Silva
     #   Carolina* is the value.
@@ -355,6 +412,18 @@ module Aws::Textract
     #   WORD `Block` objects. All lines and words that are detected in the
     #   document are returned (including text that doesn't have a
     #   relationship with the value of `FeatureTypes`).
+    #
+    # * Signatures. A SIGNATURE `Block` object contains the location
+    #   information of a signature in a document. If used in conjunction
+    #   with forms or tables, a signature can be given a Key-Value pairing
+    #   or be detected in the cell of a table.
+    #
+    # * Query. A QUERY Block object contains the query text, alias and link
+    #   to the associated Query results block object.
+    #
+    # * Query Result. A QUERY\_RESULT Block object contains the answer to
+    #   the query and an ID that connects it to the query asked. This Block
+    #   also contains a confidence score.
     #
     # Selection elements such as check boxes and option buttons (radio
     # buttons) can be detected in form data and in tables. A
@@ -378,7 +447,8 @@ module Aws::Textract
     # @option params [required, Types::Document] :document
     #   The input document as base64-encoded bytes or an Amazon S3 object. If
     #   you use the AWS CLI to call Amazon Textract operations, you can't
-    #   pass image bytes. The document must be an image in JPEG or PNG format.
+    #   pass image bytes. The document must be an image in JPEG, PNG, PDF, or
+    #   TIFF format.
     #
     #   If you're using an AWS SDK to call Amazon Textract, you might not
     #   need to base64-encode image bytes that are passed using the `Bytes`
@@ -387,14 +457,21 @@ module Aws::Textract
     # @option params [required, Array<String>] :feature_types
     #   A list of the types of analysis to perform. Add TABLES to the list to
     #   return information about the tables that are detected in the input
-    #   document. Add FORMS to return detected form data. To perform both
-    #   types of analysis, add TABLES and FORMS to `FeatureTypes`. All lines
-    #   and words detected in the document are included in the response
-    #   (including text that isn't related to the value of `FeatureTypes`).
+    #   document. Add FORMS to return detected form data. Add SIGNATURES to
+    #   return the locations of detected signatures. To perform both forms and
+    #   table analysis, add TABLES and FORMS to `FeatureTypes`. To detect
+    #   signatures within form data and table data, add SIGNATURES to either
+    #   TABLES or FORMS. All lines and words detected in the document are
+    #   included in the response (including text that isn't related to the
+    #   value of `FeatureTypes`).
     #
     # @option params [Types::HumanLoopConfig] :human_loop_config
     #   Sets the configuration for the human in the loop workflow for
     #   analyzing documents.
+    #
+    # @option params [Types::QueriesConfig] :queries_config
+    #   Contains Queries and the alias for those Queries, as determined by the
+    #   input.
     #
     # @return [Types::AnalyzeDocumentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -414,7 +491,7 @@ module Aws::Textract
     #         version: "S3ObjectVersion",
     #       },
     #     },
-    #     feature_types: ["TABLES"], # required, accepts TABLES, FORMS
+    #     feature_types: ["TABLES"], # required, accepts TABLES, FORMS, QUERIES, SIGNATURES
     #     human_loop_config: {
     #       human_loop_name: "HumanLoopName", # required
     #       flow_definition_arn: "FlowDefinitionArn", # required
@@ -422,13 +499,22 @@ module Aws::Textract
     #         content_classifiers: ["FreeOfPersonallyIdentifiableInformation"], # accepts FreeOfPersonallyIdentifiableInformation, FreeOfAdultContent
     #       },
     #     },
+    #     queries_config: {
+    #       queries: [ # required
+    #         {
+    #           text: "QueryInput", # required
+    #           alias: "QueryInput",
+    #           pages: ["QueryPage"],
+    #         },
+    #       ],
+    #     },
     #   })
     #
     # @example Response structure
     #
     #   resp.document_metadata.pages #=> Integer
     #   resp.blocks #=> Array
-    #   resp.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT"
+    #   resp.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT", "MERGED_CELL", "TITLE", "QUERY", "QUERY_RESULT", "SIGNATURE", "TABLE_TITLE", "TABLE_FOOTER"
     #   resp.blocks[0].confidence #=> Float
     #   resp.blocks[0].text #=> String
     #   resp.blocks[0].text_type #=> String, one of "HANDWRITING", "PRINTED"
@@ -445,13 +531,17 @@ module Aws::Textract
     #   resp.blocks[0].geometry.polygon[0].y #=> Float
     #   resp.blocks[0].id #=> String
     #   resp.blocks[0].relationships #=> Array
-    #   resp.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES"
+    #   resp.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES", "MERGED_CELL", "TITLE", "ANSWER", "TABLE", "TABLE_TITLE", "TABLE_FOOTER"
     #   resp.blocks[0].relationships[0].ids #=> Array
     #   resp.blocks[0].relationships[0].ids[0] #=> String
     #   resp.blocks[0].entity_types #=> Array
-    #   resp.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE"
+    #   resp.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE", "COLUMN_HEADER", "TABLE_TITLE", "TABLE_FOOTER", "TABLE_SECTION_TITLE", "TABLE_SUMMARY", "STRUCTURED_TABLE", "SEMI_STRUCTURED_TABLE"
     #   resp.blocks[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
     #   resp.blocks[0].page #=> Integer
+    #   resp.blocks[0].query.text #=> String
+    #   resp.blocks[0].query.alias #=> String
+    #   resp.blocks[0].query.pages #=> Array
+    #   resp.blocks[0].query.pages[0] #=> String
     #   resp.human_loop_activation_output.human_loop_arn #=> String
     #   resp.human_loop_activation_output.human_loop_activation_reasons #=> Array
     #   resp.human_loop_activation_output.human_loop_activation_reasons[0] #=> String
@@ -467,10 +557,254 @@ module Aws::Textract
       req.send_request(options)
     end
 
+    # `AnalyzeExpense` synchronously analyzes an input document for
+    # financially related relationships between text.
+    #
+    # Information is returned as `ExpenseDocuments` and seperated as
+    # follows:
+    #
+    # * `LineItemGroups`- A data set containing `LineItems` which store
+    #   information about the lines of text, such as an item purchased and
+    #   its price on a receipt.
+    #
+    # * `SummaryFields`- Contains all other information a receipt, such as
+    #   header information or the vendors name.
+    #
+    # @option params [required, Types::Document] :document
+    #   The input document, either as bytes or as an S3 object.
+    #
+    #   You pass image bytes to an Amazon Textract API operation by using the
+    #   `Bytes` property. For example, you would use the `Bytes` property to
+    #   pass a document loaded from a local file system. Image bytes passed by
+    #   using the `Bytes` property must be base64 encoded. Your code might not
+    #   need to encode document file bytes if you're using an AWS SDK to call
+    #   Amazon Textract API operations.
+    #
+    #   You pass images stored in an S3 bucket to an Amazon Textract API
+    #   operation by using the `S3Object` property. Documents stored in an S3
+    #   bucket don't need to be base64 encoded.
+    #
+    #   The AWS Region for the S3 bucket that contains the S3 object must
+    #   match the AWS Region that you use for Amazon Textract operations.
+    #
+    #   If you use the AWS CLI to call Amazon Textract operations, passing
+    #   image bytes using the Bytes property isn't supported. You must first
+    #   upload the document to an Amazon S3 bucket, and then call the
+    #   operation using the S3Object property.
+    #
+    #   For Amazon Textract to process an S3 object, the user must have
+    #   permission to access the S3 object.
+    #
+    # @return [Types::AnalyzeExpenseResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::AnalyzeExpenseResponse#document_metadata #document_metadata} => Types::DocumentMetadata
+    #   * {Types::AnalyzeExpenseResponse#expense_documents #expense_documents} => Array&lt;Types::ExpenseDocument&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.analyze_expense({
+    #     document: { # required
+    #       bytes: "data",
+    #       s3_object: {
+    #         bucket: "S3Bucket",
+    #         name: "S3ObjectName",
+    #         version: "S3ObjectVersion",
+    #       },
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.document_metadata.pages #=> Integer
+    #   resp.expense_documents #=> Array
+    #   resp.expense_documents[0].expense_index #=> Integer
+    #   resp.expense_documents[0].summary_fields #=> Array
+    #   resp.expense_documents[0].summary_fields[0].type.text #=> String
+    #   resp.expense_documents[0].summary_fields[0].type.confidence #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.text #=> String
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.polygon #=> Array
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.confidence #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.text #=> String
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.polygon #=> Array
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.confidence #=> Float
+    #   resp.expense_documents[0].summary_fields[0].page_number #=> Integer
+    #   resp.expense_documents[0].summary_fields[0].currency.code #=> String
+    #   resp.expense_documents[0].summary_fields[0].currency.confidence #=> Float
+    #   resp.expense_documents[0].summary_fields[0].group_properties #=> Array
+    #   resp.expense_documents[0].summary_fields[0].group_properties[0].types #=> Array
+    #   resp.expense_documents[0].summary_fields[0].group_properties[0].types[0] #=> String
+    #   resp.expense_documents[0].summary_fields[0].group_properties[0].id #=> String
+    #   resp.expense_documents[0].line_item_groups #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_item_group_index #=> Integer
+    #   resp.expense_documents[0].line_item_groups[0].line_items #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].type.text #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].type.confidence #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.text #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.polygon #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.confidence #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.text #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.polygon #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.confidence #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].page_number #=> Integer
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].currency.code #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].currency.confidence #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties[0].types #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties[0].types[0] #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties[0].id #=> String
+    #   resp.expense_documents[0].blocks #=> Array
+    #   resp.expense_documents[0].blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT", "MERGED_CELL", "TITLE", "QUERY", "QUERY_RESULT", "SIGNATURE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.expense_documents[0].blocks[0].confidence #=> Float
+    #   resp.expense_documents[0].blocks[0].text #=> String
+    #   resp.expense_documents[0].blocks[0].text_type #=> String, one of "HANDWRITING", "PRINTED"
+    #   resp.expense_documents[0].blocks[0].row_index #=> Integer
+    #   resp.expense_documents[0].blocks[0].column_index #=> Integer
+    #   resp.expense_documents[0].blocks[0].row_span #=> Integer
+    #   resp.expense_documents[0].blocks[0].column_span #=> Integer
+    #   resp.expense_documents[0].blocks[0].geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.polygon #=> Array
+    #   resp.expense_documents[0].blocks[0].geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].blocks[0].id #=> String
+    #   resp.expense_documents[0].blocks[0].relationships #=> Array
+    #   resp.expense_documents[0].blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES", "MERGED_CELL", "TITLE", "ANSWER", "TABLE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.expense_documents[0].blocks[0].relationships[0].ids #=> Array
+    #   resp.expense_documents[0].blocks[0].relationships[0].ids[0] #=> String
+    #   resp.expense_documents[0].blocks[0].entity_types #=> Array
+    #   resp.expense_documents[0].blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE", "COLUMN_HEADER", "TABLE_TITLE", "TABLE_FOOTER", "TABLE_SECTION_TITLE", "TABLE_SUMMARY", "STRUCTURED_TABLE", "SEMI_STRUCTURED_TABLE"
+    #   resp.expense_documents[0].blocks[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
+    #   resp.expense_documents[0].blocks[0].page #=> Integer
+    #   resp.expense_documents[0].blocks[0].query.text #=> String
+    #   resp.expense_documents[0].blocks[0].query.alias #=> String
+    #   resp.expense_documents[0].blocks[0].query.pages #=> Array
+    #   resp.expense_documents[0].blocks[0].query.pages[0] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/textract-2018-06-27/AnalyzeExpense AWS API Documentation
+    #
+    # @overload analyze_expense(params = {})
+    # @param [Hash] params ({})
+    def analyze_expense(params = {}, options = {})
+      req = build_request(:analyze_expense, params)
+      req.send_request(options)
+    end
+
+    # Analyzes identity documents for relevant information. This information
+    # is extracted and returned as `IdentityDocumentFields`, which records
+    # both the normalized field and value of the extracted text. Unlike
+    # other Amazon Textract operations, `AnalyzeID` doesn't return any
+    # Geometry data.
+    #
+    # @option params [required, Array<Types::Document>] :document_pages
+    #   The document being passed to AnalyzeID.
+    #
+    # @return [Types::AnalyzeIDResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::AnalyzeIDResponse#identity_documents #identity_documents} => Array&lt;Types::IdentityDocument&gt;
+    #   * {Types::AnalyzeIDResponse#document_metadata #document_metadata} => Types::DocumentMetadata
+    #   * {Types::AnalyzeIDResponse#analyze_id_model_version #analyze_id_model_version} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.analyze_id({
+    #     document_pages: [ # required
+    #       {
+    #         bytes: "data",
+    #         s3_object: {
+    #           bucket: "S3Bucket",
+    #           name: "S3ObjectName",
+    #           version: "S3ObjectVersion",
+    #         },
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.identity_documents #=> Array
+    #   resp.identity_documents[0].document_index #=> Integer
+    #   resp.identity_documents[0].identity_document_fields #=> Array
+    #   resp.identity_documents[0].identity_document_fields[0].type.text #=> String
+    #   resp.identity_documents[0].identity_document_fields[0].type.normalized_value.value #=> String
+    #   resp.identity_documents[0].identity_document_fields[0].type.normalized_value.value_type #=> String, one of "DATE"
+    #   resp.identity_documents[0].identity_document_fields[0].type.confidence #=> Float
+    #   resp.identity_documents[0].identity_document_fields[0].value_detection.text #=> String
+    #   resp.identity_documents[0].identity_document_fields[0].value_detection.normalized_value.value #=> String
+    #   resp.identity_documents[0].identity_document_fields[0].value_detection.normalized_value.value_type #=> String, one of "DATE"
+    #   resp.identity_documents[0].identity_document_fields[0].value_detection.confidence #=> Float
+    #   resp.identity_documents[0].blocks #=> Array
+    #   resp.identity_documents[0].blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT", "MERGED_CELL", "TITLE", "QUERY", "QUERY_RESULT", "SIGNATURE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.identity_documents[0].blocks[0].confidence #=> Float
+    #   resp.identity_documents[0].blocks[0].text #=> String
+    #   resp.identity_documents[0].blocks[0].text_type #=> String, one of "HANDWRITING", "PRINTED"
+    #   resp.identity_documents[0].blocks[0].row_index #=> Integer
+    #   resp.identity_documents[0].blocks[0].column_index #=> Integer
+    #   resp.identity_documents[0].blocks[0].row_span #=> Integer
+    #   resp.identity_documents[0].blocks[0].column_span #=> Integer
+    #   resp.identity_documents[0].blocks[0].geometry.bounding_box.width #=> Float
+    #   resp.identity_documents[0].blocks[0].geometry.bounding_box.height #=> Float
+    #   resp.identity_documents[0].blocks[0].geometry.bounding_box.left #=> Float
+    #   resp.identity_documents[0].blocks[0].geometry.bounding_box.top #=> Float
+    #   resp.identity_documents[0].blocks[0].geometry.polygon #=> Array
+    #   resp.identity_documents[0].blocks[0].geometry.polygon[0].x #=> Float
+    #   resp.identity_documents[0].blocks[0].geometry.polygon[0].y #=> Float
+    #   resp.identity_documents[0].blocks[0].id #=> String
+    #   resp.identity_documents[0].blocks[0].relationships #=> Array
+    #   resp.identity_documents[0].blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES", "MERGED_CELL", "TITLE", "ANSWER", "TABLE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.identity_documents[0].blocks[0].relationships[0].ids #=> Array
+    #   resp.identity_documents[0].blocks[0].relationships[0].ids[0] #=> String
+    #   resp.identity_documents[0].blocks[0].entity_types #=> Array
+    #   resp.identity_documents[0].blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE", "COLUMN_HEADER", "TABLE_TITLE", "TABLE_FOOTER", "TABLE_SECTION_TITLE", "TABLE_SUMMARY", "STRUCTURED_TABLE", "SEMI_STRUCTURED_TABLE"
+    #   resp.identity_documents[0].blocks[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
+    #   resp.identity_documents[0].blocks[0].page #=> Integer
+    #   resp.identity_documents[0].blocks[0].query.text #=> String
+    #   resp.identity_documents[0].blocks[0].query.alias #=> String
+    #   resp.identity_documents[0].blocks[0].query.pages #=> Array
+    #   resp.identity_documents[0].blocks[0].query.pages[0] #=> String
+    #   resp.document_metadata.pages #=> Integer
+    #   resp.analyze_id_model_version #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/textract-2018-06-27/AnalyzeID AWS API Documentation
+    #
+    # @overload analyze_id(params = {})
+    # @param [Hash] params ({})
+    def analyze_id(params = {}, options = {})
+      req = build_request(:analyze_id, params)
+      req.send_request(options)
+    end
+
     # Detects text in the input document. Amazon Textract can detect lines
     # of text and the words that make up a line of text. The input document
-    # must be an image in JPEG or PNG format. `DetectDocumentText` returns
-    # the detected text in an array of Block objects.
+    # must be in one of the following image formats: JPEG, PNG, PDF, or
+    # TIFF. `DetectDocumentText` returns the detected text in an array of
+    # Block objects.
     #
     # Each document page has as an associated `Block` of type PAGE. Each
     # PAGE `Block` object is the parent of LINE `Block` objects that
@@ -519,7 +853,7 @@ module Aws::Textract
     #
     #   resp.document_metadata.pages #=> Integer
     #   resp.blocks #=> Array
-    #   resp.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT"
+    #   resp.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT", "MERGED_CELL", "TITLE", "QUERY", "QUERY_RESULT", "SIGNATURE", "TABLE_TITLE", "TABLE_FOOTER"
     #   resp.blocks[0].confidence #=> Float
     #   resp.blocks[0].text #=> String
     #   resp.blocks[0].text_type #=> String, one of "HANDWRITING", "PRINTED"
@@ -536,13 +870,17 @@ module Aws::Textract
     #   resp.blocks[0].geometry.polygon[0].y #=> Float
     #   resp.blocks[0].id #=> String
     #   resp.blocks[0].relationships #=> Array
-    #   resp.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES"
+    #   resp.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES", "MERGED_CELL", "TITLE", "ANSWER", "TABLE", "TABLE_TITLE", "TABLE_FOOTER"
     #   resp.blocks[0].relationships[0].ids #=> Array
     #   resp.blocks[0].relationships[0].ids[0] #=> String
     #   resp.blocks[0].entity_types #=> Array
-    #   resp.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE"
+    #   resp.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE", "COLUMN_HEADER", "TABLE_TITLE", "TABLE_FOOTER", "TABLE_SECTION_TITLE", "TABLE_SUMMARY", "STRUCTURED_TABLE", "SEMI_STRUCTURED_TABLE"
     #   resp.blocks[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
     #   resp.blocks[0].page #=> Integer
+    #   resp.blocks[0].query.text #=> String
+    #   resp.blocks[0].query.alias #=> String
+    #   resp.blocks[0].query.pages #=> Array
+    #   resp.blocks[0].query.pages[0] #=> String
     #   resp.detect_document_text_model_version #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/textract-2018-06-27/DetectDocumentText AWS API Documentation
@@ -571,7 +909,7 @@ module Aws::Textract
     # types of information are returned:
     #
     # * Form data (key-value pairs). The related information is returned in
-    #   two Block objects, each of type `KEY_VALUE_SET`\: a KEY `Block`
+    #   two Block objects, each of type `KEY_VALUE_SET`: a KEY `Block`
     #   object and a VALUE `Block` object. For example, *Name: Ana Silva
     #   Carolina* contains a key and value. *Name:* is the key. *Ana Silva
     #   Carolina* is the value.
@@ -585,6 +923,20 @@ module Aws::Textract
     #   document are returned (including text that doesn't have a
     #   relationship with the value of the `StartDocumentAnalysis`
     #   `FeatureTypes` input parameter).
+    #
+    # * Query. A QUERY Block object contains the query text, alias and link
+    #   to the associated Query results block object.
+    #
+    # * Query Results. A QUERY\_RESULT Block object contains the answer to
+    #   the query and an ID that connects it to the query asked. This Block
+    #   also contains a confidence score.
+    #
+    # <note markdown="1"> While processing a document with queries, look out for
+    # `INVALID_REQUEST_PARAMETERS` output. This indicates that either the
+    # per page query limit has been exceeded or that the operation is trying
+    # to query a page in the document which doesn’t exist.
+    #
+    #  </note>
     #
     # Selection elements such as check boxes and option buttons (radio
     # buttons) can be detected in form data and in tables. A
@@ -646,7 +998,7 @@ module Aws::Textract
     #   resp.job_status #=> String, one of "IN_PROGRESS", "SUCCEEDED", "FAILED", "PARTIAL_SUCCESS"
     #   resp.next_token #=> String
     #   resp.blocks #=> Array
-    #   resp.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT"
+    #   resp.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT", "MERGED_CELL", "TITLE", "QUERY", "QUERY_RESULT", "SIGNATURE", "TABLE_TITLE", "TABLE_FOOTER"
     #   resp.blocks[0].confidence #=> Float
     #   resp.blocks[0].text #=> String
     #   resp.blocks[0].text_type #=> String, one of "HANDWRITING", "PRINTED"
@@ -663,13 +1015,17 @@ module Aws::Textract
     #   resp.blocks[0].geometry.polygon[0].y #=> Float
     #   resp.blocks[0].id #=> String
     #   resp.blocks[0].relationships #=> Array
-    #   resp.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES"
+    #   resp.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES", "MERGED_CELL", "TITLE", "ANSWER", "TABLE", "TABLE_TITLE", "TABLE_FOOTER"
     #   resp.blocks[0].relationships[0].ids #=> Array
     #   resp.blocks[0].relationships[0].ids[0] #=> String
     #   resp.blocks[0].entity_types #=> Array
-    #   resp.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE"
+    #   resp.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE", "COLUMN_HEADER", "TABLE_TITLE", "TABLE_FOOTER", "TABLE_SECTION_TITLE", "TABLE_SUMMARY", "STRUCTURED_TABLE", "SEMI_STRUCTURED_TABLE"
     #   resp.blocks[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
     #   resp.blocks[0].page #=> Integer
+    #   resp.blocks[0].query.text #=> String
+    #   resp.blocks[0].query.alias #=> String
+    #   resp.blocks[0].query.pages #=> Array
+    #   resp.blocks[0].query.pages[0] #=> String
     #   resp.warnings #=> Array
     #   resp.warnings[0].error_code #=> String
     #   resp.warnings[0].pages #=> Array
@@ -764,7 +1120,7 @@ module Aws::Textract
     #   resp.job_status #=> String, one of "IN_PROGRESS", "SUCCEEDED", "FAILED", "PARTIAL_SUCCESS"
     #   resp.next_token #=> String
     #   resp.blocks #=> Array
-    #   resp.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT"
+    #   resp.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT", "MERGED_CELL", "TITLE", "QUERY", "QUERY_RESULT", "SIGNATURE", "TABLE_TITLE", "TABLE_FOOTER"
     #   resp.blocks[0].confidence #=> Float
     #   resp.blocks[0].text #=> String
     #   resp.blocks[0].text_type #=> String, one of "HANDWRITING", "PRINTED"
@@ -781,13 +1137,17 @@ module Aws::Textract
     #   resp.blocks[0].geometry.polygon[0].y #=> Float
     #   resp.blocks[0].id #=> String
     #   resp.blocks[0].relationships #=> Array
-    #   resp.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES"
+    #   resp.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES", "MERGED_CELL", "TITLE", "ANSWER", "TABLE", "TABLE_TITLE", "TABLE_FOOTER"
     #   resp.blocks[0].relationships[0].ids #=> Array
     #   resp.blocks[0].relationships[0].ids[0] #=> String
     #   resp.blocks[0].entity_types #=> Array
-    #   resp.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE"
+    #   resp.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE", "COLUMN_HEADER", "TABLE_TITLE", "TABLE_FOOTER", "TABLE_SECTION_TITLE", "TABLE_SUMMARY", "STRUCTURED_TABLE", "SEMI_STRUCTURED_TABLE"
     #   resp.blocks[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
     #   resp.blocks[0].page #=> Integer
+    #   resp.blocks[0].query.text #=> String
+    #   resp.blocks[0].query.alias #=> String
+    #   resp.blocks[0].query.pages #=> Array
+    #   resp.blocks[0].query.pages[0] #=> String
     #   resp.warnings #=> Array
     #   resp.warnings[0].error_code #=> String
     #   resp.warnings[0].pages #=> Array
@@ -804,14 +1164,499 @@ module Aws::Textract
       req.send_request(options)
     end
 
+    # Gets the results for an Amazon Textract asynchronous operation that
+    # analyzes invoices and receipts. Amazon Textract finds contact
+    # information, items purchased, and vendor name, from input invoices and
+    # receipts.
+    #
+    # You start asynchronous invoice/receipt analysis by calling
+    # StartExpenseAnalysis, which returns a job identifier (`JobId`). Upon
+    # completion of the invoice/receipt analysis, Amazon Textract publishes
+    # the completion status to the Amazon Simple Notification Service
+    # (Amazon SNS) topic. This topic must be registered in the initial call
+    # to `StartExpenseAnalysis`. To get the results of the invoice/receipt
+    # analysis operation, first ensure that the status value published to
+    # the Amazon SNS topic is `SUCCEEDED`. If so, call `GetExpenseAnalysis`,
+    # and pass the job identifier (`JobId`) from the initial call to
+    # `StartExpenseAnalysis`.
+    #
+    # Use the MaxResults parameter to limit the number of blocks that are
+    # returned. If there are more results than specified in `MaxResults`,
+    # the value of `NextToken` in the operation response contains a
+    # pagination token for getting the next set of results. To get the next
+    # page of results, call `GetExpenseAnalysis`, and populate the
+    # `NextToken` request parameter with the token value that's returned
+    # from the previous call to `GetExpenseAnalysis`.
+    #
+    # For more information, see [Analyzing Invoices and Receipts][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/textract/latest/dg/invoices-receipts.html
+    #
+    # @option params [required, String] :job_id
+    #   A unique identifier for the text detection job. The `JobId` is
+    #   returned from `StartExpenseAnalysis`. A `JobId` value is only valid
+    #   for 7 days.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return per paginated call. The
+    #   largest value you can specify is 20. If you specify a value greater
+    #   than 20, a maximum of 20 results is returned. The default value is 20.
+    #
+    # @option params [String] :next_token
+    #   If the previous response was incomplete (because there are more blocks
+    #   to retrieve), Amazon Textract returns a pagination token in the
+    #   response. You can use this pagination token to retrieve the next set
+    #   of blocks.
+    #
+    # @return [Types::GetExpenseAnalysisResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetExpenseAnalysisResponse#document_metadata #document_metadata} => Types::DocumentMetadata
+    #   * {Types::GetExpenseAnalysisResponse#job_status #job_status} => String
+    #   * {Types::GetExpenseAnalysisResponse#next_token #next_token} => String
+    #   * {Types::GetExpenseAnalysisResponse#expense_documents #expense_documents} => Array&lt;Types::ExpenseDocument&gt;
+    #   * {Types::GetExpenseAnalysisResponse#warnings #warnings} => Array&lt;Types::Warning&gt;
+    #   * {Types::GetExpenseAnalysisResponse#status_message #status_message} => String
+    #   * {Types::GetExpenseAnalysisResponse#analyze_expense_model_version #analyze_expense_model_version} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_expense_analysis({
+    #     job_id: "JobId", # required
+    #     max_results: 1,
+    #     next_token: "PaginationToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.document_metadata.pages #=> Integer
+    #   resp.job_status #=> String, one of "IN_PROGRESS", "SUCCEEDED", "FAILED", "PARTIAL_SUCCESS"
+    #   resp.next_token #=> String
+    #   resp.expense_documents #=> Array
+    #   resp.expense_documents[0].expense_index #=> Integer
+    #   resp.expense_documents[0].summary_fields #=> Array
+    #   resp.expense_documents[0].summary_fields[0].type.text #=> String
+    #   resp.expense_documents[0].summary_fields[0].type.confidence #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.text #=> String
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.polygon #=> Array
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].summary_fields[0].label_detection.confidence #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.text #=> String
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.polygon #=> Array
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].summary_fields[0].value_detection.confidence #=> Float
+    #   resp.expense_documents[0].summary_fields[0].page_number #=> Integer
+    #   resp.expense_documents[0].summary_fields[0].currency.code #=> String
+    #   resp.expense_documents[0].summary_fields[0].currency.confidence #=> Float
+    #   resp.expense_documents[0].summary_fields[0].group_properties #=> Array
+    #   resp.expense_documents[0].summary_fields[0].group_properties[0].types #=> Array
+    #   resp.expense_documents[0].summary_fields[0].group_properties[0].types[0] #=> String
+    #   resp.expense_documents[0].summary_fields[0].group_properties[0].id #=> String
+    #   resp.expense_documents[0].line_item_groups #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_item_group_index #=> Integer
+    #   resp.expense_documents[0].line_item_groups[0].line_items #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].type.text #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].type.confidence #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.text #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.polygon #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.confidence #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.text #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.polygon #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.confidence #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].page_number #=> Integer
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].currency.code #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].currency.confidence #=> Float
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties[0].types #=> Array
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties[0].types[0] #=> String
+    #   resp.expense_documents[0].line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties[0].id #=> String
+    #   resp.expense_documents[0].blocks #=> Array
+    #   resp.expense_documents[0].blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT", "MERGED_CELL", "TITLE", "QUERY", "QUERY_RESULT", "SIGNATURE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.expense_documents[0].blocks[0].confidence #=> Float
+    #   resp.expense_documents[0].blocks[0].text #=> String
+    #   resp.expense_documents[0].blocks[0].text_type #=> String, one of "HANDWRITING", "PRINTED"
+    #   resp.expense_documents[0].blocks[0].row_index #=> Integer
+    #   resp.expense_documents[0].blocks[0].column_index #=> Integer
+    #   resp.expense_documents[0].blocks[0].row_span #=> Integer
+    #   resp.expense_documents[0].blocks[0].column_span #=> Integer
+    #   resp.expense_documents[0].blocks[0].geometry.bounding_box.width #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.bounding_box.height #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.bounding_box.left #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.bounding_box.top #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.polygon #=> Array
+    #   resp.expense_documents[0].blocks[0].geometry.polygon[0].x #=> Float
+    #   resp.expense_documents[0].blocks[0].geometry.polygon[0].y #=> Float
+    #   resp.expense_documents[0].blocks[0].id #=> String
+    #   resp.expense_documents[0].blocks[0].relationships #=> Array
+    #   resp.expense_documents[0].blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES", "MERGED_CELL", "TITLE", "ANSWER", "TABLE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.expense_documents[0].blocks[0].relationships[0].ids #=> Array
+    #   resp.expense_documents[0].blocks[0].relationships[0].ids[0] #=> String
+    #   resp.expense_documents[0].blocks[0].entity_types #=> Array
+    #   resp.expense_documents[0].blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE", "COLUMN_HEADER", "TABLE_TITLE", "TABLE_FOOTER", "TABLE_SECTION_TITLE", "TABLE_SUMMARY", "STRUCTURED_TABLE", "SEMI_STRUCTURED_TABLE"
+    #   resp.expense_documents[0].blocks[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
+    #   resp.expense_documents[0].blocks[0].page #=> Integer
+    #   resp.expense_documents[0].blocks[0].query.text #=> String
+    #   resp.expense_documents[0].blocks[0].query.alias #=> String
+    #   resp.expense_documents[0].blocks[0].query.pages #=> Array
+    #   resp.expense_documents[0].blocks[0].query.pages[0] #=> String
+    #   resp.warnings #=> Array
+    #   resp.warnings[0].error_code #=> String
+    #   resp.warnings[0].pages #=> Array
+    #   resp.warnings[0].pages[0] #=> Integer
+    #   resp.status_message #=> String
+    #   resp.analyze_expense_model_version #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/textract-2018-06-27/GetExpenseAnalysis AWS API Documentation
+    #
+    # @overload get_expense_analysis(params = {})
+    # @param [Hash] params ({})
+    def get_expense_analysis(params = {}, options = {})
+      req = build_request(:get_expense_analysis, params)
+      req.send_request(options)
+    end
+
+    # Gets the results for an Amazon Textract asynchronous operation that
+    # analyzes text in a lending document.
+    #
+    # You start asynchronous text analysis by calling
+    # `StartLendingAnalysis`, which returns a job identifier (`JobId`). When
+    # the text analysis operation finishes, Amazon Textract publishes a
+    # completion status to the Amazon Simple Notification Service (Amazon
+    # SNS) topic that's registered in the initial call to
+    # `StartLendingAnalysis`.
+    #
+    # To get the results of the text analysis operation, first check that
+    # the status value published to the Amazon SNS topic is SUCCEEDED. If
+    # so, call GetLendingAnalysis, and pass the job identifier (`JobId`)
+    # from the initial call to `StartLendingAnalysis`.
+    #
+    # @option params [required, String] :job_id
+    #   A unique identifier for the lending or text-detection job. The `JobId`
+    #   is returned from `StartLendingAnalysis`. A `JobId` value is only valid
+    #   for 7 days.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return per paginated call. The
+    #   largest value that you can specify is 30. If you specify a value
+    #   greater than 30, a maximum of 30 results is returned. The default
+    #   value is 30.
+    #
+    # @option params [String] :next_token
+    #   If the previous response was incomplete, Amazon Textract returns a
+    #   pagination token in the response. You can use this pagination token to
+    #   retrieve the next set of lending results.
+    #
+    # @return [Types::GetLendingAnalysisResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetLendingAnalysisResponse#document_metadata #document_metadata} => Types::DocumentMetadata
+    #   * {Types::GetLendingAnalysisResponse#job_status #job_status} => String
+    #   * {Types::GetLendingAnalysisResponse#next_token #next_token} => String
+    #   * {Types::GetLendingAnalysisResponse#results #results} => Array&lt;Types::LendingResult&gt;
+    #   * {Types::GetLendingAnalysisResponse#warnings #warnings} => Array&lt;Types::Warning&gt;
+    #   * {Types::GetLendingAnalysisResponse#status_message #status_message} => String
+    #   * {Types::GetLendingAnalysisResponse#analyze_lending_model_version #analyze_lending_model_version} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_lending_analysis({
+    #     job_id: "JobId", # required
+    #     max_results: 1,
+    #     next_token: "PaginationToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.document_metadata.pages #=> Integer
+    #   resp.job_status #=> String, one of "IN_PROGRESS", "SUCCEEDED", "FAILED", "PARTIAL_SUCCESS"
+    #   resp.next_token #=> String
+    #   resp.results #=> Array
+    #   resp.results[0].page #=> Integer
+    #   resp.results[0].page_classification.page_type #=> Array
+    #   resp.results[0].page_classification.page_type[0].value #=> String
+    #   resp.results[0].page_classification.page_type[0].confidence #=> Float
+    #   resp.results[0].page_classification.page_number #=> Array
+    #   resp.results[0].page_classification.page_number[0].value #=> String
+    #   resp.results[0].page_classification.page_number[0].confidence #=> Float
+    #   resp.results[0].extractions #=> Array
+    #   resp.results[0].extractions[0].lending_document.lending_fields #=> Array
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].type #=> String
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.text #=> String
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.geometry.bounding_box.width #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.geometry.bounding_box.height #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.geometry.bounding_box.left #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.geometry.bounding_box.top #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.geometry.polygon #=> Array
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.geometry.polygon[0].x #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.geometry.polygon[0].y #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].key_detection.confidence #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections #=> Array
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].text #=> String
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].geometry.bounding_box.width #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].geometry.bounding_box.height #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].geometry.bounding_box.left #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].geometry.bounding_box.top #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].geometry.polygon #=> Array
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].geometry.polygon[0].x #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].geometry.polygon[0].y #=> Float
+    #   resp.results[0].extractions[0].lending_document.lending_fields[0].value_detections[0].confidence #=> Float
+    #   resp.results[0].extractions[0].lending_document.signature_detections #=> Array
+    #   resp.results[0].extractions[0].lending_document.signature_detections[0].confidence #=> Float
+    #   resp.results[0].extractions[0].lending_document.signature_detections[0].geometry.bounding_box.width #=> Float
+    #   resp.results[0].extractions[0].lending_document.signature_detections[0].geometry.bounding_box.height #=> Float
+    #   resp.results[0].extractions[0].lending_document.signature_detections[0].geometry.bounding_box.left #=> Float
+    #   resp.results[0].extractions[0].lending_document.signature_detections[0].geometry.bounding_box.top #=> Float
+    #   resp.results[0].extractions[0].lending_document.signature_detections[0].geometry.polygon #=> Array
+    #   resp.results[0].extractions[0].lending_document.signature_detections[0].geometry.polygon[0].x #=> Float
+    #   resp.results[0].extractions[0].lending_document.signature_detections[0].geometry.polygon[0].y #=> Float
+    #   resp.results[0].extractions[0].expense_document.expense_index #=> Integer
+    #   resp.results[0].extractions[0].expense_document.summary_fields #=> Array
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].type.text #=> String
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].type.confidence #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].label_detection.text #=> String
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].label_detection.geometry.bounding_box.width #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].label_detection.geometry.bounding_box.height #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].label_detection.geometry.bounding_box.left #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].label_detection.geometry.bounding_box.top #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].label_detection.geometry.polygon #=> Array
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].label_detection.geometry.polygon[0].x #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].label_detection.geometry.polygon[0].y #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].label_detection.confidence #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].value_detection.text #=> String
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].value_detection.geometry.bounding_box.width #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].value_detection.geometry.bounding_box.height #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].value_detection.geometry.bounding_box.left #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].value_detection.geometry.bounding_box.top #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].value_detection.geometry.polygon #=> Array
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].value_detection.geometry.polygon[0].x #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].value_detection.geometry.polygon[0].y #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].value_detection.confidence #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].page_number #=> Integer
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].currency.code #=> String
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].currency.confidence #=> Float
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].group_properties #=> Array
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].group_properties[0].types #=> Array
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].group_properties[0].types[0] #=> String
+    #   resp.results[0].extractions[0].expense_document.summary_fields[0].group_properties[0].id #=> String
+    #   resp.results[0].extractions[0].expense_document.line_item_groups #=> Array
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_item_group_index #=> Integer
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items #=> Array
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields #=> Array
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].type.text #=> String
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].type.confidence #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.text #=> String
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.width #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.height #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.left #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.bounding_box.top #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.polygon #=> Array
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.polygon[0].x #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.geometry.polygon[0].y #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].label_detection.confidence #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.text #=> String
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.width #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.height #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.left #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.bounding_box.top #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.polygon #=> Array
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.polygon[0].x #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.geometry.polygon[0].y #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].value_detection.confidence #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].page_number #=> Integer
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].currency.code #=> String
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].currency.confidence #=> Float
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties #=> Array
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties[0].types #=> Array
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties[0].types[0] #=> String
+    #   resp.results[0].extractions[0].expense_document.line_item_groups[0].line_items[0].line_item_expense_fields[0].group_properties[0].id #=> String
+    #   resp.results[0].extractions[0].expense_document.blocks #=> Array
+    #   resp.results[0].extractions[0].expense_document.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT", "MERGED_CELL", "TITLE", "QUERY", "QUERY_RESULT", "SIGNATURE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.results[0].extractions[0].expense_document.blocks[0].confidence #=> Float
+    #   resp.results[0].extractions[0].expense_document.blocks[0].text #=> String
+    #   resp.results[0].extractions[0].expense_document.blocks[0].text_type #=> String, one of "HANDWRITING", "PRINTED"
+    #   resp.results[0].extractions[0].expense_document.blocks[0].row_index #=> Integer
+    #   resp.results[0].extractions[0].expense_document.blocks[0].column_index #=> Integer
+    #   resp.results[0].extractions[0].expense_document.blocks[0].row_span #=> Integer
+    #   resp.results[0].extractions[0].expense_document.blocks[0].column_span #=> Integer
+    #   resp.results[0].extractions[0].expense_document.blocks[0].geometry.bounding_box.width #=> Float
+    #   resp.results[0].extractions[0].expense_document.blocks[0].geometry.bounding_box.height #=> Float
+    #   resp.results[0].extractions[0].expense_document.blocks[0].geometry.bounding_box.left #=> Float
+    #   resp.results[0].extractions[0].expense_document.blocks[0].geometry.bounding_box.top #=> Float
+    #   resp.results[0].extractions[0].expense_document.blocks[0].geometry.polygon #=> Array
+    #   resp.results[0].extractions[0].expense_document.blocks[0].geometry.polygon[0].x #=> Float
+    #   resp.results[0].extractions[0].expense_document.blocks[0].geometry.polygon[0].y #=> Float
+    #   resp.results[0].extractions[0].expense_document.blocks[0].id #=> String
+    #   resp.results[0].extractions[0].expense_document.blocks[0].relationships #=> Array
+    #   resp.results[0].extractions[0].expense_document.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES", "MERGED_CELL", "TITLE", "ANSWER", "TABLE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.results[0].extractions[0].expense_document.blocks[0].relationships[0].ids #=> Array
+    #   resp.results[0].extractions[0].expense_document.blocks[0].relationships[0].ids[0] #=> String
+    #   resp.results[0].extractions[0].expense_document.blocks[0].entity_types #=> Array
+    #   resp.results[0].extractions[0].expense_document.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE", "COLUMN_HEADER", "TABLE_TITLE", "TABLE_FOOTER", "TABLE_SECTION_TITLE", "TABLE_SUMMARY", "STRUCTURED_TABLE", "SEMI_STRUCTURED_TABLE"
+    #   resp.results[0].extractions[0].expense_document.blocks[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
+    #   resp.results[0].extractions[0].expense_document.blocks[0].page #=> Integer
+    #   resp.results[0].extractions[0].expense_document.blocks[0].query.text #=> String
+    #   resp.results[0].extractions[0].expense_document.blocks[0].query.alias #=> String
+    #   resp.results[0].extractions[0].expense_document.blocks[0].query.pages #=> Array
+    #   resp.results[0].extractions[0].expense_document.blocks[0].query.pages[0] #=> String
+    #   resp.results[0].extractions[0].identity_document.document_index #=> Integer
+    #   resp.results[0].extractions[0].identity_document.identity_document_fields #=> Array
+    #   resp.results[0].extractions[0].identity_document.identity_document_fields[0].type.text #=> String
+    #   resp.results[0].extractions[0].identity_document.identity_document_fields[0].type.normalized_value.value #=> String
+    #   resp.results[0].extractions[0].identity_document.identity_document_fields[0].type.normalized_value.value_type #=> String, one of "DATE"
+    #   resp.results[0].extractions[0].identity_document.identity_document_fields[0].type.confidence #=> Float
+    #   resp.results[0].extractions[0].identity_document.identity_document_fields[0].value_detection.text #=> String
+    #   resp.results[0].extractions[0].identity_document.identity_document_fields[0].value_detection.normalized_value.value #=> String
+    #   resp.results[0].extractions[0].identity_document.identity_document_fields[0].value_detection.normalized_value.value_type #=> String, one of "DATE"
+    #   resp.results[0].extractions[0].identity_document.identity_document_fields[0].value_detection.confidence #=> Float
+    #   resp.results[0].extractions[0].identity_document.blocks #=> Array
+    #   resp.results[0].extractions[0].identity_document.blocks[0].block_type #=> String, one of "KEY_VALUE_SET", "PAGE", "LINE", "WORD", "TABLE", "CELL", "SELECTION_ELEMENT", "MERGED_CELL", "TITLE", "QUERY", "QUERY_RESULT", "SIGNATURE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.results[0].extractions[0].identity_document.blocks[0].confidence #=> Float
+    #   resp.results[0].extractions[0].identity_document.blocks[0].text #=> String
+    #   resp.results[0].extractions[0].identity_document.blocks[0].text_type #=> String, one of "HANDWRITING", "PRINTED"
+    #   resp.results[0].extractions[0].identity_document.blocks[0].row_index #=> Integer
+    #   resp.results[0].extractions[0].identity_document.blocks[0].column_index #=> Integer
+    #   resp.results[0].extractions[0].identity_document.blocks[0].row_span #=> Integer
+    #   resp.results[0].extractions[0].identity_document.blocks[0].column_span #=> Integer
+    #   resp.results[0].extractions[0].identity_document.blocks[0].geometry.bounding_box.width #=> Float
+    #   resp.results[0].extractions[0].identity_document.blocks[0].geometry.bounding_box.height #=> Float
+    #   resp.results[0].extractions[0].identity_document.blocks[0].geometry.bounding_box.left #=> Float
+    #   resp.results[0].extractions[0].identity_document.blocks[0].geometry.bounding_box.top #=> Float
+    #   resp.results[0].extractions[0].identity_document.blocks[0].geometry.polygon #=> Array
+    #   resp.results[0].extractions[0].identity_document.blocks[0].geometry.polygon[0].x #=> Float
+    #   resp.results[0].extractions[0].identity_document.blocks[0].geometry.polygon[0].y #=> Float
+    #   resp.results[0].extractions[0].identity_document.blocks[0].id #=> String
+    #   resp.results[0].extractions[0].identity_document.blocks[0].relationships #=> Array
+    #   resp.results[0].extractions[0].identity_document.blocks[0].relationships[0].type #=> String, one of "VALUE", "CHILD", "COMPLEX_FEATURES", "MERGED_CELL", "TITLE", "ANSWER", "TABLE", "TABLE_TITLE", "TABLE_FOOTER"
+    #   resp.results[0].extractions[0].identity_document.blocks[0].relationships[0].ids #=> Array
+    #   resp.results[0].extractions[0].identity_document.blocks[0].relationships[0].ids[0] #=> String
+    #   resp.results[0].extractions[0].identity_document.blocks[0].entity_types #=> Array
+    #   resp.results[0].extractions[0].identity_document.blocks[0].entity_types[0] #=> String, one of "KEY", "VALUE", "COLUMN_HEADER", "TABLE_TITLE", "TABLE_FOOTER", "TABLE_SECTION_TITLE", "TABLE_SUMMARY", "STRUCTURED_TABLE", "SEMI_STRUCTURED_TABLE"
+    #   resp.results[0].extractions[0].identity_document.blocks[0].selection_status #=> String, one of "SELECTED", "NOT_SELECTED"
+    #   resp.results[0].extractions[0].identity_document.blocks[0].page #=> Integer
+    #   resp.results[0].extractions[0].identity_document.blocks[0].query.text #=> String
+    #   resp.results[0].extractions[0].identity_document.blocks[0].query.alias #=> String
+    #   resp.results[0].extractions[0].identity_document.blocks[0].query.pages #=> Array
+    #   resp.results[0].extractions[0].identity_document.blocks[0].query.pages[0] #=> String
+    #   resp.warnings #=> Array
+    #   resp.warnings[0].error_code #=> String
+    #   resp.warnings[0].pages #=> Array
+    #   resp.warnings[0].pages[0] #=> Integer
+    #   resp.status_message #=> String
+    #   resp.analyze_lending_model_version #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/textract-2018-06-27/GetLendingAnalysis AWS API Documentation
+    #
+    # @overload get_lending_analysis(params = {})
+    # @param [Hash] params ({})
+    def get_lending_analysis(params = {}, options = {})
+      req = build_request(:get_lending_analysis, params)
+      req.send_request(options)
+    end
+
+    # Gets summarized results for the `StartLendingAnalysis` operation,
+    # which analyzes text in a lending document. The returned summary
+    # consists of information about documents grouped together by a common
+    # document type. Information like detected signatures, page numbers, and
+    # split documents is returned with respect to the type of grouped
+    # document.
+    #
+    # You start asynchronous text analysis by calling
+    # `StartLendingAnalysis`, which returns a job identifier (`JobId`). When
+    # the text analysis operation finishes, Amazon Textract publishes a
+    # completion status to the Amazon Simple Notification Service (Amazon
+    # SNS) topic that's registered in the initial call to
+    # `StartLendingAnalysis`.
+    #
+    # To get the results of the text analysis operation, first check that
+    # the status value published to the Amazon SNS topic is SUCCEEDED. If
+    # so, call `GetLendingAnalysisSummary`, and pass the job identifier
+    # (`JobId`) from the initial call to `StartLendingAnalysis`.
+    #
+    # @option params [required, String] :job_id
+    #   A unique identifier for the lending or text-detection job. The `JobId`
+    #   is returned from StartLendingAnalysis. A `JobId` value is only valid
+    #   for 7 days.
+    #
+    # @return [Types::GetLendingAnalysisSummaryResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetLendingAnalysisSummaryResponse#document_metadata #document_metadata} => Types::DocumentMetadata
+    #   * {Types::GetLendingAnalysisSummaryResponse#job_status #job_status} => String
+    #   * {Types::GetLendingAnalysisSummaryResponse#summary #summary} => Types::LendingSummary
+    #   * {Types::GetLendingAnalysisSummaryResponse#warnings #warnings} => Array&lt;Types::Warning&gt;
+    #   * {Types::GetLendingAnalysisSummaryResponse#status_message #status_message} => String
+    #   * {Types::GetLendingAnalysisSummaryResponse#analyze_lending_model_version #analyze_lending_model_version} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_lending_analysis_summary({
+    #     job_id: "JobId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.document_metadata.pages #=> Integer
+    #   resp.job_status #=> String, one of "IN_PROGRESS", "SUCCEEDED", "FAILED", "PARTIAL_SUCCESS"
+    #   resp.summary.document_groups #=> Array
+    #   resp.summary.document_groups[0].type #=> String
+    #   resp.summary.document_groups[0].split_documents #=> Array
+    #   resp.summary.document_groups[0].split_documents[0].index #=> Integer
+    #   resp.summary.document_groups[0].split_documents[0].pages #=> Array
+    #   resp.summary.document_groups[0].split_documents[0].pages[0] #=> Integer
+    #   resp.summary.document_groups[0].detected_signatures #=> Array
+    #   resp.summary.document_groups[0].detected_signatures[0].page #=> Integer
+    #   resp.summary.document_groups[0].undetected_signatures #=> Array
+    #   resp.summary.document_groups[0].undetected_signatures[0].page #=> Integer
+    #   resp.summary.undetected_document_types #=> Array
+    #   resp.summary.undetected_document_types[0] #=> String
+    #   resp.warnings #=> Array
+    #   resp.warnings[0].error_code #=> String
+    #   resp.warnings[0].pages #=> Array
+    #   resp.warnings[0].pages[0] #=> Integer
+    #   resp.status_message #=> String
+    #   resp.analyze_lending_model_version #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/textract-2018-06-27/GetLendingAnalysisSummary AWS API Documentation
+    #
+    # @overload get_lending_analysis_summary(params = {})
+    # @param [Hash] params ({})
+    def get_lending_analysis_summary(params = {}, options = {})
+      req = build_request(:get_lending_analysis_summary, params)
+      req.send_request(options)
+    end
+
     # Starts the asynchronous analysis of an input document for
     # relationships between detected items such as key-value pairs, tables,
     # and selection elements.
     #
     # `StartDocumentAnalysis` can analyze text in documents that are in
-    # JPEG, PNG, and PDF format. The documents are stored in an Amazon S3
-    # bucket. Use DocumentLocation to specify the bucket name and file name
-    # of the document.
+    # JPEG, PNG, TIFF, and PDF format. The documents are stored in an Amazon
+    # S3 bucket. Use DocumentLocation to specify the bucket name and file
+    # name of the document.
     #
     # `StartDocumentAnalysis` returns a job identifier (`JobId`) that you
     # use to get the results of the operation. When text analysis is
@@ -873,6 +1718,8 @@ module Aws::Textract
     #   customer bucket. When this parameter is not enabled, the result will
     #   be encrypted server side,using SSE-S3.
     #
+    # @option params [Types::QueriesConfig] :queries_config
+    #
     # @return [Types::StartDocumentAnalysisResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::StartDocumentAnalysisResponse#job_id #job_id} => String
@@ -887,7 +1734,7 @@ module Aws::Textract
     #         version: "S3ObjectVersion",
     #       },
     #     },
-    #     feature_types: ["TABLES"], # required, accepts TABLES, FORMS
+    #     feature_types: ["TABLES"], # required, accepts TABLES, FORMS, QUERIES, SIGNATURES
     #     client_request_token: "ClientRequestToken",
     #     job_tag: "JobTag",
     #     notification_channel: {
@@ -899,6 +1746,15 @@ module Aws::Textract
     #       s3_prefix: "S3ObjectName",
     #     },
     #     kms_key_id: "KMSKeyId",
+    #     queries_config: {
+    #       queries: [ # required
+    #         {
+    #           text: "QueryInput", # required
+    #           alias: "QueryInput",
+    #           pages: ["QueryPage"],
+    #         },
+    #       ],
+    #     },
     #   })
     #
     # @example Response structure
@@ -919,9 +1775,9 @@ module Aws::Textract
     # text.
     #
     # `StartDocumentTextDetection` can analyze text in documents that are in
-    # JPEG, PNG, and PDF format. The documents are stored in an Amazon S3
-    # bucket. Use DocumentLocation to specify the bucket name and file name
-    # of the document.
+    # JPEG, PNG, TIFF, and PDF format. The documents are stored in an Amazon
+    # S3 bucket. Use DocumentLocation to specify the bucket name and file
+    # name of the document.
     #
     # `StartTextDetection` returns a job identifier (`JobId`) that you use
     # to get the results of the operation. When text detection is finished,
@@ -1016,6 +1872,242 @@ module Aws::Textract
       req.send_request(options)
     end
 
+    # Starts the asynchronous analysis of invoices or receipts for data like
+    # contact information, items purchased, and vendor names.
+    #
+    # `StartExpenseAnalysis` can analyze text in documents that are in JPEG,
+    # PNG, and PDF format. The documents must be stored in an Amazon S3
+    # bucket. Use the DocumentLocation parameter to specify the name of your
+    # S3 bucket and the name of the document in that bucket.
+    #
+    # `StartExpenseAnalysis` returns a job identifier (`JobId`) that you
+    # will provide to `GetExpenseAnalysis` to retrieve the results of the
+    # operation. When the analysis of the input invoices/receipts is
+    # finished, Amazon Textract publishes a completion status to the Amazon
+    # Simple Notification Service (Amazon SNS) topic that you provide to the
+    # `NotificationChannel`. To obtain the results of the invoice and
+    # receipt analysis operation, ensure that the status value published to
+    # the Amazon SNS topic is `SUCCEEDED`. If so, call GetExpenseAnalysis,
+    # and pass the job identifier (`JobId`) that was returned by your call
+    # to `StartExpenseAnalysis`.
+    #
+    # For more information, see [Analyzing Invoices and Receipts][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/textract/latest/dg/invoice-receipts.html
+    #
+    # @option params [required, Types::DocumentLocation] :document_location
+    #   The location of the document to be processed.
+    #
+    # @option params [String] :client_request_token
+    #   The idempotent token that's used to identify the start request. If
+    #   you use the same token with multiple `StartDocumentTextDetection`
+    #   requests, the same `JobId` is returned. Use `ClientRequestToken` to
+    #   prevent the same job from being accidentally started more than once.
+    #   For more information, see [Calling Amazon Textract Asynchronous
+    #   Operations][1]
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/textract/latest/dg/api-async.html
+    #
+    # @option params [String] :job_tag
+    #   An identifier you specify that's included in the completion
+    #   notification published to the Amazon SNS topic. For example, you can
+    #   use `JobTag` to identify the type of document that the completion
+    #   notification corresponds to (such as a tax form or a receipt).
+    #
+    # @option params [Types::NotificationChannel] :notification_channel
+    #   The Amazon SNS topic ARN that you want Amazon Textract to publish the
+    #   completion status of the operation to.
+    #
+    # @option params [Types::OutputConfig] :output_config
+    #   Sets if the output will go to a customer defined bucket. By default,
+    #   Amazon Textract will save the results internally to be accessed by the
+    #   `GetExpenseAnalysis` operation.
+    #
+    # @option params [String] :kms_key_id
+    #   The KMS key used to encrypt the inference results. This can be in
+    #   either Key ID or Key Alias format. When a KMS key is provided, the KMS
+    #   key will be used for server-side encryption of the objects in the
+    #   customer bucket. When this parameter is not enabled, the result will
+    #   be encrypted server side,using SSE-S3.
+    #
+    # @return [Types::StartExpenseAnalysisResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StartExpenseAnalysisResponse#job_id #job_id} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.start_expense_analysis({
+    #     document_location: { # required
+    #       s3_object: {
+    #         bucket: "S3Bucket",
+    #         name: "S3ObjectName",
+    #         version: "S3ObjectVersion",
+    #       },
+    #     },
+    #     client_request_token: "ClientRequestToken",
+    #     job_tag: "JobTag",
+    #     notification_channel: {
+    #       sns_topic_arn: "SNSTopicArn", # required
+    #       role_arn: "RoleArn", # required
+    #     },
+    #     output_config: {
+    #       s3_bucket: "S3Bucket", # required
+    #       s3_prefix: "S3ObjectName",
+    #     },
+    #     kms_key_id: "KMSKeyId",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.job_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/textract-2018-06-27/StartExpenseAnalysis AWS API Documentation
+    #
+    # @overload start_expense_analysis(params = {})
+    # @param [Hash] params ({})
+    def start_expense_analysis(params = {}, options = {})
+      req = build_request(:start_expense_analysis, params)
+      req.send_request(options)
+    end
+
+    # Starts the classification and analysis of an input document.
+    # `StartLendingAnalysis` initiates the classification and analysis of a
+    # packet of lending documents. `StartLendingAnalysis` operates on a
+    # document file located in an Amazon S3 bucket.
+    #
+    # `StartLendingAnalysis` can analyze text in documents that are in one
+    # of the following formats: JPEG, PNG, TIFF, PDF. Use `DocumentLocation`
+    # to specify the bucket name and the file name of the document.
+    #
+    # `StartLendingAnalysis` returns a job identifier (`JobId`) that you use
+    # to get the results of the operation. When the text analysis is
+    # finished, Amazon Textract publishes a completion status to the Amazon
+    # Simple Notification Service (Amazon SNS) topic that you specify in
+    # `NotificationChannel`. To get the results of the text analysis
+    # operation, first check that the status value published to the Amazon
+    # SNS topic is SUCCEEDED. If the status is SUCCEEDED you can call either
+    # `GetLendingAnalysis` or `GetLendingAnalysisSummary` and provide the
+    # `JobId` to obtain the results of the analysis.
+    #
+    # If using `OutputConfig` to specify an Amazon S3 bucket, the output
+    # will be contained within the specified prefix in a directory labeled
+    # with the job-id. In the directory there are 3 sub-directories:
+    #
+    # * detailedResponse (contains the GetLendingAnalysis response)
+    #
+    # * summaryResponse (for the GetLendingAnalysisSummary response)
+    #
+    # * splitDocuments (documents split across logical boundaries)
+    #
+    # @option params [required, Types::DocumentLocation] :document_location
+    #   The Amazon S3 bucket that contains the document to be processed. It's
+    #   used by asynchronous operations.
+    #
+    #   The input document can be an image file in JPEG or PNG format. It can
+    #   also be a file in PDF format.
+    #
+    # @option params [String] :client_request_token
+    #   The idempotent token that you use to identify the start request. If
+    #   you use the same token with multiple `StartLendingAnalysis` requests,
+    #   the same `JobId` is returned. Use `ClientRequestToken` to prevent the
+    #   same job from being accidentally started more than once. For more
+    #   information, see [Calling Amazon Textract Asynchronous Operations][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/textract/latest/dg/api-sync.html
+    #
+    # @option params [String] :job_tag
+    #   An identifier that you specify to be included in the completion
+    #   notification published to the Amazon SNS topic. For example, you can
+    #   use `JobTag` to identify the type of document that the completion
+    #   notification corresponds to (such as a tax form or a receipt).
+    #
+    # @option params [Types::NotificationChannel] :notification_channel
+    #   The Amazon Simple Notification Service (Amazon SNS) topic to which
+    #   Amazon Textract publishes the completion status of an asynchronous
+    #   document operation.
+    #
+    # @option params [Types::OutputConfig] :output_config
+    #   Sets whether or not your output will go to a user created bucket. Used
+    #   to set the name of the bucket, and the prefix on the output file.
+    #
+    #   `OutputConfig` is an optional parameter which lets you adjust where
+    #   your output will be placed. By default, Amazon Textract will store the
+    #   results internally and can only be accessed by the Get API operations.
+    #   With `OutputConfig` enabled, you can set the name of the bucket the
+    #   output will be sent to the file prefix of the results where you can
+    #   download your results. Additionally, you can set the `KMSKeyID`
+    #   parameter to a customer master key (CMK) to encrypt your output.
+    #   Without this parameter set Amazon Textract will encrypt server-side
+    #   using the AWS managed CMK for Amazon S3.
+    #
+    #   Decryption of Customer Content is necessary for processing of the
+    #   documents by Amazon Textract. If your account is opted out under an AI
+    #   services opt out policy then all unencrypted Customer Content is
+    #   immediately and permanently deleted after the Customer Content has
+    #   been processed by the service. No copy of of the output is retained by
+    #   Amazon Textract. For information about how to opt out, see [ Managing
+    #   AI services opt-out policy. ][1]
+    #
+    #   For more information on data privacy, see the [Data Privacy FAQ][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html
+    #   [2]: https://aws.amazon.com/compliance/data-privacy-faq/
+    #
+    # @option params [String] :kms_key_id
+    #   The KMS key used to encrypt the inference results. This can be in
+    #   either Key ID or Key Alias format. When a KMS key is provided, the KMS
+    #   key will be used for server-side encryption of the objects in the
+    #   customer bucket. When this parameter is not enabled, the result will
+    #   be encrypted server side, using SSE-S3.
+    #
+    # @return [Types::StartLendingAnalysisResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StartLendingAnalysisResponse#job_id #job_id} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.start_lending_analysis({
+    #     document_location: { # required
+    #       s3_object: {
+    #         bucket: "S3Bucket",
+    #         name: "S3ObjectName",
+    #         version: "S3ObjectVersion",
+    #       },
+    #     },
+    #     client_request_token: "ClientRequestToken",
+    #     job_tag: "JobTag",
+    #     notification_channel: {
+    #       sns_topic_arn: "SNSTopicArn", # required
+    #       role_arn: "RoleArn", # required
+    #     },
+    #     output_config: {
+    #       s3_bucket: "S3Bucket", # required
+    #       s3_prefix: "S3ObjectName",
+    #     },
+    #     kms_key_id: "KMSKeyId",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.job_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/textract-2018-06-27/StartLendingAnalysis AWS API Documentation
+    #
+    # @overload start_lending_analysis(params = {})
+    # @param [Hash] params ({})
+    def start_lending_analysis(params = {}, options = {})
+      req = build_request(:start_lending_analysis, params)
+      req.send_request(options)
+    end
+
     # @!endgroup
 
     # @param params ({})
@@ -1029,7 +2121,7 @@ module Aws::Textract
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-textract'
-      context[:gem_version] = '1.24.0'
+      context[:gem_version] = '1.49.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

@@ -72,7 +72,9 @@ module Aws::SNS
     #
     # @return [self]
     def load
-      resp = @client.get_endpoint_attributes(endpoint_arn: @arn)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_endpoint_attributes(endpoint_arn: @arn)
+      end
       @data = resp.data
       self
     end
@@ -102,7 +104,9 @@ module Aws::SNS
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(endpoint_arn: @arn)
-      resp = @client.delete_endpoint(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_endpoint(options)
+      end
       resp.data
     end
 
@@ -220,7 +224,7 @@ module Aws::SNS
     # @option options [String] :message_deduplication_id
     #   This parameter applies only to FIFO (first-in-first-out) topics. The
     #   `MessageDeduplicationId` can contain up to 128 alphanumeric characters
-    #   (a-z, A-Z, 0-9) and punctuation ``
+    #   `(a-z, A-Z, 0-9)` and punctuation ``
     #   (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~) ``.
     #
     #   Every message must have a unique `MessageDeduplicationId`, which is a
@@ -234,8 +238,8 @@ module Aws::SNS
     #   `MessageDeduplicationId` overrides the generated one.
     # @option options [String] :message_group_id
     #   This parameter applies only to FIFO (first-in-first-out) topics. The
-    #   `MessageGroupId` can contain up to 128 alphanumeric characters (a-z,
-    #   A-Z, 0-9) and punctuation `` (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~) ``.
+    #   `MessageGroupId` can contain up to 128 alphanumeric characters `(a-z,
+    #   A-Z, 0-9)` and punctuation `` (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~) ``.
     #
     #   The `MessageGroupId` is a tag that specifies that a message belongs to
     #   a specific message group. Messages that belong to the same message
@@ -245,7 +249,9 @@ module Aws::SNS
     # @return [Types::PublishResponse]
     def publish(options = {})
       options = options.merge(target_arn: @arn)
-      resp = @client.publish(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.publish(options)
+      end
       resp.data
     end
 
@@ -277,7 +283,9 @@ module Aws::SNS
     # @return [EmptyStructure]
     def set_attributes(options = {})
       options = options.merge(endpoint_arn: @arn)
-      resp = @client.set_endpoint_attributes(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.set_endpoint_attributes(options)
+      end
       resp.data
     end
 

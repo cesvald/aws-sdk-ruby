@@ -10,14 +10,6 @@
 module Aws::EMRContainers
   module Types
 
-    # @note When making an API call, you may pass CancelJobRunRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ResourceIdString", # required
-    #         virtual_cluster_id: "ResourceIdString", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the job run to cancel.
     #   @return [String]
@@ -54,16 +46,29 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
+    # The entity representing certificate data generated for managed
+    # endpoint.
+    #
+    # @!attribute [rw] certificate_arn
+    #   The ARN of the certificate generated for managed endpoint.
+    #   @return [String]
+    #
+    # @!attribute [rw] certificate_data
+    #   The base64 encoded PEM certificate data generated for managed
+    #   endpoint.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/Certificate AWS API Documentation
+    #
+    class Certificate < Struct.new(
+      :certificate_arn,
+      :certificate_data)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A configuration for CloudWatch monitoring. You can configure your jobs
     # to send log information to CloudWatch Logs.
-    #
-    # @note When making an API call, you may pass CloudWatchMonitoringConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         log_group_name: "LogGroupName", # required
-    #         log_stream_name_prefix: "String256",
-    #       }
     #
     # @!attribute [rw] log_group_name
     #   The name of the log group for log publishing.
@@ -88,27 +93,6 @@ module Aws::EMRContainers
     # classification, properties, and optional nested configurations. A
     # classification refers to an application-specific configuration file.
     # Properties are the settings you want to change in that file.
-    #
-    # @note When making an API call, you may pass Configuration
-    #   data as a hash:
-    #
-    #       {
-    #         classification: "String1024", # required
-    #         properties: {
-    #           "String1024" => "String1024",
-    #         },
-    #         configurations: [
-    #           {
-    #             classification: "String1024", # required
-    #             properties: {
-    #               "String1024" => "String1024",
-    #             },
-    #             configurations: {
-    #               # recursive ConfigurationList
-    #             },
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] classification
     #   The classification within a configuration.
@@ -136,33 +120,6 @@ module Aws::EMRContainers
     # A configuration specification to be used to override existing
     # configurations.
     #
-    # @note When making an API call, you may pass ConfigurationOverrides
-    #   data as a hash:
-    #
-    #       {
-    #         application_configuration: [
-    #           {
-    #             classification: "String1024", # required
-    #             properties: {
-    #               "String1024" => "String1024",
-    #             },
-    #             configurations: {
-    #               # recursive ConfigurationList
-    #             },
-    #           },
-    #         ],
-    #         monitoring_configuration: {
-    #           persistent_app_ui: "ENABLED", # accepts ENABLED, DISABLED
-    #           cloud_watch_monitoring_configuration: {
-    #             log_group_name: "LogGroupName", # required
-    #             log_stream_name_prefix: "String256",
-    #           },
-    #           s3_monitoring_configuration: {
-    #             log_uri: "UriString", # required
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] application_configuration
     #   The configurations for the application running by the job run.
     #   @return [Array<Types::Configuration>]
@@ -183,45 +140,52 @@ module Aws::EMRContainers
     # The information about the container used for a job run or a managed
     # endpoint.
     #
-    # @note When making an API call, you may pass ContainerInfo
-    #   data as a hash:
+    # @note ContainerInfo is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         eks_info: {
-    #           namespace: "String256",
-    #         },
-    #       }
+    # @note ContainerInfo is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of ContainerInfo corresponding to the set member.
     #
     # @!attribute [rw] eks_info
-    #   The information about the EKS cluster.
+    #   The information about the Amazon EKS cluster.
     #   @return [Types::EksInfo]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/ContainerInfo AWS API Documentation
     #
     class ContainerInfo < Struct.new(
-      :eks_info)
+      :eks_info,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class EksInfo < ContainerInfo; end
+      class Unknown < ContainerInfo; end
+    end
+
+    # The settings for container log rotation.
+    #
+    # @!attribute [rw] rotation_size
+    #   The file size at which to rotate logs. Minimum of 2KB, Maximum of
+    #   2GB.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_files_to_keep
+    #   The number of files to keep in container after rotation.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/ContainerLogRotationConfiguration AWS API Documentation
+    #
+    class ContainerLogRotationConfiguration < Struct.new(
+      :rotation_size,
+      :max_files_to_keep)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # The information about the container provider.
     #
-    # @note When making an API call, you may pass ContainerProvider
-    #   data as a hash:
-    #
-    #       {
-    #         type: "EKS", # required, accepts EKS
-    #         id: "String256", # required
-    #         info: {
-    #           eks_info: {
-    #             namespace: "String256",
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] type
-    #   The type of the container provider. EKS is the only supported type
-    #   as of now.
+    #   The type of the container provider. Amazon EKS is the only supported
+    #   type as of now.
     #   @return [String]
     #
     # @!attribute [rw] id
@@ -242,45 +206,69 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateManagedEndpointRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The specified name of the job template.
+    #   @return [String]
     #
-    #       {
-    #         name: "ResourceNameString", # required
-    #         virtual_cluster_id: "ResourceIdString", # required
-    #         type: "EndpointType", # required
-    #         release_label: "ReleaseLabel", # required
-    #         execution_role_arn: "IAMRoleArn", # required
-    #         certificate_arn: "ACMCertArn", # required
-    #         configuration_overrides: {
-    #           application_configuration: [
-    #             {
-    #               classification: "String1024", # required
-    #               properties: {
-    #                 "String1024" => "String1024",
-    #               },
-    #               configurations: {
-    #                 # recursive ConfigurationList
-    #               },
-    #             },
-    #           ],
-    #           monitoring_configuration: {
-    #             persistent_app_ui: "ENABLED", # accepts ENABLED, DISABLED
-    #             cloud_watch_monitoring_configuration: {
-    #               log_group_name: "LogGroupName", # required
-    #               log_stream_name_prefix: "String256",
-    #             },
-    #             s3_monitoring_configuration: {
-    #               log_uri: "UriString", # required
-    #             },
-    #           },
-    #         },
-    #         client_token: "ClientToken", # required
-    #         tags: {
-    #           "String128" => "StringEmpty256",
-    #         },
-    #       }
+    # @!attribute [rw] client_token
+    #   The client token of the job template.
     #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @!attribute [rw] job_template_data
+    #   The job template data which holds values of StartJobRun API request.
+    #   @return [Types::JobTemplateData]
+    #
+    # @!attribute [rw] tags
+    #   The tags that are associated with the job template.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] kms_key_arn
+    #   The KMS key ARN used to encrypt the job template.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/CreateJobTemplateRequest AWS API Documentation
+    #
+    class CreateJobTemplateRequest < Struct.new(
+      :name,
+      :client_token,
+      :job_template_data,
+      :tags,
+      :kms_key_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] id
+    #   This output display the created job template ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   This output displays the name of the created job template.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   This output display the ARN of the created job template.
+    #   @return [String]
+    #
+    # @!attribute [rw] created_at
+    #   This output displays the date and time when the job template was
+    #   created.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/CreateJobTemplateResponse AWS API Documentation
+    #
+    class CreateJobTemplateResponse < Struct.new(
+      :id,
+      :name,
+      :arn,
+      :created_at)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] name
     #   The name of the managed endpoint.
     #   @return [String]
@@ -303,7 +291,8 @@ module Aws::EMRContainers
     #   @return [String]
     #
     # @!attribute [rw] certificate_arn
-    #   The certificate ARN of the managed endpoint.
+    #   The certificate ARN provided by users for the managed endpoint. This
+    #   field is under deprecation and will be removed in future releases.
     #   @return [String]
     #
     # @!attribute [rw] configuration_overrides
@@ -365,26 +354,6 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateVirtualClusterRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ResourceNameString", # required
-    #         container_provider: { # required
-    #           type: "EKS", # required, accepts EKS
-    #           id: "String256", # required
-    #           info: {
-    #             eks_info: {
-    #               namespace: "String256",
-    #             },
-    #           },
-    #         },
-    #         client_token: "ClientToken", # required
-    #         tags: {
-    #           "String128" => "StringEmpty256",
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   The specified name of the virtual cluster.
     #   @return [String]
@@ -437,14 +406,51 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteManagedEndpointRequest
-    #   data as a hash:
+    # The structure containing the session token being returned.
     #
-    #       {
-    #         id: "ResourceIdString", # required
-    #         virtual_cluster_id: "ResourceIdString", # required
-    #       }
+    # @note Credentials is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of Credentials corresponding to the set member.
     #
+    # @!attribute [rw] token
+    #   The actual session token being returned.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/Credentials AWS API Documentation
+    #
+    class Credentials < Struct.new(
+      :token,
+      :unknown)
+      SENSITIVE = [:token]
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class Token < Credentials; end
+      class Unknown < Credentials; end
+    end
+
+    # @!attribute [rw] id
+    #   The ID of the job template that will be deleted.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/DeleteJobTemplateRequest AWS API Documentation
+    #
+    class DeleteJobTemplateRequest < Struct.new(
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] id
+    #   This output contains the ID of the job template that was deleted.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/DeleteJobTemplateResponse AWS API Documentation
+    #
+    class DeleteJobTemplateResponse < Struct.new(
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] id
     #   The ID of the managed endpoint.
     #   @return [String]
@@ -479,13 +485,6 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteVirtualClusterRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ResourceIdString", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the virtual cluster that will be deleted.
     #   @return [String]
@@ -511,14 +510,6 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeJobRunRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ResourceIdString", # required
-    #         virtual_cluster_id: "ResourceIdString", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the job run request.
     #   @return [String]
@@ -548,14 +539,30 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeManagedEndpointRequest
-    #   data as a hash:
+    # @!attribute [rw] id
+    #   The ID of the job template that will be described.
+    #   @return [String]
     #
-    #       {
-    #         id: "ResourceIdString", # required
-    #         virtual_cluster_id: "ResourceIdString", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/DescribeJobTemplateRequest AWS API Documentation
     #
+    class DescribeJobTemplateRequest < Struct.new(
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] job_template
+    #   This output displays information about the specified job template.
+    #   @return [Types::JobTemplate]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/DescribeJobTemplateResponse AWS API Documentation
+    #
+    class DescribeJobTemplateResponse < Struct.new(
+      :job_template)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] id
     #   This output displays ID of the managed endpoint.
     #   @return [String]
@@ -585,13 +592,6 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeVirtualClusterRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ResourceIdString", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the virtual cluster that will be described.
     #   @return [String]
@@ -617,17 +617,10 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # The information about the EKS cluster.
-    #
-    # @note When making an API call, you may pass EksInfo
-    #   data as a hash:
-    #
-    #       {
-    #         namespace: "String256",
-    #       }
+    # The information about the Amazon EKS cluster.
     #
     # @!attribute [rw] namespace
-    #   The namespaces of the EKS cluster.
+    #   The namespaces of the Amazon EKS cluster.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/EksInfo AWS API Documentation
@@ -674,8 +667,14 @@ module Aws::EMRContainers
     #   @return [String]
     #
     # @!attribute [rw] certificate_arn
-    #   The certificate ARN of the endpoint.
+    #   The certificate ARN of the endpoint. This field is under deprecation
+    #   and will be removed in future.
     #   @return [String]
+    #
+    # @!attribute [rw] certificate_authority
+    #   The certificate generated by emr control plane on customer behalf to
+    #   secure the managed endpoint.
+    #   @return [Types::Certificate]
     #
     # @!attribute [rw] configuration_overrides
     #   The configuration settings that are used to override existing
@@ -698,6 +697,14 @@ module Aws::EMRContainers
     #   The subnet IDs of the endpoint.
     #   @return [Array<String>]
     #
+    # @!attribute [rw] state_details
+    #   Additional details of the endpoint state.
+    #   @return [String]
+    #
+    # @!attribute [rw] failure_reason
+    #   The reasons why the endpoint has failed.
+    #   @return [String]
+    #
     # @!attribute [rw] tags
     #   The tags of the endpoint.
     #   @return [Hash<String,String>]
@@ -714,12 +721,86 @@ module Aws::EMRContainers
       :release_label,
       :execution_role_arn,
       :certificate_arn,
+      :certificate_authority,
       :configuration_overrides,
       :server_url,
       :created_at,
       :security_group,
       :subnet_ids,
+      :state_details,
+      :failure_reason,
       :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] endpoint_identifier
+    #   The ARN of the managed endpoint for which the request is submitted.
+    #   @return [String]
+    #
+    # @!attribute [rw] virtual_cluster_identifier
+    #   The ARN of the Virtual Cluster which the Managed Endpoint belongs
+    #   to.
+    #   @return [String]
+    #
+    # @!attribute [rw] execution_role_arn
+    #   The IAM Execution Role ARN that will be used by the job run.
+    #   @return [String]
+    #
+    # @!attribute [rw] credential_type
+    #   Type of the token requested. Currently supported and default value
+    #   of this field is “TOKEN.”
+    #   @return [String]
+    #
+    # @!attribute [rw] duration_in_seconds
+    #   Duration in seconds for which the session token is valid. The
+    #   default duration is 15 minutes and the maximum is 12 hours.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] log_context
+    #   String identifier used to separate sections of the execution logs
+    #   uploaded to S3.
+    #   @return [String]
+    #
+    # @!attribute [rw] client_token
+    #   The client idempotency token of the job run request.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/GetManagedEndpointSessionCredentialsRequest AWS API Documentation
+    #
+    class GetManagedEndpointSessionCredentialsRequest < Struct.new(
+      :endpoint_identifier,
+      :virtual_cluster_identifier,
+      :execution_role_arn,
+      :credential_type,
+      :duration_in_seconds,
+      :log_context,
+      :client_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] id
+    #   The identifier of the session token returned.
+    #   @return [String]
+    #
+    # @!attribute [rw] credentials
+    #   The structure containing the session credentials.
+    #   @return [Types::Credentials]
+    #
+    # @!attribute [rw] expires_at
+    #   The date and time when the session token will expire.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/GetManagedEndpointSessionCredentialsResponse AWS API Documentation
+    #
+    class GetManagedEndpointSessionCredentialsResponse < Struct.new(
+      :id,
+      :credentials,
+      :expires_at)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -737,27 +818,23 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # Specify the driver that the job runs on.
-    #
-    # @note When making an API call, you may pass JobDriver
-    #   data as a hash:
-    #
-    #       {
-    #         spark_submit_job_driver: {
-    #           entry_point: "EntryPointPath", # required
-    #           entry_point_arguments: ["EntryPointArgument"],
-    #           spark_submit_parameters: "SparkSubmitParameters",
-    #         },
-    #       }
+    # Specify the driver that the job runs on. Exactly one of the two
+    # available job drivers is required, either sparkSqlJobDriver or
+    # sparkSubmitJobDriver.
     #
     # @!attribute [rw] spark_submit_job_driver
     #   The job driver parameters specified for spark submit.
     #   @return [Types::SparkSubmitJobDriver]
     #
+    # @!attribute [rw] spark_sql_job_driver
+    #   The job driver for job type.
+    #   @return [Types::SparkSqlJobDriver]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/JobDriver AWS API Documentation
     #
     class JobDriver < Struct.new(
-      :spark_submit_job_driver)
+      :spark_submit_job_driver,
+      :spark_sql_job_driver)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -831,6 +908,14 @@ module Aws::EMRContainers
     #   The assigned tags of the job run.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] retry_policy_configuration
+    #   The configuration of the retry policy that the job runs on.
+    #   @return [Types::RetryPolicyConfiguration]
+    #
+    # @!attribute [rw] retry_policy_execution
+    #   The current status of the retry policy executed on the job.
+    #   @return [Types::RetryPolicyExecution]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/JobRun AWS API Documentation
     #
     class JobRun < Struct.new(
@@ -849,24 +934,114 @@ module Aws::EMRContainers
       :finished_at,
       :state_details,
       :failure_reason,
-      :tags)
+      :tags,
+      :retry_policy_configuration,
+      :retry_policy_execution)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListJobRunsRequest
-    #   data as a hash:
+    # This entity describes a job template. Job template stores values of
+    # StartJobRun API request in a template and can be used to start a job
+    # run. Job template allows two use cases: avoid repeating recurring
+    # StartJobRun API request values, enforcing certain values in
+    # StartJobRun API request.
     #
-    #       {
-    #         virtual_cluster_id: "ResourceIdString", # required
-    #         created_before: Time.now,
-    #         created_after: Time.now,
-    #         name: "ResourceNameString",
-    #         states: ["PENDING"], # accepts PENDING, SUBMITTED, RUNNING, FAILED, CANCELLED, CANCEL_PENDING, COMPLETED
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
+    # @!attribute [rw] name
+    #   The name of the job template.
+    #   @return [String]
     #
+    # @!attribute [rw] id
+    #   The ID of the job template.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   The ARN of the job template.
+    #   @return [String]
+    #
+    # @!attribute [rw] created_at
+    #   The date and time when the job template was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] created_by
+    #   The user who created the job template.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The tags assigned to the job template.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] job_template_data
+    #   The job template data which holds values of StartJobRun API request.
+    #   @return [Types::JobTemplateData]
+    #
+    # @!attribute [rw] kms_key_arn
+    #   The KMS key ARN used to encrypt the job template.
+    #   @return [String]
+    #
+    # @!attribute [rw] decryption_error
+    #   The error message in case the decryption of job template fails.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/JobTemplate AWS API Documentation
+    #
+    class JobTemplate < Struct.new(
+      :name,
+      :id,
+      :arn,
+      :created_at,
+      :created_by,
+      :tags,
+      :job_template_data,
+      :kms_key_arn,
+      :decryption_error)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The values of StartJobRun API requests used in job runs started using
+    # the job template.
+    #
+    # @!attribute [rw] execution_role_arn
+    #   The execution role ARN of the job run.
+    #   @return [String]
+    #
+    # @!attribute [rw] release_label
+    #   The release version of Amazon EMR.
+    #   @return [String]
+    #
+    # @!attribute [rw] configuration_overrides
+    #   The configuration settings that are used to override defaults
+    #   configuration.
+    #   @return [Types::ParametricConfigurationOverrides]
+    #
+    # @!attribute [rw] job_driver
+    #   Specify the driver that the job runs on. Exactly one of the two
+    #   available job drivers is required, either sparkSqlJobDriver or
+    #   sparkSubmitJobDriver.
+    #   @return [Types::JobDriver]
+    #
+    # @!attribute [rw] parameter_configuration
+    #   The configuration of parameters existing in the job template.
+    #   @return [Hash<String,Types::TemplateParameterConfiguration>]
+    #
+    # @!attribute [rw] job_tags
+    #   The tags assigned to jobs started using the job template.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/JobTemplateData AWS API Documentation
+    #
+    class JobTemplateData < Struct.new(
+      :execution_role_arn,
+      :release_label,
+      :configuration_overrides,
+      :job_driver,
+      :parameter_configuration,
+      :job_tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] virtual_cluster_id
     #   The ID of the virtual cluster for which to list the job run.
     #   @return [String]
@@ -926,19 +1101,50 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListManagedEndpointsRequest
-    #   data as a hash:
+    # @!attribute [rw] created_after
+    #   The date and time after which the job templates were created.
+    #   @return [Time]
     #
-    #       {
-    #         virtual_cluster_id: "ResourceIdString", # required
-    #         created_before: Time.now,
-    #         created_after: Time.now,
-    #         types: ["EndpointType"],
-    #         states: ["CREATING"], # accepts CREATING, ACTIVE, TERMINATING, TERMINATED, TERMINATED_WITH_ERRORS
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
+    # @!attribute [rw] created_before
+    #   The date and time before which the job templates were created.
+    #   @return [Time]
     #
+    # @!attribute [rw] max_results
+    #   The maximum number of job templates that can be listed.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   The token for the next set of job templates to return.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/ListJobTemplatesRequest AWS API Documentation
+    #
+    class ListJobTemplatesRequest < Struct.new(
+      :created_after,
+      :created_before,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] templates
+    #   This output lists information about the specified job templates.
+    #   @return [Array<Types::JobTemplate>]
+    #
+    # @!attribute [rw] next_token
+    #   This output displays the token for the next set of job templates.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/ListJobTemplatesResponse AWS API Documentation
+    #
+    class ListJobTemplatesResponse < Struct.new(
+      :templates,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] virtual_cluster_id
     #   The ID of the virtual cluster.
     #   @return [String]
@@ -998,13 +1204,6 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "RsiArn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of tagged resources.
     #   @return [String]
@@ -1029,26 +1228,13 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListVirtualClustersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         container_provider_id: "String1024",
-    #         container_provider_type: "EKS", # accepts EKS
-    #         created_after: Time.now,
-    #         created_before: Time.now,
-    #         states: ["RUNNING"], # accepts RUNNING, TERMINATING, TERMINATED, ARRESTED
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] container_provider_id
     #   The container provider ID of the virtual cluster.
     #   @return [String]
     #
     # @!attribute [rw] container_provider_type
-    #   The container provider type of the virtual cluster. EKS is the only
-    #   supported type as of now.
+    #   The container provider type of the virtual cluster. Amazon EKS is
+    #   the only supported type as of now.
     #   @return [String]
     #
     # @!attribute [rw] created_after
@@ -1104,20 +1290,6 @@ module Aws::EMRContainers
 
     # Configuration setting for monitoring.
     #
-    # @note When making an API call, you may pass MonitoringConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         persistent_app_ui: "ENABLED", # accepts ENABLED, DISABLED
-    #         cloud_watch_monitoring_configuration: {
-    #           log_group_name: "LogGroupName", # required
-    #           log_stream_name_prefix: "String256",
-    #         },
-    #         s3_monitoring_configuration: {
-    #           log_uri: "UriString", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] persistent_app_ui
     #   Monitoring configurations for the persistent application UI.
     #   @return [String]
@@ -1130,12 +1302,113 @@ module Aws::EMRContainers
     #   Amazon S3 configuration for monitoring log publishing.
     #   @return [Types::S3MonitoringConfiguration]
     #
+    # @!attribute [rw] container_log_rotation_configuration
+    #   Enable or disable container log rotation.
+    #   @return [Types::ContainerLogRotationConfiguration]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/MonitoringConfiguration AWS API Documentation
     #
     class MonitoringConfiguration < Struct.new(
       :persistent_app_ui,
       :cloud_watch_monitoring_configuration,
+      :s3_monitoring_configuration,
+      :container_log_rotation_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A configuration for CloudWatch monitoring. You can configure your jobs
+    # to send log information to CloudWatch Logs. This data type allows job
+    # template parameters to be specified within.
+    #
+    # @!attribute [rw] log_group_name
+    #   The name of the log group for log publishing.
+    #   @return [String]
+    #
+    # @!attribute [rw] log_stream_name_prefix
+    #   The specified name prefix for log streams.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/ParametricCloudWatchMonitoringConfiguration AWS API Documentation
+    #
+    class ParametricCloudWatchMonitoringConfiguration < Struct.new(
+      :log_group_name,
+      :log_stream_name_prefix)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A configuration specification to be used to override existing
+    # configurations. This data type allows job template parameters to be
+    # specified within.
+    #
+    # @!attribute [rw] application_configuration
+    #   The configurations for the application running by the job run.
+    #   @return [Array<Types::Configuration>]
+    #
+    # @!attribute [rw] monitoring_configuration
+    #   The configurations for monitoring.
+    #   @return [Types::ParametricMonitoringConfiguration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/ParametricConfigurationOverrides AWS API Documentation
+    #
+    class ParametricConfigurationOverrides < Struct.new(
+      :application_configuration,
+      :monitoring_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Configuration setting for monitoring. This data type allows job
+    # template parameters to be specified within.
+    #
+    # @!attribute [rw] persistent_app_ui
+    #   Monitoring configurations for the persistent application UI.
+    #   @return [String]
+    #
+    # @!attribute [rw] cloud_watch_monitoring_configuration
+    #   Monitoring configurations for CloudWatch.
+    #   @return [Types::ParametricCloudWatchMonitoringConfiguration]
+    #
+    # @!attribute [rw] s3_monitoring_configuration
+    #   Amazon S3 configuration for monitoring log publishing.
+    #   @return [Types::ParametricS3MonitoringConfiguration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/ParametricMonitoringConfiguration AWS API Documentation
+    #
+    class ParametricMonitoringConfiguration < Struct.new(
+      :persistent_app_ui,
+      :cloud_watch_monitoring_configuration,
       :s3_monitoring_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Amazon S3 configuration for monitoring log publishing. You can
+    # configure your jobs to send log information to Amazon S3. This data
+    # type allows job template parameters to be specified within.
+    #
+    # @!attribute [rw] log_uri
+    #   Amazon S3 destination URI for log publishing.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/ParametricS3MonitoringConfiguration AWS API Documentation
+    #
+    class ParametricS3MonitoringConfiguration < Struct.new(
+      :log_uri)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The request throttled.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/RequestThrottledException AWS API Documentation
+    #
+    class RequestThrottledException < Struct.new(
+      :message)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1153,15 +1426,36 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
+    # The configuration of the retry policy that the job runs on.
+    #
+    # @!attribute [rw] max_attempts
+    #   The maximum number of attempts on the job's driver.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/RetryPolicyConfiguration AWS API Documentation
+    #
+    class RetryPolicyConfiguration < Struct.new(
+      :max_attempts)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The current status of the retry policy executed on the job.
+    #
+    # @!attribute [rw] current_attempt_count
+    #   The current number of attempts made on the driver of the job.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/RetryPolicyExecution AWS API Documentation
+    #
+    class RetryPolicyExecution < Struct.new(
+      :current_attempt_count)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Amazon S3 configuration for monitoring log publishing. You can
     # configure your jobs to send log information to Amazon S3.
-    #
-    # @note When making an API call, you may pass S3MonitoringConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         log_uri: "UriString", # required
-    #       }
     #
     # @!attribute [rw] log_uri
     #   Amazon S3 destination URI for log publishing.
@@ -1175,16 +1469,26 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
+    # The job driver for job type.
+    #
+    # @!attribute [rw] entry_point
+    #   The SQL file to be executed.
+    #   @return [String]
+    #
+    # @!attribute [rw] spark_sql_parameters
+    #   The Spark parameters to be included in the Spark SQL command.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/SparkSqlJobDriver AWS API Documentation
+    #
+    class SparkSqlJobDriver < Struct.new(
+      :entry_point,
+      :spark_sql_parameters)
+      SENSITIVE = [:entry_point, :spark_sql_parameters]
+      include Aws::Structure
+    end
+
     # The information about job driver for Spark submit.
-    #
-    # @note When making an API call, you may pass SparkSubmitJobDriver
-    #   data as a hash:
-    #
-    #       {
-    #         entry_point: "EntryPointPath", # required
-    #         entry_point_arguments: ["EntryPointArgument"],
-    #         spark_submit_parameters: "SparkSubmitParameters",
-    #       }
     #
     # @!attribute [rw] entry_point
     #   The entry point of job application.
@@ -1208,50 +1512,6 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartJobRunRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ResourceNameString",
-    #         virtual_cluster_id: "ResourceIdString", # required
-    #         client_token: "ClientToken", # required
-    #         execution_role_arn: "IAMRoleArn", # required
-    #         release_label: "ReleaseLabel", # required
-    #         job_driver: { # required
-    #           spark_submit_job_driver: {
-    #             entry_point: "EntryPointPath", # required
-    #             entry_point_arguments: ["EntryPointArgument"],
-    #             spark_submit_parameters: "SparkSubmitParameters",
-    #           },
-    #         },
-    #         configuration_overrides: {
-    #           application_configuration: [
-    #             {
-    #               classification: "String1024", # required
-    #               properties: {
-    #                 "String1024" => "String1024",
-    #               },
-    #               configurations: {
-    #                 # recursive ConfigurationList
-    #               },
-    #             },
-    #           ],
-    #           monitoring_configuration: {
-    #             persistent_app_ui: "ENABLED", # accepts ENABLED, DISABLED
-    #             cloud_watch_monitoring_configuration: {
-    #               log_group_name: "LogGroupName", # required
-    #               log_stream_name_prefix: "String256",
-    #             },
-    #             s3_monitoring_configuration: {
-    #               log_uri: "UriString", # required
-    #             },
-    #           },
-    #         },
-    #         tags: {
-    #           "String128" => "StringEmpty256",
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the job run.
     #   @return [String]
@@ -1287,6 +1547,18 @@ module Aws::EMRContainers
     #   The tags assigned to job runs.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] job_template_id
+    #   The job template ID to be used to start the job run.
+    #   @return [String]
+    #
+    # @!attribute [rw] job_template_parameters
+    #   The values of job template parameters to start a job run.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] retry_policy_configuration
+    #   The retry policy configuration for the job run.
+    #   @return [Types::RetryPolicyConfiguration]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/StartJobRunRequest AWS API Documentation
     #
     class StartJobRunRequest < Struct.new(
@@ -1297,7 +1569,10 @@ module Aws::EMRContainers
       :release_label,
       :job_driver,
       :configuration_overrides,
-      :tags)
+      :tags,
+      :job_template_id,
+      :job_template_parameters,
+      :retry_policy_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1330,16 +1605,6 @@ module Aws::EMRContainers
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "RsiArn", # required
-    #         tags: { # required
-    #           "String128" => "StringEmpty256",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of resources.
     #   @return [String]
@@ -1361,14 +1626,26 @@ module Aws::EMRContainers
     #
     class TagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
+    # The configuration of a job template parameter.
     #
-    #       {
-    #         resource_arn: "RsiArn", # required
-    #         tag_keys: ["String128"], # required
-    #       }
+    # @!attribute [rw] type
+    #   The type of the job template parameter. Allowed values are:
+    #   ‘STRING’, ‘NUMBER’.
+    #   @return [String]
     #
+    # @!attribute [rw] default_value
+    #   The default value for the job template parameter.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/emr-containers-2020-10-01/TemplateParameterConfiguration AWS API Documentation
+    #
+    class TemplateParameterConfiguration < Struct.new(
+      :type,
+      :default_value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The ARN of resources.
     #   @return [String]
@@ -1407,9 +1684,9 @@ module Aws::EMRContainers
     # Kubernetes namespace that Amazon EMR is registered with. Amazon EMR
     # uses virtual clusters to run jobs and host endpoints. Multiple virtual
     # clusters can be backed by the same physical cluster. However, each
-    # virtual cluster maps to one namespace on an EKS cluster. Virtual
-    # clusters do not create any active resources that contribute to your
-    # bill or that require lifecycle management outside the service.
+    # virtual cluster maps to one namespace on an Amazon EKS cluster.
+    # Virtual clusters do not create any active resources that contribute to
+    # your bill or that require lifecycle management outside the service.
     #
     # @!attribute [rw] id
     #   The ID of the virtual cluster.

@@ -1,6 +1,46 @@
 Unreleased Changes
 ------------------
 
+1.10.0 (2023-05-08)
+------------------
+
+* Feature - Documentation updates for AWS Security Token Service.
+
+1.9.0 (2023-01-25)
+------------------
+
+* Feature - Doc only change to update wording in a key topic
+
+1.8.0 (2022-11-17)
+------------------
+
+* Feature - Documentation updates for AWS Security Token Service.
+
+1.7.0 (2022-05-16)
+------------------
+
+* Feature - Documentation updates for AWS Security Token Service.
+
+1.6.0 (2022-03-04)
+------------------
+
+* Feature - Documentation updates for AWS Security Token Service.
+
+1.5.0 (2021-11-23)
+------------------
+
+* Feature - Documentation updates for AWS Security Token Service.
+
+1.4.0 (2021-09-01)
+------------------
+
+* Feature - AWS SDK for Ruby no longer supports Ruby runtime versions 1.9, 2.0, 2.1, and 2.2.
+
+1.3.0 (2021-07-07)
+------------------
+
+* Feature - Documentation updates for AWS Security Token Service.
+
 1.2.0 (2021-04-15)
 ------------------
 

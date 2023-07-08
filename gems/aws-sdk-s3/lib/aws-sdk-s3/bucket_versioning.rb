@@ -63,7 +63,9 @@ module Aws::S3
     #
     # @return [self]
     def load
-      resp = @client.get_bucket_versioning(bucket: @bucket_name)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_bucket_versioning(bucket: @bucket_name)
+      end
       @data = resp.data
       self
     end
@@ -178,7 +180,9 @@ module Aws::S3
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -187,6 +191,7 @@ module Aws::S3
     #
     #   bucket_versioning.enable({
     #     content_md5: "ContentMD5",
+    #     checksum_algorithm: "CRC32", # accepts CRC32, CRC32C, SHA1, SHA256
     #     mfa: "MFA",
     #     expected_bucket_owner: "AccountId",
     #   })
@@ -197,19 +202,35 @@ module Aws::S3
     #   body was not corrupted in transit. For more information, see [RFC
     #   1864][1].
     #
-    #   For requests made using the AWS Command Line Interface (CLI) or AWS
-    #   SDKs, this field is calculated automatically.
+    #   For requests made using the Amazon Web Services Command Line Interface
+    #   (CLI) or Amazon Web Services SDKs, this field is calculated
+    #   automatically.
     #
     #
     #
     #   [1]: http://www.ietf.org/rfc/rfc1864.txt
+    # @option options [String] :checksum_algorithm
+    #   Indicates the algorithm used to create the checksum for the object
+    #   when using the SDK. This header will not provide any additional
+    #   functionality if not using the SDK. When sending this header, there
+    #   must be a corresponding `x-amz-checksum` or `x-amz-trailer` header
+    #   sent. Otherwise, Amazon S3 fails the request with the HTTP status code
+    #   `400 Bad Request`. For more information, see [Checking object
+    #   integrity][1] in the *Amazon S3 User Guide*.
+    #
+    #   If you provide an individual checksum, Amazon S3 ignores any provided
+    #   `ChecksumAlgorithm` parameter.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html
     # @option options [String] :mfa
     #   The concatenation of the authentication device's serial number, a
     #   space, and the value that is displayed on your authentication device.
     # @option options [String] :expected_bucket_owner
     #   The account ID of the expected bucket owner. If the bucket is owned by
-    #   a different account, the request will fail with an HTTP `403 (Access
-    #   Denied)` error.
+    #   a different account, the request fails with the HTTP status code `403
+    #   Forbidden` (access denied).
     # @return [EmptyStructure]
     def enable(options = {})
       options = Aws::Util.deep_merge(options,
@@ -218,7 +239,9 @@ module Aws::S3
           status: "Enabled"
         }
       )
-      resp = @client.put_bucket_versioning(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.put_bucket_versioning(options)
+      end
       resp.data
     end
 
@@ -226,6 +249,7 @@ module Aws::S3
     #
     #   bucket_versioning.put({
     #     content_md5: "ContentMD5",
+    #     checksum_algorithm: "CRC32", # accepts CRC32, CRC32C, SHA1, SHA256
     #     mfa: "MFA",
     #     versioning_configuration: { # required
     #       mfa_delete: "Enabled", # accepts Enabled, Disabled
@@ -240,12 +264,28 @@ module Aws::S3
     #   body was not corrupted in transit. For more information, see [RFC
     #   1864][1].
     #
-    #   For requests made using the AWS Command Line Interface (CLI) or AWS
-    #   SDKs, this field is calculated automatically.
+    #   For requests made using the Amazon Web Services Command Line Interface
+    #   (CLI) or Amazon Web Services SDKs, this field is calculated
+    #   automatically.
     #
     #
     #
     #   [1]: http://www.ietf.org/rfc/rfc1864.txt
+    # @option options [String] :checksum_algorithm
+    #   Indicates the algorithm used to create the checksum for the object
+    #   when using the SDK. This header will not provide any additional
+    #   functionality if not using the SDK. When sending this header, there
+    #   must be a corresponding `x-amz-checksum` or `x-amz-trailer` header
+    #   sent. Otherwise, Amazon S3 fails the request with the HTTP status code
+    #   `400 Bad Request`. For more information, see [Checking object
+    #   integrity][1] in the *Amazon S3 User Guide*.
+    #
+    #   If you provide an individual checksum, Amazon S3 ignores any provided
+    #   `ChecksumAlgorithm` parameter.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html
     # @option options [String] :mfa
     #   The concatenation of the authentication device's serial number, a
     #   space, and the value that is displayed on your authentication device.
@@ -253,12 +293,14 @@ module Aws::S3
     #   Container for setting the versioning state.
     # @option options [String] :expected_bucket_owner
     #   The account ID of the expected bucket owner. If the bucket is owned by
-    #   a different account, the request will fail with an HTTP `403 (Access
-    #   Denied)` error.
+    #   a different account, the request fails with the HTTP status code `403
+    #   Forbidden` (access denied).
     # @return [EmptyStructure]
     def put(options = {})
       options = options.merge(bucket: @bucket_name)
-      resp = @client.put_bucket_versioning(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.put_bucket_versioning(options)
+      end
       resp.data
     end
 
@@ -266,6 +308,7 @@ module Aws::S3
     #
     #   bucket_versioning.suspend({
     #     content_md5: "ContentMD5",
+    #     checksum_algorithm: "CRC32", # accepts CRC32, CRC32C, SHA1, SHA256
     #     mfa: "MFA",
     #     expected_bucket_owner: "AccountId",
     #   })
@@ -276,19 +319,35 @@ module Aws::S3
     #   body was not corrupted in transit. For more information, see [RFC
     #   1864][1].
     #
-    #   For requests made using the AWS Command Line Interface (CLI) or AWS
-    #   SDKs, this field is calculated automatically.
+    #   For requests made using the Amazon Web Services Command Line Interface
+    #   (CLI) or Amazon Web Services SDKs, this field is calculated
+    #   automatically.
     #
     #
     #
     #   [1]: http://www.ietf.org/rfc/rfc1864.txt
+    # @option options [String] :checksum_algorithm
+    #   Indicates the algorithm used to create the checksum for the object
+    #   when using the SDK. This header will not provide any additional
+    #   functionality if not using the SDK. When sending this header, there
+    #   must be a corresponding `x-amz-checksum` or `x-amz-trailer` header
+    #   sent. Otherwise, Amazon S3 fails the request with the HTTP status code
+    #   `400 Bad Request`. For more information, see [Checking object
+    #   integrity][1] in the *Amazon S3 User Guide*.
+    #
+    #   If you provide an individual checksum, Amazon S3 ignores any provided
+    #   `ChecksumAlgorithm` parameter.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html
     # @option options [String] :mfa
     #   The concatenation of the authentication device's serial number, a
     #   space, and the value that is displayed on your authentication device.
     # @option options [String] :expected_bucket_owner
     #   The account ID of the expected bucket owner. If the bucket is owned by
-    #   a different account, the request will fail with an HTTP `403 (Access
-    #   Denied)` error.
+    #   a different account, the request fails with the HTTP status code `403
+    #   Forbidden` (access denied).
     # @return [EmptyStructure]
     def suspend(options = {})
       options = Aws::Util.deep_merge(options,
@@ -297,7 +356,9 @@ module Aws::S3
           status: "Suspended"
         }
       )
-      resp = @client.put_bucket_versioning(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.put_bucket_versioning(options)
+      end
       resp.data
     end
 

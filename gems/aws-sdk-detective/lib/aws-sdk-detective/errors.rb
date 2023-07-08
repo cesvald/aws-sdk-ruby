@@ -27,10 +27,12 @@ module Aws::Detective
   # See {Seahorse::Client::RequestContext} for more information.
   #
   # ## Error Classes
+  # * {AccessDeniedException}
   # * {ConflictException}
   # * {InternalServerException}
   # * {ResourceNotFoundException}
   # * {ServiceQuotaExceededException}
+  # * {TooManyRequestsException}
   # * {ValidationException}
   #
   # Additionally, error classes are dynamically generated for service errors based on the error code
@@ -38,6 +40,41 @@ module Aws::Detective
   module Errors
 
     extend Aws::Errors::DynamicErrors
+
+    class AccessDeniedException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Detective::Types::AccessDeniedException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+
+      # @return [String]
+      def error_code
+        @data[:error_code]
+      end
+
+      # @return [String]
+      def error_code_reason
+        @data[:error_code_reason]
+      end
+
+      # @return [String]
+      def sub_error_code
+        @data[:sub_error_code]
+      end
+
+      # @return [String]
+      def sub_error_code_reason
+        @data[:sub_error_code_reason]
+      end
+    end
 
     class ConflictException < ServiceError
 
@@ -97,6 +134,26 @@ module Aws::Detective
       def message
         @message || @data[:message]
       end
+
+      # @return [String]
+      def resources
+        @data[:resources]
+      end
+    end
+
+    class TooManyRequestsException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Detective::Types::TooManyRequestsException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
     end
 
     class ValidationException < ServiceError
@@ -111,6 +168,16 @@ module Aws::Detective
       # @return [String]
       def message
         @message || @data[:message]
+      end
+
+      # @return [String]
+      def error_code
+        @data[:error_code]
+      end
+
+      # @return [String]
+      def error_code_reason
+        @data[:error_code_reason]
       end
     end
 

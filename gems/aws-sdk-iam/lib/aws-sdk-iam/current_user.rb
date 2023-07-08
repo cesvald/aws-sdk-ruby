@@ -80,12 +80,13 @@ module Aws::IAM
     end
 
     # The date and time, in [ISO 8601 date-time format][1], when the user's
-    # password was last used to sign in to an AWS website. For a list of AWS
-    # websites that capture a user's last sign-in time, see the [Credential
-    # reports][2] topic in the *IAM User Guide*. If a password is used more
-    # than once in a five-minute span, only the first use is returned in
-    # this field. If the field is null (no value), then it indicates that
-    # they never signed in with a password. This can be because:
+    # password was last used to sign in to an Amazon Web Services website.
+    # For a list of Amazon Web Services websites that capture a user's last
+    # sign-in time, see the [Credential reports][2] topic in the *IAM User
+    # Guide*. If a password is used more than once in a five-minute span,
+    # only the first use is returned in this field. If the field is null (no
+    # value), then it indicates that they never signed in with a password.
+    # This can be because:
     #
     # * The user never had a password.
     #
@@ -144,7 +145,9 @@ module Aws::IAM
     #
     # @return [self]
     def load
-      resp = @client.get_user
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_user
+      end
       @data = resp.user
       self
     end
@@ -259,7 +262,9 @@ module Aws::IAM
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Associations
@@ -284,7 +289,9 @@ module Aws::IAM
     # @return [AccessKey::Collection]
     def access_keys(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_access_keys(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_access_keys(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.access_key_metadata.each do |a|
@@ -321,7 +328,9 @@ module Aws::IAM
     # @return [MfaDevice::Collection]
     def mfa_devices(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_mfa_devices(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_mfa_devices(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.mfa_devices.each do |m|
@@ -359,7 +368,9 @@ module Aws::IAM
     # @return [SigningCertificate::Collection]
     def signing_certificates(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_signing_certificates(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_signing_certificates(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.certificates.each do |c|

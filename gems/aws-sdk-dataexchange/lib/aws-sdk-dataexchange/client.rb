@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:dataexchange)
@@ -73,8 +77,13 @@ module Aws::DataExchange
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::DataExchange::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::DataExchange
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::DataExchange
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::DataExchange
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::DataExchange
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::DataExchange
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::DataExchange::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::DataExchange::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::DataExchange
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::DataExchange
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -331,6 +388,7 @@ module Aws::DataExchange
     # in the WAITING state.
     #
     # @option params [required, String] :job_id
+    #   The unique identifier for a job.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -352,8 +410,7 @@ module Aws::DataExchange
     # This operation creates a data set.
     #
     # @option params [required, String] :asset_type
-    #   The type of file your data is stored in. Currently, the supported
-    #   asset type is S3\_SNAPSHOT.
+    #   The type of asset that is added to a data set.
     #
     # @option params [required, String] :description
     #   A description for the data set. This value can be up to 16,348
@@ -386,7 +443,7 @@ module Aws::DataExchange
     # @example Request syntax with placeholder values
     #
     #   resp = client.create_data_set({
-    #     asset_type: "S3_SNAPSHOT", # required, accepts S3_SNAPSHOT
+    #     asset_type: "S3_SNAPSHOT", # required, accepts S3_SNAPSHOT, REDSHIFT_DATA_SHARE, API_GATEWAY_API, S3_DATA_ACCESS, LAKE_FORMATION_DATA_PERMISSION
     #     description: "Description", # required
     #     name: "Name", # required
     #     tags: {
@@ -397,7 +454,7 @@ module Aws::DataExchange
     # @example Response structure
     #
     #   resp.arn #=> String
-    #   resp.asset_type #=> String, one of "S3_SNAPSHOT"
+    #   resp.asset_type #=> String, one of "S3_SNAPSHOT", "REDSHIFT_DATA_SHARE", "API_GATEWAY_API", "S3_DATA_ACCESS", "LAKE_FORMATION_DATA_PERMISSION"
     #   resp.created_at #=> Time
     #   resp.description #=> String
     #   resp.id #=> String
@@ -415,6 +472,66 @@ module Aws::DataExchange
     # @param [Hash] params ({})
     def create_data_set(params = {}, options = {})
       req = build_request(:create_data_set, params)
+      req.send_request(options)
+    end
+
+    # This operation creates an event action.
+    #
+    # @option params [required, Types::Action] :action
+    #   What occurs after a certain event.
+    #
+    # @option params [required, Types::Event] :event
+    #   What occurs to start an action.
+    #
+    # @return [Types::CreateEventActionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateEventActionResponse#action #action} => Types::Action
+    #   * {Types::CreateEventActionResponse#arn #arn} => String
+    #   * {Types::CreateEventActionResponse#created_at #created_at} => Time
+    #   * {Types::CreateEventActionResponse#event #event} => Types::Event
+    #   * {Types::CreateEventActionResponse#id #id} => String
+    #   * {Types::CreateEventActionResponse#updated_at #updated_at} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_event_action({
+    #     action: { # required
+    #       export_revision_to_s3: {
+    #         encryption: {
+    #           kms_key_arn: "__string",
+    #           type: "aws:kms", # required, accepts aws:kms, AES256
+    #         },
+    #         revision_destination: { # required
+    #           bucket: "__string", # required
+    #           key_pattern: "__string",
+    #         },
+    #       },
+    #     },
+    #     event: { # required
+    #       revision_published: {
+    #         data_set_id: "Id", # required
+    #       },
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.action.export_revision_to_s3.encryption.kms_key_arn #=> String
+    #   resp.action.export_revision_to_s3.encryption.type #=> String, one of "aws:kms", "AES256"
+    #   resp.action.export_revision_to_s3.revision_destination.bucket #=> String
+    #   resp.action.export_revision_to_s3.revision_destination.key_pattern #=> String
+    #   resp.arn #=> String
+    #   resp.created_at #=> Time
+    #   resp.event.revision_published.data_set_id #=> String
+    #   resp.id #=> String
+    #   resp.updated_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/CreateEventAction AWS API Documentation
+    #
+    # @overload create_event_action(params = {})
+    # @param [Hash] params ({})
+    def create_event_action(params = {}, options = {})
+      req = build_request(:create_event_action, params)
       req.send_request(options)
     end
 
@@ -491,8 +608,66 @@ module Aws::DataExchange
     #         data_set_id: "Id", # required
     #         revision_id: "Id", # required
     #       },
+    #       import_assets_from_redshift_data_shares: {
+    #         asset_sources: [ # required
+    #           {
+    #             data_share_arn: "__string", # required
+    #           },
+    #         ],
+    #         data_set_id: "Id", # required
+    #         revision_id: "Id", # required
+    #       },
+    #       import_asset_from_api_gateway_api: {
+    #         api_description: "ApiDescription",
+    #         api_id: "__string", # required
+    #         api_key: "__string",
+    #         api_name: "__string", # required
+    #         api_specification_md_5_hash: "__stringMin24Max24PatternAZaZ094AZaZ092AZaZ093", # required
+    #         data_set_id: "Id", # required
+    #         protocol_type: "REST", # required, accepts REST
+    #         revision_id: "Id", # required
+    #         stage: "__string", # required
+    #       },
+    #       create_s3_data_access_from_s3_bucket: {
+    #         asset_source: { # required
+    #           bucket: "__string", # required
+    #           key_prefixes: ["__string"],
+    #           keys: ["__string"],
+    #           kms_keys_to_grant: [
+    #             {
+    #               kms_key_arn: "KmsKeyArn", # required
+    #             },
+    #           ],
+    #         },
+    #         data_set_id: "Id", # required
+    #         revision_id: "Id", # required
+    #       },
+    #       import_assets_from_lake_formation_tag_policy: {
+    #         catalog_id: "AwsAccountId", # required
+    #         database: {
+    #           expression: [ # required
+    #             {
+    #               tag_key: "String", # required
+    #               tag_values: ["String"], # required
+    #             },
+    #           ],
+    #           permissions: ["DESCRIBE"], # required, accepts DESCRIBE
+    #         },
+    #         table: {
+    #           expression: [ # required
+    #             {
+    #               tag_key: "String", # required
+    #               tag_values: ["String"], # required
+    #             },
+    #           ],
+    #           permissions: ["DESCRIBE"], # required, accepts DESCRIBE, SELECT
+    #         },
+    #         role_arn: "RoleArn", # required
+    #         data_set_id: "Id", # required
+    #         revision_id: "Id", # required
+    #       },
     #     },
-    #     type: "IMPORT_ASSETS_FROM_S3", # required, accepts IMPORT_ASSETS_FROM_S3, IMPORT_ASSET_FROM_SIGNED_URL, EXPORT_ASSETS_TO_S3, EXPORT_ASSET_TO_SIGNED_URL, EXPORT_REVISIONS_TO_S3
+    #     type: "IMPORT_ASSETS_FROM_S3", # required, accepts IMPORT_ASSETS_FROM_S3, IMPORT_ASSET_FROM_SIGNED_URL, EXPORT_ASSETS_TO_S3, EXPORT_ASSET_TO_SIGNED_URL, EXPORT_REVISIONS_TO_S3, IMPORT_ASSETS_FROM_REDSHIFT_DATA_SHARES, IMPORT_ASSET_FROM_API_GATEWAY_API, CREATE_S3_DATA_ACCESS_FROM_S3_BUCKET, IMPORT_ASSETS_FROM_LAKE_FORMATION_TAG_POLICY
     #   })
     #
     # @example Response structure
@@ -519,6 +694,7 @@ module Aws::DataExchange
     #   resp.details.export_revisions_to_s3.revision_destinations[0].bucket #=> String
     #   resp.details.export_revisions_to_s3.revision_destinations[0].key_pattern #=> String
     #   resp.details.export_revisions_to_s3.revision_destinations[0].revision_id #=> String
+    #   resp.details.export_revisions_to_s3.event_action_arn #=> String
     #   resp.details.import_asset_from_signed_url.asset_name #=> String
     #   resp.details.import_asset_from_signed_url.data_set_id #=> String
     #   resp.details.import_asset_from_signed_url.md_5_hash #=> String
@@ -530,20 +706,60 @@ module Aws::DataExchange
     #   resp.details.import_assets_from_s3.asset_sources[0].key #=> String
     #   resp.details.import_assets_from_s3.data_set_id #=> String
     #   resp.details.import_assets_from_s3.revision_id #=> String
+    #   resp.details.import_assets_from_redshift_data_shares.asset_sources #=> Array
+    #   resp.details.import_assets_from_redshift_data_shares.asset_sources[0].data_share_arn #=> String
+    #   resp.details.import_assets_from_redshift_data_shares.data_set_id #=> String
+    #   resp.details.import_assets_from_redshift_data_shares.revision_id #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_description #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_id #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_key #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_name #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_specification_md_5_hash #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_specification_upload_url #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_specification_upload_url_expires_at #=> Time
+    #   resp.details.import_asset_from_api_gateway_api.data_set_id #=> String
+    #   resp.details.import_asset_from_api_gateway_api.protocol_type #=> String, one of "REST"
+    #   resp.details.import_asset_from_api_gateway_api.revision_id #=> String
+    #   resp.details.import_asset_from_api_gateway_api.stage #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.bucket #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.key_prefixes #=> Array
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.key_prefixes[0] #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.keys #=> Array
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.keys[0] #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.kms_keys_to_grant #=> Array
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.kms_keys_to_grant[0].kms_key_arn #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.data_set_id #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.revision_id #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.catalog_id #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.expression #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.expression[0].tag_key #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.expression[0].tag_values #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.expression[0].tag_values[0] #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.permissions #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.permissions[0] #=> String, one of "DESCRIBE"
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.expression #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.expression[0].tag_key #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.expression[0].tag_values #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.expression[0].tag_values[0] #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.permissions #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.permissions[0] #=> String, one of "DESCRIBE", "SELECT"
+    #   resp.details.import_assets_from_lake_formation_tag_policy.role_arn #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.data_set_id #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.revision_id #=> String
     #   resp.errors #=> Array
     #   resp.errors[0].code #=> String, one of "ACCESS_DENIED_EXCEPTION", "INTERNAL_SERVER_EXCEPTION", "MALWARE_DETECTED", "RESOURCE_NOT_FOUND_EXCEPTION", "SERVICE_QUOTA_EXCEEDED_EXCEPTION", "VALIDATION_EXCEPTION", "MALWARE_SCAN_ENCRYPTED_FILE"
     #   resp.errors[0].details.import_asset_from_signed_url_job_error_details.asset_name #=> String
     #   resp.errors[0].details.import_assets_from_s3_job_error_details #=> Array
     #   resp.errors[0].details.import_assets_from_s3_job_error_details[0].bucket #=> String
     #   resp.errors[0].details.import_assets_from_s3_job_error_details[0].key #=> String
-    #   resp.errors[0].limit_name #=> String, one of "Assets per revision", "Asset size in GB"
+    #   resp.errors[0].limit_name #=> String, one of "Assets per revision", "Asset size in GB", "Amazon Redshift datashare assets per revision", "AWS Lake Formation data permission assets per revision", "Amazon S3 data access assets per revision"
     #   resp.errors[0].limit_value #=> Float
     #   resp.errors[0].message #=> String
     #   resp.errors[0].resource_id #=> String
-    #   resp.errors[0].resource_type #=> String, one of "REVISION", "ASSET"
+    #   resp.errors[0].resource_type #=> String, one of "REVISION", "ASSET", "DATA_SET"
     #   resp.id #=> String
     #   resp.state #=> String, one of "WAITING", "IN_PROGRESS", "ERROR", "COMPLETED", "CANCELLED", "TIMED_OUT"
-    #   resp.type #=> String, one of "IMPORT_ASSETS_FROM_S3", "IMPORT_ASSET_FROM_SIGNED_URL", "EXPORT_ASSETS_TO_S3", "EXPORT_ASSET_TO_SIGNED_URL", "EXPORT_REVISIONS_TO_S3"
+    #   resp.type #=> String, one of "IMPORT_ASSETS_FROM_S3", "IMPORT_ASSET_FROM_SIGNED_URL", "EXPORT_ASSETS_TO_S3", "EXPORT_ASSET_TO_SIGNED_URL", "EXPORT_REVISIONS_TO_S3", "IMPORT_ASSETS_FROM_REDSHIFT_DATA_SHARES", "IMPORT_ASSET_FROM_API_GATEWAY_API", "CREATE_S3_DATA_ACCESS_FROM_S3_BUCKET", "IMPORT_ASSETS_FROM_LAKE_FORMATION_TAG_POLICY"
     #   resp.updated_at #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/CreateJob AWS API Documentation
@@ -561,6 +777,7 @@ module Aws::DataExchange
     #   An optional comment about the revision.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [Hash<String,String>] :tags
     #   A revision tag is an optional label that you can assign to a revision
@@ -580,6 +797,9 @@ module Aws::DataExchange
     #   * {Types::CreateRevisionResponse#source_id #source_id} => String
     #   * {Types::CreateRevisionResponse#tags #tags} => Hash&lt;String,String&gt;
     #   * {Types::CreateRevisionResponse#updated_at #updated_at} => Time
+    #   * {Types::CreateRevisionResponse#revocation_comment #revocation_comment} => String
+    #   * {Types::CreateRevisionResponse#revoked #revoked} => Boolean
+    #   * {Types::CreateRevisionResponse#revoked_at #revoked_at} => Time
     #
     # @example Request syntax with placeholder values
     #
@@ -603,6 +823,9 @@ module Aws::DataExchange
     #   resp.tags #=> Hash
     #   resp.tags["__string"] #=> String
     #   resp.updated_at #=> Time
+    #   resp.revocation_comment #=> String
+    #   resp.revoked #=> Boolean
+    #   resp.revoked_at #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/CreateRevision AWS API Documentation
     #
@@ -616,10 +839,13 @@ module Aws::DataExchange
     # This operation deletes an asset.
     #
     # @option params [required, String] :asset_id
+    #   The unique identifier for an asset.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [required, String] :revision_id
+    #   The unique identifier for a revision.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -643,6 +869,7 @@ module Aws::DataExchange
     # This operation deletes a data set.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -661,11 +888,35 @@ module Aws::DataExchange
       req.send_request(options)
     end
 
+    # This operation deletes the event action.
+    #
+    # @option params [required, String] :event_action_id
+    #   The unique identifier for the event action.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_event_action({
+    #     event_action_id: "__string", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/DeleteEventAction AWS API Documentation
+    #
+    # @overload delete_event_action(params = {})
+    # @param [Hash] params ({})
+    def delete_event_action(params = {}, options = {})
+      req = build_request(:delete_event_action, params)
+      req.send_request(options)
+    end
+
     # This operation deletes a revision.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [required, String] :revision_id
+    #   The unique identifier for a revision.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -688,10 +939,13 @@ module Aws::DataExchange
     # This operation returns information about an asset.
     #
     # @option params [required, String] :asset_id
+    #   The unique identifier for an asset.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [required, String] :revision_id
+    #   The unique identifier for a revision.
     #
     # @return [Types::GetAssetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -718,7 +972,40 @@ module Aws::DataExchange
     #
     #   resp.arn #=> String
     #   resp.asset_details.s3_snapshot_asset.size #=> Float
-    #   resp.asset_type #=> String, one of "S3_SNAPSHOT"
+    #   resp.asset_details.redshift_data_share_asset.arn #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_description #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_endpoint #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_id #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_key #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_name #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_specification_download_url #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_specification_download_url_expires_at #=> Time
+    #   resp.asset_details.api_gateway_api_asset.protocol_type #=> String, one of "REST"
+    #   resp.asset_details.api_gateway_api_asset.stage #=> String
+    #   resp.asset_details.s3_data_access_asset.bucket #=> String
+    #   resp.asset_details.s3_data_access_asset.key_prefixes #=> Array
+    #   resp.asset_details.s3_data_access_asset.key_prefixes[0] #=> String
+    #   resp.asset_details.s3_data_access_asset.keys #=> Array
+    #   resp.asset_details.s3_data_access_asset.keys[0] #=> String
+    #   resp.asset_details.s3_data_access_asset.s3_access_point_alias #=> String
+    #   resp.asset_details.s3_data_access_asset.s3_access_point_arn #=> String
+    #   resp.asset_details.s3_data_access_asset.kms_keys_to_grant #=> Array
+    #   resp.asset_details.s3_data_access_asset.kms_keys_to_grant[0].kms_key_arn #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.catalog_id #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_type #=> String, one of "TABLE", "DATABASE"
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression[0].tag_key #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression[0].tag_values #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression[0].tag_values[0] #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression[0].tag_key #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression[0].tag_values #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression[0].tag_values[0] #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_type #=> String, one of "LFTagPolicy"
+    #   resp.asset_details.lake_formation_data_permission_asset.permissions #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.permissions[0] #=> String, one of "DESCRIBE", "SELECT"
+    #   resp.asset_details.lake_formation_data_permission_asset.role_arn #=> String
+    #   resp.asset_type #=> String, one of "S3_SNAPSHOT", "REDSHIFT_DATA_SHARE", "API_GATEWAY_API", "S3_DATA_ACCESS", "LAKE_FORMATION_DATA_PERMISSION"
     #   resp.created_at #=> Time
     #   resp.data_set_id #=> String
     #   resp.id #=> String
@@ -739,6 +1026,7 @@ module Aws::DataExchange
     # This operation returns information about a data set.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @return [Types::GetDataSetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -763,7 +1051,7 @@ module Aws::DataExchange
     # @example Response structure
     #
     #   resp.arn #=> String
-    #   resp.asset_type #=> String, one of "S3_SNAPSHOT"
+    #   resp.asset_type #=> String, one of "S3_SNAPSHOT", "REDSHIFT_DATA_SHARE", "API_GATEWAY_API", "S3_DATA_ACCESS", "LAKE_FORMATION_DATA_PERMISSION"
     #   resp.created_at #=> Time
     #   resp.description #=> String
     #   resp.id #=> String
@@ -784,9 +1072,51 @@ module Aws::DataExchange
       req.send_request(options)
     end
 
+    # This operation retrieves information about an event action.
+    #
+    # @option params [required, String] :event_action_id
+    #   The unique identifier for the event action.
+    #
+    # @return [Types::GetEventActionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetEventActionResponse#action #action} => Types::Action
+    #   * {Types::GetEventActionResponse#arn #arn} => String
+    #   * {Types::GetEventActionResponse#created_at #created_at} => Time
+    #   * {Types::GetEventActionResponse#event #event} => Types::Event
+    #   * {Types::GetEventActionResponse#id #id} => String
+    #   * {Types::GetEventActionResponse#updated_at #updated_at} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_event_action({
+    #     event_action_id: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.action.export_revision_to_s3.encryption.kms_key_arn #=> String
+    #   resp.action.export_revision_to_s3.encryption.type #=> String, one of "aws:kms", "AES256"
+    #   resp.action.export_revision_to_s3.revision_destination.bucket #=> String
+    #   resp.action.export_revision_to_s3.revision_destination.key_pattern #=> String
+    #   resp.arn #=> String
+    #   resp.created_at #=> Time
+    #   resp.event.revision_published.data_set_id #=> String
+    #   resp.id #=> String
+    #   resp.updated_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/GetEventAction AWS API Documentation
+    #
+    # @overload get_event_action(params = {})
+    # @param [Hash] params ({})
+    def get_event_action(params = {}, options = {})
+      req = build_request(:get_event_action, params)
+      req.send_request(options)
+    end
+
     # This operation returns information about a job.
     #
     # @option params [required, String] :job_id
+    #   The unique identifier for a job.
     #
     # @return [Types::GetJobResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -829,6 +1159,7 @@ module Aws::DataExchange
     #   resp.details.export_revisions_to_s3.revision_destinations[0].bucket #=> String
     #   resp.details.export_revisions_to_s3.revision_destinations[0].key_pattern #=> String
     #   resp.details.export_revisions_to_s3.revision_destinations[0].revision_id #=> String
+    #   resp.details.export_revisions_to_s3.event_action_arn #=> String
     #   resp.details.import_asset_from_signed_url.asset_name #=> String
     #   resp.details.import_asset_from_signed_url.data_set_id #=> String
     #   resp.details.import_asset_from_signed_url.md_5_hash #=> String
@@ -840,20 +1171,60 @@ module Aws::DataExchange
     #   resp.details.import_assets_from_s3.asset_sources[0].key #=> String
     #   resp.details.import_assets_from_s3.data_set_id #=> String
     #   resp.details.import_assets_from_s3.revision_id #=> String
+    #   resp.details.import_assets_from_redshift_data_shares.asset_sources #=> Array
+    #   resp.details.import_assets_from_redshift_data_shares.asset_sources[0].data_share_arn #=> String
+    #   resp.details.import_assets_from_redshift_data_shares.data_set_id #=> String
+    #   resp.details.import_assets_from_redshift_data_shares.revision_id #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_description #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_id #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_key #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_name #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_specification_md_5_hash #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_specification_upload_url #=> String
+    #   resp.details.import_asset_from_api_gateway_api.api_specification_upload_url_expires_at #=> Time
+    #   resp.details.import_asset_from_api_gateway_api.data_set_id #=> String
+    #   resp.details.import_asset_from_api_gateway_api.protocol_type #=> String, one of "REST"
+    #   resp.details.import_asset_from_api_gateway_api.revision_id #=> String
+    #   resp.details.import_asset_from_api_gateway_api.stage #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.bucket #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.key_prefixes #=> Array
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.key_prefixes[0] #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.keys #=> Array
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.keys[0] #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.kms_keys_to_grant #=> Array
+    #   resp.details.create_s3_data_access_from_s3_bucket.asset_source.kms_keys_to_grant[0].kms_key_arn #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.data_set_id #=> String
+    #   resp.details.create_s3_data_access_from_s3_bucket.revision_id #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.catalog_id #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.expression #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.expression[0].tag_key #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.expression[0].tag_values #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.expression[0].tag_values[0] #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.permissions #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.database.permissions[0] #=> String, one of "DESCRIBE"
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.expression #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.expression[0].tag_key #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.expression[0].tag_values #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.expression[0].tag_values[0] #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.permissions #=> Array
+    #   resp.details.import_assets_from_lake_formation_tag_policy.table.permissions[0] #=> String, one of "DESCRIBE", "SELECT"
+    #   resp.details.import_assets_from_lake_formation_tag_policy.role_arn #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.data_set_id #=> String
+    #   resp.details.import_assets_from_lake_formation_tag_policy.revision_id #=> String
     #   resp.errors #=> Array
     #   resp.errors[0].code #=> String, one of "ACCESS_DENIED_EXCEPTION", "INTERNAL_SERVER_EXCEPTION", "MALWARE_DETECTED", "RESOURCE_NOT_FOUND_EXCEPTION", "SERVICE_QUOTA_EXCEEDED_EXCEPTION", "VALIDATION_EXCEPTION", "MALWARE_SCAN_ENCRYPTED_FILE"
     #   resp.errors[0].details.import_asset_from_signed_url_job_error_details.asset_name #=> String
     #   resp.errors[0].details.import_assets_from_s3_job_error_details #=> Array
     #   resp.errors[0].details.import_assets_from_s3_job_error_details[0].bucket #=> String
     #   resp.errors[0].details.import_assets_from_s3_job_error_details[0].key #=> String
-    #   resp.errors[0].limit_name #=> String, one of "Assets per revision", "Asset size in GB"
+    #   resp.errors[0].limit_name #=> String, one of "Assets per revision", "Asset size in GB", "Amazon Redshift datashare assets per revision", "AWS Lake Formation data permission assets per revision", "Amazon S3 data access assets per revision"
     #   resp.errors[0].limit_value #=> Float
     #   resp.errors[0].message #=> String
     #   resp.errors[0].resource_id #=> String
-    #   resp.errors[0].resource_type #=> String, one of "REVISION", "ASSET"
+    #   resp.errors[0].resource_type #=> String, one of "REVISION", "ASSET", "DATA_SET"
     #   resp.id #=> String
     #   resp.state #=> String, one of "WAITING", "IN_PROGRESS", "ERROR", "COMPLETED", "CANCELLED", "TIMED_OUT"
-    #   resp.type #=> String, one of "IMPORT_ASSETS_FROM_S3", "IMPORT_ASSET_FROM_SIGNED_URL", "EXPORT_ASSETS_TO_S3", "EXPORT_ASSET_TO_SIGNED_URL", "EXPORT_REVISIONS_TO_S3"
+    #   resp.type #=> String, one of "IMPORT_ASSETS_FROM_S3", "IMPORT_ASSET_FROM_SIGNED_URL", "EXPORT_ASSETS_TO_S3", "EXPORT_ASSET_TO_SIGNED_URL", "EXPORT_REVISIONS_TO_S3", "IMPORT_ASSETS_FROM_REDSHIFT_DATA_SHARES", "IMPORT_ASSET_FROM_API_GATEWAY_API", "CREATE_S3_DATA_ACCESS_FROM_S3_BUCKET", "IMPORT_ASSETS_FROM_LAKE_FORMATION_TAG_POLICY"
     #   resp.updated_at #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/GetJob AWS API Documentation
@@ -868,8 +1239,10 @@ module Aws::DataExchange
     # This operation returns information about a revision.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [required, String] :revision_id
+    #   The unique identifier for a revision.
     #
     # @return [Types::GetRevisionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -882,6 +1255,9 @@ module Aws::DataExchange
     #   * {Types::GetRevisionResponse#source_id #source_id} => String
     #   * {Types::GetRevisionResponse#tags #tags} => Hash&lt;String,String&gt;
     #   * {Types::GetRevisionResponse#updated_at #updated_at} => Time
+    #   * {Types::GetRevisionResponse#revocation_comment #revocation_comment} => String
+    #   * {Types::GetRevisionResponse#revoked #revoked} => Boolean
+    #   * {Types::GetRevisionResponse#revoked_at #revoked_at} => Time
     #
     # @example Request syntax with placeholder values
     #
@@ -902,6 +1278,9 @@ module Aws::DataExchange
     #   resp.tags #=> Hash
     #   resp.tags["__string"] #=> String
     #   resp.updated_at #=> Time
+    #   resp.revocation_comment #=> String
+    #   resp.revoked #=> Boolean
+    #   resp.revoked_at #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/GetRevision AWS API Documentation
     #
@@ -916,10 +1295,14 @@ module Aws::DataExchange
     # descending order.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [Integer] :max_results
+    #   The maximum number of results returned by a single call.
     #
     # @option params [String] :next_token
+    #   The token value retrieved from a previous call to access the next page
+    #   of results.
     #
     # @return [Types::ListDataSetRevisionsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -948,6 +1331,9 @@ module Aws::DataExchange
     #   resp.revisions[0].id #=> String
     #   resp.revisions[0].source_id #=> String
     #   resp.revisions[0].updated_at #=> Time
+    #   resp.revisions[0].revocation_comment #=> String
+    #   resp.revisions[0].revoked #=> Boolean
+    #   resp.revisions[0].revoked_at #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/ListDataSetRevisions AWS API Documentation
     #
@@ -964,10 +1350,15 @@ module Aws::DataExchange
     # ignored.
     #
     # @option params [Integer] :max_results
+    #   The maximum number of results returned by a single call.
     #
     # @option params [String] :next_token
+    #   The token value retrieved from a previous call to access the next page
+    #   of results.
     #
     # @option params [String] :origin
+    #   A property that defines the data set as OWNED by the account (for
+    #   providers) or ENTITLED to the account (for subscribers).
     #
     # @return [Types::ListDataSetsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -988,7 +1379,7 @@ module Aws::DataExchange
     #
     #   resp.data_sets #=> Array
     #   resp.data_sets[0].arn #=> String
-    #   resp.data_sets[0].asset_type #=> String, one of "S3_SNAPSHOT"
+    #   resp.data_sets[0].asset_type #=> String, one of "S3_SNAPSHOT", "REDSHIFT_DATA_SHARE", "API_GATEWAY_API", "S3_DATA_ACCESS", "LAKE_FORMATION_DATA_PERMISSION"
     #   resp.data_sets[0].created_at #=> Time
     #   resp.data_sets[0].description #=> String
     #   resp.data_sets[0].id #=> String
@@ -1008,16 +1399,71 @@ module Aws::DataExchange
       req.send_request(options)
     end
 
+    # This operation lists your event actions.
+    #
+    # @option params [String] :event_source_id
+    #   The unique identifier for the event source.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results returned by a single call.
+    #
+    # @option params [String] :next_token
+    #   The token value retrieved from a previous call to access the next page
+    #   of results.
+    #
+    # @return [Types::ListEventActionsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListEventActionsResponse#event_actions #event_actions} => Array&lt;Types::EventActionEntry&gt;
+    #   * {Types::ListEventActionsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_event_actions({
+    #     event_source_id: "__string",
+    #     max_results: 1,
+    #     next_token: "__string",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.event_actions #=> Array
+    #   resp.event_actions[0].action.export_revision_to_s3.encryption.kms_key_arn #=> String
+    #   resp.event_actions[0].action.export_revision_to_s3.encryption.type #=> String, one of "aws:kms", "AES256"
+    #   resp.event_actions[0].action.export_revision_to_s3.revision_destination.bucket #=> String
+    #   resp.event_actions[0].action.export_revision_to_s3.revision_destination.key_pattern #=> String
+    #   resp.event_actions[0].arn #=> String
+    #   resp.event_actions[0].created_at #=> Time
+    #   resp.event_actions[0].event.revision_published.data_set_id #=> String
+    #   resp.event_actions[0].id #=> String
+    #   resp.event_actions[0].updated_at #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/ListEventActions AWS API Documentation
+    #
+    # @overload list_event_actions(params = {})
+    # @param [Hash] params ({})
+    def list_event_actions(params = {}, options = {})
+      req = build_request(:list_event_actions, params)
+      req.send_request(options)
+    end
+
     # This operation lists your jobs sorted by CreatedAt in descending
     # order.
     #
     # @option params [String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [Integer] :max_results
+    #   The maximum number of results returned by a single call.
     #
     # @option params [String] :next_token
+    #   The token value retrieved from a previous call to access the next page
+    #   of results.
     #
     # @option params [String] :revision_id
+    #   The unique identifier for a revision.
     #
     # @return [Types::ListJobsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1060,6 +1506,7 @@ module Aws::DataExchange
     #   resp.jobs[0].details.export_revisions_to_s3.revision_destinations[0].bucket #=> String
     #   resp.jobs[0].details.export_revisions_to_s3.revision_destinations[0].key_pattern #=> String
     #   resp.jobs[0].details.export_revisions_to_s3.revision_destinations[0].revision_id #=> String
+    #   resp.jobs[0].details.export_revisions_to_s3.event_action_arn #=> String
     #   resp.jobs[0].details.import_asset_from_signed_url.asset_name #=> String
     #   resp.jobs[0].details.import_asset_from_signed_url.data_set_id #=> String
     #   resp.jobs[0].details.import_asset_from_signed_url.md_5_hash #=> String
@@ -1071,20 +1518,60 @@ module Aws::DataExchange
     #   resp.jobs[0].details.import_assets_from_s3.asset_sources[0].key #=> String
     #   resp.jobs[0].details.import_assets_from_s3.data_set_id #=> String
     #   resp.jobs[0].details.import_assets_from_s3.revision_id #=> String
+    #   resp.jobs[0].details.import_assets_from_redshift_data_shares.asset_sources #=> Array
+    #   resp.jobs[0].details.import_assets_from_redshift_data_shares.asset_sources[0].data_share_arn #=> String
+    #   resp.jobs[0].details.import_assets_from_redshift_data_shares.data_set_id #=> String
+    #   resp.jobs[0].details.import_assets_from_redshift_data_shares.revision_id #=> String
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.api_description #=> String
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.api_id #=> String
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.api_key #=> String
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.api_name #=> String
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.api_specification_md_5_hash #=> String
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.api_specification_upload_url #=> String
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.api_specification_upload_url_expires_at #=> Time
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.data_set_id #=> String
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.protocol_type #=> String, one of "REST"
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.revision_id #=> String
+    #   resp.jobs[0].details.import_asset_from_api_gateway_api.stage #=> String
+    #   resp.jobs[0].details.create_s3_data_access_from_s3_bucket.asset_source.bucket #=> String
+    #   resp.jobs[0].details.create_s3_data_access_from_s3_bucket.asset_source.key_prefixes #=> Array
+    #   resp.jobs[0].details.create_s3_data_access_from_s3_bucket.asset_source.key_prefixes[0] #=> String
+    #   resp.jobs[0].details.create_s3_data_access_from_s3_bucket.asset_source.keys #=> Array
+    #   resp.jobs[0].details.create_s3_data_access_from_s3_bucket.asset_source.keys[0] #=> String
+    #   resp.jobs[0].details.create_s3_data_access_from_s3_bucket.asset_source.kms_keys_to_grant #=> Array
+    #   resp.jobs[0].details.create_s3_data_access_from_s3_bucket.asset_source.kms_keys_to_grant[0].kms_key_arn #=> String
+    #   resp.jobs[0].details.create_s3_data_access_from_s3_bucket.data_set_id #=> String
+    #   resp.jobs[0].details.create_s3_data_access_from_s3_bucket.revision_id #=> String
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.catalog_id #=> String
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.database.expression #=> Array
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.database.expression[0].tag_key #=> String
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.database.expression[0].tag_values #=> Array
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.database.expression[0].tag_values[0] #=> String
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.database.permissions #=> Array
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.database.permissions[0] #=> String, one of "DESCRIBE"
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.table.expression #=> Array
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.table.expression[0].tag_key #=> String
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.table.expression[0].tag_values #=> Array
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.table.expression[0].tag_values[0] #=> String
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.table.permissions #=> Array
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.table.permissions[0] #=> String, one of "DESCRIBE", "SELECT"
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.role_arn #=> String
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.data_set_id #=> String
+    #   resp.jobs[0].details.import_assets_from_lake_formation_tag_policy.revision_id #=> String
     #   resp.jobs[0].errors #=> Array
     #   resp.jobs[0].errors[0].code #=> String, one of "ACCESS_DENIED_EXCEPTION", "INTERNAL_SERVER_EXCEPTION", "MALWARE_DETECTED", "RESOURCE_NOT_FOUND_EXCEPTION", "SERVICE_QUOTA_EXCEEDED_EXCEPTION", "VALIDATION_EXCEPTION", "MALWARE_SCAN_ENCRYPTED_FILE"
     #   resp.jobs[0].errors[0].details.import_asset_from_signed_url_job_error_details.asset_name #=> String
     #   resp.jobs[0].errors[0].details.import_assets_from_s3_job_error_details #=> Array
     #   resp.jobs[0].errors[0].details.import_assets_from_s3_job_error_details[0].bucket #=> String
     #   resp.jobs[0].errors[0].details.import_assets_from_s3_job_error_details[0].key #=> String
-    #   resp.jobs[0].errors[0].limit_name #=> String, one of "Assets per revision", "Asset size in GB"
+    #   resp.jobs[0].errors[0].limit_name #=> String, one of "Assets per revision", "Asset size in GB", "Amazon Redshift datashare assets per revision", "AWS Lake Formation data permission assets per revision", "Amazon S3 data access assets per revision"
     #   resp.jobs[0].errors[0].limit_value #=> Float
     #   resp.jobs[0].errors[0].message #=> String
     #   resp.jobs[0].errors[0].resource_id #=> String
-    #   resp.jobs[0].errors[0].resource_type #=> String, one of "REVISION", "ASSET"
+    #   resp.jobs[0].errors[0].resource_type #=> String, one of "REVISION", "ASSET", "DATA_SET"
     #   resp.jobs[0].id #=> String
     #   resp.jobs[0].state #=> String, one of "WAITING", "IN_PROGRESS", "ERROR", "COMPLETED", "CANCELLED", "TIMED_OUT"
-    #   resp.jobs[0].type #=> String, one of "IMPORT_ASSETS_FROM_S3", "IMPORT_ASSET_FROM_SIGNED_URL", "EXPORT_ASSETS_TO_S3", "EXPORT_ASSET_TO_SIGNED_URL", "EXPORT_REVISIONS_TO_S3"
+    #   resp.jobs[0].type #=> String, one of "IMPORT_ASSETS_FROM_S3", "IMPORT_ASSET_FROM_SIGNED_URL", "EXPORT_ASSETS_TO_S3", "EXPORT_ASSET_TO_SIGNED_URL", "EXPORT_REVISIONS_TO_S3", "IMPORT_ASSETS_FROM_REDSHIFT_DATA_SHARES", "IMPORT_ASSET_FROM_API_GATEWAY_API", "CREATE_S3_DATA_ACCESS_FROM_S3_BUCKET", "IMPORT_ASSETS_FROM_LAKE_FORMATION_TAG_POLICY"
     #   resp.jobs[0].updated_at #=> Time
     #   resp.next_token #=> String
     #
@@ -1101,12 +1588,17 @@ module Aws::DataExchange
     # descending order.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [Integer] :max_results
+    #   The maximum number of results returned by a single call.
     #
     # @option params [String] :next_token
+    #   The token value retrieved from a previous call to access the next page
+    #   of results.
     #
     # @option params [required, String] :revision_id
+    #   The unique identifier for a revision.
     #
     # @return [Types::ListRevisionAssetsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1129,7 +1621,40 @@ module Aws::DataExchange
     #   resp.assets #=> Array
     #   resp.assets[0].arn #=> String
     #   resp.assets[0].asset_details.s3_snapshot_asset.size #=> Float
-    #   resp.assets[0].asset_type #=> String, one of "S3_SNAPSHOT"
+    #   resp.assets[0].asset_details.redshift_data_share_asset.arn #=> String
+    #   resp.assets[0].asset_details.api_gateway_api_asset.api_description #=> String
+    #   resp.assets[0].asset_details.api_gateway_api_asset.api_endpoint #=> String
+    #   resp.assets[0].asset_details.api_gateway_api_asset.api_id #=> String
+    #   resp.assets[0].asset_details.api_gateway_api_asset.api_key #=> String
+    #   resp.assets[0].asset_details.api_gateway_api_asset.api_name #=> String
+    #   resp.assets[0].asset_details.api_gateway_api_asset.api_specification_download_url #=> String
+    #   resp.assets[0].asset_details.api_gateway_api_asset.api_specification_download_url_expires_at #=> Time
+    #   resp.assets[0].asset_details.api_gateway_api_asset.protocol_type #=> String, one of "REST"
+    #   resp.assets[0].asset_details.api_gateway_api_asset.stage #=> String
+    #   resp.assets[0].asset_details.s3_data_access_asset.bucket #=> String
+    #   resp.assets[0].asset_details.s3_data_access_asset.key_prefixes #=> Array
+    #   resp.assets[0].asset_details.s3_data_access_asset.key_prefixes[0] #=> String
+    #   resp.assets[0].asset_details.s3_data_access_asset.keys #=> Array
+    #   resp.assets[0].asset_details.s3_data_access_asset.keys[0] #=> String
+    #   resp.assets[0].asset_details.s3_data_access_asset.s3_access_point_alias #=> String
+    #   resp.assets[0].asset_details.s3_data_access_asset.s3_access_point_arn #=> String
+    #   resp.assets[0].asset_details.s3_data_access_asset.kms_keys_to_grant #=> Array
+    #   resp.assets[0].asset_details.s3_data_access_asset.kms_keys_to_grant[0].kms_key_arn #=> String
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.catalog_id #=> String
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_type #=> String, one of "TABLE", "DATABASE"
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression #=> Array
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression[0].tag_key #=> String
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression[0].tag_values #=> Array
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression[0].tag_values[0] #=> String
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression #=> Array
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression[0].tag_key #=> String
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression[0].tag_values #=> Array
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression[0].tag_values[0] #=> String
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_type #=> String, one of "LFTagPolicy"
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.permissions #=> Array
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.permissions[0] #=> String, one of "DESCRIBE", "SELECT"
+    #   resp.assets[0].asset_details.lake_formation_data_permission_asset.role_arn #=> String
+    #   resp.assets[0].asset_type #=> String, one of "S3_SNAPSHOT", "REDSHIFT_DATA_SHARE", "API_GATEWAY_API", "S3_DATA_ACCESS", "LAKE_FORMATION_DATA_PERMISSION"
     #   resp.assets[0].created_at #=> Time
     #   resp.assets[0].data_set_id #=> String
     #   resp.assets[0].id #=> String
@@ -1151,6 +1676,8 @@ module Aws::DataExchange
     # This operation lists the tags on the resource.
     #
     # @option params [required, String] :resource_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies an AWS
+    #   resource.
     #
     # @return [Types::ListTagsForResourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1176,9 +1703,137 @@ module Aws::DataExchange
       req.send_request(options)
     end
 
+    # This operation revokes subscribers' access to a revision.
+    #
+    # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
+    #
+    # @option params [required, String] :revision_id
+    #   The unique identifier for a revision.
+    #
+    # @option params [required, String] :revocation_comment
+    #   A required comment to inform subscribers of the reason their access to
+    #   the revision was revoked.
+    #
+    # @return [Types::RevokeRevisionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::RevokeRevisionResponse#arn #arn} => String
+    #   * {Types::RevokeRevisionResponse#comment #comment} => String
+    #   * {Types::RevokeRevisionResponse#created_at #created_at} => Time
+    #   * {Types::RevokeRevisionResponse#data_set_id #data_set_id} => String
+    #   * {Types::RevokeRevisionResponse#finalized #finalized} => Boolean
+    #   * {Types::RevokeRevisionResponse#id #id} => String
+    #   * {Types::RevokeRevisionResponse#source_id #source_id} => String
+    #   * {Types::RevokeRevisionResponse#updated_at #updated_at} => Time
+    #   * {Types::RevokeRevisionResponse#revocation_comment #revocation_comment} => String
+    #   * {Types::RevokeRevisionResponse#revoked #revoked} => Boolean
+    #   * {Types::RevokeRevisionResponse#revoked_at #revoked_at} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.revoke_revision({
+    #     data_set_id: "__string", # required
+    #     revision_id: "__string", # required
+    #     revocation_comment: "__stringMin10Max512", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.arn #=> String
+    #   resp.comment #=> String
+    #   resp.created_at #=> Time
+    #   resp.data_set_id #=> String
+    #   resp.finalized #=> Boolean
+    #   resp.id #=> String
+    #   resp.source_id #=> String
+    #   resp.updated_at #=> Time
+    #   resp.revocation_comment #=> String
+    #   resp.revoked #=> Boolean
+    #   resp.revoked_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/RevokeRevision AWS API Documentation
+    #
+    # @overload revoke_revision(params = {})
+    # @param [Hash] params ({})
+    def revoke_revision(params = {}, options = {})
+      req = build_request(:revoke_revision, params)
+      req.send_request(options)
+    end
+
+    # This operation invokes an API Gateway API asset. The request is
+    # proxied to the provider’s API Gateway API.
+    #
+    # @option params [String] :body
+    #   The request body.
+    #
+    # @option params [Hash<String,String>] :query_string_parameters
+    #   Attach query string parameters to the end of the URI (for example,
+    #   /v1/examplePath?exampleParam=exampleValue).
+    #
+    # @option params [required, String] :asset_id
+    #   Asset ID value for the API request.
+    #
+    # @option params [required, String] :data_set_id
+    #   Data set ID value for the API request.
+    #
+    # @option params [Hash<String,String>] :request_headers
+    #   Any header value prefixed with x-amzn-dataexchange-header- will have
+    #   that stripped before sending the Asset API request. Use this when you
+    #   want to override a header that AWS Data Exchange uses. Alternatively,
+    #   you can use the header without a prefix to the HTTP request.
+    #
+    # @option params [String] :method
+    #   HTTP method value for the API request. Alternatively, you can use the
+    #   appropriate verb in your request.
+    #
+    # @option params [String] :path
+    #   URI path value for the API request. Alternatively, you can set the URI
+    #   path directly by invoking /v1/\\\{pathValue\\}.
+    #
+    # @option params [required, String] :revision_id
+    #   Revision ID value for the API request.
+    #
+    # @return [Types::SendApiAssetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::SendApiAssetResponse#body #body} => String
+    #   * {Types::SendApiAssetResponse#response_headers #response_headers} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.send_api_asset({
+    #     body: "__string",
+    #     query_string_parameters: {
+    #       "__string" => "__string",
+    #     },
+    #     asset_id: "__string", # required
+    #     data_set_id: "__string", # required
+    #     request_headers: {
+    #       "__string" => "__string",
+    #     },
+    #     method: "__string",
+    #     path: "__string",
+    #     revision_id: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.body #=> String
+    #   resp.response_headers #=> Hash
+    #   resp.response_headers["__string"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/SendApiAsset AWS API Documentation
+    #
+    # @overload send_api_asset(params = {})
+    # @param [Hash] params ({})
+    def send_api_asset(params = {}, options = {})
+      req = build_request(:send_api_asset, params)
+      req.send_request(options)
+    end
+
     # This operation starts a job.
     #
     # @option params [required, String] :job_id
+    #   The unique identifier for a job.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1200,8 +1855,11 @@ module Aws::DataExchange
     # This operation tags a resource.
     #
     # @option params [required, String] :resource_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies an AWS
+    #   resource.
     #
     # @option params [required, Hash<String,String>] :tags
+    #   A label that consists of a customer-defined key and an optional value.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1226,8 +1884,11 @@ module Aws::DataExchange
     # This operation removes one or more tags from a resource.
     #
     # @option params [required, String] :resource_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies an AWS
+    #   resource.
     #
     # @option params [required, Array<String>] :tag_keys
+    #   The key tags.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1250,15 +1911,23 @@ module Aws::DataExchange
     # This operation updates an asset.
     #
     # @option params [required, String] :asset_id
+    #   The unique identifier for an asset.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [required, String] :name
-    #   The name of the asset. When importing from Amazon S3, the S3 object
-    #   key is used as the asset name. When exporting to Amazon S3, the asset
-    #   name is used as default target S3 object key.
+    #   The name of the asset. When importing from Amazon S3, the Amazon S3
+    #   object key is used as the asset name. When exporting to Amazon S3, the
+    #   asset name is used as default target Amazon S3 object key. When
+    #   importing from Amazon API Gateway API, the API name is used as the
+    #   asset name. When importing from Amazon Redshift, the datashare name is
+    #   used as the asset name. When importing from AWS Lake Formation, the
+    #   static values of "Database(s) included in the LF-tag policy" or
+    #   "Table(s) included in LF-tag policy" are used as the name.
     #
     # @option params [required, String] :revision_id
+    #   The unique identifier for a revision.
     #
     # @return [Types::UpdateAssetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1286,7 +1955,40 @@ module Aws::DataExchange
     #
     #   resp.arn #=> String
     #   resp.asset_details.s3_snapshot_asset.size #=> Float
-    #   resp.asset_type #=> String, one of "S3_SNAPSHOT"
+    #   resp.asset_details.redshift_data_share_asset.arn #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_description #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_endpoint #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_id #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_key #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_name #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_specification_download_url #=> String
+    #   resp.asset_details.api_gateway_api_asset.api_specification_download_url_expires_at #=> Time
+    #   resp.asset_details.api_gateway_api_asset.protocol_type #=> String, one of "REST"
+    #   resp.asset_details.api_gateway_api_asset.stage #=> String
+    #   resp.asset_details.s3_data_access_asset.bucket #=> String
+    #   resp.asset_details.s3_data_access_asset.key_prefixes #=> Array
+    #   resp.asset_details.s3_data_access_asset.key_prefixes[0] #=> String
+    #   resp.asset_details.s3_data_access_asset.keys #=> Array
+    #   resp.asset_details.s3_data_access_asset.keys[0] #=> String
+    #   resp.asset_details.s3_data_access_asset.s3_access_point_alias #=> String
+    #   resp.asset_details.s3_data_access_asset.s3_access_point_arn #=> String
+    #   resp.asset_details.s3_data_access_asset.kms_keys_to_grant #=> Array
+    #   resp.asset_details.s3_data_access_asset.kms_keys_to_grant[0].kms_key_arn #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.catalog_id #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_type #=> String, one of "TABLE", "DATABASE"
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression[0].tag_key #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression[0].tag_values #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.database.expression[0].tag_values[0] #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression[0].tag_key #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression[0].tag_values #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_details.lf_tag_policy.resource_details.table.expression[0].tag_values[0] #=> String
+    #   resp.asset_details.lake_formation_data_permission_asset.lake_formation_data_permission_type #=> String, one of "LFTagPolicy"
+    #   resp.asset_details.lake_formation_data_permission_asset.permissions #=> Array
+    #   resp.asset_details.lake_formation_data_permission_asset.permissions[0] #=> String, one of "DESCRIBE", "SELECT"
+    #   resp.asset_details.lake_formation_data_permission_asset.role_arn #=> String
+    #   resp.asset_type #=> String, one of "S3_SNAPSHOT", "REDSHIFT_DATA_SHARE", "API_GATEWAY_API", "S3_DATA_ACCESS", "LAKE_FORMATION_DATA_PERMISSION"
     #   resp.created_at #=> Time
     #   resp.data_set_id #=> String
     #   resp.id #=> String
@@ -1307,6 +2009,7 @@ module Aws::DataExchange
     # This operation updates a data set.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [String] :description
     #   The description for the data set.
@@ -1338,7 +2041,7 @@ module Aws::DataExchange
     # @example Response structure
     #
     #   resp.arn #=> String
-    #   resp.asset_type #=> String, one of "S3_SNAPSHOT"
+    #   resp.asset_type #=> String, one of "S3_SNAPSHOT", "REDSHIFT_DATA_SHARE", "API_GATEWAY_API", "S3_DATA_ACCESS", "LAKE_FORMATION_DATA_PERMISSION"
     #   resp.created_at #=> Time
     #   resp.description #=> String
     #   resp.id #=> String
@@ -1357,12 +2060,69 @@ module Aws::DataExchange
       req.send_request(options)
     end
 
+    # This operation updates the event action.
+    #
+    # @option params [Types::Action] :action
+    #   What occurs after a certain event.
+    #
+    # @option params [required, String] :event_action_id
+    #   The unique identifier for the event action.
+    #
+    # @return [Types::UpdateEventActionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateEventActionResponse#action #action} => Types::Action
+    #   * {Types::UpdateEventActionResponse#arn #arn} => String
+    #   * {Types::UpdateEventActionResponse#created_at #created_at} => Time
+    #   * {Types::UpdateEventActionResponse#event #event} => Types::Event
+    #   * {Types::UpdateEventActionResponse#id #id} => String
+    #   * {Types::UpdateEventActionResponse#updated_at #updated_at} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_event_action({
+    #     action: {
+    #       export_revision_to_s3: {
+    #         encryption: {
+    #           kms_key_arn: "__string",
+    #           type: "aws:kms", # required, accepts aws:kms, AES256
+    #         },
+    #         revision_destination: { # required
+    #           bucket: "__string", # required
+    #           key_pattern: "__string",
+    #         },
+    #       },
+    #     },
+    #     event_action_id: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.action.export_revision_to_s3.encryption.kms_key_arn #=> String
+    #   resp.action.export_revision_to_s3.encryption.type #=> String, one of "aws:kms", "AES256"
+    #   resp.action.export_revision_to_s3.revision_destination.bucket #=> String
+    #   resp.action.export_revision_to_s3.revision_destination.key_pattern #=> String
+    #   resp.arn #=> String
+    #   resp.created_at #=> Time
+    #   resp.event.revision_published.data_set_id #=> String
+    #   resp.id #=> String
+    #   resp.updated_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/UpdateEventAction AWS API Documentation
+    #
+    # @overload update_event_action(params = {})
+    # @param [Hash] params ({})
+    def update_event_action(params = {}, options = {})
+      req = build_request(:update_event_action, params)
+      req.send_request(options)
+    end
+
     # This operation updates a revision.
     #
     # @option params [String] :comment
     #   An optional comment about the revision.
     #
     # @option params [required, String] :data_set_id
+    #   The unique identifier for a data set.
     #
     # @option params [Boolean] :finalized
     #   Finalizing a revision tells AWS Data Exchange that your changes to the
@@ -1370,6 +2130,7 @@ module Aws::DataExchange
     #   state, you can publish the revision to your products.
     #
     # @option params [required, String] :revision_id
+    #   The unique identifier for a revision.
     #
     # @return [Types::UpdateRevisionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1381,6 +2142,9 @@ module Aws::DataExchange
     #   * {Types::UpdateRevisionResponse#id #id} => String
     #   * {Types::UpdateRevisionResponse#source_id #source_id} => String
     #   * {Types::UpdateRevisionResponse#updated_at #updated_at} => Time
+    #   * {Types::UpdateRevisionResponse#revocation_comment #revocation_comment} => String
+    #   * {Types::UpdateRevisionResponse#revoked #revoked} => Boolean
+    #   * {Types::UpdateRevisionResponse#revoked_at #revoked_at} => Time
     #
     # @example Request syntax with placeholder values
     #
@@ -1401,6 +2165,9 @@ module Aws::DataExchange
     #   resp.id #=> String
     #   resp.source_id #=> String
     #   resp.updated_at #=> Time
+    #   resp.revocation_comment #=> String
+    #   resp.revoked #=> Boolean
+    #   resp.revoked_at #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dataexchange-2017-07-25/UpdateRevision AWS API Documentation
     #
@@ -1424,7 +2191,7 @@ module Aws::DataExchange
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-dataexchange'
-      context[:gem_version] = '1.13.0'
+      context[:gem_version] = '1.37.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

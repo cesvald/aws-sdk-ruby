@@ -14,8 +14,22 @@ module Aws::GreengrassV2
     include Seahorse::Model
 
     AccessDeniedException = Shapes::StructureShape.new(name: 'AccessDeniedException')
+    AssociateClientDeviceWithCoreDeviceEntry = Shapes::StructureShape.new(name: 'AssociateClientDeviceWithCoreDeviceEntry')
+    AssociateClientDeviceWithCoreDeviceEntryList = Shapes::ListShape.new(name: 'AssociateClientDeviceWithCoreDeviceEntryList')
+    AssociateClientDeviceWithCoreDeviceErrorEntry = Shapes::StructureShape.new(name: 'AssociateClientDeviceWithCoreDeviceErrorEntry')
+    AssociateClientDeviceWithCoreDeviceErrorList = Shapes::ListShape.new(name: 'AssociateClientDeviceWithCoreDeviceErrorList')
+    AssociateServiceRoleToAccountRequest = Shapes::StructureShape.new(name: 'AssociateServiceRoleToAccountRequest')
+    AssociateServiceRoleToAccountResponse = Shapes::StructureShape.new(name: 'AssociateServiceRoleToAccountResponse')
+    AssociatedClientDevice = Shapes::StructureShape.new(name: 'AssociatedClientDevice')
+    AssociatedClientDeviceList = Shapes::ListShape.new(name: 'AssociatedClientDeviceList')
+    BatchAssociateClientDeviceWithCoreDeviceRequest = Shapes::StructureShape.new(name: 'BatchAssociateClientDeviceWithCoreDeviceRequest')
+    BatchAssociateClientDeviceWithCoreDeviceResponse = Shapes::StructureShape.new(name: 'BatchAssociateClientDeviceWithCoreDeviceResponse')
+    BatchDisassociateClientDeviceFromCoreDeviceRequest = Shapes::StructureShape.new(name: 'BatchDisassociateClientDeviceFromCoreDeviceRequest')
+    BatchDisassociateClientDeviceFromCoreDeviceResponse = Shapes::StructureShape.new(name: 'BatchDisassociateClientDeviceFromCoreDeviceResponse')
+    CPU = Shapes::FloatShape.new(name: 'CPU')
     CancelDeploymentRequest = Shapes::StructureShape.new(name: 'CancelDeploymentRequest')
     CancelDeploymentResponse = Shapes::StructureShape.new(name: 'CancelDeploymentResponse')
+    ClientTokenString = Shapes::StringShape.new(name: 'ClientTokenString')
     CloudComponentState = Shapes::StringShape.new(name: 'CloudComponentState')
     CloudComponentStatus = Shapes::StructureShape.new(name: 'CloudComponentStatus')
     Component = Shapes::StructureShape.new(name: 'Component')
@@ -44,6 +58,7 @@ module Aws::GreengrassV2
     ComponentVersionString = Shapes::StringShape.new(name: 'ComponentVersionString')
     ComponentVisibilityScope = Shapes::StringShape.new(name: 'ComponentVisibilityScope')
     ConflictException = Shapes::StructureShape.new(name: 'ConflictException')
+    ConnectivityInfo = Shapes::StructureShape.new(name: 'ConnectivityInfo')
     CoreDevice = Shapes::StructureShape.new(name: 'CoreDevice')
     CoreDeviceArchitectureString = Shapes::StringShape.new(name: 'CoreDeviceArchitectureString')
     CoreDevicePlatformString = Shapes::StringShape.new(name: 'CoreDevicePlatformString')
@@ -57,6 +72,7 @@ module Aws::GreengrassV2
     DefaultMaxResults = Shapes::IntegerShape.new(name: 'DefaultMaxResults')
     DeleteComponentRequest = Shapes::StructureShape.new(name: 'DeleteComponentRequest')
     DeleteCoreDeviceRequest = Shapes::StructureShape.new(name: 'DeleteCoreDeviceRequest')
+    DeleteDeploymentRequest = Shapes::StructureShape.new(name: 'DeleteDeploymentRequest')
     Deployment = Shapes::StructureShape.new(name: 'Deployment')
     DeploymentComponentUpdatePolicy = Shapes::StructureShape.new(name: 'DeploymentComponentUpdatePolicy')
     DeploymentComponentUpdatePolicyAction = Shapes::StringShape.new(name: 'DeploymentComponentUpdatePolicyAction')
@@ -67,14 +83,26 @@ module Aws::GreengrassV2
     DeploymentIoTJobConfiguration = Shapes::StructureShape.new(name: 'DeploymentIoTJobConfiguration')
     DeploymentList = Shapes::ListShape.new(name: 'DeploymentList')
     DeploymentName = Shapes::StringShape.new(name: 'DeploymentName')
+    DeploymentNameString = Shapes::StringShape.new(name: 'DeploymentNameString')
     DeploymentPolicies = Shapes::StructureShape.new(name: 'DeploymentPolicies')
     DeploymentStatus = Shapes::StringShape.new(name: 'DeploymentStatus')
     DescribeComponentRequest = Shapes::StructureShape.new(name: 'DescribeComponentRequest')
     DescribeComponentResponse = Shapes::StructureShape.new(name: 'DescribeComponentResponse')
     Description = Shapes::StringShape.new(name: 'Description')
     DescriptionString = Shapes::StringShape.new(name: 'DescriptionString')
+    DisassociateClientDeviceFromCoreDeviceEntry = Shapes::StructureShape.new(name: 'DisassociateClientDeviceFromCoreDeviceEntry')
+    DisassociateClientDeviceFromCoreDeviceEntryList = Shapes::ListShape.new(name: 'DisassociateClientDeviceFromCoreDeviceEntryList')
+    DisassociateClientDeviceFromCoreDeviceErrorEntry = Shapes::StructureShape.new(name: 'DisassociateClientDeviceFromCoreDeviceErrorEntry')
+    DisassociateClientDeviceFromCoreDeviceErrorList = Shapes::ListShape.new(name: 'DisassociateClientDeviceFromCoreDeviceErrorList')
+    DisassociateServiceRoleFromAccountRequest = Shapes::StructureShape.new(name: 'DisassociateServiceRoleFromAccountRequest')
+    DisassociateServiceRoleFromAccountResponse = Shapes::StructureShape.new(name: 'DisassociateServiceRoleFromAccountResponse')
     EffectiveDeployment = Shapes::StructureShape.new(name: 'EffectiveDeployment')
+    EffectiveDeploymentErrorCode = Shapes::StringShape.new(name: 'EffectiveDeploymentErrorCode')
+    EffectiveDeploymentErrorStack = Shapes::ListShape.new(name: 'EffectiveDeploymentErrorStack')
+    EffectiveDeploymentErrorType = Shapes::StringShape.new(name: 'EffectiveDeploymentErrorType')
+    EffectiveDeploymentErrorTypeList = Shapes::ListShape.new(name: 'EffectiveDeploymentErrorTypeList')
     EffectiveDeploymentExecutionStatus = Shapes::StringShape.new(name: 'EffectiveDeploymentExecutionStatus')
+    EffectiveDeploymentStatusDetails = Shapes::StructureShape.new(name: 'EffectiveDeploymentStatusDetails')
     EffectiveDeploymentsList = Shapes::ListShape.new(name: 'EffectiveDeploymentsList')
     FileSystemPath = Shapes::StringShape.new(name: 'FileSystemPath')
     GGCVersion = Shapes::StringShape.new(name: 'GGCVersion')
@@ -83,13 +111,20 @@ module Aws::GreengrassV2
     GetComponentResponse = Shapes::StructureShape.new(name: 'GetComponentResponse')
     GetComponentVersionArtifactRequest = Shapes::StructureShape.new(name: 'GetComponentVersionArtifactRequest')
     GetComponentVersionArtifactResponse = Shapes::StructureShape.new(name: 'GetComponentVersionArtifactResponse')
+    GetConnectivityInfoRequest = Shapes::StructureShape.new(name: 'GetConnectivityInfoRequest')
+    GetConnectivityInfoResponse = Shapes::StructureShape.new(name: 'GetConnectivityInfoResponse')
     GetCoreDeviceRequest = Shapes::StructureShape.new(name: 'GetCoreDeviceRequest')
     GetCoreDeviceResponse = Shapes::StructureShape.new(name: 'GetCoreDeviceResponse')
     GetDeploymentRequest = Shapes::StructureShape.new(name: 'GetDeploymentRequest')
     GetDeploymentResponse = Shapes::StructureShape.new(name: 'GetDeploymentResponse')
+    GetServiceRoleForAccountRequest = Shapes::StructureShape.new(name: 'GetServiceRoleForAccountRequest')
+    GetServiceRoleForAccountResponse = Shapes::StructureShape.new(name: 'GetServiceRoleForAccountResponse')
     InstalledComponent = Shapes::StructureShape.new(name: 'InstalledComponent')
     InstalledComponentLifecycleState = Shapes::StringShape.new(name: 'InstalledComponentLifecycleState')
+    InstalledComponentLifecycleStatusCode = Shapes::StringShape.new(name: 'InstalledComponentLifecycleStatusCode')
+    InstalledComponentLifecycleStatusCodeList = Shapes::ListShape.new(name: 'InstalledComponentLifecycleStatusCodeList')
     InstalledComponentList = Shapes::ListShape.new(name: 'InstalledComponentList')
+    InstalledComponentTopologyFilter = Shapes::StringShape.new(name: 'InstalledComponentTopologyFilter')
     InternalServerException = Shapes::StructureShape.new(name: 'InternalServerException')
     IoTJobARN = Shapes::StringShape.new(name: 'IoTJobARN')
     IoTJobAbortAction = Shapes::StringShape.new(name: 'IoTJobAbortAction')
@@ -109,6 +144,7 @@ module Aws::GreengrassV2
     IoTJobRolloutBaseRatePerMinute = Shapes::IntegerShape.new(name: 'IoTJobRolloutBaseRatePerMinute')
     IoTJobRolloutIncrementFactor = Shapes::FloatShape.new(name: 'IoTJobRolloutIncrementFactor')
     IoTJobTimeoutConfig = Shapes::StructureShape.new(name: 'IoTJobTimeoutConfig')
+    IoTThingName = Shapes::StringShape.new(name: 'IoTThingName')
     IsLatestForTarget = Shapes::BooleanShape.new(name: 'IsLatestForTarget')
     IsRoot = Shapes::BooleanShape.new(name: 'IsRoot')
     LambdaContainerParams = Shapes::StructureShape.new(name: 'LambdaContainerParams')
@@ -122,7 +158,6 @@ module Aws::GreengrassV2
     LambdaExecArgsList = Shapes::ListShape.new(name: 'LambdaExecArgsList')
     LambdaExecutionParameters = Shapes::StructureShape.new(name: 'LambdaExecutionParameters')
     LambdaFilesystemPermission = Shapes::StringShape.new(name: 'LambdaFilesystemPermission')
-    LambdaFunctionARNWithVersionNumber = Shapes::StringShape.new(name: 'LambdaFunctionARNWithVersionNumber')
     LambdaFunctionRecipeSource = Shapes::StructureShape.new(name: 'LambdaFunctionRecipeSource')
     LambdaInputPayloadEncodingType = Shapes::StringShape.new(name: 'LambdaInputPayloadEncodingType')
     LambdaIsolationMode = Shapes::StringShape.new(name: 'LambdaIsolationMode')
@@ -130,6 +165,8 @@ module Aws::GreengrassV2
     LambdaVolumeList = Shapes::ListShape.new(name: 'LambdaVolumeList')
     LambdaVolumeMount = Shapes::StructureShape.new(name: 'LambdaVolumeMount')
     LifecycleStateDetails = Shapes::StringShape.new(name: 'LifecycleStateDetails')
+    ListClientDevicesAssociatedWithCoreDeviceRequest = Shapes::StructureShape.new(name: 'ListClientDevicesAssociatedWithCoreDeviceRequest')
+    ListClientDevicesAssociatedWithCoreDeviceResponse = Shapes::StructureShape.new(name: 'ListClientDevicesAssociatedWithCoreDeviceResponse')
     ListComponentVersionsRequest = Shapes::StructureShape.new(name: 'ListComponentVersionsRequest')
     ListComponentVersionsResponse = Shapes::StructureShape.new(name: 'ListComponentVersionsResponse')
     ListComponentsRequest = Shapes::StructureShape.new(name: 'ListComponentsRequest')
@@ -144,16 +181,19 @@ module Aws::GreengrassV2
     ListInstalledComponentsResponse = Shapes::StructureShape.new(name: 'ListInstalledComponentsResponse')
     ListTagsForResourceRequest = Shapes::StructureShape.new(name: 'ListTagsForResourceRequest')
     ListTagsForResourceResponse = Shapes::StructureShape.new(name: 'ListTagsForResourceResponse')
+    Memory = Shapes::IntegerShape.new(name: 'Memory')
     NextTokenString = Shapes::StringShape.new(name: 'NextTokenString')
     NonEmptyString = Shapes::StringShape.new(name: 'NonEmptyString')
     NullableString = Shapes::StringShape.new(name: 'NullableString')
     OptionalBoolean = Shapes::BooleanShape.new(name: 'OptionalBoolean')
     OptionalInteger = Shapes::IntegerShape.new(name: 'OptionalInteger')
     PlatformAttributesMap = Shapes::MapShape.new(name: 'PlatformAttributesMap')
+    PortNumberInt = Shapes::IntegerShape.new(name: 'PortNumberInt')
     PublisherString = Shapes::StringShape.new(name: 'PublisherString')
     Reason = Shapes::StringShape.new(name: 'Reason')
     RecipeBlob = Shapes::BlobShape.new(name: 'RecipeBlob')
     RecipeOutputFormat = Shapes::StringShape.new(name: 'RecipeOutputFormat')
+    RequestAlreadyInProgressException = Shapes::StructureShape.new(name: 'RequestAlreadyInProgressException')
     ResolveComponentCandidatesRequest = Shapes::StructureShape.new(name: 'ResolveComponentCandidatesRequest')
     ResolveComponentCandidatesResponse = Shapes::StructureShape.new(name: 'ResolveComponentCandidatesResponse')
     ResolvedComponentVersion = Shapes::StructureShape.new(name: 'ResolvedComponentVersion')
@@ -163,6 +203,7 @@ module Aws::GreengrassV2
     ServiceQuotaExceededException = Shapes::StructureShape.new(name: 'ServiceQuotaExceededException')
     String = Shapes::StringShape.new(name: 'String')
     StringMap = Shapes::MapShape.new(name: 'StringMap')
+    SystemResourceLimits = Shapes::StructureShape.new(name: 'SystemResourceLimits')
     TagKey = Shapes::StringShape.new(name: 'TagKey')
     TagKeyList = Shapes::ListShape.new(name: 'TagKeyList')
     TagMap = Shapes::MapShape.new(name: 'TagMap')
@@ -176,13 +217,55 @@ module Aws::GreengrassV2
     TopicString = Shapes::StringShape.new(name: 'TopicString')
     UntagResourceRequest = Shapes::StructureShape.new(name: 'UntagResourceRequest')
     UntagResourceResponse = Shapes::StructureShape.new(name: 'UntagResourceResponse')
+    UpdateConnectivityInfoRequest = Shapes::StructureShape.new(name: 'UpdateConnectivityInfoRequest')
+    UpdateConnectivityInfoResponse = Shapes::StructureShape.new(name: 'UpdateConnectivityInfoResponse')
     ValidationException = Shapes::StructureShape.new(name: 'ValidationException')
     ValidationExceptionField = Shapes::StructureShape.new(name: 'ValidationExceptionField')
     ValidationExceptionFieldList = Shapes::ListShape.new(name: 'ValidationExceptionFieldList')
     ValidationExceptionReason = Shapes::StringShape.new(name: 'ValidationExceptionReason')
+    VendorGuidance = Shapes::StringShape.new(name: 'VendorGuidance')
+    connectivityInfoList = Shapes::ListShape.new(name: 'connectivityInfoList')
 
     AccessDeniedException.add_member(:message, Shapes::ShapeRef.new(shape: String, required: true, location_name: "message"))
     AccessDeniedException.struct_class = Types::AccessDeniedException
+
+    AssociateClientDeviceWithCoreDeviceEntry.add_member(:thing_name, Shapes::ShapeRef.new(shape: IoTThingName, required: true, location_name: "thingName"))
+    AssociateClientDeviceWithCoreDeviceEntry.struct_class = Types::AssociateClientDeviceWithCoreDeviceEntry
+
+    AssociateClientDeviceWithCoreDeviceEntryList.member = Shapes::ShapeRef.new(shape: AssociateClientDeviceWithCoreDeviceEntry)
+
+    AssociateClientDeviceWithCoreDeviceErrorEntry.add_member(:thing_name, Shapes::ShapeRef.new(shape: IoTThingName, location_name: "thingName"))
+    AssociateClientDeviceWithCoreDeviceErrorEntry.add_member(:code, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "code"))
+    AssociateClientDeviceWithCoreDeviceErrorEntry.add_member(:message, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "message"))
+    AssociateClientDeviceWithCoreDeviceErrorEntry.struct_class = Types::AssociateClientDeviceWithCoreDeviceErrorEntry
+
+    AssociateClientDeviceWithCoreDeviceErrorList.member = Shapes::ShapeRef.new(shape: AssociateClientDeviceWithCoreDeviceErrorEntry)
+
+    AssociateServiceRoleToAccountRequest.add_member(:role_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "RoleArn"))
+    AssociateServiceRoleToAccountRequest.struct_class = Types::AssociateServiceRoleToAccountRequest
+
+    AssociateServiceRoleToAccountResponse.add_member(:associated_at, Shapes::ShapeRef.new(shape: String, location_name: "AssociatedAt"))
+    AssociateServiceRoleToAccountResponse.struct_class = Types::AssociateServiceRoleToAccountResponse
+
+    AssociatedClientDevice.add_member(:thing_name, Shapes::ShapeRef.new(shape: IoTThingName, location_name: "thingName"))
+    AssociatedClientDevice.add_member(:association_timestamp, Shapes::ShapeRef.new(shape: Timestamp, location_name: "associationTimestamp"))
+    AssociatedClientDevice.struct_class = Types::AssociatedClientDevice
+
+    AssociatedClientDeviceList.member = Shapes::ShapeRef.new(shape: AssociatedClientDevice)
+
+    BatchAssociateClientDeviceWithCoreDeviceRequest.add_member(:entries, Shapes::ShapeRef.new(shape: AssociateClientDeviceWithCoreDeviceEntryList, location_name: "entries"))
+    BatchAssociateClientDeviceWithCoreDeviceRequest.add_member(:core_device_thing_name, Shapes::ShapeRef.new(shape: IoTThingName, required: true, location: "uri", location_name: "coreDeviceThingName"))
+    BatchAssociateClientDeviceWithCoreDeviceRequest.struct_class = Types::BatchAssociateClientDeviceWithCoreDeviceRequest
+
+    BatchAssociateClientDeviceWithCoreDeviceResponse.add_member(:error_entries, Shapes::ShapeRef.new(shape: AssociateClientDeviceWithCoreDeviceErrorList, location_name: "errorEntries"))
+    BatchAssociateClientDeviceWithCoreDeviceResponse.struct_class = Types::BatchAssociateClientDeviceWithCoreDeviceResponse
+
+    BatchDisassociateClientDeviceFromCoreDeviceRequest.add_member(:entries, Shapes::ShapeRef.new(shape: DisassociateClientDeviceFromCoreDeviceEntryList, location_name: "entries"))
+    BatchDisassociateClientDeviceFromCoreDeviceRequest.add_member(:core_device_thing_name, Shapes::ShapeRef.new(shape: IoTThingName, required: true, location: "uri", location_name: "coreDeviceThingName"))
+    BatchDisassociateClientDeviceFromCoreDeviceRequest.struct_class = Types::BatchDisassociateClientDeviceFromCoreDeviceRequest
+
+    BatchDisassociateClientDeviceFromCoreDeviceResponse.add_member(:error_entries, Shapes::ShapeRef.new(shape: DisassociateClientDeviceFromCoreDeviceErrorList, location_name: "errorEntries"))
+    BatchDisassociateClientDeviceFromCoreDeviceResponse.struct_class = Types::BatchDisassociateClientDeviceFromCoreDeviceResponse
 
     CancelDeploymentRequest.add_member(:deployment_id, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location: "uri", location_name: "deploymentId"))
     CancelDeploymentRequest.struct_class = Types::CancelDeploymentRequest
@@ -193,6 +276,8 @@ module Aws::GreengrassV2
     CloudComponentStatus.add_member(:component_state, Shapes::ShapeRef.new(shape: CloudComponentState, location_name: "componentState"))
     CloudComponentStatus.add_member(:message, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "message"))
     CloudComponentStatus.add_member(:errors, Shapes::ShapeRef.new(shape: StringMap, location_name: "errors"))
+    CloudComponentStatus.add_member(:vendor_guidance, Shapes::ShapeRef.new(shape: VendorGuidance, location_name: "vendorGuidance"))
+    CloudComponentStatus.add_member(:vendor_guidance_message, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "vendorGuidanceMessage"))
     CloudComponentStatus.struct_class = Types::CloudComponentStatus
 
     Component.add_member(:arn, Shapes::ShapeRef.new(shape: ComponentARN, location_name: "arn"))
@@ -245,6 +330,8 @@ module Aws::GreengrassV2
     ComponentPlatformList.member = Shapes::ShapeRef.new(shape: ComponentPlatform)
 
     ComponentRunWith.add_member(:posix_user, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "posixUser"))
+    ComponentRunWith.add_member(:system_resource_limits, Shapes::ShapeRef.new(shape: SystemResourceLimits, location_name: "systemResourceLimits"))
+    ComponentRunWith.add_member(:windows_user, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "windowsUser"))
     ComponentRunWith.struct_class = Types::ComponentRunWith
 
     ComponentVersionList.member = Shapes::ShapeRef.new(shape: ComponentVersionListItem)
@@ -262,6 +349,12 @@ module Aws::GreengrassV2
     ConflictException.add_member(:resource_type, Shapes::ShapeRef.new(shape: String, required: true, location_name: "resourceType"))
     ConflictException.struct_class = Types::ConflictException
 
+    ConnectivityInfo.add_member(:id, Shapes::ShapeRef.new(shape: String, location_name: "Id"))
+    ConnectivityInfo.add_member(:host_address, Shapes::ShapeRef.new(shape: String, location_name: "HostAddress"))
+    ConnectivityInfo.add_member(:port_number, Shapes::ShapeRef.new(shape: PortNumberInt, location_name: "PortNumber"))
+    ConnectivityInfo.add_member(:metadata, Shapes::ShapeRef.new(shape: String, location_name: "Metadata"))
+    ConnectivityInfo.struct_class = Types::ConnectivityInfo
+
     CoreDevice.add_member(:core_device_thing_name, Shapes::ShapeRef.new(shape: CoreDeviceThingName, location_name: "coreDeviceThingName"))
     CoreDevice.add_member(:status, Shapes::ShapeRef.new(shape: CoreDeviceStatus, location_name: "status"))
     CoreDevice.add_member(:last_status_update_timestamp, Shapes::ShapeRef.new(shape: Timestamp, location_name: "lastStatusUpdateTimestamp"))
@@ -272,6 +365,7 @@ module Aws::GreengrassV2
     CreateComponentVersionRequest.add_member(:inline_recipe, Shapes::ShapeRef.new(shape: RecipeBlob, location_name: "inlineRecipe"))
     CreateComponentVersionRequest.add_member(:lambda_function, Shapes::ShapeRef.new(shape: LambdaFunctionRecipeSource, location_name: "lambdaFunction"))
     CreateComponentVersionRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    CreateComponentVersionRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientTokenString, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
     CreateComponentVersionRequest.struct_class = Types::CreateComponentVersionRequest
 
     CreateComponentVersionResponse.add_member(:arn, Shapes::ShapeRef.new(shape: ComponentVersionARN, location_name: "arn"))
@@ -282,11 +376,13 @@ module Aws::GreengrassV2
     CreateComponentVersionResponse.struct_class = Types::CreateComponentVersionResponse
 
     CreateDeploymentRequest.add_member(:target_arn, Shapes::ShapeRef.new(shape: TargetARN, required: true, location_name: "targetArn"))
-    CreateDeploymentRequest.add_member(:deployment_name, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "deploymentName"))
+    CreateDeploymentRequest.add_member(:deployment_name, Shapes::ShapeRef.new(shape: DeploymentNameString, location_name: "deploymentName"))
     CreateDeploymentRequest.add_member(:components, Shapes::ShapeRef.new(shape: ComponentDeploymentSpecifications, location_name: "components"))
     CreateDeploymentRequest.add_member(:iot_job_configuration, Shapes::ShapeRef.new(shape: DeploymentIoTJobConfiguration, location_name: "iotJobConfiguration"))
     CreateDeploymentRequest.add_member(:deployment_policies, Shapes::ShapeRef.new(shape: DeploymentPolicies, location_name: "deploymentPolicies"))
+    CreateDeploymentRequest.add_member(:parent_target_arn, Shapes::ShapeRef.new(shape: ThingGroupARN, location_name: "parentTargetArn"))
     CreateDeploymentRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    CreateDeploymentRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientTokenString, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
     CreateDeploymentRequest.struct_class = Types::CreateDeploymentRequest
 
     CreateDeploymentResponse.add_member(:deployment_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "deploymentId"))
@@ -300,6 +396,9 @@ module Aws::GreengrassV2
     DeleteCoreDeviceRequest.add_member(:core_device_thing_name, Shapes::ShapeRef.new(shape: CoreDeviceThingName, required: true, location: "uri", location_name: "coreDeviceThingName"))
     DeleteCoreDeviceRequest.struct_class = Types::DeleteCoreDeviceRequest
 
+    DeleteDeploymentRequest.add_member(:deployment_id, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location: "uri", location_name: "deploymentId"))
+    DeleteDeploymentRequest.struct_class = Types::DeleteDeploymentRequest
+
     Deployment.add_member(:target_arn, Shapes::ShapeRef.new(shape: TargetARN, location_name: "targetArn"))
     Deployment.add_member(:revision_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "revisionId"))
     Deployment.add_member(:deployment_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "deploymentId"))
@@ -307,6 +406,7 @@ module Aws::GreengrassV2
     Deployment.add_member(:creation_timestamp, Shapes::ShapeRef.new(shape: Timestamp, location_name: "creationTimestamp"))
     Deployment.add_member(:deployment_status, Shapes::ShapeRef.new(shape: DeploymentStatus, location_name: "deploymentStatus"))
     Deployment.add_member(:is_latest_for_target, Shapes::ShapeRef.new(shape: IsLatestForTarget, location_name: "isLatestForTarget"))
+    Deployment.add_member(:parent_target_arn, Shapes::ShapeRef.new(shape: ThingGroupARN, location_name: "parentTargetArn"))
     Deployment.struct_class = Types::Deployment
 
     DeploymentComponentUpdatePolicy.add_member(:timeout_in_seconds, Shapes::ShapeRef.new(shape: OptionalInteger, location_name: "timeoutInSeconds", metadata: {"box"=>true}))
@@ -342,6 +442,23 @@ module Aws::GreengrassV2
     DescribeComponentResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     DescribeComponentResponse.struct_class = Types::DescribeComponentResponse
 
+    DisassociateClientDeviceFromCoreDeviceEntry.add_member(:thing_name, Shapes::ShapeRef.new(shape: IoTThingName, required: true, location_name: "thingName"))
+    DisassociateClientDeviceFromCoreDeviceEntry.struct_class = Types::DisassociateClientDeviceFromCoreDeviceEntry
+
+    DisassociateClientDeviceFromCoreDeviceEntryList.member = Shapes::ShapeRef.new(shape: DisassociateClientDeviceFromCoreDeviceEntry)
+
+    DisassociateClientDeviceFromCoreDeviceErrorEntry.add_member(:thing_name, Shapes::ShapeRef.new(shape: IoTThingName, location_name: "thingName"))
+    DisassociateClientDeviceFromCoreDeviceErrorEntry.add_member(:code, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "code"))
+    DisassociateClientDeviceFromCoreDeviceErrorEntry.add_member(:message, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "message"))
+    DisassociateClientDeviceFromCoreDeviceErrorEntry.struct_class = Types::DisassociateClientDeviceFromCoreDeviceErrorEntry
+
+    DisassociateClientDeviceFromCoreDeviceErrorList.member = Shapes::ShapeRef.new(shape: DisassociateClientDeviceFromCoreDeviceErrorEntry)
+
+    DisassociateServiceRoleFromAccountRequest.struct_class = Types::DisassociateServiceRoleFromAccountRequest
+
+    DisassociateServiceRoleFromAccountResponse.add_member(:disassociated_at, Shapes::ShapeRef.new(shape: String, location_name: "DisassociatedAt"))
+    DisassociateServiceRoleFromAccountResponse.struct_class = Types::DisassociateServiceRoleFromAccountResponse
+
     EffectiveDeployment.add_member(:deployment_id, Shapes::ShapeRef.new(shape: DeploymentID, required: true, location_name: "deploymentId"))
     EffectiveDeployment.add_member(:deployment_name, Shapes::ShapeRef.new(shape: DeploymentName, required: true, location_name: "deploymentName"))
     EffectiveDeployment.add_member(:iot_job_id, Shapes::ShapeRef.new(shape: IoTJobId, location_name: "iotJobId"))
@@ -352,7 +469,16 @@ module Aws::GreengrassV2
     EffectiveDeployment.add_member(:reason, Shapes::ShapeRef.new(shape: Reason, location_name: "reason"))
     EffectiveDeployment.add_member(:creation_timestamp, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "creationTimestamp"))
     EffectiveDeployment.add_member(:modified_timestamp, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "modifiedTimestamp"))
+    EffectiveDeployment.add_member(:status_details, Shapes::ShapeRef.new(shape: EffectiveDeploymentStatusDetails, location_name: "statusDetails"))
     EffectiveDeployment.struct_class = Types::EffectiveDeployment
+
+    EffectiveDeploymentErrorStack.member = Shapes::ShapeRef.new(shape: EffectiveDeploymentErrorCode)
+
+    EffectiveDeploymentErrorTypeList.member = Shapes::ShapeRef.new(shape: EffectiveDeploymentErrorType)
+
+    EffectiveDeploymentStatusDetails.add_member(:error_stack, Shapes::ShapeRef.new(shape: EffectiveDeploymentErrorStack, location_name: "errorStack"))
+    EffectiveDeploymentStatusDetails.add_member(:error_types, Shapes::ShapeRef.new(shape: EffectiveDeploymentErrorTypeList, location_name: "errorTypes"))
+    EffectiveDeploymentStatusDetails.struct_class = Types::EffectiveDeploymentStatusDetails
 
     EffectiveDeploymentsList.member = Shapes::ShapeRef.new(shape: EffectiveDeployment)
 
@@ -371,6 +497,13 @@ module Aws::GreengrassV2
 
     GetComponentVersionArtifactResponse.add_member(:pre_signed_url, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location_name: "preSignedUrl"))
     GetComponentVersionArtifactResponse.struct_class = Types::GetComponentVersionArtifactResponse
+
+    GetConnectivityInfoRequest.add_member(:thing_name, Shapes::ShapeRef.new(shape: CoreDeviceThingName, required: true, location: "uri", location_name: "thingName"))
+    GetConnectivityInfoRequest.struct_class = Types::GetConnectivityInfoRequest
+
+    GetConnectivityInfoResponse.add_member(:connectivity_info, Shapes::ShapeRef.new(shape: connectivityInfoList, location_name: "ConnectivityInfo"))
+    GetConnectivityInfoResponse.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    GetConnectivityInfoResponse.struct_class = Types::GetConnectivityInfoResponse
 
     GetCoreDeviceRequest.add_member(:core_device_thing_name, Shapes::ShapeRef.new(shape: CoreDeviceThingName, required: true, location: "uri", location_name: "coreDeviceThingName"))
     GetCoreDeviceRequest.struct_class = Types::GetCoreDeviceRequest
@@ -399,15 +532,28 @@ module Aws::GreengrassV2
     GetDeploymentResponse.add_member(:iot_job_configuration, Shapes::ShapeRef.new(shape: DeploymentIoTJobConfiguration, location_name: "iotJobConfiguration"))
     GetDeploymentResponse.add_member(:creation_timestamp, Shapes::ShapeRef.new(shape: Timestamp, location_name: "creationTimestamp"))
     GetDeploymentResponse.add_member(:is_latest_for_target, Shapes::ShapeRef.new(shape: IsLatestForTarget, location_name: "isLatestForTarget"))
+    GetDeploymentResponse.add_member(:parent_target_arn, Shapes::ShapeRef.new(shape: ThingGroupARN, location_name: "parentTargetArn"))
     GetDeploymentResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     GetDeploymentResponse.struct_class = Types::GetDeploymentResponse
+
+    GetServiceRoleForAccountRequest.struct_class = Types::GetServiceRoleForAccountRequest
+
+    GetServiceRoleForAccountResponse.add_member(:associated_at, Shapes::ShapeRef.new(shape: String, location_name: "AssociatedAt"))
+    GetServiceRoleForAccountResponse.add_member(:role_arn, Shapes::ShapeRef.new(shape: String, location_name: "RoleArn"))
+    GetServiceRoleForAccountResponse.struct_class = Types::GetServiceRoleForAccountResponse
 
     InstalledComponent.add_member(:component_name, Shapes::ShapeRef.new(shape: ComponentNameString, location_name: "componentName"))
     InstalledComponent.add_member(:component_version, Shapes::ShapeRef.new(shape: ComponentVersionString, location_name: "componentVersion"))
     InstalledComponent.add_member(:lifecycle_state, Shapes::ShapeRef.new(shape: InstalledComponentLifecycleState, location_name: "lifecycleState"))
     InstalledComponent.add_member(:lifecycle_state_details, Shapes::ShapeRef.new(shape: LifecycleStateDetails, location_name: "lifecycleStateDetails"))
     InstalledComponent.add_member(:is_root, Shapes::ShapeRef.new(shape: IsRoot, location_name: "isRoot"))
+    InstalledComponent.add_member(:last_status_change_timestamp, Shapes::ShapeRef.new(shape: Timestamp, location_name: "lastStatusChangeTimestamp"))
+    InstalledComponent.add_member(:last_reported_timestamp, Shapes::ShapeRef.new(shape: Timestamp, location_name: "lastReportedTimestamp"))
+    InstalledComponent.add_member(:last_installation_source, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "lastInstallationSource"))
+    InstalledComponent.add_member(:lifecycle_status_codes, Shapes::ShapeRef.new(shape: InstalledComponentLifecycleStatusCodeList, location_name: "lifecycleStatusCodes"))
     InstalledComponent.struct_class = Types::InstalledComponent
+
+    InstalledComponentLifecycleStatusCodeList.member = Shapes::ShapeRef.new(shape: InstalledComponentLifecycleStatusCode)
 
     InstalledComponentList.member = Shapes::ShapeRef.new(shape: InstalledComponent)
 
@@ -479,7 +625,7 @@ module Aws::GreengrassV2
     LambdaExecutionParameters.add_member(:linux_process_params, Shapes::ShapeRef.new(shape: LambdaLinuxProcessParams, location_name: "linuxProcessParams"))
     LambdaExecutionParameters.struct_class = Types::LambdaExecutionParameters
 
-    LambdaFunctionRecipeSource.add_member(:lambda_arn, Shapes::ShapeRef.new(shape: LambdaFunctionARNWithVersionNumber, required: true, location_name: "lambdaArn"))
+    LambdaFunctionRecipeSource.add_member(:lambda_arn, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location_name: "lambdaArn"))
     LambdaFunctionRecipeSource.add_member(:component_name, Shapes::ShapeRef.new(shape: ComponentNameString, location_name: "componentName"))
     LambdaFunctionRecipeSource.add_member(:component_version, Shapes::ShapeRef.new(shape: ComponentVersionString, location_name: "componentVersion"))
     LambdaFunctionRecipeSource.add_member(:component_platforms, Shapes::ShapeRef.new(shape: ComponentPlatformList, location_name: "componentPlatforms"))
@@ -498,6 +644,15 @@ module Aws::GreengrassV2
     LambdaVolumeMount.add_member(:permission, Shapes::ShapeRef.new(shape: LambdaFilesystemPermission, location_name: "permission"))
     LambdaVolumeMount.add_member(:add_group_owner, Shapes::ShapeRef.new(shape: OptionalBoolean, location_name: "addGroupOwner", metadata: {"box"=>true}))
     LambdaVolumeMount.struct_class = Types::LambdaVolumeMount
+
+    ListClientDevicesAssociatedWithCoreDeviceRequest.add_member(:core_device_thing_name, Shapes::ShapeRef.new(shape: IoTThingName, required: true, location: "uri", location_name: "coreDeviceThingName"))
+    ListClientDevicesAssociatedWithCoreDeviceRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: DefaultMaxResults, location: "querystring", location_name: "maxResults", metadata: {"box"=>true}))
+    ListClientDevicesAssociatedWithCoreDeviceRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextTokenString, location: "querystring", location_name: "nextToken", metadata: {"box"=>true}))
+    ListClientDevicesAssociatedWithCoreDeviceRequest.struct_class = Types::ListClientDevicesAssociatedWithCoreDeviceRequest
+
+    ListClientDevicesAssociatedWithCoreDeviceResponse.add_member(:associated_client_devices, Shapes::ShapeRef.new(shape: AssociatedClientDeviceList, location_name: "associatedClientDevices"))
+    ListClientDevicesAssociatedWithCoreDeviceResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextTokenString, location_name: "nextToken", metadata: {"box"=>true}))
+    ListClientDevicesAssociatedWithCoreDeviceResponse.struct_class = Types::ListClientDevicesAssociatedWithCoreDeviceResponse
 
     ListComponentVersionsRequest.add_member(:arn, Shapes::ShapeRef.new(shape: ComponentARN, required: true, location: "uri", location_name: "arn"))
     ListComponentVersionsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: DefaultMaxResults, location: "querystring", location_name: "maxResults", metadata: {"box"=>true}))
@@ -529,6 +684,7 @@ module Aws::GreengrassV2
 
     ListDeploymentsRequest.add_member(:target_arn, Shapes::ShapeRef.new(shape: TargetARN, location: "querystring", location_name: "targetArn"))
     ListDeploymentsRequest.add_member(:history_filter, Shapes::ShapeRef.new(shape: DeploymentHistoryFilter, location: "querystring", location_name: "historyFilter"))
+    ListDeploymentsRequest.add_member(:parent_target_arn, Shapes::ShapeRef.new(shape: ThingGroupARN, location: "querystring", location_name: "parentTargetArn"))
     ListDeploymentsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: DefaultMaxResults, location: "querystring", location_name: "maxResults", metadata: {"box"=>true}))
     ListDeploymentsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextTokenString, location: "querystring", location_name: "nextToken", metadata: {"box"=>true}))
     ListDeploymentsRequest.struct_class = Types::ListDeploymentsRequest
@@ -549,6 +705,7 @@ module Aws::GreengrassV2
     ListInstalledComponentsRequest.add_member(:core_device_thing_name, Shapes::ShapeRef.new(shape: CoreDeviceThingName, required: true, location: "uri", location_name: "coreDeviceThingName"))
     ListInstalledComponentsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: DefaultMaxResults, location: "querystring", location_name: "maxResults", metadata: {"box"=>true}))
     ListInstalledComponentsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextTokenString, location: "querystring", location_name: "nextToken", metadata: {"box"=>true}))
+    ListInstalledComponentsRequest.add_member(:topology_filter, Shapes::ShapeRef.new(shape: InstalledComponentTopologyFilter, location: "querystring", location_name: "topologyFilter", metadata: {"box"=>true}))
     ListInstalledComponentsRequest.struct_class = Types::ListInstalledComponentsRequest
 
     ListInstalledComponentsResponse.add_member(:installed_components, Shapes::ShapeRef.new(shape: InstalledComponentList, location_name: "installedComponents"))
@@ -564,8 +721,11 @@ module Aws::GreengrassV2
     PlatformAttributesMap.key = Shapes::ShapeRef.new(shape: NonEmptyString)
     PlatformAttributesMap.value = Shapes::ShapeRef.new(shape: NonEmptyString)
 
-    ResolveComponentCandidatesRequest.add_member(:platform, Shapes::ShapeRef.new(shape: ComponentPlatform, required: true, location_name: "platform"))
-    ResolveComponentCandidatesRequest.add_member(:component_candidates, Shapes::ShapeRef.new(shape: ComponentCandidateList, required: true, location_name: "componentCandidates"))
+    RequestAlreadyInProgressException.add_member(:message, Shapes::ShapeRef.new(shape: String, required: true, location_name: "message"))
+    RequestAlreadyInProgressException.struct_class = Types::RequestAlreadyInProgressException
+
+    ResolveComponentCandidatesRequest.add_member(:platform, Shapes::ShapeRef.new(shape: ComponentPlatform, location_name: "platform"))
+    ResolveComponentCandidatesRequest.add_member(:component_candidates, Shapes::ShapeRef.new(shape: ComponentCandidateList, location_name: "componentCandidates"))
     ResolveComponentCandidatesRequest.struct_class = Types::ResolveComponentCandidatesRequest
 
     ResolveComponentCandidatesResponse.add_member(:resolved_component_versions, Shapes::ShapeRef.new(shape: ResolvedComponentVersionsList, location_name: "resolvedComponentVersions"))
@@ -575,6 +735,8 @@ module Aws::GreengrassV2
     ResolvedComponentVersion.add_member(:component_name, Shapes::ShapeRef.new(shape: ComponentNameString, location_name: "componentName"))
     ResolvedComponentVersion.add_member(:component_version, Shapes::ShapeRef.new(shape: ComponentVersionString, location_name: "componentVersion"))
     ResolvedComponentVersion.add_member(:recipe, Shapes::ShapeRef.new(shape: RecipeBlob, location_name: "recipe"))
+    ResolvedComponentVersion.add_member(:vendor_guidance, Shapes::ShapeRef.new(shape: VendorGuidance, location_name: "vendorGuidance"))
+    ResolvedComponentVersion.add_member(:message, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "message"))
     ResolvedComponentVersion.struct_class = Types::ResolvedComponentVersion
 
     ResolvedComponentVersionsList.member = Shapes::ShapeRef.new(shape: ResolvedComponentVersion)
@@ -593,6 +755,10 @@ module Aws::GreengrassV2
 
     StringMap.key = Shapes::ShapeRef.new(shape: NonEmptyString)
     StringMap.value = Shapes::ShapeRef.new(shape: NonEmptyString)
+
+    SystemResourceLimits.add_member(:memory, Shapes::ShapeRef.new(shape: Memory, location_name: "memory"))
+    SystemResourceLimits.add_member(:cpus, Shapes::ShapeRef.new(shape: CPU, location_name: "cpus"))
+    SystemResourceLimits.struct_class = Types::SystemResourceLimits
 
     TagKeyList.member = Shapes::ShapeRef.new(shape: TagKey)
 
@@ -617,6 +783,14 @@ module Aws::GreengrassV2
 
     UntagResourceResponse.struct_class = Types::UntagResourceResponse
 
+    UpdateConnectivityInfoRequest.add_member(:thing_name, Shapes::ShapeRef.new(shape: CoreDeviceThingName, required: true, location: "uri", location_name: "thingName"))
+    UpdateConnectivityInfoRequest.add_member(:connectivity_info, Shapes::ShapeRef.new(shape: connectivityInfoList, required: true, location_name: "ConnectivityInfo"))
+    UpdateConnectivityInfoRequest.struct_class = Types::UpdateConnectivityInfoRequest
+
+    UpdateConnectivityInfoResponse.add_member(:version, Shapes::ShapeRef.new(shape: String, location_name: "Version"))
+    UpdateConnectivityInfoResponse.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    UpdateConnectivityInfoResponse.struct_class = Types::UpdateConnectivityInfoResponse
+
     ValidationException.add_member(:message, Shapes::ShapeRef.new(shape: String, required: true, location_name: "message"))
     ValidationException.add_member(:reason, Shapes::ShapeRef.new(shape: ValidationExceptionReason, location_name: "reason"))
     ValidationException.add_member(:fields, Shapes::ShapeRef.new(shape: ValidationExceptionFieldList, location_name: "fields"))
@@ -628,6 +802,8 @@ module Aws::GreengrassV2
 
     ValidationExceptionFieldList.member = Shapes::ShapeRef.new(shape: ValidationExceptionField)
 
+    connectivityInfoList.member = Shapes::ShapeRef.new(shape: ConnectivityInfo)
+
 
     # @api private
     API = Seahorse::Model::Api.new.tap do |api|
@@ -637,7 +813,6 @@ module Aws::GreengrassV2
       api.metadata = {
         "apiVersion" => "2020-11-30",
         "endpointPrefix" => "greengrass",
-        "jsonVersion" => "1.1",
         "protocol" => "rest-json",
         "serviceAbbreviation" => "AWS GreengrassV2",
         "serviceFullName" => "AWS IoT Greengrass V2",
@@ -645,6 +820,42 @@ module Aws::GreengrassV2
         "signatureVersion" => "v4",
         "uid" => "greengrassv2-2020-11-30",
       }
+
+      api.add_operation(:associate_service_role_to_account, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "AssociateServiceRoleToAccount"
+        o.http_method = "PUT"
+        o.http_request_uri = "/greengrass/servicerole"
+        o.input = Shapes::ShapeRef.new(shape: AssociateServiceRoleToAccountRequest)
+        o.output = Shapes::ShapeRef.new(shape: AssociateServiceRoleToAccountResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+      end)
+
+      api.add_operation(:batch_associate_client_device_with_core_device, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "BatchAssociateClientDeviceWithCoreDevice"
+        o.http_method = "POST"
+        o.http_request_uri = "/greengrass/v2/coreDevices/{coreDeviceThingName}/associateClientDevices"
+        o.input = Shapes::ShapeRef.new(shape: BatchAssociateClientDeviceWithCoreDeviceRequest)
+        o.output = Shapes::ShapeRef.new(shape: BatchAssociateClientDeviceWithCoreDeviceResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
+
+      api.add_operation(:batch_disassociate_client_device_from_core_device, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "BatchDisassociateClientDeviceFromCoreDevice"
+        o.http_method = "POST"
+        o.http_request_uri = "/greengrass/v2/coreDevices/{coreDeviceThingName}/disassociateClientDevices"
+        o.input = Shapes::ShapeRef.new(shape: BatchDisassociateClientDeviceFromCoreDeviceRequest)
+        o.output = Shapes::ShapeRef.new(shape: BatchDisassociateClientDeviceFromCoreDeviceResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
 
       api.add_operation(:cancel_deployment, Seahorse::Model::Operation.new.tap do |o|
         o.name = "CancelDeployment"
@@ -672,6 +883,7 @@ module Aws::GreengrassV2
         o.errors << Shapes::ShapeRef.new(shape: ConflictException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: RequestAlreadyInProgressException)
       end)
 
       api.add_operation(:create_deployment, Seahorse::Model::Operation.new.tap do |o|
@@ -685,6 +897,8 @@ module Aws::GreengrassV2
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: RequestAlreadyInProgressException)
       end)
 
       api.add_operation(:delete_component, Seahorse::Model::Operation.new.tap do |o|
@@ -715,6 +929,20 @@ module Aws::GreengrassV2
         o.errors << Shapes::ShapeRef.new(shape: ConflictException)
       end)
 
+      api.add_operation(:delete_deployment, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteDeployment"
+        o.http_method = "DELETE"
+        o.http_request_uri = "/greengrass/v2/deployments/{deploymentId}"
+        o.input = Shapes::ShapeRef.new(shape: DeleteDeploymentRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
+
       api.add_operation(:describe_component, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DescribeComponent"
         o.http_method = "GET"
@@ -725,6 +953,15 @@ module Aws::GreengrassV2
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+      end)
+
+      api.add_operation(:disassociate_service_role_from_account, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DisassociateServiceRoleFromAccount"
+        o.http_method = "DELETE"
+        o.http_request_uri = "/greengrass/servicerole"
+        o.input = Shapes::ShapeRef.new(shape: DisassociateServiceRoleFromAccountRequest)
+        o.output = Shapes::ShapeRef.new(shape: DisassociateServiceRoleFromAccountResponse)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
       end)
 
@@ -754,6 +991,16 @@ module Aws::GreengrassV2
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
       end)
 
+      api.add_operation(:get_connectivity_info, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetConnectivityInfo"
+        o.http_method = "GET"
+        o.http_request_uri = "/greengrass/things/{thingName}/connectivityInfo"
+        o.input = Shapes::ShapeRef.new(shape: GetConnectivityInfoRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetConnectivityInfoResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+      end)
+
       api.add_operation(:get_core_device, Seahorse::Model::Operation.new.tap do |o|
         o.name = "GetCoreDevice"
         o.http_method = "GET"
@@ -778,6 +1025,34 @@ module Aws::GreengrassV2
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
+
+      api.add_operation(:get_service_role_for_account, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetServiceRoleForAccount"
+        o.http_method = "GET"
+        o.http_request_uri = "/greengrass/servicerole"
+        o.input = Shapes::ShapeRef.new(shape: GetServiceRoleForAccountRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetServiceRoleForAccountResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+      end)
+
+      api.add_operation(:list_client_devices_associated_with_core_device, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListClientDevicesAssociatedWithCoreDevice"
+        o.http_method = "GET"
+        o.http_request_uri = "/greengrass/v2/coreDevices/{coreDeviceThingName}/associatedClientDevices"
+        o.input = Shapes::ShapeRef.new(shape: ListClientDevicesAssociatedWithCoreDeviceRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListClientDevicesAssociatedWithCoreDeviceResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
       end)
 
       api.add_operation(:list_component_versions, Seahorse::Model::Operation.new.tap do |o|
@@ -807,6 +1082,7 @@ module Aws::GreengrassV2
         o.output = Shapes::ShapeRef.new(shape: ListComponentsResponse)
         o.errors << Shapes::ShapeRef.new(shape: ValidationException)
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
         o[:pager] = Aws::Pager.new(
@@ -911,9 +1187,9 @@ module Aws::GreengrassV2
         o.errors << Shapes::ShapeRef.new(shape: ValidationException)
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ConflictException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
-        o.errors << Shapes::ShapeRef.new(shape: ConflictException)
       end)
 
       api.add_operation(:tag_resource, Seahorse::Model::Operation.new.tap do |o|
@@ -936,6 +1212,16 @@ module Aws::GreengrassV2
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
         o.errors << Shapes::ShapeRef.new(shape: ValidationException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
+      api.add_operation(:update_connectivity_info, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UpdateConnectivityInfo"
+        o.http_method = "PUT"
+        o.http_request_uri = "/greengrass/things/{thingName}/connectivityInfo"
+        o.input = Shapes::ShapeRef.new(shape: UpdateConnectivityInfoRequest)
+        o.output = Shapes::ShapeRef.new(shape: UpdateConnectivityInfoResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
       end)
     end
 

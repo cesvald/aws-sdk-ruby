@@ -1,6 +1,262 @@
 Unreleased Changes
 ------------------
 
+1.128.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.127.0 (2023-06-28)
+------------------
+
+* Feature - The S3 LISTObjects, ListObjectsV2 and ListObjectVersions API now supports a new optional header x-amz-optional-object-attributes. If header contains RestoreStatus as the value, then S3 will include Glacier restore status i.e. isRestoreInProgress and RestoreExpiryDate in List response.
+
+* Feature - Select minimum expiration time for presigned urls between the expiration time option and the credential expiration time.
+
+1.126.0 (2023-06-16)
+------------------
+
+* Feature - This release adds SDK support for request-payer request header and request-charged response header in the "GetBucketAccelerateConfiguration", "ListMultipartUploads", "ListObjects", "ListObjectsV2" and "ListObjectVersions" S3 APIs.
+
+1.125.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.124.0 (2023-06-13)
+------------------
+
+* Feature - Integrate double encryption feature to SDKs.
+
+1.123.2 (2023-06-12)
+------------------
+
+* Issue - Fix issue when decrypting noncurrent versions of objects when using client side encryption (#2866). 
+
+1.123.1 (2023-06-02)
+------------------
+
+* Issue - Fix multipart `download_file` so that it does not download bytes out of range (#2859).
+
+1.123.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.122.0 (2023-05-04)
+------------------
+
+* Feature - Documentation updates for Amazon S3
+
+1.121.0 (2023-04-19)
+------------------
+
+* Feature - Provides support for "Snow" Storage class.
+
+1.120.1 (2023-04-05)
+------------------
+
+* Issue - Skip `#check_for_cached_region` if custom endpoint provided
+
+1.120.0 (2023-03-31)
+------------------
+
+* Feature - Documentation updates for Amazon S3
+
+1.119.2 (2023-03-22)
+------------------
+
+* Issue - Provide `endpoint` and `bucket` attributes on `Aws::S3::Errors::PermanentRedirect` error objects.
+
+1.119.1 (2023-02-13)
+------------------
+
+* Issue - Ensure object metadata is not lost on multipart copy (#2821).
+
+1.119.0 (2023-01-26)
+------------------
+
+* Feature - Allow FIPS to be used with path-style URLs.
+
+1.118.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.117.2 (2022-11-30)
+------------------
+
+* Issue - Return error messages from failures in threads in `MultipartStreamUploader` (#2793).
+
+1.117.1 (2022-10-26)
+------------------
+
+* Issue - Fix custom endpoint and port regression with `presigned_url` (#2776).
+
+1.117.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Apply checksums to MultipartStreamUploader (#2769).
+
+1.116.0 (2022-10-21)
+------------------
+
+* Feature - S3 on Outposts launches support for automatic bucket-style alias. You can use the automatic access point alias instead of an access point ARN for any object-level operation in an Outposts bucket.
+
+1.115.0 (2022-10-19)
+------------------
+
+* Feature - Updates internal logic for constructing API endpoints. We have added rule-based endpoints and internal model parameters.
+
+1.114.0 (2022-05-03)
+------------------
+
+* Feature - Documentation only update for doc bug fixes for the S3 API docs.
+
+1.113.2 (2022-04-26)
+------------------
+
+* Issue - Fix an issue where `ExpiredToken` errors were retried as if the request was from another region.
+
+1.113.1 (2022-04-25)
+------------------
+
+* Issue - Rewind the underlying file on a streaming retry that is not a truncated body (#2692).
+
+1.113.0 (2022-02-24)
+------------------
+
+* Feature - This release adds support for new integrity checking capabilities in Amazon S3. You can choose from four supported checksum algorithms for data integrity checking on your upload and download requests. In addition, AWS SDK can automatically calculate a checksum as it streams data into S3
+
+1.112.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.111.3 (2022-01-24)
+------------------
+
+* Issue - Fix starts_with fields on `PresignedPost` (#2636).
+
+1.111.2 (2022-01-20)
+------------------
+
+* Issue - Minor cleanups.
+
+1.111.1 (2022-01-06)
+------------------
+
+* Issue - Don't fail small files in `upload_file` when `:thread_count` is set. (#2628)
+
+1.111.0 (2022-01-04)
+------------------
+
+* Feature - Minor doc-based updates based on feedback bugs received.
+
+1.110.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.109.0 (2021-11-30)
+------------------
+
+* Feature - Introduce Amazon S3 Glacier Instant Retrieval storage class and a new setting in S3 Object Ownership to disable ACLs for bucket and the objects in it.
+
+1.108.0 (2021-11-29)
+------------------
+
+* Feature - Amazon S3 Event Notifications adds Amazon EventBridge as a destination and supports additional event types. The PutBucketNotificationConfiguration API can now skip validation of Amazon SQS, Amazon SNS and AWS Lambda destinations.
+
+1.107.0 (2021-11-23)
+------------------
+
+* Feature - Introduce two new Filters to S3 Lifecycle configurations - ObjectSizeGreaterThan and ObjectSizeLessThan. Introduce a new way to trigger actions on noncurrent versions by providing the number of newer noncurrent versions along with noncurrent days.
+
+1.106.0 (2021-11-17)
+------------------
+
+* Feature - Add `presigned_request` method to `Aws::S3::Object`.
+
+1.105.1 (2021-11-05)
+------------------
+
+* Issue - Raise error when `use_fips_endpoint` is used with `use_accelerate_endpoint`.
+
+1.105.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.104.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.103.0 (2021-09-16)
+------------------
+
+* Feature - Add support for access point arn filtering in S3 CW Request Metrics
+
+1.102.0 (2021-09-02)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.101.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.100.0 (2021-08-27)
+------------------
+
+* Feature - Documentation updates for Amazon S3.
+
+1.99.0 (2021-08-16)
+------------------
+
+* Feature - Documentation updates for Amazon S3
+
+1.98.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.97.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.96.2 (2021-07-20)
+------------------
+
+* Issue - Fix file downloading edge case for 1 byte multipart ranges (#2561).
+
+1.96.1 (2021-06-10)
+------------------
+
+* Issue - fix GetBucketLocation location_constraint XML parsing (#2536)
+
+1.96.0 (2021-06-03)
+------------------
+
+* Feature - S3 Inventory now supports Bucket Key Status
+
+1.95.1 (2021-05-24)
+------------------
+
+* Issue - Raise an error when FIPS is in the ARN's region for Access Point and Object Lambda.
+
+1.95.0 (2021-05-21)
+------------------
+
+* Feature - Documentation updates for Amazon S3
+
 1.94.1 (2021-05-05)
 ------------------
 

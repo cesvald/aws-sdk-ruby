@@ -13,10 +13,14 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-cloudformation/types'
 require_relative 'aws-sdk-cloudformation/client_api'
+require_relative 'aws-sdk-cloudformation/plugins/endpoints.rb'
 require_relative 'aws-sdk-cloudformation/client'
 require_relative 'aws-sdk-cloudformation/errors'
 require_relative 'aws-sdk-cloudformation/waiters'
 require_relative 'aws-sdk-cloudformation/resource'
+require_relative 'aws-sdk-cloudformation/endpoint_parameters'
+require_relative 'aws-sdk-cloudformation/endpoint_provider'
+require_relative 'aws-sdk-cloudformation/endpoints'
 require_relative 'aws-sdk-cloudformation/event'
 require_relative 'aws-sdk-cloudformation/stack'
 require_relative 'aws-sdk-cloudformation/stack_resource'
@@ -33,7 +37,7 @@ require_relative 'aws-sdk-cloudformation/customizations'
 # structure.
 #
 #     cloud_formation = Aws::CloudFormation::Client.new
-#     resp = cloud_formation.cancel_update_stack(params)
+#     resp = cloud_formation.activate_organizations_access(params)
 #
 # See {Client} for more information.
 #
@@ -53,6 +57,6 @@ require_relative 'aws-sdk-cloudformation/customizations'
 # @!group service
 module Aws::CloudFormation
 
-  GEM_VERSION = '1.52.0'
+  GEM_VERSION = '1.84.0'
 
 end

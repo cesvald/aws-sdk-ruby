@@ -67,6 +67,14 @@ module Aws::EC2
       data[:default_for_az]
     end
 
+    # Indicates the device position for local network interfaces in this
+    # subnet. For example, `1` indicates local network interfaces in this
+    # subnet are the secondary network interface (eth1).
+    # @return [Integer]
+    def enable_lni_at_device_index
+      data[:enable_lni_at_device_index]
+    end
+
     # Indicates whether instances launched in this subnet receive a public
     # IPv4 address.
     # @return [Boolean]
@@ -100,7 +108,7 @@ module Aws::EC2
       data[:vpc_id]
     end
 
-    # The ID of the AWS account that owns the subnet.
+    # The ID of the Amazon Web Services account that owns the subnet.
     # @return [String]
     def owner_id
       data[:owner_id]
@@ -138,6 +146,28 @@ module Aws::EC2
       data[:outpost_arn]
     end
 
+    # Indicates whether DNS queries made to the Amazon-provided DNS Resolver
+    # in this subnet should return synthetic IPv6 addresses for IPv4-only
+    # destinations.
+    # @return [Boolean]
+    def enable_dns_64
+      data[:enable_dns_64]
+    end
+
+    # Indicates whether this is an IPv6 only subnet.
+    # @return [Boolean]
+    def ipv_6_native
+      data[:ipv_6_native]
+    end
+
+    # The type of hostnames to assign to instances in the subnet at launch.
+    # An instance hostname is based on the IPv4 address or ID of the
+    # instance.
+    # @return [Types::PrivateDnsNameOptionsOnLaunch]
+    def private_dns_name_options_on_launch
+      data[:private_dns_name_options_on_launch]
+    end
+
     # @!endgroup
 
     # @return [Client]
@@ -152,7 +182,9 @@ module Aws::EC2
     #
     # @return [self]
     def load
-      resp = @client.describe_subnets(subnet_ids: [@id])
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_subnets(subnet_ids: [@id])
+      end
       @data = resp.subnets[0]
       self
     end
@@ -267,7 +299,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -282,7 +316,7 @@ module Aws::EC2
     #         ebs: {
     #           delete_on_termination: false,
     #           iops: 1,
-    #           snapshot_id: "String",
+    #           snapshot_id: "SnapshotId",
     #           volume_size: 1,
     #           volume_type: "standard", # accepts standard, io1, io2, gp2, sc1, st1, gp3
     #           kms_key_id: "String",
@@ -294,7 +328,7 @@ module Aws::EC2
     #       },
     #     ],
     #     image_id: "ImageId",
-    #     instance_type: "t1.micro", # accepts t1.micro, t2.nano, t2.micro, t2.small, t2.medium, t2.large, t2.xlarge, t2.2xlarge, t3.nano, t3.micro, t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge, t3a.nano, t3a.micro, t3a.small, t3a.medium, t3a.large, t3a.xlarge, t3a.2xlarge, t4g.nano, t4g.micro, t4g.small, t4g.medium, t4g.large, t4g.xlarge, t4g.2xlarge, m1.small, m1.medium, m1.large, m1.xlarge, m3.medium, m3.large, m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge, m2.xlarge, m2.2xlarge, m2.4xlarge, cr1.8xlarge, r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge, r4.large, r4.xlarge, r4.2xlarge, r4.4xlarge, r4.8xlarge, r4.16xlarge, r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.8xlarge, r5.12xlarge, r5.16xlarge, r5.24xlarge, r5.metal, r5a.large, r5a.xlarge, r5a.2xlarge, r5a.4xlarge, r5a.8xlarge, r5a.12xlarge, r5a.16xlarge, r5a.24xlarge, r5b.large, r5b.xlarge, r5b.2xlarge, r5b.4xlarge, r5b.8xlarge, r5b.12xlarge, r5b.16xlarge, r5b.24xlarge, r5b.metal, r5d.large, r5d.xlarge, r5d.2xlarge, r5d.4xlarge, r5d.8xlarge, r5d.12xlarge, r5d.16xlarge, r5d.24xlarge, r5d.metal, r5ad.large, r5ad.xlarge, r5ad.2xlarge, r5ad.4xlarge, r5ad.8xlarge, r5ad.12xlarge, r5ad.16xlarge, r5ad.24xlarge, r6g.metal, r6g.medium, r6g.large, r6g.xlarge, r6g.2xlarge, r6g.4xlarge, r6g.8xlarge, r6g.12xlarge, r6g.16xlarge, r6gd.metal, r6gd.medium, r6gd.large, r6gd.xlarge, r6gd.2xlarge, r6gd.4xlarge, r6gd.8xlarge, r6gd.12xlarge, r6gd.16xlarge, x1.16xlarge, x1.32xlarge, x1e.xlarge, x1e.2xlarge, x1e.4xlarge, x1e.8xlarge, x1e.16xlarge, x1e.32xlarge, i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge, i3.large, i3.xlarge, i3.2xlarge, i3.4xlarge, i3.8xlarge, i3.16xlarge, i3.metal, i3en.large, i3en.xlarge, i3en.2xlarge, i3en.3xlarge, i3en.6xlarge, i3en.12xlarge, i3en.24xlarge, i3en.metal, hi1.4xlarge, hs1.8xlarge, c1.medium, c1.xlarge, c3.large, c3.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge, c4.large, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge, c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.12xlarge, c5.18xlarge, c5.24xlarge, c5.metal, c5a.large, c5a.xlarge, c5a.2xlarge, c5a.4xlarge, c5a.8xlarge, c5a.12xlarge, c5a.16xlarge, c5a.24xlarge, c5ad.large, c5ad.xlarge, c5ad.2xlarge, c5ad.4xlarge, c5ad.8xlarge, c5ad.12xlarge, c5ad.16xlarge, c5ad.24xlarge, c5d.large, c5d.xlarge, c5d.2xlarge, c5d.4xlarge, c5d.9xlarge, c5d.12xlarge, c5d.18xlarge, c5d.24xlarge, c5d.metal, c5n.large, c5n.xlarge, c5n.2xlarge, c5n.4xlarge, c5n.9xlarge, c5n.18xlarge, c5n.metal, c6g.metal, c6g.medium, c6g.large, c6g.xlarge, c6g.2xlarge, c6g.4xlarge, c6g.8xlarge, c6g.12xlarge, c6g.16xlarge, c6gd.metal, c6gd.medium, c6gd.large, c6gd.xlarge, c6gd.2xlarge, c6gd.4xlarge, c6gd.8xlarge, c6gd.12xlarge, c6gd.16xlarge, c6gn.medium, c6gn.large, c6gn.xlarge, c6gn.2xlarge, c6gn.4xlarge, c6gn.8xlarge, c6gn.12xlarge, c6gn.16xlarge, cc1.4xlarge, cc2.8xlarge, g2.2xlarge, g2.8xlarge, g3.4xlarge, g3.8xlarge, g3.16xlarge, g3s.xlarge, g4ad.4xlarge, g4ad.8xlarge, g4ad.16xlarge, g4dn.xlarge, g4dn.2xlarge, g4dn.4xlarge, g4dn.8xlarge, g4dn.12xlarge, g4dn.16xlarge, g4dn.metal, cg1.4xlarge, p2.xlarge, p2.8xlarge, p2.16xlarge, p3.2xlarge, p3.8xlarge, p3.16xlarge, p3dn.24xlarge, p4d.24xlarge, d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge, d3.xlarge, d3.2xlarge, d3.4xlarge, d3.8xlarge, d3en.xlarge, d3en.2xlarge, d3en.4xlarge, d3en.6xlarge, d3en.8xlarge, d3en.12xlarge, f1.2xlarge, f1.4xlarge, f1.16xlarge, m5.large, m5.xlarge, m5.2xlarge, m5.4xlarge, m5.8xlarge, m5.12xlarge, m5.16xlarge, m5.24xlarge, m5.metal, m5a.large, m5a.xlarge, m5a.2xlarge, m5a.4xlarge, m5a.8xlarge, m5a.12xlarge, m5a.16xlarge, m5a.24xlarge, m5d.large, m5d.xlarge, m5d.2xlarge, m5d.4xlarge, m5d.8xlarge, m5d.12xlarge, m5d.16xlarge, m5d.24xlarge, m5d.metal, m5ad.large, m5ad.xlarge, m5ad.2xlarge, m5ad.4xlarge, m5ad.8xlarge, m5ad.12xlarge, m5ad.16xlarge, m5ad.24xlarge, m5zn.large, m5zn.xlarge, m5zn.2xlarge, m5zn.3xlarge, m5zn.6xlarge, m5zn.12xlarge, m5zn.metal, h1.2xlarge, h1.4xlarge, h1.8xlarge, h1.16xlarge, z1d.large, z1d.xlarge, z1d.2xlarge, z1d.3xlarge, z1d.6xlarge, z1d.12xlarge, z1d.metal, u-6tb1.56xlarge, u-6tb1.112xlarge, u-9tb1.112xlarge, u-12tb1.112xlarge, u-6tb1.metal, u-9tb1.metal, u-12tb1.metal, u-18tb1.metal, u-24tb1.metal, a1.medium, a1.large, a1.xlarge, a1.2xlarge, a1.4xlarge, a1.metal, m5dn.large, m5dn.xlarge, m5dn.2xlarge, m5dn.4xlarge, m5dn.8xlarge, m5dn.12xlarge, m5dn.16xlarge, m5dn.24xlarge, m5n.large, m5n.xlarge, m5n.2xlarge, m5n.4xlarge, m5n.8xlarge, m5n.12xlarge, m5n.16xlarge, m5n.24xlarge, r5dn.large, r5dn.xlarge, r5dn.2xlarge, r5dn.4xlarge, r5dn.8xlarge, r5dn.12xlarge, r5dn.16xlarge, r5dn.24xlarge, r5n.large, r5n.xlarge, r5n.2xlarge, r5n.4xlarge, r5n.8xlarge, r5n.12xlarge, r5n.16xlarge, r5n.24xlarge, inf1.xlarge, inf1.2xlarge, inf1.6xlarge, inf1.24xlarge, m6g.metal, m6g.medium, m6g.large, m6g.xlarge, m6g.2xlarge, m6g.4xlarge, m6g.8xlarge, m6g.12xlarge, m6g.16xlarge, m6gd.metal, m6gd.medium, m6gd.large, m6gd.xlarge, m6gd.2xlarge, m6gd.4xlarge, m6gd.8xlarge, m6gd.12xlarge, m6gd.16xlarge, mac1.metal, x2gd.medium, x2gd.large, x2gd.xlarge, x2gd.2xlarge, x2gd.4xlarge, x2gd.8xlarge, x2gd.12xlarge, x2gd.16xlarge, x2gd.metal
+    #     instance_type: "a1.medium", # accepts a1.medium, a1.large, a1.xlarge, a1.2xlarge, a1.4xlarge, a1.metal, c1.medium, c1.xlarge, c3.large, c3.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge, c4.large, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge, c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.12xlarge, c5.18xlarge, c5.24xlarge, c5.metal, c5a.large, c5a.xlarge, c5a.2xlarge, c5a.4xlarge, c5a.8xlarge, c5a.12xlarge, c5a.16xlarge, c5a.24xlarge, c5ad.large, c5ad.xlarge, c5ad.2xlarge, c5ad.4xlarge, c5ad.8xlarge, c5ad.12xlarge, c5ad.16xlarge, c5ad.24xlarge, c5d.large, c5d.xlarge, c5d.2xlarge, c5d.4xlarge, c5d.9xlarge, c5d.12xlarge, c5d.18xlarge, c5d.24xlarge, c5d.metal, c5n.large, c5n.xlarge, c5n.2xlarge, c5n.4xlarge, c5n.9xlarge, c5n.18xlarge, c5n.metal, c6g.medium, c6g.large, c6g.xlarge, c6g.2xlarge, c6g.4xlarge, c6g.8xlarge, c6g.12xlarge, c6g.16xlarge, c6g.metal, c6gd.medium, c6gd.large, c6gd.xlarge, c6gd.2xlarge, c6gd.4xlarge, c6gd.8xlarge, c6gd.12xlarge, c6gd.16xlarge, c6gd.metal, c6gn.medium, c6gn.large, c6gn.xlarge, c6gn.2xlarge, c6gn.4xlarge, c6gn.8xlarge, c6gn.12xlarge, c6gn.16xlarge, c6i.large, c6i.xlarge, c6i.2xlarge, c6i.4xlarge, c6i.8xlarge, c6i.12xlarge, c6i.16xlarge, c6i.24xlarge, c6i.32xlarge, c6i.metal, cc1.4xlarge, cc2.8xlarge, cg1.4xlarge, cr1.8xlarge, d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge, d3.xlarge, d3.2xlarge, d3.4xlarge, d3.8xlarge, d3en.xlarge, d3en.2xlarge, d3en.4xlarge, d3en.6xlarge, d3en.8xlarge, d3en.12xlarge, dl1.24xlarge, f1.2xlarge, f1.4xlarge, f1.16xlarge, g2.2xlarge, g2.8xlarge, g3.4xlarge, g3.8xlarge, g3.16xlarge, g3s.xlarge, g4ad.xlarge, g4ad.2xlarge, g4ad.4xlarge, g4ad.8xlarge, g4ad.16xlarge, g4dn.xlarge, g4dn.2xlarge, g4dn.4xlarge, g4dn.8xlarge, g4dn.12xlarge, g4dn.16xlarge, g4dn.metal, g5.xlarge, g5.2xlarge, g5.4xlarge, g5.8xlarge, g5.12xlarge, g5.16xlarge, g5.24xlarge, g5.48xlarge, g5g.xlarge, g5g.2xlarge, g5g.4xlarge, g5g.8xlarge, g5g.16xlarge, g5g.metal, hi1.4xlarge, hpc6a.48xlarge, hs1.8xlarge, h1.2xlarge, h1.4xlarge, h1.8xlarge, h1.16xlarge, i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge, i3.large, i3.xlarge, i3.2xlarge, i3.4xlarge, i3.8xlarge, i3.16xlarge, i3.metal, i3en.large, i3en.xlarge, i3en.2xlarge, i3en.3xlarge, i3en.6xlarge, i3en.12xlarge, i3en.24xlarge, i3en.metal, im4gn.large, im4gn.xlarge, im4gn.2xlarge, im4gn.4xlarge, im4gn.8xlarge, im4gn.16xlarge, inf1.xlarge, inf1.2xlarge, inf1.6xlarge, inf1.24xlarge, is4gen.medium, is4gen.large, is4gen.xlarge, is4gen.2xlarge, is4gen.4xlarge, is4gen.8xlarge, m1.small, m1.medium, m1.large, m1.xlarge, m2.xlarge, m2.2xlarge, m2.4xlarge, m3.medium, m3.large, m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge, m5.large, m5.xlarge, m5.2xlarge, m5.4xlarge, m5.8xlarge, m5.12xlarge, m5.16xlarge, m5.24xlarge, m5.metal, m5a.large, m5a.xlarge, m5a.2xlarge, m5a.4xlarge, m5a.8xlarge, m5a.12xlarge, m5a.16xlarge, m5a.24xlarge, m5ad.large, m5ad.xlarge, m5ad.2xlarge, m5ad.4xlarge, m5ad.8xlarge, m5ad.12xlarge, m5ad.16xlarge, m5ad.24xlarge, m5d.large, m5d.xlarge, m5d.2xlarge, m5d.4xlarge, m5d.8xlarge, m5d.12xlarge, m5d.16xlarge, m5d.24xlarge, m5d.metal, m5dn.large, m5dn.xlarge, m5dn.2xlarge, m5dn.4xlarge, m5dn.8xlarge, m5dn.12xlarge, m5dn.16xlarge, m5dn.24xlarge, m5dn.metal, m5n.large, m5n.xlarge, m5n.2xlarge, m5n.4xlarge, m5n.8xlarge, m5n.12xlarge, m5n.16xlarge, m5n.24xlarge, m5n.metal, m5zn.large, m5zn.xlarge, m5zn.2xlarge, m5zn.3xlarge, m5zn.6xlarge, m5zn.12xlarge, m5zn.metal, m6a.large, m6a.xlarge, m6a.2xlarge, m6a.4xlarge, m6a.8xlarge, m6a.12xlarge, m6a.16xlarge, m6a.24xlarge, m6a.32xlarge, m6a.48xlarge, m6g.metal, m6g.medium, m6g.large, m6g.xlarge, m6g.2xlarge, m6g.4xlarge, m6g.8xlarge, m6g.12xlarge, m6g.16xlarge, m6gd.metal, m6gd.medium, m6gd.large, m6gd.xlarge, m6gd.2xlarge, m6gd.4xlarge, m6gd.8xlarge, m6gd.12xlarge, m6gd.16xlarge, m6i.large, m6i.xlarge, m6i.2xlarge, m6i.4xlarge, m6i.8xlarge, m6i.12xlarge, m6i.16xlarge, m6i.24xlarge, m6i.32xlarge, m6i.metal, mac1.metal, p2.xlarge, p2.8xlarge, p2.16xlarge, p3.2xlarge, p3.8xlarge, p3.16xlarge, p3dn.24xlarge, p4d.24xlarge, r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge, r4.large, r4.xlarge, r4.2xlarge, r4.4xlarge, r4.8xlarge, r4.16xlarge, r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.8xlarge, r5.12xlarge, r5.16xlarge, r5.24xlarge, r5.metal, r5a.large, r5a.xlarge, r5a.2xlarge, r5a.4xlarge, r5a.8xlarge, r5a.12xlarge, r5a.16xlarge, r5a.24xlarge, r5ad.large, r5ad.xlarge, r5ad.2xlarge, r5ad.4xlarge, r5ad.8xlarge, r5ad.12xlarge, r5ad.16xlarge, r5ad.24xlarge, r5b.large, r5b.xlarge, r5b.2xlarge, r5b.4xlarge, r5b.8xlarge, r5b.12xlarge, r5b.16xlarge, r5b.24xlarge, r5b.metal, r5d.large, r5d.xlarge, r5d.2xlarge, r5d.4xlarge, r5d.8xlarge, r5d.12xlarge, r5d.16xlarge, r5d.24xlarge, r5d.metal, r5dn.large, r5dn.xlarge, r5dn.2xlarge, r5dn.4xlarge, r5dn.8xlarge, r5dn.12xlarge, r5dn.16xlarge, r5dn.24xlarge, r5dn.metal, r5n.large, r5n.xlarge, r5n.2xlarge, r5n.4xlarge, r5n.8xlarge, r5n.12xlarge, r5n.16xlarge, r5n.24xlarge, r5n.metal, r6g.medium, r6g.large, r6g.xlarge, r6g.2xlarge, r6g.4xlarge, r6g.8xlarge, r6g.12xlarge, r6g.16xlarge, r6g.metal, r6gd.medium, r6gd.large, r6gd.xlarge, r6gd.2xlarge, r6gd.4xlarge, r6gd.8xlarge, r6gd.12xlarge, r6gd.16xlarge, r6gd.metal, r6i.large, r6i.xlarge, r6i.2xlarge, r6i.4xlarge, r6i.8xlarge, r6i.12xlarge, r6i.16xlarge, r6i.24xlarge, r6i.32xlarge, r6i.metal, t1.micro, t2.nano, t2.micro, t2.small, t2.medium, t2.large, t2.xlarge, t2.2xlarge, t3.nano, t3.micro, t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge, t3a.nano, t3a.micro, t3a.small, t3a.medium, t3a.large, t3a.xlarge, t3a.2xlarge, t4g.nano, t4g.micro, t4g.small, t4g.medium, t4g.large, t4g.xlarge, t4g.2xlarge, u-6tb1.56xlarge, u-6tb1.112xlarge, u-9tb1.112xlarge, u-12tb1.112xlarge, u-6tb1.metal, u-9tb1.metal, u-12tb1.metal, u-18tb1.metal, u-24tb1.metal, vt1.3xlarge, vt1.6xlarge, vt1.24xlarge, x1.16xlarge, x1.32xlarge, x1e.xlarge, x1e.2xlarge, x1e.4xlarge, x1e.8xlarge, x1e.16xlarge, x1e.32xlarge, x2iezn.2xlarge, x2iezn.4xlarge, x2iezn.6xlarge, x2iezn.8xlarge, x2iezn.12xlarge, x2iezn.metal, x2gd.medium, x2gd.large, x2gd.xlarge, x2gd.2xlarge, x2gd.4xlarge, x2gd.8xlarge, x2gd.12xlarge, x2gd.16xlarge, x2gd.metal, z1d.large, z1d.xlarge, z1d.2xlarge, z1d.3xlarge, z1d.6xlarge, z1d.12xlarge, z1d.metal, x2idn.16xlarge, x2idn.24xlarge, x2idn.32xlarge, x2iedn.xlarge, x2iedn.2xlarge, x2iedn.4xlarge, x2iedn.8xlarge, x2iedn.16xlarge, x2iedn.24xlarge, x2iedn.32xlarge, c6a.large, c6a.xlarge, c6a.2xlarge, c6a.4xlarge, c6a.8xlarge, c6a.12xlarge, c6a.16xlarge, c6a.24xlarge, c6a.32xlarge, c6a.48xlarge, c6a.metal, m6a.metal, i4i.large, i4i.xlarge, i4i.2xlarge, i4i.4xlarge, i4i.8xlarge, i4i.16xlarge, i4i.32xlarge, i4i.metal, x2idn.metal, x2iedn.metal, c7g.medium, c7g.large, c7g.xlarge, c7g.2xlarge, c7g.4xlarge, c7g.8xlarge, c7g.12xlarge, c7g.16xlarge, mac2.metal, c6id.large, c6id.xlarge, c6id.2xlarge, c6id.4xlarge, c6id.8xlarge, c6id.12xlarge, c6id.16xlarge, c6id.24xlarge, c6id.32xlarge, c6id.metal, m6id.large, m6id.xlarge, m6id.2xlarge, m6id.4xlarge, m6id.8xlarge, m6id.12xlarge, m6id.16xlarge, m6id.24xlarge, m6id.32xlarge, m6id.metal, r6id.large, r6id.xlarge, r6id.2xlarge, r6id.4xlarge, r6id.8xlarge, r6id.12xlarge, r6id.16xlarge, r6id.24xlarge, r6id.32xlarge, r6id.metal, r6a.large, r6a.xlarge, r6a.2xlarge, r6a.4xlarge, r6a.8xlarge, r6a.12xlarge, r6a.16xlarge, r6a.24xlarge, r6a.32xlarge, r6a.48xlarge, r6a.metal, p4de.24xlarge, u-3tb1.56xlarge, u-18tb1.112xlarge, u-24tb1.112xlarge, trn1.2xlarge, trn1.32xlarge, hpc6id.32xlarge, c6in.large, c6in.xlarge, c6in.2xlarge, c6in.4xlarge, c6in.8xlarge, c6in.12xlarge, c6in.16xlarge, c6in.24xlarge, c6in.32xlarge, m6in.large, m6in.xlarge, m6in.2xlarge, m6in.4xlarge, m6in.8xlarge, m6in.12xlarge, m6in.16xlarge, m6in.24xlarge, m6in.32xlarge, m6idn.large, m6idn.xlarge, m6idn.2xlarge, m6idn.4xlarge, m6idn.8xlarge, m6idn.12xlarge, m6idn.16xlarge, m6idn.24xlarge, m6idn.32xlarge, r6in.large, r6in.xlarge, r6in.2xlarge, r6in.4xlarge, r6in.8xlarge, r6in.12xlarge, r6in.16xlarge, r6in.24xlarge, r6in.32xlarge, r6idn.large, r6idn.xlarge, r6idn.2xlarge, r6idn.4xlarge, r6idn.8xlarge, r6idn.12xlarge, r6idn.16xlarge, r6idn.24xlarge, r6idn.32xlarge, c7g.metal, m7g.medium, m7g.large, m7g.xlarge, m7g.2xlarge, m7g.4xlarge, m7g.8xlarge, m7g.12xlarge, m7g.16xlarge, m7g.metal, r7g.medium, r7g.large, r7g.xlarge, r7g.2xlarge, r7g.4xlarge, r7g.8xlarge, r7g.12xlarge, r7g.16xlarge, r7g.metal, c6in.metal, m6in.metal, m6idn.metal, r6in.metal, r6idn.metal, inf2.xlarge, inf2.8xlarge, inf2.24xlarge, inf2.48xlarge, trn1n.32xlarge, i4g.large, i4g.xlarge, i4g.2xlarge, i4g.4xlarge, i4g.8xlarge, i4g.16xlarge
     #     ipv_6_address_count: 1,
     #     ipv_6_addresses: [
     #       {
@@ -311,17 +345,18 @@ module Aws::EC2
     #     placement: {
     #       availability_zone: "String",
     #       affinity: "String",
-    #       group_name: "String",
+    #       group_name: "PlacementGroupName",
     #       partition_number: 1,
     #       host_id: "String",
     #       tenancy: "default", # accepts default, dedicated, host
     #       spread_domain: "String",
     #       host_resource_group_arn: "String",
+    #       group_id: "PlacementGroupId",
     #     },
     #     ramdisk_id: "RamdiskId",
     #     security_group_ids: ["SecurityGroupId"],
     #     security_groups: ["SecurityGroupName"],
-    #     user_data: "String",
+    #     user_data: "RunInstancesUserData",
     #     additional_info: "String",
     #     client_token: "String",
     #     disable_api_termination: false,
@@ -345,7 +380,7 @@ module Aws::EC2
     #             ipv_6_address: "String",
     #           },
     #         ],
-    #         network_interface_id: "String",
+    #         network_interface_id: "NetworkInterfaceId",
     #         private_ip_address: "String",
     #         private_ip_addresses: [
     #           {
@@ -358,6 +393,18 @@ module Aws::EC2
     #         associate_carrier_ip_address: false,
     #         interface_type: "String",
     #         network_card_index: 1,
+    #         ipv_4_prefixes: [
+    #           {
+    #             ipv_4_prefix: "String",
+    #           },
+    #         ],
+    #         ipv_4_prefix_count: 1,
+    #         ipv_6_prefixes: [
+    #           {
+    #             ipv_6_prefix: "String",
+    #           },
+    #         ],
+    #         ipv_6_prefix_count: 1,
     #       },
     #     ],
     #     private_ip_address: "String",
@@ -374,7 +421,7 @@ module Aws::EC2
     #     ],
     #     tag_specifications: [
     #       {
-    #         resource_type: "client-vpn-endpoint", # accepts client-vpn-endpoint, customer-gateway, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, internet-gateway, key-pair, launch-template, local-gateway-route-table-vpc-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, placement-group, reserved-instances, route-table, security-group, snapshot, spot-fleet-request, spot-instances-request, subnet, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-route-table, volume, vpc, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log
+    #         resource_type: "capacity-reservation", # accepts capacity-reservation, client-vpn-endpoint, customer-gateway, carrier-gateway, coip-pool, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, instance-event-window, internet-gateway, ipam, ipam-pool, ipam-scope, ipv4pool-ec2, ipv6pool-ec2, key-pair, launch-template, local-gateway, local-gateway-route-table, local-gateway-virtual-interface, local-gateway-virtual-interface-group, local-gateway-route-table-vpc-association, local-gateway-route-table-virtual-interface-group-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, network-insights-access-scope, network-insights-access-scope-analysis, placement-group, prefix-list, replace-root-volume-task, reserved-instances, route-table, security-group, security-group-rule, snapshot, spot-fleet-request, spot-instances-request, subnet, subnet-cidr-reservation, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-policy-table, transit-gateway-route-table, transit-gateway-route-table-announcement, volume, vpc, vpc-endpoint, vpc-endpoint-connection, vpc-endpoint-service, vpc-endpoint-service-permission, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log, capacity-reservation-fleet, traffic-mirror-filter-rule, vpc-endpoint-connection-device-type, verified-access-instance, verified-access-group, verified-access-endpoint, verified-access-policy, verified-access-trust-provider, vpn-connection-device-type, vpc-block-public-access-exclusion, ipam-resource-discovery, ipam-resource-discovery-association, instance-connect-endpoint
     #         tags: [
     #           {
     #             key: "String",
@@ -404,6 +451,7 @@ module Aws::EC2
     #     cpu_options: {
     #       core_count: 1,
     #       threads_per_core: 1,
+    #       amd_sev_snp: "enabled", # accepts enabled, disabled
     #     },
     #     capacity_reservation_specification: {
     #       capacity_reservation_preference: "open", # accepts open, none
@@ -424,14 +472,32 @@ module Aws::EC2
     #       http_tokens: "optional", # accepts optional, required
     #       http_put_response_hop_limit: 1,
     #       http_endpoint: "disabled", # accepts disabled, enabled
+    #       http_protocol_ipv_6: "disabled", # accepts disabled, enabled
+    #       instance_metadata_tags: "disabled", # accepts disabled, enabled
     #     },
     #     enclave_options: {
     #       enabled: false,
     #     },
+    #     private_dns_name_options: {
+    #       hostname_type: "ip-name", # accepts ip-name, resource-name
+    #       enable_resource_name_dns_a_record: false,
+    #       enable_resource_name_dns_aaaa_record: false,
+    #     },
+    #     maintenance_options: {
+    #       auto_recovery: "disabled", # accepts disabled, default
+    #     },
+    #     disable_api_stop: false,
     #   })
     # @param [Hash] options ({})
     # @option options [Array<Types::BlockDeviceMapping>] :block_device_mappings
-    #   The block device mapping entries.
+    #   The block device mapping, which defines the EBS volumes and instance
+    #   store volumes to attach to the instance at launch. For more
+    #   information, see [Block device mappings][1] in the *Amazon EC2 User
+    #   Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html
     # @option options [String] :image_id
     #   The ID of the AMI. An AMI ID is required to launch an instance and
     #   must be specified here or in a launch template.
@@ -439,27 +505,33 @@ module Aws::EC2
     #   The instance type. For more information, see [Instance types][1] in
     #   the *Amazon EC2 User Guide*.
     #
+    #   When you change your EBS-backed instance type, instance restart or
+    #   replacement behavior depends on the instance type compatibility
+    #   between the old and new types. An instance that's backed by an
+    #   instance store volume is always replaced. For more information, see
+    #   [Change the instance type][2] in the *Amazon EC2 User Guide*.
+    #
     #   Default: `m1.small`
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html
+    #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-resize.html
     # @option options [Integer] :ipv_6_address_count
-    #   \[EC2-VPC\] The number of IPv6 addresses to associate with the primary
-    #   network interface. Amazon EC2 chooses the IPv6 addresses from the
-    #   range of your subnet. You cannot specify this option and the option to
-    #   assign specific IPv6 addresses in the same request. You can specify
-    #   this option if you've specified a minimum number of instances to
-    #   launch.
+    #   The number of IPv6 addresses to associate with the primary network
+    #   interface. Amazon EC2 chooses the IPv6 addresses from the range of
+    #   your subnet. You cannot specify this option and the option to assign
+    #   specific IPv6 addresses in the same request. You can specify this
+    #   option if you've specified a minimum number of instances to launch.
     #
     #   You cannot specify this option and the network interfaces option in
     #   the same request.
     # @option options [Array<Types::InstanceIpv6Address>] :ipv_6_addresses
-    #   \[EC2-VPC\] The IPv6 addresses from the range of the subnet to
-    #   associate with the primary network interface. You cannot specify this
-    #   option and the option to assign a number of IPv6 addresses in the same
-    #   request. You cannot specify this option if you've specified a minimum
-    #   number of instances to launch.
+    #   The IPv6 addresses from the range of the subnet to associate with the
+    #   primary network interface. You cannot specify this option and the
+    #   option to assign a number of IPv6 addresses in the same request. You
+    #   cannot specify this option if you've specified a minimum number of
+    #   instances to launch.
     #
     #   You cannot specify this option and the network interfaces option in
     #   the same request.
@@ -467,8 +539,7 @@ module Aws::EC2
     #   The ID of the kernel.
     #
     #   We recommend that you use PV-GRUB instead of kernels and RAM disks.
-    #   For more information, see [ PV-GRUB][1] in the *Amazon EC2 User
-    #   Guide*.
+    #   For more information, see [PV-GRUB][1] in the *Amazon EC2 User Guide*.
     #
     #
     #
@@ -520,11 +591,11 @@ module Aws::EC2
     #   The ID of the RAM disk to select. Some kernels require additional
     #   drivers at launch. Check the kernel requirements for information about
     #   whether you need to specify a RAM disk. To find kernel requirements,
-    #   go to the AWS Resource Center and search for the kernel ID.
+    #   go to the Amazon Web Services Resource Center and search for the
+    #   kernel ID.
     #
     #   We recommend that you use PV-GRUB instead of kernels and RAM disks.
-    #   For more information, see [ PV-GRUB][1] in the *Amazon EC2 User
-    #   Guide*.
+    #   For more information, see [PV-GRUB][1] in the *Amazon EC2 User Guide*.
     #
     #
     #
@@ -540,25 +611,24 @@ module Aws::EC2
     #
     #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateSecurityGroup.html
     # @option options [Array<String>] :security_groups
-    #   \[EC2-Classic, default VPC\] The names of the security groups. For a
-    #   nondefault VPC, you must use security group IDs instead.
+    #   \[Default VPC\] The names of the security groups.
     #
     #   If you specify a network interface, you must specify any security
     #   groups as part of the network interface.
     #
     #   Default: Amazon EC2 uses the default security group.
     # @option options [String] :user_data
-    #   The user data to make available to the instance. For more information,
-    #   see [Running commands on your Linux instance at launch][1] (Linux) and
-    #   [Adding User Data][2] (Windows). If you are using a command line tool,
-    #   base64-encoding is performed for you, and you can load the text from a
-    #   file. Otherwise, you must provide base64-encoded text. User data is
-    #   limited to 16 KB.
+    #   The user data script to make available to the instance. For more
+    #   information, see [Run commands on your Linux instance at launch][1]
+    #   and [Run commands on your Windows instance at launch][2]. If you are
+    #   using a command line tool, base64-encoding is performed for you, and
+    #   you can load the text from a file. Otherwise, you must provide
+    #   base64-encoded text. User data is limited to 16 KB.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html
-    #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ec2-instance-metadata.html#instancedata-add-user-data
+    #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ec2-windows-user-data.html
     # @option options [String] :additional_info
     #   Reserved.
     # @option options [String] :client_token
@@ -614,8 +684,8 @@ module Aws::EC2
     #   a network interface, you must specify any security groups and subnets
     #   as part of the network interface.
     # @option options [String] :private_ip_address
-    #   \[EC2-VPC\] The primary IPv4 address. You must specify a value from
-    #   the IPv4 address range of the subnet.
+    #   The primary IPv4 address. You must specify a value from the IPv4
+    #   address range of the subnet.
     #
     #   Only one private IP address can be designated as primary. You can't
     #   specify this option if you've specified the option to designate a
@@ -642,11 +712,34 @@ module Aws::EC2
     #
     #   You cannot specify accelerators from different generations in the same
     #   request.
+    #
+    #   <note markdown="1"> Starting April 15, 2023, Amazon Web Services will not onboard new
+    #   customers to Amazon Elastic Inference (EI), and will help current
+    #   customers migrate their workloads to options that offer better price
+    #   and performance. After April 15, 2023, new customers will not be able
+    #   to launch instances with Amazon EI accelerators in Amazon SageMaker,
+    #   Amazon ECS, or Amazon EC2. However, customers who have used Amazon EI
+    #   at least once during the past 30-day period are considered current
+    #   customers and will be able to continue using the service.
+    #
+    #    </note>
     # @option options [Array<Types::TagSpecification>] :tag_specifications
-    #   The tags to apply to the resources during launch. You can only tag
-    #   instances and volumes on launch. The specified tags are applied to all
-    #   instances or volumes that are created during launch. To tag a resource
-    #   after it has been created, see [CreateTags][1].
+    #   The tags to apply to the resources that are created during instance
+    #   launch.
+    #
+    #   You can specify tags for the following resources only:
+    #
+    #   * Instances
+    #
+    #   * Volumes
+    #
+    #   * Elastic graphics
+    #
+    #   * Spot Instance requests
+    #
+    #   * Network interfaces
+    #
+    #   To tag a resource after it has been created, see [CreateTags][1].
     #
     #
     #
@@ -669,15 +762,18 @@ module Aws::EC2
     #   information, see [Burstable performance instances][2] in the *Amazon
     #   EC2 User Guide*.
     #
-    #   Default: `standard` (T2 instances) or `unlimited` (T3/T3a instances)
+    #   Default: `standard` (T2 instances) or `unlimited` (T3/T3a/T4g
+    #   instances)
+    #
+    #   For T3 instances with `host` tenancy, only `standard` is supported.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyInstanceCreditSpecification.html
     #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html
     # @option options [Types::CpuOptionsRequest] :cpu_options
-    #   The CPU options for the instance. For more information, see
-    #   [Optimizing CPU options][1] in the *Amazon EC2 User Guide*.
+    #   The CPU options for the instance. For more information, see [Optimize
+    #   CPU options][1] in the *Amazon EC2 User Guide*.
     #
     #
     #
@@ -689,16 +785,18 @@ module Aws::EC2
     #   Capacity Reservation that has matching attributes (instance type,
     #   platform, Availability Zone).
     # @option options [Types::HibernationOptionsRequest] :hibernation_options
-    #   Indicates whether an instance is enabled for hibernation. For more
-    #   information, see [Hibernate your instance][1] in the *Amazon EC2 User
-    #   Guide*.
+    #   Indicates whether an instance is enabled for hibernation. This
+    #   parameter is valid only if the instance meets the [hibernation
+    #   prerequisites][1]. For more information, see [Hibernate your
+    #   instance][2] in the *Amazon EC2 User Guide*.
     #
-    #   You can't enable hibernation and AWS Nitro Enclaves on the same
-    #   instance.
+    #   You can't enable hibernation and Amazon Web Services Nitro Enclaves
+    #   on the same instance.
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/hibernating-prerequisites.html
+    #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html
     # @option options [Array<Types::LicenseConfigurationRequest>] :license_specifications
     #   The license configurations.
     # @option options [Types::InstanceMetadataOptionsRequest] :metadata_options
@@ -709,21 +807,36 @@ module Aws::EC2
     #
     #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html
     # @option options [Types::EnclaveOptionsRequest] :enclave_options
-    #   Indicates whether the instance is enabled for AWS Nitro Enclaves. For
-    #   more information, see [ What is AWS Nitro Enclaves?][1] in the *AWS
-    #   Nitro Enclaves User Guide*.
+    #   Indicates whether the instance is enabled for Amazon Web Services
+    #   Nitro Enclaves. For more information, see [What is Amazon Web Services
+    #   Nitro Enclaves?][1] in the *Amazon Web Services Nitro Enclaves User
+    #   Guide*.
     #
-    #   You can't enable AWS Nitro Enclaves and hibernation on the same
-    #   instance.
+    #   You can't enable Amazon Web Services Nitro Enclaves and hibernation
+    #   on the same instance.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html
+    # @option options [Types::PrivateDnsNameOptionsRequest] :private_dns_name_options
+    #   The options for the instance hostname. The default values are
+    #   inherited from the subnet.
+    # @option options [Types::InstanceMaintenanceOptionsRequest] :maintenance_options
+    #   The maintenance and recovery options for the instance.
+    # @option options [Boolean] :disable_api_stop
+    #   Indicates whether an instance is enabled for stop protection. For more
+    #   information, see [Stop protection][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection
     # @return [Instance::Collection]
     def create_instances(options = {})
       batch = []
       options = options.merge(subnet_id: @id)
-      resp = @client.run_instances(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.run_instances(options)
+      end
       resp.data.instances.each do |i|
         batch << Instance.new(
           id: i.instance_id,
@@ -754,10 +867,22 @@ module Aws::EC2
     #       },
     #     ],
     #     secondary_private_ip_address_count: 1,
-    #     interface_type: "efa", # accepts efa
+    #     ipv_4_prefixes: [
+    #       {
+    #         ipv_4_prefix: "String",
+    #       },
+    #     ],
+    #     ipv_4_prefix_count: 1,
+    #     ipv_6_prefixes: [
+    #       {
+    #         ipv_6_prefix: "String",
+    #       },
+    #     ],
+    #     ipv_6_prefix_count: 1,
+    #     interface_type: "efa", # accepts efa, branch, trunk
     #     tag_specifications: [
     #       {
-    #         resource_type: "client-vpn-endpoint", # accepts client-vpn-endpoint, customer-gateway, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, internet-gateway, key-pair, launch-template, local-gateway-route-table-vpc-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, placement-group, reserved-instances, route-table, security-group, snapshot, spot-fleet-request, spot-instances-request, subnet, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-route-table, volume, vpc, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log
+    #         resource_type: "capacity-reservation", # accepts capacity-reservation, client-vpn-endpoint, customer-gateway, carrier-gateway, coip-pool, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, instance-event-window, internet-gateway, ipam, ipam-pool, ipam-scope, ipv4pool-ec2, ipv6pool-ec2, key-pair, launch-template, local-gateway, local-gateway-route-table, local-gateway-virtual-interface, local-gateway-virtual-interface-group, local-gateway-route-table-vpc-association, local-gateway-route-table-virtual-interface-group-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, network-insights-access-scope, network-insights-access-scope-analysis, placement-group, prefix-list, replace-root-volume-task, reserved-instances, route-table, security-group, security-group-rule, snapshot, spot-fleet-request, spot-instances-request, subnet, subnet-cidr-reservation, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-policy-table, transit-gateway-route-table, transit-gateway-route-table-announcement, volume, vpc, vpc-endpoint, vpc-endpoint-connection, vpc-endpoint-service, vpc-endpoint-service-permission, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log, capacity-reservation-fleet, traffic-mirror-filter-rule, vpc-endpoint-connection-device-type, verified-access-instance, verified-access-group, verified-access-endpoint, verified-access-policy, verified-access-trust-provider, vpn-connection-device-type, vpc-block-public-access-exclusion, ipam-resource-discovery, ipam-resource-discovery-association, instance-connect-endpoint
     #         tags: [
     #           {
     #             key: "String",
@@ -766,6 +891,7 @@ module Aws::EC2
     #         ],
     #       },
     #     ],
+    #     client_token: "String",
     #   })
     # @param [Hash] options ({})
     # @option options [String] :description
@@ -780,13 +906,20 @@ module Aws::EC2
     # @option options [Integer] :ipv_6_address_count
     #   The number of IPv6 addresses to assign to a network interface. Amazon
     #   EC2 automatically selects the IPv6 addresses from the subnet range.
-    #   You can't use this option if specifying specific IPv6 addresses. If
-    #   your subnet has the `AssignIpv6AddressOnCreation` attribute set to
-    #   `true`, you can specify `0` to override this setting.
+    #
+    #   You can't specify a count of IPv6 addresses using this parameter if
+    #   you've specified one of the following: specific IPv6 addresses,
+    #   specific IPv6 prefixes, or a count of IPv6 prefixes.
+    #
+    #   If your subnet has the `AssignIpv6AddressOnCreation` attribute set,
+    #   you can override that setting by specifying 0 as the IPv6 address
+    #   count.
     # @option options [Array<Types::InstanceIpv6Address>] :ipv_6_addresses
-    #   One or more specific IPv6 addresses from the IPv6 CIDR block range of
-    #   your subnet. You can't use this option if you're specifying a number
-    #   of IPv6 addresses.
+    #   The IPv6 addresses from the IPv6 CIDR block range of your subnet.
+    #
+    #   You can't specify IPv6 addresses using this parameter if you've
+    #   specified one of the following: a count of IPv6 addresses, specific
+    #   IPv6 prefixes, or a count of IPv6 prefixes.
     # @option options [String] :private_ip_address
     #   The primary private IPv4 address of the network interface. If you
     #   don't specify an IPv4 address, Amazon EC2 selects one for you from
@@ -794,7 +927,11 @@ module Aws::EC2
     #   cannot indicate any IP addresses specified in `privateIpAddresses` as
     #   primary (only one IP address can be designated as primary).
     # @option options [Array<Types::PrivateIpAddressSpecification>] :private_ip_addresses
-    #   One or more private IPv4 addresses.
+    #   The private IPv4 addresses.
+    #
+    #   You can't specify private IPv4 addresses if you've specified one of
+    #   the following: a count of private IPv4 addresses, specific IPv4
+    #   prefixes, or a count of IPv4 prefixes.
     # @option options [Integer] :secondary_private_ip_address_count
     #   The number of secondary private IPv4 addresses to assign to a network
     #   interface. When you specify a number of secondary IPv4 addresses,
@@ -802,28 +939,55 @@ module Aws::EC2
     #   range. You can't specify this option and specify more than one
     #   private IP address using `privateIpAddresses`.
     #
-    #   The number of IP addresses you can assign to a network interface
-    #   varies by instance type. For more information, see [IP Addresses Per
-    #   ENI Per Instance Type][1] in the *Amazon Virtual Private Cloud User
-    #   Guide*.
+    #   You can't specify a count of private IPv4 addresses if you've
+    #   specified one of the following: specific private IPv4 addresses,
+    #   specific IPv4 prefixes, or a count of IPv4 prefixes.
+    # @option options [Array<Types::Ipv4PrefixSpecificationRequest>] :ipv_4_prefixes
+    #   The IPv4 prefixes assigned to the network interface.
     #
+    #   You can't specify IPv4 prefixes if you've specified one of the
+    #   following: a count of IPv4 prefixes, specific private IPv4 addresses,
+    #   or a count of private IPv4 addresses.
+    # @option options [Integer] :ipv_4_prefix_count
+    #   The number of IPv4 prefixes that Amazon Web Services automatically
+    #   assigns to the network interface.
     #
+    #   You can't specify a count of IPv4 prefixes if you've specified one
+    #   of the following: specific IPv4 prefixes, specific private IPv4
+    #   addresses, or a count of private IPv4 addresses.
+    # @option options [Array<Types::Ipv6PrefixSpecificationRequest>] :ipv_6_prefixes
+    #   The IPv6 prefixes assigned to the network interface.
     #
-    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI
+    #   You can't specify IPv6 prefixes if you've specified one of the
+    #   following: a count of IPv6 prefixes, specific IPv6 addresses, or a
+    #   count of IPv6 addresses.
+    # @option options [Integer] :ipv_6_prefix_count
+    #   The number of IPv6 prefixes that Amazon Web Services automatically
+    #   assigns to the network interface.
+    #
+    #   You can't specify a count of IPv6 prefixes if you've specified one
+    #   of the following: specific IPv6 prefixes, specific IPv6 addresses, or
+    #   a count of IPv6 addresses.
     # @option options [String] :interface_type
-    #   Indicates the type of network interface. To create an Elastic Fabric
-    #   Adapter (EFA), specify `efa`. For more information, see [ Elastic
-    #   Fabric Adapter][1] in the *Amazon Elastic Compute Cloud User Guide*.
+    #   The type of network interface. The default is `interface`.
     #
-    #
-    #
-    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html
+    #   The only supported values are `interface`, `efa`, and `trunk`.
     # @option options [Array<Types::TagSpecification>] :tag_specifications
     #   The tags to apply to the new network interface.
+    # @option options [String] :client_token
+    #   Unique, case-sensitive identifier that you provide to ensure the
+    #   idempotency of the request. For more information, see [Ensuring
+    #   Idempotency][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html
     # @return [NetworkInterface]
     def create_network_interface(options = {})
       options = options.merge(subnet_id: @id)
-      resp = @client.create_network_interface(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_network_interface(options)
+      end
       NetworkInterface.new(
         id: resp.data.network_interface.network_interface_id,
         data: resp.data.network_interface,
@@ -856,7 +1020,9 @@ module Aws::EC2
     def create_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.create_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -893,13 +1059,17 @@ module Aws::EC2
     #   if its value is an empty string.
     #
     #   If you omit this parameter, we delete all user-defined tags for the
-    #   specified resources. We do not delete AWS-generated tags (tags that
-    #   have the `aws:` prefix).
+    #   specified resources. We do not delete Amazon Web Services-generated
+    #   tags (tags that have the `aws:` prefix).
+    #
+    #   Constraints: Up to 1000 tags.
     # @return [Tag::Collection]
     def delete_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.delete_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -925,7 +1095,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(subnet_id: @id)
-      resp = @client.delete_subnet(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_subnet(options)
+      end
       resp.data
     end
 
@@ -970,16 +1142,13 @@ module Aws::EC2
     #
     #   * `block-device-mapping.volume-id` - The volume ID of the EBS volume.
     #
+    #   * `capacity-reservation-id` - The ID of the Capacity Reservation into
+    #     which the instance was launched.
+    #
     #   * `client-token` - The idempotency token you provided when you
     #     launched the instance.
     #
     #   * `dns-name` - The public DNS name of the instance.
-    #
-    #   * `group-id` - The ID of the security group for the instance.
-    #     EC2-Classic only.
-    #
-    #   * `group-name` - The name of the security group for the instance.
-    #     EC2-Classic only.
     #
     #   * `hibernation-options.configured` - A Boolean that indicates whether
     #     the instance is enabled for hibernation. A value of `true` means
@@ -1029,17 +1198,23 @@ module Aws::EC2
     #     index for the instance in the launch group (for example, 0, 1, 2,
     #     and so on).
     #
-    #   * `launch-time` - The time when the instance was launched.
+    #   * `launch-time` - The time when the instance was launched, in the ISO
+    #     8601 format in the UTC time zone (YYYY-MM-DDThh:mm:ss.sssZ), for
+    #     example, `2021-09-29T11:04:43.305Z`. You can use a wildcard (`*`),
+    #     for example, `2021-09-29T*`, which matches an entire day.
     #
     #   * `metadata-options.http-tokens` - The metadata request authorization
     #     state (`optional` \| `required`)
     #
-    #   * `metadata-options.http-put-response-hop-limit` - The http metadata
+    #   * `metadata-options.http-put-response-hop-limit` - The HTTP metadata
     #     request put response hop limit (integer, possible values `1` to
     #     `64`)
     #
-    #   * `metadata-options.http-endpoint` - Enable or disable metadata access
-    #     on http endpoint (`enabled` \| `disabled`)
+    #   * `metadata-options.http-endpoint` - The status of access to the HTTP
+    #     metadata endpoint on your instance (`enabled` \| `disabled`)
+    #
+    #   * `metadata-options.instance-metadata-tags` - The status of access to
+    #     instance tags from the instance metadata (`enabled` \| `disabled`)
     #
     #   * `monitoring-state` - Indicates whether detailed monitoring is
     #     enabled (`disabled` \| `enabled`).
@@ -1124,7 +1299,7 @@ module Aws::EC2
     #     interface.
     #
     #   * `network-interface.requester-managed` - Indicates whether the
-    #     network interface is being managed by AWS.
+    #     network interface is being managed by Amazon Web Services.
     #
     #   * `network-interface.status` - The status of the network interface
     #     (`available`) \| `in-use`).
@@ -1143,7 +1318,8 @@ module Aws::EC2
     #
     #   * `outpost-arn` - The Amazon Resource Name (ARN) of the Outpost.
     #
-    #   * `owner-id` - The AWS account ID of the instance owner.
+    #   * `owner-id` - The Amazon Web Services account ID of the instance
+    #     owner.
     #
     #   * `placement-group-name` - The name of the placement group for the
     #     instance.
@@ -1171,8 +1347,8 @@ module Aws::EC2
     #     terminate the instance). Similar to the state-reason-code filter.
     #
     #   * `requester-id` - The ID of the entity that launched the instance on
-    #     your behalf (for example, AWS Management Console, Auto Scaling, and
-    #     so on).
+    #     your behalf (for example, Amazon Web Services Management Console,
+    #     Auto Scaling, and so on).
     #
     #   * `reservation-id` - The ID of the instance's reservation. A
     #     reservation ID is created any time you launch an instance. A
@@ -1203,11 +1379,11 @@ module Aws::EC2
     #
     #   * `subnet-id` - The ID of the subnet for the instance.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
-    #     the resource. Use the tag key in the filter name and the tag value
-    #     as the filter value. For example, to find all resources that have a
-    #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
-    #     for the filter name and `TeamA` for the filter value.
+    #   * `tag:<key>` - The key/value combination of a tag assigned to the
+    #     resource. Use the tag key in the filter name and the tag value as
+    #     the filter value. For example, to find all resources that have a tag
+    #     with the key `Owner` and the value `TeamA`, specify `tag:Owner` for
+    #     the filter name and `TeamA` for the filter value.
     #
     #   * `tag-key` - The key of a tag assigned to the resource. Use this
     #     filter to find all resources that have a tag with a specific key,
@@ -1236,7 +1412,9 @@ module Aws::EC2
           name: "subnet-id",
           values: [@id]
         }])
-        resp = @client.describe_instances(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_instances(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.reservations.each do |r|
@@ -1282,7 +1460,7 @@ module Aws::EC2
     #
     #   * `subnet-id` - The ID of the subnet in which the NAT gateway resides.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1302,7 +1480,9 @@ module Aws::EC2
           name: "subnet-id",
           values: [@id]
         }])
-        resp = @client.describe_nat_gateways(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_nat_gateways(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.nat_gateways.each do |n|
@@ -1396,11 +1576,20 @@ module Aws::EC2
     #   * `ipv6-addresses.ipv6-address` - An IPv6 address associated with the
     #     network interface.
     #
+    #   * `interface-type` - The type of network interface
+    #     (`api_gateway_managed` \| `aws_codestar_connections_managed` \|
+    #     `branch` \| `efa` \| `gateway_load_balancer` \|
+    #     `gateway_load_balancer_endpoint` \| `global_accelerator_managed` \|
+    #     `interface` \| `iot_rules_managed` \| `lambda` \| `load_balancer` \|
+    #     `nat_gateway` \| `network_load_balancer` \| `quicksight` \|
+    #     `transit_gateway` \| `trunk` \| `vpc_endpoint`).
+    #
     #   * `mac-address` - The MAC address of the network interface.
     #
     #   * `network-interface-id` - The ID of the network interface.
     #
-    #   * `owner-id` - The AWS account ID of the network interface owner.
+    #   * `owner-id` - The Amazon Web Services account ID of the network
+    #     interface owner.
     #
     #   * `private-ip-address` - The private IPv4 address or addresses of the
     #     network interface.
@@ -1408,12 +1597,12 @@ module Aws::EC2
     #   * `private-dns-name` - The private DNS name of the network interface
     #     (IPv4).
     #
-    #   * `requester-id` - The alias or AWS account ID of the principal or
-    #     service that created the network interface.
+    #   * `requester-id` - The alias or Amazon Web Services account ID of the
+    #     principal or service that created the network interface.
     #
     #   * `requester-managed` - Indicates whether the network interface is
-    #     being managed by an AWS service (for example, AWS Management
-    #     Console, Auto Scaling, and so on).
+    #     being managed by an Amazon Web Service (for example, Amazon Web
+    #     Services Management Console, Auto Scaling, and so on).
     #
     #   * `source-dest-check` - Indicates whether the network interface
     #     performs source/destination checking. A value of `true` means
@@ -1428,7 +1617,7 @@ module Aws::EC2
     #
     #   * `subnet-id` - The ID of the subnet for the network interface.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1445,7 +1634,7 @@ module Aws::EC2
     #   If you have the required permissions, the error response is
     #   `DryRunOperation`. Otherwise, it is `UnauthorizedOperation`.
     # @option options [Array<String>] :network_interface_ids
-    #   One or more network interface IDs.
+    #   The network interface IDs.
     #
     #   Default: Describes all your network interfaces.
     # @return [NetworkInterface::Collection]
@@ -1455,7 +1644,9 @@ module Aws::EC2
           name: "subnet-id",
           values: [@id]
         }])
-        resp = @client.describe_network_interfaces(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_network_interfaces(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.network_interfaces.each do |n|

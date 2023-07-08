@@ -12,21 +12,12 @@ module Aws::ConfigService
 
     # A collection of accounts and regions.
     #
-    # @note When making an API call, you may pass AccountAggregationSource
-    #   data as a hash:
-    #
-    #       {
-    #         account_ids: ["AccountId"], # required
-    #         all_aws_regions: false,
-    #         aws_regions: ["String"],
-    #       }
-    #
     # @!attribute [rw] account_ids
     #   The 12-digit account ID of the account being aggregated.
     #   @return [Array<String>]
     #
     # @!attribute [rw] all_aws_regions
-    #   If true, aggregate existing AWS Config regions and future regions.
+    #   If true, aggregate existing Config regions and future regions.
     #   @return [Boolean]
     #
     # @!attribute [rw] aws_regions
@@ -43,7 +34,7 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Indicates whether an AWS Config rule is compliant based on account ID,
+    # Indicates whether an Config rule is compliant based on account ID,
     # region, compliance, and rule name.
     #
     # A rule is compliant if all of the resources that the rule evaluated
@@ -51,12 +42,13 @@ module Aws::ConfigService
     # comply.
     #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule.
+    #   The name of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] compliance
-    #   Indicates whether an AWS resource or AWS Config rule is compliant
-    #   and provides the number of contributors that affect the compliance.
+    #   Indicates whether an Amazon Web Services resource or Config rule is
+    #   compliant and provides the number of contributors that affect the
+    #   compliance.
     #   @return [Types::Compliance]
     #
     # @!attribute [rw] account_id
@@ -100,11 +92,12 @@ module Aws::ConfigService
     #   @return [Types::AggregateConformancePackCompliance]
     #
     # @!attribute [rw] account_id
-    #   The 12-digit AWS account ID of the source account.
+    #   The 12-digit Amazon Web Services account ID of the source account.
     #   @return [String]
     #
     # @!attribute [rw] aws_region
-    #   The source AWS Region from where the data is aggregated.
+    #   The source Amazon Web Services Region from where the data is
+    #   aggregated.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/AggregateComplianceByConformancePack AWS API Documentation
@@ -126,7 +119,7 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] compliance_summary
-    #   The number of compliant and noncompliant AWS Config rules.
+    #   The number of compliant and noncompliant Config rules.
     #   @return [Types::ComplianceSummary]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/AggregateComplianceCount AWS API Documentation
@@ -158,11 +151,11 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] compliant_rule_count
-    #   The number of compliant AWS Config Rules.
+    #   The number of compliant Config Rules.
     #   @return [Integer]
     #
     # @!attribute [rw] non_compliant_rule_count
-    #   The number of noncompliant AWS Config Rules.
+    #   The number of noncompliant Config Rules.
     #   @return [Integer]
     #
     # @!attribute [rw] total_rule_count
@@ -204,16 +197,6 @@ module Aws::ConfigService
     # Filters the conformance packs based on an account ID, region,
     # compliance type, and the name of the conformance pack.
     #
-    # @note When making an API call, you may pass AggregateConformancePackComplianceFilters
-    #   data as a hash:
-    #
-    #       {
-    #         conformance_pack_name: "ConformancePackName",
-    #         compliance_type: "COMPLIANT", # accepts COMPLIANT, NON_COMPLIANT, INSUFFICIENT_DATA
-    #         account_id: "AccountId",
-    #         aws_region: "AwsRegion",
-    #       }
-    #
     # @!attribute [rw] conformance_pack_name
     #   The name of the conformance pack.
     #   @return [String]
@@ -223,11 +206,12 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] account_id
-    #   The 12-digit AWS account ID of the source account.
+    #   The 12-digit Amazon Web Services account ID of the source account.
     #   @return [String]
     #
     # @!attribute [rw] aws_region
-    #   The source AWS Region from where the data is aggregated.
+    #   The source Amazon Web Services Region from where the data is
+    #   aggregated.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/AggregateConformancePackComplianceFilters AWS API Documentation
@@ -248,7 +232,8 @@ module Aws::ConfigService
     #   @return [Types::AggregateConformancePackComplianceCount]
     #
     # @!attribute [rw] group_name
-    #   Groups the result based on AWS Account ID or AWS Region.
+    #   Groups the result based on Amazon Web Services account ID or Amazon
+    #   Web Services Region.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/AggregateConformancePackComplianceSummary AWS API Documentation
@@ -262,20 +247,13 @@ module Aws::ConfigService
 
     # Filters the results based on account ID and region.
     #
-    # @note When making an API call, you may pass AggregateConformancePackComplianceSummaryFilters
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId",
-    #         aws_region: "AwsRegion",
-    #       }
-    #
     # @!attribute [rw] account_id
-    #   The 12-digit AWS account ID of the source account.
+    #   The 12-digit Amazon Web Services account ID of the source account.
     #   @return [String]
     #
     # @!attribute [rw] aws_region
-    #   The source AWS Region from where the data is aggregated.
+    #   The source Amazon Web Services Region from where the data is
+    #   aggregated.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/AggregateConformancePackComplianceSummaryFilters AWS API Documentation
@@ -287,10 +265,10 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The details of an AWS Config evaluation for an account ID and region
-    # in an aggregator. Provides the AWS resource that was evaluated, the
-    # compliance of the resource, related time stamps, and supplementary
-    # information.
+    # The details of an Config evaluation for an account ID and region in an
+    # aggregator. Provides the Amazon Web Services resource that was
+    # evaluated, the compliance of the resource, related time stamps, and
+    # supplementary information.
     #
     # @!attribute [rw] evaluation_result_identifier
     #   Uniquely identifies the evaluation result.
@@ -299,17 +277,18 @@ module Aws::ConfigService
     # @!attribute [rw] compliance_type
     #   The resource compliance status.
     #
-    #   For the `AggregationEvaluationResult` data type, AWS Config supports
-    #   only the `COMPLIANT` and `NON_COMPLIANT`. AWS Config does not
-    #   support the `NOT_APPLICABLE` and `INSUFFICIENT_DATA` value.
+    #   For the `AggregationEvaluationResult` data type, Config supports
+    #   only the `COMPLIANT` and `NON_COMPLIANT`. Config does not support
+    #   the `NOT_APPLICABLE` and `INSUFFICIENT_DATA` value.
     #   @return [String]
     #
     # @!attribute [rw] result_recorded_time
-    #   The time when AWS Config recorded the aggregate evaluation result.
+    #   The time when Config recorded the aggregate evaluation result.
     #   @return [Time]
     #
     # @!attribute [rw] config_rule_invoked_time
-    #   The time when the AWS Config rule evaluated the AWS resource.
+    #   The time when the Config rule evaluated the Amazon Web Services
+    #   resource.
     #   @return [Time]
     #
     # @!attribute [rw] annotation
@@ -339,20 +318,9 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The details that identify a resource that is collected by AWS Config
+    # The details that identify a resource that is collected by Config
     # aggregator, including the resource type, ID, (if available) the custom
     # resource name, the source account, and source region.
-    #
-    # @note When making an API call, you may pass AggregateResourceIdentifier
-    #   data as a hash:
-    #
-    #       {
-    #         source_account_id: "AccountId", # required
-    #         source_region: "AwsRegion", # required
-    #         resource_id: "ResourceId", # required
-    #         resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #         resource_name: "ResourceName",
-    #       }
     #
     # @!attribute [rw] source_account_id
     #   The 12-digit account ID of the source account.
@@ -363,15 +331,15 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] resource_id
-    #   The ID of the AWS resource.
+    #   The ID of the Amazon Web Services resource.
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of the AWS resource.
+    #   The type of the Amazon Web Services resource.
     #   @return [String]
     #
     # @!attribute [rw] resource_name
-    #   The name of the AWS resource.
+    #   The name of the Amazon Web Services resource.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/AggregateResourceIdentifier AWS API Documentation
@@ -415,7 +383,7 @@ module Aws::ConfigService
     #   @return [Time]
     #
     # @!attribute [rw] last_error_code
-    #   The error code that AWS Config returned when the source account
+    #   The error code that Config returned when the source account
     #   aggregation last failed.
     #   @return [String]
     #
@@ -475,7 +443,8 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] account_id
-    #   The 12-digit AWS account ID associated with the resource.
+    #   The 12-digit Amazon Web Services account ID associated with the
+    #   resource.
     #   @return [String]
     #
     # @!attribute [rw] configuration_item_capture_time
@@ -514,7 +483,7 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource.
+    #   The type of Amazon Web Services resource.
     #   @return [String]
     #
     # @!attribute [rw] resource_id
@@ -542,9 +511,9 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] supplementary_configuration
-    #   Configuration attributes that AWS Config returns for certain
-    #   resource types to supplement the information returned for the
-    #   configuration parameter.
+    #   Configuration attributes that Config returns for certain resource
+    #   types to supplement the information returned for the configuration
+    #   parameter.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/BaseConfigurationItem AWS API Documentation
@@ -568,22 +537,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchGetAggregateResourceConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         resource_identifiers: [ # required
-    #           {
-    #             source_account_id: "AccountId", # required
-    #             source_region: "AwsRegion", # required
-    #             resource_id: "ResourceId", # required
-    #             resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #             resource_name: "ResourceName",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -620,18 +573,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchGetResourceConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_keys: [ # required
-    #           {
-    #             resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #             resource_id: "ResourceId", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_keys
     #   A list of resource keys to be processed with the current request.
     #   Each element in the list consists of the resource type and resource
@@ -669,32 +610,34 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Indicates whether an AWS resource or AWS Config rule is compliant and
-    # provides the number of contributors that affect the compliance.
+    # Indicates whether an Amazon Web Services resource or Config rule is
+    # compliant and provides the number of contributors that affect the
+    # compliance.
     #
     # @!attribute [rw] compliance_type
-    #   Indicates whether an AWS resource or AWS Config rule is compliant.
+    #   Indicates whether an Amazon Web Services resource or Config rule is
+    #   compliant.
     #
-    #   A resource is compliant if it complies with all of the AWS Config
-    #   rules that evaluate it. A resource is noncompliant if it does not
-    #   comply with one or more of these rules.
+    #   A resource is compliant if it complies with all of the Config rules
+    #   that evaluate it. A resource is noncompliant if it does not comply
+    #   with one or more of these rules.
     #
     #   A rule is compliant if all of the resources that the rule evaluates
     #   comply with it. A rule is noncompliant if any of these resources do
     #   not comply.
     #
-    #   AWS Config returns the `INSUFFICIENT_DATA` value when no evaluation
-    #   results are available for the AWS resource or AWS Config rule.
+    #   Config returns the `INSUFFICIENT_DATA` value when no evaluation
+    #   results are available for the Amazon Web Services resource or Config
+    #   rule.
     #
-    #   For the `Compliance` data type, AWS Config supports only
-    #   `COMPLIANT`, `NON_COMPLIANT`, and `INSUFFICIENT_DATA` values. AWS
-    #   Config does not support the `NOT_APPLICABLE` value for the
-    #   `Compliance` data type.
+    #   For the `Compliance` data type, Config supports only `COMPLIANT`,
+    #   `NON_COMPLIANT`, and `INSUFFICIENT_DATA` values. Config does not
+    #   support the `NOT_APPLICABLE` value for the `Compliance` data type.
     #   @return [String]
     #
     # @!attribute [rw] compliance_contributor_count
-    #   The number of AWS resources or AWS Config rules that cause a result
-    #   of `NON_COMPLIANT`, up to a maximum number.
+    #   The number of Amazon Web Services resources or Config rules that
+    #   cause a result of `NON_COMPLIANT`, up to a maximum number.
     #   @return [Types::ComplianceContributorCount]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/Compliance AWS API Documentation
@@ -706,16 +649,16 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Indicates whether an AWS Config rule is compliant. A rule is compliant
-    # if all of the resources that the rule evaluated comply with it. A rule
-    # is noncompliant if any of these resources do not comply.
+    # Indicates whether an Config rule is compliant. A rule is compliant if
+    # all of the resources that the rule evaluated comply with it. A rule is
+    # noncompliant if any of these resources do not comply.
     #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule.
+    #   The name of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] compliance
-    #   Indicates whether the AWS Config rule is compliant.
+    #   Indicates whether the Config rule is compliant.
     #   @return [Types::Compliance]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ComplianceByConfigRule AWS API Documentation
@@ -727,22 +670,23 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Indicates whether an AWS resource that is evaluated according to one
-    # or more AWS Config rules is compliant. A resource is compliant if it
-    # complies with all of the rules that evaluate it. A resource is
-    # noncompliant if it does not comply with one or more of these rules.
+    # Indicates whether an Amazon Web Services resource that is evaluated
+    # according to one or more Config rules is compliant. A resource is
+    # compliant if it complies with all of the rules that evaluate it. A
+    # resource is noncompliant if it does not comply with one or more of
+    # these rules.
     #
     # @!attribute [rw] resource_type
-    #   The type of the AWS resource that was evaluated.
+    #   The type of the Amazon Web Services resource that was evaluated.
     #   @return [String]
     #
     # @!attribute [rw] resource_id
-    #   The ID of the AWS resource that was evaluated.
+    #   The ID of the Amazon Web Services resource that was evaluated.
     #   @return [String]
     #
     # @!attribute [rw] compliance
-    #   Indicates whether the AWS resource complies with all of the AWS
-    #   Config rules that evaluated it.
+    #   Indicates whether the Amazon Web Services resource complies with all
+    #   of the Config rules that evaluated it.
     #   @return [Types::Compliance]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ComplianceByResource AWS API Documentation
@@ -755,12 +699,13 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The number of AWS resources or AWS Config rules responsible for the
-    # current compliance of the item, up to a maximum number.
+    # The number of Amazon Web Services resources or Config rules
+    # responsible for the current compliance of the item, up to a maximum
+    # number.
     #
     # @!attribute [rw] capped_count
-    #   The number of AWS resources or AWS Config rules responsible for the
-    #   current compliance of the item.
+    #   The number of Amazon Web Services resources or Config rules
+    #   responsible for the current compliance of the item.
     #   @return [Integer]
     #
     # @!attribute [rw] cap_exceeded
@@ -776,21 +721,21 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The number of AWS Config rules or AWS resources that are compliant and
-    # noncompliant.
+    # The number of Config rules or Amazon Web Services resources that are
+    # compliant and noncompliant.
     #
     # @!attribute [rw] compliant_resource_count
-    #   The number of AWS Config rules or AWS resources that are compliant,
-    #   up to a maximum of 25 for rules and 100 for resources.
+    #   The number of Config rules or Amazon Web Services resources that are
+    #   compliant, up to a maximum of 25 for rules and 100 for resources.
     #   @return [Types::ComplianceContributorCount]
     #
     # @!attribute [rw] non_compliant_resource_count
-    #   The number of AWS Config rules or AWS resources that are
+    #   The number of Config rules or Amazon Web Services resources that are
     #   noncompliant, up to a maximum of 25 for rules and 100 for resources.
     #   @return [Types::ComplianceContributorCount]
     #
     # @!attribute [rw] compliance_summary_timestamp
-    #   The time that AWS Config created the compliance summary.
+    #   The time that Config created the compliance summary.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ComplianceSummary AWS API Documentation
@@ -803,16 +748,16 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The number of AWS resources of a specific type that are compliant or
-    # noncompliant, up to a maximum of 100 for each.
+    # The number of Amazon Web Services resources of a specific type that
+    # are compliant or noncompliant, up to a maximum of 100 for each.
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource.
+    #   The type of Amazon Web Services resource.
     #   @return [String]
     #
     # @!attribute [rw] compliance_summary
-    #   The number of AWS resources that are compliant or noncompliant, up
-    #   to a maximum of 100 for each.
+    #   The number of Amazon Web Services resources that are compliant or
+    #   noncompliant, up to a maximum of 100 for each.
     #   @return [Types::ComplianceSummary]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ComplianceSummaryByResourceType AWS API Documentation
@@ -866,75 +811,57 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # An AWS Config rule represents an AWS Lambda function that you create
-    # for a custom rule or a predefined function for an AWS managed rule.
-    # The function evaluates configuration items to assess whether your AWS
-    # resources comply with your desired configurations. This function can
-    # run when AWS Config detects a configuration change to an AWS resource
-    # and at a periodic frequency that you choose (for example, every 24
-    # hours).
+    # Config rules evaluate the configuration settings of your Amazon Web
+    # Services resources. A rule can run when Config detects a configuration
+    # change to an Amazon Web Services resource or at a periodic frequency
+    # that you choose (for example, every 24 hours). There are two types of
+    # rules: *Config Managed Rules* and *Config Custom Rules*.
     #
-    # <note markdown="1"> You can use the AWS CLI and AWS SDKs if you want to create a rule that
-    # triggers evaluations for your resources when AWS Config delivers the
-    # configuration snapshot. For more information, see
-    # ConfigSnapshotDeliveryProperties.
+    # Config Managed Rules are predefined, customizable rules created by
+    # Config. For a list of managed rules, see [List of Config Managed
+    # Rules][1].
+    #
+    # Config Custom Rules are rules that you create from scratch. There are
+    # two ways to create Config custom rules: with Lambda functions ([
+    # Lambda Developer Guide][2]) and with Guard ([Guard GitHub
+    # Repository][3]), a policy-as-code language. Config custom rules
+    # created with Lambda are called *Config Custom Lambda Rules* and Config
+    # custom rules created with Guard are called *Config Custom Policy
+    # Rules*.
+    #
+    # For more information about developing and using Config rules, see
+    # [Evaluating Resource with Config Rules][4] in the *Config Developer
+    # Guide*.
+    #
+    # <note markdown="1"> You can use the Amazon Web Services CLI and Amazon Web Services SDKs
+    # if you want to create a rule that triggers evaluations for your
+    # resources when Config delivers the configuration snapshot. For more
+    # information, see ConfigSnapshotDeliveryProperties.
     #
     #  </note>
     #
-    # For more information about developing and using AWS Config rules, see
-    # [Evaluating AWS Resource Configurations with AWS Config][1] in the
-    # *AWS Config Developer Guide*.
     #
     #
-    #
-    # [1]: https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config.html
-    #
-    # @note When making an API call, you may pass ConfigRule
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName",
-    #         config_rule_arn: "StringWithCharLimit256",
-    #         config_rule_id: "StringWithCharLimit64",
-    #         description: "EmptiableStringWithCharLimit256",
-    #         scope: {
-    #           compliance_resource_types: ["StringWithCharLimit256"],
-    #           tag_key: "StringWithCharLimit128",
-    #           tag_value: "StringWithCharLimit256",
-    #           compliance_resource_id: "BaseResourceId",
-    #         },
-    #         source: { # required
-    #           owner: "CUSTOM_LAMBDA", # required, accepts CUSTOM_LAMBDA, AWS
-    #           source_identifier: "StringWithCharLimit256", # required
-    #           source_details: [
-    #             {
-    #               event_source: "aws.config", # accepts aws.config
-    #               message_type: "ConfigurationItemChangeNotification", # accepts ConfigurationItemChangeNotification, ConfigurationSnapshotDeliveryCompleted, ScheduledNotification, OversizedConfigurationItemChangeNotification
-    #               maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #             },
-    #           ],
-    #         },
-    #         input_parameters: "StringWithCharLimit1024",
-    #         maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #         config_rule_state: "ACTIVE", # accepts ACTIVE, DELETING, DELETING_RESULTS, EVALUATING
-    #         created_by: "StringWithCharLimit256",
-    #       }
+    # [1]: https://docs.aws.amazon.com/config/latest/developerguide/managed-rules-by-aws-config.html
+    # [2]: https://docs.aws.amazon.com/config/latest/developerguide/gettingstarted-concepts.html#gettingstarted-concepts-function
+    # [3]: https://github.com/aws-cloudformation/cloudformation-guard
+    # [4]: https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config.html
     #
     # @!attribute [rw] config_rule_name
-    #   The name that you assign to the AWS Config rule. The name is
-    #   required if you are adding a new rule.
+    #   The name that you assign to the Config rule. The name is required if
+    #   you are adding a new rule.
     #   @return [String]
     #
     # @!attribute [rw] config_rule_arn
-    #   The Amazon Resource Name (ARN) of the AWS Config rule.
+    #   The Amazon Resource Name (ARN) of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] config_rule_id
-    #   The ID of the AWS Config rule.
+    #   The ID of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] description
-    #   The description that you provide for the AWS Config rule.
+    #   The description that you provide for the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] scope
@@ -952,24 +879,26 @@ module Aws::ConfigService
     #   @return [Types::Scope]
     #
     # @!attribute [rw] source
-    #   Provides the rule owner (AWS or customer), the rule identifier, and
-    #   the notifications that cause the function to evaluate your AWS
+    #   Provides the rule owner (`Amazon Web Services` for managed rules,
+    #   `CUSTOM_POLICY` for Custom Policy rules, and `CUSTOM_LAMBDA` for
+    #   Custom Lambda rules), the rule identifier, and the notifications
+    #   that cause the function to evaluate your Amazon Web Services
     #   resources.
     #   @return [Types::Source]
     #
     # @!attribute [rw] input_parameters
-    #   A string, in JSON format, that is passed to the AWS Config rule
-    #   Lambda function.
+    #   A string, in JSON format, that is passed to the Config rule Lambda
+    #   function.
     #   @return [String]
     #
     # @!attribute [rw] maximum_execution_frequency
-    #   The maximum frequency with which AWS Config runs evaluations for a
-    #   rule. You can specify a value for `MaximumExecutionFrequency` when:
+    #   The maximum frequency with which Config runs evaluations for a rule.
+    #   You can specify a value for `MaximumExecutionFrequency` when:
     #
-    #   * You are using an AWS managed rule that is triggered at a periodic
+    #   * This is for an Config managed rule that is triggered at a periodic
     #     frequency.
     #
-    #   * Your custom rule is triggered when AWS Config delivers the
+    #   * Your custom rule is triggered when Config delivers the
     #     configuration snapshot. For more information, see
     #     ConfigSnapshotDeliveryProperties.
     #
@@ -981,32 +910,38 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] config_rule_state
-    #   Indicates whether the AWS Config rule is active or is currently
-    #   being deleted by AWS Config. It can also indicate the evaluation
-    #   status for the AWS Config rule.
+    #   Indicates whether the Config rule is active or is currently being
+    #   deleted by Config. It can also indicate the evaluation status for
+    #   the Config rule.
     #
-    #   AWS Config sets the state of the rule to `EVALUATING` temporarily
-    #   after you use the `StartConfigRulesEvaluation` request to evaluate
-    #   your resources against the AWS Config rule.
+    #   Config sets the state of the rule to `EVALUATING` temporarily after
+    #   you use the `StartConfigRulesEvaluation` request to evaluate your
+    #   resources against the Config rule.
     #
-    #   AWS Config sets the state of the rule to `DELETING_RESULTS`
-    #   temporarily after you use the `DeleteEvaluationResults` request to
-    #   delete the current evaluation results for the AWS Config rule.
+    #   Config sets the state of the rule to `DELETING_RESULTS` temporarily
+    #   after you use the `DeleteEvaluationResults` request to delete the
+    #   current evaluation results for the Config rule.
     #
-    #   AWS Config temporarily sets the state of a rule to `DELETING` after
-    #   you use the `DeleteConfigRule` request to delete the rule. After AWS
-    #   Config deletes the rule, the rule and all of its evaluations are
-    #   erased and are no longer available.
+    #   Config temporarily sets the state of a rule to `DELETING` after you
+    #   use the `DeleteConfigRule` request to delete the rule. After Config
+    #   deletes the rule, the rule and all of its evaluations are erased and
+    #   are no longer available.
     #   @return [String]
     #
     # @!attribute [rw] created_by
     #   Service principal name of the service that created the rule.
     #
-    #   <note markdown="1"> The field is populated only if the service linked rule is created by
+    #   <note markdown="1"> The field is populated only if the service-linked rule is created by
     #   a service. The field is empty if you create your own rule.
     #
     #    </note>
     #   @return [String]
+    #
+    # @!attribute [rw] evaluation_modes
+    #   The modes the Config rule can be evaluated in. The valid values are
+    #   distinct objects. By default, the value is Detective evaluation mode
+    #   only.
+    #   @return [Array<Types::EvaluationModeConfiguration>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConfigRule AWS API Documentation
     #
@@ -1020,7 +955,8 @@ module Aws::ConfigService
       :input_parameters,
       :maximum_execution_frequency,
       :config_rule_state,
-      :created_by)
+      :created_by,
+      :evaluation_modes)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1028,26 +964,16 @@ module Aws::ConfigService
     # Filters the compliance results based on account ID, region, compliance
     # type, and rule name.
     #
-    # @note When making an API call, you may pass ConfigRuleComplianceFilters
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName",
-    #         compliance_type: "COMPLIANT", # accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #         account_id: "AccountId",
-    #         aws_region: "AwsRegion",
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule.
+    #   The name of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] compliance_type
     #   The rule compliance status.
     #
-    #   For the `ConfigRuleComplianceFilters` data type, AWS Config supports
-    #   only `COMPLIANT` and `NON_COMPLIANT`. AWS Config does not support
-    #   the `NOT_APPLICABLE` and the `INSUFFICIENT_DATA` values.
+    #   For the `ConfigRuleComplianceFilters` data type, Config supports
+    #   only `COMPLIANT` and `NON_COMPLIANT`. Config does not support the
+    #   `NOT_APPLICABLE` and the `INSUFFICIENT_DATA` values.
     #   @return [String]
     #
     # @!attribute [rw] account_id
@@ -1071,14 +997,6 @@ module Aws::ConfigService
 
     # Filters the results based on the account IDs and regions.
     #
-    # @note When making an API call, you may pass ConfigRuleComplianceSummaryFilters
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId",
-    #         aws_region: "AwsRegion",
-    #       }
-    #
     # @!attribute [rw] account_id
     #   The 12-digit account ID of the source account.
     #   @return [String]
@@ -1096,72 +1014,88 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Status information for your AWS managed Config rules. The status
-    # includes information such as the last time the rule ran, the last time
-    # it failed, and the related error for the last failure.
+    # Status information for your Config Managed rules and Config Custom
+    # Policy rules. The status includes information such as the last time
+    # the rule ran, the last time it failed, and the related error for the
+    # last failure.
     #
-    # This action does not return status information about custom AWS Config
-    # rules.
+    # This action does not return status information about Config Custom
+    # Lambda rules.
     #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule.
+    #   The name of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] config_rule_arn
-    #   The Amazon Resource Name (ARN) of the AWS Config rule.
+    #   The Amazon Resource Name (ARN) of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] config_rule_id
-    #   The ID of the AWS Config rule.
+    #   The ID of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] last_successful_invocation_time
-    #   The time that AWS Config last successfully invoked the AWS Config
-    #   rule to evaluate your AWS resources.
+    #   The time that Config last successfully invoked the Config rule to
+    #   evaluate your Amazon Web Services resources.
     #   @return [Time]
     #
     # @!attribute [rw] last_failed_invocation_time
-    #   The time that AWS Config last failed to invoke the AWS Config rule
-    #   to evaluate your AWS resources.
+    #   The time that Config last failed to invoke the Config rule to
+    #   evaluate your Amazon Web Services resources.
     #   @return [Time]
     #
     # @!attribute [rw] last_successful_evaluation_time
-    #   The time that AWS Config last successfully evaluated your AWS
-    #   resources against the rule.
+    #   The time that Config last successfully evaluated your Amazon Web
+    #   Services resources against the rule.
     #   @return [Time]
     #
     # @!attribute [rw] last_failed_evaluation_time
-    #   The time that AWS Config last failed to evaluate your AWS resources
-    #   against the rule.
+    #   The time that Config last failed to evaluate your Amazon Web
+    #   Services resources against the rule.
     #   @return [Time]
     #
     # @!attribute [rw] first_activated_time
-    #   The time that you first activated the AWS Config rule.
+    #   The time that you first activated the Config rule.
     #   @return [Time]
     #
     # @!attribute [rw] last_deactivated_time
-    #   The time that you last turned off the AWS Config rule.
+    #   The time that you last turned off the Config rule.
     #   @return [Time]
     #
     # @!attribute [rw] last_error_code
-    #   The error code that AWS Config returned when the rule last failed.
+    #   The error code that Config returned when the rule last failed.
     #   @return [String]
     #
     # @!attribute [rw] last_error_message
-    #   The error message that AWS Config returned when the rule last
-    #   failed.
+    #   The error message that Config returned when the rule last failed.
     #   @return [String]
     #
     # @!attribute [rw] first_evaluation_started
-    #   Indicates whether AWS Config has evaluated your resources against
-    #   the rule at least once.
+    #   Indicates whether Config has evaluated your resources against the
+    #   rule at least once.
     #
-    #   * `true` - AWS Config has evaluated your AWS resources against the
-    #     rule at least once.
+    #   * `true` - Config has evaluated your Amazon Web Services resources
+    #     against the rule at least once.
     #
-    #   * `false` - AWS Config has not once finished evaluating your AWS
-    #     resources against the rule.
+    #   * `false` - Config has not finished evaluating your Amazon Web
+    #     Services resources against the rule at least once.
     #   @return [Boolean]
+    #
+    # @!attribute [rw] last_debug_log_delivery_status
+    #   The status of the last attempted delivery of a debug log for your
+    #   Config Custom Policy rules. Either `Successful` or `Failed`.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_debug_log_delivery_status_reason
+    #   The reason Config was not able to deliver a debug log. This is for
+    #   the last failed attempt to retrieve a debug log for your Config
+    #   Custom Policy rules.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_debug_log_delivery_time
+    #   The time Config last attempted to deliver a debug log for your
+    #   Config Custom Policy rules.
+    #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConfigRuleEvaluationStatus AWS API Documentation
     #
@@ -1177,32 +1111,35 @@ module Aws::ConfigService
       :last_deactivated_time,
       :last_error_code,
       :last_error_message,
-      :first_evaluation_started)
+      :first_evaluation_started,
+      :last_debug_log_delivery_status,
+      :last_debug_log_delivery_status_reason,
+      :last_debug_log_delivery_time)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Provides options for how often AWS Config delivers configuration
-    # snapshots to the Amazon S3 bucket in your delivery channel.
+    # Provides options for how often Config delivers configuration snapshots
+    # to the Amazon S3 bucket in your delivery channel.
     #
     # The frequency for a rule that triggers evaluations for your resources
-    # when AWS Config delivers the configuration snapshot is set by one of
-    # two values, depending on which is less frequent:
+    # when Config delivers the configuration snapshot is set by one of two
+    # values, depending on which is less frequent:
     #
     # * The value for the `deliveryFrequency` parameter within the delivery
-    #   channel configuration, which sets how often AWS Config delivers
-    #   configuration snapshots. This value also sets how often AWS Config
-    #   invokes evaluations for AWS Config rules.
+    #   channel configuration, which sets how often Config delivers
+    #   configuration snapshots. This value also sets how often Config
+    #   invokes evaluations for Config rules.
     #
     # * The value for the `MaximumExecutionFrequency` parameter, which sets
-    #   the maximum frequency with which AWS Config invokes evaluations for
-    #   the rule. For more information, see ConfigRule.
+    #   the maximum frequency with which Config invokes evaluations for the
+    #   rule. For more information, see ConfigRule.
     #
     # If the `deliveryFrequency` value is less frequent than the
-    # `MaximumExecutionFrequency` value for a rule, AWS Config invokes the
-    # rule only as often as the `deliveryFrequency` value.
+    # `MaximumExecutionFrequency` value for a rule, Config invokes the rule
+    # only as often as the `deliveryFrequency` value.
     #
-    # 1.  For example, you want your rule to run evaluations when AWS Config
+    # 1.  For example, you want your rule to run evaluations when Config
     #     delivers the configuration snapshot.
     #
     # 2.  You specify the `MaximumExecutionFrequency` value for `Six_Hours`.
@@ -1211,27 +1148,19 @@ module Aws::ConfigService
     #     for `TwentyFour_Hours`.
     #
     # 4.  Because the value for `deliveryFrequency` is less frequent than
-    #     `MaximumExecutionFrequency`, AWS Config invokes evaluations for
-    #     the rule every 24 hours.
+    #     `MaximumExecutionFrequency`, Config invokes evaluations for the
+    #     rule every 24 hours.
     #
     # You should set the `MaximumExecutionFrequency` value to be at least as
     # frequent as the `deliveryFrequency` value. You can view the
     # `deliveryFrequency` value by using the `DescribeDeliveryChannnels`
     # action.
     #
-    # To update the `deliveryFrequency` with which AWS Config delivers your
+    # To update the `deliveryFrequency` with which Config delivers your
     # configuration snapshots, use the `PutDeliveryChannel` action.
     #
-    # @note When making an API call, you may pass ConfigSnapshotDeliveryProperties
-    #   data as a hash:
-    #
-    #       {
-    #         delivery_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #       }
-    #
     # @!attribute [rw] delivery_frequency
-    #   The frequency with which AWS Config delivers configuration
-    #   snapshots.
+    #   The frequency with which Config delivers configuration snapshots.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConfigSnapshotDeliveryProperties AWS API Documentation
@@ -1248,9 +1177,9 @@ module Aws::ConfigService
     # @!attribute [rw] last_status
     #   Status of the last attempted delivery.
     #
-    #   **Note** Providing an SNS topic on a [DeliveryChannel][1] for AWS
-    #   Config is optional. If the SNS delivery is turned off, the last
-    #   status will be **Not\_Applicable**.
+    #   **Note** Providing an SNS topic on a [DeliveryChannel][1] for Config
+    #   is optional. If the SNS delivery is turned off, the last status will
+    #   be **Not\_Applicable**.
     #
     #
     #
@@ -1308,7 +1237,8 @@ module Aws::ConfigService
     #   @return [Time]
     #
     # @!attribute [rw] created_by
-    #   AWS service that created the configuration aggregator.
+    #   Amazon Web Services service that created the configuration
+    #   aggregator.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConfigurationAggregator AWS API Documentation
@@ -1332,7 +1262,8 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] account_id
-    #   The 12-digit AWS account ID associated with the resource.
+    #   The 12-digit Amazon Web Services account ID associated with the
+    #   resource.
     #   @return [String]
     #
     # @!attribute [rw] configuration_item_capture_time
@@ -1378,7 +1309,7 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource.
+    #   The type of Amazon Web Services resource.
     #   @return [String]
     #
     # @!attribute [rw] resource_id
@@ -1410,12 +1341,12 @@ module Aws::ConfigService
     #
     #   A populated field indicates that the current configuration was
     #   initiated by the events recorded in the CloudTrail log. For more
-    #   information about CloudTrail, see [What Is AWS CloudTrail][1].
+    #   information about CloudTrail, see [What Is CloudTrail][1].
     #
     #   An empty field indicates that the current configuration was not
     #   initiated by any event. As of Version 1.3, the relatedEvents field
-    #   is empty. You can access the [LookupEvents API][2] in the *AWS
-    #   CloudTrail API Reference* to retrieve the events for the resource.
+    #   is empty. You can access the [LookupEvents API][2] in the
+    #   *CloudTrail API Reference* to retrieve the events for the resource.
     #
     #
     #
@@ -1424,7 +1355,7 @@ module Aws::ConfigService
     #   @return [Array<String>]
     #
     # @!attribute [rw] relationships
-    #   A list of related AWS resources.
+    #   A list of related Amazon Web Services resources.
     #   @return [Array<Types::Relationship>]
     #
     # @!attribute [rw] configuration
@@ -1432,9 +1363,9 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] supplementary_configuration
-    #   Configuration attributes that AWS Config returns for certain
-    #   resource types to supplement the information returned for the
-    #   `configuration` parameter.
+    #   Configuration attributes that Config returns for certain resource
+    #   types to supplement the information returned for the `configuration`
+    #   parameter.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConfigurationItem AWS API Documentation
@@ -1462,36 +1393,82 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # An object that represents the recording of configuration changes of an
-    # AWS resource.
+    # Records configuration changes to specified resource types. For more
+    # information about the configuration recorder, see [ **Managing the
+    # Configuration Recorder** ][1] in the *Config Developer Guide*.
     #
-    # @note When making an API call, you may pass ConfigurationRecorder
-    #   data as a hash:
     #
-    #       {
-    #         name: "RecorderName",
-    #         role_arn: "String",
-    #         recording_group: {
-    #           all_supported: false,
-    #           include_global_resource_types: false,
-    #           resource_types: ["AWS::EC2::CustomerGateway"], # accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #         },
-    #       }
+    #
+    # [1]: https://docs.aws.amazon.com/config/latest/developerguide/stop-start-recorder.html
     #
     # @!attribute [rw] name
-    #   The name of the recorder. By default, AWS Config automatically
-    #   assigns the name "default" when creating the configuration
-    #   recorder. You cannot change the assigned name.
+    #   The name of the configuration recorder. Config automatically assigns
+    #   the name of "default" when creating the configuration recorder.
+    #
+    #   You cannot change the name of the configuration recorder after it
+    #   has been created. To change the configuration recorder name, you
+    #   must delete it and create a new configuration recorder with a new
+    #   name.
     #   @return [String]
     #
     # @!attribute [rw] role_arn
-    #   Amazon Resource Name (ARN) of the IAM role used to describe the AWS
-    #   resources associated with the account.
+    #   Amazon Resource Name (ARN) of the IAM role assumed by Config and
+    #   used by the configuration recorder.
+    #
+    #   <note markdown="1"> While the API model does not require this field, the server will
+    #   reject a request without a defined `roleARN` for the configuration
+    #   recorder.
+    #
+    #    </note>
+    #
+    #   <note markdown="1"> **Pre-existing Config role**
+    #
+    #    If you have used an Amazon Web Services service that uses Config,
+    #   such as Security Hub or Control Tower, and an Config role has
+    #   already been created, make sure that the IAM role that you use when
+    #   setting up Config keeps the same minimum permissions as the already
+    #   created Config role. You must do this so that the other Amazon Web
+    #   Services service continues to run as expected.
+    #
+    #    For example, if Control Tower has an IAM role that allows Config to
+    #   read Amazon Simple Storage Service (Amazon S3) objects, make sure
+    #   that the same permissions are granted within the IAM role you use
+    #   when setting up Config. Otherwise, it may interfere with how Control
+    #   Tower operates. For more information about IAM roles for Config, see
+    #   [ **Identity and Access Management for Config** ][1] in the *Config
+    #   Developer Guide*.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/config/latest/developerguide/security-iam.html
     #   @return [String]
     #
     # @!attribute [rw] recording_group
-    #   Specifies the types of AWS resources for which AWS Config records
-    #   configuration changes.
+    #   Specifies which resource types Config records for configuration
+    #   changes.
+    #
+    #   <note markdown="1"> <b> High Number of Config Evaluations</b>
+    #
+    #    You may notice increased activity in your account during your
+    #   initial month recording with Config when compared to subsequent
+    #   months. During the initial bootstrapping process, Config runs
+    #   evaluations on all the resources in your account that you have
+    #   selected for Config to record.
+    #
+    #    If you are running ephemeral workloads, you may see increased
+    #   activity from Config as it records configuration changes associated
+    #   with creating and deleting these temporary resources. An *ephemeral
+    #   workload* is a temporary use of computing resources that are loaded
+    #   and run when needed. Examples include Amazon Elastic Compute Cloud
+    #   (Amazon EC2) Spot Instances, Amazon EMR jobs, and Auto Scaling. If
+    #   you want to avoid the increased activity from running ephemeral
+    #   workloads, you can run these types of workloads in a separate
+    #   account with Config turned off to avoid increased configuration
+    #   recording and rule evaluations.
+    #
+    #    </note>
     #   @return [Types::RecordingGroup]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConfigurationRecorder AWS API Documentation
@@ -1505,6 +1482,11 @@ module Aws::ConfigService
     end
 
     # The current status of the configuration recorder.
+    #
+    # <note markdown="1"> For a detailed status of recording events over time, add your Config
+    # events to CloudWatch metrics and use CloudWatch metrics.
+    #
+    #  </note>
     #
     # @!attribute [rw] name
     #   The name of the configuration recorder.
@@ -1523,19 +1505,20 @@ module Aws::ConfigService
     #   @return [Boolean]
     #
     # @!attribute [rw] last_status
-    #   The last (previous) status of the recorder.
+    #   The status of the latest recording event processed by the recorder.
     #   @return [String]
     #
     # @!attribute [rw] last_error_code
-    #   The error code indicating that the recording failed.
+    #   The latest error code from when the recorder last failed.
     #   @return [String]
     #
     # @!attribute [rw] last_error_message
-    #   The message indicating that the recording failed due to an error.
+    #   The latest error message from when the recorder last failed.
     #   @return [String]
     #
     # @!attribute [rw] last_status_change_time
-    #   The time when the status was last changed.
+    #   The time of the latest change in status of an recording event
+    #   processed by the recorder.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConfigurationRecorderStatus AWS API Documentation
@@ -1553,19 +1536,11 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Filters the conformance pack by compliance types and AWS Config rule
+    # Filters the conformance pack by compliance types and Config rule
     # names.
     #
-    # @note When making an API call, you may pass ConformancePackComplianceFilters
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_names: ["StringWithCharLimit64"],
-    #         compliance_type: "COMPLIANT", # accepts COMPLIANT, NON_COMPLIANT, INSUFFICIENT_DATA
-    #       }
-    #
     # @!attribute [rw] config_rule_names
-    #   Filters the results by AWS Config rule names.
+    #   Filters the results by Config rule names.
     #   @return [Array<String>]
     #
     # @!attribute [rw] compliance_type
@@ -1584,6 +1559,58 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
+    # A compliance score is the percentage of the number of compliant
+    # rule-resource combinations in a conformance pack compared to the
+    # number of total possible rule-resource combinations in the conformance
+    # pack. This metric provides you with a high-level view of the
+    # compliance state of your conformance packs. You can use it to
+    # identify, investigate, and understand the level of compliance in your
+    # conformance packs.
+    #
+    # @!attribute [rw] score
+    #   Compliance score for the conformance pack. Conformance packs with no
+    #   evaluation results will have a compliance score of
+    #   `INSUFFICIENT_DATA`.
+    #   @return [String]
+    #
+    # @!attribute [rw] conformance_pack_name
+    #   The name of the conformance pack.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_updated_time
+    #   The time that the conformance pack compliance score was last
+    #   updated.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConformancePackComplianceScore AWS API Documentation
+    #
+    class ConformancePackComplianceScore < Struct.new(
+      :score,
+      :conformance_pack_name,
+      :last_updated_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of filters to apply to the conformance pack compliance score
+    # result set.
+    #
+    # @!attribute [rw] conformance_pack_names
+    #   The names of the conformance packs whose compliance scores you want
+    #   to include in the conformance pack compliance score result set. You
+    #   can include up to 25 conformance packs in the `ConformancePackNames`
+    #   array of strings, each with a character limit of 256 characters for
+    #   the conformance pack name.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConformancePackComplianceScoresFilters AWS API Documentation
+    #
+    class ConformancePackComplianceScoresFilters < Struct.new(
+      :conformance_pack_names)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Summary includes the name and status of the conformance pack.
     #
     # @!attribute [rw] conformance_pack_name
@@ -1591,8 +1618,7 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] conformance_pack_compliance_status
-    #   The status of the conformance pack. The allowed values are
-    #   `COMPLIANT`, `NON_COMPLIANT` and `INSUFFICIENT_DATA`.
+    #   The status of the conformance pack.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConformancePackComplianceSummary AWS API Documentation
@@ -1605,8 +1631,8 @@ module Aws::ConfigService
     end
 
     # Returns details of a conformance pack. A conformance pack is a
-    # collection of AWS Config rules and remediation actions that can be
-    # easily deployed in an account and a region.
+    # collection of Config rules and remediation actions that can be easily
+    # deployed in an account and a region.
     #
     # @!attribute [rw] conformance_pack_name
     #   Name of the conformance pack.
@@ -1621,7 +1647,8 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] delivery_s3_bucket
-    #   Amazon S3 bucket where AWS Config stores conformance pack templates.
+    #   The name of the Amazon S3 bucket where Config stores conformance
+    #   pack templates.
     #
     #   <note markdown="1"> This field is optional.
     #
@@ -1641,12 +1668,19 @@ module Aws::ConfigService
     #   @return [Array<Types::ConformancePackInputParameter>]
     #
     # @!attribute [rw] last_update_requested_time
-    #   Last time when conformation pack update was requested.
+    #   The last time a conformation pack update was requested.
     #   @return [Time]
     #
     # @!attribute [rw] created_by
-    #   AWS service that created the conformance pack.
+    #   The Amazon Web Services service that created the conformance pack.
     #   @return [String]
+    #
+    # @!attribute [rw] template_ssm_document_details
+    #   An object that contains the name or Amazon Resource Name (ARN) of
+    #   the Amazon Web Services Systems Manager document (SSM document) and
+    #   the version of the SSM document that is used to create a conformance
+    #   pack.
+    #   @return [Types::TemplateSSMDocumentDetails]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ConformancePackDetail AWS API Documentation
     #
@@ -1658,26 +1692,17 @@ module Aws::ConfigService
       :delivery_s3_key_prefix,
       :conformance_pack_input_parameters,
       :last_update_requested_time,
-      :created_by)
+      :created_by,
+      :template_ssm_document_details)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Filters a conformance pack by AWS Config rule names, compliance types,
-    # AWS resource types, and resource IDs.
-    #
-    # @note When making an API call, you may pass ConformancePackEvaluationFilters
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_names: ["StringWithCharLimit64"],
-    #         compliance_type: "COMPLIANT", # accepts COMPLIANT, NON_COMPLIANT, INSUFFICIENT_DATA
-    #         resource_type: "StringWithCharLimit256",
-    #         resource_ids: ["StringWithCharLimit256"],
-    #       }
+    # Filters a conformance pack by Config rule names, compliance types,
+    # Amazon Web Services resource types, and resource IDs.
     #
     # @!attribute [rw] config_rule_names
-    #   Filters the results by AWS Config rule names.
+    #   Filters the results by Config rule names.
     #   @return [Array<String>]
     #
     # @!attribute [rw] compliance_type
@@ -1712,9 +1737,10 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The details of a conformance pack evaluation. Provides AWS Config rule
-    # and AWS resource type that was evaluated, the compliance of the
-    # conformance pack, related time stamps, and supplementary information.
+    # The details of a conformance pack evaluation. Provides Config rule and
+    # Amazon Web Services resource type that was evaluated, the compliance
+    # of the conformance pack, related time stamps, and supplementary
+    # information.
     #
     # @!attribute [rw] compliance_type
     #   The compliance type. The allowed values are `COMPLIANT` and
@@ -1726,11 +1752,11 @@ module Aws::ConfigService
     #   @return [Types::EvaluationResultIdentifier]
     #
     # @!attribute [rw] config_rule_invoked_time
-    #   The time when AWS Config rule evaluated AWS resource.
+    #   The time when Config rule evaluated Amazon Web Services resource.
     #   @return [Time]
     #
     # @!attribute [rw] result_recorded_time
-    #   The time when AWS Config recorded the evaluation result.
+    #   The time when Config recorded the evaluation result.
     #   @return [Time]
     #
     # @!attribute [rw] annotation
@@ -1755,14 +1781,6 @@ module Aws::ConfigService
     # length of 255 characters, and values can have a maximum length of 4096
     # characters.
     #
-    # @note When making an API call, you may pass ConformancePackInputParameter
-    #   data as a hash:
-    #
-    #       {
-    #         parameter_name: "ParameterName", # required
-    #         parameter_value: "ParameterValue", # required
-    #       }
-    #
     # @!attribute [rw] parameter_name
     #   One part of a key-value pair.
     #   @return [String]
@@ -1780,19 +1798,16 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Compliance information of one or more AWS Config rules within a
-    # conformance pack. You can filter using AWS Config rule names and
+    # Compliance information of one or more Config rules within a
+    # conformance pack. You can filter using Config rule names and
     # compliance types.
     #
     # @!attribute [rw] config_rule_name
-    #   Name of the config rule.
+    #   Name of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] compliance_type
-    #   Compliance of the AWS Config rule.
-    #
-    #   The allowed values are `COMPLIANT`, `NON_COMPLIANT`, and
-    #   `INSUFFICIENT_DATA`.
+    #   Compliance of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] controls
@@ -1829,7 +1844,7 @@ module Aws::ConfigService
     # @!attribute [rw] conformance_pack_state
     #   Indicates deployment status of conformance pack.
     #
-    #   AWS Config sets the state of the conformance pack to:
+    #   Config sets the state of the conformance pack to:
     #
     #   * CREATE\_IN\_PROGRESS when a conformance pack creation is in
     #     progress for an account.
@@ -1848,7 +1863,7 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] stack_arn
-    #   Amazon Resource Name (ARN) of AWS CloudFormation stack.
+    #   Amazon Resource Name (ARN) of CloudFormation stack.
     #   @return [String]
     #
     # @!attribute [rw] conformance_pack_status_reason
@@ -1884,14 +1899,41 @@ module Aws::ConfigService
     #
     class ConformancePackTemplateValidationException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteAggregationAuthorizationRequest
-    #   data as a hash:
+    # Provides the runtime system, policy definition, and whether debug
+    # logging enabled. You can specify the following CustomPolicyDetails
+    # parameter values only for Config Custom Policy rules.
     #
-    #       {
-    #         authorized_account_id: "AccountId", # required
-    #         authorized_aws_region: "AwsRegion", # required
-    #       }
+    # @!attribute [rw] policy_runtime
+    #   The runtime system for your Config Custom Policy rule. Guard is a
+    #   policy-as-code language that allows you to write policies that are
+    #   enforced by Config Custom Policy rules. For more information about
+    #   Guard, see the [Guard GitHub Repository][1].
     #
+    #
+    #
+    #   [1]: https://github.com/aws-cloudformation/cloudformation-guard
+    #   @return [String]
+    #
+    # @!attribute [rw] policy_text
+    #   The policy definition containing the logic for your Config Custom
+    #   Policy rule.
+    #   @return [String]
+    #
+    # @!attribute [rw] enable_debug_log_delivery
+    #   The boolean expression for enabling debug logging for your Config
+    #   Custom Policy rule. The default value is `false`.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/CustomPolicyDetails AWS API Documentation
+    #
+    class CustomPolicyDetails < Struct.new(
+      :policy_runtime,
+      :policy_text,
+      :enable_debug_log_delivery)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] authorized_account_id
     #   The 12-digit account ID of the account authorized to aggregate data.
     #   @return [String]
@@ -1909,15 +1951,8 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteConfigRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName", # required
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule that you want to delete.
+    #   The name of the Config rule that you want to delete.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteConfigRuleRequest AWS API Documentation
@@ -1928,13 +1963,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteConfigurationAggregatorRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -1948,13 +1976,6 @@ module Aws::ConfigService
     end
 
     # The request object for the `DeleteConfigurationRecorder` action.
-    #
-    # @note When making an API call, you may pass DeleteConfigurationRecorderRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_recorder_name: "RecorderName", # required
-    #       }
     #
     # @!attribute [rw] configuration_recorder_name
     #   The name of the configuration recorder to be deleted. You can
@@ -1970,13 +1991,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteConformancePackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         conformance_pack_name: "ConformancePackName", # required
-    #       }
-    #
     # @!attribute [rw] conformance_pack_name
     #   Name of the conformance pack you want to delete.
     #   @return [String]
@@ -1992,13 +2006,6 @@ module Aws::ConfigService
     # The input for the DeleteDeliveryChannel action. The action accepts the
     # following data, in JSON format.
     #
-    # @note When making an API call, you may pass DeleteDeliveryChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         delivery_channel_name: "ChannelName", # required
-    #       }
-    #
     # @!attribute [rw] delivery_channel_name
     #   The name of the delivery channel to delete.
     #   @return [String]
@@ -2011,15 +2018,8 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteEvaluationResultsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "StringWithCharLimit64", # required
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule for which you want to delete the
+    #   The name of the Config rule for which you want to delete the
     #   evaluation results.
     #   @return [String]
     #
@@ -2032,21 +2032,14 @@ module Aws::ConfigService
     end
 
     # The output when you delete the evaluation results for the specified
-    # AWS Config rule.
+    # Config rule.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteEvaluationResultsResponse AWS API Documentation
     #
     class DeleteEvaluationResultsResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteOrganizationConfigRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_config_rule_name: "OrganizationConfigRuleName", # required
-    #       }
-    #
     # @!attribute [rw] organization_config_rule_name
-    #   The name of organization config rule that you want to delete.
+    #   The name of organization Config rule that you want to delete.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteOrganizationConfigRuleRequest AWS API Documentation
@@ -2057,13 +2050,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteOrganizationConformancePackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_conformance_pack_name: "OrganizationConformancePackName", # required
-    #       }
-    #
     # @!attribute [rw] organization_conformance_pack_name
     #   The name of organization conformance pack that you want to delete.
     #   @return [String]
@@ -2076,14 +2062,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeletePendingAggregationRequestRequest
-    #   data as a hash:
-    #
-    #       {
-    #         requester_account_id: "AccountId", # required
-    #         requester_aws_region: "AwsRegion", # required
-    #       }
-    #
     # @!attribute [rw] requester_account_id
     #   The 12-digit account ID of the account requesting to aggregate data.
     #   @return [String]
@@ -2101,17 +2079,9 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRemediationConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName", # required
-    #         resource_type: "String",
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule for which you want to delete
-    #   remediation configuration.
+    #   The name of the Config rule for which you want to delete remediation
+    #   configuration.
     #   @return [String]
     #
     # @!attribute [rw] resource_type
@@ -2131,28 +2101,15 @@ module Aws::ConfigService
     #
     class DeleteRemediationConfigurationResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteRemediationExceptionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName", # required
-    #         resource_keys: [ # required
-    #           {
-    #             resource_type: "StringWithCharLimit256",
-    #             resource_id: "StringWithCharLimit1024",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule for which you want to delete
-    #   remediation exception configuration.
+    #   The name of the Config rule for which you want to delete remediation
+    #   exception configuration.
     #   @return [String]
     #
     # @!attribute [rw] resource_keys
     #   An exception list of resource exception keys to be processed with
-    #   the current request. AWS Config adds exception for each resource
-    #   key. For example, AWS Config adds 3 exceptions for 3 resource keys.
+    #   the current request. Config adds exception for each resource key.
+    #   For example, Config adds 3 exceptions for 3 resource keys.
     #   @return [Array<Types::RemediationExceptionResourceKey>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteRemediationExceptionsRequest AWS API Documentation
@@ -2178,14 +2135,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteResourceConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "ResourceTypeString", # required
-    #         resource_id: "ResourceId", # required
-    #       }
-    #
     # @!attribute [rw] resource_type
     #   The type of the resource.
     #   @return [String]
@@ -2203,13 +2152,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRetentionConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         retention_configuration_name: "RetentionConfigurationName", # required
-    #       }
-    #
     # @!attribute [rw] retention_configuration_name
     #   The name of the retention configuration to delete.
     #   @return [String]
@@ -2222,13 +2164,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteStoredQueryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         query_name: "QueryName", # required
-    #       }
-    #
     # @!attribute [rw] query_name
     #   The name of the query that you want to delete.
     #   @return [String]
@@ -2246,13 +2181,6 @@ module Aws::ConfigService
     class DeleteStoredQueryResponse < Aws::EmptyStructure; end
 
     # The input for the DeliverConfigSnapshot action.
-    #
-    # @note When making an API call, you may pass DeliverConfigSnapshotRequest
-    #   data as a hash:
-    #
-    #       {
-    #         delivery_channel_name: "ChannelName", # required
-    #       }
     #
     # @!attribute [rw] delivery_channel_name
     #   The name of the delivery channel through which the snapshot is
@@ -2281,25 +2209,11 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The channel through which AWS Config delivers notifications and
-    # updated configuration states.
-    #
-    # @note When making an API call, you may pass DeliveryChannel
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ChannelName",
-    #         s3_bucket_name: "String",
-    #         s3_key_prefix: "String",
-    #         s3_kms_key_arn: "String",
-    #         sns_topic_arn: "String",
-    #         config_snapshot_delivery_properties: {
-    #           delivery_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #         },
-    #       }
+    # The channel through which Config delivers notifications and updated
+    # configuration states.
     #
     # @!attribute [rw] name
-    #   The name of the delivery channel. By default, AWS Config assigns the
+    #   The name of the delivery channel. By default, Config assigns the
     #   name "default" when creating the delivery channel. To change the
     #   delivery channel name, you must use the DeleteDeliveryChannel action
     #   to delete your current delivery channel, and then you must use the
@@ -2308,13 +2222,13 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] s3_bucket_name
-    #   The name of the Amazon S3 bucket to which AWS Config delivers
+    #   The name of the Amazon S3 bucket to which Config delivers
     #   configuration snapshots and configuration history files.
     #
-    #   If you specify a bucket that belongs to another AWS account, that
-    #   bucket must have policies that grant access permissions to AWS
-    #   Config. For more information, see [Permissions for the Amazon S3
-    #   Bucket][1] in the AWS Config Developer Guide.
+    #   If you specify a bucket that belongs to another Amazon Web Services
+    #   account, that bucket must have policies that grant access
+    #   permissions to Config. For more information, see [Permissions for
+    #   the Amazon S3 Bucket][1] in the *Config Developer Guide*.
     #
     #
     #
@@ -2326,20 +2240,19 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] s3_kms_key_arn
-    #   The Amazon Resource Name (ARN) of the AWS Key Management Service
-    #   (KMS) customer managed key (CMK) used to encrypt objects delivered
-    #   by AWS Config. Must belong to the same Region as the destination S3
-    #   bucket.
+    #   The Amazon Resource Name (ARN) of the Key Management Service (KMS )
+    #   KMS key (KMS key) used to encrypt objects delivered by Config. Must
+    #   belong to the same Region as the destination S3 bucket.
     #   @return [String]
     #
     # @!attribute [rw] sns_topic_arn
-    #   The Amazon Resource Name (ARN) of the Amazon SNS topic to which AWS
+    #   The Amazon Resource Name (ARN) of the Amazon SNS topic to which
     #   Config sends notifications about configuration changes.
     #
     #   If you choose a topic from another account, the topic must have
-    #   policies that grant access permissions to AWS Config. For more
+    #   policies that grant access permissions to Config. For more
     #   information, see [Permissions for the Amazon SNS Topic][1] in the
-    #   AWS Config Developer Guide.
+    #   *Config Developer Guide*.
     #
     #
     #
@@ -2347,8 +2260,8 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] config_snapshot_delivery_properties
-    #   The options for how often AWS Config delivers configuration
-    #   snapshots to the Amazon S3 bucket.
+    #   The options for how often Config delivers configuration snapshots to
+    #   the Amazon S3 bucket.
     #   @return [Types::ConfigSnapshotDeliveryProperties]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeliveryChannel AWS API Documentation
@@ -2398,21 +2311,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeAggregateComplianceByConfigRulesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         filters: {
-    #           config_rule_name: "ConfigRuleName",
-    #           compliance_type: "COMPLIANT", # accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #           account_id: "AccountId",
-    #           aws_region: "AwsRegion",
-    #         },
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -2423,7 +2321,7 @@ module Aws::ConfigService
     #
     # @!attribute [rw] limit
     #   The maximum number of evaluation results returned on each page. The
-    #   default is maximum. If you specify 0, AWS Config uses the default.
+    #   default is maximum. If you specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -2460,21 +2358,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeAggregateComplianceByConformancePacksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         filters: {
-    #           conformance_pack_name: "ConformancePackName",
-    #           compliance_type: "COMPLIANT", # accepts COMPLIANT, NON_COMPLIANT, INSUFFICIENT_DATA
-    #           account_id: "AccountId",
-    #           aws_region: "AwsRegion",
-    #         },
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -2486,8 +2369,8 @@ module Aws::ConfigService
     #
     # @!attribute [rw] limit
     #   The maximum number of conformance packs compliance details returned
-    #   on each page. The default is maximum. If you specify 0, AWS Config
-    #   uses the default.
+    #   on each page. The default is maximum. If you specify 0, Config uses
+    #   the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -2524,17 +2407,9 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeAggregationAuthorizationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] limit
     #   The maximum number of AggregationAuthorizations returned on each
-    #   page. The default is maximum. If you specify 0, AWS Config uses the
+    #   page. The default is maximum. If you specify 0, Config uses the
     #   default.
     #   @return [Integer]
     #
@@ -2571,24 +2446,12 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeComplianceByConfigRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_names: ["ConfigRuleName"],
-    #         compliance_types: ["COMPLIANT"], # accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] config_rule_names
-    #   Specify one or more AWS Config rule names to filter the results by
-    #   rule.
+    #   Specify one or more Config rule names to filter the results by rule.
     #   @return [Array<String>]
     #
     # @!attribute [rw] compliance_types
     #   Filters the results by compliance.
-    #
-    #   The allowed values are `COMPLIANT` and `NON_COMPLIANT`.
     #   @return [Array<String>]
     #
     # @!attribute [rw] next_token
@@ -2607,8 +2470,7 @@ module Aws::ConfigService
     end
 
     # @!attribute [rw] compliance_by_config_rules
-    #   Indicates whether each of the specified AWS Config rules is
-    #   compliant.
+    #   Indicates whether each of the specified Config rules is compliant.
     #   @return [Array<Types::ComplianceByConfigRule>]
     #
     # @!attribute [rw] next_token
@@ -2625,41 +2487,28 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeComplianceByResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "StringWithCharLimit256",
-    #         resource_id: "BaseResourceId",
-    #         compliance_types: ["COMPLIANT"], # accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] resource_type
-    #   The types of AWS resources for which you want compliance information
-    #   (for example, `AWS::EC2::Instance`). For this action, you can
-    #   specify that the resource type is an AWS account by specifying
-    #   `AWS::::Account`.
+    #   The types of Amazon Web Services resources for which you want
+    #   compliance information (for example, `AWS::EC2::Instance`). For this
+    #   action, you can specify that the resource type is an Amazon Web
+    #   Services account by specifying `AWS::::Account`.
     #   @return [String]
     #
     # @!attribute [rw] resource_id
-    #   The ID of the AWS resource for which you want compliance
-    #   information. You can specify only one resource ID. If you specify a
-    #   resource ID, you must also specify a type for `ResourceType`.
+    #   The ID of the Amazon Web Services resource for which you want
+    #   compliance information. You can specify only one resource ID. If you
+    #   specify a resource ID, you must also specify a type for
+    #   `ResourceType`.
     #   @return [String]
     #
     # @!attribute [rw] compliance_types
     #   Filters the results by compliance.
-    #
-    #   The allowed values are `COMPLIANT`, `NON_COMPLIANT`, and
-    #   `INSUFFICIENT_DATA`.
     #   @return [Array<String>]
     #
     # @!attribute [rw] limit
     #   The maximum number of evaluation results returned on each page. The
     #   default is 10. You cannot specify a number greater than 100. If you
-    #   specify 0, AWS Config uses the default.
+    #   specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -2680,8 +2529,8 @@ module Aws::ConfigService
     end
 
     # @!attribute [rw] compliance_by_resources
-    #   Indicates whether the specified AWS resource complies with all of
-    #   the AWS Config rules that evaluate it.
+    #   Indicates whether the specified Amazon Web Services resource
+    #   complies with all of the Config rules that evaluate it.
     #   @return [Array<Types::ComplianceByResource>]
     #
     # @!attribute [rw] next_token
@@ -2698,19 +2547,10 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConfigRuleEvaluationStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_names: ["ConfigRuleName"],
-    #         next_token: "String",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] config_rule_names
-    #   The name of the AWS managed Config rules for which you want status
-    #   information. If you do not specify any names, AWS Config returns
-    #   status information for all AWS managed Config rules that you use.
+    #   The name of the Config managed rules for which you want status
+    #   information. If you do not specify any names, Config returns status
+    #   information for all Config managed rules that you use.
     #   @return [Array<String>]
     #
     # @!attribute [rw] next_token
@@ -2724,8 +2564,8 @@ module Aws::ConfigService
     #   This parameter is required if the rule limit for your account is
     #   more than the default of 150 rules.
     #
-    #   For information about requesting a rule limit increase, see [AWS
-    #   Config Limits][1] in the *AWS General Reference Guide*.
+    #   For information about requesting a rule limit increase, see [Config
+    #   Limits][1] in the *Amazon Web Services General Reference Guide*.
     #
     #
     #
@@ -2743,7 +2583,7 @@ module Aws::ConfigService
     end
 
     # @!attribute [rw] config_rules_evaluation_status
-    #   Status information about your AWS managed Config rules.
+    #   Status information about your Config managed rules.
     #   @return [Array<Types::ConfigRuleEvaluationStatus>]
     #
     # @!attribute [rw] next_token
@@ -2760,18 +2600,31 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConfigRulesRequest
-    #   data as a hash:
+    # Returns a filtered list of Detective or Proactive Config rules. By
+    # default, if the filter is not defined, this API returns an unfiltered
+    # list. For more information on Detective or Proactive Config rules, see
+    # [ **Evaluation Mode** ][1] in the *Config Developer Guide*.
     #
-    #       {
-    #         config_rule_names: ["ConfigRuleName"],
-    #         next_token: "String",
-    #       }
     #
+    #
+    # [1]: https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config-rules.html
+    #
+    # @!attribute [rw] evaluation_mode
+    #   The mode of an evaluation. The valid values are Detective or
+    #   Proactive.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConfigRulesFilters AWS API Documentation
+    #
+    class DescribeConfigRulesFilters < Struct.new(
+      :evaluation_mode)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] config_rule_names
-    #   The names of the AWS Config rules for which you want details. If you
-    #   do not specify any names, AWS Config returns details for all your
-    #   rules.
+    #   The names of the Config rules for which you want details. If you do
+    #   not specify any names, Config returns details for all your rules.
     #   @return [Array<String>]
     #
     # @!attribute [rw] next_token
@@ -2779,17 +2632,29 @@ module Aws::ConfigService
     #   get the next page of results in a paginated response.
     #   @return [String]
     #
+    # @!attribute [rw] filters
+    #   Returns a list of Detective or Proactive Config rules. By default,
+    #   this API returns an unfiltered list. For more information on
+    #   Detective or Proactive Config rules, see [ **Evaluation Mode** ][1]
+    #   in the *Config Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config-rules.html
+    #   @return [Types::DescribeConfigRulesFilters]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConfigRulesRequest AWS API Documentation
     #
     class DescribeConfigRulesRequest < Struct.new(
       :config_rule_names,
-      :next_token)
+      :next_token,
+      :filters)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # @!attribute [rw] config_rules
-    #   The details about your AWS Config rules.
+    #   The details about your Config rules.
     #   @return [Array<Types::ConfigRule>]
     #
     # @!attribute [rw] next_token
@@ -2806,16 +2671,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConfigurationAggregatorSourcesStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         update_status: ["FAILED"], # accepts FAILED, SUCCEEDED, OUTDATED
-    #         next_token: "String",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -2837,8 +2692,7 @@ module Aws::ConfigService
     #
     # @!attribute [rw] limit
     #   The maximum number of AggregatorSourceStatus returned on each page.
-    #   The default is maximum. If you specify 0, AWS Config uses the
-    #   default.
+    #   The default is maximum. If you specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConfigurationAggregatorSourcesStatusRequest AWS API Documentation
@@ -2870,15 +2724,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConfigurationAggregatorsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_names: ["ConfigurationAggregatorName"],
-    #         next_token: "String",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_names
     #   The name of the configuration aggregators.
     #   @return [Array<String>]
@@ -2890,7 +2735,7 @@ module Aws::ConfigService
     #
     # @!attribute [rw] limit
     #   The maximum number of configuration aggregators returned on each
-    #   page. The default is maximum. If you specify 0, AWS Config uses the
+    #   page. The default is maximum. If you specify 0, Config uses the
     #   default.
     #   @return [Integer]
     #
@@ -2924,13 +2769,6 @@ module Aws::ConfigService
 
     # The input for the DescribeConfigurationRecorderStatus action.
     #
-    # @note When making an API call, you may pass DescribeConfigurationRecorderStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_recorder_names: ["RecorderName"],
-    #       }
-    #
     # @!attribute [rw] configuration_recorder_names
     #   The name(s) of the configuration recorder. If the name is not
     #   specified, the action returns the current status of all the
@@ -2962,13 +2800,6 @@ module Aws::ConfigService
 
     # The input for the DescribeConfigurationRecorders action.
     #
-    # @note When making an API call, you may pass DescribeConfigurationRecordersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_recorder_names: ["RecorderName"],
-    #       }
-    #
     # @!attribute [rw] configuration_recorder_names
     #   A list of configuration recorder names.
     #   @return [Array<String>]
@@ -2996,19 +2827,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConformancePackComplianceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         conformance_pack_name: "ConformancePackName", # required
-    #         filters: {
-    #           config_rule_names: ["StringWithCharLimit64"],
-    #           compliance_type: "COMPLIANT", # accepts COMPLIANT, NON_COMPLIANT, INSUFFICIENT_DATA
-    #         },
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] conformance_pack_name
     #   Name of the conformance pack.
     #   @return [String]
@@ -3018,7 +2836,7 @@ module Aws::ConfigService
     #   @return [Types::ConformancePackComplianceFilters]
     #
     # @!attribute [rw] limit
-    #   The maximum number of AWS Config rules within a conformance pack are
+    #   The maximum number of Config rules within a conformance pack are
     #   returned on each page.
     #   @return [Integer]
     #
@@ -3061,15 +2879,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConformancePackStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         conformance_pack_names: ["ConformancePackName"],
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] conformance_pack_names
     #   Comma-separated list of conformance pack names.
     #   @return [Array<String>]
@@ -3112,19 +2921,10 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConformancePacksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         conformance_pack_names: ["ConformancePackName"],
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] conformance_pack_names
     #   Comma-separated list of conformance pack names for which you want
-    #   details. If you do not specify any names, AWS Config returns details
-    #   for all your conformance packs.
+    #   details. If you do not specify any names, Config returns details for
+    #   all your conformance packs.
     #   @return [Array<String>]
     #
     # @!attribute [rw] limit
@@ -3166,13 +2966,6 @@ module Aws::ConfigService
 
     # The input for the DeliveryChannelStatus action.
     #
-    # @note When making an API call, you may pass DescribeDeliveryChannelStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         delivery_channel_names: ["ChannelName"],
-    #       }
-    #
     # @!attribute [rw] delivery_channel_names
     #   A list of delivery channel names.
     #   @return [Array<String>]
@@ -3201,13 +2994,6 @@ module Aws::ConfigService
 
     # The input for the DescribeDeliveryChannels action.
     #
-    # @note When making an API call, you may pass DescribeDeliveryChannelsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         delivery_channel_names: ["ChannelName"],
-    #       }
-    #
     # @!attribute [rw] delivery_channel_names
     #   A list of delivery channel names.
     #   @return [Array<String>]
@@ -3235,25 +3021,16 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeOrganizationConfigRuleStatusesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_config_rule_names: ["StringWithCharLimit64"],
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] organization_config_rule_names
-    #   The names of organization config rules for which you want status
-    #   details. If you do not specify any names, AWS Config returns details
-    #   for all your organization AWS Confg rules.
+    #   The names of organization Config rules for which you want status
+    #   details. If you do not specify any names, Config returns details for
+    #   all your organization Config rules.
     #   @return [Array<String>]
     #
     # @!attribute [rw] limit
     #   The maximum number of `OrganizationConfigRuleStatuses` returned on
-    #   each page. If you do no specify a number, AWS Config uses the
-    #   default. The default is 100.
+    #   each page. If you do no specify a number, Config uses the default.
+    #   The default is 100.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -3289,25 +3066,16 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeOrganizationConfigRulesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_config_rule_names: ["StringWithCharLimit64"],
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] organization_config_rule_names
-    #   The names of organization config rules for which you want details.
-    #   If you do not specify any names, AWS Config returns details for all
-    #   your organization config rules.
+    #   The names of organization Config rules for which you want details.
+    #   If you do not specify any names, Config returns details for all your
+    #   organization Config rules.
     #   @return [Array<String>]
     #
     # @!attribute [rw] limit
-    #   The maximum number of organization config rules returned on each
-    #   page. If you do no specify a number, AWS Config uses the default.
-    #   The default is 100.
+    #   The maximum number of organization Config rules returned on each
+    #   page. If you do no specify a number, Config uses the default. The
+    #   default is 100.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -3343,24 +3111,15 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeOrganizationConformancePackStatusesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_conformance_pack_names: ["OrganizationConformancePackName"],
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] organization_conformance_pack_names
     #   The names of organization conformance packs for which you want
-    #   status details. If you do not specify any names, AWS Config returns
+    #   status details. If you do not specify any names, Config returns
     #   details for all your organization conformance packs.
     #   @return [Array<String>]
     #
     # @!attribute [rw] limit
     #   The maximum number of OrganizationConformancePackStatuses returned
-    #   on each page. If you do no specify a number, AWS Config uses the
+    #   on each page. If you do no specify a number, Config uses the
     #   default. The default is 100.
     #   @return [Integer]
     #
@@ -3397,23 +3156,14 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeOrganizationConformancePacksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_conformance_pack_names: ["OrganizationConformancePackName"],
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] organization_conformance_pack_names
     #   The name that you assign to an organization conformance pack.
     #   @return [Array<String>]
     #
     # @!attribute [rw] limit
     #   The maximum number of organization config packs returned on each
-    #   page. If you do no specify a number, AWS Config uses the default.
-    #   The default is 100.
+    #   page. If you do no specify a number, Config uses the default. The
+    #   default is 100.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -3449,17 +3199,9 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribePendingAggregationRequestsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] limit
     #   The maximum number of evaluation results returned on each page. The
-    #   default is maximum. If you specify 0, AWS Config uses the default.
+    #   default is maximum. If you specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -3494,16 +3236,9 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRemediationConfigurationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_names: ["ConfigRuleName"], # required
-    #       }
-    #
     # @!attribute [rw] config_rule_names
-    #   A list of AWS Config rule names of remediation configurations for
-    #   which you want details.
+    #   A list of Config rule names of remediation configurations for which
+    #   you want details.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeRemediationConfigurationsRequest AWS API Documentation
@@ -3526,34 +3261,19 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRemediationExceptionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName", # required
-    #         resource_keys: [
-    #           {
-    #             resource_type: "StringWithCharLimit256",
-    #             resource_id: "StringWithCharLimit1024",
-    #           },
-    #         ],
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule.
+    #   The name of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] resource_keys
     #   An exception list of resource exception keys to be processed with
-    #   the current request. AWS Config adds exception for each resource
-    #   key. For example, AWS Config adds 3 exceptions for 3 resource keys.
+    #   the current request. Config adds exception for each resource key.
+    #   For example, Config adds 3 exceptions for 3 resource keys.
     #   @return [Array<Types::RemediationExceptionResourceKey>]
     #
     # @!attribute [rw] limit
     #   The maximum number of RemediationExceptionResourceKey returned on
-    #   each page. The default is 25. If you specify 0, AWS Config uses the
+    #   each page. The default is 25. If you specify 0, Config uses the
     #   default.
     #   @return [Integer]
     #
@@ -3591,23 +3311,8 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRemediationExecutionStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName", # required
-    #         resource_keys: [
-    #           {
-    #             resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #             resource_id: "ResourceId", # required
-    #           },
-    #         ],
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   A list of AWS Config rule names.
+    #   A list of Config rule names.
     #   @return [String]
     #
     # @!attribute [rw] resource_keys
@@ -3618,7 +3323,7 @@ module Aws::ConfigService
     #
     # @!attribute [rw] limit
     #   The maximum number of RemediationExecutionStatuses returned on each
-    #   page. The default is maximum. If you specify 0, AWS Config uses the
+    #   page. The default is maximum. If you specify 0, Config uses the
     #   default.
     #   @return [Integer]
     #
@@ -3656,20 +3361,12 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRetentionConfigurationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         retention_configuration_names: ["RetentionConfigurationName"],
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] retention_configuration_names
     #   A list of names of retention configurations for which you want
-    #   details. If you do not specify a name, AWS Config returns details
-    #   for all the retention configurations for that account.
+    #   details. If you do not specify a name, Config returns details for
+    #   all the retention configurations for that account.
     #
-    #   <note markdown="1"> Currently, AWS Config supports only one retention configuration per
+    #   <note markdown="1"> Currently, Config supports only one retention configuration per
     #   region in your account.
     #
     #    </note>
@@ -3707,41 +3404,29 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Identifies an AWS resource and indicates whether it complies with the
-    # AWS Config rule that it was evaluated against.
-    #
-    # @note When making an API call, you may pass Evaluation
-    #   data as a hash:
-    #
-    #       {
-    #         compliance_resource_type: "StringWithCharLimit256", # required
-    #         compliance_resource_id: "BaseResourceId", # required
-    #         compliance_type: "COMPLIANT", # required, accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #         annotation: "StringWithCharLimit256",
-    #         ordering_timestamp: Time.now, # required
-    #       }
+    # Identifies an Amazon Web Services resource and indicates whether it
+    # complies with the Config rule that it was evaluated against.
     #
     # @!attribute [rw] compliance_resource_type
-    #   The type of AWS resource that was evaluated.
+    #   The type of Amazon Web Services resource that was evaluated.
     #   @return [String]
     #
     # @!attribute [rw] compliance_resource_id
-    #   The ID of the AWS resource that was evaluated.
+    #   The ID of the Amazon Web Services resource that was evaluated.
     #   @return [String]
     #
     # @!attribute [rw] compliance_type
-    #   Indicates whether the AWS resource complies with the AWS Config rule
-    #   that it was evaluated against.
+    #   Indicates whether the Amazon Web Services resource complies with the
+    #   Config rule that it was evaluated against.
     #
-    #   For the `Evaluation` data type, AWS Config supports only the
-    #   `COMPLIANT`, `NON_COMPLIANT`, and `NOT_APPLICABLE` values. AWS
-    #   Config does not support the `INSUFFICIENT_DATA` value for this data
-    #   type.
+    #   For the `Evaluation` data type, Config supports only the
+    #   `COMPLIANT`, `NON_COMPLIANT`, and `NOT_APPLICABLE` values. Config
+    #   does not support the `INSUFFICIENT_DATA` value for this data type.
     #
-    #   Similarly, AWS Config does not accept `INSUFFICIENT_DATA` as the
-    #   value for `ComplianceType` from a `PutEvaluations` request. For
-    #   example, an AWS Lambda function for a custom AWS Config rule cannot
-    #   pass an `INSUFFICIENT_DATA` value to AWS Config.
+    #   Similarly, Config does not accept `INSUFFICIENT_DATA` as the value
+    #   for `ComplianceType` from a `PutEvaluations` request. For example,
+    #   an Lambda function for a custom Config rule cannot pass an
+    #   `INSUFFICIENT_DATA` value to Config.
     #   @return [String]
     #
     # @!attribute [rw] annotation
@@ -3750,12 +3435,11 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] ordering_timestamp
-    #   The time of the event in AWS Config that triggered the evaluation.
-    #   For event-based evaluations, the time indicates when AWS Config
-    #   created the configuration item that triggered the evaluation. For
-    #   periodic evaluations, the time indicates when AWS Config triggered
-    #   the evaluation at the frequency that you specified (for example,
-    #   every 24 hours).
+    #   The time of the event in Config that triggered the evaluation. For
+    #   event-based evaluations, the time indicates when Config created the
+    #   configuration item that triggered the evaluation. For periodic
+    #   evaluations, the time indicates when Config triggered the evaluation
+    #   at the frequency that you specified (for example, every 24 hours).
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/Evaluation AWS API Documentation
@@ -3770,30 +3454,64 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The details of an AWS Config evaluation. Provides the AWS resource
-    # that was evaluated, the compliance of the resource, related time
-    # stamps, and supplementary information.
+    # Use EvaluationContext to group independently initiated proactive
+    # resource evaluations. For example, CFN Stack. If you want to check
+    # just a resource definition, you do not need to provide evaluation
+    # context.
+    #
+    # @!attribute [rw] evaluation_context_identifier
+    #   A unique EvaluationContextIdentifier ID for an EvaluationContext.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/EvaluationContext AWS API Documentation
+    #
+    class EvaluationContext < Struct.new(
+      :evaluation_context_identifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The configuration object for Config rule evaluation mode. The
+    # Supported valid values are Detective or Proactive.
+    #
+    # @!attribute [rw] mode
+    #   The mode of an evaluation. The valid values are Detective or
+    #   Proactive.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/EvaluationModeConfiguration AWS API Documentation
+    #
+    class EvaluationModeConfiguration < Struct.new(
+      :mode)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The details of an Config evaluation. Provides the Amazon Web Services
+    # resource that was evaluated, the compliance of the resource, related
+    # time stamps, and supplementary information.
     #
     # @!attribute [rw] evaluation_result_identifier
     #   Uniquely identifies the evaluation result.
     #   @return [Types::EvaluationResultIdentifier]
     #
     # @!attribute [rw] compliance_type
-    #   Indicates whether the AWS resource complies with the AWS Config rule
-    #   that evaluated it.
+    #   Indicates whether the Amazon Web Services resource complies with the
+    #   Config rule that evaluated it.
     #
-    #   For the `EvaluationResult` data type, AWS Config supports only the
-    #   `COMPLIANT`, `NON_COMPLIANT`, and `NOT_APPLICABLE` values. AWS
-    #   Config does not support the `INSUFFICIENT_DATA` value for the
+    #   For the `EvaluationResult` data type, Config supports only the
+    #   `COMPLIANT`, `NON_COMPLIANT`, and `NOT_APPLICABLE` values. Config
+    #   does not support the `INSUFFICIENT_DATA` value for the
     #   `EvaluationResult` data type.
     #   @return [String]
     #
     # @!attribute [rw] result_recorded_time
-    #   The time when AWS Config recorded the evaluation result.
+    #   The time when Config recorded the evaluation result.
     #   @return [Time]
     #
     # @!attribute [rw] config_rule_invoked_time
-    #   The time when the AWS Config rule evaluated the AWS resource.
+    #   The time when the Config rule evaluated the Amazon Web Services
+    #   resource.
     #   @return [Time]
     #
     # @!attribute [rw] annotation
@@ -3802,9 +3520,10 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] result_token
-    #   An encrypted token that associates an evaluation with an AWS Config
-    #   rule. The token identifies the rule, the AWS resource being
-    #   evaluated, and the event that triggered the evaluation.
+    #   An encrypted token that associates an evaluation with an Config
+    #   rule. The token identifies the rule, the Amazon Web Services
+    #   resource being evaluated, and the event that triggered the
+    #   evaluation.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/EvaluationResult AWS API Documentation
@@ -3823,40 +3542,51 @@ module Aws::ConfigService
     # Uniquely identifies an evaluation result.
     #
     # @!attribute [rw] evaluation_result_qualifier
-    #   Identifies an AWS Config rule used to evaluate an AWS resource, and
-    #   provides the type and ID of the evaluated resource.
+    #   Identifies an Config rule used to evaluate an Amazon Web Services
+    #   resource, and provides the type and ID of the evaluated resource.
     #   @return [Types::EvaluationResultQualifier]
     #
     # @!attribute [rw] ordering_timestamp
-    #   The time of the event that triggered the evaluation of your AWS
-    #   resources. The time can indicate when AWS Config delivered a
-    #   configuration item change notification, or it can indicate when AWS
+    #   The time of the event that triggered the evaluation of your Amazon
+    #   Web Services resources. The time can indicate when Config delivered
+    #   a configuration item change notification, or it can indicate when
     #   Config delivered the configuration snapshot, depending on which
     #   event triggered the evaluation.
     #   @return [Time]
+    #
+    # @!attribute [rw] resource_evaluation_id
+    #   A Unique ID for an evaluation result.
+    #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/EvaluationResultIdentifier AWS API Documentation
     #
     class EvaluationResultIdentifier < Struct.new(
       :evaluation_result_qualifier,
-      :ordering_timestamp)
+      :ordering_timestamp,
+      :resource_evaluation_id)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Identifies an AWS Config rule that evaluated an AWS resource, and
-    # provides the type and ID of the resource that the rule evaluated.
+    # Identifies an Config rule that evaluated an Amazon Web Services
+    # resource, and provides the type and ID of the resource that the rule
+    # evaluated.
     #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule that was used in the evaluation.
+    #   The name of the Config rule that was used in the evaluation.
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource that was evaluated.
+    #   The type of Amazon Web Services resource that was evaluated.
     #   @return [String]
     #
     # @!attribute [rw] resource_id
-    #   The ID of the evaluated AWS resource.
+    #   The ID of the evaluated Amazon Web Services resource.
+    #   @return [String]
+    #
+    # @!attribute [rw] evaluation_mode
+    #   The mode of an evaluation. The valid values are Detective or
+    #   Proactive.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/EvaluationResultQualifier AWS API Documentation
@@ -3864,22 +3594,50 @@ module Aws::ConfigService
     class EvaluationResultQualifier < Struct.new(
       :config_rule_name,
       :resource_type,
-      :resource_id)
+      :resource_id,
+      :evaluation_mode)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # The controls that AWS Config uses for executing remediations.
+    # Returns status details of an evaluation.
     #
-    # @note When making an API call, you may pass ExecutionControls
-    #   data as a hash:
+    # @!attribute [rw] status
+    #   The status of an execution. The valid values are In\_Progress,
+    #   Succeeded or Failed.
+    #   @return [String]
     #
-    #       {
-    #         ssm_controls: {
-    #           concurrent_execution_rate_percentage: 1,
-    #           error_percentage: 1,
-    #         },
-    #       }
+    # @!attribute [rw] failure_reason
+    #   An explanation for failed execution status.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/EvaluationStatus AWS API Documentation
+    #
+    class EvaluationStatus < Struct.new(
+      :status,
+      :failure_reason)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Specifies whether the configuration recorder excludes resource types
+    # from being recorded. Use the `resourceTypes` field to enter a
+    # comma-separated list of resource types to exclude as exemptions.
+    #
+    # @!attribute [rw] resource_types
+    #   A comma-separated list of resource types to exclude from recording
+    #   by the configuration recorder.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ExclusionByResourceTypes AWS API Documentation
+    #
+    class ExclusionByResourceTypes < Struct.new(
+      :resource_types)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The controls that Config uses for executing remediations.
     #
     # @!attribute [rw] ssm_controls
     #   A SsmControls object.
@@ -3893,33 +3651,22 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Identifies an AWS resource and indicates whether it complies with the
-    # AWS Config rule that it was evaluated against.
-    #
-    # @note When making an API call, you may pass ExternalEvaluation
-    #   data as a hash:
-    #
-    #       {
-    #         compliance_resource_type: "StringWithCharLimit256", # required
-    #         compliance_resource_id: "BaseResourceId", # required
-    #         compliance_type: "COMPLIANT", # required, accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #         annotation: "StringWithCharLimit256",
-    #         ordering_timestamp: Time.now, # required
-    #       }
+    # Identifies an Amazon Web Services resource and indicates whether it
+    # complies with the Config rule that it was evaluated against.
     #
     # @!attribute [rw] compliance_resource_type
-    #   The evaluated compliance resource type. AWS Config accepts
+    #   The evaluated compliance resource type. Config accepts
     #   `AWS::::Account` resource type.
     #   @return [String]
     #
     # @!attribute [rw] compliance_resource_id
-    #   The evaluated compliance resource ID. AWS Config accepts only AWS
-    #   account ID.
+    #   The evaluated compliance resource ID. Config accepts only Amazon Web
+    #   Services account ID.
     #   @return [String]
     #
     # @!attribute [rw] compliance_type
-    #   The compliance of the AWS resource. The valid values are `COMPLIANT,
-    #   NON_COMPLIANT, ` and `NOT_APPLICABLE`.
+    #   The compliance of the Amazon Web Services resource. The valid values
+    #   are `COMPLIANT, NON_COMPLIANT, ` and `NOT_APPLICABLE`.
     #   @return [String]
     #
     # @!attribute [rw] annotation
@@ -3948,7 +3695,7 @@ module Aws::ConfigService
     #
     # @!attribute [rw] failure_message
     #   Returns a failure message for delete remediation exception. For
-    #   example, AWS Config creates an exception due to an internal error.
+    #   example, Config creates an exception due to an internal error.
     #   @return [String]
     #
     # @!attribute [rw] failed_items
@@ -4021,25 +3768,12 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAggregateComplianceDetailsByConfigRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         config_rule_name: "ConfigRuleName", # required
-    #         account_id: "AccountId", # required
-    #         aws_region: "AwsRegion", # required
-    #         compliance_type: "COMPLIANT", # accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
     #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule for which you want compliance
+    #   The name of the Config rule for which you want compliance
     #   information.
     #   @return [String]
     #
@@ -4055,9 +3789,9 @@ module Aws::ConfigService
     #   The resource compliance status.
     #
     #   <note markdown="1"> For the `GetAggregateComplianceDetailsByConfigRuleRequest` data
-    #   type, AWS Config supports only the `COMPLIANT` and `NON_COMPLIANT`.
-    #   AWS Config does not support the `NOT_APPLICABLE` and
-    #   `INSUFFICIENT_DATA` values.
+    #   type, Config supports only the `COMPLIANT` and `NON_COMPLIANT`.
+    #   Config does not support the `NOT_APPLICABLE` and `INSUFFICIENT_DATA`
+    #   values.
     #
     #    </note>
     #   @return [String]
@@ -4065,7 +3799,7 @@ module Aws::ConfigService
     # @!attribute [rw] limit
     #   The maximum number of evaluation results returned on each page. The
     #   default is 50. You cannot specify a number greater than 100. If you
-    #   specify 0, AWS Config uses the default.
+    #   specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4105,20 +3839,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAggregateConfigRuleComplianceSummaryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         filters: {
-    #           account_id: "AccountId",
-    #           aws_region: "AwsRegion",
-    #         },
-    #         group_by_key: "ACCOUNT_ID", # accepts ACCOUNT_ID, AWS_REGION
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -4135,7 +3855,7 @@ module Aws::ConfigService
     # @!attribute [rw] limit
     #   The maximum number of evaluation results returned on each page. The
     #   default is 1000. You cannot specify a number greater than 1000. If
-    #   you specify 0, AWS Config uses the default.
+    #   you specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4178,20 +3898,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAggregateConformancePackComplianceSummaryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         filters: {
-    #           account_id: "AccountId",
-    #           aws_region: "AwsRegion",
-    #         },
-    #         group_by_key: "ACCOUNT_ID", # accepts ACCOUNT_ID, AWS_REGION
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -4202,12 +3908,13 @@ module Aws::ConfigService
     #   @return [Types::AggregateConformancePackComplianceSummaryFilters]
     #
     # @!attribute [rw] group_by_key
-    #   Groups the result based on AWS Account ID or AWS Region.
+    #   Groups the result based on Amazon Web Services account ID or Amazon
+    #   Web Services Region.
     #   @return [String]
     #
     # @!attribute [rw] limit
     #   The maximum number of results returned on each page. The default is
-    #   maximum. If you specify 0, AWS Config uses the default.
+    #   maximum. If you specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4233,7 +3940,8 @@ module Aws::ConfigService
     #   @return [Array<Types::AggregateConformancePackComplianceSummary>]
     #
     # @!attribute [rw] group_by_key
-    #   Groups the result based on AWS Account ID or AWS Region.
+    #   Groups the result based on Amazon Web Services account ID or Amazon
+    #   Web Services Region.
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -4251,21 +3959,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAggregateDiscoveredResourceCountsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         filters: {
-    #           resource_type: "AWS::EC2::CustomerGateway", # accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #           account_id: "AccountId",
-    #           region: "AwsRegion",
-    #         },
-    #         group_by_key: "RESOURCE_TYPE", # accepts RESOURCE_TYPE, ACCOUNT_ID, AWS_REGION
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -4281,7 +3974,7 @@ module Aws::ConfigService
     # @!attribute [rw] limit
     #   The maximum number of GroupedResourceCount objects returned on each
     #   page. The default is 1000. You cannot specify a number greater than
-    #   1000. If you specify 0, AWS Config uses the default.
+    #   1000. If you specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4331,20 +4024,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAggregateResourceConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         resource_identifier: { # required
-    #           source_account_id: "AccountId", # required
-    #           source_region: "AwsRegion", # required
-    #           resource_id: "ResourceId", # required
-    #           resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #           resource_name: "ResourceName",
-    #         },
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -4374,32 +4053,24 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetComplianceDetailsByConfigRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "StringWithCharLimit64", # required
-    #         compliance_types: ["COMPLIANT"], # accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule for which you want compliance
+    #   The name of the Config rule for which you want compliance
     #   information.
     #   @return [String]
     #
     # @!attribute [rw] compliance_types
     #   Filters the results by compliance.
     #
-    #   The allowed values are `COMPLIANT`, `NON_COMPLIANT`, and
-    #   `NOT_APPLICABLE`.
+    #   `INSUFFICIENT_DATA` is a valid `ComplianceType` that is returned
+    #   when an Config rule cannot be evaluated. However,
+    #   `INSUFFICIENT_DATA` cannot be used as a `ComplianceType` for
+    #   filtering results.
     #   @return [Array<String>]
     #
     # @!attribute [rw] limit
     #   The maximum number of evaluation results returned on each page. The
     #   default is 10. You cannot specify a number greater than 100. If you
-    #   specify 0, AWS Config uses the default.
+    #   specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4419,8 +4090,8 @@ module Aws::ConfigService
     end
 
     # @!attribute [rw] evaluation_results
-    #   Indicates whether the AWS resource complies with the specified AWS
-    #   Config rule.
+    #   Indicates whether the Amazon Web Services resource complies with the
+    #   specified Config rule.
     #   @return [Array<Types::EvaluationResult>]
     #
     # @!attribute [rw] next_token
@@ -4437,36 +4108,38 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetComplianceDetailsByResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "StringWithCharLimit256", # required
-    #         resource_id: "BaseResourceId", # required
-    #         compliance_types: ["COMPLIANT"], # accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] resource_type
-    #   The type of the AWS resource for which you want compliance
-    #   information.
+    #   The type of the Amazon Web Services resource for which you want
+    #   compliance information.
     #   @return [String]
     #
     # @!attribute [rw] resource_id
-    #   The ID of the AWS resource for which you want compliance
-    #   information.
+    #   The ID of the Amazon Web Services resource for which you want
+    #   compliance information.
     #   @return [String]
     #
     # @!attribute [rw] compliance_types
     #   Filters the results by compliance.
     #
-    #   The allowed values are `COMPLIANT`, `NON_COMPLIANT`, and
-    #   `NOT_APPLICABLE`.
+    #   `INSUFFICIENT_DATA` is a valid `ComplianceType` that is returned
+    #   when an Config rule cannot be evaluated. However,
+    #   `INSUFFICIENT_DATA` cannot be used as a `ComplianceType` for
+    #   filtering results.
     #   @return [Array<String>]
     #
     # @!attribute [rw] next_token
     #   The `nextToken` string returned on a previous page that you use to
     #   get the next page of results in a paginated response.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_evaluation_id
+    #   The unique ID of Amazon Web Services resource execution for which
+    #   you want to retrieve evaluation results.
+    #
+    #   <note markdown="1"> You need to only provide either a `ResourceEvaluationID` or a
+    #   `ResourceID `and `ResourceType`.
+    #
+    #    </note>
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetComplianceDetailsByResourceRequest AWS API Documentation
@@ -4475,14 +4148,15 @@ module Aws::ConfigService
       :resource_type,
       :resource_id,
       :compliance_types,
-      :next_token)
+      :next_token,
+      :resource_evaluation_id)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # @!attribute [rw] evaluation_results
-    #   Indicates whether the specified AWS resource complies each AWS
-    #   Config rule.
+    #   Indicates whether the specified Amazon Web Services resource
+    #   complies each Config rule.
     #   @return [Array<Types::EvaluationResult>]
     #
     # @!attribute [rw] next_token
@@ -4500,8 +4174,8 @@ module Aws::ConfigService
     end
 
     # @!attribute [rw] compliance_summary
-    #   The number of AWS Config rules that are compliant and the number
-    #   that are noncompliant, up to a maximum of 25 for each.
+    #   The number of Config rules that are compliant and the number that
+    #   are noncompliant, up to a maximum of 25 for each.
     #   @return [Types::ComplianceSummary]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetComplianceSummaryByConfigRuleResponse AWS API Documentation
@@ -4512,21 +4186,15 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetComplianceSummaryByResourceTypeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_types: ["StringWithCharLimit256"],
-    #       }
-    #
     # @!attribute [rw] resource_types
     #   Specify one or more resource types to get the number of resources
     #   that are compliant and the number that are noncompliant for each
     #   resource type.
     #
-    #   For this request, you can specify an AWS resource type such as
-    #   `AWS::EC2::Instance`. You can specify that the resource type is an
-    #   AWS account by specifying `AWS::::Account`.
+    #   For this request, you can specify an Amazon Web Services resource
+    #   type such as `AWS::EC2::Instance`. You can specify that the resource
+    #   type is an Amazon Web Services account by specifying
+    #   `AWS::::Account`.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetComplianceSummaryByResourceTypeRequest AWS API Documentation
@@ -4552,21 +4220,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetConformancePackComplianceDetailsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         conformance_pack_name: "ConformancePackName", # required
-    #         filters: {
-    #           config_rule_names: ["StringWithCharLimit64"],
-    #           compliance_type: "COMPLIANT", # accepts COMPLIANT, NON_COMPLIANT, INSUFFICIENT_DATA
-    #           resource_type: "StringWithCharLimit256",
-    #           resource_ids: ["StringWithCharLimit256"],
-    #         },
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] conformance_pack_name
     #   Name of the conformance pack.
     #   @return [String]
@@ -4577,8 +4230,8 @@ module Aws::ConfigService
     #
     # @!attribute [rw] limit
     #   The maximum number of evaluation results returned on each page. If
-    #   you do no specify a number, AWS Config uses the default. The default
-    #   is 100.
+    #   you do no specify a number, Config uses the default. The default is
+    #   100.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4620,15 +4273,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetConformancePackComplianceSummaryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         conformance_pack_names: ["ConformancePackName"], # required
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] conformance_pack_names
     #   Names of conformance packs.
     #   @return [Array<String>]
@@ -4670,29 +4314,44 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDiscoveredResourceCountsRequest
-    #   data as a hash:
+    # @!attribute [rw] config_rule_name
+    #   The name of your Config Custom Policy rule.
+    #   @return [String]
     #
-    #       {
-    #         resource_types: ["StringWithCharLimit256"],
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetCustomRulePolicyRequest AWS API Documentation
     #
+    class GetCustomRulePolicyRequest < Struct.new(
+      :config_rule_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] policy_text
+    #   The policy definition containing the logic for your Config Custom
+    #   Policy rule.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetCustomRulePolicyResponse AWS API Documentation
+    #
+    class GetCustomRulePolicyResponse < Struct.new(
+      :policy_text)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_types
     #   The comma-separated list that specifies the resource types that you
-    #   want AWS Config to return (for example, `"AWS::EC2::Instance"`,
+    #   want Config to return (for example, `"AWS::EC2::Instance"`,
     #   `"AWS::IAM::User"`).
     #
-    #   If a value for `resourceTypes` is not specified, AWS Config returns
-    #   all resource types that AWS Config is recording in the region for
-    #   your account.
+    #   If a value for `resourceTypes` is not specified, Config returns all
+    #   resource types that Config is recording in the region for your
+    #   account.
     #
-    #   <note markdown="1"> If the configuration recorder is turned off, AWS Config returns an
-    #   empty list of ResourceCount objects. If the configuration recorder
-    #   is not recording a specific resource type (for example, S3 buckets),
-    #   that resource type is not returned in the list of ResourceCount
-    #   objects.
+    #   <note markdown="1"> If the configuration recorder is turned off, Config returns an empty
+    #   list of ResourceCount objects. If the configuration recorder is not
+    #   recording a specific resource type (for example, S3 buckets), that
+    #   resource type is not returned in the list of ResourceCount objects.
     #
     #    </note>
     #   @return [Array<String>]
@@ -4700,7 +4359,7 @@ module Aws::ConfigService
     # @!attribute [rw] limit
     #   The maximum number of ResourceCount objects returned on each page.
     #   The default is 100. You cannot specify a number greater than 100. If
-    #   you specify 0, AWS Config uses the default.
+    #   you specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4719,22 +4378,22 @@ module Aws::ConfigService
     end
 
     # @!attribute [rw] total_discovered_resources
-    #   The total number of resources that AWS Config is recording in the
-    #   region for your account. If you specify resource types in the
-    #   request, AWS Config returns only the total number of resources for
-    #   those resource types.
+    #   The total number of resources that Config is recording in the region
+    #   for your account. If you specify resource types in the request,
+    #   Config returns only the total number of resources for those resource
+    #   types.
     #
     #   **Example**
     #
-    #   1.  AWS Config is recording three resource types in the US East
-    #       (Ohio) Region for your account: 25 EC2 instances, 20 IAM users,
-    #       and 15 S3 buckets, for a total of 60 resources.
+    #   1.  Config is recording three resource types in the US East (Ohio)
+    #       Region for your account: 25 EC2 instances, 20 IAM users, and 15
+    #       S3 buckets, for a total of 60 resources.
     #
     #   2.  You make a call to the `GetDiscoveredResourceCounts` action and
     #       specify the resource type, `"AWS::EC2::Instances"`, in the
     #       request.
     #
-    #   3.  AWS Config returns 25 for `totalDiscoveredResources`.
+    #   3.  Config returns 25 for `totalDiscoveredResources`.
     #   @return [Integer]
     #
     # @!attribute [rw] resource_counts
@@ -4757,21 +4416,8 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetOrganizationConfigRuleDetailedStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_config_rule_name: "OrganizationConfigRuleName", # required
-    #         filters: {
-    #           account_id: "AccountId",
-    #           member_account_rule_status: "CREATE_SUCCESSFUL", # accepts CREATE_SUCCESSFUL, CREATE_IN_PROGRESS, CREATE_FAILED, DELETE_SUCCESSFUL, DELETE_FAILED, DELETE_IN_PROGRESS, UPDATE_SUCCESSFUL, UPDATE_IN_PROGRESS, UPDATE_FAILED
-    #         },
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] organization_config_rule_name
-    #   The name of organization config rule for which you want status
+    #   The name of your organization Config rule for which you want status
     #   details for member accounts.
     #   @return [String]
     #
@@ -4781,8 +4427,8 @@ module Aws::ConfigService
     #
     # @!attribute [rw] limit
     #   The maximum number of `OrganizationConfigRuleDetailedStatus`
-    #   returned on each page. If you do not specify a number, AWS Config
-    #   uses the default. The default is 100.
+    #   returned on each page. If you do not specify a number, Config uses
+    #   the default. The default is 100.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4819,19 +4465,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetOrganizationConformancePackDetailedStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_conformance_pack_name: "OrganizationConformancePackName", # required
-    #         filters: {
-    #           account_id: "AccountId",
-    #           status: "CREATE_SUCCESSFUL", # accepts CREATE_SUCCESSFUL, CREATE_IN_PROGRESS, CREATE_FAILED, DELETE_SUCCESSFUL, DELETE_FAILED, DELETE_IN_PROGRESS, UPDATE_SUCCESSFUL, UPDATE_IN_PROGRESS, UPDATE_FAILED
-    #         },
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] organization_conformance_pack_name
     #   The name of organization conformance pack for which you want status
     #   details for member accounts.
@@ -4843,8 +4476,8 @@ module Aws::ConfigService
     #
     # @!attribute [rw] limit
     #   The maximum number of `OrganizationConformancePackDetailedStatuses`
-    #   returned on each page. If you do not specify a number, AWS Config
-    #   uses the default. The default is 100.
+    #   returned on each page. If you do not specify a number, Config uses
+    #   the default. The default is 100.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4881,20 +4514,32 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
+    # @!attribute [rw] organization_config_rule_name
+    #   The name of your organization Config Custom Policy rule.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetOrganizationCustomRulePolicyRequest AWS API Documentation
+    #
+    class GetOrganizationCustomRulePolicyRequest < Struct.new(
+      :organization_config_rule_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] policy_text
+    #   The policy definition containing the logic for your organization
+    #   Config Custom Policy rule.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetOrganizationCustomRulePolicyResponse AWS API Documentation
+    #
+    class GetOrganizationCustomRulePolicyResponse < Struct.new(
+      :policy_text)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The input for the GetResourceConfigHistory action.
-    #
-    # @note When making an API call, you may pass GetResourceConfigHistoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #         resource_id: "ResourceId", # required
-    #         later_time: Time.now,
-    #         earlier_time: Time.now,
-    #         chronological_order: "Reverse", # accepts Reverse, Forward
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] resource_type
     #   The resource type.
@@ -4923,7 +4568,7 @@ module Aws::ConfigService
     # @!attribute [rw] limit
     #   The maximum number of configuration items returned on each page. The
     #   default is 10. You cannot specify a number greater than 100. If you
-    #   specify 0, AWS Config uses the default.
+    #   specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -4966,13 +4611,65 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetStoredQueryRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_evaluation_id
+    #   The unique `ResourceEvaluationId` of Amazon Web Services resource
+    #   execution for which you want to retrieve the evaluation summary.
+    #   @return [String]
     #
-    #       {
-    #         query_name: "QueryName", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetResourceEvaluationSummaryRequest AWS API Documentation
     #
+    class GetResourceEvaluationSummaryRequest < Struct.new(
+      :resource_evaluation_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_evaluation_id
+    #   The unique `ResourceEvaluationId` of Amazon Web Services resource
+    #   execution for which you want to retrieve the evaluation summary.
+    #   @return [String]
+    #
+    # @!attribute [rw] evaluation_mode
+    #   Lists results of the mode that you requested to retrieve the
+    #   resource evaluation summary. The valid values are Detective or
+    #   Proactive.
+    #   @return [String]
+    #
+    # @!attribute [rw] evaluation_status
+    #   Returns an `EvaluationStatus` object.
+    #   @return [Types::EvaluationStatus]
+    #
+    # @!attribute [rw] evaluation_start_timestamp
+    #   The start timestamp when Config rule starts evaluating compliance
+    #   for the provided resource details.
+    #   @return [Time]
+    #
+    # @!attribute [rw] compliance
+    #   The compliance status of the resource evaluation summary.
+    #   @return [String]
+    #
+    # @!attribute [rw] evaluation_context
+    #   Returns an `EvaluationContext` object.
+    #   @return [Types::EvaluationContext]
+    #
+    # @!attribute [rw] resource_details
+    #   Returns a `ResourceDetails` object.
+    #   @return [Types::ResourceDetails]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetResourceEvaluationSummaryResponse AWS API Documentation
+    #
+    class GetResourceEvaluationSummaryResponse < Struct.new(
+      :resource_evaluation_id,
+      :evaluation_mode,
+      :evaluation_status,
+      :evaluation_start_timestamp,
+      :compliance,
+      :evaluation_context,
+      :resource_details)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] query_name
     #   The name of the query.
     #   @return [String]
@@ -5018,8 +4715,21 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Your Amazon S3 bucket policy does not permit AWS Config to write to
-    # it.
+    # Using the same client token with one or more different parameters.
+    # Specify a new client token with the parameter changes and try again.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/IdempotentParameterMismatch AWS API Documentation
+    #
+    class IdempotentParameterMismatch < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Your Amazon S3 bucket policy does not permit Config to write to it.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/InsufficientDeliveryPolicyException AWS API Documentation
     #
@@ -5028,29 +4738,32 @@ module Aws::ConfigService
     # Indicates one of the following errors:
     #
     # * For PutConfigRule, the rule cannot be created because the IAM role
-    #   assigned to AWS Config lacks permissions to perform the config:Put*
+    #   assigned to Config lacks permissions to perform the config:Put*
     #   action.
     #
-    # * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
-    #   the function ARN, and check the function's permissions.
+    # * For PutConfigRule, the Lambda function cannot be invoked. Check the
+    #   function ARN, and check the function's permissions.
     #
-    # * For PutOrganizationConfigRule, organization config rule cannot be
+    # * For PutOrganizationConfigRule, organization Config rule cannot be
     #   created because you do not have permissions to call IAM `GetRole`
-    #   action or create a service linked role.
+    #   action or create a service-linked role.
     #
     # * For PutConformancePack and PutOrganizationConformancePack, a
-    #   conformance pack cannot be created because you do not have
-    #   permissions:
+    #   conformance pack cannot be created because you do not have the
+    #   following permissions:
     #
-    #   * To call IAM `GetRole` action or create a service linked role.
+    #   * You do not have permission to call IAM `GetRole` action or create
+    #     a service-linked role.
     #
-    #   * To read Amazon S3 bucket.
+    #   * You do not have permission to read Amazon S3 bucket or call
+    #     SSM:GetDocument.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/InsufficientPermissionsException AWS API Documentation
     #
     class InsufficientPermissionsException < Aws::EmptyStructure; end
 
-    # You have provided a configuration recorder name that is not valid.
+    # You have provided a name for the configuration recorder that is not
+    # valid.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/InvalidConfigurationRecorderNameException AWS API Documentation
     #
@@ -5074,7 +4787,7 @@ module Aws::ConfigService
     #
     class InvalidLimitException < Aws::EmptyStructure; end
 
-    # The specified next token is invalid. Specify the `nextToken` string
+    # The specified next token is not valid. Specify the `nextToken` string
     # that was returned in the previous response to get the next page of
     # results.
     #
@@ -5082,28 +4795,51 @@ module Aws::ConfigService
     #
     class InvalidNextTokenException < Aws::EmptyStructure; end
 
-    # One or more of the specified parameters are invalid. Verify that your
-    # parameters are valid and try again.
+    # One or more of the specified parameters are not valid. Verify that
+    # your parameters are valid and try again.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/InvalidParameterValueException AWS API Documentation
     #
     class InvalidParameterValueException < Aws::EmptyStructure; end
 
-    # AWS Config throws an exception if the recording group does not contain
-    # a valid list of resource types. Invalid values might also be
-    # incorrectly formatted.
+    # Indicates one of the following errors:
+    #
+    # * You have provided a combination of parameter values that is not
+    #   valid. For example:
+    #
+    #   * Setting the `allSupported` field of [RecordingGroup][1] to `true`,
+    #     but providing a non-empty list for the `resourceTypes`field of
+    #     [RecordingGroup][1].
+    #
+    #   * Setting the `allSupported` field of [RecordingGroup][1] to `true`,
+    #     but also setting the `useOnly` field of [RecordingStrategy][2] to
+    #     `EXCLUSION_BY_RESOURCE_TYPES`.
+    #
+    # * Every parameter is either null, false, or empty.
+    #
+    # * You have reached the limit of the number of resource types you can
+    #   provide for the recording group.
+    #
+    # * You have provided resource types or a recording strategy that are
+    #   not valid.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingGroup.html
+    # [2]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/InvalidRecordingGroupException AWS API Documentation
     #
     class InvalidRecordingGroupException < Aws::EmptyStructure; end
 
-    # The specified `ResultToken` is invalid.
+    # The specified `ResultToken` is not valid.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/InvalidResultTokenException AWS API Documentation
     #
     class InvalidResultTokenException < Aws::EmptyStructure; end
 
-    # You have provided a null or empty role ARN.
+    # You have provided a null or empty Amazon Resource Name (ARN) for the
+    # IAM role assumed by Config and used by the configuration recorder.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/InvalidRoleException AWS API Documentation
     #
@@ -5152,29 +4888,12 @@ module Aws::ConfigService
     #
     class LimitExceededException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ListAggregateDiscoveredResourcesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #         filters: {
-    #           account_id: "AccountId",
-    #           resource_id: "ResourceId",
-    #           resource_name: "ResourceName",
-    #           region: "AwsRegion",
-    #         },
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of resources that you want AWS Config to list in the
-    #   response.
+    #   The type of resources that you want Config to list in the response.
     #   @return [String]
     #
     # @!attribute [rw] filters
@@ -5183,7 +4902,7 @@ module Aws::ConfigService
     #
     # @!attribute [rw] limit
     #   The maximum number of resource identifiers returned on each page.
-    #   You cannot specify a number greater than 100. If you specify 0, AWS
+    #   You cannot specify a number greater than 100. If you specify 0,
     #   Config uses the default.
     #   @return [Integer]
     #
@@ -5222,45 +4941,105 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDiscoveredResourcesRequest
-    #   data as a hash:
+    # @!attribute [rw] filters
+    #   Filters the results based on the
+    #   `ConformancePackComplianceScoresFilters`.
+    #   @return [Types::ConformancePackComplianceScoresFilters]
     #
-    #       {
-    #         resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #         resource_ids: ["ResourceId"],
-    #         resource_name: "ResourceName",
-    #         limit: 1,
-    #         include_deleted_resources: false,
-    #         next_token: "NextToken",
-    #       }
+    # @!attribute [rw] sort_order
+    #   Determines the order in which conformance pack compliance scores are
+    #   sorted. Either in ascending or descending order.
     #
+    #   By default, conformance pack compliance scores are sorted in
+    #   alphabetical order by name of the conformance pack. Conformance pack
+    #   compliance scores are sorted in reverse alphabetical order if you
+    #   enter `DESCENDING`.
+    #
+    #   You can sort conformance pack compliance scores by the numerical
+    #   value of the compliance score by entering `SCORE` in the `SortBy`
+    #   action. When compliance scores are sorted by `SCORE`, conformance
+    #   packs with a compliance score of `INSUFFICIENT_DATA` will be last
+    #   when sorting by ascending order and first when sorting by descending
+    #   order.
+    #   @return [String]
+    #
+    # @!attribute [rw] sort_by
+    #   Sorts your conformance pack compliance scores in either ascending or
+    #   descending order, depending on `SortOrder`.
+    #
+    #   By default, conformance pack compliance scores are sorted in
+    #   alphabetical order by name of the conformance pack. Enter `SCORE`,
+    #   to sort conformance pack compliance scores by the numerical value of
+    #   the compliance score.
+    #   @return [String]
+    #
+    # @!attribute [rw] limit
+    #   The maximum number of conformance pack compliance scores returned on
+    #   each page.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   The `nextToken` string in a prior request that you can use to get
+    #   the paginated response for the next set of conformance pack
+    #   compliance scores.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ListConformancePackComplianceScoresRequest AWS API Documentation
+    #
+    class ListConformancePackComplianceScoresRequest < Struct.new(
+      :filters,
+      :sort_order,
+      :sort_by,
+      :limit,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   The `nextToken` string that you can use to get the next page of
+    #   results in a paginated response.
+    #   @return [String]
+    #
+    # @!attribute [rw] conformance_pack_compliance_scores
+    #   A list of `ConformancePackComplianceScore` objects.
+    #   @return [Array<Types::ConformancePackComplianceScore>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ListConformancePackComplianceScoresResponse AWS API Documentation
+    #
+    class ListConformancePackComplianceScoresResponse < Struct.new(
+      :next_token,
+      :conformance_pack_compliance_scores)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_type
-    #   The type of resources that you want AWS Config to list in the
-    #   response.
+    #   The type of resources that you want Config to list in the response.
     #   @return [String]
     #
     # @!attribute [rw] resource_ids
-    #   The IDs of only those resources that you want AWS Config to list in
-    #   the response. If you do not specify this parameter, AWS Config lists
-    #   all resources of the specified type that it has discovered.
+    #   The IDs of only those resources that you want Config to list in the
+    #   response. If you do not specify this parameter, Config lists all
+    #   resources of the specified type that it has discovered. You can list
+    #   a minimum of 1 resourceID and a maximum of 20 resourceIds.
     #   @return [Array<String>]
     #
     # @!attribute [rw] resource_name
-    #   The custom name of only those resources that you want AWS Config to
-    #   list in the response. If you do not specify this parameter, AWS
-    #   Config lists all resources of the specified type that it has
-    #   discovered.
+    #   The custom name of only those resources that you want Config to list
+    #   in the response. If you do not specify this parameter, Config lists
+    #   all resources of the specified type that it has discovered.
     #   @return [String]
     #
     # @!attribute [rw] limit
     #   The maximum number of resource identifiers returned on each page.
     #   The default is 100. You cannot specify a number greater than 100. If
-    #   you specify 0, AWS Config uses the default.
+    #   you specify 0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] include_deleted_resources
-    #   Specifies whether AWS Config includes deleted resources in the
-    #   results. By default, deleted resources are not included.
+    #   Specifies whether Config includes deleted resources in the results.
+    #   By default, deleted resources are not included.
     #   @return [Boolean]
     #
     # @!attribute [rw] next_token
@@ -5282,9 +5061,9 @@ module Aws::ConfigService
     end
 
     # @!attribute [rw] resource_identifiers
-    #   The details that identify a resource that is discovered by AWS
-    #   Config, including the resource type, ID, and (if available) the
-    #   custom resource name.
+    #   The details that identify a resource that is discovered by Config,
+    #   including the resource type, ID, and (if available) the custom
+    #   resource name.
     #   @return [Array<Types::ResourceIdentifier>]
     #
     # @!attribute [rw] next_token
@@ -5301,14 +5080,49 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListStoredQueriesRequest
-    #   data as a hash:
+    # @!attribute [rw] filters
+    #   Returns a `ResourceEvaluationFilters` object.
+    #   @return [Types::ResourceEvaluationFilters]
     #
-    #       {
-    #         next_token: "String",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] limit
+    #   The maximum number of evaluations returned on each page. The default
+    #   is 10. You cannot specify a number greater than 100. If you specify
+    #   0, Config uses the default.
+    #   @return [Integer]
     #
+    # @!attribute [rw] next_token
+    #   The `nextToken` string returned on a previous page that you use to
+    #   get the next page of results in a paginated response.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ListResourceEvaluationsRequest AWS API Documentation
+    #
+    class ListResourceEvaluationsRequest < Struct.new(
+      :filters,
+      :limit,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_evaluations
+    #   Returns a `ResourceEvaluations` object.
+    #   @return [Array<Types::ResourceEvaluation>]
+    #
+    # @!attribute [rw] next_token
+    #   The `nextToken` string returned on a previous page that you use to
+    #   get the next page of results in a paginated response.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ListResourceEvaluationsResponse AWS API Documentation
+    #
+    class ListResourceEvaluationsResponse < Struct.new(
+      :resource_evaluations,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   The nextToken string returned in a previous request that you use to
     #   request the next page of results in a paginated response.
@@ -5349,15 +5163,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) that identifies the resource for
     #   which to list the tags. Currently, the supported resources are
@@ -5368,7 +5173,7 @@ module Aws::ConfigService
     # @!attribute [rw] limit
     #   The maximum number of tags returned on each page. The limit maximum
     #   is 50. You cannot specify a number greater than 50. If you specify
-    #   0, AWS Config uses the default.
+    #   0, Config uses the default.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -5404,29 +5209,40 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # You have reached the limit (100,000) of active custom resource types
-    # in your account. Delete unused resources using `DeleteResourceConfig`.
+    # You have reached the limit of active custom resource types in your
+    # account. There is a limit of 100,000. Delete unused resources using
+    # [DeleteResourceConfig][1] ``.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/config/latest/APIReference/API_DeleteResourceConfig.html
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/MaxActiveResourcesExceededException AWS API Documentation
     #
     class MaxActiveResourcesExceededException < Aws::EmptyStructure; end
 
-    # Failed to add the AWS Config rule because the account already contains
-    # the maximum number of 150 rules. Consider deleting any deactivated
-    # rules before you add new rules.
+    # Failed to add the Config rule because the account already contains the
+    # maximum number of 150 rules. Consider deleting any deactivated rules
+    # before you add new rules.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/MaxNumberOfConfigRulesExceededException AWS API Documentation
     #
     class MaxNumberOfConfigRulesExceededException < Aws::EmptyStructure; end
 
-    # You have reached the limit of the number of recorders you can create.
+    # You have reached the limit of the number of configuration recorders
+    # you can create.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/MaxNumberOfConfigurationRecordersExceededException AWS API Documentation
     #
     class MaxNumberOfConfigurationRecordersExceededException < Aws::EmptyStructure; end
 
-    # You have reached the limit (6) of the number of conformance packs in
-    # an account (6 conformance pack with 25 AWS Config rules per pack).
+    # You have reached the limit of the number of conformance packs you can
+    # create in an account. For more information, see [ **Service Limits**
+    # ][1] in the *Config Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/config/latest/developerguide/configlimits.html
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/MaxNumberOfConformancePacksExceededException AWS API Documentation
     #
@@ -5439,16 +5255,25 @@ module Aws::ConfigService
     #
     class MaxNumberOfDeliveryChannelsExceededException < Aws::EmptyStructure; end
 
-    # You have reached the limit of the number of organization config rules
-    # you can create.
+    # You have reached the limit of the number of organization Config rules
+    # you can create. For more information, see see [ **Service Limits**
+    # ][1] in the *Config Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/config/latest/developerguide/configlimits.html
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/MaxNumberOfOrganizationConfigRulesExceededException AWS API Documentation
     #
     class MaxNumberOfOrganizationConfigRulesExceededException < Aws::EmptyStructure; end
 
-    # You have reached the limit (6) of the number of organization
-    # conformance packs in an account (6 conformance pack with 25 AWS Config
-    # rules per pack per account).
+    # You have reached the limit of the number of organization conformance
+    # packs you can create in an account. For more information, see [
+    # **Service Limits** ][1] in the *Config Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/config/latest/developerguide/configlimits.html
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/MaxNumberOfOrganizationConformancePacksExceededException AWS API Documentation
     #
@@ -5461,7 +5286,7 @@ module Aws::ConfigService
     #
     class MaxNumberOfRetentionConfigurationsExceededException < Aws::EmptyStructure; end
 
-    # Organization config rule creation or deletion status in each member
+    # Organization Config rule creation or deletion status in each member
     # account. This includes the name of the rule, the status, error code
     # and error message when the rule creation or deletion failed.
     #
@@ -5470,56 +5295,56 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] config_rule_name
-    #   The name of config rule deployed in the member account.
+    #   The name of Config rule deployed in the member account.
     #   @return [String]
     #
     # @!attribute [rw] member_account_rule_status
-    #   Indicates deployment status for config rule in the member account.
-    #   When master account calls `PutOrganizationConfigRule` action for the
-    #   first time, config rule status is created in the member account.
-    #   When master account calls `PutOrganizationConfigRule` action for the
-    #   second time, config rule status is updated in the member account.
-    #   Config rule status is deleted when the master account deletes
-    #   `OrganizationConfigRule` and disables service access for
+    #   Indicates deployment status for Config rule in the member account.
+    #   When management account calls `PutOrganizationConfigRule` action for
+    #   the first time, Config rule status is created in the member account.
+    #   When management account calls `PutOrganizationConfigRule` action for
+    #   the second time, Config rule status is updated in the member
+    #   account. Config rule status is deleted when the management account
+    #   deletes `OrganizationConfigRule` and disables service access for
     #   `config-multiaccountsetup.amazonaws.com`.
     #
-    #   AWS Config sets the state of the rule to:
+    #   Config sets the state of the rule to:
     #
-    #   * `CREATE_SUCCESSFUL` when config rule has been created in the
+    #   * `CREATE_SUCCESSFUL` when Config rule has been created in the
     #     member account.
     #
-    #   * `CREATE_IN_PROGRESS` when config rule is being created in the
+    #   * `CREATE_IN_PROGRESS` when Config rule is being created in the
     #     member account.
     #
-    #   * `CREATE_FAILED` when config rule creation has failed in the member
+    #   * `CREATE_FAILED` when Config rule creation has failed in the member
     #     account.
     #
-    #   * `DELETE_FAILED` when config rule deletion has failed in the member
+    #   * `DELETE_FAILED` when Config rule deletion has failed in the member
     #     account.
     #
-    #   * `DELETE_IN_PROGRESS` when config rule is being deleted in the
+    #   * `DELETE_IN_PROGRESS` when Config rule is being deleted in the
     #     member account.
     #
-    #   * `DELETE_SUCCESSFUL` when config rule has been deleted in the
+    #   * `DELETE_SUCCESSFUL` when Config rule has been deleted in the
     #     member account.
     #
-    #   * `UPDATE_SUCCESSFUL` when config rule has been updated in the
+    #   * `UPDATE_SUCCESSFUL` when Config rule has been updated in the
     #     member account.
     #
-    #   * `UPDATE_IN_PROGRESS` when config rule is being updated in the
+    #   * `UPDATE_IN_PROGRESS` when Config rule is being updated in the
     #     member account.
     #
-    #   * `UPDATE_FAILED` when config rule deletion has failed in the member
+    #   * `UPDATE_FAILED` when Config rule deletion has failed in the member
     #     account.
     #   @return [String]
     #
     # @!attribute [rw] error_code
-    #   An error code that is returned when config rule creation or deletion
+    #   An error code that is returned when Config rule creation or deletion
     #   failed in the member account.
     #   @return [String]
     #
     # @!attribute [rw] error_message
-    #   An error message indicating that config rule account creation or
+    #   An error message indicating that Config rule account creation or
     #   deletion has failed due to an error in the member account.
     #   @return [String]
     #
@@ -5571,14 +5396,15 @@ module Aws::ConfigService
     #
     class NoSuchBucketException < Aws::EmptyStructure; end
 
-    # One or more AWS Config rules in the request are invalid. Verify that
-    # the rule names are correct and try again.
+    # The Config rule in the request is not valid. Verify that the rule is
+    # an Config Process Check rule, that the rule name is correct, and that
+    # valid Amazon Resouce Names (ARNs) are used before trying again.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/NoSuchConfigRuleException AWS API Documentation
     #
     class NoSuchConfigRuleException < Aws::EmptyStructure; end
 
-    # AWS Config rule that you passed in the filter does not exist.
+    # Config rule that you passed in the filter does not exist.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/NoSuchConfigRuleInConformancePackException AWS API Documentation
     #
@@ -5608,13 +5434,16 @@ module Aws::ConfigService
     #
     class NoSuchDeliveryChannelException < Aws::EmptyStructure; end
 
-    # You specified one or more organization config rules that do not exist.
+    # The Config rule in the request is not valid. Verify that the rule is
+    # an organization Config Process Check rule, that the rule name is
+    # correct, and that valid Amazon Resouce Names (ARNs) are used before
+    # trying again.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/NoSuchOrganizationConfigRuleException AWS API Documentation
     #
     class NoSuchOrganizationConfigRuleException < Aws::EmptyStructure; end
 
-    # AWS Config organization conformance pack that you passed in the filter
+    # Config organization conformance pack that you passed in the filter
     # does not exist.
     #
     # For DeleteOrganizationConformancePack, you tried to delete an
@@ -5624,7 +5453,7 @@ module Aws::ConfigService
     #
     class NoSuchOrganizationConformancePackException < Aws::EmptyStructure; end
 
-    # You specified an AWS Config rule without a remediation configuration.
+    # You specified an Config rule without a remediation configuration.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/NoSuchRemediationConfigurationException AWS API Documentation
     #
@@ -5647,25 +5476,26 @@ module Aws::ConfigService
     #
     # * No permission to call `EnableAWSServiceAccess` API
     #
-    # * The configuration aggregator cannot be updated because your AWS
-    #   Organization management account or the delegated administrator role
-    #   changed. Delete this aggregator and create a new one with the
-    #   current AWS Organization.
+    # * The configuration aggregator cannot be updated because your Amazon
+    #   Web Services Organization management account or the delegated
+    #   administrator role changed. Delete this aggregator and create a new
+    #   one with the current Amazon Web Services Organization.
     #
-    # * The configuration aggregator is associated with a previous AWS
-    #   Organization and AWS Config cannot aggregate data with current AWS
-    #   Organization. Delete this aggregator and create a new one with the
-    #   current AWS Organization.
+    # * The configuration aggregator is associated with a previous Amazon
+    #   Web Services Organization and Config cannot aggregate data with
+    #   current Amazon Web Services Organization. Delete this aggregator and
+    #   create a new one with the current Amazon Web Services Organization.
     #
-    # * You are not a registered delegated administrator for AWS Config with
+    # * You are not a registered delegated administrator for Config with
     #   permissions to call `ListDelegatedAdministrators` API. Ensure that
-    #   the management account registers delagated administrator for AWS
-    #   Config service principle name before the delegated administrator
-    #   creates an aggregator.
+    #   the management account registers delagated administrator for Config
+    #   service principle name before the delegated administrator creates an
+    #   aggregator.
     #
     # For all `OrganizationConfigRule` and `OrganizationConformancePack`
-    # APIs, AWS Config throws an exception if APIs are called from member
-    # accounts. All APIs must be called from organization master account.
+    # APIs, Config throws an exception if APIs are called from member
+    # accounts. All APIs must be called from organization management
+    # account.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/OrganizationAccessDeniedException AWS API Documentation
     #
@@ -5674,18 +5504,9 @@ module Aws::ConfigService
     # This object contains regions to set up the aggregator and an IAM role
     # to retrieve organization details.
     #
-    # @note When making an API call, you may pass OrganizationAggregationSource
-    #   data as a hash:
-    #
-    #       {
-    #         role_arn: "String", # required
-    #         aws_regions: ["String"],
-    #         all_aws_regions: false,
-    #       }
-    #
     # @!attribute [rw] role_arn
-    #   ARN of the IAM role used to retrieve AWS Organization details
-    #   associated with the aggregator account.
+    #   ARN of the IAM role used to retrieve Amazon Web Services
+    #   Organization details associated with the aggregator account.
     #   @return [String]
     #
     # @!attribute [rw] aws_regions
@@ -5693,7 +5514,7 @@ module Aws::ConfigService
     #   @return [Array<String>]
     #
     # @!attribute [rw] all_aws_regions
-    #   If true, aggregate existing AWS Config regions and future regions.
+    #   If true, aggregate existing Config regions and future regions.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/OrganizationAggregationSource AWS API Documentation
@@ -5706,22 +5527,22 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # AWS Config resource cannot be created because your organization does
-    # not have all features enabled.
+    # Config resource cannot be created because your organization does not
+    # have all features enabled.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/OrganizationAllFeaturesNotEnabledException AWS API Documentation
     #
     class OrganizationAllFeaturesNotEnabledException < Aws::EmptyStructure; end
 
-    # An organization config rule that has information about config rules
-    # that AWS Config creates in member accounts.
+    # An organization Config rule that has information about Config rules
+    # that Config creates in member accounts.
     #
     # @!attribute [rw] organization_config_rule_name
-    #   The name that you assign to organization config rule.
+    #   The name that you assign to organization Config rule.
     #   @return [String]
     #
     # @!attribute [rw] organization_config_rule_arn
-    #   Amazon Resource Name (ARN) of organization config rule.
+    #   Amazon Resource Name (ARN) of organization Config rule.
     #   @return [String]
     #
     # @!attribute [rw] organization_managed_rule_metadata
@@ -5733,13 +5554,22 @@ module Aws::ConfigService
     #   @return [Types::OrganizationCustomRuleMetadata]
     #
     # @!attribute [rw] excluded_accounts
-    #   A comma-separated list of accounts excluded from organization config
+    #   A comma-separated list of accounts excluded from organization Config
     #   rule.
     #   @return [Array<String>]
     #
     # @!attribute [rw] last_update_time
     #   The timestamp of the last update.
     #   @return [Time]
+    #
+    # @!attribute [rw] organization_custom_policy_rule_metadata
+    #   An object that specifies metadata for your organization's Config
+    #   Custom Policy rule. The metadata includes the runtime system in use,
+    #   which accounts have debug logging enabled, and other custom rule
+    #   metadata, such as resource type, resource ID of Amazon Web Services
+    #   resource, and organization trigger types that initiate Config to
+    #   evaluate Amazon Web Services resources against a rule.
+    #   @return [Types::OrganizationCustomPolicyRuleMetadataNoPolicy]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/OrganizationConfigRule AWS API Documentation
     #
@@ -5749,66 +5579,67 @@ module Aws::ConfigService
       :organization_managed_rule_metadata,
       :organization_custom_rule_metadata,
       :excluded_accounts,
-      :last_update_time)
+      :last_update_time,
+      :organization_custom_policy_rule_metadata)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Returns the status for an organization config rule in an organization.
+    # Returns the status for an organization Config rule in an organization.
     #
     # @!attribute [rw] organization_config_rule_name
-    #   The name that you assign to organization config rule.
+    #   The name that you assign to organization Config rule.
     #   @return [String]
     #
     # @!attribute [rw] organization_rule_status
-    #   Indicates deployment status of an organization config rule. When
-    #   master account calls PutOrganizationConfigRule action for the first
-    #   time, config rule status is created in all the member accounts. When
-    #   master account calls PutOrganizationConfigRule action for the second
-    #   time, config rule status is updated in all the member accounts.
-    #   Additionally, config rule status is updated when one or more member
-    #   accounts join or leave an organization. Config rule status is
-    #   deleted when the master account deletes OrganizationConfigRule in
-    #   all the member accounts and disables service access for
-    #   `config-multiaccountsetup.amazonaws.com`.
+    #   Indicates deployment status of an organization Config rule. When
+    #   management account calls PutOrganizationConfigRule action for the
+    #   first time, Config rule status is created in all the member
+    #   accounts. When management account calls PutOrganizationConfigRule
+    #   action for the second time, Config rule status is updated in all the
+    #   member accounts. Additionally, Config rule status is updated when
+    #   one or more member accounts join or leave an organization. Config
+    #   rule status is deleted when the management account deletes
+    #   OrganizationConfigRule in all the member accounts and disables
+    #   service access for `config-multiaccountsetup.amazonaws.com`.
     #
-    #   AWS Config sets the state of the rule to:
+    #   Config sets the state of the rule to:
     #
-    #   * `CREATE_SUCCESSFUL` when an organization config rule has been
+    #   * `CREATE_SUCCESSFUL` when an organization Config rule has been
     #     successfully created in all the member accounts.
     #
-    #   * `CREATE_IN_PROGRESS` when an organization config rule creation is
+    #   * `CREATE_IN_PROGRESS` when an organization Config rule creation is
     #     in progress.
     #
-    #   * `CREATE_FAILED` when an organization config rule creation failed
+    #   * `CREATE_FAILED` when an organization Config rule creation failed
     #     in one or more member accounts within that organization.
     #
-    #   * `DELETE_FAILED` when an organization config rule deletion failed
+    #   * `DELETE_FAILED` when an organization Config rule deletion failed
     #     in one or more member accounts within that organization.
     #
-    #   * `DELETE_IN_PROGRESS` when an organization config rule deletion is
+    #   * `DELETE_IN_PROGRESS` when an organization Config rule deletion is
     #     in progress.
     #
-    #   * `DELETE_SUCCESSFUL` when an organization config rule has been
+    #   * `DELETE_SUCCESSFUL` when an organization Config rule has been
     #     successfully deleted from all the member accounts.
     #
-    #   * `UPDATE_SUCCESSFUL` when an organization config rule has been
+    #   * `UPDATE_SUCCESSFUL` when an organization Config rule has been
     #     successfully updated in all the member accounts.
     #
-    #   * `UPDATE_IN_PROGRESS` when an organization config rule update is in
+    #   * `UPDATE_IN_PROGRESS` when an organization Config rule update is in
     #     progress.
     #
-    #   * `UPDATE_FAILED` when an organization config rule update failed in
+    #   * `UPDATE_FAILED` when an organization Config rule update failed in
     #     one or more member accounts within that organization.
     #   @return [String]
     #
     # @!attribute [rw] error_code
-    #   An error code that is returned when organization config rule
+    #   An error code that is returned when organization Config rule
     #   creation or deletion has failed.
     #   @return [String]
     #
     # @!attribute [rw] error_message
-    #   An error message indicating that organization config rule creation
+    #   An error message indicating that organization Config rule creation
     #   or deletion failed due to an error.
     #   @return [String]
     #
@@ -5829,7 +5660,7 @@ module Aws::ConfigService
     end
 
     # An organization conformance pack that has information about
-    # conformance packs that AWS Config creates in member accounts.
+    # conformance packs that Config creates in member accounts.
     #
     # @!attribute [rw] organization_conformance_pack_name
     #   The name you assign to an organization conformance pack.
@@ -5840,7 +5671,8 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] delivery_s3_bucket
-    #   Amazon S3 bucket where AWS Config stores conformance pack templates.
+    #   The name of the Amazon S3 bucket where Config stores conformance
+    #   pack templates.
     #
     #   <note markdown="1"> This field is optional.
     #
@@ -5897,16 +5729,16 @@ module Aws::ConfigService
     #
     # @!attribute [rw] status
     #   Indicates deployment status for conformance pack in a member
-    #   account. When master account calls `PutOrganizationConformancePack`
-    #   action for the first time, conformance pack status is created in the
-    #   member account. When master account calls
-    #   `PutOrganizationConformancePack` action for the second time,
-    #   conformance pack status is updated in the member account.
-    #   Conformance pack status is deleted when the master account deletes
-    #   `OrganizationConformancePack` and disables service access for
-    #   `config-multiaccountsetup.amazonaws.com`.
+    #   account. When management account calls
+    #   `PutOrganizationConformancePack` action for the first time,
+    #   conformance pack status is created in the member account. When
+    #   management account calls `PutOrganizationConformancePack` action for
+    #   the second time, conformance pack status is updated in the member
+    #   account. Conformance pack status is deleted when the management
+    #   account deletes `OrganizationConformancePack` and disables service
+    #   access for `config-multiaccountsetup.amazonaws.com`.
     #
-    #   AWS Config sets the state of the conformance pack to:
+    #   Config sets the state of the conformance pack to:
     #
     #   * `CREATE_SUCCESSFUL` when conformance pack has been created in the
     #     member account.
@@ -5972,17 +5804,18 @@ module Aws::ConfigService
     #
     # @!attribute [rw] status
     #   Indicates deployment status of an organization conformance pack.
-    #   When master account calls PutOrganizationConformancePack for the
+    #   When management account calls PutOrganizationConformancePack for the
     #   first time, conformance pack status is created in all the member
-    #   accounts. When master account calls PutOrganizationConformancePack
-    #   for the second time, conformance pack status is updated in all the
-    #   member accounts. Additionally, conformance pack status is updated
-    #   when one or more member accounts join or leave an organization.
-    #   Conformance pack status is deleted when the master account deletes
-    #   OrganizationConformancePack in all the member accounts and disables
-    #   service access for `config-multiaccountsetup.amazonaws.com`.
+    #   accounts. When management account calls
+    #   PutOrganizationConformancePack for the second time, conformance pack
+    #   status is updated in all the member accounts. Additionally,
+    #   conformance pack status is updated when one or more member accounts
+    #   join or leave an organization. Conformance pack status is deleted
+    #   when the management account deletes OrganizationConformancePack in
+    #   all the member accounts and disables service access for
+    #   `config-multiaccountsetup.amazonaws.com`.
     #
-    #   AWS Config sets the state of the conformance pack to:
+    #   Config sets the state of the conformance pack to:
     #
     #   * `CREATE_SUCCESSFUL` when an organization conformance pack has been
     #     successfully created in all the member accounts.
@@ -6044,30 +5877,205 @@ module Aws::ConfigService
     #
     class OrganizationConformancePackTemplateValidationException < Aws::EmptyStructure; end
 
-    # An object that specifies organization custom rule metadata such as
-    # resource type, resource ID of AWS resource, Lamdba function ARN, and
-    # organization trigger types that trigger AWS Config to evaluate your
-    # AWS resources against a rule. It also provides the frequency with
-    # which you want AWS Config to run evaluations for the rule if the
-    # trigger type is periodic.
-    #
-    # @note When making an API call, you may pass OrganizationCustomRuleMetadata
-    #   data as a hash:
-    #
-    #       {
-    #         description: "StringWithCharLimit256Min0",
-    #         lambda_function_arn: "StringWithCharLimit256", # required
-    #         organization_config_rule_trigger_types: ["ConfigurationItemChangeNotification"], # required, accepts ConfigurationItemChangeNotification, OversizedConfigurationItemChangeNotification, ScheduledNotification
-    #         input_parameters: "StringWithCharLimit2048",
-    #         maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #         resource_types_scope: ["StringWithCharLimit256"],
-    #         resource_id_scope: "StringWithCharLimit768",
-    #         tag_key_scope: "StringWithCharLimit128",
-    #         tag_value_scope: "StringWithCharLimit256",
-    #       }
+    # An object that specifies metadata for your organization's Config
+    # Custom Policy rule. The metadata includes the runtime system in use,
+    # which accounts have debug logging enabled, and other custom rule
+    # metadata, such as resource type, resource ID of Amazon Web Services
+    # resource, and organization trigger types that initiate Config to
+    # evaluate Amazon Web Services resources against a rule.
     #
     # @!attribute [rw] description
-    #   The description that you provide for organization config rule.
+    #   The description that you provide for your organization Config Custom
+    #   Policy rule.
+    #   @return [String]
+    #
+    # @!attribute [rw] organization_config_rule_trigger_types
+    #   The type of notification that initiates Config to run an evaluation
+    #   for a rule. For Config Custom Policy rules, Config supports
+    #   change-initiated notification types:
+    #
+    #   * `ConfigurationItemChangeNotification` - Initiates an evaluation
+    #     when Config delivers a configuration item as a result of a
+    #     resource change.
+    #
+    #   * `OversizedConfigurationItemChangeNotification` - Initiates an
+    #     evaluation when Config delivers an oversized configuration item.
+    #     Config may generate this notification type when a resource changes
+    #     and the notification exceeds the maximum size allowed by Amazon
+    #     SNS.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] input_parameters
+    #   A string, in JSON format, that is passed to your organization Config
+    #   Custom Policy rule.
+    #   @return [String]
+    #
+    # @!attribute [rw] maximum_execution_frequency
+    #   The maximum frequency with which Config runs evaluations for a rule.
+    #   Your Config Custom Policy rule is triggered when Config delivers the
+    #   configuration snapshot. For more information, see
+    #   ConfigSnapshotDeliveryProperties.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_types_scope
+    #   The type of the Amazon Web Services resource that was evaluated.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] resource_id_scope
+    #   The ID of the Amazon Web Services resource that was evaluated.
+    #   @return [String]
+    #
+    # @!attribute [rw] tag_key_scope
+    #   One part of a key-value pair that make up a tag. A key is a general
+    #   label that acts like a category for more specific tag values.
+    #   @return [String]
+    #
+    # @!attribute [rw] tag_value_scope
+    #   The optional part of a key-value pair that make up a tag. A value
+    #   acts as a descriptor within a tag category (key).
+    #   @return [String]
+    #
+    # @!attribute [rw] policy_runtime
+    #   The runtime system for your organization Config Custom Policy rules.
+    #   Guard is a policy-as-code language that allows you to write policies
+    #   that are enforced by Config Custom Policy rules. For more
+    #   information about Guard, see the [Guard GitHub Repository][1].
+    #
+    #
+    #
+    #   [1]: https://github.com/aws-cloudformation/cloudformation-guard
+    #   @return [String]
+    #
+    # @!attribute [rw] policy_text
+    #   The policy definition containing the logic for your organization
+    #   Config Custom Policy rule.
+    #   @return [String]
+    #
+    # @!attribute [rw] debug_log_delivery_accounts
+    #   A list of accounts that you can enable debug logging for your
+    #   organization Config Custom Policy rule. List is null when debug
+    #   logging is enabled for all accounts.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/OrganizationCustomPolicyRuleMetadata AWS API Documentation
+    #
+    class OrganizationCustomPolicyRuleMetadata < Struct.new(
+      :description,
+      :organization_config_rule_trigger_types,
+      :input_parameters,
+      :maximum_execution_frequency,
+      :resource_types_scope,
+      :resource_id_scope,
+      :tag_key_scope,
+      :tag_value_scope,
+      :policy_runtime,
+      :policy_text,
+      :debug_log_delivery_accounts)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # metadata for your organization Config Custom Policy rule including the
+    # runtime system in use, which accounts have debug logging enabled, and
+    # other custom rule metadata such as resource type, resource ID of
+    # Amazon Web Services resource, and organization trigger types that
+    # trigger Config to evaluate Amazon Web Services resources against a
+    # rule.
+    #
+    # @!attribute [rw] description
+    #   The description that you provide for your organization Config Custom
+    #   Policy rule.
+    #   @return [String]
+    #
+    # @!attribute [rw] organization_config_rule_trigger_types
+    #   The type of notification that triggers Config to run an evaluation
+    #   for a rule. For Config Custom Policy rules, Config supports change
+    #   triggered notification types:
+    #
+    #   * `ConfigurationItemChangeNotification` - Triggers an evaluation
+    #     when Config delivers a configuration item as a result of a
+    #     resource change.
+    #
+    #   * `OversizedConfigurationItemChangeNotification` - Triggers an
+    #     evaluation when Config delivers an oversized configuration item.
+    #     Config may generate this notification type when a resource changes
+    #     and the notification exceeds the maximum size allowed by Amazon
+    #     SNS.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] input_parameters
+    #   A string, in JSON format, that is passed to your organization Config
+    #   Custom Policy rule.
+    #   @return [String]
+    #
+    # @!attribute [rw] maximum_execution_frequency
+    #   The maximum frequency with which Config runs evaluations for a rule.
+    #   Your Config Custom Policy rule is triggered when Config delivers the
+    #   configuration snapshot. For more information, see
+    #   ConfigSnapshotDeliveryProperties.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_types_scope
+    #   The type of the Amazon Web Services resource that was evaluated.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] resource_id_scope
+    #   The ID of the Amazon Web Services resource that was evaluated.
+    #   @return [String]
+    #
+    # @!attribute [rw] tag_key_scope
+    #   One part of a key-value pair that make up a tag. A key is a general
+    #   label that acts like a category for more specific tag values.
+    #   @return [String]
+    #
+    # @!attribute [rw] tag_value_scope
+    #   The optional part of a key-value pair that make up a tag. A value
+    #   acts as a descriptor within a tag category (key).
+    #   @return [String]
+    #
+    # @!attribute [rw] policy_runtime
+    #   The runtime system for your organization Config Custom Policy rules.
+    #   Guard is a policy-as-code language that allows you to write policies
+    #   that are enforced by Config Custom Policy rules. For more
+    #   information about Guard, see the [Guard GitHub Repository][1].
+    #
+    #
+    #
+    #   [1]: https://github.com/aws-cloudformation/cloudformation-guard
+    #   @return [String]
+    #
+    # @!attribute [rw] debug_log_delivery_accounts
+    #   A list of accounts that you can enable debug logging for your
+    #   organization Config Custom Policy rule. List is null when debug
+    #   logging is enabled for all accounts.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/OrganizationCustomPolicyRuleMetadataNoPolicy AWS API Documentation
+    #
+    class OrganizationCustomPolicyRuleMetadataNoPolicy < Struct.new(
+      :description,
+      :organization_config_rule_trigger_types,
+      :input_parameters,
+      :maximum_execution_frequency,
+      :resource_types_scope,
+      :resource_id_scope,
+      :tag_key_scope,
+      :tag_value_scope,
+      :policy_runtime,
+      :debug_log_delivery_accounts)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # organization custom rule metadata such as resource type, resource ID
+    # of Amazon Web Services resource, Lambda function ARN, and organization
+    # trigger types that trigger Config to evaluate your Amazon Web Services
+    # resources against a rule. It also provides the frequency with which
+    # you want Config to run evaluations for the rule if the trigger type is
+    # periodic.
+    #
+    # @!attribute [rw] description
+    #   The description that you provide for your organization Config rule.
     #   @return [String]
     #
     # @!attribute [rw] lambda_function_arn
@@ -6075,33 +6083,32 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] organization_config_rule_trigger_types
-    #   The type of notification that triggers AWS Config to run an
-    #   evaluation for a rule. You can specify the following notification
-    #   types:
+    #   The type of notification that triggers Config to run an evaluation
+    #   for a rule. You can specify the following notification types:
     #
     #   * `ConfigurationItemChangeNotification` - Triggers an evaluation
-    #     when AWS Config delivers a configuration item as a result of a
+    #     when Config delivers a configuration item as a result of a
     #     resource change.
     #
     #   * `OversizedConfigurationItemChangeNotification` - Triggers an
-    #     evaluation when AWS Config delivers an oversized configuration
-    #     item. AWS Config may generate this notification type when a
-    #     resource changes and the notification exceeds the maximum size
-    #     allowed by Amazon SNS.
+    #     evaluation when Config delivers an oversized configuration item.
+    #     Config may generate this notification type when a resource changes
+    #     and the notification exceeds the maximum size allowed by Amazon
+    #     SNS.
     #
     #   * `ScheduledNotification` - Triggers a periodic evaluation at the
     #     frequency specified for `MaximumExecutionFrequency`.
     #   @return [Array<String>]
     #
     # @!attribute [rw] input_parameters
-    #   A string, in JSON format, that is passed to organization config rule
-    #   Lambda function.
+    #   A string, in JSON format, that is passed to your organization Config
+    #   rule Lambda function.
     #   @return [String]
     #
     # @!attribute [rw] maximum_execution_frequency
-    #   The maximum frequency with which AWS Config runs evaluations for a
-    #   rule. Your custom rule is triggered when AWS Config delivers the
-    #   configuration snapshot. For more information, see
+    #   The maximum frequency with which Config runs evaluations for a rule.
+    #   Your custom rule is triggered when Config delivers the configuration
+    #   snapshot. For more information, see
     #   ConfigSnapshotDeliveryProperties.
     #
     #   <note markdown="1"> By default, rules with a periodic trigger are evaluated every 24
@@ -6112,11 +6119,11 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] resource_types_scope
-    #   The type of the AWS resource that was evaluated.
+    #   The type of the Amazon Web Services resource that was evaluated.
     #   @return [Array<String>]
     #
     # @!attribute [rw] resource_id_scope
-    #   The ID of the AWS resource that was evaluated.
+    #   The ID of the Amazon Web Services resource that was evaluated.
     #   @return [String]
     #
     # @!attribute [rw] tag_key_scope
@@ -6145,33 +6152,19 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # An object that specifies organization managed rule metadata such as
-    # resource type and ID of AWS resource along with the rule identifier.
-    # It also provides the frequency with which you want AWS Config to run
-    # evaluations for the rule if the trigger type is periodic.
-    #
-    # @note When making an API call, you may pass OrganizationManagedRuleMetadata
-    #   data as a hash:
-    #
-    #       {
-    #         description: "StringWithCharLimit256Min0",
-    #         rule_identifier: "StringWithCharLimit256", # required
-    #         input_parameters: "StringWithCharLimit2048",
-    #         maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #         resource_types_scope: ["StringWithCharLimit256"],
-    #         resource_id_scope: "StringWithCharLimit768",
-    #         tag_key_scope: "StringWithCharLimit128",
-    #         tag_value_scope: "StringWithCharLimit256",
-    #       }
+    # organization managed rule metadata such as resource type and ID of
+    # Amazon Web Services resource along with the rule identifier. It also
+    # provides the frequency with which you want Config to run evaluations
+    # for the rule if the trigger type is periodic.
     #
     # @!attribute [rw] description
-    #   The description that you provide for organization config rule.
+    #   The description that you provide for your organization Config rule.
     #   @return [String]
     #
     # @!attribute [rw] rule_identifier
     #   For organization config managed rules, a predefined identifier from
     #   a list. For example, `IAM_PASSWORD_POLICY` is a managed rule. To
-    #   reference a managed rule, see [Using AWS Managed Config Rules][1].
+    #   reference a managed rule, see [Using Config managed rules][1].
     #
     #
     #
@@ -6179,14 +6172,14 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] input_parameters
-    #   A string, in JSON format, that is passed to organization config rule
-    #   Lambda function.
+    #   A string, in JSON format, that is passed to your organization Config
+    #   rule Lambda function.
     #   @return [String]
     #
     # @!attribute [rw] maximum_execution_frequency
-    #   The maximum frequency with which AWS Config runs evaluations for a
-    #   rule. You are using an AWS managed rule that is triggered at a
-    #   periodic frequency.
+    #   The maximum frequency with which Config runs evaluations for a rule.
+    #   This is for an Config managed rule that is triggered at a periodic
+    #   frequency.
     #
     #   <note markdown="1"> By default, rules with a periodic trigger are evaluated every 24
     #   hours. To change the frequency, specify a valid value for the
@@ -6196,11 +6189,11 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] resource_types_scope
-    #   The type of the AWS resource that was evaluated.
+    #   The type of the Amazon Web Services resource that was evaluated.
     #   @return [Array<String>]
     #
     # @!attribute [rw] resource_id_scope
-    #   The ID of the AWS resource that was evaluated.
+    #   The ID of the Amazon Web Services resource that was evaluated.
     #   @return [String]
     #
     # @!attribute [rw] tag_key_scope
@@ -6231,14 +6224,6 @@ module Aws::ConfigService
     # Status filter object to filter results based on specific member
     # account ID or status type for an organization conformance pack.
     #
-    # @note When making an API call, you may pass OrganizationResourceDetailedStatusFilters
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId",
-    #         status: "CREATE_SUCCESSFUL", # accepts CREATE_SUCCESSFUL, CREATE_IN_PROGRESS, CREATE_FAILED, DELETE_SUCCESSFUL, DELETE_FAILED, DELETE_IN_PROGRESS, UPDATE_SUCCESSFUL, UPDATE_IN_PROGRESS, UPDATE_FAILED
-    #       }
-    #
     # @!attribute [rw] account_id
     #   The 12-digit account ID of the member account within an
     #   organization.
@@ -6246,16 +6231,16 @@ module Aws::ConfigService
     #
     # @!attribute [rw] status
     #   Indicates deployment status for conformance pack in a member
-    #   account. When master account calls `PutOrganizationConformancePack`
-    #   action for the first time, conformance pack status is created in the
-    #   member account. When master account calls
-    #   `PutOrganizationConformancePack` action for the second time,
-    #   conformance pack status is updated in the member account.
-    #   Conformance pack status is deleted when the master account deletes
-    #   `OrganizationConformancePack` and disables service access for
-    #   `config-multiaccountsetup.amazonaws.com`.
+    #   account. When management account calls
+    #   `PutOrganizationConformancePack` action for the first time,
+    #   conformance pack status is created in the member account. When
+    #   management account calls `PutOrganizationConformancePack` action for
+    #   the second time, conformance pack status is updated in the member
+    #   account. Conformance pack status is deleted when the management
+    #   account deletes `OrganizationConformancePack` and disables service
+    #   access for `config-multiaccountsetup.amazonaws.com`.
     #
-    #   AWS Config sets the state of the conformance pack to:
+    #   Config sets the state of the conformance pack to:
     #
     #   * `CREATE_SUCCESSFUL` when conformance pack has been created in the
     #     member account.
@@ -6320,20 +6305,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutAggregationAuthorizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         authorized_account_id: "AccountId", # required
-    #         authorized_aws_region: "AwsRegion", # required
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] authorized_account_id
     #   The 12-digit account ID of the account authorized to aggregate data.
     #   @return [String]
@@ -6368,45 +6339,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutConfigRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule: { # required
-    #           config_rule_name: "ConfigRuleName",
-    #           config_rule_arn: "StringWithCharLimit256",
-    #           config_rule_id: "StringWithCharLimit64",
-    #           description: "EmptiableStringWithCharLimit256",
-    #           scope: {
-    #             compliance_resource_types: ["StringWithCharLimit256"],
-    #             tag_key: "StringWithCharLimit128",
-    #             tag_value: "StringWithCharLimit256",
-    #             compliance_resource_id: "BaseResourceId",
-    #           },
-    #           source: { # required
-    #             owner: "CUSTOM_LAMBDA", # required, accepts CUSTOM_LAMBDA, AWS
-    #             source_identifier: "StringWithCharLimit256", # required
-    #             source_details: [
-    #               {
-    #                 event_source: "aws.config", # accepts aws.config
-    #                 message_type: "ConfigurationItemChangeNotification", # accepts ConfigurationItemChangeNotification, ConfigurationSnapshotDeliveryCompleted, ScheduledNotification, OversizedConfigurationItemChangeNotification
-    #                 maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #               },
-    #             ],
-    #           },
-    #           input_parameters: "StringWithCharLimit1024",
-    #           maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #           config_rule_state: "ACTIVE", # accepts ACTIVE, DELETING, DELETING_RESULTS, EVALUATING
-    #           created_by: "StringWithCharLimit256",
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] config_rule
     #   The rule that you want to add to your account.
     #   @return [Types::ConfigRule]
@@ -6424,31 +6356,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutConfigurationAggregatorRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         account_aggregation_sources: [
-    #           {
-    #             account_ids: ["AccountId"], # required
-    #             all_aws_regions: false,
-    #             aws_regions: ["String"],
-    #           },
-    #         ],
-    #         organization_aggregation_source: {
-    #           role_arn: "String", # required
-    #           aws_regions: ["String"],
-    #           all_aws_regions: false,
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] configuration_aggregator_name
     #   The name of the configuration aggregator.
     #   @return [String]
@@ -6490,24 +6397,9 @@ module Aws::ConfigService
 
     # The input for the PutConfigurationRecorder action.
     #
-    # @note When making an API call, you may pass PutConfigurationRecorderRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_recorder: { # required
-    #           name: "RecorderName",
-    #           role_arn: "String",
-    #           recording_group: {
-    #             all_supported: false,
-    #             include_global_resource_types: false,
-    #             resource_types: ["AWS::EC2::CustomerGateway"], # accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] configuration_recorder
-    #   The configuration recorder object that records each configuration
-    #   change made to the resources.
+    #   An object for the configuration recorder to record configuration
+    #   changes for specified resource types.
     #   @return [Types::ConfigurationRecorder]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutConfigurationRecorderRequest AWS API Documentation
@@ -6518,32 +6410,15 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutConformancePackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         conformance_pack_name: "ConformancePackName", # required
-    #         template_s3_uri: "TemplateS3Uri",
-    #         template_body: "TemplateBody",
-    #         delivery_s3_bucket: "DeliveryS3Bucket",
-    #         delivery_s3_key_prefix: "DeliveryS3KeyPrefix",
-    #         conformance_pack_input_parameters: [
-    #           {
-    #             parameter_name: "ParameterName", # required
-    #             parameter_value: "ParameterValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] conformance_pack_name
-    #   Name of the conformance pack you want to create.
+    #   The unique name of the conformance pack you want to deploy.
     #   @return [String]
     #
     # @!attribute [rw] template_s3_uri
-    #   Location of file containing the template body
-    #   (`s3://bucketname/prefix`). The uri must point to the conformance
-    #   pack template (max size: 300 KB) that is located in an Amazon S3
-    #   bucket in the same region as the conformance pack.
+    #   The location of the file containing the template body
+    #   (`s3://bucketname/prefix`). The uri must point to a conformance pack
+    #   template (max size: 300 KB) that is located in an Amazon S3 bucket
+    #   in the same Region as the conformance pack.
     #
     #   <note markdown="1"> You must have access to read Amazon S3 bucket.
     #
@@ -6551,18 +6426,20 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] template_body
-    #   A string containing full conformance pack template body. Structure
-    #   containing the template body with a minimum length of 1 byte and a
-    #   maximum length of 51,200 bytes.
+    #   A string containing the full conformance pack template body. The
+    #   structure containing the template body has a minimum length of 1
+    #   byte and a maximum length of 51,200 bytes.
     #
-    #   <note markdown="1"> You can only use a YAML template with one resource type, that is,
-    #   config rule and a remediation action.
+    #   <note markdown="1"> You can use a YAML template with two resource types: Config rule
+    #   (`AWS::Config::ConfigRule`) and remediation action
+    #   (`AWS::Config::RemediationConfiguration`).
     #
     #    </note>
     #   @return [String]
     #
     # @!attribute [rw] delivery_s3_bucket
-    #   Amazon S3 bucket where AWS Config stores conformance pack templates.
+    #   The name of the Amazon S3 bucket where Config stores conformance
+    #   pack templates.
     #
     #   <note markdown="1"> This field is optional.
     #
@@ -6581,6 +6458,13 @@ module Aws::ConfigService
     #   A list of `ConformancePackInputParameter` objects.
     #   @return [Array<Types::ConformancePackInputParameter>]
     #
+    # @!attribute [rw] template_ssm_document_details
+    #   An object of type `TemplateSSMDocumentDetails`, which contains the
+    #   name or the Amazon Resource Name (ARN) of the Amazon Web Services
+    #   Systems Manager document (SSM document) and the version of the SSM
+    #   document that is used to create a conformance pack.
+    #   @return [Types::TemplateSSMDocumentDetails]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutConformancePackRequest AWS API Documentation
     #
     class PutConformancePackRequest < Struct.new(
@@ -6589,7 +6473,8 @@ module Aws::ConfigService
       :template_body,
       :delivery_s3_bucket,
       :delivery_s3_key_prefix,
-      :conformance_pack_input_parameters)
+      :conformance_pack_input_parameters,
+      :template_ssm_document_details)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -6608,22 +6493,6 @@ module Aws::ConfigService
 
     # The input for the PutDeliveryChannel action.
     #
-    # @note When making an API call, you may pass PutDeliveryChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         delivery_channel: { # required
-    #           name: "ChannelName",
-    #           s3_bucket_name: "String",
-    #           s3_key_prefix: "String",
-    #           s3_kms_key_arn: "String",
-    #           sns_topic_arn: "String",
-    #           config_snapshot_delivery_properties: {
-    #             delivery_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] delivery_channel
     #   The configuration delivery channel object that delivers the
     #   configuration information to an Amazon S3 bucket and to an Amazon
@@ -6638,41 +6507,23 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutEvaluationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         evaluations: [
-    #           {
-    #             compliance_resource_type: "StringWithCharLimit256", # required
-    #             compliance_resource_id: "BaseResourceId", # required
-    #             compliance_type: "COMPLIANT", # required, accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #             annotation: "StringWithCharLimit256",
-    #             ordering_timestamp: Time.now, # required
-    #           },
-    #         ],
-    #         result_token: "String", # required
-    #         test_mode: false,
-    #       }
-    #
     # @!attribute [rw] evaluations
-    #   The assessments that the AWS Lambda function performs. Each
-    #   evaluation identifies an AWS resource and indicates whether it
-    #   complies with the AWS Config rule that invokes the AWS Lambda
-    #   function.
+    #   The assessments that the Lambda function performs. Each evaluation
+    #   identifies an Amazon Web Services resource and indicates whether it
+    #   complies with the Config rule that invokes the Lambda function.
     #   @return [Array<Types::Evaluation>]
     #
     # @!attribute [rw] result_token
-    #   An encrypted token that associates an evaluation with an AWS Config
+    #   An encrypted token that associates an evaluation with an Config
     #   rule. Identifies the rule and the event that triggered the
     #   evaluation.
     #   @return [String]
     #
     # @!attribute [rw] test_mode
     #   Use this parameter to specify a test run for `PutEvaluations`. You
-    #   can verify whether your AWS Lambda function will deliver evaluation
-    #   results to AWS Config. No updates occur to your existing
-    #   evaluations, and evaluation results are not sent to AWS Config.
+    #   can verify whether your Lambda function will deliver evaluation
+    #   results to Config. No updates occur to your existing evaluations,
+    #   and evaluation results are not sent to Config.
     #
     #   <note markdown="1"> When `TestMode` is `true`, `PutEvaluations` doesn't require a valid
     #   value for the `ResultToken` parameter, but the value cannot be null.
@@ -6702,22 +6553,8 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutExternalEvaluationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName", # required
-    #         external_evaluation: { # required
-    #           compliance_resource_type: "StringWithCharLimit256", # required
-    #           compliance_resource_id: "BaseResourceId", # required
-    #           compliance_type: "COMPLIANT", # required, accepts COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
-    #           annotation: "StringWithCharLimit256",
-    #           ordering_timestamp: Time.now, # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule.
+    #   The name of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] external_evaluation
@@ -6738,51 +6575,42 @@ module Aws::ConfigService
     #
     class PutExternalEvaluationResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass PutOrganizationConfigRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_config_rule_name: "OrganizationConfigRuleName", # required
-    #         organization_managed_rule_metadata: {
-    #           description: "StringWithCharLimit256Min0",
-    #           rule_identifier: "StringWithCharLimit256", # required
-    #           input_parameters: "StringWithCharLimit2048",
-    #           maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #           resource_types_scope: ["StringWithCharLimit256"],
-    #           resource_id_scope: "StringWithCharLimit768",
-    #           tag_key_scope: "StringWithCharLimit128",
-    #           tag_value_scope: "StringWithCharLimit256",
-    #         },
-    #         organization_custom_rule_metadata: {
-    #           description: "StringWithCharLimit256Min0",
-    #           lambda_function_arn: "StringWithCharLimit256", # required
-    #           organization_config_rule_trigger_types: ["ConfigurationItemChangeNotification"], # required, accepts ConfigurationItemChangeNotification, OversizedConfigurationItemChangeNotification, ScheduledNotification
-    #           input_parameters: "StringWithCharLimit2048",
-    #           maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #           resource_types_scope: ["StringWithCharLimit256"],
-    #           resource_id_scope: "StringWithCharLimit768",
-    #           tag_key_scope: "StringWithCharLimit128",
-    #           tag_value_scope: "StringWithCharLimit256",
-    #         },
-    #         excluded_accounts: ["AccountId"],
-    #       }
-    #
     # @!attribute [rw] organization_config_rule_name
-    #   The name that you assign to an organization config rule.
+    #   The name that you assign to an organization Config rule.
     #   @return [String]
     #
     # @!attribute [rw] organization_managed_rule_metadata
-    #   An `OrganizationManagedRuleMetadata` object.
+    #   An `OrganizationManagedRuleMetadata` object. This object specifies
+    #   organization managed rule metadata such as resource type and ID of
+    #   Amazon Web Services resource along with the rule identifier. It also
+    #   provides the frequency with which you want Config to run evaluations
+    #   for the rule if the trigger type is periodic.
     #   @return [Types::OrganizationManagedRuleMetadata]
     #
     # @!attribute [rw] organization_custom_rule_metadata
-    #   An `OrganizationCustomRuleMetadata` object.
+    #   An `OrganizationCustomRuleMetadata` object. This object specifies
+    #   organization custom rule metadata such as resource type, resource ID
+    #   of Amazon Web Services resource, Lambda function ARN, and
+    #   organization trigger types that trigger Config to evaluate your
+    #   Amazon Web Services resources against a rule. It also provides the
+    #   frequency with which you want Config to run evaluations for the rule
+    #   if the trigger type is periodic.
     #   @return [Types::OrganizationCustomRuleMetadata]
     #
     # @!attribute [rw] excluded_accounts
     #   A comma-separated list of accounts that you want to exclude from an
-    #   organization config rule.
+    #   organization Config rule.
     #   @return [Array<String>]
+    #
+    # @!attribute [rw] organization_custom_policy_rule_metadata
+    #   An `OrganizationCustomPolicyRuleMetadata` object. This object
+    #   specifies metadata for your organization's Config Custom Policy
+    #   rule. The metadata includes the runtime system in use, which
+    #   accounts have debug logging enabled, and other custom rule metadata,
+    #   such as resource type, resource ID of Amazon Web Services resource,
+    #   and organization trigger types that initiate Config to evaluate
+    #   Amazon Web Services resources against a rule.
+    #   @return [Types::OrganizationCustomPolicyRuleMetadata]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutOrganizationConfigRuleRequest AWS API Documentation
     #
@@ -6790,13 +6618,14 @@ module Aws::ConfigService
       :organization_config_rule_name,
       :organization_managed_rule_metadata,
       :organization_custom_rule_metadata,
-      :excluded_accounts)
+      :excluded_accounts,
+      :organization_custom_policy_rule_metadata)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # @!attribute [rw] organization_config_rule_arn
-    #   The Amazon Resource Name (ARN) of an organization config rule.
+    #   The Amazon Resource Name (ARN) of an organization Config rule.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutOrganizationConfigRuleResponse AWS API Documentation
@@ -6807,24 +6636,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutOrganizationConformancePackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_conformance_pack_name: "OrganizationConformancePackName", # required
-    #         template_s3_uri: "TemplateS3Uri",
-    #         template_body: "TemplateBody",
-    #         delivery_s3_bucket: "DeliveryS3Bucket",
-    #         delivery_s3_key_prefix: "DeliveryS3KeyPrefix",
-    #         conformance_pack_input_parameters: [
-    #           {
-    #             parameter_name: "ParameterName", # required
-    #             parameter_value: "ParameterValue", # required
-    #           },
-    #         ],
-    #         excluded_accounts: ["AccountId"],
-    #       }
-    #
     # @!attribute [rw] organization_conformance_pack_name
     #   Name of the organization conformance pack you want to create.
     #   @return [String]
@@ -6845,7 +6656,8 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] delivery_s3_bucket
-    #   Amazon S3 bucket where AWS Config stores conformance pack templates.
+    #   The name of the Amazon S3 bucket where Config stores conformance
+    #   pack templates.
     #
     #   <note markdown="1"> This field is optional. If used, it must be prefixed with
     #   `awsconfigconforms`.
@@ -6866,8 +6678,8 @@ module Aws::ConfigService
     #   @return [Array<Types::ConformancePackInputParameter>]
     #
     # @!attribute [rw] excluded_accounts
-    #   A list of AWS accounts to be excluded from an organization
-    #   conformance pack while deploying a conformance pack.
+    #   A list of Amazon Web Services accounts to be excluded from an
+    #   organization conformance pack while deploying a conformance pack.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutOrganizationConformancePackRequest AWS API Documentation
@@ -6896,42 +6708,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutRemediationConfigurationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         remediation_configurations: [ # required
-    #           {
-    #             config_rule_name: "ConfigRuleName", # required
-    #             target_type: "SSM_DOCUMENT", # required, accepts SSM_DOCUMENT
-    #             target_id: "StringWithCharLimit256", # required
-    #             target_version: "String",
-    #             parameters: {
-    #               "StringWithCharLimit256" => {
-    #                 resource_value: {
-    #                   value: "RESOURCE_ID", # required, accepts RESOURCE_ID
-    #                 },
-    #                 static_value: {
-    #                   values: ["StringWithCharLimit256"], # required
-    #                 },
-    #               },
-    #             },
-    #             resource_type: "String",
-    #             automatic: false,
-    #             execution_controls: {
-    #               ssm_controls: {
-    #                 concurrent_execution_rate_percentage: 1,
-    #                 error_percentage: 1,
-    #               },
-    #             },
-    #             maximum_automatic_attempts: 1,
-    #             retry_attempt_seconds: 1,
-    #             arn: "StringWithCharLimit1024",
-    #             created_by_service: "StringWithCharLimit1024",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] remediation_configurations
     #   A list of remediation configuration objects.
     #   @return [Array<Types::RemediationConfiguration>]
@@ -6956,30 +6732,15 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutRemediationExceptionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName", # required
-    #         resource_keys: [ # required
-    #           {
-    #             resource_type: "StringWithCharLimit256",
-    #             resource_id: "StringWithCharLimit1024",
-    #           },
-    #         ],
-    #         message: "StringWithCharLimit1024",
-    #         expiration_time: Time.now,
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule for which you want to create
-    #   remediation exception.
+    #   The name of the Config rule for which you want to create remediation
+    #   exception.
     #   @return [String]
     #
     # @!attribute [rw] resource_keys
     #   An exception list of resource exception keys to be processed with
-    #   the current request. AWS Config adds exception for each resource
-    #   key. For example, AWS Config adds 3 exceptions for 3 resource keys.
+    #   the current request. Config adds exception for each resource key.
+    #   For example, Config adds 3 exceptions for 3 resource keys.
     #   @return [Array<Types::RemediationExceptionResourceKey>]
     #
     # @!attribute [rw] message
@@ -7015,33 +6776,19 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutResourceConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "ResourceTypeString", # required
-    #         schema_version_id: "SchemaVersionId", # required
-    #         resource_id: "ResourceId", # required
-    #         resource_name: "ResourceName",
-    #         configuration: "Configuration", # required
-    #         tags: {
-    #           "Name" => "Value",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_type
     #   The type of the resource. The custom resource type must be
-    #   registered with AWS CloudFormation.
+    #   registered with CloudFormation.
     #
-    #   <note markdown="1"> You cannot use the organization names “aws”, “amzn”, “amazon”,
-    #   “alexa”, “custom” with custom resource types. It is the first part
-    #   of the ResourceType up to the first ::.
+    #   <note markdown="1"> You cannot use the organization names “amzn”, “amazon”, “alexa”,
+    #   “custom” with custom resource types. It is the first part of the
+    #   ResourceType up to the first ::.
     #
     #    </note>
     #   @return [String]
     #
     # @!attribute [rw] schema_version_id
-    #   Version of the schema registered for the ResourceType in AWS
+    #   Version of the schema registered for the ResourceType in
     #   CloudFormation.
     #   @return [String]
     #
@@ -7055,7 +6802,7 @@ module Aws::ConfigService
     #
     # @!attribute [rw] configuration
     #   The configuration object of the resource in valid JSON format. It
-    #   must match the schema registered with AWS CloudFormation.
+    #   must match the schema registered with CloudFormation.
     #
     #   <note markdown="1"> The configuration JSON must not exceed 64 KB.
     #
@@ -7064,6 +6811,13 @@ module Aws::ConfigService
     #
     # @!attribute [rw] tags
     #   Tags associated with the resource.
+    #
+    #   <note markdown="1"> This field is not to be confused with the Amazon Web Services-wide
+    #   tag feature for Amazon Web Services resources. Tags for
+    #   `PutResourceConfig` are tags that you supply for the configuration
+    #   items of your custom resources.
+    #
+    #    </note>
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutResourceConfigRequest AWS API Documentation
@@ -7079,15 +6833,8 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutRetentionConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         retention_period_in_days: 1, # required
-    #       }
-    #
     # @!attribute [rw] retention_period_in_days
-    #   Number of days AWS Config stores your historical information.
+    #   Number of days Config stores your historical information.
     #
     #   <note markdown="1"> Currently, only applicable to the configuration item history.
     #
@@ -7114,25 +6861,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutStoredQueryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         stored_query: { # required
-    #           query_id: "QueryId",
-    #           query_arn: "QueryArn",
-    #           query_name: "QueryName", # required
-    #           description: "QueryDescription",
-    #           expression: "QueryExpression",
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] stored_query
     #   A list of `StoredQuery` objects. The mandatory fields are
     #   `QueryName` and `Expression`.
@@ -7184,112 +6912,285 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Specifies the types of AWS resource for which AWS Config records
-    # configuration changes.
+    # Specifies which resource types Config records for configuration
+    # changes. In the recording group, you specify whether you want to
+    # record all supported resource types or to include or exclude specific
+    # types of resources.
     #
-    # In the recording group, you specify whether all supported types or
-    # specific types of resources are recorded.
+    # By default, Config records configuration changes for all supported
+    # types of *Regional resources* that Config discovers in the Amazon Web
+    # Services Region in which it is running. Regional resources are tied to
+    # a Region and can be used only in that Region. Examples of Regional
+    # resources are Amazon EC2 instances and Amazon EBS volumes.
     #
-    # By default, AWS Config records configuration changes for all supported
-    # types of regional resources that AWS Config discovers in the region in
-    # which it is running. Regional resources are tied to a region and can
-    # be used only in that region. Examples of regional resources are EC2
-    # instances and EBS volumes.
+    # You can also have Config record supported types of *global resources*.
+    # Global resources are not tied to a specific Region and can be used in
+    # all Regions. The global resource types that Config supports include
+    # IAM users, groups, roles, and customer managed policies.
     #
-    # You can also have AWS Config record configuration changes for
-    # supported types of global resources (for example, IAM resources).
-    # Global resources are not tied to an individual region and can be used
-    # in all regions.
+    # Global resource types onboarded to Config recording after February
+    # 2022 will be recorded only in the service's home Region for the
+    # commercial partition and Amazon Web Services GovCloud (US-West) for
+    # the Amazon Web Services GovCloud (US) partition. You can view the
+    # Configuration Items for these new global resource types only in their
+    # home Region and Amazon Web Services GovCloud (US-West).
     #
-    # The configuration details for any global resource are the same in all
-    # regions. If you customize AWS Config in multiple regions to record
-    # global resources, it will create multiple configuration items each
-    # time a global resource changes: one configuration item for each
-    # region. These configuration items will contain identical data. To
-    # prevent duplicate configuration items, you should consider customizing
-    # AWS Config in only one region to record global resources, unless you
-    # want the configuration items to be available in multiple regions.
-    #
-    # If you don't want AWS Config to record all resources, you can specify
-    # which types of resources it will record with the `resourceTypes`
+    # If you don't want Config to record all resources, you can specify
+    # which types of resources Config records with the `resourceTypes`
     # parameter.
     #
     # For a list of supported resource types, see [Supported Resource
-    # Types][1].
+    # Types][1] in the *Config developer guide*.
     #
-    # For more information, see [Selecting Which Resources AWS Config
-    # Records][2].
+    # For more information and a table of the Home Regions for Global
+    # Resource Types Onboarded after February 2022, see [Selecting Which
+    # Resources Config Records][2] in the *Config developer guide*.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html#supported-resources
     # [2]: https://docs.aws.amazon.com/config/latest/developerguide/select-resources.html
     #
-    # @note When making an API call, you may pass RecordingGroup
-    #   data as a hash:
-    #
-    #       {
-    #         all_supported: false,
-    #         include_global_resource_types: false,
-    #         resource_types: ["AWS::EC2::CustomerGateway"], # accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #       }
-    #
     # @!attribute [rw] all_supported
-    #   Specifies whether AWS Config records configuration changes for every
-    #   supported type of regional resource.
+    #   Specifies whether Config records configuration changes for all
+    #   supported regional resource types.
     #
-    #   If you set this option to `true`, when AWS Config adds support for a
-    #   new type of regional resource, it starts recording resources of that
+    #   If you set this field to `true`, when Config adds support for a new
+    #   type of regional resource, Config starts recording resources of that
     #   type automatically.
     #
-    #   If you set this option to `true`, you cannot enumerate a list of
-    #   `resourceTypes`.
+    #   If you set this field to `true`, you cannot enumerate specific
+    #   resource types to record in the `resourceTypes` field of
+    #   [RecordingGroup][1], or to exclude in the `resourceTypes` field of
+    #   [ExclusionByResourceTypes][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingGroup.html
+    #   [2]: https://docs.aws.amazon.com/config/latest/APIReference/API_ExclusionByResourceTypes.html
     #   @return [Boolean]
     #
     # @!attribute [rw] include_global_resource_types
-    #   Specifies whether AWS Config includes all supported types of global
-    #   resources (for example, IAM resources) with the resources that it
-    #   records.
+    #   Specifies whether Config records configuration changes for all
+    #   supported global resources.
     #
-    #   Before you can set this option to `true`, you must set the
-    #   `allSupported` option to `true`.
+    #   Before you set this field to `true`, set the `allSupported` field of
+    #   [RecordingGroup][1] to `true`. Optionally, you can set the `useOnly`
+    #   field of [RecordingStrategy][2] to `ALL_SUPPORTED_RESOURCE_TYPES`.
     #
-    #   If you set this option to `true`, when AWS Config adds support for a
-    #   new type of global resource, it starts recording resources of that
+    #   If you set this field to `true`, when Config adds support for a new
+    #   type of global resource in the Region where you set up the
+    #   configuration recorder, Config starts recording resources of that
     #   type automatically.
     #
-    #   The configuration details for any global resource are the same in
-    #   all regions. To prevent duplicate configuration items, you should
-    #   consider customizing AWS Config in only one region to record global
-    #   resources.
+    #   <note markdown="1"> If you set this field to `false` but list global resource types in
+    #   the `resourceTypes` field of [RecordingGroup][1], Config will still
+    #   record configuration changes for those specified resource types
+    #   *regardless* of if you set the `includeGlobalResourceTypes` field to
+    #   false.
+    #
+    #    If you do not want to record configuration changes to global
+    #   resource types, make sure to not list them in the `resourceTypes`
+    #   field in addition to setting the `includeGlobalResourceTypes` field
+    #   to false.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingGroup.html
+    #   [2]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html
     #   @return [Boolean]
     #
     # @!attribute [rw] resource_types
-    #   A comma-separated list that specifies the types of AWS resources for
-    #   which AWS Config records configuration changes (for example,
-    #   `AWS::EC2::Instance` or `AWS::CloudTrail::Trail`).
+    #   A comma-separated list that specifies which resource types Config
+    #   records.
     #
-    #   To record all configuration changes, you must set the `allSupported`
-    #   option to `true`.
+    #   Optionally, you can set the `useOnly` field of
+    #   [RecordingStrategy][1] to `INCLUSION_BY_RESOURCE_TYPES`.
     #
-    #   If you set this option to `false`, when AWS Config adds support for
-    #   a new type of resource, it will not record resources of that type
-    #   unless you manually add that type to your recording group.
+    #   To record all configuration changes, set the `allSupported` field of
+    #   [RecordingGroup][2] to `true`, and either omit this field or don't
+    #   specify any resource types in this field. If you set the
+    #   `allSupported` field to `false` and specify values for
+    #   `resourceTypes`, when Config adds support for a new type of
+    #   resource, it will not record resources of that type unless you
+    #   manually add that type to your recording group.
     #
-    #   For a list of valid `resourceTypes` values, see the **resourceType
-    #   Value** column in [Supported AWS Resource Types][1].
+    #   For a list of valid `resourceTypes` values, see the **Resource Type
+    #   Value** column in [Supported Amazon Web Services resource Types][3]
+    #   in the *Config developer guide*.
+    #
+    #   <note markdown="1"> **Region Availability**
+    #
+    #    Before specifying a resource type for Config to track, check
+    #   [Resource Coverage by Region Availability][4] to see if the resource
+    #   type is supported in the Amazon Web Services Region where you set up
+    #   Config. If a resource type is supported by Config in at least one
+    #   Region, you can enable the recording of that resource type in all
+    #   Regions supported by Config, even if the specified resource type is
+    #   not supported in the Amazon Web Services Region where you set up
+    #   Config.
+    #
+    #    </note>
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html#supported-resources
+    #   [1]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html
+    #   [2]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingGroup.html
+    #   [3]: https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html#supported-resources
+    #   [4]: https://docs.aws.amazon.com/config/latest/developerguide/what-is-resource-config-coverage.html
     #   @return [Array<String>]
+    #
+    # @!attribute [rw] exclusion_by_resource_types
+    #   An object that specifies how Config excludes resource types from
+    #   being recorded by the configuration recorder.
+    #
+    #   To use this option, you must set the `useOnly` field of
+    #   [RecordingStrategy][1] to `EXCLUSION_BY_RESOURCE_TYPES`.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html
+    #   @return [Types::ExclusionByResourceTypes]
+    #
+    # @!attribute [rw] recording_strategy
+    #   An object that specifies the recording strategy for the
+    #   configuration recorder.
+    #
+    #   * If you set the `useOnly` field of [RecordingStrategy][1] to
+    #     `ALL_SUPPORTED_RESOURCE_TYPES`, Config records configuration
+    #     changes for all supported regional resource types. You also must
+    #     set the `allSupported` field of [RecordingGroup][2] to `true`.
+    #     When Config adds support for a new type of regional resource,
+    #     Config automatically starts recording resources of that type.
+    #
+    #   * If you set the `useOnly` field of [RecordingStrategy][1] to
+    #     `INCLUSION_BY_RESOURCE_TYPES`, Config records configuration
+    #     changes for only the resource types you specify in the
+    #     `resourceTypes` field of [RecordingGroup][2].
+    #
+    #   * If you set the `useOnly` field of [RecordingStrategy][1] to
+    #     `EXCLUSION_BY_RESOURCE_TYPES`, Config records configuration
+    #     changes for all supported resource types except the resource types
+    #     that you specify as exemptions to exclude from being recorded in
+    #     the `resourceTypes` field of [ExclusionByResourceTypes][3].
+    #
+    #   <note markdown="1"> The `recordingStrategy` field is optional when you set the
+    #   `allSupported` field of [RecordingGroup][2] to `true`.
+    #
+    #    The `recordingStrategy` field is optional when you list resource
+    #   types in the `resourceTypes` field of [RecordingGroup][2].
+    #
+    #    The `recordingStrategy` field is required if you list resource types
+    #   to exclude from recording in the `resourceTypes` field of
+    #   [ExclusionByResourceTypes][3].
+    #
+    #    </note>
+    #
+    #   <note markdown="1"> If you choose `EXCLUSION_BY_RESOURCE_TYPES` for the recording
+    #   strategy, the `exclusionByResourceTypes` field will override other
+    #   properties in the request.
+    #
+    #    For example, even if you set `includeGlobalResourceTypes` to false,
+    #   global resource types will still be automatically recorded in this
+    #   option unless those resource types are specifically listed as
+    #   exemptions in the `resourceTypes` field of
+    #   `exclusionByResourceTypes`.
+    #
+    #    By default, if you choose the `EXCLUSION_BY_RESOURCE_TYPES`
+    #   recording strategy, when Config adds support for a new resource type
+    #   in the Region where you set up the configuration recorder, including
+    #   global resource types, Config starts recording resources of that
+    #   type automatically.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html
+    #   [2]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingGroup.html
+    #   [3]: https://docs.aws.amazon.com/config/latest/APIReference/API_ExclusionByResourceTypes.html
+    #   @return [Types::RecordingStrategy]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/RecordingGroup AWS API Documentation
     #
     class RecordingGroup < Struct.new(
       :all_supported,
       :include_global_resource_types,
-      :resource_types)
+      :resource_types,
+      :exclusion_by_resource_types,
+      :recording_strategy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Specifies the recording strategy of the configuration recorder.
+    #
+    # @!attribute [rw] use_only
+    #   The recording strategy for the configuration recorder.
+    #
+    #   * If you set this option to `ALL_SUPPORTED_RESOURCE_TYPES`, Config
+    #     records configuration changes for all supported regional resource
+    #     types. You also must set the `allSupported` field of
+    #     [RecordingGroup][1] to `true`.
+    #
+    #     When Config adds support for a new type of regional resource,
+    #     Config automatically starts recording resources of that type. For
+    #     a list of supported resource types, see [Supported Resource
+    #     Types][2] in the *Config developer guide*.
+    #
+    #   * If you set this option to `INCLUSION_BY_RESOURCE_TYPES`, Config
+    #     records configuration changes for only the resource types that you
+    #     specify in the `resourceTypes` field of [RecordingGroup][1].
+    #
+    #   * If you set this option to `EXCLUSION_BY_RESOURCE_TYPES`, Config
+    #     records configuration changes for all supported resource types,
+    #     except the resource types that you specify as exemptions to
+    #     exclude from being recorded in the `resourceTypes` field of
+    #     [ExclusionByResourceTypes][3].
+    #
+    #   <note markdown="1"> The `recordingStrategy` field is optional when you set the
+    #   `allSupported` field of [RecordingGroup][1] to `true`.
+    #
+    #    The `recordingStrategy` field is optional when you list resource
+    #   types in the `resourceTypes` field of [RecordingGroup][1].
+    #
+    #    The `recordingStrategy` field is required if you list resource types
+    #   to exclude from recording in the `resourceTypes` field of
+    #   [ExclusionByResourceTypes][3].
+    #
+    #    </note>
+    #
+    #   <note markdown="1"> If you choose `EXCLUSION_BY_RESOURCE_TYPES` for the recording
+    #   strategy, the `exclusionByResourceTypes` field will override other
+    #   properties in the request.
+    #
+    #    For example, even if you set `includeGlobalResourceTypes` to false,
+    #   global resource types will still be automatically recorded in this
+    #   option unless those resource types are specifically listed as
+    #   exemptions in the `resourceTypes` field of
+    #   `exclusionByResourceTypes`.
+    #
+    #    By default, if you choose the `EXCLUSION_BY_RESOURCE_TYPES`
+    #   recording strategy, when Config adds support for a new resource type
+    #   in the Region where you set up the configuration recorder, including
+    #   global resource types, Config starts recording resources of that
+    #   type automatically.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingGroup.html
+    #   [2]: https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html#supported-resources
+    #   [3]: https://docs.aws.amazon.com/config/latest/APIReference/API_ExclusionByResourceTypes.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/RecordingStrategy AWS API Documentation
+    #
+    class RecordingStrategy < Struct.new(
+      :use_only)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -7327,40 +7228,8 @@ module Aws::ConfigService
     # configuration that includes the remediation action, parameters, and
     # data to execute the action.
     #
-    # @note When making an API call, you may pass RemediationConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName", # required
-    #         target_type: "SSM_DOCUMENT", # required, accepts SSM_DOCUMENT
-    #         target_id: "StringWithCharLimit256", # required
-    #         target_version: "String",
-    #         parameters: {
-    #           "StringWithCharLimit256" => {
-    #             resource_value: {
-    #               value: "RESOURCE_ID", # required, accepts RESOURCE_ID
-    #             },
-    #             static_value: {
-    #               values: ["StringWithCharLimit256"], # required
-    #             },
-    #           },
-    #         },
-    #         resource_type: "String",
-    #         automatic: false,
-    #         execution_controls: {
-    #           ssm_controls: {
-    #             concurrent_execution_rate_percentage: 1,
-    #             error_percentage: 1,
-    #           },
-    #         },
-    #         maximum_automatic_attempts: 1,
-    #         retry_attempt_seconds: 1,
-    #         arn: "StringWithCharLimit1024",
-    #         created_by_service: "StringWithCharLimit1024",
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule.
+    #   The name of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] target_type
@@ -7369,7 +7238,7 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] target_id
-    #   Target ID is the name of the public document.
+    #   Target ID is the name of the SSM document.
     #   @return [String]
     #
     # @!attribute [rw] target_version
@@ -7403,18 +7272,18 @@ module Aws::ConfigService
     #   do not select a number, the default is 5.
     #
     #   For example, if you specify MaximumAutomaticAttempts as 5 with
-    #   RetryAttemptSeconds as 50 seconds, AWS Config will put a
+    #   RetryAttemptSeconds as 50 seconds, Config will put a
     #   RemediationException on your behalf for the failing resource after
     #   the 5th failed attempt within 50 seconds.
     #   @return [Integer]
     #
     # @!attribute [rw] retry_attempt_seconds
-    #   Maximum time in seconds that AWS Config runs auto-remediation. If
-    #   you do not select a number, the default is 60 seconds.
+    #   Maximum time in seconds that Config runs auto-remediation. If you do
+    #   not select a number, the default is 60 seconds.
     #
     #   For example, if you specify RetryAttemptSeconds as 50 seconds and
-    #   MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations
-    #   5 times within 50 seconds before throwing an exception.
+    #   MaximumAutomaticAttempts as 5, Config will run auto-remediations 5
+    #   times within 50 seconds before throwing an exception.
     #   @return [Integer]
     #
     # @!attribute [rw] arn
@@ -7422,7 +7291,7 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] created_by_service
-    #   Name of the service that owns the service linked rule, if
+    #   Name of the service that owns the service-linked rule, if
     #   applicable.
     #   @return [String]
     #
@@ -7451,7 +7320,7 @@ module Aws::ConfigService
     # type.
     #
     # @!attribute [rw] config_rule_name
-    #   The name of the AWS Config rule.
+    #   The name of the Config rule.
     #   @return [String]
     #
     # @!attribute [rw] resource_type
@@ -7482,16 +7351,8 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The details that identify a resource within AWS Config, including the
+    # The details that identify a resource within Config, including the
     # resource type and resource ID.
-    #
-    # @note When making an API call, you may pass RemediationExceptionResourceKey
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "StringWithCharLimit256",
-    #         resource_id: "StringWithCharLimit1024",
-    #       }
     #
     # @!attribute [rw] resource_type
     #   The type of a resource.
@@ -7514,8 +7375,8 @@ module Aws::ConfigService
     # action for that resource.
     #
     # @!attribute [rw] resource_key
-    #   The details that identify a resource within AWS Config, including
-    #   the resource type and resource ID.
+    #   The details that identify a resource within Config, including the
+    #   resource type and resource ID.
     #   @return [Types::ResourceKey]
     #
     # @!attribute [rw] state
@@ -7581,7 +7442,7 @@ module Aws::ConfigService
     end
 
     # Remediation action is in progress. You can either cancel execution in
-    # AWS Systems Manager or wait and try again later.
+    # Amazon Web Services Systems Manager or wait and try again later.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/RemediationInProgressException AWS API Documentation
     #
@@ -7589,18 +7450,6 @@ module Aws::ConfigService
 
     # The value is either a dynamic (resource) value or a static value. You
     # must select either a dynamic value or a static value.
-    #
-    # @note When making an API call, you may pass RemediationParameterValue
-    #   data as a hash:
-    #
-    #       {
-    #         resource_value: {
-    #           value: "RESOURCE_ID", # required, accepts RESOURCE_ID
-    #         },
-    #         static_value: {
-    #           values: ["StringWithCharLimit256"], # required
-    #         },
-    #       }
     #
     # @!attribute [rw] resource_value
     #   The value is dynamic and changes at run-time.
@@ -7655,17 +7504,8 @@ module Aws::ConfigService
     # Filters the resource count based on account ID, region, and resource
     # type.
     #
-    # @note When making an API call, you may pass ResourceCountFilters
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "AWS::EC2::CustomerGateway", # accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #         account_id: "AccountId",
-    #         region: "AwsRegion",
-    #       }
-    #
     # @!attribute [rw] resource_type
-    #   The type of the AWS resource.
+    #   The type of the Amazon Web Services resource.
     #   @return [String]
     #
     # @!attribute [rw] account_id
@@ -7686,18 +7526,107 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
+    # Returns information about the resource being evaluated.
+    #
+    # @!attribute [rw] resource_id
+    #   A unique resource ID for an evaluation.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_type
+    #   The type of resource being evaluated.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_configuration
+    #   The resource definition to be evaluated as per the resource
+    #   configuration schema type.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_configuration_schema_type
+    #   The schema type of the resource configuration.
+    #
+    #   <note markdown="1"> You can find the [Resource type schema][1], or
+    #   `CFN_RESOURCE_SCHEMA`, in "*Amazon Web Services public
+    #   extensions*" within the CloudFormation registry or with the
+    #   following CLI commmand: `aws cloudformation describe-type
+    #   --type-name "AWS::S3::Bucket" --type RESOURCE`.
+    #
+    #    For more information, see [Managing extensions through the
+    #   CloudFormation registry][2] and [Amazon Web Services resource and
+    #   property types reference][3] in the CloudFormation User Guide.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-schema.html
+    #   [2]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/registry.html#registry-view
+    #   [3]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ResourceDetails AWS API Documentation
+    #
+    class ResourceDetails < Struct.new(
+      :resource_id,
+      :resource_type,
+      :resource_configuration,
+      :resource_configuration_schema_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Returns details of a resource evaluation.
+    #
+    # @!attribute [rw] resource_evaluation_id
+    #   The ResourceEvaluationId of a evaluation.
+    #   @return [String]
+    #
+    # @!attribute [rw] evaluation_mode
+    #   The mode of an evaluation. The valid values are Detective or
+    #   Proactive.
+    #   @return [String]
+    #
+    # @!attribute [rw] evaluation_start_timestamp
+    #   The starting time of an execution.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ResourceEvaluation AWS API Documentation
+    #
+    class ResourceEvaluation < Struct.new(
+      :resource_evaluation_id,
+      :evaluation_mode,
+      :evaluation_start_timestamp)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Returns details of a resource evaluation based on the selected filter.
+    #
+    # @!attribute [rw] evaluation_mode
+    #   Filters all resource evaluations results based on an evaluation
+    #   mode. the valid value for this API is `Proactive`.
+    #   @return [String]
+    #
+    # @!attribute [rw] time_window
+    #   Returns a `TimeWindow` object.
+    #   @return [Types::TimeWindow]
+    #
+    # @!attribute [rw] evaluation_context_identifier
+    #   Filters evaluations for a given infrastructure deployment. For
+    #   example: CFN Stack.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ResourceEvaluationFilters AWS API Documentation
+    #
+    class ResourceEvaluationFilters < Struct.new(
+      :evaluation_mode,
+      :time_window,
+      :evaluation_context_identifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Filters the results by resource account ID, region, resource ID, and
     # resource name.
-    #
-    # @note When making an API call, you may pass ResourceFilters
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId",
-    #         resource_id: "ResourceId",
-    #         resource_name: "ResourceName",
-    #         region: "AwsRegion",
-    #       }
     #
     # @!attribute [rw] account_id
     #   The 12-digit source account ID.
@@ -7726,7 +7655,7 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The details that identify a resource that is discovered by AWS Config,
+    # The details that identify a resource that is discovered by Config,
     # including the resource type, ID, and (if available) the custom
     # resource name.
     #
@@ -7759,21 +7688,21 @@ module Aws::ConfigService
 
     # You see this exception in the following cases:
     #
-    # * For DeleteConfigRule, AWS Config is deleting this rule. Try your
-    #   request again later.
+    # * For DeleteConfigRule, Config is deleting this rule. Try your request
+    #   again later.
     #
     # * For DeleteConfigRule, the rule is deleting your evaluation results.
     #   Try your request again later.
     #
     # * For DeleteConfigRule, a remediation action is associated with the
-    #   rule and AWS Config cannot delete this rule. Delete the remediation
+    #   rule and Config cannot delete this rule. Delete the remediation
     #   action associated with the rule before deleting the rule and try
     #   your request again later.
     #
-    # * For PutConfigOrganizationRule, organization config rule deletion is
+    # * For PutConfigOrganizationRule, organization Config rule deletion is
     #   in progress. Try your request again later.
     #
-    # * For DeleteOrganizationConfigRule, organization config rule creation
+    # * For DeleteOrganizationConfigRule, organization Config rule creation
     #   is in progress. Try your request again later.
     #
     # * For PutConformancePack and PutOrganizationConformancePack, a
@@ -7787,16 +7716,8 @@ module Aws::ConfigService
     #
     class ResourceInUseException < Aws::EmptyStructure; end
 
-    # The details that identify a resource within AWS Config, including the
+    # The details that identify a resource within Config, including the
     # resource type and resource ID.
-    #
-    # @note When making an API call, you may pass ResourceKey
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #         resource_id: "ResourceId", # required
-    #       }
     #
     # @!attribute [rw] resource_type
     #   The resource type.
@@ -7830,13 +7751,6 @@ module Aws::ConfigService
 
     # The dynamic value of the resource.
     #
-    # @note When making an API call, you may pass ResourceValue
-    #   data as a hash:
-    #
-    #       {
-    #         value: "RESOURCE_ID", # required, accepts RESOURCE_ID
-    #       }
-    #
     # @!attribute [rw] value
     #   The value is a resource ID.
     #   @return [String]
@@ -7851,14 +7765,14 @@ module Aws::ConfigService
 
     # An object with the name of the retention configuration and the
     # retention period in days. The object stores the configuration for data
-    # retention in AWS Config.
+    # retention in Config.
     #
     # @!attribute [rw] name
     #   The name of the retention configuration object.
     #   @return [String]
     #
     # @!attribute [rw] retention_period_in_days
-    #   Number of days AWS Config stores your historical information.
+    #   Number of days Config stores your historical information.
     #
     #   <note markdown="1"> Currently, only applicable to the configuration item history.
     #
@@ -7874,45 +7788,35 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Defines which resources trigger an evaluation for an AWS Config rule.
-    # The scope can include one or more resource types, a combination of a
-    # tag key and value, or a combination of one resource type and one
-    # resource ID. Specify a scope to constrain which resources trigger an
-    # evaluation for a rule. Otherwise, evaluations for the rule are
-    # triggered when any resource in your recording group changes in
-    # configuration.
-    #
-    # @note When making an API call, you may pass Scope
-    #   data as a hash:
-    #
-    #       {
-    #         compliance_resource_types: ["StringWithCharLimit256"],
-    #         tag_key: "StringWithCharLimit128",
-    #         tag_value: "StringWithCharLimit256",
-    #         compliance_resource_id: "BaseResourceId",
-    #       }
+    # Defines which resources trigger an evaluation for an Config rule. The
+    # scope can include one or more resource types, a combination of a tag
+    # key and value, or a combination of one resource type and one resource
+    # ID. Specify a scope to constrain which resources trigger an evaluation
+    # for a rule. Otherwise, evaluations for the rule are triggered when any
+    # resource in your recording group changes in configuration.
     #
     # @!attribute [rw] compliance_resource_types
-    #   The resource types of only those AWS resources that you want to
-    #   trigger an evaluation for the rule. You can only specify one type if
-    #   you also specify a resource ID for `ComplianceResourceId`.
+    #   The resource types of only those Amazon Web Services resources that
+    #   you want to trigger an evaluation for the rule. You can only specify
+    #   one type if you also specify a resource ID for
+    #   `ComplianceResourceId`.
     #   @return [Array<String>]
     #
     # @!attribute [rw] tag_key
-    #   The tag key that is applied to only those AWS resources that you
-    #   want to trigger an evaluation for the rule.
+    #   The tag key that is applied to only those Amazon Web Services
+    #   resources that you want to trigger an evaluation for the rule.
     #   @return [String]
     #
     # @!attribute [rw] tag_value
-    #   The tag value applied to only those AWS resources that you want to
-    #   trigger an evaluation for the rule. If you specify a value for
-    #   `TagValue`, you must also specify a value for `TagKey`.
+    #   The tag value applied to only those Amazon Web Services resources
+    #   that you want to trigger an evaluation for the rule. If you specify
+    #   a value for `TagValue`, you must also specify a value for `TagKey`.
     #   @return [String]
     #
     # @!attribute [rw] compliance_resource_id
-    #   The ID of the only AWS resource that you want to trigger an
-    #   evaluation for the rule. If you specify a resource ID, you must
-    #   specify one resource type for `ComplianceResourceTypes`.
+    #   The ID of the only Amazon Web Services resource that you want to
+    #   trigger an evaluation for the rule. If you specify a resource ID,
+    #   you must specify one resource type for `ComplianceResourceTypes`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/Scope AWS API Documentation
@@ -7926,17 +7830,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SelectAggregateResourceConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         expression: "Expression", # required
-    #         configuration_aggregator_name: "ConfigurationAggregatorName", # required
-    #         limit: 1,
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] expression
     #   The SQL query SELECT command.
     #   @return [String]
@@ -7950,8 +7843,8 @@ module Aws::ConfigService
     #   @return [Integer]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of query results returned on each page. AWS
-    #   Config also allows the Limit request parameter.
+    #   The maximum number of query results returned on each page. Config
+    #   also allows the Limit request parameter.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
@@ -7994,15 +7887,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SelectResourceConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         expression: "Expression", # required
-    #         limit: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] expression
     #   The SQL query `SELECT` command.
     #   @return [String]
@@ -8049,99 +7933,104 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # Provides the AWS Config rule owner (AWS or customer), the rule
-    # identifier, and the events that trigger the evaluation of your AWS
+    # Provides the CustomPolicyDetails, the rule owner (`Amazon Web
+    # Services` for managed rules, `CUSTOM_POLICY` for Custom Policy rules,
+    # and `CUSTOM_LAMBDA` for Custom Lambda rules), the rule identifier, and
+    # the events that cause the evaluation of your Amazon Web Services
     # resources.
     #
-    # @note When making an API call, you may pass Source
-    #   data as a hash:
-    #
-    #       {
-    #         owner: "CUSTOM_LAMBDA", # required, accepts CUSTOM_LAMBDA, AWS
-    #         source_identifier: "StringWithCharLimit256", # required
-    #         source_details: [
-    #           {
-    #             event_source: "aws.config", # accepts aws.config
-    #             message_type: "ConfigurationItemChangeNotification", # accepts ConfigurationItemChangeNotification, ConfigurationSnapshotDeliveryCompleted, ScheduledNotification, OversizedConfigurationItemChangeNotification
-    #             maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] owner
-    #   Indicates whether AWS or the customer owns and manages the AWS
-    #   Config rule.
-    #   @return [String]
+    #   Indicates whether Amazon Web Services or the customer owns and
+    #   manages the Config rule.
     #
-    # @!attribute [rw] source_identifier
-    #   For AWS Config managed rules, a predefined identifier from a list.
-    #   For example, `IAM_PASSWORD_POLICY` is a managed rule. To reference a
-    #   managed rule, see [Using AWS Managed Config Rules][1].
+    #   Config Managed Rules are predefined rules owned by Amazon Web
+    #   Services. For more information, see [Config Managed Rules][1] in the
+    #   *Config developer guide*.
     #
-    #   For custom rules, the identifier is the Amazon Resource Name (ARN)
-    #   of the rule's AWS Lambda function, such as
-    #   `arn:aws:lambda:us-east-2:123456789012:function:custom_rule_name`.
+    #   Config Custom Rules are rules that you can develop either with Guard
+    #   (`CUSTOM_POLICY`) or Lambda (`CUSTOM_LAMBDA`). For more information,
+    #   see [Config Custom Rules ][2] in the *Config developer guide*.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html
+    #   [2]: https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules.html
+    #   @return [String]
+    #
+    # @!attribute [rw] source_identifier
+    #   For Config Managed rules, a predefined identifier from a list. For
+    #   example, `IAM_PASSWORD_POLICY` is a managed rule. To reference a
+    #   managed rule, see [List of Config Managed Rules][1].
+    #
+    #   For Config Custom Lambda rules, the identifier is the Amazon
+    #   Resource Name (ARN) of the rule's Lambda function, such as
+    #   `arn:aws:lambda:us-east-2:123456789012:function:custom_rule_name`.
+    #
+    #   For Config Custom Policy rules, this field will be ignored.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/config/latest/developerguide/managed-rules-by-aws-config.html
     #   @return [String]
     #
     # @!attribute [rw] source_details
-    #   Provides the source and type of the event that causes AWS Config to
-    #   evaluate your AWS resources.
+    #   Provides the source and the message types that cause Config to
+    #   evaluate your Amazon Web Services resources against a rule. It also
+    #   provides the frequency with which you want Config to run evaluations
+    #   for the rule if the trigger type is periodic.
+    #
+    #   If the owner is set to `CUSTOM_POLICY`, the only acceptable values
+    #   for the Config rule trigger message type are
+    #   `ConfigurationItemChangeNotification` and
+    #   `OversizedConfigurationItemChangeNotification`.
     #   @return [Array<Types::SourceDetail>]
+    #
+    # @!attribute [rw] custom_policy_details
+    #   Provides the runtime system, policy definition, and whether debug
+    #   logging is enabled. Required when owner is set to `CUSTOM_POLICY`.
+    #   @return [Types::CustomPolicyDetails]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/Source AWS API Documentation
     #
     class Source < Struct.new(
       :owner,
       :source_identifier,
-      :source_details)
+      :source_details,
+      :custom_policy_details)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Provides the source and the message types that trigger AWS Config to
-    # evaluate your AWS resources against a rule. It also provides the
-    # frequency with which you want AWS Config to run evaluations for the
-    # rule if the trigger type is periodic. You can specify the parameter
-    # values for `SourceDetail` only for custom rules.
-    #
-    # @note When making an API call, you may pass SourceDetail
-    #   data as a hash:
-    #
-    #       {
-    #         event_source: "aws.config", # accepts aws.config
-    #         message_type: "ConfigurationItemChangeNotification", # accepts ConfigurationItemChangeNotification, ConfigurationSnapshotDeliveryCompleted, ScheduledNotification, OversizedConfigurationItemChangeNotification
-    #         maximum_execution_frequency: "One_Hour", # accepts One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
-    #       }
+    # Provides the source and the message types that trigger Config to
+    # evaluate your Amazon Web Services resources against a rule. It also
+    # provides the frequency with which you want Config to run evaluations
+    # for the rule if the trigger type is periodic. You can specify the
+    # parameter values for `SourceDetail` only for custom rules.
     #
     # @!attribute [rw] event_source
-    #   The source of the event, such as an AWS service, that triggers AWS
-    #   Config to evaluate your AWS resources.
+    #   The source of the event, such as an Amazon Web Services service,
+    #   that triggers Config to evaluate your Amazon Web Services resources.
     #   @return [String]
     #
     # @!attribute [rw] message_type
-    #   The type of notification that triggers AWS Config to run an
-    #   evaluation for a rule. You can specify the following notification
-    #   types:
+    #   The type of notification that triggers Config to run an evaluation
+    #   for a rule. You can specify the following notification types:
     #
     #   * `ConfigurationItemChangeNotification` - Triggers an evaluation
-    #     when AWS Config delivers a configuration item as a result of a
+    #     when Config delivers a configuration item as a result of a
     #     resource change.
     #
     #   * `OversizedConfigurationItemChangeNotification` - Triggers an
-    #     evaluation when AWS Config delivers an oversized configuration
-    #     item. AWS Config may generate this notification type when a
-    #     resource changes and the notification exceeds the maximum size
-    #     allowed by Amazon SNS.
+    #     evaluation when Config delivers an oversized configuration item.
+    #     Config may generate this notification type when a resource changes
+    #     and the notification exceeds the maximum size allowed by Amazon
+    #     SNS.
     #
     #   * `ScheduledNotification` - Triggers a periodic evaluation at the
     #     frequency specified for `MaximumExecutionFrequency`.
     #
     #   * `ConfigurationSnapshotDeliveryCompleted` - Triggers a periodic
-    #     evaluation when AWS Config delivers a configuration snapshot.
+    #     evaluation when Config delivers a configuration snapshot.
     #
     #   If you want your custom rule to be triggered by configuration
     #   changes, specify two SourceDetail objects, one for
@@ -8150,7 +8039,7 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] maximum_execution_frequency
-    #   The frequency at which you want AWS Config to run evaluations for a
+    #   The frequency at which you want Config to run evaluations for a
     #   custom rule with a periodic trigger. If you specify a value for
     #   `MaximumExecutionFrequency`, then `MessageType` must use the
     #   `ScheduledNotification` value.
@@ -8159,9 +8048,9 @@ module Aws::ConfigService
     #   hours. To change the frequency, specify a valid value for the
     #   `MaximumExecutionFrequency` parameter.
     #
-    #    Based on the valid value you choose, AWS Config runs evaluations
-    #   once for each valid value. For example, if you choose `Three_Hours`,
-    #   AWS Config runs evaluations once every three hours. In this case,
+    #    Based on the valid value you choose, Config runs evaluations once
+    #   for each valid value. For example, if you choose `Three_Hours`,
+    #   Config runs evaluations once every three hours. In this case,
     #   `Three_Hours` is the frequency of this rule.
     #
     #    </note>
@@ -8177,15 +8066,8 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # AWS Systems Manager (SSM) specific remediation controls.
-    #
-    # @note When making an API call, you may pass SsmControls
-    #   data as a hash:
-    #
-    #       {
-    #         concurrent_execution_rate_percentage: 1,
-    #         error_percentage: 1,
-    #       }
+    # Amazon Web Services Systems Manager (SSM) specific remediation
+    # controls.
     #
     # @!attribute [rw] concurrent_execution_rate_percentage
     #   The maximum percentage of remediation actions allowed to run in
@@ -8211,16 +8093,9 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartConfigRulesEvaluationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_names: ["ConfigRuleName"],
-    #       }
-    #
     # @!attribute [rw] config_rule_names
-    #   The list of names of AWS Config rules that you want to run
-    #   evaluations for.
+    #   The list of names of Config rules that you want to run evaluations
+    #   for.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/StartConfigRulesEvaluationRequest AWS API Documentation
@@ -8231,7 +8106,7 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # The output when you start the evaluation for the specified AWS Config
+    # The output when you start the evaluation for the specified Config
     # rule.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/StartConfigRulesEvaluationResponse AWS API Documentation
@@ -8239,13 +8114,6 @@ module Aws::ConfigService
     class StartConfigRulesEvaluationResponse < Aws::EmptyStructure; end
 
     # The input for the StartConfigurationRecorder action.
-    #
-    # @note When making an API call, you may pass StartConfigurationRecorderRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_recorder_name: "RecorderName", # required
-    #       }
     #
     # @!attribute [rw] configuration_recorder_name
     #   The name of the recorder object that records each configuration
@@ -8260,22 +8128,9 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartRemediationExecutionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         config_rule_name: "ConfigRuleName", # required
-    #         resource_keys: [ # required
-    #           {
-    #             resource_type: "AWS::EC2::CustomerGateway", # required, accepts AWS::EC2::CustomerGateway, AWS::EC2::EIP, AWS::EC2::Host, AWS::EC2::Instance, AWS::EC2::InternetGateway, AWS::EC2::NetworkAcl, AWS::EC2::NetworkInterface, AWS::EC2::RouteTable, AWS::EC2::SecurityGroup, AWS::EC2::Subnet, AWS::CloudTrail::Trail, AWS::EC2::Volume, AWS::EC2::VPC, AWS::EC2::VPNConnection, AWS::EC2::VPNGateway, AWS::EC2::RegisteredHAInstance, AWS::EC2::NatGateway, AWS::EC2::EgressOnlyInternetGateway, AWS::EC2::VPCEndpoint, AWS::EC2::VPCEndpointService, AWS::EC2::FlowLog, AWS::EC2::VPCPeeringConnection, AWS::Elasticsearch::Domain, AWS::IAM::Group, AWS::IAM::Policy, AWS::IAM::Role, AWS::IAM::User, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::ACM::Certificate, AWS::RDS::DBInstance, AWS::RDS::DBSubnetGroup, AWS::RDS::DBSecurityGroup, AWS::RDS::DBSnapshot, AWS::RDS::DBCluster, AWS::RDS::DBClusterSnapshot, AWS::RDS::EventSubscription, AWS::S3::Bucket, AWS::S3::AccountPublicAccessBlock, AWS::Redshift::Cluster, AWS::Redshift::ClusterSnapshot, AWS::Redshift::ClusterParameterGroup, AWS::Redshift::ClusterSecurityGroup, AWS::Redshift::ClusterSubnetGroup, AWS::Redshift::EventSubscription, AWS::SSM::ManagedInstanceInventory, AWS::CloudWatch::Alarm, AWS::CloudFormation::Stack, AWS::ElasticLoadBalancing::LoadBalancer, AWS::AutoScaling::AutoScalingGroup, AWS::AutoScaling::LaunchConfiguration, AWS::AutoScaling::ScalingPolicy, AWS::AutoScaling::ScheduledAction, AWS::DynamoDB::Table, AWS::CodeBuild::Project, AWS::WAF::RateBasedRule, AWS::WAF::Rule, AWS::WAF::RuleGroup, AWS::WAF::WebACL, AWS::WAFRegional::RateBasedRule, AWS::WAFRegional::Rule, AWS::WAFRegional::RuleGroup, AWS::WAFRegional::WebACL, AWS::CloudFront::Distribution, AWS::CloudFront::StreamingDistribution, AWS::Lambda::Function, AWS::NetworkFirewall::Firewall, AWS::NetworkFirewall::FirewallPolicy, AWS::NetworkFirewall::RuleGroup, AWS::ElasticBeanstalk::Application, AWS::ElasticBeanstalk::ApplicationVersion, AWS::ElasticBeanstalk::Environment, AWS::WAFv2::WebACL, AWS::WAFv2::RuleGroup, AWS::WAFv2::IPSet, AWS::WAFv2::RegexPatternSet, AWS::WAFv2::ManagedRuleSet, AWS::XRay::EncryptionConfig, AWS::SSM::AssociationCompliance, AWS::SSM::PatchCompliance, AWS::Shield::Protection, AWS::ShieldRegional::Protection, AWS::Config::ConformancePackCompliance, AWS::Config::ResourceCompliance, AWS::ApiGateway::Stage, AWS::ApiGateway::RestApi, AWS::ApiGatewayV2::Stage, AWS::ApiGatewayV2::Api, AWS::CodePipeline::Pipeline, AWS::ServiceCatalog::CloudFormationProvisionedProduct, AWS::ServiceCatalog::CloudFormationProduct, AWS::ServiceCatalog::Portfolio, AWS::SQS::Queue, AWS::KMS::Key, AWS::QLDB::Ledger, AWS::SecretsManager::Secret, AWS::SNS::Topic, AWS::SSM::FileData
-    #             resource_id: "ResourceId", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] config_rule_name
-    #   The list of names of AWS Config rules that you want to run
-    #   remediation execution for.
+    #   The list of names of Config rules that you want to run remediation
+    #   execution for.
     #   @return [String]
     #
     # @!attribute [rw] resource_keys
@@ -8312,14 +8167,67 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
+    # @!attribute [rw] resource_details
+    #   Returns a `ResourceDetails` object.
+    #   @return [Types::ResourceDetails]
+    #
+    # @!attribute [rw] evaluation_context
+    #   Returns an `EvaluationContext` object.
+    #   @return [Types::EvaluationContext]
+    #
+    # @!attribute [rw] evaluation_mode
+    #   The mode of an evaluation. The valid values for this API are
+    #   `DETECTIVE` and `PROACTIVE`.
+    #   @return [String]
+    #
+    # @!attribute [rw] evaluation_timeout
+    #   The timeout for an evaluation. The default is 900 seconds. You
+    #   cannot specify a number greater than 3600. If you specify 0, Config
+    #   uses the default.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] client_token
+    #   A client token is a unique, case-sensitive string of up to 64 ASCII
+    #   characters. To make an idempotent API request using one of these
+    #   actions, specify a client token in the request.
+    #
+    #   <note markdown="1"> Avoid reusing the same client token for other API requests. If you
+    #   retry a request that completed successfully using the same client
+    #   token and the same parameters, the retry succeeds without performing
+    #   any further actions. If you retry a successful request using the
+    #   same client token, but one or more of the parameters are different,
+    #   other than the Region or Availability Zone, the retry fails with an
+    #   IdempotentParameterMismatch error.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/StartResourceEvaluationRequest AWS API Documentation
+    #
+    class StartResourceEvaluationRequest < Struct.new(
+      :resource_details,
+      :evaluation_context,
+      :evaluation_mode,
+      :evaluation_timeout,
+      :client_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_evaluation_id
+    #   A unique ResourceEvaluationId that is associated with a single
+    #   execution.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/StartResourceEvaluationResponse AWS API Documentation
+    #
+    class StartResourceEvaluationResponse < Struct.new(
+      :resource_evaluation_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The static value of the resource.
-    #
-    # @note When making an API call, you may pass StaticValue
-    #   data as a hash:
-    #
-    #       {
-    #         values: ["StringWithCharLimit256"], # required
-    #       }
     #
     # @!attribute [rw] values
     #   A list of values. For example, the ARN of the assumed role.
@@ -8334,15 +8242,7 @@ module Aws::ConfigService
     end
 
     # Status filter object to filter results based on specific member
-    # account ID or status type for an organization config rule.
-    #
-    # @note When making an API call, you may pass StatusDetailFilters
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId",
-    #         member_account_rule_status: "CREATE_SUCCESSFUL", # accepts CREATE_SUCCESSFUL, CREATE_IN_PROGRESS, CREATE_FAILED, DELETE_SUCCESSFUL, DELETE_FAILED, DELETE_IN_PROGRESS, UPDATE_SUCCESSFUL, UPDATE_IN_PROGRESS, UPDATE_FAILED
-    #       }
+    # account ID or status type for an organization Config rule.
     #
     # @!attribute [rw] account_id
     #   The 12-digit account ID of the member account within an
@@ -8350,42 +8250,42 @@ module Aws::ConfigService
     #   @return [String]
     #
     # @!attribute [rw] member_account_rule_status
-    #   Indicates deployment status for config rule in the member account.
-    #   When master account calls `PutOrganizationConfigRule` action for the
-    #   first time, config rule status is created in the member account.
-    #   When master account calls `PutOrganizationConfigRule` action for the
-    #   second time, config rule status is updated in the member account.
-    #   Config rule status is deleted when the master account deletes
-    #   `OrganizationConfigRule` and disables service access for
+    #   Indicates deployment status for Config rule in the member account.
+    #   When management account calls `PutOrganizationConfigRule` action for
+    #   the first time, Config rule status is created in the member account.
+    #   When management account calls `PutOrganizationConfigRule` action for
+    #   the second time, Config rule status is updated in the member
+    #   account. Config rule status is deleted when the management account
+    #   deletes `OrganizationConfigRule` and disables service access for
     #   `config-multiaccountsetup.amazonaws.com`.
     #
-    #   AWS Config sets the state of the rule to:
+    #   Config sets the state of the rule to:
     #
-    #   * `CREATE_SUCCESSFUL` when config rule has been created in the
+    #   * `CREATE_SUCCESSFUL` when Config rule has been created in the
     #     member account.
     #
-    #   * `CREATE_IN_PROGRESS` when config rule is being created in the
+    #   * `CREATE_IN_PROGRESS` when Config rule is being created in the
     #     member account.
     #
-    #   * `CREATE_FAILED` when config rule creation has failed in the member
+    #   * `CREATE_FAILED` when Config rule creation has failed in the member
     #     account.
     #
-    #   * `DELETE_FAILED` when config rule deletion has failed in the member
+    #   * `DELETE_FAILED` when Config rule deletion has failed in the member
     #     account.
     #
-    #   * `DELETE_IN_PROGRESS` when config rule is being deleted in the
+    #   * `DELETE_IN_PROGRESS` when Config rule is being deleted in the
     #     member account.
     #
-    #   * `DELETE_SUCCESSFUL` when config rule has been deleted in the
+    #   * `DELETE_SUCCESSFUL` when Config rule has been deleted in the
     #     member account.
     #
-    #   * `UPDATE_SUCCESSFUL` when config rule has been updated in the
+    #   * `UPDATE_SUCCESSFUL` when Config rule has been updated in the
     #     member account.
     #
-    #   * `UPDATE_IN_PROGRESS` when config rule is being updated in the
+    #   * `UPDATE_IN_PROGRESS` when Config rule is being updated in the
     #     member account.
     #
-    #   * `UPDATE_FAILED` when config rule deletion has failed in the member
+    #   * `UPDATE_FAILED` when Config rule deletion has failed in the member
     #     account.
     #   @return [String]
     #
@@ -8399,13 +8299,6 @@ module Aws::ConfigService
     end
 
     # The input for the StopConfigurationRecorder action.
-    #
-    # @note When making an API call, you may pass StopConfigurationRecorderRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_recorder_name: "RecorderName", # required
-    #       }
     #
     # @!attribute [rw] configuration_recorder_name
     #   The name of the recorder object that records each configuration
@@ -8421,17 +8314,6 @@ module Aws::ConfigService
     end
 
     # Provides the details of a stored query.
-    #
-    # @note When making an API call, you may pass StoredQuery
-    #   data as a hash:
-    #
-    #       {
-    #         query_id: "QueryId",
-    #         query_arn: "QueryArn",
-    #         query_name: "QueryName", # required
-    #         description: "QueryDescription",
-    #         expression: "QueryExpression",
-    #       }
     #
     # @!attribute [rw] query_id
     #   The ID of the query.
@@ -8507,14 +8389,6 @@ module Aws::ConfigService
     # maximum character length of 128 characters, and tag values can have a
     # maximum length of 256 characters.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey",
-    #         value: "TagValue",
-    #       }
-    #
     # @!attribute [rw] key
     #   One part of a key-value pair that make up a tag. A key is a general
     #   label that acts like a category for more specific tag values.
@@ -8534,19 +8408,6 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) that identifies the resource for
     #   which to list the tags. Currently, the supported resources are
@@ -8567,21 +8428,78 @@ module Aws::ConfigService
       include Aws::Structure
     end
 
-    # You have reached the limit of the number of tags you can use. You have
-    # more than 50 tags.
+    # This API allows you to create a conformance pack template with an
+    # Amazon Web Services Systems Manager document (SSM document). To deploy
+    # a conformance pack using an SSM document, first create an SSM document
+    # with conformance pack content, and then provide the `DocumentName` in
+    # the [PutConformancePack API][1]. You can also provide the
+    # `DocumentVersion`.
+    #
+    # The `TemplateSSMDocumentDetails` object contains the name of the SSM
+    # document and the version of the SSM document.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/config/latest/APIReference/API_PutConformancePack.html
+    #
+    # @!attribute [rw] document_name
+    #   The name or Amazon Resource Name (ARN) of the SSM document to use to
+    #   create a conformance pack. If you use the document name, Config
+    #   checks only your account and Amazon Web Services Region for the SSM
+    #   document. If you want to use an SSM document from another Region or
+    #   account, you must provide the ARN.
+    #   @return [String]
+    #
+    # @!attribute [rw] document_version
+    #   The version of the SSM document to use to create a conformance pack.
+    #   By default, Config uses the latest version.
+    #
+    #   <note markdown="1"> This field is optional.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/TemplateSSMDocumentDetails AWS API Documentation
+    #
+    class TemplateSSMDocumentDetails < Struct.new(
+      :document_name,
+      :document_version)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Filters evaluation results based on start and end times.
+    #
+    # @!attribute [rw] start_time
+    #   The start time of an execution.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The end time of an execution. The end time must be after the start
+    #   date.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/TimeWindow AWS API Documentation
+    #
+    class TimeWindow < Struct.new(
+      :start_time,
+      :end_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # You have reached the limit of the number of tags you can use. For more
+    # information, see [ **Service Limits** ][1] in the *Config Developer
+    # Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/config/latest/developerguide/configlimits.html
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/TooManyTagsException AWS API Documentation
     #
     class TooManyTagsException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) that identifies the resource for
     #   which to list the tags. Currently, the supported resources are

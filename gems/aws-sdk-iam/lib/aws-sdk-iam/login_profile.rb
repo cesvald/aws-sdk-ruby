@@ -61,7 +61,9 @@ module Aws::IAM
     #
     # @return [self]
     def load
-      resp = @client.get_login_profile(user_name: @user_name)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_login_profile(user_name: @user_name)
+      end
       @data = resp.login_profile
       self
     end
@@ -176,7 +178,9 @@ module Aws::IAM
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -197,8 +201,9 @@ module Aws::IAM
     #   character range (`\u00FF`). You can also include the tab (`\u0009`),
     #   line feed (`\u000A`), and carriage return (`\u000D`) characters. Any
     #   of these characters are valid in a password. However, many tools, such
-    #   as the AWS Management Console, might restrict the ability to type
-    #   certain characters because they have special meaning within that tool.
+    #   as the Amazon Web Services Management Console, might restrict the
+    #   ability to type certain characters because they have special meaning
+    #   within that tool.
     #
     #
     #
@@ -209,7 +214,9 @@ module Aws::IAM
     # @return [LoginProfile]
     def create(options = {})
       options = options.merge(user_name: @user_name)
-      resp = @client.create_login_profile(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_login_profile(options)
+      end
       LoginProfile.new(
         user_name: resp.data.login_profile.user_name,
         data: resp.data.login_profile,
@@ -224,7 +231,9 @@ module Aws::IAM
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(user_name: @user_name)
-      resp = @client.delete_login_profile(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_login_profile(options)
+      end
       resp.data
     end
 
@@ -251,8 +260,8 @@ module Aws::IAM
     #     carriage return (`\u000D`)
     #
     #   However, the format can be further restricted by the account
-    #   administrator by setting a password policy on the AWS account. For
-    #   more information, see UpdateAccountPasswordPolicy.
+    #   administrator by setting a password policy on the Amazon Web Services
+    #   account. For more information, see UpdateAccountPasswordPolicy.
     #
     #
     #
@@ -263,7 +272,9 @@ module Aws::IAM
     # @return [EmptyStructure]
     def update(options = {})
       options = options.merge(user_name: @user_name)
-      resp = @client.update_login_profile(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.update_login_profile(options)
+      end
       resp.data
     end
 

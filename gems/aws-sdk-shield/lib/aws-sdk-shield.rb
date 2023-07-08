@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-shield/types'
 require_relative 'aws-sdk-shield/client_api'
+require_relative 'aws-sdk-shield/plugins/endpoints.rb'
 require_relative 'aws-sdk-shield/client'
 require_relative 'aws-sdk-shield/errors'
 require_relative 'aws-sdk-shield/resource'
+require_relative 'aws-sdk-shield/endpoint_parameters'
+require_relative 'aws-sdk-shield/endpoint_provider'
+require_relative 'aws-sdk-shield/endpoints'
 require_relative 'aws-sdk-shield/customizations'
 
 # This module provides support for AWS Shield. This module is available in the
@@ -48,6 +52,6 @@ require_relative 'aws-sdk-shield/customizations'
 # @!group service
 module Aws::Shield
 
-  GEM_VERSION = '1.37.0'
+  GEM_VERSION = '1.55.0'
 
 end

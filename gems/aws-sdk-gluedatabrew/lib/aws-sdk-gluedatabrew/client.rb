@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:gluedatabrew)
@@ -73,8 +77,13 @@ module Aws::GlueDataBrew
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::GlueDataBrew::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::GlueDataBrew
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::GlueDataBrew
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::GlueDataBrew
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::GlueDataBrew
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::GlueDataBrew
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::GlueDataBrew::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::GlueDataBrew::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::GlueDataBrew
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::GlueDataBrew
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -400,7 +457,7 @@ module Aws::GlueDataBrew
     #   alphanumeric (A-Z, a-z, 0-9), hyphen (-), period (.), and space.
     #
     # @option params [String] :format
-    #   The file format of a dataset that is created from an S3 file or
+    #   The file format of a dataset that is created from an Amazon S3 file or
     #   folder.
     #
     # @option params [Types::FormatOptions] :format_options
@@ -409,11 +466,11 @@ module Aws::GlueDataBrew
     #
     # @option params [required, Types::Input] :input
     #   Represents information on how DataBrew can find data, in either the
-    #   AWS Glue Data Catalog or Amazon S3.
+    #   Glue Data Catalog or Amazon S3.
     #
     # @option params [Types::PathOptions] :path_options
-    #   A set of options that defines how DataBrew interprets an S3 path of
-    #   the dataset.
+    #   A set of options that defines how DataBrew interprets an Amazon S3
+    #   path of the dataset.
     #
     # @option params [Hash<String,String>] :tags
     #   Metadata tags to apply to this dataset.
@@ -426,7 +483,7 @@ module Aws::GlueDataBrew
     #
     #   resp = client.create_dataset({
     #     name: "DatasetName", # required
-    #     format: "CSV", # accepts CSV, JSON, PARQUET, EXCEL
+    #     format: "CSV", # accepts CSV, JSON, PARQUET, EXCEL, ORC
     #     format_options: {
     #       json: {
     #         multi_line: false,
@@ -445,6 +502,7 @@ module Aws::GlueDataBrew
     #       s3_input_definition: {
     #         bucket: "Bucket", # required
     #         key: "Key",
+    #         bucket_owner: "BucketOwner",
     #       },
     #       data_catalog_input_definition: {
     #         catalog_id: "CatalogId",
@@ -453,15 +511,21 @@ module Aws::GlueDataBrew
     #         temp_directory: {
     #           bucket: "Bucket", # required
     #           key: "Key",
+    #           bucket_owner: "BucketOwner",
     #         },
     #       },
     #       database_input_definition: {
     #         glue_connection_name: "GlueConnectionName", # required
-    #         database_table_name: "DatabaseTableName", # required
+    #         database_table_name: "DatabaseTableName",
     #         temp_directory: {
     #           bucket: "Bucket", # required
     #           key: "Key",
+    #           bucket_owner: "BucketOwner",
     #         },
+    #         query_string: "QueryString",
+    #       },
+    #       metadata: {
+    #         source_arn: "Arn",
     #       },
     #     },
     #     path_options: {
@@ -525,7 +589,7 @@ module Aws::GlueDataBrew
     # @option params [String] :encryption_mode
     #   The encryption mode for the job, which can be one of the following:
     #
-    #   * `SSE-KMS` - `SSE-KMS` - Server-side encryption with AWS KMS-managed
+    #   * `SSE-KMS` - `SSE-KMS` - Server-side encryption with KMS-managed
     #     keys.
     #
     #   * `SSE-S3` - Server-side encryption with keys managed by Amazon S3.
@@ -546,12 +610,21 @@ module Aws::GlueDataBrew
     #   The maximum number of times to retry the job after a job run fails.
     #
     # @option params [required, Types::S3Location] :output_location
-    #   Represents an Amazon S3 location (bucket name and object key) where
-    #   DataBrew can read input data, or write output from a job.
+    #   Represents an Amazon S3 location (bucket name, bucket owner, and
+    #   object key) where DataBrew can read input data, or write output from a
+    #   job.
+    #
+    # @option params [Types::ProfileConfiguration] :configuration
+    #   Configuration for profile jobs. Used to select columns, do
+    #   evaluations, and override default parameters of evaluations. When
+    #   configuration is null, the profile job will run with default settings.
+    #
+    # @option params [Array<Types::ValidationConfiguration>] :validation_configurations
+    #   List of validation configurations that are applied to the profile job.
     #
     # @option params [required, String] :role_arn
-    #   The Amazon Resource Name (ARN) of the AWS Identity and Access
-    #   Management (IAM) role to be assumed when DataBrew runs the job.
+    #   The Amazon Resource Name (ARN) of the Identity and Access Management
+    #   (IAM) role to be assumed when DataBrew runs the job.
     #
     # @option params [Hash<String,String>] :tags
     #   Metadata tags to apply to this job.
@@ -583,7 +656,62 @@ module Aws::GlueDataBrew
     #     output_location: { # required
     #       bucket: "Bucket", # required
     #       key: "Key",
+    #       bucket_owner: "BucketOwner",
     #     },
+    #     configuration: {
+    #       dataset_statistics_configuration: {
+    #         included_statistics: ["Statistic"],
+    #         overrides: [
+    #           {
+    #             statistic: "Statistic", # required
+    #             parameters: { # required
+    #               "ParameterName" => "ParameterValue",
+    #             },
+    #           },
+    #         ],
+    #       },
+    #       profile_columns: [
+    #         {
+    #           regex: "ColumnName",
+    #           name: "ColumnName",
+    #         },
+    #       ],
+    #       column_statistics_configurations: [
+    #         {
+    #           selectors: [
+    #             {
+    #               regex: "ColumnName",
+    #               name: "ColumnName",
+    #             },
+    #           ],
+    #           statistics: { # required
+    #             included_statistics: ["Statistic"],
+    #             overrides: [
+    #               {
+    #                 statistic: "Statistic", # required
+    #                 parameters: { # required
+    #                   "ParameterName" => "ParameterValue",
+    #                 },
+    #               },
+    #             ],
+    #           },
+    #         },
+    #       ],
+    #       entity_detector_configuration: {
+    #         entity_types: ["EntityType"], # required
+    #         allowed_statistics: [
+    #           {
+    #             statistics: ["Statistic"], # required
+    #           },
+    #         ],
+    #       },
+    #     },
+    #     validation_configurations: [
+    #       {
+    #         ruleset_arn: "Arn", # required
+    #         validation_mode: "CHECK_ALL", # accepts CHECK_ALL
+    #       },
+    #     ],
     #     role_arn: "Arn", # required
     #     tags: {
     #       "TagKey" => "TagValue",
@@ -625,8 +753,8 @@ module Aws::GlueDataBrew
     #   interactive data analysis.
     #
     # @option params [required, String] :role_arn
-    #   The Amazon Resource Name (ARN) of the AWS Identity and Access
-    #   Management (IAM) role to be assumed for this request.
+    #   The Amazon Resource Name (ARN) of the Identity and Access Management
+    #   (IAM) role to be assumed for this request.
     #
     # @option params [Hash<String,String>] :tags
     #   Metadata tags to apply to this project.
@@ -726,7 +854,7 @@ module Aws::GlueDataBrew
     end
 
     # Creates a new job to transform input data, using steps defined in an
-    # existing AWS Glue DataBrew recipe
+    # existing Glue DataBrew recipe
     #
     # @option params [String] :dataset_name
     #   The name of the dataset that this job processes.
@@ -738,7 +866,7 @@ module Aws::GlueDataBrew
     # @option params [String] :encryption_mode
     #   The encryption mode for the job, which can be one of the following:
     #
-    #   * `SSE-KMS` - Server-side encryption with keys managed by AWS KMS.
+    #   * `SSE-KMS` - Server-side encryption with keys managed by KMS.
     #
     #   * `SSE-S3` - Server-side encryption with keys managed by Amazon S3.
     #
@@ -757,8 +885,16 @@ module Aws::GlueDataBrew
     # @option params [Integer] :max_retries
     #   The maximum number of times to retry the job after a job run fails.
     #
-    # @option params [required, Array<Types::Output>] :outputs
+    # @option params [Array<Types::Output>] :outputs
     #   One or more artifacts that represent the output from running the job.
+    #
+    # @option params [Array<Types::DataCatalogOutput>] :data_catalog_outputs
+    #   One or more artifacts that represent the Glue Data Catalog output from
+    #   running the job.
+    #
+    # @option params [Array<Types::DatabaseOutput>] :database_outputs
+    #   Represents a list of JDBC database output objects which defines the
+    #   output destination for a DataBrew recipe job to write to.
     #
     # @option params [String] :project_name
     #   Either the name of an existing project, or a combination of a recipe
@@ -768,8 +904,8 @@ module Aws::GlueDataBrew
     #   Represents the name and version of a DataBrew recipe.
     #
     # @option params [required, String] :role_arn
-    #   The Amazon Resource Name (ARN) of the AWS Identity and Access
-    #   Management (IAM) role to be assumed when DataBrew runs the job.
+    #   The Amazon Resource Name (ARN) of the Identity and Access Management
+    #   (IAM) role to be assumed when DataBrew runs the job.
     #
     # @option params [Hash<String,String>] :tags
     #   Metadata tags to apply to this job.
@@ -792,14 +928,15 @@ module Aws::GlueDataBrew
     #     log_subscription: "ENABLE", # accepts ENABLE, DISABLE
     #     max_capacity: 1,
     #     max_retries: 1,
-    #     outputs: [ # required
+    #     outputs: [
     #       {
     #         compression_format: "GZIP", # accepts GZIP, LZ4, SNAPPY, BZIP2, DEFLATE, LZO, BROTLI, ZSTD, ZLIB
-    #         format: "CSV", # accepts CSV, JSON, PARQUET, GLUEPARQUET, AVRO, ORC, XML
+    #         format: "CSV", # accepts CSV, JSON, PARQUET, GLUEPARQUET, AVRO, ORC, XML, TABLEAUHYPER
     #         partition_columns: ["ColumnName"],
     #         location: { # required
     #           bucket: "Bucket", # required
     #           key: "Key",
+    #           bucket_owner: "BucketOwner",
     #         },
     #         overwrite: false,
     #         format_options: {
@@ -807,6 +944,44 @@ module Aws::GlueDataBrew
     #             delimiter: "Delimiter",
     #           },
     #         },
+    #         max_output_files: 1,
+    #       },
+    #     ],
+    #     data_catalog_outputs: [
+    #       {
+    #         catalog_id: "CatalogId",
+    #         database_name: "DatabaseName", # required
+    #         table_name: "TableName", # required
+    #         s3_options: {
+    #           location: { # required
+    #             bucket: "Bucket", # required
+    #             key: "Key",
+    #             bucket_owner: "BucketOwner",
+    #           },
+    #         },
+    #         database_options: {
+    #           temp_directory: {
+    #             bucket: "Bucket", # required
+    #             key: "Key",
+    #             bucket_owner: "BucketOwner",
+    #           },
+    #           table_name: "DatabaseTableName", # required
+    #         },
+    #         overwrite: false,
+    #       },
+    #     ],
+    #     database_outputs: [
+    #       {
+    #         glue_connection_name: "GlueConnectionName", # required
+    #         database_options: { # required
+    #           temp_directory: {
+    #             bucket: "Bucket", # required
+    #             key: "Key",
+    #             bucket_owner: "BucketOwner",
+    #           },
+    #           table_name: "DatabaseTableName", # required
+    #         },
+    #         database_output_mode: "NEW_TABLE", # accepts NEW_TABLE
     #       },
     #     ],
     #     project_name: "ProjectName",
@@ -834,6 +1009,76 @@ module Aws::GlueDataBrew
       req.send_request(options)
     end
 
+    # Creates a new ruleset that can be used in a profile job to validate
+    # the data quality of a dataset.
+    #
+    # @option params [required, String] :name
+    #   The name of the ruleset to be created. Valid characters are
+    #   alphanumeric (A-Z, a-z, 0-9), hyphen (-), period (.), and space.
+    #
+    # @option params [String] :description
+    #   The description of the ruleset.
+    #
+    # @option params [required, String] :target_arn
+    #   The Amazon Resource Name (ARN) of a resource (dataset) that the
+    #   ruleset is associated with.
+    #
+    # @option params [required, Array<Types::Rule>] :rules
+    #   A list of rules that are defined with the ruleset. A rule includes one
+    #   or more checks to be validated on a DataBrew dataset.
+    #
+    # @option params [Hash<String,String>] :tags
+    #   Metadata tags to apply to the ruleset.
+    #
+    # @return [Types::CreateRulesetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateRulesetResponse#name #name} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_ruleset({
+    #     name: "RulesetName", # required
+    #     description: "RulesetDescription",
+    #     target_arn: "Arn", # required
+    #     rules: [ # required
+    #       {
+    #         name: "RuleName", # required
+    #         disabled: false,
+    #         check_expression: "Expression", # required
+    #         substitution_map: {
+    #           "ValueReference" => "ConditionValue",
+    #         },
+    #         threshold: {
+    #           value: 1.0, # required
+    #           type: "GREATER_THAN_OR_EQUAL", # accepts GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL, GREATER_THAN, LESS_THAN
+    #           unit: "COUNT", # accepts COUNT, PERCENTAGE
+    #         },
+    #         column_selectors: [
+    #           {
+    #             regex: "ColumnName",
+    #             name: "ColumnName",
+    #           },
+    #         ],
+    #       },
+    #     ],
+    #     tags: {
+    #       "TagKey" => "TagValue",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/databrew-2017-07-25/CreateRuleset AWS API Documentation
+    #
+    # @overload create_ruleset(params = {})
+    # @param [Hash] params ({})
+    def create_ruleset(params = {}, options = {})
+      req = build_request(:create_ruleset, params)
+      req.send_request(options)
+    end
+
     # Creates a new schedule for one or more DataBrew jobs. Jobs can be run
     # at a specific date and time, or at regular intervals.
     #
@@ -842,7 +1087,7 @@ module Aws::GlueDataBrew
     #
     # @option params [required, String] :cron_expression
     #   The date or dates and time or times when the jobs are to be run. For
-    #   more information, see [Cron expressions][1] in the *AWS Glue DataBrew
+    #   more information, see [Cron expressions][1] in the *Glue DataBrew
     #   Developer Guide*.
     #
     #
@@ -1004,6 +1249,34 @@ module Aws::GlueDataBrew
       req.send_request(options)
     end
 
+    # Deletes a ruleset.
+    #
+    # @option params [required, String] :name
+    #   The name of the ruleset to be deleted.
+    #
+    # @return [Types::DeleteRulesetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteRulesetResponse#name #name} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_ruleset({
+    #     name: "RulesetName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/databrew-2017-07-25/DeleteRuleset AWS API Documentation
+    #
+    # @overload delete_ruleset(params = {})
+    # @param [Hash] params ({})
+    def delete_ruleset(params = {}, options = {})
+      req = build_request(:delete_ruleset, params)
+      req.send_request(options)
+    end
+
     # Deletes the specified DataBrew schedule.
     #
     # @option params [required, String] :name
@@ -1063,7 +1336,7 @@ module Aws::GlueDataBrew
     #   resp.created_by #=> String
     #   resp.create_date #=> Time
     #   resp.name #=> String
-    #   resp.format #=> String, one of "CSV", "JSON", "PARQUET", "EXCEL"
+    #   resp.format #=> String, one of "CSV", "JSON", "PARQUET", "EXCEL", "ORC"
     #   resp.format_options.json.multi_line #=> Boolean
     #   resp.format_options.excel.sheet_names #=> Array
     #   resp.format_options.excel.sheet_names[0] #=> String
@@ -1074,15 +1347,20 @@ module Aws::GlueDataBrew
     #   resp.format_options.csv.header_row #=> Boolean
     #   resp.input.s3_input_definition.bucket #=> String
     #   resp.input.s3_input_definition.key #=> String
+    #   resp.input.s3_input_definition.bucket_owner #=> String
     #   resp.input.data_catalog_input_definition.catalog_id #=> String
     #   resp.input.data_catalog_input_definition.database_name #=> String
     #   resp.input.data_catalog_input_definition.table_name #=> String
     #   resp.input.data_catalog_input_definition.temp_directory.bucket #=> String
     #   resp.input.data_catalog_input_definition.temp_directory.key #=> String
+    #   resp.input.data_catalog_input_definition.temp_directory.bucket_owner #=> String
     #   resp.input.database_input_definition.glue_connection_name #=> String
     #   resp.input.database_input_definition.database_table_name #=> String
     #   resp.input.database_input_definition.temp_directory.bucket #=> String
     #   resp.input.database_input_definition.temp_directory.key #=> String
+    #   resp.input.database_input_definition.temp_directory.bucket_owner #=> String
+    #   resp.input.database_input_definition.query_string #=> String
+    #   resp.input.metadata.source_arn #=> String
     #   resp.last_modified_date #=> Time
     #   resp.last_modified_by #=> String
     #   resp.source #=> String, one of "S3", "DATA-CATALOG", "DATABASE"
@@ -1135,7 +1413,11 @@ module Aws::GlueDataBrew
     #   * {Types::DescribeJobResponse#max_capacity #max_capacity} => Integer
     #   * {Types::DescribeJobResponse#max_retries #max_retries} => Integer
     #   * {Types::DescribeJobResponse#outputs #outputs} => Array&lt;Types::Output&gt;
+    #   * {Types::DescribeJobResponse#data_catalog_outputs #data_catalog_outputs} => Array&lt;Types::DataCatalogOutput&gt;
+    #   * {Types::DescribeJobResponse#database_outputs #database_outputs} => Array&lt;Types::DatabaseOutput&gt;
     #   * {Types::DescribeJobResponse#project_name #project_name} => String
+    #   * {Types::DescribeJobResponse#profile_configuration #profile_configuration} => Types::ProfileConfiguration
+    #   * {Types::DescribeJobResponse#validation_configurations #validation_configurations} => Array&lt;Types::ValidationConfiguration&gt;
     #   * {Types::DescribeJobResponse#recipe_reference #recipe_reference} => Types::RecipeReference
     #   * {Types::DescribeJobResponse#resource_arn #resource_arn} => String
     #   * {Types::DescribeJobResponse#role_arn #role_arn} => String
@@ -1165,14 +1447,62 @@ module Aws::GlueDataBrew
     #   resp.max_retries #=> Integer
     #   resp.outputs #=> Array
     #   resp.outputs[0].compression_format #=> String, one of "GZIP", "LZ4", "SNAPPY", "BZIP2", "DEFLATE", "LZO", "BROTLI", "ZSTD", "ZLIB"
-    #   resp.outputs[0].format #=> String, one of "CSV", "JSON", "PARQUET", "GLUEPARQUET", "AVRO", "ORC", "XML"
+    #   resp.outputs[0].format #=> String, one of "CSV", "JSON", "PARQUET", "GLUEPARQUET", "AVRO", "ORC", "XML", "TABLEAUHYPER"
     #   resp.outputs[0].partition_columns #=> Array
     #   resp.outputs[0].partition_columns[0] #=> String
     #   resp.outputs[0].location.bucket #=> String
     #   resp.outputs[0].location.key #=> String
+    #   resp.outputs[0].location.bucket_owner #=> String
     #   resp.outputs[0].overwrite #=> Boolean
     #   resp.outputs[0].format_options.csv.delimiter #=> String
+    #   resp.outputs[0].max_output_files #=> Integer
+    #   resp.data_catalog_outputs #=> Array
+    #   resp.data_catalog_outputs[0].catalog_id #=> String
+    #   resp.data_catalog_outputs[0].database_name #=> String
+    #   resp.data_catalog_outputs[0].table_name #=> String
+    #   resp.data_catalog_outputs[0].s3_options.location.bucket #=> String
+    #   resp.data_catalog_outputs[0].s3_options.location.key #=> String
+    #   resp.data_catalog_outputs[0].s3_options.location.bucket_owner #=> String
+    #   resp.data_catalog_outputs[0].database_options.temp_directory.bucket #=> String
+    #   resp.data_catalog_outputs[0].database_options.temp_directory.key #=> String
+    #   resp.data_catalog_outputs[0].database_options.temp_directory.bucket_owner #=> String
+    #   resp.data_catalog_outputs[0].database_options.table_name #=> String
+    #   resp.data_catalog_outputs[0].overwrite #=> Boolean
+    #   resp.database_outputs #=> Array
+    #   resp.database_outputs[0].glue_connection_name #=> String
+    #   resp.database_outputs[0].database_options.temp_directory.bucket #=> String
+    #   resp.database_outputs[0].database_options.temp_directory.key #=> String
+    #   resp.database_outputs[0].database_options.temp_directory.bucket_owner #=> String
+    #   resp.database_outputs[0].database_options.table_name #=> String
+    #   resp.database_outputs[0].database_output_mode #=> String, one of "NEW_TABLE"
     #   resp.project_name #=> String
+    #   resp.profile_configuration.dataset_statistics_configuration.included_statistics #=> Array
+    #   resp.profile_configuration.dataset_statistics_configuration.included_statistics[0] #=> String
+    #   resp.profile_configuration.dataset_statistics_configuration.overrides #=> Array
+    #   resp.profile_configuration.dataset_statistics_configuration.overrides[0].statistic #=> String
+    #   resp.profile_configuration.dataset_statistics_configuration.overrides[0].parameters #=> Hash
+    #   resp.profile_configuration.dataset_statistics_configuration.overrides[0].parameters["ParameterName"] #=> String
+    #   resp.profile_configuration.profile_columns #=> Array
+    #   resp.profile_configuration.profile_columns[0].regex #=> String
+    #   resp.profile_configuration.profile_columns[0].name #=> String
+    #   resp.profile_configuration.column_statistics_configurations #=> Array
+    #   resp.profile_configuration.column_statistics_configurations[0].selectors #=> Array
+    #   resp.profile_configuration.column_statistics_configurations[0].selectors[0].regex #=> String
+    #   resp.profile_configuration.column_statistics_configurations[0].selectors[0].name #=> String
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.included_statistics #=> Array
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.included_statistics[0] #=> String
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.overrides #=> Array
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.overrides[0].statistic #=> String
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.overrides[0].parameters #=> Hash
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.overrides[0].parameters["ParameterName"] #=> String
+    #   resp.profile_configuration.entity_detector_configuration.entity_types #=> Array
+    #   resp.profile_configuration.entity_detector_configuration.entity_types[0] #=> String
+    #   resp.profile_configuration.entity_detector_configuration.allowed_statistics #=> Array
+    #   resp.profile_configuration.entity_detector_configuration.allowed_statistics[0].statistics #=> Array
+    #   resp.profile_configuration.entity_detector_configuration.allowed_statistics[0].statistics[0] #=> String
+    #   resp.validation_configurations #=> Array
+    #   resp.validation_configurations[0].ruleset_arn #=> String
+    #   resp.validation_configurations[0].validation_mode #=> String, one of "CHECK_ALL"
     #   resp.recipe_reference.name #=> String
     #   resp.recipe_reference.recipe_version #=> String
     #   resp.resource_arn #=> String
@@ -1208,11 +1538,15 @@ module Aws::GlueDataBrew
     #   * {Types::DescribeJobRunResponse#error_message #error_message} => String
     #   * {Types::DescribeJobRunResponse#execution_time #execution_time} => Integer
     #   * {Types::DescribeJobRunResponse#job_name #job_name} => String
+    #   * {Types::DescribeJobRunResponse#profile_configuration #profile_configuration} => Types::ProfileConfiguration
+    #   * {Types::DescribeJobRunResponse#validation_configurations #validation_configurations} => Array&lt;Types::ValidationConfiguration&gt;
     #   * {Types::DescribeJobRunResponse#run_id #run_id} => String
     #   * {Types::DescribeJobRunResponse#state #state} => String
     #   * {Types::DescribeJobRunResponse#log_subscription #log_subscription} => String
     #   * {Types::DescribeJobRunResponse#log_group_name #log_group_name} => String
     #   * {Types::DescribeJobRunResponse#outputs #outputs} => Array&lt;Types::Output&gt;
+    #   * {Types::DescribeJobRunResponse#data_catalog_outputs #data_catalog_outputs} => Array&lt;Types::DataCatalogOutput&gt;
+    #   * {Types::DescribeJobRunResponse#database_outputs #database_outputs} => Array&lt;Types::DatabaseOutput&gt;
     #   * {Types::DescribeJobRunResponse#recipe_reference #recipe_reference} => Types::RecipeReference
     #   * {Types::DescribeJobRunResponse#started_by #started_by} => String
     #   * {Types::DescribeJobRunResponse#started_on #started_on} => Time
@@ -1233,19 +1567,67 @@ module Aws::GlueDataBrew
     #   resp.error_message #=> String
     #   resp.execution_time #=> Integer
     #   resp.job_name #=> String
+    #   resp.profile_configuration.dataset_statistics_configuration.included_statistics #=> Array
+    #   resp.profile_configuration.dataset_statistics_configuration.included_statistics[0] #=> String
+    #   resp.profile_configuration.dataset_statistics_configuration.overrides #=> Array
+    #   resp.profile_configuration.dataset_statistics_configuration.overrides[0].statistic #=> String
+    #   resp.profile_configuration.dataset_statistics_configuration.overrides[0].parameters #=> Hash
+    #   resp.profile_configuration.dataset_statistics_configuration.overrides[0].parameters["ParameterName"] #=> String
+    #   resp.profile_configuration.profile_columns #=> Array
+    #   resp.profile_configuration.profile_columns[0].regex #=> String
+    #   resp.profile_configuration.profile_columns[0].name #=> String
+    #   resp.profile_configuration.column_statistics_configurations #=> Array
+    #   resp.profile_configuration.column_statistics_configurations[0].selectors #=> Array
+    #   resp.profile_configuration.column_statistics_configurations[0].selectors[0].regex #=> String
+    #   resp.profile_configuration.column_statistics_configurations[0].selectors[0].name #=> String
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.included_statistics #=> Array
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.included_statistics[0] #=> String
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.overrides #=> Array
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.overrides[0].statistic #=> String
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.overrides[0].parameters #=> Hash
+    #   resp.profile_configuration.column_statistics_configurations[0].statistics.overrides[0].parameters["ParameterName"] #=> String
+    #   resp.profile_configuration.entity_detector_configuration.entity_types #=> Array
+    #   resp.profile_configuration.entity_detector_configuration.entity_types[0] #=> String
+    #   resp.profile_configuration.entity_detector_configuration.allowed_statistics #=> Array
+    #   resp.profile_configuration.entity_detector_configuration.allowed_statistics[0].statistics #=> Array
+    #   resp.profile_configuration.entity_detector_configuration.allowed_statistics[0].statistics[0] #=> String
+    #   resp.validation_configurations #=> Array
+    #   resp.validation_configurations[0].ruleset_arn #=> String
+    #   resp.validation_configurations[0].validation_mode #=> String, one of "CHECK_ALL"
     #   resp.run_id #=> String
     #   resp.state #=> String, one of "STARTING", "RUNNING", "STOPPING", "STOPPED", "SUCCEEDED", "FAILED", "TIMEOUT"
     #   resp.log_subscription #=> String, one of "ENABLE", "DISABLE"
     #   resp.log_group_name #=> String
     #   resp.outputs #=> Array
     #   resp.outputs[0].compression_format #=> String, one of "GZIP", "LZ4", "SNAPPY", "BZIP2", "DEFLATE", "LZO", "BROTLI", "ZSTD", "ZLIB"
-    #   resp.outputs[0].format #=> String, one of "CSV", "JSON", "PARQUET", "GLUEPARQUET", "AVRO", "ORC", "XML"
+    #   resp.outputs[0].format #=> String, one of "CSV", "JSON", "PARQUET", "GLUEPARQUET", "AVRO", "ORC", "XML", "TABLEAUHYPER"
     #   resp.outputs[0].partition_columns #=> Array
     #   resp.outputs[0].partition_columns[0] #=> String
     #   resp.outputs[0].location.bucket #=> String
     #   resp.outputs[0].location.key #=> String
+    #   resp.outputs[0].location.bucket_owner #=> String
     #   resp.outputs[0].overwrite #=> Boolean
     #   resp.outputs[0].format_options.csv.delimiter #=> String
+    #   resp.outputs[0].max_output_files #=> Integer
+    #   resp.data_catalog_outputs #=> Array
+    #   resp.data_catalog_outputs[0].catalog_id #=> String
+    #   resp.data_catalog_outputs[0].database_name #=> String
+    #   resp.data_catalog_outputs[0].table_name #=> String
+    #   resp.data_catalog_outputs[0].s3_options.location.bucket #=> String
+    #   resp.data_catalog_outputs[0].s3_options.location.key #=> String
+    #   resp.data_catalog_outputs[0].s3_options.location.bucket_owner #=> String
+    #   resp.data_catalog_outputs[0].database_options.temp_directory.bucket #=> String
+    #   resp.data_catalog_outputs[0].database_options.temp_directory.key #=> String
+    #   resp.data_catalog_outputs[0].database_options.temp_directory.bucket_owner #=> String
+    #   resp.data_catalog_outputs[0].database_options.table_name #=> String
+    #   resp.data_catalog_outputs[0].overwrite #=> Boolean
+    #   resp.database_outputs #=> Array
+    #   resp.database_outputs[0].glue_connection_name #=> String
+    #   resp.database_outputs[0].database_options.temp_directory.bucket #=> String
+    #   resp.database_outputs[0].database_options.temp_directory.key #=> String
+    #   resp.database_outputs[0].database_options.temp_directory.bucket_owner #=> String
+    #   resp.database_outputs[0].database_options.table_name #=> String
+    #   resp.database_outputs[0].database_output_mode #=> String, one of "NEW_TABLE"
     #   resp.recipe_reference.name #=> String
     #   resp.recipe_reference.recipe_version #=> String
     #   resp.started_by #=> String
@@ -1384,6 +1766,64 @@ module Aws::GlueDataBrew
       req.send_request(options)
     end
 
+    # Retrieves detailed information about the ruleset.
+    #
+    # @option params [required, String] :name
+    #   The name of the ruleset to be described.
+    #
+    # @return [Types::DescribeRulesetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeRulesetResponse#name #name} => String
+    #   * {Types::DescribeRulesetResponse#description #description} => String
+    #   * {Types::DescribeRulesetResponse#target_arn #target_arn} => String
+    #   * {Types::DescribeRulesetResponse#rules #rules} => Array&lt;Types::Rule&gt;
+    #   * {Types::DescribeRulesetResponse#create_date #create_date} => Time
+    #   * {Types::DescribeRulesetResponse#created_by #created_by} => String
+    #   * {Types::DescribeRulesetResponse#last_modified_by #last_modified_by} => String
+    #   * {Types::DescribeRulesetResponse#last_modified_date #last_modified_date} => Time
+    #   * {Types::DescribeRulesetResponse#resource_arn #resource_arn} => String
+    #   * {Types::DescribeRulesetResponse#tags #tags} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_ruleset({
+    #     name: "RulesetName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.name #=> String
+    #   resp.description #=> String
+    #   resp.target_arn #=> String
+    #   resp.rules #=> Array
+    #   resp.rules[0].name #=> String
+    #   resp.rules[0].disabled #=> Boolean
+    #   resp.rules[0].check_expression #=> String
+    #   resp.rules[0].substitution_map #=> Hash
+    #   resp.rules[0].substitution_map["ValueReference"] #=> String
+    #   resp.rules[0].threshold.value #=> Float
+    #   resp.rules[0].threshold.type #=> String, one of "GREATER_THAN_OR_EQUAL", "LESS_THAN_OR_EQUAL", "GREATER_THAN", "LESS_THAN"
+    #   resp.rules[0].threshold.unit #=> String, one of "COUNT", "PERCENTAGE"
+    #   resp.rules[0].column_selectors #=> Array
+    #   resp.rules[0].column_selectors[0].regex #=> String
+    #   resp.rules[0].column_selectors[0].name #=> String
+    #   resp.create_date #=> Time
+    #   resp.created_by #=> String
+    #   resp.last_modified_by #=> String
+    #   resp.last_modified_date #=> Time
+    #   resp.resource_arn #=> String
+    #   resp.tags #=> Hash
+    #   resp.tags["TagKey"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/databrew-2017-07-25/DescribeRuleset AWS API Documentation
+    #
+    # @overload describe_ruleset(params = {})
+    # @param [Hash] params ({})
+    def describe_ruleset(params = {}, options = {})
+      req = build_request(:describe_ruleset, params)
+      req.send_request(options)
+    end
+
     # Returns the definition of a specific DataBrew schedule.
     #
     # @option params [required, String] :name
@@ -1460,7 +1900,7 @@ module Aws::GlueDataBrew
     #   resp.datasets[0].created_by #=> String
     #   resp.datasets[0].create_date #=> Time
     #   resp.datasets[0].name #=> String
-    #   resp.datasets[0].format #=> String, one of "CSV", "JSON", "PARQUET", "EXCEL"
+    #   resp.datasets[0].format #=> String, one of "CSV", "JSON", "PARQUET", "EXCEL", "ORC"
     #   resp.datasets[0].format_options.json.multi_line #=> Boolean
     #   resp.datasets[0].format_options.excel.sheet_names #=> Array
     #   resp.datasets[0].format_options.excel.sheet_names[0] #=> String
@@ -1471,15 +1911,20 @@ module Aws::GlueDataBrew
     #   resp.datasets[0].format_options.csv.header_row #=> Boolean
     #   resp.datasets[0].input.s3_input_definition.bucket #=> String
     #   resp.datasets[0].input.s3_input_definition.key #=> String
+    #   resp.datasets[0].input.s3_input_definition.bucket_owner #=> String
     #   resp.datasets[0].input.data_catalog_input_definition.catalog_id #=> String
     #   resp.datasets[0].input.data_catalog_input_definition.database_name #=> String
     #   resp.datasets[0].input.data_catalog_input_definition.table_name #=> String
     #   resp.datasets[0].input.data_catalog_input_definition.temp_directory.bucket #=> String
     #   resp.datasets[0].input.data_catalog_input_definition.temp_directory.key #=> String
+    #   resp.datasets[0].input.data_catalog_input_definition.temp_directory.bucket_owner #=> String
     #   resp.datasets[0].input.database_input_definition.glue_connection_name #=> String
     #   resp.datasets[0].input.database_input_definition.database_table_name #=> String
     #   resp.datasets[0].input.database_input_definition.temp_directory.bucket #=> String
     #   resp.datasets[0].input.database_input_definition.temp_directory.key #=> String
+    #   resp.datasets[0].input.database_input_definition.temp_directory.bucket_owner #=> String
+    #   resp.datasets[0].input.database_input_definition.query_string #=> String
+    #   resp.datasets[0].input.metadata.source_arn #=> String
     #   resp.datasets[0].last_modified_date #=> Time
     #   resp.datasets[0].last_modified_by #=> String
     #   resp.datasets[0].source #=> String, one of "S3", "DATA-CATALOG", "DATABASE"
@@ -1555,19 +2000,43 @@ module Aws::GlueDataBrew
     #   resp.job_runs[0].log_group_name #=> String
     #   resp.job_runs[0].outputs #=> Array
     #   resp.job_runs[0].outputs[0].compression_format #=> String, one of "GZIP", "LZ4", "SNAPPY", "BZIP2", "DEFLATE", "LZO", "BROTLI", "ZSTD", "ZLIB"
-    #   resp.job_runs[0].outputs[0].format #=> String, one of "CSV", "JSON", "PARQUET", "GLUEPARQUET", "AVRO", "ORC", "XML"
+    #   resp.job_runs[0].outputs[0].format #=> String, one of "CSV", "JSON", "PARQUET", "GLUEPARQUET", "AVRO", "ORC", "XML", "TABLEAUHYPER"
     #   resp.job_runs[0].outputs[0].partition_columns #=> Array
     #   resp.job_runs[0].outputs[0].partition_columns[0] #=> String
     #   resp.job_runs[0].outputs[0].location.bucket #=> String
     #   resp.job_runs[0].outputs[0].location.key #=> String
+    #   resp.job_runs[0].outputs[0].location.bucket_owner #=> String
     #   resp.job_runs[0].outputs[0].overwrite #=> Boolean
     #   resp.job_runs[0].outputs[0].format_options.csv.delimiter #=> String
+    #   resp.job_runs[0].outputs[0].max_output_files #=> Integer
+    #   resp.job_runs[0].data_catalog_outputs #=> Array
+    #   resp.job_runs[0].data_catalog_outputs[0].catalog_id #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].database_name #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].table_name #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].s3_options.location.bucket #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].s3_options.location.key #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].s3_options.location.bucket_owner #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].database_options.temp_directory.bucket #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].database_options.temp_directory.key #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].database_options.temp_directory.bucket_owner #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].database_options.table_name #=> String
+    #   resp.job_runs[0].data_catalog_outputs[0].overwrite #=> Boolean
+    #   resp.job_runs[0].database_outputs #=> Array
+    #   resp.job_runs[0].database_outputs[0].glue_connection_name #=> String
+    #   resp.job_runs[0].database_outputs[0].database_options.temp_directory.bucket #=> String
+    #   resp.job_runs[0].database_outputs[0].database_options.temp_directory.key #=> String
+    #   resp.job_runs[0].database_outputs[0].database_options.temp_directory.bucket_owner #=> String
+    #   resp.job_runs[0].database_outputs[0].database_options.table_name #=> String
+    #   resp.job_runs[0].database_outputs[0].database_output_mode #=> String, one of "NEW_TABLE"
     #   resp.job_runs[0].recipe_reference.name #=> String
     #   resp.job_runs[0].recipe_reference.recipe_version #=> String
     #   resp.job_runs[0].started_by #=> String
     #   resp.job_runs[0].started_on #=> Time
     #   resp.job_runs[0].job_sample.mode #=> String, one of "FULL_DATASET", "CUSTOM_ROWS"
     #   resp.job_runs[0].job_sample.size #=> Integer
+    #   resp.job_runs[0].validation_configurations #=> Array
+    #   resp.job_runs[0].validation_configurations[0].ruleset_arn #=> String
+    #   resp.job_runs[0].validation_configurations[0].validation_mode #=> String, one of "CHECK_ALL"
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/databrew-2017-07-25/ListJobRuns AWS API Documentation
@@ -1632,13 +2101,34 @@ module Aws::GlueDataBrew
     #   resp.jobs[0].max_retries #=> Integer
     #   resp.jobs[0].outputs #=> Array
     #   resp.jobs[0].outputs[0].compression_format #=> String, one of "GZIP", "LZ4", "SNAPPY", "BZIP2", "DEFLATE", "LZO", "BROTLI", "ZSTD", "ZLIB"
-    #   resp.jobs[0].outputs[0].format #=> String, one of "CSV", "JSON", "PARQUET", "GLUEPARQUET", "AVRO", "ORC", "XML"
+    #   resp.jobs[0].outputs[0].format #=> String, one of "CSV", "JSON", "PARQUET", "GLUEPARQUET", "AVRO", "ORC", "XML", "TABLEAUHYPER"
     #   resp.jobs[0].outputs[0].partition_columns #=> Array
     #   resp.jobs[0].outputs[0].partition_columns[0] #=> String
     #   resp.jobs[0].outputs[0].location.bucket #=> String
     #   resp.jobs[0].outputs[0].location.key #=> String
+    #   resp.jobs[0].outputs[0].location.bucket_owner #=> String
     #   resp.jobs[0].outputs[0].overwrite #=> Boolean
     #   resp.jobs[0].outputs[0].format_options.csv.delimiter #=> String
+    #   resp.jobs[0].outputs[0].max_output_files #=> Integer
+    #   resp.jobs[0].data_catalog_outputs #=> Array
+    #   resp.jobs[0].data_catalog_outputs[0].catalog_id #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].database_name #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].table_name #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].s3_options.location.bucket #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].s3_options.location.key #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].s3_options.location.bucket_owner #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].database_options.temp_directory.bucket #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].database_options.temp_directory.key #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].database_options.temp_directory.bucket_owner #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].database_options.table_name #=> String
+    #   resp.jobs[0].data_catalog_outputs[0].overwrite #=> Boolean
+    #   resp.jobs[0].database_outputs #=> Array
+    #   resp.jobs[0].database_outputs[0].glue_connection_name #=> String
+    #   resp.jobs[0].database_outputs[0].database_options.temp_directory.bucket #=> String
+    #   resp.jobs[0].database_outputs[0].database_options.temp_directory.key #=> String
+    #   resp.jobs[0].database_outputs[0].database_options.temp_directory.bucket_owner #=> String
+    #   resp.jobs[0].database_outputs[0].database_options.table_name #=> String
+    #   resp.jobs[0].database_outputs[0].database_output_mode #=> String, one of "NEW_TABLE"
     #   resp.jobs[0].project_name #=> String
     #   resp.jobs[0].recipe_reference.name #=> String
     #   resp.jobs[0].recipe_reference.recipe_version #=> String
@@ -1649,6 +2139,9 @@ module Aws::GlueDataBrew
     #   resp.jobs[0].tags["TagKey"] #=> String
     #   resp.jobs[0].job_sample.mode #=> String, one of "FULL_DATASET", "CUSTOM_ROWS"
     #   resp.jobs[0].job_sample.size #=> Integer
+    #   resp.jobs[0].validation_configurations #=> Array
+    #   resp.jobs[0].validation_configurations[0].ruleset_arn #=> String
+    #   resp.jobs[0].validation_configurations[0].validation_mode #=> String, one of "CHECK_ALL"
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/databrew-2017-07-25/ListJobs AWS API Documentation
@@ -1842,6 +2335,64 @@ module Aws::GlueDataBrew
       req.send_request(options)
     end
 
+    # List all rulesets available in the current account or rulesets
+    # associated with a specific resource (dataset).
+    #
+    # @option params [String] :target_arn
+    #   The Amazon Resource Name (ARN) of a resource (dataset). Using this
+    #   parameter indicates to return only those rulesets that are associated
+    #   with the specified resource.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return in this request.
+    #
+    # @option params [String] :next_token
+    #   A token generated by DataBrew that specifies where to continue
+    #   pagination if a previous request was truncated. To get the next set of
+    #   pages, pass in the NextToken value from the response object of the
+    #   previous page call.
+    #
+    # @return [Types::ListRulesetsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListRulesetsResponse#rulesets #rulesets} => Array&lt;Types::RulesetItem&gt;
+    #   * {Types::ListRulesetsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_rulesets({
+    #     target_arn: "Arn",
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.rulesets #=> Array
+    #   resp.rulesets[0].account_id #=> String
+    #   resp.rulesets[0].created_by #=> String
+    #   resp.rulesets[0].create_date #=> Time
+    #   resp.rulesets[0].description #=> String
+    #   resp.rulesets[0].last_modified_by #=> String
+    #   resp.rulesets[0].last_modified_date #=> Time
+    #   resp.rulesets[0].name #=> String
+    #   resp.rulesets[0].resource_arn #=> String
+    #   resp.rulesets[0].rule_count #=> Integer
+    #   resp.rulesets[0].tags #=> Hash
+    #   resp.rulesets[0].tags["TagKey"] #=> String
+    #   resp.rulesets[0].target_arn #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/databrew-2017-07-25/ListRulesets AWS API Documentation
+    #
+    # @overload list_rulesets(params = {})
+    # @param [Hash] params ({})
+    def list_rulesets(params = {}, options = {})
+      req = build_request(:list_rulesets, params)
+      req.send_request(options)
+    end
+
     # Lists the DataBrew schedules that are defined.
     #
     # @option params [String] :job_name
@@ -2015,6 +2566,9 @@ module Aws::GlueDataBrew
     #       start_column_index: 1, # required
     #       column_range: 1,
     #       hidden_columns: ["ColumnName"],
+    #       start_row_index: 1,
+    #       row_range: 1,
+    #       analytics: "ENABLE", # accepts ENABLE, DISABLE
     #     },
     #   })
     #
@@ -2193,7 +2747,7 @@ module Aws::GlueDataBrew
     #   The name of the dataset to be updated.
     #
     # @option params [String] :format
-    #   The file format of a dataset that is created from an S3 file or
+    #   The file format of a dataset that is created from an Amazon S3 file or
     #   folder.
     #
     # @option params [Types::FormatOptions] :format_options
@@ -2202,11 +2756,11 @@ module Aws::GlueDataBrew
     #
     # @option params [required, Types::Input] :input
     #   Represents information on how DataBrew can find data, in either the
-    #   AWS Glue Data Catalog or Amazon S3.
+    #   Glue Data Catalog or Amazon S3.
     #
     # @option params [Types::PathOptions] :path_options
-    #   A set of options that defines how DataBrew interprets an S3 path of
-    #   the dataset.
+    #   A set of options that defines how DataBrew interprets an Amazon S3
+    #   path of the dataset.
     #
     # @return [Types::UpdateDatasetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2216,7 +2770,7 @@ module Aws::GlueDataBrew
     #
     #   resp = client.update_dataset({
     #     name: "DatasetName", # required
-    #     format: "CSV", # accepts CSV, JSON, PARQUET, EXCEL
+    #     format: "CSV", # accepts CSV, JSON, PARQUET, EXCEL, ORC
     #     format_options: {
     #       json: {
     #         multi_line: false,
@@ -2235,6 +2789,7 @@ module Aws::GlueDataBrew
     #       s3_input_definition: {
     #         bucket: "Bucket", # required
     #         key: "Key",
+    #         bucket_owner: "BucketOwner",
     #       },
     #       data_catalog_input_definition: {
     #         catalog_id: "CatalogId",
@@ -2243,15 +2798,21 @@ module Aws::GlueDataBrew
     #         temp_directory: {
     #           bucket: "Bucket", # required
     #           key: "Key",
+    #           bucket_owner: "BucketOwner",
     #         },
     #       },
     #       database_input_definition: {
     #         glue_connection_name: "GlueConnectionName", # required
-    #         database_table_name: "DatabaseTableName", # required
+    #         database_table_name: "DatabaseTableName",
     #         temp_directory: {
     #           bucket: "Bucket", # required
     #           key: "Key",
+    #           bucket_owner: "BucketOwner",
     #         },
+    #         query_string: "QueryString",
+    #       },
+    #       metadata: {
+    #         source_arn: "Arn",
     #       },
     #     },
     #     path_options: {
@@ -2302,6 +2863,11 @@ module Aws::GlueDataBrew
 
     # Modifies the definition of an existing profile job.
     #
+    # @option params [Types::ProfileConfiguration] :configuration
+    #   Configuration for profile jobs. Used to select columns, do
+    #   evaluations, and override default parameters of evaluations. When
+    #   configuration is null, the profile job will run with default settings.
+    #
     # @option params [String] :encryption_key_arn
     #   The Amazon Resource Name (ARN) of an encryption key that is used to
     #   protect the job.
@@ -2309,7 +2875,7 @@ module Aws::GlueDataBrew
     # @option params [String] :encryption_mode
     #   The encryption mode for the job, which can be one of the following:
     #
-    #   * `SSE-KMS` - Server-side encryption with keys managed by AWS KMS.
+    #   * `SSE-KMS` - Server-side encryption with keys managed by KMS.
     #
     #   * `SSE-S3` - Server-side encryption with keys managed by Amazon S3.
     #
@@ -2328,12 +2894,16 @@ module Aws::GlueDataBrew
     #   The maximum number of times to retry the job after a job run fails.
     #
     # @option params [required, Types::S3Location] :output_location
-    #   Represents an Amazon S3 location (bucket name and object key) where
-    #   DataBrew can read input data, or write output from a job.
+    #   Represents an Amazon S3 location (bucket name, bucket owner, and
+    #   object key) where DataBrew can read input data, or write output from a
+    #   job.
+    #
+    # @option params [Array<Types::ValidationConfiguration>] :validation_configurations
+    #   List of validation configurations that are applied to the profile job.
     #
     # @option params [required, String] :role_arn
-    #   The Amazon Resource Name (ARN) of the AWS Identity and Access
-    #   Management (IAM) role to be assumed when DataBrew runs the job.
+    #   The Amazon Resource Name (ARN) of the Identity and Access Management
+    #   (IAM) role to be assumed when DataBrew runs the job.
     #
     # @option params [Integer] :timeout
     #   The job's timeout in minutes. A job that attempts to run longer than
@@ -2353,6 +2923,54 @@ module Aws::GlueDataBrew
     # @example Request syntax with placeholder values
     #
     #   resp = client.update_profile_job({
+    #     configuration: {
+    #       dataset_statistics_configuration: {
+    #         included_statistics: ["Statistic"],
+    #         overrides: [
+    #           {
+    #             statistic: "Statistic", # required
+    #             parameters: { # required
+    #               "ParameterName" => "ParameterValue",
+    #             },
+    #           },
+    #         ],
+    #       },
+    #       profile_columns: [
+    #         {
+    #           regex: "ColumnName",
+    #           name: "ColumnName",
+    #         },
+    #       ],
+    #       column_statistics_configurations: [
+    #         {
+    #           selectors: [
+    #             {
+    #               regex: "ColumnName",
+    #               name: "ColumnName",
+    #             },
+    #           ],
+    #           statistics: { # required
+    #             included_statistics: ["Statistic"],
+    #             overrides: [
+    #               {
+    #                 statistic: "Statistic", # required
+    #                 parameters: { # required
+    #                   "ParameterName" => "ParameterValue",
+    #                 },
+    #               },
+    #             ],
+    #           },
+    #         },
+    #       ],
+    #       entity_detector_configuration: {
+    #         entity_types: ["EntityType"], # required
+    #         allowed_statistics: [
+    #           {
+    #             statistics: ["Statistic"], # required
+    #           },
+    #         ],
+    #       },
+    #     },
     #     encryption_key_arn: "EncryptionKeyArn",
     #     encryption_mode: "SSE-KMS", # accepts SSE-KMS, SSE-S3
     #     name: "JobName", # required
@@ -2362,7 +2980,14 @@ module Aws::GlueDataBrew
     #     output_location: { # required
     #       bucket: "Bucket", # required
     #       key: "Key",
+    #       bucket_owner: "BucketOwner",
     #     },
+    #     validation_configurations: [
+    #       {
+    #         ruleset_arn: "Arn", # required
+    #         validation_mode: "CHECK_ALL", # accepts CHECK_ALL
+    #       },
+    #     ],
     #     role_arn: "Arn", # required
     #     timeout: 1,
     #     job_sample: {
@@ -2490,7 +3115,7 @@ module Aws::GlueDataBrew
     # @option params [String] :encryption_mode
     #   The encryption mode for the job, which can be one of the following:
     #
-    #   * `SSE-KMS` - Server-side encryption with keys managed by AWS KMS.
+    #   * `SSE-KMS` - Server-side encryption with keys managed by KMS.
     #
     #   * `SSE-S3` - Server-side encryption with keys managed by Amazon S3.
     #
@@ -2508,12 +3133,20 @@ module Aws::GlueDataBrew
     # @option params [Integer] :max_retries
     #   The maximum number of times to retry the job after a job run fails.
     #
-    # @option params [required, Array<Types::Output>] :outputs
+    # @option params [Array<Types::Output>] :outputs
     #   One or more artifacts that represent the output from running the job.
     #
+    # @option params [Array<Types::DataCatalogOutput>] :data_catalog_outputs
+    #   One or more artifacts that represent the Glue Data Catalog output from
+    #   running the job.
+    #
+    # @option params [Array<Types::DatabaseOutput>] :database_outputs
+    #   Represents a list of JDBC database output objects which defines the
+    #   output destination for a DataBrew recipe job to write into.
+    #
     # @option params [required, String] :role_arn
-    #   The Amazon Resource Name (ARN) of the AWS Identity and Access
-    #   Management (IAM) role to be assumed when DataBrew runs the job.
+    #   The Amazon Resource Name (ARN) of the Identity and Access Management
+    #   (IAM) role to be assumed when DataBrew runs the job.
     #
     # @option params [Integer] :timeout
     #   The job's timeout in minutes. A job that attempts to run longer than
@@ -2532,14 +3165,15 @@ module Aws::GlueDataBrew
     #     log_subscription: "ENABLE", # accepts ENABLE, DISABLE
     #     max_capacity: 1,
     #     max_retries: 1,
-    #     outputs: [ # required
+    #     outputs: [
     #       {
     #         compression_format: "GZIP", # accepts GZIP, LZ4, SNAPPY, BZIP2, DEFLATE, LZO, BROTLI, ZSTD, ZLIB
-    #         format: "CSV", # accepts CSV, JSON, PARQUET, GLUEPARQUET, AVRO, ORC, XML
+    #         format: "CSV", # accepts CSV, JSON, PARQUET, GLUEPARQUET, AVRO, ORC, XML, TABLEAUHYPER
     #         partition_columns: ["ColumnName"],
     #         location: { # required
     #           bucket: "Bucket", # required
     #           key: "Key",
+    #           bucket_owner: "BucketOwner",
     #         },
     #         overwrite: false,
     #         format_options: {
@@ -2547,6 +3181,44 @@ module Aws::GlueDataBrew
     #             delimiter: "Delimiter",
     #           },
     #         },
+    #         max_output_files: 1,
+    #       },
+    #     ],
+    #     data_catalog_outputs: [
+    #       {
+    #         catalog_id: "CatalogId",
+    #         database_name: "DatabaseName", # required
+    #         table_name: "TableName", # required
+    #         s3_options: {
+    #           location: { # required
+    #             bucket: "Bucket", # required
+    #             key: "Key",
+    #             bucket_owner: "BucketOwner",
+    #           },
+    #         },
+    #         database_options: {
+    #           temp_directory: {
+    #             bucket: "Bucket", # required
+    #             key: "Key",
+    #             bucket_owner: "BucketOwner",
+    #           },
+    #           table_name: "DatabaseTableName", # required
+    #         },
+    #         overwrite: false,
+    #       },
+    #     ],
+    #     database_outputs: [
+    #       {
+    #         glue_connection_name: "GlueConnectionName", # required
+    #         database_options: { # required
+    #           temp_directory: {
+    #             bucket: "Bucket", # required
+    #             key: "Key",
+    #             bucket_owner: "BucketOwner",
+    #           },
+    #           table_name: "DatabaseTableName", # required
+    #         },
+    #         database_output_mode: "NEW_TABLE", # accepts NEW_TABLE
     #       },
     #     ],
     #     role_arn: "Arn", # required
@@ -2566,6 +3238,63 @@ module Aws::GlueDataBrew
       req.send_request(options)
     end
 
+    # Updates specified ruleset.
+    #
+    # @option params [required, String] :name
+    #   The name of the ruleset to be updated.
+    #
+    # @option params [String] :description
+    #   The description of the ruleset.
+    #
+    # @option params [required, Array<Types::Rule>] :rules
+    #   A list of rules that are defined with the ruleset. A rule includes one
+    #   or more checks to be validated on a DataBrew dataset.
+    #
+    # @return [Types::UpdateRulesetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateRulesetResponse#name #name} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_ruleset({
+    #     name: "RulesetName", # required
+    #     description: "RulesetDescription",
+    #     rules: [ # required
+    #       {
+    #         name: "RuleName", # required
+    #         disabled: false,
+    #         check_expression: "Expression", # required
+    #         substitution_map: {
+    #           "ValueReference" => "ConditionValue",
+    #         },
+    #         threshold: {
+    #           value: 1.0, # required
+    #           type: "GREATER_THAN_OR_EQUAL", # accepts GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL, GREATER_THAN, LESS_THAN
+    #           unit: "COUNT", # accepts COUNT, PERCENTAGE
+    #         },
+    #         column_selectors: [
+    #           {
+    #             regex: "ColumnName",
+    #             name: "ColumnName",
+    #           },
+    #         ],
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/databrew-2017-07-25/UpdateRuleset AWS API Documentation
+    #
+    # @overload update_ruleset(params = {})
+    # @param [Hash] params ({})
+    def update_ruleset(params = {}, options = {})
+      req = build_request(:update_ruleset, params)
+      req.send_request(options)
+    end
+
     # Modifies the definition of an existing DataBrew schedule.
     #
     # @option params [Array<String>] :job_names
@@ -2573,7 +3302,7 @@ module Aws::GlueDataBrew
     #
     # @option params [required, String] :cron_expression
     #   The date or dates and time or times when the jobs are to be run. For
-    #   more information, see [Cron expressions][1] in the *AWS Glue DataBrew
+    #   more information, see [Cron expressions][1] in the *Glue DataBrew
     #   Developer Guide*.
     #
     #
@@ -2621,7 +3350,7 @@ module Aws::GlueDataBrew
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-gluedatabrew'
-      context[:gem_version] = '1.7.0'
+      context[:gem_version] = '1.29.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

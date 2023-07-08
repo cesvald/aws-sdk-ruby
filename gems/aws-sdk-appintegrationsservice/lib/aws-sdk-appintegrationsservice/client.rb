@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:appintegrationsservice)
@@ -73,8 +77,13 @@ module Aws::AppIntegrationsService
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::AppIntegrationsService::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::AppIntegrationsService
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::AppIntegrationsService
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::AppIntegrationsService
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::AppIntegrationsService
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::AppIntegrationsService
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::AppIntegrationsService::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::AppIntegrationsService::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::AppIntegrationsService
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::AppIntegrationsService
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -327,13 +384,134 @@ module Aws::AppIntegrationsService
 
     # @!group API Operations
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
+    # Creates and persists a DataIntegration resource.
     #
+    # <note markdown="1"> You cannot create a DataIntegration association for a DataIntegration
+    # that has been previously associated. Use a different DataIntegration,
+    # or recreate the DataIntegration using the `CreateDataIntegration` API.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :name
+    #   The name of the DataIntegration.
+    #
+    # @option params [String] :description
+    #   A description of the DataIntegration.
+    #
+    # @option params [required, String] :kms_key
+    #   The KMS key for the DataIntegration.
+    #
+    # @option params [required, String] :source_uri
+    #   The URI of the data source.
+    #
+    # @option params [required, Types::ScheduleConfiguration] :schedule_config
+    #   The name of the data and how often it should be pulled from the
+    #   source.
+    #
+    # @option params [Hash<String,String>] :tags
+    #   The tags used to organize, track, or control access for this resource.
+    #   For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
+    #
+    # @option params [String] :client_token
+    #   A unique, case-sensitive identifier that you provide to ensure the
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency, see
+    #   [Making retries safe with idempotent APIs][1].
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
+    #
+    # @option params [Types::FileConfiguration] :file_configuration
+    #   The configuration for what files should be pulled from the source.
+    #
+    # @option params [Hash<String,Hash>] :object_configuration
+    #   The configuration for what data should be pulled from the source.
+    #
+    # @return [Types::CreateDataIntegrationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateDataIntegrationResponse#arn #arn} => String
+    #   * {Types::CreateDataIntegrationResponse#id #id} => String
+    #   * {Types::CreateDataIntegrationResponse#name #name} => String
+    #   * {Types::CreateDataIntegrationResponse#description #description} => String
+    #   * {Types::CreateDataIntegrationResponse#kms_key #kms_key} => String
+    #   * {Types::CreateDataIntegrationResponse#source_uri #source_uri} => String
+    #   * {Types::CreateDataIntegrationResponse#schedule_configuration #schedule_configuration} => Types::ScheduleConfiguration
+    #   * {Types::CreateDataIntegrationResponse#tags #tags} => Hash&lt;String,String&gt;
+    #   * {Types::CreateDataIntegrationResponse#client_token #client_token} => String
+    #   * {Types::CreateDataIntegrationResponse#file_configuration #file_configuration} => Types::FileConfiguration
+    #   * {Types::CreateDataIntegrationResponse#object_configuration #object_configuration} => Hash&lt;String,Hash&lt;String,Array&lt;String&gt;&gt;&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_data_integration({
+    #     name: "Name", # required
+    #     description: "Description",
+    #     kms_key: "NonBlankString", # required
+    #     source_uri: "SourceURI", # required
+    #     schedule_config: { # required
+    #       first_execution_from: "NonBlankString",
+    #       object: "Object",
+    #       schedule_expression: "NonBlankString", # required
+    #     },
+    #     tags: {
+    #       "TagKey" => "TagValue",
+    #     },
+    #     client_token: "IdempotencyToken",
+    #     file_configuration: {
+    #       folders: ["NonBlankLongString"], # required
+    #       filters: {
+    #         "NonBlankString" => ["Fields"],
+    #       },
+    #     },
+    #     object_configuration: {
+    #       "NonBlankString" => {
+    #         "NonBlankString" => ["Fields"],
+    #       },
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.arn #=> String
+    #   resp.id #=> String
+    #   resp.name #=> String
+    #   resp.description #=> String
+    #   resp.kms_key #=> String
+    #   resp.source_uri #=> String
+    #   resp.schedule_configuration.first_execution_from #=> String
+    #   resp.schedule_configuration.object #=> String
+    #   resp.schedule_configuration.schedule_expression #=> String
+    #   resp.tags #=> Hash
+    #   resp.tags["TagKey"] #=> String
+    #   resp.client_token #=> String
+    #   resp.file_configuration.folders #=> Array
+    #   resp.file_configuration.folders[0] #=> String
+    #   resp.file_configuration.filters #=> Hash
+    #   resp.file_configuration.filters["NonBlankString"] #=> Array
+    #   resp.file_configuration.filters["NonBlankString"][0] #=> String
+    #   resp.object_configuration #=> Hash
+    #   resp.object_configuration["NonBlankString"] #=> Hash
+    #   resp.object_configuration["NonBlankString"]["NonBlankString"] #=> Array
+    #   resp.object_configuration["NonBlankString"]["NonBlankString"][0] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/CreateDataIntegration AWS API Documentation
+    #
+    # @overload create_data_integration(params = {})
+    # @param [Hash] params ({})
+    def create_data_integration(params = {}, options = {})
+      req = build_request(:create_data_integration, params)
+      req.send_request(options)
+    end
+
     # Creates an EventIntegration, given a specified name, description, and
-    # a reference to an Amazon Eventbridge bus in your account and a partner
-    # event source that will push events to that bus. No objects are created
-    # in the your account, only metadata that is persisted on the
+    # a reference to an Amazon EventBridge bus in your account and a partner
+    # event source that pushes events to that bus. No objects are created in
+    # the your account, only metadata that is persisted on the
     # EventIntegration control plane.
     #
     # @option params [required, String] :name
@@ -346,17 +524,25 @@ module Aws::AppIntegrationsService
     #   The event filter.
     #
     # @option params [required, String] :event_bridge_bus
-    #   The Eventbridge bus.
+    #   The EventBridge bus.
     #
     # @option params [String] :client_token
     #   A unique, case-sensitive identifier that you provide to ensure the
-    #   idempotency of the request.
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency, see
+    #   [Making retries safe with idempotent APIs][1].
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
     #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
+    #
     # @option params [Hash<String,String>] :tags
-    #   One or more tags.
+    #   The tags used to organize, track, or control access for this resource.
+    #   For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
     #
     # @return [Types::CreateEventIntegrationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -390,9 +576,42 @@ module Aws::AppIntegrationsService
       req.send_request(options)
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
+    # Deletes the DataIntegration. Only DataIntegrations that don't have
+    # any DataIntegrationAssociations can be deleted. Deleting a
+    # DataIntegration also deletes the underlying Amazon AppFlow flow and
+    # service linked role.
     #
+    # <note markdown="1"> You cannot create a DataIntegration association for a DataIntegration
+    # that has been previously associated. Use a different DataIntegration,
+    # or recreate the DataIntegration using the [CreateDataIntegration][1]
+    # API.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/appintegrations/latest/APIReference/API_CreateDataIntegration.html
+    #
+    # @option params [required, String] :data_integration_identifier
+    #   A unique identifier for the DataIntegration.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_data_integration({
+    #     data_integration_identifier: "Identifier", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/DeleteDataIntegration AWS API Documentation
+    #
+    # @overload delete_data_integration(params = {})
+    # @param [Hash] params ({})
+    def delete_data_integration(params = {}, options = {})
+      req = build_request(:delete_data_integration, params)
+      req.send_request(options)
+    end
+
     # Deletes the specified existing event integration. If the event
     # integration is associated with clients, the request is rejected.
     #
@@ -416,10 +635,74 @@ module Aws::AppIntegrationsService
       req.send_request(options)
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
+    # Returns information about the DataIntegration.
     #
-    # Return information about the event integration.
+    # <note markdown="1"> You cannot create a DataIntegration association for a DataIntegration
+    # that has been previously associated. Use a different DataIntegration,
+    # or recreate the DataIntegration using the [CreateDataIntegration][1]
+    # API.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/appintegrations/latest/APIReference/API_CreateDataIntegration.html
+    #
+    # @option params [required, String] :identifier
+    #   A unique identifier.
+    #
+    # @return [Types::GetDataIntegrationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetDataIntegrationResponse#arn #arn} => String
+    #   * {Types::GetDataIntegrationResponse#id #id} => String
+    #   * {Types::GetDataIntegrationResponse#name #name} => String
+    #   * {Types::GetDataIntegrationResponse#description #description} => String
+    #   * {Types::GetDataIntegrationResponse#kms_key #kms_key} => String
+    #   * {Types::GetDataIntegrationResponse#source_uri #source_uri} => String
+    #   * {Types::GetDataIntegrationResponse#schedule_configuration #schedule_configuration} => Types::ScheduleConfiguration
+    #   * {Types::GetDataIntegrationResponse#tags #tags} => Hash&lt;String,String&gt;
+    #   * {Types::GetDataIntegrationResponse#file_configuration #file_configuration} => Types::FileConfiguration
+    #   * {Types::GetDataIntegrationResponse#object_configuration #object_configuration} => Hash&lt;String,Hash&lt;String,Array&lt;String&gt;&gt;&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_data_integration({
+    #     identifier: "Identifier", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.arn #=> String
+    #   resp.id #=> String
+    #   resp.name #=> String
+    #   resp.description #=> String
+    #   resp.kms_key #=> String
+    #   resp.source_uri #=> String
+    #   resp.schedule_configuration.first_execution_from #=> String
+    #   resp.schedule_configuration.object #=> String
+    #   resp.schedule_configuration.schedule_expression #=> String
+    #   resp.tags #=> Hash
+    #   resp.tags["TagKey"] #=> String
+    #   resp.file_configuration.folders #=> Array
+    #   resp.file_configuration.folders[0] #=> String
+    #   resp.file_configuration.filters #=> Hash
+    #   resp.file_configuration.filters["NonBlankString"] #=> Array
+    #   resp.file_configuration.filters["NonBlankString"][0] #=> String
+    #   resp.object_configuration #=> Hash
+    #   resp.object_configuration["NonBlankString"] #=> Hash
+    #   resp.object_configuration["NonBlankString"]["NonBlankString"] #=> Array
+    #   resp.object_configuration["NonBlankString"]["NonBlankString"][0] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/GetDataIntegration AWS API Documentation
+    #
+    # @overload get_data_integration(params = {})
+    # @param [Hash] params ({})
+    def get_data_integration(params = {}, options = {})
+      req = build_request(:get_data_integration, params)
+      req.send_request(options)
+    end
+
+    # Returns information about the event integration.
     #
     # @option params [required, String] :name
     #   The name of the event integration.
@@ -458,9 +741,111 @@ module Aws::AppIntegrationsService
       req.send_request(options)
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
+    # Returns a paginated list of DataIntegration associations in the
+    # account.
     #
+    # <note markdown="1"> You cannot create a DataIntegration association for a DataIntegration
+    # that has been previously associated. Use a different DataIntegration,
+    # or recreate the DataIntegration using the [CreateDataIntegration][1]
+    # API.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/appintegrations/latest/APIReference/API_CreateDataIntegration.html
+    #
+    # @option params [required, String] :data_integration_identifier
+    #   A unique identifier for the DataIntegration.
+    #
+    # @option params [String] :next_token
+    #   The token for the next set of results. Use the value returned in the
+    #   previous response in the next request to retrieve the next set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return per page.
+    #
+    # @return [Types::ListDataIntegrationAssociationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListDataIntegrationAssociationsResponse#data_integration_associations #data_integration_associations} => Array&lt;Types::DataIntegrationAssociationSummary&gt;
+    #   * {Types::ListDataIntegrationAssociationsResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_data_integration_associations({
+    #     data_integration_identifier: "Identifier", # required
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.data_integration_associations #=> Array
+    #   resp.data_integration_associations[0].data_integration_association_arn #=> String
+    #   resp.data_integration_associations[0].data_integration_arn #=> String
+    #   resp.data_integration_associations[0].client_id #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/ListDataIntegrationAssociations AWS API Documentation
+    #
+    # @overload list_data_integration_associations(params = {})
+    # @param [Hash] params ({})
+    def list_data_integration_associations(params = {}, options = {})
+      req = build_request(:list_data_integration_associations, params)
+      req.send_request(options)
+    end
+
+    # Returns a paginated list of DataIntegrations in the account.
+    #
+    # <note markdown="1"> You cannot create a DataIntegration association for a DataIntegration
+    # that has been previously associated. Use a different DataIntegration,
+    # or recreate the DataIntegration using the [CreateDataIntegration][1]
+    # API.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/appintegrations/latest/APIReference/API_CreateDataIntegration.html
+    #
+    # @option params [String] :next_token
+    #   The token for the next set of results. Use the value returned in the
+    #   previous response in the next request to retrieve the next set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return per page.
+    #
+    # @return [Types::ListDataIntegrationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListDataIntegrationsResponse#data_integrations #data_integrations} => Array&lt;Types::DataIntegrationSummary&gt;
+    #   * {Types::ListDataIntegrationsResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_data_integrations({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.data_integrations #=> Array
+    #   resp.data_integrations[0].arn #=> String
+    #   resp.data_integrations[0].name #=> String
+    #   resp.data_integrations[0].source_uri #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/ListDataIntegrations AWS API Documentation
+    #
+    # @overload list_data_integrations(params = {})
+    # @param [Hash] params ({})
+    def list_data_integrations(params = {}, options = {})
+      req = build_request(:list_data_integrations, params)
+      req.send_request(options)
+    end
+
     # Returns a paginated list of event integration associations in the
     # account.
     #
@@ -509,9 +894,6 @@ module Aws::AppIntegrationsService
       req.send_request(options)
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
-    #
     # Returns a paginated list of event integrations in the account.
     #
     # @option params [String] :next_token
@@ -555,9 +937,6 @@ module Aws::AppIntegrationsService
       req.send_request(options)
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
-    #
     # Lists the tags for the specified resource.
     #
     # @option params [required, String] :resource_arn
@@ -587,16 +966,15 @@ module Aws::AppIntegrationsService
       req.send_request(options)
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
-    #
     # Adds the specified tags to the specified resource.
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #
     # @option params [required, Hash<String,String>] :tags
-    #   One or more tags.
+    #   The tags used to organize, track, or control access for this resource.
+    #   For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -618,9 +996,6 @@ module Aws::AppIntegrationsService
       req.send_request(options)
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
-    #
     # Removes the specified tags from the specified resource.
     #
     # @option params [required, String] :resource_arn
@@ -647,9 +1022,47 @@ module Aws::AppIntegrationsService
       req.send_request(options)
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
+    # Updates the description of a DataIntegration.
     #
+    # <note markdown="1"> You cannot create a DataIntegration association for a DataIntegration
+    # that has been previously associated. Use a different DataIntegration,
+    # or recreate the DataIntegration using the [CreateDataIntegration][1]
+    # API.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/appintegrations/latest/APIReference/API_CreateDataIntegration.html
+    #
+    # @option params [required, String] :identifier
+    #   A unique identifier for the DataIntegration.
+    #
+    # @option params [String] :name
+    #   The name of the DataIntegration.
+    #
+    # @option params [String] :description
+    #   A description of the DataIntegration.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_data_integration({
+    #     identifier: "Identifier", # required
+    #     name: "Name",
+    #     description: "Description",
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/UpdateDataIntegration AWS API Documentation
+    #
+    # @overload update_data_integration(params = {})
+    # @param [Hash] params ({})
+    def update_data_integration(params = {}, options = {})
+      req = build_request(:update_data_integration, params)
+      req.send_request(options)
+    end
+
     # Updates the description of an event integration.
     #
     # @option params [required, String] :name
@@ -689,7 +1102,7 @@ module Aws::AppIntegrationsService
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-appintegrationsservice'
-      context[:gem_version] = '1.2.0'
+      context[:gem_version] = '1.20.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

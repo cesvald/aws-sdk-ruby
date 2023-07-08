@@ -13,10 +13,14 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-ecr/types'
 require_relative 'aws-sdk-ecr/client_api'
+require_relative 'aws-sdk-ecr/plugins/endpoints.rb'
 require_relative 'aws-sdk-ecr/client'
 require_relative 'aws-sdk-ecr/errors'
 require_relative 'aws-sdk-ecr/waiters'
 require_relative 'aws-sdk-ecr/resource'
+require_relative 'aws-sdk-ecr/endpoint_parameters'
+require_relative 'aws-sdk-ecr/endpoint_provider'
+require_relative 'aws-sdk-ecr/endpoints'
 require_relative 'aws-sdk-ecr/customizations'
 
 # This module provides support for Amazon EC2 Container Registry. This module is available in the
@@ -49,6 +53,6 @@ require_relative 'aws-sdk-ecr/customizations'
 # @!group service
 module Aws::ECR
 
-  GEM_VERSION = '1.42.0'
+  GEM_VERSION = '1.62.0'
 
 end

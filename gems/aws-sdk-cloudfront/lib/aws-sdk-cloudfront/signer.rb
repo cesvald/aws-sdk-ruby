@@ -15,7 +15,8 @@ module Aws
       # @option options [String] :private_key_path
       def initialize(options = {})
         @key_pair_id = key_pair_id(options)
-        @private_key = private_key(options)
+        @cipher = OpenSSL::Digest::SHA1.new
+        @private_key = OpenSSL::PKey::RSA.new(private_key(options))
       end
 
       private
@@ -68,7 +69,7 @@ module Aws
             resource_content
           end
         else
-          msg = "Invaild URI scheme:#{scheme}.Scheme must be one of: http, https or rtmp."
+          msg = "Invalid URI scheme:#{scheme}.Scheme must be one of: http, https or rtmp."
           raise ArgumentError, msg
         end
       end
@@ -97,8 +98,7 @@ module Aws
 
       # create the signature string with policy signed
       def sign_policy(policy)
-        key = OpenSSL::PKey::RSA.new(@private_key)
-        key.sign(OpenSSL::Digest::SHA1.new, policy)
+        @private_key.sign(@cipher, policy)
       end
 
       # create canned policy that used for signing

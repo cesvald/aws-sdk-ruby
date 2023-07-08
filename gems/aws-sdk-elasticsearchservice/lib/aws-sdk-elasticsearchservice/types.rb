@@ -13,13 +13,6 @@ module Aws::ElasticsearchService
     # Container for the parameters to the
     # `AcceptInboundCrossClusterSearchConnection` operation.
     #
-    # @note When making an API call, you may pass AcceptInboundCrossClusterSearchConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cross_cluster_search_connection_id: "CrossClusterSearchConnectionId", # required
-    #       }
-    #
     # @!attribute [rw] cross_cluster_search_connection_id
     #   The id of the inbound connection that you want to accept.
     #   @return [String]
@@ -76,19 +69,6 @@ module Aws::ElasticsearchService
 
     # Container for the parameters to the `AddTags` operation. Specify the
     # tags that you want to attach to the Elasticsearch domain.
-    #
-    # @note When making an API call, you may pass AddTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "ARN", # required
-    #         tag_list: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] arn
     #   Specify the `ARN` for which you want to add the tags.
@@ -177,10 +157,22 @@ module Aws::ElasticsearchService
     #   Describes the SAML application configured for a domain.
     #   @return [Types::SAMLOptionsOutput]
     #
+    # @!attribute [rw] anonymous_auth_disable_date
+    #   Specifies the Anonymous Auth Disable Date when Anonymous Auth is
+    #   enabled.
+    #   @return [Time]
+    #
+    # @!attribute [rw] anonymous_auth_enabled
+    #   True if Anonymous auth is enabled. Anonymous auth can be enabled
+    #   only when AdvancedSecurity is enabled on existing domains.
+    #   @return [Boolean]
+    #
     class AdvancedSecurityOptions < Struct.new(
       :enabled,
       :internal_user_database_enabled,
-      :saml_options)
+      :saml_options,
+      :anonymous_auth_disable_date,
+      :anonymous_auth_enabled)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -189,31 +181,6 @@ module Aws::ElasticsearchService
     # security is enabled, whether the internal database option is enabled,
     # master username and password (if internal database is enabled), and
     # master user ARN (if IAM is enabled).
-    #
-    # @note When making an API call, you may pass AdvancedSecurityOptionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false,
-    #         internal_user_database_enabled: false,
-    #         master_user_options: {
-    #           master_user_arn: "ARN",
-    #           master_user_name: "Username",
-    #           master_user_password: "Password",
-    #         },
-    #         saml_options: {
-    #           enabled: false,
-    #           idp: {
-    #             metadata_content: "SAMLMetadata", # required
-    #             entity_id: "SAMLEntityId", # required
-    #           },
-    #           master_user_name: "Username",
-    #           master_backend_role: "BackendRole",
-    #           subject_key: "String",
-    #           roles_key: "String",
-    #           session_timeout_minutes: 1,
-    #         },
-    #       }
     #
     # @!attribute [rw] enabled
     #   True if advanced security is enabled.
@@ -232,11 +199,17 @@ module Aws::ElasticsearchService
     #   Specifies the SAML application configuration for the domain.
     #   @return [Types::SAMLOptionsInput]
     #
+    # @!attribute [rw] anonymous_auth_enabled
+    #   True if Anonymous auth is enabled. Anonymous auth can be enabled
+    #   only when AdvancedSecurity is enabled on existing domains.
+    #   @return [Boolean]
+    #
     class AdvancedSecurityOptionsInput < Struct.new(
       :enabled,
       :internal_user_database_enabled,
       :master_user_options,
-      :saml_options)
+      :saml_options,
+      :anonymous_auth_enabled)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -263,14 +236,6 @@ module Aws::ElasticsearchService
 
     # Container for request parameters to ` AssociatePackage ` operation.
     #
-    # @note When making an API call, you may pass AssociatePackageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         package_id: "PackageID", # required
-    #         domain_name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] package_id
     #   Internal ID of the package that you want to associate with a domain.
     #   Use `DescribePackages` to find this value.
@@ -295,6 +260,59 @@ module Aws::ElasticsearchService
     #
     class AssociatePackageResponse < Struct.new(
       :domain_package_details)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for request parameters to the `AuthorizeVpcEndpointAccess`
+    # operation. Specifies the account to be permitted to manage VPC
+    # endpoints against the domain.
+    #
+    # @!attribute [rw] domain_name
+    #   The name of the OpenSearch Service domain to provide access to.
+    #   @return [String]
+    #
+    # @!attribute [rw] account
+    #   The account ID to grant access to.
+    #   @return [String]
+    #
+    class AuthorizeVpcEndpointAccessRequest < Struct.new(
+      :domain_name,
+      :account)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for response parameters to the `AuthorizeVpcEndpointAccess`
+    # operation. Contains the account ID and the type of the account being
+    # authorized to access the VPC endpoint.
+    #
+    # @!attribute [rw] authorized_principal
+    #   Information about the account or service that was provided access to
+    #   the domain.
+    #   @return [Types::AuthorizedPrincipal]
+    #
+    class AuthorizeVpcEndpointAccessResponse < Struct.new(
+      :authorized_principal)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about an account or service that has access to an Amazon
+    # OpenSearch Service domain through the use of an interface VPC
+    # endpoint.
+    #
+    # @!attribute [rw] principal_type
+    #   The type of principal.
+    #   @return [String]
+    #
+    # @!attribute [rw] principal
+    #   The IAM principal that is allowed access to the domain.
+    #   @return [String]
+    #
+    class AuthorizedPrincipal < Struct.new(
+      :principal_type,
+      :principal)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -350,18 +368,6 @@ module Aws::ElasticsearchService
     #
     # [1]: https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/auto-tune.html
     #
-    # @note When making an API call, you may pass AutoTuneMaintenanceSchedule
-    #   data as a hash:
-    #
-    #       {
-    #         start_at: Time.now,
-    #         duration: {
-    #           value: 1,
-    #           unit: "HOURS", # accepts HOURS
-    #         },
-    #         cron_expression_for_recurrence: "String",
-    #       }
-    #
     # @!attribute [rw] start_at
     #   Specifies timestamp at which Auto-Tune maintenance schedule start.
     #   @return [Time]
@@ -396,24 +402,6 @@ module Aws::ElasticsearchService
     # domain, rollback state when disabling Auto-Tune options and list of
     # maintenance schedules.
     #
-    # @note When making an API call, you may pass AutoTuneOptions
-    #   data as a hash:
-    #
-    #       {
-    #         desired_state: "ENABLED", # accepts ENABLED, DISABLED
-    #         rollback_on_disable: "NO_ROLLBACK", # accepts NO_ROLLBACK, DEFAULT_ROLLBACK
-    #         maintenance_schedules: [
-    #           {
-    #             start_at: Time.now,
-    #             duration: {
-    #               value: 1,
-    #               unit: "HOURS", # accepts HOURS
-    #             },
-    #             cron_expression_for_recurrence: "String",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] desired_state
     #   Specifies the Auto-Tune desired state. Valid values are ENABLED,
     #   DISABLED.
@@ -443,23 +431,6 @@ module Aws::ElasticsearchService
 
     # Specifies the Auto-Tune options: the Auto-Tune desired state for the
     # domain and list of maintenance schedules.
-    #
-    # @note When making an API call, you may pass AutoTuneOptionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         desired_state: "ENABLED", # accepts ENABLED, DISABLED
-    #         maintenance_schedules: [
-    #           {
-    #             start_at: Time.now,
-    #             duration: {
-    #               value: 1,
-    #               unit: "HOURS", # accepts HOURS
-    #             },
-    #             cron_expression_for_recurrence: "String",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] desired_state
     #   Specifies the Auto-Tune desired state. Valid values are ENABLED,
@@ -575,13 +546,6 @@ module Aws::ElasticsearchService
     # name of the Elasticsearch domain that you wish to cancel a service
     # software update on.
     #
-    # @note When making an API call, you may pass CancelElasticsearchServiceSoftwareUpdateRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to stop the latest service
     #   software update on.
@@ -606,6 +570,100 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
+    # Specifies change details of the domain configuration change.
+    #
+    # @!attribute [rw] change_id
+    #   The unique change identifier associated with a specific domain
+    #   configuration change.
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   Contains an optional message associated with the domain
+    #   configuration change.
+    #   @return [String]
+    #
+    class ChangeProgressDetails < Struct.new(
+      :change_id,
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A progress stage details of a specific domain configuration change.
+    #
+    # @!attribute [rw] name
+    #   The name of the specific progress stage.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   The overall status of a specific progress stage.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the progress stage.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_updated
+    #   The last updated timestamp of the progress stage.
+    #   @return [Time]
+    #
+    class ChangeProgressStage < Struct.new(
+      :name,
+      :status,
+      :description,
+      :last_updated)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The progress details of a specific domain configuration change.
+    #
+    # @!attribute [rw] change_id
+    #   The unique change identifier associated with a specific domain
+    #   configuration change.
+    #   @return [String]
+    #
+    # @!attribute [rw] start_time
+    #   The time at which the configuration change is made on the domain.
+    #   @return [Time]
+    #
+    # @!attribute [rw] status
+    #   The overall status of the domain configuration change. This field
+    #   can take the following values: `PENDING`, `PROCESSING`, `COMPLETED`
+    #   and `FAILED`
+    #   @return [String]
+    #
+    # @!attribute [rw] pending_properties
+    #   The list of properties involved in the domain configuration change
+    #   that are still in pending.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] completed_properties
+    #   The list of properties involved in the domain configuration change
+    #   that are completed.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] total_number_of_stages
+    #   The total number of stages required for the configuration change.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] change_progress_stages
+    #   The specific stages that the domain is going through to perform the
+    #   configuration change.
+    #   @return [Array<Types::ChangeProgressStage>]
+    #
+    class ChangeProgressStatusDetails < Struct.new(
+      :change_id,
+      :start_time,
+      :status,
+      :pending_properties,
+      :completed_properties,
+      :total_number_of_stages,
+      :change_progress_stages)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Options to specify the Cognito user and identity pools for Kibana
     # authentication. For more information, see [Amazon Cognito
     # Authentication for Kibana][1].
@@ -613,16 +671,6 @@ module Aws::ElasticsearchService
     #
     #
     # [1]: http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html
-    #
-    # @note When making an API call, you may pass CognitoOptions
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false,
-    #         user_pool_id: "UserPoolId",
-    #         identity_pool_id: "IdentityPoolId",
-    #         role_arn: "RoleArn",
-    #       }
     #
     # @!attribute [rw] enabled
     #   Specifies the option to enable Cognito for Kibana authentication.
@@ -669,17 +717,10 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
-    # Specifies settings for cold storage.
-    #
-    # @note When making an API call, you may pass ColdStorageOptions
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #       }
+    # Specifies the configuration for cold storage options such as enabled
     #
     # @!attribute [rw] enabled
-    #   True to enable cold storage for an Elasticsearch domain.
+    #   Enable cold storage option. Accepted values true or false
     #   @return [Boolean]
     #
     class ColdStorageOptions < Struct.new(
@@ -711,114 +752,6 @@ module Aws::ElasticsearchService
     #
     class ConflictException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass CreateElasticsearchDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         elasticsearch_version: "ElasticsearchVersionString",
-    #         elasticsearch_cluster_config: {
-    #           instance_type: "m3.medium.elasticsearch", # accepts m3.medium.elasticsearch, m3.large.elasticsearch, m3.xlarge.elasticsearch, m3.2xlarge.elasticsearch, m4.large.elasticsearch, m4.xlarge.elasticsearch, m4.2xlarge.elasticsearch, m4.4xlarge.elasticsearch, m4.10xlarge.elasticsearch, m5.large.elasticsearch, m5.xlarge.elasticsearch, m5.2xlarge.elasticsearch, m5.4xlarge.elasticsearch, m5.12xlarge.elasticsearch, r5.large.elasticsearch, r5.xlarge.elasticsearch, r5.2xlarge.elasticsearch, r5.4xlarge.elasticsearch, r5.12xlarge.elasticsearch, c5.large.elasticsearch, c5.xlarge.elasticsearch, c5.2xlarge.elasticsearch, c5.4xlarge.elasticsearch, c5.9xlarge.elasticsearch, c5.18xlarge.elasticsearch, ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch, t2.micro.elasticsearch, t2.small.elasticsearch, t2.medium.elasticsearch, r3.large.elasticsearch, r3.xlarge.elasticsearch, r3.2xlarge.elasticsearch, r3.4xlarge.elasticsearch, r3.8xlarge.elasticsearch, i2.xlarge.elasticsearch, i2.2xlarge.elasticsearch, d2.xlarge.elasticsearch, d2.2xlarge.elasticsearch, d2.4xlarge.elasticsearch, d2.8xlarge.elasticsearch, c4.large.elasticsearch, c4.xlarge.elasticsearch, c4.2xlarge.elasticsearch, c4.4xlarge.elasticsearch, c4.8xlarge.elasticsearch, r4.large.elasticsearch, r4.xlarge.elasticsearch, r4.2xlarge.elasticsearch, r4.4xlarge.elasticsearch, r4.8xlarge.elasticsearch, r4.16xlarge.elasticsearch, i3.large.elasticsearch, i3.xlarge.elasticsearch, i3.2xlarge.elasticsearch, i3.4xlarge.elasticsearch, i3.8xlarge.elasticsearch, i3.16xlarge.elasticsearch
-    #           instance_count: 1,
-    #           dedicated_master_enabled: false,
-    #           zone_awareness_enabled: false,
-    #           zone_awareness_config: {
-    #             availability_zone_count: 1,
-    #           },
-    #           dedicated_master_type: "m3.medium.elasticsearch", # accepts m3.medium.elasticsearch, m3.large.elasticsearch, m3.xlarge.elasticsearch, m3.2xlarge.elasticsearch, m4.large.elasticsearch, m4.xlarge.elasticsearch, m4.2xlarge.elasticsearch, m4.4xlarge.elasticsearch, m4.10xlarge.elasticsearch, m5.large.elasticsearch, m5.xlarge.elasticsearch, m5.2xlarge.elasticsearch, m5.4xlarge.elasticsearch, m5.12xlarge.elasticsearch, r5.large.elasticsearch, r5.xlarge.elasticsearch, r5.2xlarge.elasticsearch, r5.4xlarge.elasticsearch, r5.12xlarge.elasticsearch, c5.large.elasticsearch, c5.xlarge.elasticsearch, c5.2xlarge.elasticsearch, c5.4xlarge.elasticsearch, c5.9xlarge.elasticsearch, c5.18xlarge.elasticsearch, ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch, t2.micro.elasticsearch, t2.small.elasticsearch, t2.medium.elasticsearch, r3.large.elasticsearch, r3.xlarge.elasticsearch, r3.2xlarge.elasticsearch, r3.4xlarge.elasticsearch, r3.8xlarge.elasticsearch, i2.xlarge.elasticsearch, i2.2xlarge.elasticsearch, d2.xlarge.elasticsearch, d2.2xlarge.elasticsearch, d2.4xlarge.elasticsearch, d2.8xlarge.elasticsearch, c4.large.elasticsearch, c4.xlarge.elasticsearch, c4.2xlarge.elasticsearch, c4.4xlarge.elasticsearch, c4.8xlarge.elasticsearch, r4.large.elasticsearch, r4.xlarge.elasticsearch, r4.2xlarge.elasticsearch, r4.4xlarge.elasticsearch, r4.8xlarge.elasticsearch, r4.16xlarge.elasticsearch, i3.large.elasticsearch, i3.xlarge.elasticsearch, i3.2xlarge.elasticsearch, i3.4xlarge.elasticsearch, i3.8xlarge.elasticsearch, i3.16xlarge.elasticsearch
-    #           dedicated_master_count: 1,
-    #           warm_enabled: false,
-    #           warm_type: "ultrawarm1.medium.elasticsearch", # accepts ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch
-    #           warm_count: 1,
-    #           cold_storage_options: {
-    #             enabled: false, # required
-    #           },
-    #         },
-    #         ebs_options: {
-    #           ebs_enabled: false,
-    #           volume_type: "standard", # accepts standard, gp2, io1
-    #           volume_size: 1,
-    #           iops: 1,
-    #         },
-    #         access_policies: "PolicyDocument",
-    #         snapshot_options: {
-    #           automated_snapshot_start_hour: 1,
-    #         },
-    #         vpc_options: {
-    #           subnet_ids: ["String"],
-    #           security_group_ids: ["String"],
-    #         },
-    #         cognito_options: {
-    #           enabled: false,
-    #           user_pool_id: "UserPoolId",
-    #           identity_pool_id: "IdentityPoolId",
-    #           role_arn: "RoleArn",
-    #         },
-    #         encryption_at_rest_options: {
-    #           enabled: false,
-    #           kms_key_id: "KmsKeyId",
-    #         },
-    #         node_to_node_encryption_options: {
-    #           enabled: false,
-    #         },
-    #         advanced_options: {
-    #           "String" => "String",
-    #         },
-    #         log_publishing_options: {
-    #           "INDEX_SLOW_LOGS" => {
-    #             cloud_watch_logs_log_group_arn: "CloudWatchLogsLogGroupArn",
-    #             enabled: false,
-    #           },
-    #         },
-    #         domain_endpoint_options: {
-    #           enforce_https: false,
-    #           tls_security_policy: "Policy-Min-TLS-1-0-2019-07", # accepts Policy-Min-TLS-1-0-2019-07, Policy-Min-TLS-1-2-2019-07
-    #           custom_endpoint_enabled: false,
-    #           custom_endpoint: "DomainNameFqdn",
-    #           custom_endpoint_certificate_arn: "ARN",
-    #         },
-    #         advanced_security_options: {
-    #           enabled: false,
-    #           internal_user_database_enabled: false,
-    #           master_user_options: {
-    #             master_user_arn: "ARN",
-    #             master_user_name: "Username",
-    #             master_user_password: "Password",
-    #           },
-    #           saml_options: {
-    #             enabled: false,
-    #             idp: {
-    #               metadata_content: "SAMLMetadata", # required
-    #               entity_id: "SAMLEntityId", # required
-    #             },
-    #             master_user_name: "Username",
-    #             master_backend_role: "BackendRole",
-    #             subject_key: "String",
-    #             roles_key: "String",
-    #             session_timeout_minutes: 1,
-    #           },
-    #         },
-    #         auto_tune_options: {
-    #           desired_state: "ENABLED", # accepts ENABLED, DISABLED
-    #           maintenance_schedules: [
-    #             {
-    #               start_at: Time.now,
-    #               duration: {
-    #                 value: 1,
-    #                 unit: "HOURS", # accepts HOURS
-    #               },
-    #               cron_expression_for_recurrence: "String",
-    #             },
-    #           ],
-    #         },
-    #         tag_list: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the Elasticsearch domain that you are creating. Domain
     #   names are unique across the domains owned by an account within an
@@ -955,23 +888,6 @@ module Aws::ElasticsearchService
     # Container for the parameters to the
     # `CreateOutboundCrossClusterSearchConnection` operation.
     #
-    # @note When making an API call, you may pass CreateOutboundCrossClusterSearchConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         source_domain_info: { # required
-    #           owner_id: "OwnerId",
-    #           domain_name: "DomainName", # required
-    #           region: "Region",
-    #         },
-    #         destination_domain_info: { # required
-    #           owner_id: "OwnerId",
-    #           domain_name: "DomainName", # required
-    #           region: "Region",
-    #         },
-    #         connection_alias: "ConnectionAlias", # required
-    #       }
-    #
     # @!attribute [rw] source_domain_info
     #   Specifies the `DomainInformation` for the source Elasticsearch
     #   domain.
@@ -1036,19 +952,6 @@ module Aws::ElasticsearchService
 
     # Container for request parameters to ` CreatePackage ` operation.
     #
-    # @note When making an API call, you may pass CreatePackageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         package_name: "PackageName", # required
-    #         package_type: "TXT-DICTIONARY", # required, accepts TXT-DICTIONARY
-    #         package_description: "PackageDescription",
-    #         package_source: { # required
-    #           s3_bucket_name: "S3BucketName",
-    #           s3_key: "S3Key",
-    #         },
-    #       }
-    #
     # @!attribute [rw] package_name
     #   Unique identifier for the package.
     #   @return [String]
@@ -1086,16 +989,47 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
+    # Container for the parameters to the `CreateVpcEndpointRequest`
+    # operation.
+    #
+    # @!attribute [rw] domain_arn
+    #   The Amazon Resource Name (ARN) of the domain to grant access to.
+    #   @return [String]
+    #
+    # @!attribute [rw] vpc_options
+    #   Options to specify the subnets and security groups for the endpoint.
+    #   @return [Types::VPCOptions]
+    #
+    # @!attribute [rw] client_token
+    #   Unique, case-sensitive identifier to ensure idempotency of the
+    #   request.
+    #   @return [String]
+    #
+    class CreateVpcEndpointRequest < Struct.new(
+      :domain_arn,
+      :vpc_options,
+      :client_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for response parameters to the `CreateVpcEndpoint`
+    # operation. Contains the configuration and status of the VPC Endpoint
+    # being created.
+    #
+    # @!attribute [rw] vpc_endpoint
+    #   Information about the newly created VPC endpoint.
+    #   @return [Types::VpcEndpoint]
+    #
+    class CreateVpcEndpointResponse < Struct.new(
+      :vpc_endpoint)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Container for the parameters to the `DeleteElasticsearchDomain`
     # operation. Specifies the name of the Elasticsearch domain that you
     # want to delete.
-    #
-    # @note When making an API call, you may pass DeleteElasticsearchDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the Elasticsearch domain that you want to permanently
@@ -1125,13 +1059,6 @@ module Aws::ElasticsearchService
     # Container for the parameters to the
     # `DeleteInboundCrossClusterSearchConnection` operation.
     #
-    # @note When making an API call, you may pass DeleteInboundCrossClusterSearchConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cross_cluster_search_connection_id: "CrossClusterSearchConnectionId", # required
-    #       }
-    #
     # @!attribute [rw] cross_cluster_search_connection_id
     #   The id of the inbound connection that you want to permanently
     #   delete.
@@ -1160,13 +1087,6 @@ module Aws::ElasticsearchService
     # Container for the parameters to the
     # `DeleteOutboundCrossClusterSearchConnection` operation.
     #
-    # @note When making an API call, you may pass DeleteOutboundCrossClusterSearchConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cross_cluster_search_connection_id: "CrossClusterSearchConnectionId", # required
-    #       }
-    #
     # @!attribute [rw] cross_cluster_search_connection_id
     #   The id of the outbound connection that you want to permanently
     #   delete.
@@ -1194,13 +1114,6 @@ module Aws::ElasticsearchService
 
     # Container for request parameters to ` DeletePackage ` operation.
     #
-    # @note When making an API call, you may pass DeletePackageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         package_id: "PackageID", # required
-    #       }
-    #
     # @!attribute [rw] package_id
     #   Internal ID of the package that you want to delete. Use
     #   `DescribePackages` to find this value.
@@ -1224,17 +1137,35 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
+    # Deletes an Amazon OpenSearch Service-managed interface VPC endpoint.
+    #
+    # @!attribute [rw] vpc_endpoint_id
+    #   The unique identifier of the endpoint to be deleted.
+    #   @return [String]
+    #
+    class DeleteVpcEndpointRequest < Struct.new(
+      :vpc_endpoint_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for response parameters to the `DeleteVpcEndpoint`
+    # operation. Contains the summarized detail of the VPC Endpoint being
+    # deleted.
+    #
+    # @!attribute [rw] vpc_endpoint_summary
+    #   Information about the deleted endpoint, including its current status
+    #   (`DELETING` or `DELETE_FAILED`).
+    #   @return [Types::VpcEndpointSummary]
+    #
+    class DeleteVpcEndpointResponse < Struct.new(
+      :vpc_endpoint_summary)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Container for the parameters to the `DescribeDomainAutoTunes`
     # operation.
-    #
-    # @note When making an API call, you may pass DescribeDomainAutoTunesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] domain_name
     #   Specifies the domain name for which you want Auto-Tune action
@@ -1286,16 +1217,44 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
+    # Container for the parameters to the `DescribeDomainChangeProgress`
+    # operation. Specifies the domain name and optional change specific
+    # identity for which you want progress information.
+    #
+    # @!attribute [rw] domain_name
+    #   The domain you want to get the progress information about.
+    #   @return [String]
+    #
+    # @!attribute [rw] change_id
+    #   The specific change ID for which you want to get progress
+    #   information. This is an optional parameter. If omitted, the service
+    #   returns information about the most recent configuration change.
+    #   @return [String]
+    #
+    class DescribeDomainChangeProgressRequest < Struct.new(
+      :domain_name,
+      :change_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The result of a `DescribeDomainChangeProgress` request. Contains the
+    # progress information of the requested domain change.
+    #
+    # @!attribute [rw] change_progress_status
+    #   Progress information for the configuration change that is requested
+    #   in the `DescribeDomainChangeProgress` request.
+    #   @return [Types::ChangeProgressStatusDetails]
+    #
+    class DescribeDomainChangeProgressResponse < Struct.new(
+      :change_progress_status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Container for the parameters to the
     # `DescribeElasticsearchDomainConfig` operation. Specifies the domain
     # name for which you want configuration information.
-    #
-    # @note When making an API call, you may pass DescribeElasticsearchDomainConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The Elasticsearch domain that you want to get information about.
@@ -1324,13 +1283,6 @@ module Aws::ElasticsearchService
     # Container for the parameters to the `DescribeElasticsearchDomain`
     # operation.
     #
-    # @note When making an API call, you may pass DescribeElasticsearchDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the Elasticsearch domain for which you want information.
     #   @return [String]
@@ -1358,13 +1310,6 @@ module Aws::ElasticsearchService
     # operation. By default, the API returns the status of all Elasticsearch
     # domains.
     #
-    # @note When making an API call, you may pass DescribeElasticsearchDomainsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_names: ["DomainName"], # required
-    #       }
-    #
     # @!attribute [rw] domain_names
     #   The Elasticsearch domains for which you want information.
     #   @return [Array<String>]
@@ -1391,15 +1336,6 @@ module Aws::ElasticsearchService
 
     # Container for the parameters to `
     # DescribeElasticsearchInstanceTypeLimits ` operation.
-    #
-    # @note When making an API call, you may pass DescribeElasticsearchInstanceTypeLimitsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName",
-    #         instance_type: "m3.medium.elasticsearch", # required, accepts m3.medium.elasticsearch, m3.large.elasticsearch, m3.xlarge.elasticsearch, m3.2xlarge.elasticsearch, m4.large.elasticsearch, m4.xlarge.elasticsearch, m4.2xlarge.elasticsearch, m4.4xlarge.elasticsearch, m4.10xlarge.elasticsearch, m5.large.elasticsearch, m5.xlarge.elasticsearch, m5.2xlarge.elasticsearch, m5.4xlarge.elasticsearch, m5.12xlarge.elasticsearch, r5.large.elasticsearch, r5.xlarge.elasticsearch, r5.2xlarge.elasticsearch, r5.4xlarge.elasticsearch, r5.12xlarge.elasticsearch, c5.large.elasticsearch, c5.xlarge.elasticsearch, c5.2xlarge.elasticsearch, c5.4xlarge.elasticsearch, c5.9xlarge.elasticsearch, c5.18xlarge.elasticsearch, ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch, t2.micro.elasticsearch, t2.small.elasticsearch, t2.medium.elasticsearch, r3.large.elasticsearch, r3.xlarge.elasticsearch, r3.2xlarge.elasticsearch, r3.4xlarge.elasticsearch, r3.8xlarge.elasticsearch, i2.xlarge.elasticsearch, i2.2xlarge.elasticsearch, d2.xlarge.elasticsearch, d2.2xlarge.elasticsearch, d2.4xlarge.elasticsearch, d2.8xlarge.elasticsearch, c4.large.elasticsearch, c4.xlarge.elasticsearch, c4.2xlarge.elasticsearch, c4.4xlarge.elasticsearch, c4.8xlarge.elasticsearch, r4.large.elasticsearch, r4.xlarge.elasticsearch, r4.2xlarge.elasticsearch, r4.4xlarge.elasticsearch, r4.8xlarge.elasticsearch, r4.16xlarge.elasticsearch, i3.large.elasticsearch, i3.xlarge.elasticsearch, i3.2xlarge.elasticsearch, i3.4xlarge.elasticsearch, i3.8xlarge.elasticsearch, i3.16xlarge.elasticsearch
-    #         elasticsearch_version: "ElasticsearchVersionString", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   DomainName represents the name of the Domain that we are trying to
@@ -1443,20 +1379,6 @@ module Aws::ElasticsearchService
 
     # Container for the parameters to the
     # `DescribeInboundCrossClusterSearchConnections` operation.
-    #
-    # @note When making an API call, you may pass DescribeInboundCrossClusterSearchConnectionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [
-    #           {
-    #             name: "NonEmptyString",
-    #             values: ["NonEmptyString"],
-    #           },
-    #         ],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] filters
     #   A list of filters used to match properties for inbound cross-cluster
@@ -1511,20 +1433,6 @@ module Aws::ElasticsearchService
     # Container for the parameters to the
     # `DescribeOutboundCrossClusterSearchConnections` operation.
     #
-    # @note When making an API call, you may pass DescribeOutboundCrossClusterSearchConnectionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [
-    #           {
-    #             name: "NonEmptyString",
-    #             values: ["NonEmptyString"],
-    #           },
-    #         ],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] filters
     #   A list of filters used to match properties for outbound
     #   cross-cluster search connection. Available `Filter` names for this
@@ -1577,20 +1485,12 @@ module Aws::ElasticsearchService
 
     # Filter to apply in `DescribePackage` response.
     #
-    # @note When making an API call, you may pass DescribePackagesFilter
-    #   data as a hash:
-    #
-    #       {
-    #         name: "PackageID", # accepts PackageID, PackageName, PackageStatus
-    #         value: ["DescribePackagesFilterValue"],
-    #       }
-    #
     # @!attribute [rw] name
     #   Any field from `PackageDetails`.
     #   @return [String]
     #
     # @!attribute [rw] value
-    #   A list of values for the specified field.
+    #   A non-empty list of values for the specified field.
     #   @return [Array<String>]
     #
     class DescribePackagesFilter < Struct.new(
@@ -1601,20 +1501,6 @@ module Aws::ElasticsearchService
     end
 
     # Container for request parameters to ` DescribePackage ` operation.
-    #
-    # @note When making an API call, you may pass DescribePackagesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [
-    #           {
-    #             name: "PackageID", # accepts PackageID, PackageName, PackageStatus
-    #             value: ["DescribePackagesFilterValue"],
-    #           },
-    #         ],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] filters
     #   Only returns packages that match the `DescribePackagesFilterList`
@@ -1657,15 +1543,6 @@ module Aws::ElasticsearchService
 
     # Container for parameters to
     # `DescribeReservedElasticsearchInstanceOfferings`
-    #
-    # @note When making an API call, you may pass DescribeReservedElasticsearchInstanceOfferingsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         reserved_elasticsearch_instance_offering_id: "GUID",
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] reserved_elasticsearch_instance_offering_id
     #   The offering identifier filter value. Use this parameter to show
@@ -1711,15 +1588,6 @@ module Aws::ElasticsearchService
 
     # Container for parameters to `DescribeReservedElasticsearchInstances`
     #
-    # @note When making an API call, you may pass DescribeReservedElasticsearchInstancesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         reserved_elasticsearch_instance_id: "GUID",
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] reserved_elasticsearch_instance_id
     #   The reserved instance identifier filter value. Use this parameter to
     #   show only the reservation that matches the specified reserved
@@ -1761,20 +1629,45 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
+    # Container for request parameters to the `DescribeVpcEndpoints`
+    # operation. Specifies the list of VPC endpoints to be described.
+    #
+    # @!attribute [rw] vpc_endpoint_ids
+    #   The unique identifiers of the endpoints to get information about.
+    #   @return [Array<String>]
+    #
+    class DescribeVpcEndpointsRequest < Struct.new(
+      :vpc_endpoint_ids)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for response parameters to the `DescribeVpcEndpoints`
+    # operation. Returns a list containing configuration details and status
+    # of the VPC Endpoints as well as a list containing error responses of
+    # the endpoints that could not be described
+    #
+    # @!attribute [rw] vpc_endpoints
+    #   Information about each requested VPC endpoint.
+    #   @return [Array<Types::VpcEndpoint>]
+    #
+    # @!attribute [rw] vpc_endpoint_errors
+    #   Any errors associated with the request.
+    #   @return [Array<Types::VpcEndpointError>]
+    #
+    class DescribeVpcEndpointsResponse < Struct.new(
+      :vpc_endpoints,
+      :vpc_endpoint_errors)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # An error occured because the client wanted to access a not supported
     # operation. Gives http status code of 409.
     #
     class DisabledOperationException < Aws::EmptyStructure; end
 
     # Container for request parameters to ` DissociatePackage ` operation.
-    #
-    # @note When making an API call, you may pass DissociatePackageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         package_id: "PackageID", # required
-    #         domain_name: "DomainName", # required
-    #       }
     #
     # @!attribute [rw] package_id
     #   Internal ID of the package that you want to associate with a domain.
@@ -1805,17 +1698,6 @@ module Aws::ElasticsearchService
     end
 
     # Options to configure endpoint for the Elasticsearch domain.
-    #
-    # @note When making an API call, you may pass DomainEndpointOptions
-    #   data as a hash:
-    #
-    #       {
-    #         enforce_https: false,
-    #         tls_security_policy: "Policy-Min-TLS-1-0-2019-07", # accepts Policy-Min-TLS-1-0-2019-07, Policy-Min-TLS-1-2-2019-07
-    #         custom_endpoint_enabled: false,
-    #         custom_endpoint: "DomainNameFqdn",
-    #         custom_endpoint_certificate_arn: "ARN",
-    #       }
     #
     # @!attribute [rw] enforce_https
     #   Specify if only HTTPS endpoint should be enabled for the
@@ -1878,21 +1760,17 @@ module Aws::ElasticsearchService
     #   Specifies the `DomainName`.
     #   @return [String]
     #
+    # @!attribute [rw] engine_type
+    #   Specifies the `EngineType` of the domain.
+    #   @return [String]
+    #
     class DomainInfo < Struct.new(
-      :domain_name)
+      :domain_name,
+      :engine_type)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DomainInformation
-    #   data as a hash:
-    #
-    #       {
-    #         owner_id: "OwnerId",
-    #         domain_name: "DomainName", # required
-    #         region: "Region",
-    #       }
-    #
     # @!attribute [rw] owner_id
     #   @return [String]
     #
@@ -1968,20 +1846,34 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
+    # @!attribute [rw] deployment_type
+    #   Specifies the deployment mechanism through which the update shall be
+    #   applied on the domain. Possible responses are `Blue/Green` (The
+    #   update will require a blue/green deployment.) `DynamicUpdate` (The
+    #   update can be applied in-place without a Blue/Green deployment
+    #   required.) `Undetermined` (The domain is undergoing an update which
+    #   needs to complete before the deployment type can be predicted.)
+    #   `None` (The configuration change matches the current configuration
+    #   and will not result in any update.)
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   Contains an optional message associated with the DryRunResults.
+    #   @return [String]
+    #
+    class DryRunResults < Struct.new(
+      :deployment_type,
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Specifies maintenance schedule duration: duration value and duration
     # unit. See the [Developer Guide][1] for more information.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/auto-tune.html
-    #
-    # @note When making an API call, you may pass Duration
-    #   data as a hash:
-    #
-    #       {
-    #         value: 1,
-    #         unit: "HOURS", # accepts HOURS
-    #       }
     #
     # @!attribute [rw] value
     #   Integer to specify the value of a maintenance schedule duration. See
@@ -2016,16 +1908,6 @@ module Aws::ElasticsearchService
     #
     # [1]: http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-ebs
     #
-    # @note When making an API call, you may pass EBSOptions
-    #   data as a hash:
-    #
-    #       {
-    #         ebs_enabled: false,
-    #         volume_type: "standard", # accepts standard, gp2, io1
-    #         volume_size: 1,
-    #         iops: 1,
-    #       }
-    #
     # @!attribute [rw] ebs_enabled
     #   Specifies whether EBS-based storage is enabled.
     #   @return [Boolean]
@@ -2039,14 +1921,19 @@ module Aws::ElasticsearchService
     #   @return [Integer]
     #
     # @!attribute [rw] iops
-    #   Specifies the IOPD for a Provisioned IOPS EBS volume (SSD).
+    #   Specifies the IOPS for Provisioned IOPS And GP3 EBS volume (SSD).
+    #   @return [Integer]
+    #
+    # @!attribute [rw] throughput
+    #   Specifies the Throughput for GP3 EBS volume (SSD).
     #   @return [Integer]
     #
     class EBSOptions < Struct.new(
       :ebs_enabled,
       :volume_type,
       :volume_size,
-      :iops)
+      :iops,
+      :throughput)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2071,27 +1958,6 @@ module Aws::ElasticsearchService
 
     # Specifies the configuration for the domain cluster, such as the type
     # and number of instances.
-    #
-    # @note When making an API call, you may pass ElasticsearchClusterConfig
-    #   data as a hash:
-    #
-    #       {
-    #         instance_type: "m3.medium.elasticsearch", # accepts m3.medium.elasticsearch, m3.large.elasticsearch, m3.xlarge.elasticsearch, m3.2xlarge.elasticsearch, m4.large.elasticsearch, m4.xlarge.elasticsearch, m4.2xlarge.elasticsearch, m4.4xlarge.elasticsearch, m4.10xlarge.elasticsearch, m5.large.elasticsearch, m5.xlarge.elasticsearch, m5.2xlarge.elasticsearch, m5.4xlarge.elasticsearch, m5.12xlarge.elasticsearch, r5.large.elasticsearch, r5.xlarge.elasticsearch, r5.2xlarge.elasticsearch, r5.4xlarge.elasticsearch, r5.12xlarge.elasticsearch, c5.large.elasticsearch, c5.xlarge.elasticsearch, c5.2xlarge.elasticsearch, c5.4xlarge.elasticsearch, c5.9xlarge.elasticsearch, c5.18xlarge.elasticsearch, ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch, t2.micro.elasticsearch, t2.small.elasticsearch, t2.medium.elasticsearch, r3.large.elasticsearch, r3.xlarge.elasticsearch, r3.2xlarge.elasticsearch, r3.4xlarge.elasticsearch, r3.8xlarge.elasticsearch, i2.xlarge.elasticsearch, i2.2xlarge.elasticsearch, d2.xlarge.elasticsearch, d2.2xlarge.elasticsearch, d2.4xlarge.elasticsearch, d2.8xlarge.elasticsearch, c4.large.elasticsearch, c4.xlarge.elasticsearch, c4.2xlarge.elasticsearch, c4.4xlarge.elasticsearch, c4.8xlarge.elasticsearch, r4.large.elasticsearch, r4.xlarge.elasticsearch, r4.2xlarge.elasticsearch, r4.4xlarge.elasticsearch, r4.8xlarge.elasticsearch, r4.16xlarge.elasticsearch, i3.large.elasticsearch, i3.xlarge.elasticsearch, i3.2xlarge.elasticsearch, i3.4xlarge.elasticsearch, i3.8xlarge.elasticsearch, i3.16xlarge.elasticsearch
-    #         instance_count: 1,
-    #         dedicated_master_enabled: false,
-    #         zone_awareness_enabled: false,
-    #         zone_awareness_config: {
-    #           availability_zone_count: 1,
-    #         },
-    #         dedicated_master_type: "m3.medium.elasticsearch", # accepts m3.medium.elasticsearch, m3.large.elasticsearch, m3.xlarge.elasticsearch, m3.2xlarge.elasticsearch, m4.large.elasticsearch, m4.xlarge.elasticsearch, m4.2xlarge.elasticsearch, m4.4xlarge.elasticsearch, m4.10xlarge.elasticsearch, m5.large.elasticsearch, m5.xlarge.elasticsearch, m5.2xlarge.elasticsearch, m5.4xlarge.elasticsearch, m5.12xlarge.elasticsearch, r5.large.elasticsearch, r5.xlarge.elasticsearch, r5.2xlarge.elasticsearch, r5.4xlarge.elasticsearch, r5.12xlarge.elasticsearch, c5.large.elasticsearch, c5.xlarge.elasticsearch, c5.2xlarge.elasticsearch, c5.4xlarge.elasticsearch, c5.9xlarge.elasticsearch, c5.18xlarge.elasticsearch, ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch, t2.micro.elasticsearch, t2.small.elasticsearch, t2.medium.elasticsearch, r3.large.elasticsearch, r3.xlarge.elasticsearch, r3.2xlarge.elasticsearch, r3.4xlarge.elasticsearch, r3.8xlarge.elasticsearch, i2.xlarge.elasticsearch, i2.2xlarge.elasticsearch, d2.xlarge.elasticsearch, d2.2xlarge.elasticsearch, d2.4xlarge.elasticsearch, d2.8xlarge.elasticsearch, c4.large.elasticsearch, c4.xlarge.elasticsearch, c4.2xlarge.elasticsearch, c4.4xlarge.elasticsearch, c4.8xlarge.elasticsearch, r4.large.elasticsearch, r4.xlarge.elasticsearch, r4.2xlarge.elasticsearch, r4.4xlarge.elasticsearch, r4.8xlarge.elasticsearch, r4.16xlarge.elasticsearch, i3.large.elasticsearch, i3.xlarge.elasticsearch, i3.2xlarge.elasticsearch, i3.4xlarge.elasticsearch, i3.8xlarge.elasticsearch, i3.16xlarge.elasticsearch
-    #         dedicated_master_count: 1,
-    #         warm_enabled: false,
-    #         warm_type: "ultrawarm1.medium.elasticsearch", # accepts ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch
-    #         warm_count: 1,
-    #         cold_storage_options: {
-    #           enabled: false, # required
-    #         },
-    #       }
     #
     # @!attribute [rw] instance_type
     #   The instance type for an Elasticsearch cluster. UltraWarm instance
@@ -2147,8 +2013,7 @@ module Aws::ElasticsearchService
     #   @return [Integer]
     #
     # @!attribute [rw] cold_storage_options
-    #   Specifies the `ColdStorageOptions` configuration for an
-    #   Elasticsearch domain.
+    #   Specifies the `ColdStorageOptions` config for Elasticsearch Domain
     #   @return [Types::ColdStorageOptions]
     #
     class ElasticsearchClusterConfig < Struct.new(
@@ -2264,6 +2129,10 @@ module Aws::ElasticsearchService
     #   Specifies `AutoTuneOptions` for the domain.
     #   @return [Types::AutoTuneOptionsStatus]
     #
+    # @!attribute [rw] change_progress_details
+    #   Specifies change details of the domain configuration change.
+    #   @return [Types::ChangeProgressDetails]
+    #
     class ElasticsearchDomainConfig < Struct.new(
       :elasticsearch_version,
       :elasticsearch_cluster_config,
@@ -2278,7 +2147,8 @@ module Aws::ElasticsearchService
       :log_publishing_options,
       :domain_endpoint_options,
       :advanced_security_options,
-      :auto_tune_options)
+      :auto_tune_options,
+      :change_progress_details)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2326,7 +2196,7 @@ module Aws::ElasticsearchService
     #
     # @!attribute [rw] endpoints
     #   Map containing the Elasticsearch domain endpoints used to submit
-    #   index and search requests. Example `key, value`\:
+    #   index and search requests. Example `key, value`:
     #   `'vpc','vpc-endpoint-h2dsd34efgyghrtguk5gt6j2foh4.us-east-1.es.amazonaws.com'`.
     #   @return [Hash<String,String>]
     #
@@ -2417,6 +2287,10 @@ module Aws::ElasticsearchService
     #   The current status of the Elasticsearch domain's Auto-Tune options.
     #   @return [Types::AutoTuneOptionsOutput]
     #
+    # @!attribute [rw] change_progress_details
+    #   Specifies change details of the domain configuration change.
+    #   @return [Types::ChangeProgressDetails]
+    #
     class ElasticsearchDomainStatus < Struct.new(
       :domain_id,
       :domain_name,
@@ -2441,7 +2315,8 @@ module Aws::ElasticsearchService
       :service_software_options,
       :domain_endpoint_options,
       :advanced_security_options,
-      :auto_tune_options)
+      :auto_tune_options,
+      :change_progress_details)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2467,14 +2342,6 @@ module Aws::ElasticsearchService
     end
 
     # Specifies the Encryption At Rest Options.
-    #
-    # @note When making an API call, you may pass EncryptionAtRestOptions
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false,
-    #         kms_key_id: "KmsKeyId",
-    #       }
     #
     # @!attribute [rw] enabled
     #   Specifies the option to enable Encryption At Rest.
@@ -2529,14 +2396,6 @@ module Aws::ElasticsearchService
     # filter. A cross-cluster search connection must match at least one of
     # the specified values for it to be returned from an operation.
     #
-    # @note When making an API call, you may pass Filter
-    #   data as a hash:
-    #
-    #       {
-    #         name: "NonEmptyString",
-    #         values: ["NonEmptyString"],
-    #       }
-    #
     # @!attribute [rw] name
     #   Specifies the name of the filter.
     #   @return [String]
@@ -2554,13 +2413,6 @@ module Aws::ElasticsearchService
 
     # Container for request parameters to `
     # GetCompatibleElasticsearchVersions ` operation.
-    #
-    # @note When making an API call, you may pass GetCompatibleElasticsearchVersionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName",
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of an Elasticsearch domain. Domain names are unique across
@@ -2591,15 +2443,6 @@ module Aws::ElasticsearchService
 
     # Container for request parameters to ` GetPackageVersionHistory `
     # operation.
-    #
-    # @note When making an API call, you may pass GetPackageVersionHistoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         package_id: "PackageID", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] package_id
     #   Returns an audit history of versions of the package.
@@ -2645,15 +2488,6 @@ module Aws::ElasticsearchService
     end
 
     # Container for request parameters to ` GetUpgradeHistory ` operation.
-    #
-    # @note When making an API call, you may pass GetUpgradeHistoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of an Elasticsearch domain. Domain names are unique across
@@ -2701,13 +2535,6 @@ module Aws::ElasticsearchService
     end
 
     # Container for request parameters to ` GetUpgradeStatus ` operation.
-    #
-    # @note When making an API call, you may pass GetUpgradeStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of an Elasticsearch domain. Domain names are unique across
@@ -2893,11 +2720,24 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
+    # Container for the parameters to the `ListDomainNames` operation.
+    #
+    # @!attribute [rw] engine_type
+    #   Optional parameter to filter the output by domain engine type.
+    #   Acceptable values are 'Elasticsearch' and 'OpenSearch'.
+    #   @return [String]
+    #
+    class ListDomainNamesRequest < Struct.new(
+      :engine_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The result of a `ListDomainNames` operation. Contains the names of all
-    # Elasticsearch domains owned by this account.
+    # domains owned by this account and their respective engine types.
     #
     # @!attribute [rw] domain_names
-    #   List of Elasticsearch domain names.
+    #   List of domain names and respective engine types.
     #   @return [Array<Types::DomainInfo>]
     #
     class ListDomainNamesResponse < Struct.new(
@@ -2908,15 +2748,6 @@ module Aws::ElasticsearchService
 
     # Container for request parameters to ` ListDomainsForPackage `
     # operation.
-    #
-    # @note When making an API call, you may pass ListDomainsForPackageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         package_id: "PackageID", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] package_id
     #   The package for which to list domains.
@@ -2959,16 +2790,6 @@ module Aws::ElasticsearchService
 
     # Container for the parameters to the ` ListElasticsearchInstanceTypes `
     # operation.
-    #
-    # @note When making an API call, you may pass ListElasticsearchInstanceTypesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         elasticsearch_version: "ElasticsearchVersionString", # required
-    #         domain_name: "DomainName",
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] elasticsearch_version
     #   Version of Elasticsearch for which list of supported elasticsearch
@@ -3031,14 +2852,6 @@ module Aws::ElasticsearchService
     # received response does not contain a NextToken, then there are no more
     # results to retrieve.
     #
-    # @note When making an API call, you may pass ListElasticsearchVersionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   Set this value to limit the number of results returned. Value
     #   provided must be greater than 10 else it wont be honored.
@@ -3079,15 +2892,6 @@ module Aws::ElasticsearchService
 
     # Container for request parameters to ` ListPackagesForDomain `
     # operation.
-    #
-    # @note When making an API call, you may pass ListPackagesForDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the domain for which you want to list associated
@@ -3135,13 +2939,6 @@ module Aws::ElasticsearchService
     # `ARN` for the Elasticsearch domain to which the tags are attached that
     # you want to view are attached.
     #
-    # @note When making an API call, you may pass ListTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "ARN", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   Specify the `ARN` for the Elasticsearch domain to which the tags are
     #   attached that you want to view.
@@ -3166,20 +2963,121 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
+    # Retrieves information about each principal that is allowed to access a
+    # given Amazon OpenSearch Service domain through the use of an interface
+    # VPC endpoint
+    #
+    # @!attribute [rw] domain_name
+    #   The name of the OpenSearch Service domain to retrieve access
+    #   information for.
+    #   @return [String]
+    #
+    # @!attribute [rw] next_token
+    #   Provides an identifier to allow retrieval of paginated results.
+    #   @return [String]
+    #
+    class ListVpcEndpointAccessRequest < Struct.new(
+      :domain_name,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for response parameters to the `ListVpcEndpointAccess`
+    # operation. Returns a list of accounts id and account type authorized
+    # to manage VPC endpoints.
+    #
+    # @!attribute [rw] authorized_principal_list
+    #   List of `AuthorizedPrincipal` describing the details of the
+    #   permissions to manage VPC endpoints against the specified domain.
+    #   @return [Array<Types::AuthorizedPrincipal>]
+    #
+    # @!attribute [rw] next_token
+    #   Provides an identifier to allow retrieval of paginated results.
+    #   @return [String]
+    #
+    class ListVpcEndpointAccessResponse < Struct.new(
+      :authorized_principal_list,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for request parameters to the `ListVpcEndpointsForDomain`
+    # operation. Specifies the domain whose VPC endpoints will be listed.
+    #
+    # @!attribute [rw] domain_name
+    #   Name of the ElasticSearch domain whose VPC endpoints are to be
+    #   listed.
+    #   @return [String]
+    #
+    # @!attribute [rw] next_token
+    #   Provides an identifier to allow retrieval of paginated results.
+    #   @return [String]
+    #
+    class ListVpcEndpointsForDomainRequest < Struct.new(
+      :domain_name,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for response parameters to the `ListVpcEndpointsForDomain`
+    # operation. Returns a list containing summarized details of the VPC
+    # endpoints.
+    #
+    # @!attribute [rw] vpc_endpoint_summary_list
+    #   Provides list of `VpcEndpointSummary` summarizing details of the VPC
+    #   endpoints.
+    #   @return [Array<Types::VpcEndpointSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   Information about each endpoint associated with the domain.
+    #   @return [String]
+    #
+    class ListVpcEndpointsForDomainResponse < Struct.new(
+      :vpc_endpoint_summary_list,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for request parameters to the `ListVpcEndpoints` operation.
+    #
+    # @!attribute [rw] next_token
+    #   Identifier to allow retrieval of paginated results.
+    #   @return [String]
+    #
+    class ListVpcEndpointsRequest < Struct.new(
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for response parameters to the `ListVpcEndpoints` operation.
+    # Returns a list containing summarized details of the VPC endpoints.
+    #
+    # @!attribute [rw] vpc_endpoint_summary_list
+    #   Information about each endpoint.
+    #   @return [Array<Types::VpcEndpointSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   Provides an identifier to allow retrieval of paginated results.
+    #   @return [String]
+    #
+    class ListVpcEndpointsResponse < Struct.new(
+      :vpc_endpoint_summary_list,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Log Publishing option that is set for given domain.
     # Attributes and their details: * CloudWatchLogsLogGroupArn: ARN of the
     # Cloudwatch log group to which
     #   log needs to be published.
     # * Enabled: Whether the log publishing for given log type is enabled or
     #   not
-    #
-    # @note When making an API call, you may pass LogPublishingOption
-    #   data as a hash:
-    #
-    #       {
-    #         cloud_watch_logs_log_group_arn: "CloudWatchLogsLogGroupArn",
-    #         enabled: false,
-    #       }
     #
     # @!attribute [rw] cloud_watch_logs_log_group_arn
     #   ARN of the Cloudwatch log group to which log needs to be published.
@@ -3218,15 +3116,6 @@ module Aws::ElasticsearchService
 
     # Credentials for the master user: username and password, ARN, or both.
     #
-    # @note When making an API call, you may pass MasterUserOptions
-    #   data as a hash:
-    #
-    #       {
-    #         master_user_arn: "ARN",
-    #         master_user_name: "Username",
-    #         master_user_password: "Password",
-    #       }
-    #
     # @!attribute [rw] master_user_arn
     #   ARN for the master user (if IAM is enabled).
     #   @return [String]
@@ -3250,13 +3139,6 @@ module Aws::ElasticsearchService
     end
 
     # Specifies the node-to-node encryption options.
-    #
-    # @note When making an API call, you may pass NodeToNodeEncryptionOptions
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false,
-    #       }
     #
     # @!attribute [rw] enabled
     #   Specify true to enable node-to-node encryption.
@@ -3443,14 +3325,6 @@ module Aws::ElasticsearchService
     # The S3 location for importing the package specified as `S3BucketName`
     # and `S3Key`
     #
-    # @note When making an API call, you may pass PackageSource
-    #   data as a hash:
-    #
-    #       {
-    #         s3_bucket_name: "S3BucketName",
-    #         s3_key: "S3Key",
-    #       }
-    #
     # @!attribute [rw] s3_bucket_name
     #   Name of the bucket containing the package.
     #   @return [String]
@@ -3490,15 +3364,6 @@ module Aws::ElasticsearchService
 
     # Container for parameters to
     # `PurchaseReservedElasticsearchInstanceOffering`
-    #
-    # @note When making an API call, you may pass PurchaseReservedElasticsearchInstanceOfferingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         reserved_elasticsearch_instance_offering_id: "GUID", # required
-    #         reservation_name: "ReservationToken", # required
-    #         instance_count: 1,
-    #       }
     #
     # @!attribute [rw] reserved_elasticsearch_instance_offering_id
     #   The ID of the reserved Elasticsearch instance offering to purchase.
@@ -3560,13 +3425,6 @@ module Aws::ElasticsearchService
     # Container for the parameters to the
     # `RejectInboundCrossClusterSearchConnection` operation.
     #
-    # @note When making an API call, you may pass RejectInboundCrossClusterSearchConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cross_cluster_search_connection_id: "CrossClusterSearchConnectionId", # required
-    #       }
-    #
     # @!attribute [rw] cross_cluster_search_connection_id
     #   The id of the inbound connection that you want to reject.
     #   @return [String]
@@ -3594,14 +3452,6 @@ module Aws::ElasticsearchService
     # Container for the parameters to the `RemoveTags` operation. Specify
     # the `ARN` for the Elasticsearch domain from which you want to remove
     # the specified `TagKey`.
-    #
-    # @note When making an API call, you may pass RemoveTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "ARN", # required
-    #         tag_keys: ["String"], # required
-    #       }
     #
     # @!attribute [rw] arn
     #   Specifies the `ARN` for the Elasticsearch domain from which you want
@@ -3760,15 +3610,30 @@ module Aws::ElasticsearchService
     #
     class ResourceNotFoundException < Aws::EmptyStructure; end
 
+    # Revokes access to an Amazon OpenSearch Service domain that was
+    # provided through an interface VPC endpoint.
+    #
+    # @!attribute [rw] domain_name
+    #   The name of the OpenSearch Service domain.
+    #   @return [String]
+    #
+    # @!attribute [rw] account
+    #   The account ID to revoke access from.
+    #   @return [String]
+    #
+    class RevokeVpcEndpointAccessRequest < Struct.new(
+      :domain_name,
+      :account)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Container for response parameters to the `RevokeVpcEndpointAccess`
+    # operation. The response body for this operation is empty.
+    #
+    class RevokeVpcEndpointAccessResponse < Aws::EmptyStructure; end
+
     # Specifies the SAML Identity Provider's information.
-    #
-    # @note When making an API call, you may pass SAMLIdp
-    #   data as a hash:
-    #
-    #       {
-    #         metadata_content: "SAMLMetadata", # required
-    #         entity_id: "SAMLEntityId", # required
-    #       }
     #
     # @!attribute [rw] metadata_content
     #   The Metadata of the SAML application in xml format.
@@ -3786,22 +3651,6 @@ module Aws::ElasticsearchService
     end
 
     # Specifies the SAML application configuration for the domain.
-    #
-    # @note When making an API call, you may pass SAMLOptionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false,
-    #         idp: {
-    #           metadata_content: "SAMLMetadata", # required
-    #           entity_id: "SAMLEntityId", # required
-    #         },
-    #         master_user_name: "Username",
-    #         master_backend_role: "BackendRole",
-    #         subject_key: "String",
-    #         roles_key: "String",
-    #         session_timeout_minutes: 1,
-    #       }
     #
     # @!attribute [rw] enabled
     #   True if SAML is enabled.
@@ -3975,13 +3824,6 @@ module Aws::ElasticsearchService
     # automated snapshot of the specified Elasticsearch domain. Default
     # value is `0` hours.
     #
-    # @note When making an API call, you may pass SnapshotOptions
-    #   data as a hash:
-    #
-    #       {
-    #         automated_snapshot_start_hour: 1,
-    #       }
-    #
     # @!attribute [rw] automated_snapshot_start_hour
     #   Specifies the time, in UTC format, when the service takes a daily
     #   automated snapshot of the specified Elasticsearch domain. Default
@@ -4016,13 +3858,6 @@ module Aws::ElasticsearchService
     # `StartElasticsearchServiceSoftwareUpdate` operation. Specifies the
     # name of the Elasticsearch domain that you wish to schedule a service
     # software update on.
-    #
-    # @note When making an API call, you may pass StartElasticsearchServiceSoftwareUpdateRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to update to the latest service
@@ -4062,7 +3897,8 @@ module Aws::ElasticsearchService
     #   storageSubType, in case of "ebs" storageType we will have
     #   following valid storageSubTypes 1.  standard
     #   2.  gp2
-    #   3.  io1
+    #   3.  gp3
+    #   4.  io1
     #
     #    Refer `VolumeType` for more information regarding above EBS storage
     #   options.
@@ -4089,6 +3925,8 @@ module Aws::ElasticsearchService
     #   2.  MaximumVolumeSize
     #   3.  MaximumIops
     #   4.  MinimumIops
+    #   5.  MaximumThroughput
+    #   6.  MinimumThroughput
     #   @return [String]
     #
     # @!attribute [rw] limit_values
@@ -4103,14 +3941,6 @@ module Aws::ElasticsearchService
     end
 
     # Specifies a key value pair for a resource tag.
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
     #
     # @!attribute [rw] key
     #   Specifies the `TagKey`, the name of the tag. Tag keys must be unique
@@ -4134,108 +3964,6 @@ module Aws::ElasticsearchService
     # Container for the parameters to the `UpdateElasticsearchDomain`
     # operation. Specifies the type and number of instances in the domain
     # cluster.
-    #
-    # @note When making an API call, you may pass UpdateElasticsearchDomainConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         elasticsearch_cluster_config: {
-    #           instance_type: "m3.medium.elasticsearch", # accepts m3.medium.elasticsearch, m3.large.elasticsearch, m3.xlarge.elasticsearch, m3.2xlarge.elasticsearch, m4.large.elasticsearch, m4.xlarge.elasticsearch, m4.2xlarge.elasticsearch, m4.4xlarge.elasticsearch, m4.10xlarge.elasticsearch, m5.large.elasticsearch, m5.xlarge.elasticsearch, m5.2xlarge.elasticsearch, m5.4xlarge.elasticsearch, m5.12xlarge.elasticsearch, r5.large.elasticsearch, r5.xlarge.elasticsearch, r5.2xlarge.elasticsearch, r5.4xlarge.elasticsearch, r5.12xlarge.elasticsearch, c5.large.elasticsearch, c5.xlarge.elasticsearch, c5.2xlarge.elasticsearch, c5.4xlarge.elasticsearch, c5.9xlarge.elasticsearch, c5.18xlarge.elasticsearch, ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch, t2.micro.elasticsearch, t2.small.elasticsearch, t2.medium.elasticsearch, r3.large.elasticsearch, r3.xlarge.elasticsearch, r3.2xlarge.elasticsearch, r3.4xlarge.elasticsearch, r3.8xlarge.elasticsearch, i2.xlarge.elasticsearch, i2.2xlarge.elasticsearch, d2.xlarge.elasticsearch, d2.2xlarge.elasticsearch, d2.4xlarge.elasticsearch, d2.8xlarge.elasticsearch, c4.large.elasticsearch, c4.xlarge.elasticsearch, c4.2xlarge.elasticsearch, c4.4xlarge.elasticsearch, c4.8xlarge.elasticsearch, r4.large.elasticsearch, r4.xlarge.elasticsearch, r4.2xlarge.elasticsearch, r4.4xlarge.elasticsearch, r4.8xlarge.elasticsearch, r4.16xlarge.elasticsearch, i3.large.elasticsearch, i3.xlarge.elasticsearch, i3.2xlarge.elasticsearch, i3.4xlarge.elasticsearch, i3.8xlarge.elasticsearch, i3.16xlarge.elasticsearch
-    #           instance_count: 1,
-    #           dedicated_master_enabled: false,
-    #           zone_awareness_enabled: false,
-    #           zone_awareness_config: {
-    #             availability_zone_count: 1,
-    #           },
-    #           dedicated_master_type: "m3.medium.elasticsearch", # accepts m3.medium.elasticsearch, m3.large.elasticsearch, m3.xlarge.elasticsearch, m3.2xlarge.elasticsearch, m4.large.elasticsearch, m4.xlarge.elasticsearch, m4.2xlarge.elasticsearch, m4.4xlarge.elasticsearch, m4.10xlarge.elasticsearch, m5.large.elasticsearch, m5.xlarge.elasticsearch, m5.2xlarge.elasticsearch, m5.4xlarge.elasticsearch, m5.12xlarge.elasticsearch, r5.large.elasticsearch, r5.xlarge.elasticsearch, r5.2xlarge.elasticsearch, r5.4xlarge.elasticsearch, r5.12xlarge.elasticsearch, c5.large.elasticsearch, c5.xlarge.elasticsearch, c5.2xlarge.elasticsearch, c5.4xlarge.elasticsearch, c5.9xlarge.elasticsearch, c5.18xlarge.elasticsearch, ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch, t2.micro.elasticsearch, t2.small.elasticsearch, t2.medium.elasticsearch, r3.large.elasticsearch, r3.xlarge.elasticsearch, r3.2xlarge.elasticsearch, r3.4xlarge.elasticsearch, r3.8xlarge.elasticsearch, i2.xlarge.elasticsearch, i2.2xlarge.elasticsearch, d2.xlarge.elasticsearch, d2.2xlarge.elasticsearch, d2.4xlarge.elasticsearch, d2.8xlarge.elasticsearch, c4.large.elasticsearch, c4.xlarge.elasticsearch, c4.2xlarge.elasticsearch, c4.4xlarge.elasticsearch, c4.8xlarge.elasticsearch, r4.large.elasticsearch, r4.xlarge.elasticsearch, r4.2xlarge.elasticsearch, r4.4xlarge.elasticsearch, r4.8xlarge.elasticsearch, r4.16xlarge.elasticsearch, i3.large.elasticsearch, i3.xlarge.elasticsearch, i3.2xlarge.elasticsearch, i3.4xlarge.elasticsearch, i3.8xlarge.elasticsearch, i3.16xlarge.elasticsearch
-    #           dedicated_master_count: 1,
-    #           warm_enabled: false,
-    #           warm_type: "ultrawarm1.medium.elasticsearch", # accepts ultrawarm1.medium.elasticsearch, ultrawarm1.large.elasticsearch
-    #           warm_count: 1,
-    #           cold_storage_options: {
-    #             enabled: false, # required
-    #           },
-    #         },
-    #         ebs_options: {
-    #           ebs_enabled: false,
-    #           volume_type: "standard", # accepts standard, gp2, io1
-    #           volume_size: 1,
-    #           iops: 1,
-    #         },
-    #         snapshot_options: {
-    #           automated_snapshot_start_hour: 1,
-    #         },
-    #         vpc_options: {
-    #           subnet_ids: ["String"],
-    #           security_group_ids: ["String"],
-    #         },
-    #         cognito_options: {
-    #           enabled: false,
-    #           user_pool_id: "UserPoolId",
-    #           identity_pool_id: "IdentityPoolId",
-    #           role_arn: "RoleArn",
-    #         },
-    #         advanced_options: {
-    #           "String" => "String",
-    #         },
-    #         access_policies: "PolicyDocument",
-    #         log_publishing_options: {
-    #           "INDEX_SLOW_LOGS" => {
-    #             cloud_watch_logs_log_group_arn: "CloudWatchLogsLogGroupArn",
-    #             enabled: false,
-    #           },
-    #         },
-    #         domain_endpoint_options: {
-    #           enforce_https: false,
-    #           tls_security_policy: "Policy-Min-TLS-1-0-2019-07", # accepts Policy-Min-TLS-1-0-2019-07, Policy-Min-TLS-1-2-2019-07
-    #           custom_endpoint_enabled: false,
-    #           custom_endpoint: "DomainNameFqdn",
-    #           custom_endpoint_certificate_arn: "ARN",
-    #         },
-    #         advanced_security_options: {
-    #           enabled: false,
-    #           internal_user_database_enabled: false,
-    #           master_user_options: {
-    #             master_user_arn: "ARN",
-    #             master_user_name: "Username",
-    #             master_user_password: "Password",
-    #           },
-    #           saml_options: {
-    #             enabled: false,
-    #             idp: {
-    #               metadata_content: "SAMLMetadata", # required
-    #               entity_id: "SAMLEntityId", # required
-    #             },
-    #             master_user_name: "Username",
-    #             master_backend_role: "BackendRole",
-    #             subject_key: "String",
-    #             roles_key: "String",
-    #             session_timeout_minutes: 1,
-    #           },
-    #         },
-    #         node_to_node_encryption_options: {
-    #           enabled: false,
-    #         },
-    #         encryption_at_rest_options: {
-    #           enabled: false,
-    #           kms_key_id: "KmsKeyId",
-    #         },
-    #         auto_tune_options: {
-    #           desired_state: "ENABLED", # accepts ENABLED, DISABLED
-    #           rollback_on_disable: "NO_ROLLBACK", # accepts NO_ROLLBACK, DEFAULT_ROLLBACK
-    #           maintenance_schedules: [
-    #             {
-    #               start_at: Time.now,
-    #               duration: {
-    #                 value: 1,
-    #                 unit: "HOURS", # accepts HOURS
-    #               },
-    #               cron_expression_for_recurrence: "String",
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the Elasticsearch domain that you are updating.
@@ -4316,6 +4044,15 @@ module Aws::ElasticsearchService
     #   Specifies Auto-Tune options.
     #   @return [Types::AutoTuneOptions]
     #
+    # @!attribute [rw] dry_run
+    #   This flag, when set to True, specifies whether the
+    #   `UpdateElasticsearchDomain` request should return the results of
+    #   validation checks without actually applying the change. This flag,
+    #   when set to True, specifies the deployment mechanism through which
+    #   the update shall be applied on the domain. This will not actually
+    #   perform the Update.
+    #   @return [Boolean]
+    #
     class UpdateElasticsearchDomainConfigRequest < Struct.new(
       :domain_name,
       :elasticsearch_cluster_config,
@@ -4330,7 +4067,8 @@ module Aws::ElasticsearchService
       :advanced_security_options,
       :node_to_node_encryption_options,
       :encryption_at_rest_options,
-      :auto_tune_options)
+      :auto_tune_options,
+      :dry_run)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -4342,26 +4080,18 @@ module Aws::ElasticsearchService
     #   The status of the updated Elasticsearch domain.
     #   @return [Types::ElasticsearchDomainConfig]
     #
+    # @!attribute [rw] dry_run_results
+    #   Contains result of DryRun.
+    #   @return [Types::DryRunResults]
+    #
     class UpdateElasticsearchDomainConfigResponse < Struct.new(
-      :domain_config)
+      :domain_config,
+      :dry_run_results)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Container for request parameters to ` UpdatePackage ` operation.
-    #
-    # @note When making an API call, you may pass UpdatePackageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         package_id: "PackageID", # required
-    #         package_source: { # required
-    #           s3_bucket_name: "S3BucketName",
-    #           s3_key: "S3Key",
-    #         },
-    #         package_description: "PackageDescription",
-    #         commit_message: "CommitMessage",
-    #       }
     #
     # @!attribute [rw] package_id
     #   Unique identifier for the package.
@@ -4402,17 +4132,38 @@ module Aws::ElasticsearchService
       include Aws::Structure
     end
 
+    # Modifies an Amazon OpenSearch Service-managed interface VPC endpoint.
+    #
+    # @!attribute [rw] vpc_endpoint_id
+    #   Unique identifier of the VPC endpoint to be updated.
+    #   @return [String]
+    #
+    # @!attribute [rw] vpc_options
+    #   The security groups and/or subnets to add, remove, or modify.
+    #   @return [Types::VPCOptions]
+    #
+    class UpdateVpcEndpointRequest < Struct.new(
+      :vpc_endpoint_id,
+      :vpc_options)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains the configuration and status of the VPC endpoint being
+    # updated.
+    #
+    # @!attribute [rw] vpc_endpoint
+    #   The endpoint to be updated.
+    #   @return [Types::VpcEndpoint]
+    #
+    class UpdateVpcEndpointResponse < Struct.new(
+      :vpc_endpoint)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Container for request parameters to ` UpgradeElasticsearchDomain `
     # operation.
-    #
-    # @note When making an API call, you may pass UpgradeElasticsearchDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         target_version: "ElasticsearchVersionString", # required
-    #         perform_check_only: false,
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of an Elasticsearch domain. Domain names are unique across
@@ -4461,10 +4212,15 @@ module Aws::ElasticsearchService
     #   Upgrade.
     #   @return [Boolean]
     #
+    # @!attribute [rw] change_progress_details
+    #   Specifies change details of the domain configuration change.
+    #   @return [Types::ChangeProgressDetails]
+    #
     class UpgradeElasticsearchDomainResponse < Struct.new(
       :domain_name,
       :target_version,
-      :perform_check_only)
+      :perform_check_only,
+      :change_progress_details)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -4601,14 +4357,6 @@ module Aws::ElasticsearchService
     #
     # [1]: http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html
     #
-    # @note When making an API call, you may pass VPCOptions
-    #   data as a hash:
-    #
-    #       {
-    #         subnet_ids: ["String"],
-    #         security_group_ids: ["String"],
-    #       }
-    #
     # @!attribute [rw] subnet_ids
     #   Specifies the subnets for VPC endpoint.
     #   @return [Array<String>]
@@ -4629,15 +4377,100 @@ module Aws::ElasticsearchService
     #
     class ValidationException < Aws::EmptyStructure; end
 
+    # The connection endpoint for connecting to an Amazon OpenSearch Service
+    # domain through a proxy.
+    #
+    # @!attribute [rw] vpc_endpoint_id
+    #   The unique identifier of the endpoint.
+    #   @return [String]
+    #
+    # @!attribute [rw] vpc_endpoint_owner
+    #   The creator of the endpoint.
+    #   @return [String]
+    #
+    # @!attribute [rw] domain_arn
+    #   The Amazon Resource Name (ARN) of the domain associated with the
+    #   endpoint.
+    #   @return [String]
+    #
+    # @!attribute [rw] vpc_options
+    #   Options to specify the subnets and security groups for an Amazon
+    #   OpenSearch Service VPC endpoint.
+    #   @return [Types::VPCDerivedInfo]
+    #
+    # @!attribute [rw] status
+    #   The current status of the endpoint.
+    #   @return [String]
+    #
+    # @!attribute [rw] endpoint
+    #   The connection endpoint ID for connecting to the domain.
+    #   @return [String]
+    #
+    class VpcEndpoint < Struct.new(
+      :vpc_endpoint_id,
+      :vpc_endpoint_owner,
+      :domain_arn,
+      :vpc_options,
+      :status,
+      :endpoint)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Error information when attempting to describe an Amazon OpenSearch
+    # Service-managed VPC endpoint.
+    #
+    # @!attribute [rw] vpc_endpoint_id
+    #   The unique identifier of the endpoint.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_code
+    #   The code associated with the error.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_message
+    #   A message describing the error.
+    #   @return [String]
+    #
+    class VpcEndpointError < Struct.new(
+      :vpc_endpoint_id,
+      :error_code,
+      :error_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Summary information for an Amazon OpenSearch Service-managed VPC
+    # endpoint.
+    #
+    # @!attribute [rw] vpc_endpoint_id
+    #   The unique identifier of the endpoint.
+    #   @return [String]
+    #
+    # @!attribute [rw] vpc_endpoint_owner
+    #   The creator of the endpoint.
+    #   @return [String]
+    #
+    # @!attribute [rw] domain_arn
+    #   The Amazon Resource Name (ARN) of the domain associated with the
+    #   endpoint.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   The current status of the endpoint.
+    #   @return [String]
+    #
+    class VpcEndpointSummary < Struct.new(
+      :vpc_endpoint_id,
+      :vpc_endpoint_owner,
+      :domain_arn,
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Specifies the zone awareness configuration for the domain cluster,
     # such as the number of availability zones.
-    #
-    # @note When making an API call, you may pass ZoneAwarenessConfig
-    #   data as a hash:
-    #
-    #       {
-    #         availability_zone_count: 1,
-    #       }
     #
     # @!attribute [rw] availability_zone_count
     #   An integer value to indicate the number of availability zones for a

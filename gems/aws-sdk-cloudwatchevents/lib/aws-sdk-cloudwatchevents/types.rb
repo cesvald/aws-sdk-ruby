@@ -10,13 +10,6 @@
 module Aws::CloudWatchEvents
   module Types
 
-    # @note When making an API call, you may pass ActivateEventSourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EventSourceName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the partner event source to activate.
     #   @return [String]
@@ -141,15 +134,6 @@ module Aws::CloudWatchEvents
     # task, and whether a public IP address is to be used. This structure is
     # relevant only for ECS tasks that use the `awsvpc` network mode.
     #
-    # @note When making an API call, you may pass AwsVpcConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         subnets: ["String"], # required
-    #         security_groups: ["String"],
-    #         assign_public_ip: "ENABLED", # accepts ENABLED, DISABLED
-    #       }
-    #
     # @!attribute [rw] subnets
     #   Specifies the subnets associated with the task. These subnets must
     #   all be in the same VPC. You can specify as many as 16 subnets.
@@ -181,14 +165,7 @@ module Aws::CloudWatchEvents
     # The array properties for the submitted job, such as the size of the
     # array. The array size can be between 2 and 10,000. If you specify
     # array properties for a job, it becomes an array job. This parameter is
-    # used only if the target is an AWS Batch job.
-    #
-    # @note When making an API call, you may pass BatchArrayProperties
-    #   data as a hash:
-    #
-    #       {
-    #         size: 1,
-    #       }
+    # used only if the target is an Batch job.
     #
     # @!attribute [rw] size
     #   The size of the array, if this is an array batch job. Valid values
@@ -203,45 +180,31 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # The custom parameters to be used when the target is an AWS Batch job.
-    #
-    # @note When making an API call, you may pass BatchParameters
-    #   data as a hash:
-    #
-    #       {
-    #         job_definition: "String", # required
-    #         job_name: "String", # required
-    #         array_properties: {
-    #           size: 1,
-    #         },
-    #         retry_strategy: {
-    #           attempts: 1,
-    #         },
-    #       }
+    # The custom parameters to be used when the target is an Batch job.
     #
     # @!attribute [rw] job_definition
     #   The ARN or name of the job definition to use if the event target is
-    #   an AWS Batch job. This job definition must already exist.
+    #   an Batch job. This job definition must already exist.
     #   @return [String]
     #
     # @!attribute [rw] job_name
     #   The name to use for this execution of the job, if the target is an
-    #   AWS Batch job.
+    #   Batch job.
     #   @return [String]
     #
     # @!attribute [rw] array_properties
     #   The array properties for the submitted job, such as the size of the
     #   array. The array size can be between 2 and 10,000. If you specify
     #   array properties for a job, it becomes an array job. This parameter
-    #   is used only if the target is an AWS Batch job.
+    #   is used only if the target is an Batch job.
     #   @return [Types::BatchArrayProperties]
     #
     # @!attribute [rw] retry_strategy
-    #   The retry strategy to use for failed jobs, if the target is an AWS
-    #   Batch job. The retry strategy is the number of times to retry the
-    #   failed job execution. Valid values are 1–10. When you specify a
-    #   retry strategy here, it overrides the retry strategy defined in the
-    #   job definition.
+    #   The retry strategy to use for failed jobs, if the target is an Batch
+    #   job. The retry strategy is the number of times to retry the failed
+    #   job execution. Valid values are 1–10. When you specify a retry
+    #   strategy here, it overrides the retry strategy defined in the job
+    #   definition.
     #   @return [Types::BatchRetryStrategy]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/BatchParameters AWS API Documentation
@@ -255,16 +218,9 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # The retry strategy to use for failed jobs, if the target is an AWS
-    # Batch job. If you specify a retry strategy here, it overrides the
-    # retry strategy defined in the job definition.
-    #
-    # @note When making an API call, you may pass BatchRetryStrategy
-    #   data as a hash:
-    #
-    #       {
-    #         attempts: 1,
-    #       }
+    # The retry strategy to use for failed jobs, if the target is an Batch
+    # job. If you specify a retry strategy here, it overrides the retry
+    # strategy defined in the job definition.
     #
     # @!attribute [rw] attempts
     #   The number of times to attempt to retry, if the job fails. Valid
@@ -279,13 +235,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CancelReplayRequest
-    #   data as a hash:
-    #
-    #       {
-    #         replay_name: "ReplayName", # required
-    #       }
-    #
     # @!attribute [rw] replay_name
     #   The name of the replay to cancel.
     #   @return [String]
@@ -320,6 +269,41 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
+    # The details of a capacity provider strategy. To learn more, see
+    # [CapacityProviderStrategyItem][1] in the Amazon ECS API Reference.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CapacityProviderStrategyItem.html
+    #
+    # @!attribute [rw] capacity_provider
+    #   The short name of the capacity provider.
+    #   @return [String]
+    #
+    # @!attribute [rw] weight
+    #   The weight value designates the relative percentage of the total
+    #   number of tasks launched that should use the specified capacity
+    #   provider. The weight value is taken into consideration after the
+    #   base value, if defined, is satisfied.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] base
+    #   The base value designates how many tasks, at a minimum, to run on
+    #   the specified capacity provider. Only one capacity provider in a
+    #   capacity provider strategy can have a base defined. If no value is
+    #   specified, the default value of 0 is used.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/CapacityProviderStrategyItem AWS API Documentation
+    #
+    class CapacityProviderStrategyItem < Struct.new(
+      :capacity_provider,
+      :weight,
+      :base)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # There is concurrent modification on a rule, target, archive, or
     # replay.
     #
@@ -329,22 +313,13 @@ module Aws::CloudWatchEvents
 
     # A JSON string which you can use to limit the event bus permissions you
     # are granting to only accounts that fulfill the condition. Currently,
-    # the only supported condition is membership in a certain AWS
-    # organization. The string must contain `Type`, `Key`, and `Value`
-    # fields. The `Value` field specifies the ID of the AWS organization.
-    # Following is an example value for `Condition`\:
+    # the only supported condition is membership in a certain Amazon Web
+    # Services organization. The string must contain `Type`, `Key`, and
+    # `Value` fields. The `Value` field specifies the ID of the Amazon Web
+    # Services organization. Following is an example value for `Condition`:
     #
     # `'\{"Type" : "StringEquals", "Key": "aws:PrincipalOrgID", "Value":
     # "o-1234567890"\}'`
-    #
-    # @note When making an API call, you may pass Condition
-    #   data as a hash:
-    #
-    #       {
-    #         type: "String", # required
-    #         key: "String", # required
-    #         value: "String", # required
-    #       }
     #
     # @!attribute [rw] type
     #   Specifies the type of condition. Currently the only supported value
@@ -485,15 +460,6 @@ module Aws::CloudWatchEvents
     # additional body parameters per request. An event payload cannot exceed
     # 64 KB.
     #
-    # @note When making an API call, you may pass ConnectionBodyParameter
-    #   data as a hash:
-    #
-    #       {
-    #         key: "String",
-    #         value: "String",
-    #         is_value_secret: false,
-    #       }
-    #
     # @!attribute [rw] key
     #   The key for the parameter.
     #   @return [String]
@@ -520,15 +486,6 @@ module Aws::CloudWatchEvents
     # additional header parameters per request. An event payload cannot
     # exceed 64 KB.
     #
-    # @note When making an API call, you may pass ConnectionHeaderParameter
-    #   data as a hash:
-    #
-    #       {
-    #         key: "HeaderKey",
-    #         value: "HeaderValue",
-    #         is_value_secret: false,
-    #       }
-    #
     # @!attribute [rw] key
     #   The key for the parameter.
     #   @return [String]
@@ -552,33 +509,6 @@ module Aws::CloudWatchEvents
     end
 
     # Contains additional parameters for the connection.
-    #
-    # @note When making an API call, you may pass ConnectionHttpParameters
-    #   data as a hash:
-    #
-    #       {
-    #         header_parameters: [
-    #           {
-    #             key: "HeaderKey",
-    #             value: "HeaderValue",
-    #             is_value_secret: false,
-    #           },
-    #         ],
-    #         query_string_parameters: [
-    #           {
-    #             key: "QueryStringKey",
-    #             value: "QueryStringValue",
-    #             is_value_secret: false,
-    #           },
-    #         ],
-    #         body_parameters: [
-    #           {
-    #             key: "String",
-    #             value: "String",
-    #             is_value_secret: false,
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] header_parameters
     #   Contains additional header parameters for the connection.
@@ -656,15 +586,6 @@ module Aws::CloudWatchEvents
     # additional parameter counts towards the event payload size, which
     # cannot exceed 64 KB.
     #
-    # @note When making an API call, you may pass ConnectionQueryStringParameter
-    #   data as a hash:
-    #
-    #       {
-    #         key: "QueryStringKey",
-    #         value: "QueryStringValue",
-    #         is_value_secret: false,
-    #       }
-    #
     # @!attribute [rw] key
     #   The key for a query string parameter.
     #   @return [String]
@@ -687,18 +608,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateApiDestinationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ApiDestinationName", # required
-    #         description: "ApiDestinationDescription",
-    #         connection_arn: "ConnectionArn", # required
-    #         invocation_endpoint: "HttpsEndpoint", # required
-    #         http_method: "POST", # required, accepts POST, GET, HEAD, OPTIONS, PUT, PATCH, DELETE
-    #         invocation_rate_limit_per_second: 1,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name for the API destination to create.
     #   @return [String]
@@ -768,23 +677,12 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateArchiveRequest
-    #   data as a hash:
-    #
-    #       {
-    #         archive_name: "ArchiveName", # required
-    #         event_source_arn: "Arn", # required
-    #         description: "ArchiveDescription",
-    #         event_pattern: "EventPattern",
-    #         retention_days: 1,
-    #       }
-    #
     # @!attribute [rw] archive_name
     #   The name for the archive to create.
     #   @return [String]
     #
     # @!attribute [rw] event_source_arn
-    #   The ARN of the event source associated with the archive.
+    #   The ARN of the event bus that sends events to the archive.
     #   @return [String]
     #
     # @!attribute [rw] description
@@ -841,14 +739,6 @@ module Aws::CloudWatchEvents
 
     # Contains the API key authorization parameters for the connection.
     #
-    # @note When making an API call, you may pass CreateConnectionApiKeyAuthRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         api_key_name: "AuthHeaderParameters", # required
-    #         api_key_value: "AuthHeaderParameters", # required
-    #       }
-    #
     # @!attribute [rw] api_key_name
     #   The name of the API key to use for authorization.
     #   @return [String]
@@ -867,74 +757,6 @@ module Aws::CloudWatchEvents
     end
 
     # Contains the authorization parameters for the connection.
-    #
-    # @note When making an API call, you may pass CreateConnectionAuthRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         basic_auth_parameters: {
-    #           username: "AuthHeaderParameters", # required
-    #           password: "AuthHeaderParameters", # required
-    #         },
-    #         o_auth_parameters: {
-    #           client_parameters: { # required
-    #             client_id: "AuthHeaderParameters", # required
-    #             client_secret: "AuthHeaderParameters", # required
-    #           },
-    #           authorization_endpoint: "HttpsEndpoint", # required
-    #           http_method: "GET", # required, accepts GET, POST, PUT
-    #           o_auth_http_parameters: {
-    #             header_parameters: [
-    #               {
-    #                 key: "HeaderKey",
-    #                 value: "HeaderValue",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #             query_string_parameters: [
-    #               {
-    #                 key: "QueryStringKey",
-    #                 value: "QueryStringValue",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #             body_parameters: [
-    #               {
-    #                 key: "String",
-    #                 value: "String",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #           },
-    #         },
-    #         api_key_auth_parameters: {
-    #           api_key_name: "AuthHeaderParameters", # required
-    #           api_key_value: "AuthHeaderParameters", # required
-    #         },
-    #         invocation_http_parameters: {
-    #           header_parameters: [
-    #             {
-    #               key: "HeaderKey",
-    #               value: "HeaderValue",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #           query_string_parameters: [
-    #             {
-    #               key: "QueryStringKey",
-    #               value: "QueryStringValue",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #           body_parameters: [
-    #             {
-    #               key: "String",
-    #               value: "String",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] basic_auth_parameters
     #   A `CreateConnectionBasicAuthRequestParameters` object that contains
@@ -972,14 +794,6 @@ module Aws::CloudWatchEvents
 
     # Contains the Basic authorization parameters to use for the connection.
     #
-    # @note When making an API call, you may pass CreateConnectionBasicAuthRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         username: "AuthHeaderParameters", # required
-    #         password: "AuthHeaderParameters", # required
-    #       }
-    #
     # @!attribute [rw] username
     #   The user name to use for Basic authorization.
     #   @return [String]
@@ -1000,14 +814,6 @@ module Aws::CloudWatchEvents
 
     # Contains the Basic authorization parameters to use for the connection.
     #
-    # @note When making an API call, you may pass CreateConnectionOAuthClientRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         client_id: "AuthHeaderParameters", # required
-    #         client_secret: "AuthHeaderParameters", # required
-    #       }
-    #
     # @!attribute [rw] client_id
     #   The client ID to use for OAuth authorization for the connection.
     #   @return [String]
@@ -1027,41 +833,6 @@ module Aws::CloudWatchEvents
     end
 
     # Contains the OAuth authorization parameters to use for the connection.
-    #
-    # @note When making an API call, you may pass CreateConnectionOAuthRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         client_parameters: { # required
-    #           client_id: "AuthHeaderParameters", # required
-    #           client_secret: "AuthHeaderParameters", # required
-    #         },
-    #         authorization_endpoint: "HttpsEndpoint", # required
-    #         http_method: "GET", # required, accepts GET, POST, PUT
-    #         o_auth_http_parameters: {
-    #           header_parameters: [
-    #             {
-    #               key: "HeaderKey",
-    #               value: "HeaderValue",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #           query_string_parameters: [
-    #             {
-    #               key: "QueryStringKey",
-    #               value: "QueryStringValue",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #           body_parameters: [
-    #             {
-    #               key: "String",
-    #               value: "String",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] client_parameters
     #   A `CreateConnectionOAuthClientRequestParameters` object that
@@ -1093,79 +864,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ConnectionName", # required
-    #         description: "ConnectionDescription",
-    #         authorization_type: "BASIC", # required, accepts BASIC, OAUTH_CLIENT_CREDENTIALS, API_KEY
-    #         auth_parameters: { # required
-    #           basic_auth_parameters: {
-    #             username: "AuthHeaderParameters", # required
-    #             password: "AuthHeaderParameters", # required
-    #           },
-    #           o_auth_parameters: {
-    #             client_parameters: { # required
-    #               client_id: "AuthHeaderParameters", # required
-    #               client_secret: "AuthHeaderParameters", # required
-    #             },
-    #             authorization_endpoint: "HttpsEndpoint", # required
-    #             http_method: "GET", # required, accepts GET, POST, PUT
-    #             o_auth_http_parameters: {
-    #               header_parameters: [
-    #                 {
-    #                   key: "HeaderKey",
-    #                   value: "HeaderValue",
-    #                   is_value_secret: false,
-    #                 },
-    #               ],
-    #               query_string_parameters: [
-    #                 {
-    #                   key: "QueryStringKey",
-    #                   value: "QueryStringValue",
-    #                   is_value_secret: false,
-    #                 },
-    #               ],
-    #               body_parameters: [
-    #                 {
-    #                   key: "String",
-    #                   value: "String",
-    #                   is_value_secret: false,
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #           api_key_auth_parameters: {
-    #             api_key_name: "AuthHeaderParameters", # required
-    #             api_key_value: "AuthHeaderParameters", # required
-    #           },
-    #           invocation_http_parameters: {
-    #             header_parameters: [
-    #               {
-    #                 key: "HeaderKey",
-    #                 value: "HeaderValue",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #             query_string_parameters: [
-    #               {
-    #                 key: "QueryStringKey",
-    #                 value: "QueryStringValue",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #             body_parameters: [
-    #               {
-    #                 key: "String",
-    #                 value: "String",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   The name for the connection to create.
     #   @return [String]
@@ -1221,20 +919,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateEventBusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EventBusName", # required
-    #         event_source_name: "EventSourceName",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the new event bus.
     #
@@ -1277,25 +961,17 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreatePartnerEventSourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EventSourceName", # required
-    #         account: "AccountId", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the partner event source. This name must be unique and
     #   must be in the format ` partner_name/event_namespace/event_name `.
-    #   The AWS account that wants to use this partner event source must
-    #   create a partner event bus with a name that matches the name of the
-    #   partner event source.
+    #   The Amazon Web Services account that wants to use this partner event
+    #   source must create a partner event bus with a name that matches the
+    #   name of the partner event source.
     #   @return [String]
     #
     # @!attribute [rw] account
-    #   The AWS account ID that is permitted to create a matching partner
-    #   event bus for this partner event source.
+    #   The Amazon Web Services account ID that is permitted to create a
+    #   matching partner event bus for this partner event source.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/CreatePartnerEventSourceRequest AWS API Documentation
@@ -1319,13 +995,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeactivateEventSourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EventSourceName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the partner event source to deactivate.
     #   @return [String]
@@ -1341,13 +1010,6 @@ module Aws::CloudWatchEvents
     # A `DeadLetterConfig` object that contains information about a
     # dead-letter queue configuration.
     #
-    # @note When making an API call, you may pass DeadLetterConfig
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "ResourceArn",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The ARN of the SQS queue specified as the target for the dead-letter
     #   queue.
@@ -1361,13 +1023,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeauthorizeConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ConnectionName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the connection to remove authorization from.
     #   @return [String]
@@ -1412,13 +1067,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteApiDestinationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ApiDestinationName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the destination to delete.
     #   @return [String]
@@ -1435,13 +1083,6 @@ module Aws::CloudWatchEvents
     #
     class DeleteApiDestinationResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteArchiveRequest
-    #   data as a hash:
-    #
-    #       {
-    #         archive_name: "ArchiveName", # required
-    #       }
-    #
     # @!attribute [rw] archive_name
     #   The name of the archive to delete.
     #   @return [String]
@@ -1458,13 +1099,6 @@ module Aws::CloudWatchEvents
     #
     class DeleteArchiveResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ConnectionName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the connection to delete.
     #   @return [String]
@@ -1511,13 +1145,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteEventBusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EventBusName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the event bus to delete.
     #   @return [String]
@@ -1530,21 +1157,13 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeletePartnerEventSourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EventSourceName", # required
-    #         account: "AccountId", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the event source to delete.
     #   @return [String]
     #
     # @!attribute [rw] account
-    #   The AWS account ID of the AWS customer that the event source was
-    #   created for.
+    #   The Amazon Web Services account ID of the Amazon Web Services
+    #   customer that the event source was created for.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DeletePartnerEventSourceRequest AWS API Documentation
@@ -1556,15 +1175,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "RuleName", # required
-    #         event_bus_name: "EventBusNameOrArn",
-    #         force: false,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the rule.
     #   @return [String]
@@ -1575,11 +1185,12 @@ module Aws::CloudWatchEvents
     #   @return [String]
     #
     # @!attribute [rw] force
-    #   If this is a managed rule, created by an AWS service on your behalf,
-    #   you must specify `Force` as `True` to delete the rule. This
-    #   parameter is ignored for rules that are not managed rules. You can
-    #   check whether a rule is a managed rule by using `DescribeRule` or
-    #   `ListRules` and checking the `ManagedBy` field of the response.
+    #   If this is a managed rule, created by an Amazon Web Services service
+    #   on your behalf, you must specify `Force` as `True` to delete the
+    #   rule. This parameter is ignored for rules that are not managed
+    #   rules. You can check whether a rule is a managed rule by using
+    #   `DescribeRule` or `ListRules` and checking the `ManagedBy` field of
+    #   the response.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DeleteRuleRequest AWS API Documentation
@@ -1592,13 +1203,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeApiDestinationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ApiDestinationName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the API destination to retrieve.
     #   @return [String]
@@ -1677,13 +1281,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeArchiveRequest
-    #   data as a hash:
-    #
-    #       {
-    #         archive_name: "ArchiveName", # required
-    #       }
-    #
     # @!attribute [rw] archive_name
     #   The name of the archive to retrieve.
     #   @return [String]
@@ -1758,13 +1355,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ConnectionName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the connection to retrieve.
     #   @return [String]
@@ -1840,13 +1430,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventBusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EventBusNameOrArn",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name or ARN of the event bus to show details for. If you omit
     #   this, the default event bus is displayed.
@@ -1884,13 +1467,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventSourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EventSourceName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the partner event source to display the details of.
     #   @return [String]
@@ -1946,13 +1522,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribePartnerEventSourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EventSourceName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the event source to display.
     #   @return [String]
@@ -1982,13 +1551,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeReplayRequest
-    #   data as a hash:
-    #
-    #       {
-    #         replay_name: "ReplayName", # required
-    #       }
-    #
     # @!attribute [rw] replay_name
     #   The name of the replay to retrieve.
     #   @return [String]
@@ -2070,14 +1632,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "RuleName", # required
-    #         event_bus_name: "EventBusNameOrArn",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the rule.
     #   @return [String]
@@ -2132,9 +1686,9 @@ module Aws::CloudWatchEvents
     #   @return [String]
     #
     # @!attribute [rw] managed_by
-    #   If this is a managed rule, created by an AWS service on your behalf,
-    #   this field displays the principal name of the AWS service that
-    #   created the rule.
+    #   If this is a managed rule, created by an Amazon Web Services service
+    #   on your behalf, this field displays the principal name of the Amazon
+    #   Web Services service that created the rule.
     #   @return [String]
     #
     # @!attribute [rw] event_bus_name
@@ -2167,14 +1721,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisableRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "RuleName", # required
-    #         event_bus_name: "EventBusNameOrArn",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the rule.
     #   @return [String]
@@ -2196,24 +1742,6 @@ module Aws::CloudWatchEvents
     # The custom parameters to be used when the target is an Amazon ECS
     # task.
     #
-    # @note When making an API call, you may pass EcsParameters
-    #   data as a hash:
-    #
-    #       {
-    #         task_definition_arn: "Arn", # required
-    #         task_count: 1,
-    #         launch_type: "EC2", # accepts EC2, FARGATE
-    #         network_configuration: {
-    #           awsvpc_configuration: {
-    #             subnets: ["String"], # required
-    #             security_groups: ["String"],
-    #             assign_public_ip: "ENABLED", # accepts ENABLED, DISABLED
-    #           },
-    #         },
-    #         platform_version: "String",
-    #         group: "String",
-    #       }
-    #
     # @!attribute [rw] task_definition_arn
     #   The ARN of the task definition to use if the event target is an
     #   Amazon ECS task.
@@ -2228,9 +1756,9 @@ module Aws::CloudWatchEvents
     #   Specifies the launch type on which your task is running. The launch
     #   type that you specify here must match one of the launch type
     #   (compatibilities) of the target task. The `FARGATE` value is
-    #   supported only in the Regions where AWS Fargate with Amazon ECS is
-    #   supported. For more information, see [AWS Fargate on Amazon ECS][1]
-    #   in the *Amazon Elastic Container Service Developer Guide*.
+    #   supported only in the Regions where Fargate witt Amazon ECS is
+    #   supported. For more information, see [Fargate on Amazon ECS][1] in
+    #   the *Amazon Elastic Container Service Developer Guide*.
     #
     #
     #
@@ -2238,8 +1766,8 @@ module Aws::CloudWatchEvents
     #   @return [String]
     #
     # @!attribute [rw] network_configuration
-    #   Use this structure if the ECS task uses the `awsvpc` network mode.
-    #   This structure specifies the VPC subnets and security groups
+    #   Use this structure if the Amazon ECS task uses the `awsvpc` network
+    #   mode. This structure specifies the VPC subnets and security groups
     #   associated with the task, and whether a public IP address is to be
     #   used. This structure is required if `LaunchType` is `FARGATE`
     #   because the `awsvpc` mode is required for Fargate tasks.
@@ -2253,7 +1781,7 @@ module Aws::CloudWatchEvents
     #   numeric portion of the platform version, such as `1.1.0`.
     #
     #   This structure is used only if `LaunchType` is `FARGATE`. For more
-    #   information about valid platform versions, see [AWS Fargate Platform
+    #   information about valid platform versions, see [Fargate Platform
     #   Versions][1] in the *Amazon Elastic Container Service Developer
     #   Guide*.
     #
@@ -2267,6 +1795,64 @@ module Aws::CloudWatchEvents
     #   characters.
     #   @return [String]
     #
+    # @!attribute [rw] capacity_provider_strategy
+    #   The capacity provider strategy to use for the task.
+    #
+    #   If a `capacityProviderStrategy` is specified, the `launchType`
+    #   parameter must be omitted. If no `capacityProviderStrategy` or
+    #   launchType is specified, the `defaultCapacityProviderStrategy` for
+    #   the cluster is used.
+    #   @return [Array<Types::CapacityProviderStrategyItem>]
+    #
+    # @!attribute [rw] enable_ecs_managed_tags
+    #   Specifies whether to enable Amazon ECS managed tags for the task.
+    #   For more information, see [Tagging Your Amazon ECS Resources][1] in
+    #   the Amazon Elastic Container Service Developer Guide.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-using-tags.html
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] enable_execute_command
+    #   Whether or not to enable the execute command functionality for the
+    #   containers in this task. If true, this enables execute command
+    #   functionality on all containers in the task.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] placement_constraints
+    #   An array of placement constraint objects to use for the task. You
+    #   can specify up to 10 constraints per task (including constraints in
+    #   the task definition and those specified at runtime).
+    #   @return [Array<Types::PlacementConstraint>]
+    #
+    # @!attribute [rw] placement_strategy
+    #   The placement strategy objects to use for the task. You can specify
+    #   a maximum of five strategy rules per task.
+    #   @return [Array<Types::PlacementStrategy>]
+    #
+    # @!attribute [rw] propagate_tags
+    #   Specifies whether to propagate the tags from the task definition to
+    #   the task. If no value is specified, the tags are not propagated.
+    #   Tags can only be propagated to the task during task creation. To add
+    #   tags to a task after task creation, use the TagResource API action.
+    #   @return [String]
+    #
+    # @!attribute [rw] reference_id
+    #   The reference ID to use for the task.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The metadata that you apply to the task to help you categorize and
+    #   organize them. Each tag consists of a key and an optional value,
+    #   both of which you define. To learn more, see [RunTask][1] in the
+    #   Amazon ECS API Reference.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html#ECS-RunTask-request-tags
+    #   @return [Array<Types::Tag>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/EcsParameters AWS API Documentation
     #
     class EcsParameters < Struct.new(
@@ -2275,19 +1861,19 @@ module Aws::CloudWatchEvents
       :launch_type,
       :network_configuration,
       :platform_version,
-      :group)
+      :group,
+      :capacity_provider_strategy,
+      :enable_ecs_managed_tags,
+      :enable_execute_command,
+      :placement_constraints,
+      :placement_strategy,
+      :propagate_tags,
+      :reference_id,
+      :tags)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass EnableRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "RuleName", # required
-    #         event_bus_name: "EventBusNameOrArn",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the rule.
     #   @return [String]
@@ -2308,8 +1894,8 @@ module Aws::CloudWatchEvents
 
     # An event bus receives events from a source and routes them to rules
     # associated with that event bus. Your account's default event bus
-    # receives rules from AWS services. A custom event bus can receive rules
-    # from AWS services as well as your custom applications and services. A
+    # receives events from Amazon Web Services services. A custom event bus
+    # can receive events from your custom applications and services. A
     # partner event bus receives events from an event source created by an
     # SaaS partner. These events come from the partners services or
     # applications.
@@ -2323,8 +1909,8 @@ module Aws::CloudWatchEvents
     #   @return [String]
     #
     # @!attribute [rw] policy
-    #   The permissions policy of the event bus, describing which other AWS
-    #   accounts can write events to this event bus.
+    #   The permissions policy of the event bus, describing which other
+    #   Amazon Web Services accounts can write events to this event bus.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/EventBus AWS API Documentation
@@ -2338,9 +1924,9 @@ module Aws::CloudWatchEvents
     end
 
     # A partner event source is created by an SaaS partner. If a customer
-    # creates a partner event bus that matches this event source, that AWS
-    # account can receive events from the partner's applications or
-    # services.
+    # creates a partner event bus that matches this event source, that
+    # Amazon Web Services account can receive events from the partner's
+    # applications or services.
     #
     # @!attribute [rw] arn
     #   The ARN of the event source.
@@ -2355,8 +1941,8 @@ module Aws::CloudWatchEvents
     #   @return [Time]
     #
     # @!attribute [rw] expiration_time
-    #   The date and time that the event source will expire, if the AWS
-    #   account doesn't create a matching event bus for it.
+    #   The date and time that the event source will expire, if the Amazon
+    #   Web Services account doesn't create a matching event bus for it.
     #   @return [Time]
     #
     # @!attribute [rw] name
@@ -2389,19 +1975,6 @@ module Aws::CloudWatchEvents
     # Gateway REST APIs or EventBridge ApiDestinations. In the latter case,
     # these are merged with any InvocationParameters specified on the
     # Connection, with any values from the Connection taking precedence.
-    #
-    # @note When making an API call, you may pass HttpParameters
-    #   data as a hash:
-    #
-    #       {
-    #         path_parameter_values: ["PathParameter"],
-    #         header_parameters: {
-    #           "HeaderKey" => "HeaderValue",
-    #         },
-    #         query_string_parameters: {
-    #           "QueryStringKey" => "QueryStringValue",
-    #         },
-    #       }
     #
     # @!attribute [rw] path_parameter_values
     #   The path parameter values to be used to populate API Gateway REST
@@ -2438,16 +2011,6 @@ module Aws::CloudWatchEvents
     # Contains the parameters needed for you to provide custom input to a
     # target based on one or more pieces of data extracted from the event.
     #
-    # @note When making an API call, you may pass InputTransformer
-    #   data as a hash:
-    #
-    #       {
-    #         input_paths_map: {
-    #           "InputTransformerPathKey" => "TargetInputPath",
-    #         },
-    #         input_template: "TransformerInput", # required
-    #       }
-    #
     # @!attribute [rw] input_paths_map
     #   Map of JSON paths to be extracted from the event. You can then
     #   insert these in the template in `InputTemplate` to produce the
@@ -2457,7 +2020,7 @@ module Aws::CloudWatchEvents
     #   valid JSON path. You can have as many as 100 key-value pairs. You
     #   must use JSON dot notation, not bracket notation.
     #
-    #   The keys cannot start with "AWS."
+    #   The keys cannot start with "Amazon Web Services."
     #   @return [Hash<String,String>]
     #
     # @!attribute [rw] input_template
@@ -2551,13 +2114,6 @@ module Aws::CloudWatchEvents
     # not include this parameter, the default is to use the `eventId` as the
     # partition key.
     #
-    # @note When making an API call, you may pass KinesisParameters
-    #   data as a hash:
-    #
-    #       {
-    #         partition_key_path: "TargetPartitionKeyPath", # required
-    #       }
-    #
     # @!attribute [rw] partition_key_path
     #   The JSON path to be extracted from the event and used as the
     #   partition key. For more information, see [Amazon Kinesis Streams Key
@@ -2583,16 +2139,6 @@ module Aws::CloudWatchEvents
     #
     class LimitExceededException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ListApiDestinationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name_prefix: "ApiDestinationName",
-    #         connection_arn: "ConnectionArn",
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] name_prefix
     #   A name prefix to filter results returned. Only API destinations with
     #   a name that starts with the prefix are returned.
@@ -2641,17 +2187,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListArchivesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name_prefix: "ArchiveName",
-    #         event_source_arn: "Arn",
-    #         state: "ENABLED", # accepts ENABLED, DISABLED, CREATING, UPDATING, CREATE_FAILED, UPDATE_FAILED
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] name_prefix
     #   A name prefix to filter the archives returned. Only archives with
     #   name that match the prefix are returned.
@@ -2704,16 +2239,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListConnectionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name_prefix: "ConnectionName",
-    #         connection_state: "CREATING", # accepts CREATING, UPDATING, DELETING, AUTHORIZED, DEAUTHORIZED, AUTHORIZING, DEAUTHORIZING
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] name_prefix
     #   A name prefix to filter results returned. Only connections with a
     #   name that starts with the prefix are returned.
@@ -2762,15 +2287,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListEventBusesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name_prefix: "EventBusName",
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] name_prefix
     #   Specifying this limits the results to only those event buses with
     #   names that start with the specified prefix.
@@ -2815,15 +2331,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListEventSourcesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name_prefix: "EventSourceNamePrefix",
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] name_prefix
     #   Specifying this limits the results to only those partner event
     #   sources with names that start with the specified prefix.
@@ -2868,15 +2375,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPartnerEventSourceAccountsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         event_source_name: "EventSourceName", # required
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] event_source_name
     #   The name of the partner event source to display account information
     #   about.
@@ -2921,15 +2419,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPartnerEventSourcesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name_prefix: "PartnerEventSourceNamePrefix", # required
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] name_prefix
     #   If you specify this, the results are limited to only those partner
     #   event sources that start with the string you specify.
@@ -2974,17 +2463,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListReplaysRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name_prefix: "ReplayName",
-    #         state: "STARTING", # accepts STARTING, RUNNING, CANCELLING, COMPLETED, CANCELLED, FAILED
-    #         event_source_arn: "Arn",
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] name_prefix
     #   A name prefix to filter the replays returned. Only replays with name
     #   that match the prefix are returned.
@@ -2995,7 +2473,7 @@ module Aws::CloudWatchEvents
     #   @return [String]
     #
     # @!attribute [rw] event_source_arn
-    #   The ARN of the event source associated with the replay.
+    #   The ARN of the archive from which the events are replayed.
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -3038,16 +2516,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRuleNamesByTargetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         target_arn: "TargetArn", # required
-    #         event_bus_name: "EventBusNameOrArn",
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] target_arn
     #   The Amazon Resource Name (ARN) of the target resource.
     #   @return [String]
@@ -3095,16 +2563,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRulesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name_prefix: "RuleName",
-    #         event_bus_name: "EventBusNameOrArn",
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] name_prefix
     #   The prefix matching the rule name.
     #   @return [String]
@@ -3152,13 +2610,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the EventBridge resource for which you want to view tags.
     #   @return [String]
@@ -3184,16 +2635,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTargetsByRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         rule: "RuleName", # required
-    #         event_bus_name: "EventBusNameOrArn",
-    #         next_token: "NextToken",
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] rule
     #   The name of the rule.
     #   @return [String]
@@ -3241,11 +2682,11 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # This rule was created by an AWS service on behalf of your account. It
-    # is managed by that service. If you see this error in response to
-    # `DeleteRule` or `RemoveTargets`, you can use the `Force` parameter in
-    # those calls to delete the rule or remove targets from the rule. You
-    # cannot modify these managed rules by using `DisableRule`,
+    # This rule was created by an Amazon Web Services service on behalf of
+    # your account. It is managed by that service. If you see this error in
+    # response to `DeleteRule` or `RemoveTargets`, you can use the `Force`
+    # parameter in those calls to delete the rule or remove targets from the
+    # rule. You cannot modify these managed rules by using `DisableRule`,
     # `EnableRule`, `PutTargets`, `PutRule`, `TagResource`, or
     # `UntagResource`.
     #
@@ -3254,17 +2695,6 @@ module Aws::CloudWatchEvents
     class ManagedRuleException < Aws::EmptyStructure; end
 
     # This structure specifies the network configuration for an ECS task.
-    #
-    # @note When making an API call, you may pass NetworkConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         awsvpc_configuration: {
-    #           subnets: ["String"], # required
-    #           security_groups: ["String"],
-    #           assign_public_ip: "ENABLED", # accepts ENABLED, DISABLED
-    #         },
-    #       }
     #
     # @!attribute [rw] awsvpc_configuration
     #   Use this structure to specify the VPC subnets and security groups
@@ -3288,9 +2718,9 @@ module Aws::CloudWatchEvents
     class OperationDisabledException < Aws::EmptyStructure; end
 
     # A partner event source is created by an SaaS partner. If a customer
-    # creates a partner event bus that matches this event source, that AWS
-    # account can receive events from the partner's applications or
-    # services.
+    # creates a partner event bus that matches this event source, that
+    # Amazon Web Services account can receive events from the partner's
+    # applications or services.
     #
     # @!attribute [rw] arn
     #   The ARN of the partner event source.
@@ -3309,10 +2739,12 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # The AWS account that a partner event source has been offered to.
+    # The Amazon Web Services account that a partner event source has been
+    # offered to.
     #
     # @!attribute [rw] account
-    #   The AWS account ID that the partner event source was offered to.
+    #   The Amazon Web Services account ID that the partner event source was
+    #   offered to.
     #   @return [String]
     #
     # @!attribute [rw] creation_time
@@ -3320,8 +2752,8 @@ module Aws::CloudWatchEvents
     #   @return [Time]
     #
     # @!attribute [rw] expiration_time
-    #   The date and time that the event source will expire, if the AWS
-    #   account doesn't create a matching event bus for it.
+    #   The date and time that the event source will expire, if the Amazon
+    #   Web Services account doesn't create a matching event bus for it.
     #   @return [Time]
     #
     # @!attribute [rw] state
@@ -3344,6 +2776,79 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
+    # An object representing a constraint on task placement. To learn more,
+    # see [Task Placement Constraints][1] in the Amazon Elastic Container
+    # Service Developer Guide.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html
+    #
+    # @!attribute [rw] type
+    #   The type of constraint. Use distinctInstance to ensure that each
+    #   task in a particular group is running on a different container
+    #   instance. Use memberOf to restrict the selection to a group of valid
+    #   candidates.
+    #   @return [String]
+    #
+    # @!attribute [rw] expression
+    #   A cluster query language expression to apply to the constraint. You
+    #   cannot specify an expression if the constraint type is
+    #   `distinctInstance`. To learn more, see [Cluster Query Language][1]
+    #   in the Amazon Elastic Container Service Developer Guide.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/PlacementConstraint AWS API Documentation
+    #
+    class PlacementConstraint < Struct.new(
+      :type,
+      :expression)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The task placement strategy for a task or service. To learn more, see
+    # [Task Placement Strategies][1] in the Amazon Elastic Container Service
+    # Service Developer Guide.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html
+    #
+    # @!attribute [rw] type
+    #   The type of placement strategy. The random placement strategy
+    #   randomly places tasks on available candidates. The spread placement
+    #   strategy spreads placement across available candidates evenly based
+    #   on the field parameter. The binpack strategy places tasks on
+    #   available candidates that have the least available amount of the
+    #   resource that is specified with the field parameter. For example, if
+    #   you binpack on memory, a task is placed on the instance with the
+    #   least amount of remaining memory (but still enough to run the task).
+    #   @return [String]
+    #
+    # @!attribute [rw] field
+    #   The field to apply the placement strategy against. For the spread
+    #   placement strategy, valid values are instanceId (or host, which has
+    #   the same effect), or any platform or custom attribute that is
+    #   applied to a container instance, such as
+    #   attribute:ecs.availability-zone. For the binpack placement strategy,
+    #   valid values are cpu and memory. For the random placement strategy,
+    #   this field is not used.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/PlacementStrategy AWS API Documentation
+    #
+    class PlacementStrategy < Struct.new(
+      :type,
+      :field)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The event bus policy is too long. For more information, see the
     # limits.
     #
@@ -3351,23 +2856,6 @@ module Aws::CloudWatchEvents
     #
     class PolicyLengthExceededException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass PutEventsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         entries: [ # required
-    #           {
-    #             time: Time.now,
-    #             source: "String",
-    #             resources: ["EventResource"],
-    #             detail_type: "String",
-    #             detail: "String",
-    #             event_bus_name: "NonPartnerEventBusNameOrArn",
-    #             trace_header: "TraceHeader",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] entries
     #   The entry that defines an event in your system. You can specify
     #   several parameters for the entry such as the source and type of the
@@ -3384,26 +2872,14 @@ module Aws::CloudWatchEvents
 
     # Represents an event to be submitted.
     #
-    # @note When making an API call, you may pass PutEventsRequestEntry
-    #   data as a hash:
-    #
-    #       {
-    #         time: Time.now,
-    #         source: "String",
-    #         resources: ["EventResource"],
-    #         detail_type: "String",
-    #         detail: "String",
-    #         event_bus_name: "NonPartnerEventBusNameOrArn",
-    #         trace_header: "TraceHeader",
-    #       }
-    #
     # @!attribute [rw] time
     #   The time stamp of the event, per [RFC3339][1]. If no time stamp is
-    #   provided, the time stamp of the PutEvents call is used.
+    #   provided, the time stamp of the [PutEvents][2] call is used.
     #
     #
     #
     #   [1]: https://www.rfc-editor.org/rfc/rfc3339.txt
+    #   [2]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html
     #   @return [Time]
     #
     # @!attribute [rw] source
@@ -3411,9 +2887,9 @@ module Aws::CloudWatchEvents
     #   @return [String]
     #
     # @!attribute [rw] resources
-    #   AWS resources, identified by Amazon Resource Name (ARN), which the
-    #   event primarily concerns. Any number, including zero, may be
-    #   present.
+    #   Amazon Web Services resources, identified by Amazon Resource Name
+    #   (ARN), which the event primarily concerns. Any number, including
+    #   zero, may be present.
     #   @return [Array<String>]
     #
     # @!attribute [rw] detail_type
@@ -3433,11 +2909,11 @@ module Aws::CloudWatchEvents
     #   @return [String]
     #
     # @!attribute [rw] trace_header
-    #   An AWS X-Ray trade header, which is an http header (X-Amzn-Trace-Id)
+    #   An X-Ray trade header, which is an http header (X-Amzn-Trace-Id)
     #   that contains the trace-id associated with the event.
     #
     #   To learn more about X-Ray trace headers, see [Tracing header][1] in
-    #   the AWS X-Ray Developer Guide.
+    #   the X-Ray Developer Guide.
     #
     #
     #
@@ -3502,21 +2978,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutPartnerEventsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         entries: [ # required
-    #           {
-    #             time: Time.now,
-    #             source: "EventSourceName",
-    #             resources: ["EventResource"],
-    #             detail_type: "String",
-    #             detail: "String",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] entries
     #   The list of events to write to the event bus.
     #   @return [Array<Types::PutPartnerEventsRequestEntry>]
@@ -3531,29 +2992,18 @@ module Aws::CloudWatchEvents
 
     # The details about an event generated by an SaaS partner.
     #
-    # @note When making an API call, you may pass PutPartnerEventsRequestEntry
-    #   data as a hash:
-    #
-    #       {
-    #         time: Time.now,
-    #         source: "EventSourceName",
-    #         resources: ["EventResource"],
-    #         detail_type: "String",
-    #         detail: "String",
-    #       }
-    #
     # @!attribute [rw] time
     #   The date and time of the event.
     #   @return [Time]
     #
     # @!attribute [rw] source
-    #   The event source that is generating the evntry.
+    #   The event source that is generating the entry.
     #   @return [String]
     #
     # @!attribute [rw] resources
-    #   AWS resources, identified by Amazon Resource Name (ARN), which the
-    #   event primarily concerns. Any number, including zero, may be
-    #   present.
+    #   Amazon Web Services resources, identified by Amazon Resource Name
+    #   (ARN), which the event primarily concerns. Any number, including
+    #   zero, may be present.
     #   @return [Array<String>]
     #
     # @!attribute [rw] detail_type
@@ -3621,22 +3071,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutPermissionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         event_bus_name: "NonPartnerEventBusName",
-    #         action: "Action",
-    #         principal: "Principal",
-    #         statement_id: "StatementId",
-    #         condition: {
-    #           type: "String", # required
-    #           key: "String", # required
-    #           value: "String", # required
-    #         },
-    #         policy: "String",
-    #       }
-    #
     # @!attribute [rw] event_bus_name
     #   The name of the event bus associated with the rule. If you omit
     #   this, the default event bus is used.
@@ -3644,13 +3078,12 @@ module Aws::CloudWatchEvents
     #
     # @!attribute [rw] action
     #   The action that you are enabling the other account to perform.
-    #   Currently, this must be `events:PutEvents`.
     #   @return [String]
     #
     # @!attribute [rw] principal
-    #   The 12-digit AWS account ID that you are permitting to put events to
-    #   your default event bus. Specify "*" to permit any account to put
-    #   events to your default event bus.
+    #   The 12-digit Amazon Web Services account ID that you are permitting
+    #   to put events to your default event bus. Specify "*" to permit
+    #   any account to put events to your default event bus.
     #
     #   If you specify "*" without specifying `Condition`, avoid creating
     #   rules that may match undesirable events. To create more secure
@@ -3664,19 +3097,24 @@ module Aws::CloudWatchEvents
     #   An identifier string for the external account that you are granting
     #   permissions to. If you later want to revoke the permission for this
     #   external account, specify this `StatementId` when you run
-    #   RemovePermission.
+    #   [RemovePermission][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_RemovePermission.html
     #   @return [String]
     #
     # @!attribute [rw] condition
     #   This parameter enables you to limit the permission to accounts that
-    #   fulfill a certain condition, such as being a member of a certain AWS
-    #   organization. For more information about AWS Organizations, see
-    #   [What Is AWS Organizations][1] in the *AWS Organizations User
+    #   fulfill a certain condition, such as being a member of a certain
+    #   Amazon Web Services organization. For more information about Amazon
+    #   Web Services Organizations, see [What Is Amazon Web Services
+    #   Organizations][1] in the *Amazon Web Services Organizations User
     #   Guide*.
     #
-    #   If you specify `Condition` with an AWS organization ID, and specify
-    #   "*" as the value for `Principal`, you grant permission to all the
-    #   accounts in the named organization.
+    #   If you specify `Condition` with an Amazon Web Services organization
+    #   ID, and specify "*" as the value for `Principal`, you grant
+    #   permission to all the accounts in the named organization.
     #
     #   The `Condition` is a JSON string which must contain `Type`, `Key`,
     #   and `Value` fields.
@@ -3705,25 +3143,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "RuleName", # required
-    #         schedule_expression: "ScheduleExpression",
-    #         event_pattern: "EventPattern",
-    #         state: "ENABLED", # accepts ENABLED, DISABLED
-    #         description: "RuleDescription",
-    #         role_arn: "RoleArn",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         event_bus_name: "EventBusNameOrArn",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the rule that you are creating or updating.
     #   @return [String]
@@ -3753,6 +3172,12 @@ module Aws::CloudWatchEvents
     # @!attribute [rw] role_arn
     #   The Amazon Resource Name (ARN) of the IAM role associated with the
     #   rule.
+    #
+    #   If you're setting an event bus in another account as the target and
+    #   that account granted permission to your account through an
+    #   organization instead of directly by the account ID, you must specify
+    #   a `RoleArn` with proper permissions in the `Target` structure,
+    #   instead of here in this parameter.
     #   @return [String]
     #
     # @!attribute [rw] tags
@@ -3791,99 +3216,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutTargetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         rule: "RuleName", # required
-    #         event_bus_name: "EventBusNameOrArn",
-    #         targets: [ # required
-    #           {
-    #             id: "TargetId", # required
-    #             arn: "TargetArn", # required
-    #             role_arn: "RoleArn",
-    #             input: "TargetInput",
-    #             input_path: "TargetInputPath",
-    #             input_transformer: {
-    #               input_paths_map: {
-    #                 "InputTransformerPathKey" => "TargetInputPath",
-    #               },
-    #               input_template: "TransformerInput", # required
-    #             },
-    #             kinesis_parameters: {
-    #               partition_key_path: "TargetPartitionKeyPath", # required
-    #             },
-    #             run_command_parameters: {
-    #               run_command_targets: [ # required
-    #                 {
-    #                   key: "RunCommandTargetKey", # required
-    #                   values: ["RunCommandTargetValue"], # required
-    #                 },
-    #               ],
-    #             },
-    #             ecs_parameters: {
-    #               task_definition_arn: "Arn", # required
-    #               task_count: 1,
-    #               launch_type: "EC2", # accepts EC2, FARGATE
-    #               network_configuration: {
-    #                 awsvpc_configuration: {
-    #                   subnets: ["String"], # required
-    #                   security_groups: ["String"],
-    #                   assign_public_ip: "ENABLED", # accepts ENABLED, DISABLED
-    #                 },
-    #               },
-    #               platform_version: "String",
-    #               group: "String",
-    #             },
-    #             batch_parameters: {
-    #               job_definition: "String", # required
-    #               job_name: "String", # required
-    #               array_properties: {
-    #                 size: 1,
-    #               },
-    #               retry_strategy: {
-    #                 attempts: 1,
-    #               },
-    #             },
-    #             sqs_parameters: {
-    #               message_group_id: "MessageGroupId",
-    #             },
-    #             http_parameters: {
-    #               path_parameter_values: ["PathParameter"],
-    #               header_parameters: {
-    #                 "HeaderKey" => "HeaderValue",
-    #               },
-    #               query_string_parameters: {
-    #                 "QueryStringKey" => "QueryStringValue",
-    #               },
-    #             },
-    #             redshift_data_parameters: {
-    #               secret_manager_arn: "RedshiftSecretManagerArn",
-    #               database: "Database", # required
-    #               db_user: "DbUser",
-    #               sql: "Sql", # required
-    #               statement_name: "StatementName",
-    #               with_event: false,
-    #             },
-    #             sage_maker_pipeline_parameters: {
-    #               pipeline_parameter_list: [
-    #                 {
-    #                   name: "SageMakerPipelineParameterName", # required
-    #                   value: "SageMakerPipelineParameterValue", # required
-    #                 },
-    #               ],
-    #             },
-    #             dead_letter_config: {
-    #               arn: "ResourceArn",
-    #             },
-    #             retry_policy: {
-    #               maximum_retry_attempts: 1,
-    #               maximum_event_age_in_seconds: 1,
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] rule
     #   The name of the rule.
     #   @return [String]
@@ -3950,25 +3282,14 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # These are custom parameters to be used when the target is a Redshift
-    # cluster to invoke the Redshift Data API ExecuteStatement based on
-    # EventBridge events.
-    #
-    # @note When making an API call, you may pass RedshiftDataParameters
-    #   data as a hash:
-    #
-    #       {
-    #         secret_manager_arn: "RedshiftSecretManagerArn",
-    #         database: "Database", # required
-    #         db_user: "DbUser",
-    #         sql: "Sql", # required
-    #         statement_name: "StatementName",
-    #         with_event: false,
-    #       }
+    # These are custom parameters to be used when the target is a Amazon
+    # Redshift cluster to invoke the Amazon Redshift Data API
+    # ExecuteStatement based on EventBridge events.
     #
     # @!attribute [rw] secret_manager_arn
     #   The name or ARN of the secret that enables access to the database.
-    #   Required when authenticating using AWS Secrets Manager.
+    #   Required when authenticating using Amazon Web Services Secrets
+    #   Manager.
     #   @return [String]
     #
     # @!attribute [rw] database
@@ -4008,15 +3329,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RemovePermissionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         statement_id: "StatementId",
-    #         remove_all_permissions: false,
-    #         event_bus_name: "NonPartnerEventBusName",
-    #       }
-    #
     # @!attribute [rw] statement_id
     #   The statement ID corresponding to the account that is no longer
     #   allowed to put events to the default event bus.
@@ -4041,16 +3353,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RemoveTargetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         rule: "RuleName", # required
-    #         event_bus_name: "EventBusNameOrArn",
-    #         ids: ["TargetId"], # required
-    #         force: false,
-    #       }
-    #
     # @!attribute [rw] rule
     #   The name of the rule.
     #   @return [String]
@@ -4065,11 +3367,12 @@ module Aws::CloudWatchEvents
     #   @return [Array<String>]
     #
     # @!attribute [rw] force
-    #   If this is a managed rule, created by an AWS service on your behalf,
-    #   you must specify `Force` as `True` to remove targets. This parameter
-    #   is ignored for rules that are not managed rules. You can check
-    #   whether a rule is a managed rule by using `DescribeRule` or
-    #   `ListRules` and checking the `ManagedBy` field of the response.
+    #   If this is a managed rule, created by an Amazon Web Services service
+    #   on your behalf, you must specify `Force` as `True` to remove
+    #   targets. This parameter is ignored for rules that are not managed
+    #   rules. You can check whether a rule is a managed rule by using
+    #   `DescribeRule` or `ListRules` and checking the `ManagedBy` field of
+    #   the response.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/RemoveTargetsRequest AWS API Documentation
@@ -4188,14 +3491,6 @@ module Aws::CloudWatchEvents
 
     # A `ReplayDestination` object that contains details about a replay.
     #
-    # @note When making an API call, you may pass ReplayDestination
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "Arn", # required
-    #         filter_arns: ["Arn"],
-    #       }
-    #
     # @!attribute [rw] arn
     #   The ARN of the event bus to replay event to. You can replay events
     #   only to the event bus specified to create the archive.
@@ -4228,14 +3523,6 @@ module Aws::CloudWatchEvents
 
     # A `RetryPolicy` object that includes information about the retry
     # policy settings.
-    #
-    # @note When making an API call, you may pass RetryPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         maximum_retry_attempts: 1,
-    #         maximum_event_age_in_seconds: 1,
-    #       }
     #
     # @!attribute [rw] maximum_retry_attempts
     #   The maximum number of retry attempts to make before the request
@@ -4287,18 +3574,29 @@ module Aws::CloudWatchEvents
     #
     # @!attribute [rw] schedule_expression
     #   The scheduling expression. For example, "cron(0 20 * * ? *)",
-    #   "rate(5 minutes)".
+    #   "rate(5 minutes)". For more information, see [Creating an Amazon
+    #   EventBridge rule that runs on a schedule][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html
     #   @return [String]
     #
     # @!attribute [rw] role_arn
     #   The Amazon Resource Name (ARN) of the role that is used for target
     #   invocation.
+    #
+    #   If you're setting an event bus in another account as the target and
+    #   that account granted permission to your account through an
+    #   organization instead of directly by the account ID, you must specify
+    #   a `RoleArn` with proper permissions in the `Target` structure,
+    #   instead of here in this parameter.
     #   @return [String]
     #
     # @!attribute [rw] managed_by
-    #   If the rule was created on behalf of your account by an AWS service,
-    #   this field displays the principal name of the service that created
-    #   the rule.
+    #   If the rule was created on behalf of your account by an Amazon Web
+    #   Services service, this field displays the principal name of the
+    #   service that created the rule.
     #   @return [String]
     #
     # @!attribute [rw] event_bus_name
@@ -4325,18 +3623,6 @@ module Aws::CloudWatchEvents
     # This parameter contains the criteria (either InstanceIds or a tag)
     # used to specify which EC2 instances are to be sent the command.
     #
-    # @note When making an API call, you may pass RunCommandParameters
-    #   data as a hash:
-    #
-    #       {
-    #         run_command_targets: [ # required
-    #           {
-    #             key: "RunCommandTargetKey", # required
-    #             values: ["RunCommandTargetValue"], # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] run_command_targets
     #   Currently, we support including only one RunCommandTarget block,
     #   which specifies either an array of InstanceIds or a tag.
@@ -4353,14 +3639,6 @@ module Aws::CloudWatchEvents
     # Information about the EC2 instances that are to be sent the command,
     # specified as key-value pairs. Each `RunCommandTarget` block can
     # include only one key, but this key may specify multiple values.
-    #
-    # @note When making an API call, you may pass RunCommandTarget
-    #   data as a hash:
-    #
-    #       {
-    #         key: "RunCommandTargetKey", # required
-    #         values: ["RunCommandTargetValue"], # required
-    #       }
     #
     # @!attribute [rw] key
     #   Can be either `tag:` *tag-key* or `InstanceIds`.
@@ -4384,14 +3662,6 @@ module Aws::CloudWatchEvents
     # Name/Value pair of a parameter to start execution of a SageMaker Model
     # Building Pipeline.
     #
-    # @note When making an API call, you may pass SageMakerPipelineParameter
-    #   data as a hash:
-    #
-    #       {
-    #         name: "SageMakerPipelineParameterName", # required
-    #         value: "SageMakerPipelineParameterValue", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   Name of parameter to start execution of a SageMaker Model Building
     #   Pipeline.
@@ -4414,18 +3684,6 @@ module Aws::CloudWatchEvents
     # These are custom parameters to use when the target is a SageMaker
     # Model Building Pipeline that starts based on EventBridge events.
     #
-    # @note When making an API call, you may pass SageMakerPipelineParameters
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_parameter_list: [
-    #           {
-    #             name: "SageMakerPipelineParameterName", # required
-    #             value: "SageMakerPipelineParameterValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] pipeline_parameter_list
     #   List of Parameter names and values for SageMaker Model Building
     #   Pipeline execution.
@@ -4442,13 +3700,6 @@ module Aws::CloudWatchEvents
     # This structure includes the custom parameter to be used when the
     # target is an SQS FIFO queue.
     #
-    # @note When making an API call, you may pass SqsParameters
-    #   data as a hash:
-    #
-    #       {
-    #         message_group_id: "MessageGroupId",
-    #       }
-    #
     # @!attribute [rw] message_group_id
     #   The FIFO message group ID to use as the target.
     #   @return [String]
@@ -4461,21 +3712,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartReplayRequest
-    #   data as a hash:
-    #
-    #       {
-    #         replay_name: "ReplayName", # required
-    #         description: "ReplayDescription",
-    #         event_source_arn: "Arn", # required
-    #         event_start_time: Time.now, # required
-    #         event_end_time: Time.now, # required
-    #         destination: { # required
-    #           arn: "Arn", # required
-    #           filter_arns: ["Arn"],
-    #         },
-    #       }
-    #
     # @!attribute [rw] replay_name
     #   The name of the replay to start.
     #   @return [String]
@@ -4545,16 +3781,8 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # A key-value pair associated with an AWS resource. In EventBridge,
-    # rules and event buses support tagging.
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
+    # A key-value pair associated with an Amazon Web Services resource. In
+    # EventBridge, rules and event buses support tagging.
     #
     # @!attribute [rw] key
     #   A string you can use to assign a value. The combination of tag keys
@@ -4574,19 +3802,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the EventBridge resource that you're adding tags to.
     #   @return [String]
@@ -4610,108 +3825,23 @@ module Aws::CloudWatchEvents
 
     # Targets are the resources to be invoked when a rule is triggered. For
     # a complete list of services and resources that can be set as a target,
-    # see PutTargets.
+    # see [PutTargets][1].
     #
     # If you are setting the event bus of another account as the target, and
     # that account granted permission to your account through an
     # organization instead of directly by the account ID, then you must
     # specify a `RoleArn` with proper permissions in the `Target` structure.
-    # For more information, see [Sending and Receiving Events Between AWS
-    # Accounts][1] in the *Amazon EventBridge User Guide*.
+    # For more information, see [Sending and Receiving Events Between Amazon
+    # Web Services Accounts][2] in the *Amazon EventBridge User Guide*.
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-cross-account-event-delivery.html
-    #
-    # @note When making an API call, you may pass Target
-    #   data as a hash:
-    #
-    #       {
-    #         id: "TargetId", # required
-    #         arn: "TargetArn", # required
-    #         role_arn: "RoleArn",
-    #         input: "TargetInput",
-    #         input_path: "TargetInputPath",
-    #         input_transformer: {
-    #           input_paths_map: {
-    #             "InputTransformerPathKey" => "TargetInputPath",
-    #           },
-    #           input_template: "TransformerInput", # required
-    #         },
-    #         kinesis_parameters: {
-    #           partition_key_path: "TargetPartitionKeyPath", # required
-    #         },
-    #         run_command_parameters: {
-    #           run_command_targets: [ # required
-    #             {
-    #               key: "RunCommandTargetKey", # required
-    #               values: ["RunCommandTargetValue"], # required
-    #             },
-    #           ],
-    #         },
-    #         ecs_parameters: {
-    #           task_definition_arn: "Arn", # required
-    #           task_count: 1,
-    #           launch_type: "EC2", # accepts EC2, FARGATE
-    #           network_configuration: {
-    #             awsvpc_configuration: {
-    #               subnets: ["String"], # required
-    #               security_groups: ["String"],
-    #               assign_public_ip: "ENABLED", # accepts ENABLED, DISABLED
-    #             },
-    #           },
-    #           platform_version: "String",
-    #           group: "String",
-    #         },
-    #         batch_parameters: {
-    #           job_definition: "String", # required
-    #           job_name: "String", # required
-    #           array_properties: {
-    #             size: 1,
-    #           },
-    #           retry_strategy: {
-    #             attempts: 1,
-    #           },
-    #         },
-    #         sqs_parameters: {
-    #           message_group_id: "MessageGroupId",
-    #         },
-    #         http_parameters: {
-    #           path_parameter_values: ["PathParameter"],
-    #           header_parameters: {
-    #             "HeaderKey" => "HeaderValue",
-    #           },
-    #           query_string_parameters: {
-    #             "QueryStringKey" => "QueryStringValue",
-    #           },
-    #         },
-    #         redshift_data_parameters: {
-    #           secret_manager_arn: "RedshiftSecretManagerArn",
-    #           database: "Database", # required
-    #           db_user: "DbUser",
-    #           sql: "Sql", # required
-    #           statement_name: "StatementName",
-    #           with_event: false,
-    #         },
-    #         sage_maker_pipeline_parameters: {
-    #           pipeline_parameter_list: [
-    #             {
-    #               name: "SageMakerPipelineParameterName", # required
-    #               value: "SageMakerPipelineParameterValue", # required
-    #             },
-    #           ],
-    #         },
-    #         dead_letter_config: {
-    #           arn: "ResourceArn",
-    #         },
-    #         retry_policy: {
-    #           maximum_retry_attempts: 1,
-    #           maximum_event_age_in_seconds: 1,
-    #         },
-    #       }
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutTargets.html
+    # [2]: https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-cross-account-event-delivery.html
     #
     # @!attribute [rw] id
-    #   The ID of the target.
+    #   The ID of the target. We recommend using a memorable and unique
+    #   string.
     #   @return [String]
     #
     # @!attribute [rw] arn
@@ -4775,9 +3905,9 @@ module Aws::CloudWatchEvents
     #   @return [Types::EcsParameters]
     #
     # @!attribute [rw] batch_parameters
-    #   If the event target is an AWS Batch job, this contains the job
+    #   If the event target is an Batch job, this contains the job
     #   definition, job name, and other parameters. For more information,
-    #   see [Jobs][1] in the *AWS Batch User Guide*.
+    #   see [Jobs][1] in the *Batch User Guide*.
     #
     #
     #
@@ -4806,12 +3936,12 @@ module Aws::CloudWatchEvents
     #   @return [Types::HttpParameters]
     #
     # @!attribute [rw] redshift_data_parameters
-    #   Contains the Redshift Data API parameters to use when the target is
-    #   a Redshift cluster.
+    #   Contains the Amazon Redshift Data API parameters to use when the
+    #   target is a Amazon Redshift cluster.
     #
-    #   If you specify a Redshift Cluster as a Target, you can use this to
-    #   specify parameters to invoke the Redshift Data API ExecuteStatement
-    #   based on EventBridge events.
+    #   If you specify a Amazon Redshift Cluster as a Target, you can use
+    #   this to specify parameters to invoke the Amazon Redshift Data API
+    #   ExecuteStatement based on EventBridge events.
     #   @return [Types::RedshiftDataParameters]
     #
     # @!attribute [rw] sage_maker_pipeline_parameters
@@ -4856,14 +3986,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TestEventPatternRequest
-    #   data as a hash:
-    #
-    #       {
-    #         event_pattern: "EventPattern", # required
-    #         event: "String", # required
-    #       }
-    #
     # @!attribute [rw] event_pattern
     #   The event pattern. For more information, see [Events and Event
     #   Patterns][1] in the *Amazon EventBridge User Guide*.
@@ -4875,8 +3997,8 @@ module Aws::CloudWatchEvents
     #
     # @!attribute [rw] event
     #   The event, in JSON format, to test against the event pattern. The
-    #   JSON must follow the format specified in [AWS Events][1], and the
-    #   following fields are mandatory:
+    #   JSON must follow the format specified in [Amazon Web Services
+    #   Events][1], and the following fields are mandatory:
     #
     #   * `id`
     #
@@ -4918,14 +4040,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the EventBridge resource from which you are removing
     #   tags.
@@ -4948,18 +4062,6 @@ module Aws::CloudWatchEvents
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateApiDestinationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ApiDestinationName", # required
-    #         description: "ApiDestinationDescription",
-    #         connection_arn: "ConnectionArn",
-    #         invocation_endpoint: "HttpsEndpoint",
-    #         http_method: "POST", # accepts POST, GET, HEAD, OPTIONS, PUT, PATCH, DELETE
-    #         invocation_rate_limit_per_second: 1,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the API destination to update.
     #   @return [String]
@@ -5026,16 +4128,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateArchiveRequest
-    #   data as a hash:
-    #
-    #       {
-    #         archive_name: "ArchiveName", # required
-    #         description: "ArchiveDescription",
-    #         event_pattern: "EventPattern",
-    #         retention_days: 1,
-    #       }
-    #
     # @!attribute [rw] archive_name
     #   The name of the archive to update.
     #   @return [String]
@@ -5093,14 +4185,6 @@ module Aws::CloudWatchEvents
     # Contains the API key authorization parameters to use to update the
     # connection.
     #
-    # @note When making an API call, you may pass UpdateConnectionApiKeyAuthRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         api_key_name: "AuthHeaderParameters",
-    #         api_key_value: "AuthHeaderParameters",
-    #       }
-    #
     # @!attribute [rw] api_key_name
     #   The name of the API key to use for authorization.
     #   @return [String]
@@ -5119,74 +4203,6 @@ module Aws::CloudWatchEvents
     end
 
     # Contains the additional parameters to use for the connection.
-    #
-    # @note When making an API call, you may pass UpdateConnectionAuthRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         basic_auth_parameters: {
-    #           username: "AuthHeaderParameters",
-    #           password: "AuthHeaderParameters",
-    #         },
-    #         o_auth_parameters: {
-    #           client_parameters: {
-    #             client_id: "AuthHeaderParameters",
-    #             client_secret: "AuthHeaderParameters",
-    #           },
-    #           authorization_endpoint: "HttpsEndpoint",
-    #           http_method: "GET", # accepts GET, POST, PUT
-    #           o_auth_http_parameters: {
-    #             header_parameters: [
-    #               {
-    #                 key: "HeaderKey",
-    #                 value: "HeaderValue",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #             query_string_parameters: [
-    #               {
-    #                 key: "QueryStringKey",
-    #                 value: "QueryStringValue",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #             body_parameters: [
-    #               {
-    #                 key: "String",
-    #                 value: "String",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #           },
-    #         },
-    #         api_key_auth_parameters: {
-    #           api_key_name: "AuthHeaderParameters",
-    #           api_key_value: "AuthHeaderParameters",
-    #         },
-    #         invocation_http_parameters: {
-    #           header_parameters: [
-    #             {
-    #               key: "HeaderKey",
-    #               value: "HeaderValue",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #           query_string_parameters: [
-    #             {
-    #               key: "QueryStringKey",
-    #               value: "QueryStringValue",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #           body_parameters: [
-    #             {
-    #               key: "String",
-    #               value: "String",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] basic_auth_parameters
     #   A `UpdateConnectionBasicAuthRequestParameters` object that contains
@@ -5221,14 +4237,6 @@ module Aws::CloudWatchEvents
 
     # Contains the Basic authorization parameters for the connection.
     #
-    # @note When making an API call, you may pass UpdateConnectionBasicAuthRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         username: "AuthHeaderParameters",
-    #         password: "AuthHeaderParameters",
-    #       }
-    #
     # @!attribute [rw] username
     #   The user name to use for Basic authorization.
     #   @return [String]
@@ -5249,14 +4257,6 @@ module Aws::CloudWatchEvents
 
     # Contains the OAuth authorization parameters to use for the connection.
     #
-    # @note When making an API call, you may pass UpdateConnectionOAuthClientRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         client_id: "AuthHeaderParameters",
-    #         client_secret: "AuthHeaderParameters",
-    #       }
-    #
     # @!attribute [rw] client_id
     #   The client ID to use for OAuth authorization.
     #   @return [String]
@@ -5276,41 +4276,6 @@ module Aws::CloudWatchEvents
     end
 
     # Contains the OAuth request parameters to use for the connection.
-    #
-    # @note When making an API call, you may pass UpdateConnectionOAuthRequestParameters
-    #   data as a hash:
-    #
-    #       {
-    #         client_parameters: {
-    #           client_id: "AuthHeaderParameters",
-    #           client_secret: "AuthHeaderParameters",
-    #         },
-    #         authorization_endpoint: "HttpsEndpoint",
-    #         http_method: "GET", # accepts GET, POST, PUT
-    #         o_auth_http_parameters: {
-    #           header_parameters: [
-    #             {
-    #               key: "HeaderKey",
-    #               value: "HeaderValue",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #           query_string_parameters: [
-    #             {
-    #               key: "QueryStringKey",
-    #               value: "QueryStringValue",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #           body_parameters: [
-    #             {
-    #               key: "String",
-    #               value: "String",
-    #               is_value_secret: false,
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] client_parameters
     #   A `UpdateConnectionOAuthClientRequestParameters` object that
@@ -5343,79 +4308,6 @@ module Aws::CloudWatchEvents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ConnectionName", # required
-    #         description: "ConnectionDescription",
-    #         authorization_type: "BASIC", # accepts BASIC, OAUTH_CLIENT_CREDENTIALS, API_KEY
-    #         auth_parameters: {
-    #           basic_auth_parameters: {
-    #             username: "AuthHeaderParameters",
-    #             password: "AuthHeaderParameters",
-    #           },
-    #           o_auth_parameters: {
-    #             client_parameters: {
-    #               client_id: "AuthHeaderParameters",
-    #               client_secret: "AuthHeaderParameters",
-    #             },
-    #             authorization_endpoint: "HttpsEndpoint",
-    #             http_method: "GET", # accepts GET, POST, PUT
-    #             o_auth_http_parameters: {
-    #               header_parameters: [
-    #                 {
-    #                   key: "HeaderKey",
-    #                   value: "HeaderValue",
-    #                   is_value_secret: false,
-    #                 },
-    #               ],
-    #               query_string_parameters: [
-    #                 {
-    #                   key: "QueryStringKey",
-    #                   value: "QueryStringValue",
-    #                   is_value_secret: false,
-    #                 },
-    #               ],
-    #               body_parameters: [
-    #                 {
-    #                   key: "String",
-    #                   value: "String",
-    #                   is_value_secret: false,
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #           api_key_auth_parameters: {
-    #             api_key_name: "AuthHeaderParameters",
-    #             api_key_value: "AuthHeaderParameters",
-    #           },
-    #           invocation_http_parameters: {
-    #             header_parameters: [
-    #               {
-    #                 key: "HeaderKey",
-    #                 value: "HeaderValue",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #             query_string_parameters: [
-    #               {
-    #                 key: "QueryStringKey",
-    #                 value: "QueryStringValue",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #             body_parameters: [
-    #               {
-    #                 key: "String",
-    #                 value: "String",
-    #                 is_value_secret: false,
-    #               },
-    #             ],
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the connection to update.
     #   @return [String]

@@ -36,6 +36,15 @@ module Aws::SNS
 
     # Attributes include the following:
     #
+    # * `AppleCertificateExpiryDate` – The expiry date of the SSL
+    #   certificate used to configure certificate-based authentication.
+    #
+    # * `ApplePlatformTeamID` – The Apple developer account ID used to
+    #   configure token-based authentication.
+    #
+    # * `ApplePlatformBundleID` – The app identifier used to configure
+    #   token-based authentication.
+    #
     # * `EventEndpointCreated` – Topic ARN to which EndpointCreated event
     #   notifications should be sent.
     #
@@ -67,7 +76,9 @@ module Aws::SNS
     #
     # @return [self]
     def load
-      resp = @client.get_platform_application_attributes(platform_application_arn: @arn)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_platform_application_attributes(platform_application_arn: @arn)
+      end
       @data = resp.data
       self
     end
@@ -119,7 +130,9 @@ module Aws::SNS
     # @return [PlatformEndpoint]
     def create_platform_endpoint(options = {})
       options = options.merge(platform_application_arn: @arn)
-      resp = @client.create_platform_endpoint(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_platform_endpoint(options)
+      end
       PlatformEndpoint.new(
         arn: resp.data.endpoint_arn,
         client: @client
@@ -133,7 +146,9 @@ module Aws::SNS
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(platform_application_arn: @arn)
-      resp = @client.delete_platform_application(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_platform_application(options)
+      end
       resp.data
     end
 
@@ -150,15 +165,34 @@ module Aws::SNS
     #   include the following:
     #
     #   * `PlatformCredential` – The credential received from the notification
-    #     service. For `APNS` and `APNS_SANDBOX`, `PlatformCredential` is
-    #     `private key`. For `GCM` (Firebase Cloud Messaging),
-    #     `PlatformCredential` is `API key`. For `ADM`, `PlatformCredential`
-    #     is `client secret`.
+    #     service.
+    #
+    #     * For ADM, `PlatformCredential`is client secret.
+    #
+    #     * For Apple Services using certificate credentials,
+    #       `PlatformCredential` is private key.
+    #
+    #     * For Apple Services using token credentials, `PlatformCredential`
+    #       is signing key.
+    #
+    #     * For GCM (Firebase Cloud Messaging), `PlatformCredential` is API
+    #       key.
+    #   ^
     #
     #   * `PlatformPrincipal` – The principal received from the notification
-    #     service. For `APNS` and `APNS_SANDBOX`, `PlatformPrincipal` is `SSL
-    #     certificate`. For `GCM` (Firebase Cloud Messaging), there is no
-    #     `PlatformPrincipal`. For `ADM`, `PlatformPrincipal` is `client id`.
+    #     service.
+    #
+    #     * For ADM, `PlatformPrincipal`is client id.
+    #
+    #     * For Apple Services using certificate credentials,
+    #       `PlatformPrincipal` is SSL certificate.
+    #
+    #     * For Apple Services using token credentials, `PlatformPrincipal` is
+    #       signing key ID.
+    #
+    #     * For GCM (Firebase Cloud Messaging), there is no
+    #       `PlatformPrincipal`.
+    #   ^
     #
     #   * `EventEndpointCreated` – Topic ARN to which `EndpointCreated` event
     #     notifications are sent.
@@ -181,10 +215,21 @@ module Aws::SNS
     #
     #   * `SuccessFeedbackSampleRate` – Sample rate percentage (0-100) of
     #     successfully delivered messages.
+    #
+    #   The following attributes only apply to `APNs` token-based
+    #   authentication:
+    #
+    #   * `ApplePlatformTeamID` – The identifier that's assigned to your
+    #     Apple developer account team.
+    #
+    #   * `ApplePlatformBundleID` – The bundle identifier that's assigned to
+    #     your iOS app.
     # @return [EmptyStructure]
     def set_attributes(options = {})
       options = options.merge(platform_application_arn: @arn)
-      resp = @client.set_platform_application_attributes(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.set_platform_application_attributes(options)
+      end
       resp.data
     end
 
@@ -198,7 +243,9 @@ module Aws::SNS
     def endpoints(options = {})
       batches = Enumerator.new do |y|
         options = options.merge(platform_application_arn: @arn)
-        resp = @client.list_endpoints_by_platform_application(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_endpoints_by_platform_application(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.endpoints.each do |e|

@@ -33,7 +33,7 @@ module Aws::ConnectParticipant
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-service-limits.html#feature-limits
+    #   [1]: https://docs.aws.amazon.com/connect/latest/adminguide/feature-limits.html
     #   @return [String]
     #
     # @!attribute [rw] attachment_id
@@ -59,25 +59,22 @@ module Aws::ConnectParticipant
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CompleteAttachmentUploadRequest
-    #   data as a hash:
-    #
-    #       {
-    #         attachment_ids: ["ArtifactId"], # required
-    #         client_token: "NonEmptyClientToken", # required
-    #         connection_token: "ParticipantToken", # required
-    #       }
-    #
     # @!attribute [rw] attachment_ids
     #   A list of unique identifiers for the attachments.
     #   @return [Array<String>]
     #
     # @!attribute [rw] client_token
     #   A unique, case-sensitive identifier that you provide to ensure the
-    #   idempotency of the request.
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency,
+    #   see [Making retries safe with idempotent APIs][1].
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
+    #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
     #   @return [String]
     #
     # @!attribute [rw] connection_token
@@ -134,22 +131,15 @@ module Aws::ConnectParticipant
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateParticipantConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         type: ["WEBSOCKET"], # required, accepts WEBSOCKET, CONNECTION_CREDENTIALS
-    #         participant_token: "ParticipantToken", # required
-    #       }
-    #
     # @!attribute [rw] type
-    #   Type of connection information required.
+    #   Type of connection information required. This can be omitted if
+    #   `ConnectParticipant` is `true`.
     #   @return [Array<String>]
     #
     # @!attribute [rw] participant_token
     #   This is a header parameter.
     #
-    #   The Participant Token as obtained from [StartChatContact][1] API
+    #   The ParticipantToken as obtained from [StartChatContact][1] API
     #   response.
     #
     #
@@ -157,11 +147,18 @@ module Aws::ConnectParticipant
     #   [1]: https://docs.aws.amazon.com/connect/latest/APIReference/API_StartChatContact.html
     #   @return [String]
     #
+    # @!attribute [rw] connect_participant
+    #   Amazon Connect Participant is used to mark the participant as
+    #   connected for customer participant in message streaming, as well as
+    #   for agent or manager participant in non-streaming chats.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/connectparticipant-2018-09-07/CreateParticipantConnectionRequest AWS API Documentation
     #
     class CreateParticipantConnectionRequest < Struct.new(
       :type,
-      :participant_token)
+      :participant_token,
+      :connect_participant)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -184,20 +181,18 @@ module Aws::ConnectParticipant
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisconnectParticipantRequest
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "ClientToken",
-    #         connection_token: "ParticipantToken", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   A unique, case-sensitive identifier that you provide to ensure the
-    #   idempotency of the request.
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency,
+    #   see [Making retries safe with idempotent APIs][1].
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
+    #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
     #   @return [String]
     #
     # @!attribute [rw] connection_token
@@ -218,14 +213,6 @@ module Aws::ConnectParticipant
     #
     class DisconnectParticipantResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass GetAttachmentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         attachment_id: "ArtifactId", # required
-    #         connection_token: "ParticipantToken", # required
-    #       }
-    #
     # @!attribute [rw] attachment_id
     #   A unique identifier for the attachment.
     #   @return [String]
@@ -245,8 +232,12 @@ module Aws::ConnectParticipant
     end
 
     # @!attribute [rw] url
-    #   The pre-signed URL using which file would be downloaded from Amazon
-    #   S3 by the API caller.
+    #   This is the pre-signed URL that can be used for uploading the file
+    #   to Amazon S3 when used in response to [StartAttachmentUpload][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/connect-participant/latest/APIReference/API_StartAttachmentUpload.html
     #   @return [String]
     #
     # @!attribute [rw] url_expiry
@@ -264,23 +255,6 @@ module Aws::ConnectParticipant
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTranscriptRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_id: "ContactId",
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #         scan_direction: "FORWARD", # accepts FORWARD, BACKWARD
-    #         sort_order: "DESCENDING", # accepts DESCENDING, ASCENDING
-    #         start_position: {
-    #           id: "ChatItemId",
-    #           absolute_time: "Instant",
-    #           most_recent: 1,
-    #         },
-    #         connection_token: "ParticipantToken", # required
-    #       }
-    #
     # @!attribute [rw] contact_id
     #   The contactId from the current contact chain for which transcript is
     #   needed.
@@ -407,6 +381,28 @@ module Aws::ConnectParticipant
     #   Provides information about the attachments.
     #   @return [Array<Types::AttachmentItem>]
     #
+    # @!attribute [rw] message_metadata
+    #   The metadata related to the message. Currently this supports only
+    #   information related to message receipts.
+    #   @return [Types::MessageMetadata]
+    #
+    # @!attribute [rw] related_contact_id
+    #   The contactId on which the transcript item was originally sent. This
+    #   field is only populated for persistent chats when the transcript
+    #   item is from the past chat session. For more information, see
+    #   [Enable persistent chat][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/connect/latest/adminguide/chat-persistence.html
+    #   @return [String]
+    #
+    # @!attribute [rw] contact_id
+    #   The contactId on which the transcript item was originally sent. This
+    #   field is populated only when the transcript item is from the current
+    #   chat session.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/connectparticipant-2018-09-07/Item AWS API Documentation
     #
     class Item < Struct.new(
@@ -418,40 +414,92 @@ module Aws::ConnectParticipant
       :participant_id,
       :display_name,
       :participant_role,
-      :attachments)
+      :attachments,
+      :message_metadata,
+      :related_contact_id,
+      :contact_id)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SendEventRequest
-    #   data as a hash:
+    # Contains metadata related to a message.
     #
-    #       {
-    #         content_type: "ChatContentType", # required
-    #         content: "ChatContent",
-    #         client_token: "ClientToken",
-    #         connection_token: "ParticipantToken", # required
-    #       }
+    # @!attribute [rw] message_id
+    #   The identifier of the message that contains the metadata
+    #   information.
+    #   @return [String]
     #
+    # @!attribute [rw] receipts
+    #   The list of receipt information for a message for different
+    #   recipients.
+    #   @return [Array<Types::Receipt>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/connectparticipant-2018-09-07/MessageMetadata AWS API Documentation
+    #
+    class MessageMetadata < Struct.new(
+      :message_id,
+      :receipts)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The receipt for the message delivered to the recipient.
+    #
+    # @!attribute [rw] delivered_timestamp
+    #   The time when the message was delivered to the recipient.
+    #   @return [String]
+    #
+    # @!attribute [rw] read_timestamp
+    #   The time when the message was read by the recipient.
+    #   @return [String]
+    #
+    # @!attribute [rw] recipient_participant_id
+    #   The identifier of the recipient of the message.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/connectparticipant-2018-09-07/Receipt AWS API Documentation
+    #
+    class Receipt < Struct.new(
+      :delivered_timestamp,
+      :read_timestamp,
+      :recipient_participant_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] content_type
     #   The content type of the request. Supported types are:
     #
     #   * application/vnd.amazonaws.connect.event.typing
     #
     #   * application/vnd.amazonaws.connect.event.connection.acknowledged
+    #
+    #   * application/vnd.amazonaws.connect.event.message.delivered
+    #
+    #   * application/vnd.amazonaws.connect.event.message.read
     #   @return [String]
     #
     # @!attribute [rw] content
-    #   The content of the event to be sent (for example, message text).
-    #   This is not yet supported.
+    #   The content of the event to be sent (for example, message text). For
+    #   content related to message receipts, this is supported in the form
+    #   of a JSON string.
+    #
+    #   Sample Content:
+    #   "\\\{\\"messageId\\":\\"11111111-aaaa-bbbb-cccc-EXAMPLE01234\\"\\}"
     #   @return [String]
     #
     # @!attribute [rw] client_token
     #   A unique, case-sensitive identifier that you provide to ensure the
-    #   idempotency of the request.
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency,
+    #   see [Making retries safe with idempotent APIs][1].
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
+    #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
     #   @return [String]
     #
     # @!attribute [rw] connection_token
@@ -490,30 +538,38 @@ module Aws::ConnectParticipant
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SendMessageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         content_type: "ChatContentType", # required
-    #         content: "ChatContent", # required
-    #         client_token: "ClientToken",
-    #         connection_token: "ParticipantToken", # required
-    #       }
-    #
     # @!attribute [rw] content_type
-    #   The type of the content. Supported types are text/plain.
+    #   The type of the content. Supported types are `text/plain`,
+    #   `text/markdown`, `application/json`, and
+    #   `application/vnd.amazonaws.connect.message.interactive.response`.
     #   @return [String]
     #
     # @!attribute [rw] content
     #   The content of the message.
+    #
+    #   * For `text/plain` and `text/markdown`, the Length Constraints are
+    #     Minimum of 1, Maximum of 1024.
+    #
+    #   * For `application/json`, the Length Constraints are Minimum of 1,
+    #     Maximum of 12000.
+    #
+    #   * For
+    #     `application/vnd.amazonaws.connect.message.interactive.response`,
+    #     the Length Constraints are Minimum of 1, Maximum of 12288.
     #   @return [String]
     #
     # @!attribute [rw] client_token
     #   A unique, case-sensitive identifier that you provide to ensure the
-    #   idempotency of the request.
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency,
+    #   see [Making retries safe with idempotent APIs][1].
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
+    #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
     #   @return [String]
     #
     # @!attribute [rw] connection_token
@@ -564,17 +620,6 @@ module Aws::ConnectParticipant
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartAttachmentUploadRequest
-    #   data as a hash:
-    #
-    #       {
-    #         content_type: "ContentType", # required
-    #         attachment_size_in_bytes: 1, # required
-    #         attachment_name: "AttachmentName", # required
-    #         client_token: "NonEmptyClientToken", # required
-    #         connection_token: "ParticipantToken", # required
-    #       }
-    #
     # @!attribute [rw] content_type
     #   Describes the MIME file type of the attachment. For a list of
     #   supported file types, see [Feature specifications][1] in the *Amazon
@@ -582,7 +627,7 @@ module Aws::ConnectParticipant
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-service-limits.html#feature-limits
+    #   [1]: https://docs.aws.amazon.com/connect/latest/adminguide/feature-limits.html
     #   @return [String]
     #
     # @!attribute [rw] attachment_size_in_bytes
@@ -594,11 +639,17 @@ module Aws::ConnectParticipant
     #   @return [String]
     #
     # @!attribute [rw] client_token
-    #   A unique case sensitive identifier to support idempotency of
-    #   request.
+    #   A unique, case-sensitive identifier that you provide to ensure the
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency,
+    #   see [Making retries safe with idempotent APIs][1].
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
+    #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
     #   @return [String]
     #
     # @!attribute [rw] connection_token
@@ -637,15 +688,6 @@ module Aws::ConnectParticipant
 
     # A filtering option for where to start. For example, if you sent 100
     # messages, start with message 50.
-    #
-    # @note When making an API call, you may pass StartPosition
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ChatItemId",
-    #         absolute_time: "Instant",
-    #         most_recent: 1,
-    #       }
     #
     # @!attribute [rw] id
     #   The ID of the message or event where to start.
@@ -689,8 +731,12 @@ module Aws::ConnectParticipant
     # Fields to be used while uploading the attachment.
     #
     # @!attribute [rw] url
-    #   The pre-signed URL using which file would be downloaded from Amazon
-    #   S3 by the API caller.
+    #   This is the pre-signed URL that can be used for uploading the file
+    #   to Amazon S3 when used in response to [StartAttachmentUpload][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/connect-participant/latest/APIReference/API_StartAttachmentUpload.html
     #   @return [String]
     #
     # @!attribute [rw] url_expiry

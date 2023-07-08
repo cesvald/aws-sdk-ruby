@@ -1,6 +1,183 @@
 Unreleased Changes
 ------------------
 
+1.71.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.70.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.69.0 (2023-06-23)
+------------------
+
+* Feature - Update to Amazon FSx documentation.
+
+1.68.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.67.0 (2023-06-12)
+------------------
+
+* Feature - Amazon FSx for NetApp ONTAP now supports joining a storage virtual machine (SVM) to Active Directory after the SVM has been created.
+
+1.66.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.65.0 (2023-04-07)
+------------------
+
+* Feature - Amazon FSx for Lustre now supports creating data repository associations on Persistent_1 and Scratch_2 file systems.
+
+1.64.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.63.0 (2022-12-23)
+------------------
+
+* Feature - Fix a bug where a recent release might break certain existing SDKs.
+
+1.62.0 (2022-11-29)
+------------------
+
+* Feature - This release adds support for 4GB/s / 160K PIOPS FSx for ONTAP file systems and 10GB/s / 350K PIOPS FSx for OpenZFS file systems (Single_AZ_2). For FSx for ONTAP, this also adds support for DP volumes, snapshot policy, copy tags to backups, and Multi-AZ route table updates.
+
+1.61.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.60.0 (2022-09-29)
+------------------
+
+* Feature - This release adds support for Amazon File Cache.
+
+1.59.0 (2022-09-07)
+------------------
+
+* Feature - Documentation update for Amazon FSx.
+
+1.58.0 (2022-08-29)
+------------------
+
+* Feature - Documentation updates for Amazon FSx for NetApp ONTAP.
+
+1.57.0 (2022-07-29)
+------------------
+
+* Feature - Documentation updates for Amazon FSx
+
+1.56.0 (2022-05-25)
+------------------
+
+* Feature - This release adds root squash support to FSx for Lustre to restrict root level access from clients by mapping root users to a less-privileged user/group with limited permissions.
+
+1.55.0 (2022-04-13)
+------------------
+
+* Feature - This release adds support for deploying FSx for ONTAP file systems in a single Availability Zone.
+
+1.54.0 (2022-04-05)
+------------------
+
+* Feature - Provide customers more visibility into file system status by adding new "Misconfigured Unavailable" status for Amazon FSx for Windows File Server.
+
+1.53.0 (2022-03-30)
+------------------
+
+* Feature - This release adds support for modifying throughput capacity for FSx for ONTAP file systems.
+
+1.52.0 (2022-03-03)
+------------------
+
+* Feature - This release adds support for data repository associations to use root ("/") as the file system path
+
+1.51.0 (2022-02-28)
+------------------
+
+* Feature - This release adds support for the following FSx for OpenZFS features: snapshot lifecycle transition messages, force flag for deleting file systems with child resources, LZ4 data compression, custom record sizes, and unsetting volume quotas and reservations.
+
+1.50.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.49.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.48.0 (2022-01-25)
+------------------
+
+* Feature - This release adds support for growing SSD storage capacity and growing/shrinking SSD IOPS for FSx for ONTAP file systems.
+
+1.47.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.46.0 (2021-11-30)
+------------------
+
+* Feature - This release adds support for the FSx for OpenZFS file system type, FSx for Lustre file systems with the Persistent_2 deployment type, and FSx for Lustre file systems with Amazon S3 data repository associations and automatic export policies.
+
+1.45.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.44.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.43.0 (2021-10-06)
+------------------
+
+* Feature - This release adds support for Lustre 2.12 to FSx for Lustre.
+
+1.42.0 (2021-09-02)
+------------------
+
+* Feature - Announcing Amazon FSx for NetApp ONTAP, a new service that provides fully managed shared storage in the AWS Cloud with the data access and management capabilities of ONTAP.
+
+1.41.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.40.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.39.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.38.0 (2021-06-08)
+------------------
+
+* Feature - This release adds support for auditing end-user access to files, folders, and file shares using Windows event logs, enabling customers to meet their security and compliance needs.
+
+1.37.0 (2021-05-27)
+------------------
+
+* Feature - This release adds LZ4 data compression support to FSx for Lustre to reduce storage consumption of both file system storage and file system backups.
+
 1.36.0 (2021-04-12)
 ------------------
 

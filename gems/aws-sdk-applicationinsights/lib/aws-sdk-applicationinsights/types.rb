@@ -106,6 +106,15 @@ module Aws::ApplicationInsights
     #   * “Configuring application, detected 1 Unconfigured Components”
     #   @return [String]
     #
+    # @!attribute [rw] auto_config_enabled
+    #   Indicates whether auto-configuration is turned on for this
+    #   application.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] discovery_type
+    #   The method used by Application Insights to onboard your resources.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ApplicationInfo AWS API Documentation
     #
     class ApplicationInfo < Struct.new(
@@ -114,7 +123,9 @@ module Aws::ApplicationInsights
       :ops_item_sns_topic_arn,
       :ops_center_enabled,
       :cwe_monitor_enabled,
-      :remarks)
+      :remarks,
+      :auto_config_enabled,
+      :discovery_type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -174,22 +185,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         ops_center_enabled: false,
-    #         cwe_monitor_enabled: false,
-    #         ops_item_sns_topic_arn: "OpsItemSNSTopicArn",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -217,6 +212,23 @@ module Aws::ApplicationInsights
     #   128 characters. The maximum length of a tag value is 256 characters.
     #   @return [Array<Types::Tag>]
     #
+    # @!attribute [rw] auto_config_enabled
+    #   Indicates whether Application Insights automatically configures
+    #   unmonitored resources in the resource group.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] auto_create
+    #   Configures all of the resources in the resource group by applying
+    #   the recommended configurations.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] grouping_type
+    #   Application Insights can create applications based on a resource
+    #   group or on an account. To create an account-based application using
+    #   all of the resources in the account, set this parameter to
+    #   `ACCOUNT_BASED`.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/CreateApplicationRequest AWS API Documentation
     #
     class CreateApplicationRequest < Struct.new(
@@ -224,7 +236,10 @@ module Aws::ApplicationInsights
       :ops_center_enabled,
       :cwe_monitor_enabled,
       :ops_item_sns_topic_arn,
-      :tags)
+      :tags,
+      :auto_config_enabled,
+      :auto_create,
+      :grouping_type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -241,15 +256,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateComponentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         component_name: "CustomComponentName", # required
-    #         resource_list: ["ResourceARN"], # required
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -276,17 +282,6 @@ module Aws::ApplicationInsights
     #
     class CreateComponentResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass CreateLogPatternRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         pattern_set_name: "LogPatternSetName", # required
-    #         pattern_name: "LogPatternName", # required
-    #         pattern: "LogPatternRegex", # required
-    #         rank: 1, # required
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -347,13 +342,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -370,14 +358,6 @@ module Aws::ApplicationInsights
     #
     class DeleteApplicationResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteComponentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         component_name: "CustomComponentName", # required
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -399,15 +379,6 @@ module Aws::ApplicationInsights
     #
     class DeleteComponentResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteLogPatternRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         pattern_set_name: "LogPatternSetName", # required
-    #         pattern_name: "LogPatternName", # required
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -434,13 +405,6 @@ module Aws::ApplicationInsights
     #
     class DeleteLogPatternResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -465,15 +429,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeComponentConfigurationRecommendationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         component_name: "ComponentName", # required
-    #         tier: "CUSTOM", # required, accepts CUSTOM, DEFAULT, DOT_NET_CORE, DOT_NET_WORKER, DOT_NET_WEB_TIER, DOT_NET_WEB, SQL_SERVER, SQL_SERVER_ALWAYSON_AVAILABILITY_GROUP, MYSQL, POSTGRESQL, JAVA_JMX, ORACLE
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -483,9 +438,7 @@ module Aws::ApplicationInsights
     #   @return [String]
     #
     # @!attribute [rw] tier
-    #   The tier of the application component. Supported tiers include
-    #   `DOT_NET_CORE`, `DOT_NET_WORKER`, `DOT_NET_WEB`, `SQL_SERVER`, and
-    #   `DEFAULT`.
+    #   The tier of the application component.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/DescribeComponentConfigurationRecommendationRequest AWS API Documentation
@@ -511,14 +464,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeComponentConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         component_name: "ComponentName", # required
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -561,14 +506,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeComponentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         component_name: "ComponentName", # required
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -604,15 +541,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeLogPatternRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         pattern_set_name: "LogPatternSetName", # required
-    #         pattern_name: "LogPatternName", # required
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -652,13 +580,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeObservationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         observation_id: "ObservationId", # required
-    #       }
-    #
     # @!attribute [rw] observation_id
     #   The ID of the observation.
     #   @return [String]
@@ -683,13 +604,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeProblemObservationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         problem_id: "ProblemId", # required
-    #       }
-    #
     # @!attribute [rw] problem_id
     #   The ID of the problem.
     #   @return [String]
@@ -714,13 +628,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeProblemRequest
-    #   data as a hash:
-    #
-    #       {
-    #         problem_id: "ProblemId", # required
-    #       }
-    #
     # @!attribute [rw] problem_id
     #   The ID of the problem.
     #   @return [String]
@@ -759,14 +666,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListApplicationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   The maximum number of results to return in a single call. To
     #   retrieve the remaining results, make another call with the returned
@@ -804,15 +703,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListComponentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -854,18 +744,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListConfigurationHistoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName",
-    #         start_time: Time.now,
-    #         end_time: Time.now,
-    #         event_status: "INFO", # accepts INFO, WARN, ERROR
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   Resource group to which the application belongs.
     #   @return [String]
@@ -937,15 +815,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListLogPatternSetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -993,16 +862,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListLogPatternsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         pattern_set_name: "LogPatternSetName",
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -1055,17 +914,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListProblemsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName",
-    #         start_time: Time.now,
-    #         end_time: Time.now,
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -1091,6 +939,10 @@ module Aws::ApplicationInsights
     #   The token to request the next page of results.
     #   @return [String]
     #
+    # @!attribute [rw] component_name
+    #   The name of the component.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListProblemsRequest AWS API Documentation
     #
     class ListProblemsRequest < Struct.new(
@@ -1098,7 +950,8 @@ module Aws::ApplicationInsights
       :start_time,
       :end_time,
       :max_results,
-      :next_token)
+      :next_token,
+      :component_name)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1112,22 +965,20 @@ module Aws::ApplicationInsights
     #   `null` when there are no more results to return.
     #   @return [String]
     #
+    # @!attribute [rw] resource_group_name
+    #   The name of the resource group.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/ListProblemsResponse AWS API Documentation
     #
     class ListProblemsResponse < Struct.new(
       :problem_list,
-      :next_token)
+      :next_token,
+      :resource_group_name)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the application that you want to
     #   retrieve tag information for.
@@ -1491,6 +1342,15 @@ module Aws::ApplicationInsights
     #   Feedback provided by the user about the problem.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] recurring_count
+    #   The number of times that the same problem reoccurred after the first
+    #   time it was resolved.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] last_recurrence_time
+    #   The last time that the problem reoccurred after its last resolution.
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/Problem AWS API Documentation
     #
     class Problem < Struct.new(
@@ -1503,7 +1363,9 @@ module Aws::ApplicationInsights
       :end_time,
       :severity_level,
       :resource_group_name,
-      :feedback)
+      :feedback,
+      :recurring_count,
+      :last_recurrence_time)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1572,14 +1434,6 @@ module Aws::ApplicationInsights
     #   any tag keys or values that you define. In addition, you can't edit
     #   or remove tag keys or values that use this prefix.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
-    #
     # @!attribute [rw] key
     #   One part of a key-value pair that defines a tag. The maximum length
     #   of a tag key is 128 characters. The minimum length is 1 character.
@@ -1601,19 +1455,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the application that you want to
     #   add one or more tags to.
@@ -1672,14 +1513,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the application that you want to
     #   remove one or more tags from.
@@ -1708,17 +1541,6 @@ module Aws::ApplicationInsights
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         ops_center_enabled: false,
-    #         cwe_monitor_enabled: false,
-    #         ops_item_sns_topic_arn: "OpsItemSNSTopicArn",
-    #         remove_sns_topic: false,
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -1745,6 +1567,10 @@ module Aws::ApplicationInsights
     #   problems.
     #   @return [Boolean]
     #
+    # @!attribute [rw] auto_config_enabled
+    #   Turns auto-configuration on or off.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/UpdateApplicationRequest AWS API Documentation
     #
     class UpdateApplicationRequest < Struct.new(
@@ -1752,7 +1578,8 @@ module Aws::ApplicationInsights
       :ops_center_enabled,
       :cwe_monitor_enabled,
       :ops_item_sns_topic_arn,
-      :remove_sns_topic)
+      :remove_sns_topic,
+      :auto_config_enabled)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1769,17 +1596,6 @@ module Aws::ApplicationInsights
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateComponentConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         component_name: "ComponentName", # required
-    #         monitor: false,
-    #         tier: "CUSTOM", # accepts CUSTOM, DEFAULT, DOT_NET_CORE, DOT_NET_WORKER, DOT_NET_WEB_TIER, DOT_NET_WEB, SQL_SERVER, SQL_SERVER_ALWAYSON_AVAILABILITY_GROUP, MYSQL, POSTGRESQL, JAVA_JMX, ORACLE
-    #         component_configuration: "ComponentConfiguration",
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -1793,9 +1609,7 @@ module Aws::ApplicationInsights
     #   @return [Boolean]
     #
     # @!attribute [rw] tier
-    #   The tier of the application component. Supported tiers include
-    #   `DOT_NET_WORKER`, `DOT_NET_WEB`, `DOT_NET_CORE`, `SQL_SERVER`, and
-    #   `DEFAULT`.
+    #   The tier of the application component.
     #   @return [String]
     #
     # @!attribute [rw] component_configuration
@@ -1813,6 +1627,11 @@ module Aws::ApplicationInsights
     #   [2]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/component-config.html
     #   @return [String]
     #
+    # @!attribute [rw] auto_config_enabled
+    #   Automatically configures the component by applying the recommended
+    #   configurations.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/UpdateComponentConfigurationRequest AWS API Documentation
     #
     class UpdateComponentConfigurationRequest < Struct.new(
@@ -1820,7 +1639,8 @@ module Aws::ApplicationInsights
       :component_name,
       :monitor,
       :tier,
-      :component_configuration)
+      :component_configuration,
+      :auto_config_enabled)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1829,16 +1649,6 @@ module Aws::ApplicationInsights
     #
     class UpdateComponentConfigurationResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateComponentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         component_name: "CustomComponentName", # required
-    #         new_component_name: "CustomComponentName",
-    #         resource_list: ["ResourceARN"],
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]
@@ -1870,17 +1680,6 @@ module Aws::ApplicationInsights
     #
     class UpdateComponentResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateLogPatternRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_group_name: "ResourceGroupName", # required
-    #         pattern_set_name: "LogPatternSetName", # required
-    #         pattern_name: "LogPatternName", # required
-    #         pattern: "LogPatternRegex",
-    #         rank: 1,
-    #       }
-    #
     # @!attribute [rw] resource_group_name
     #   The name of the resource group.
     #   @return [String]

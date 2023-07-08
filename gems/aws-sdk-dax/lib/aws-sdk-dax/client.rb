@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:dax)
@@ -73,8 +77,13 @@ module Aws::DAX
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::DAX::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::DAX
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::DAX
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::DAX
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::DAX
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::DAX
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::DAX::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::DAX::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::DAX
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::DAX
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -442,6 +499,14 @@ module Aws::DAX
     #   Represents the settings used to enable server-side encryption on the
     #   cluster.
     #
+    # @option params [String] :cluster_endpoint_encryption_type
+    #   The type of encryption the cluster's endpoint should support. Values
+    #   are:
+    #
+    #   * `NONE` for no encryption
+    #
+    #   * `TLS` for Transport Layer Security
+    #
     # @return [Types::CreateClusterResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateClusterResponse#cluster #cluster} => Types::Cluster
@@ -469,6 +534,7 @@ module Aws::DAX
     #     sse_specification: {
     #       enabled: false, # required
     #     },
+    #     cluster_endpoint_encryption_type: "NONE", # accepts NONE, TLS
     #   })
     #
     # @example Response structure
@@ -482,12 +548,14 @@ module Aws::DAX
     #   resp.cluster.status #=> String
     #   resp.cluster.cluster_discovery_endpoint.address #=> String
     #   resp.cluster.cluster_discovery_endpoint.port #=> Integer
+    #   resp.cluster.cluster_discovery_endpoint.url #=> String
     #   resp.cluster.node_ids_to_remove #=> Array
     #   resp.cluster.node_ids_to_remove[0] #=> String
     #   resp.cluster.nodes #=> Array
     #   resp.cluster.nodes[0].node_id #=> String
     #   resp.cluster.nodes[0].endpoint.address #=> String
     #   resp.cluster.nodes[0].endpoint.port #=> Integer
+    #   resp.cluster.nodes[0].endpoint.url #=> String
     #   resp.cluster.nodes[0].node_create_time #=> Time
     #   resp.cluster.nodes[0].availability_zone #=> String
     #   resp.cluster.nodes[0].node_status #=> String
@@ -505,6 +573,7 @@ module Aws::DAX
     #   resp.cluster.parameter_group.node_ids_to_reboot #=> Array
     #   resp.cluster.parameter_group.node_ids_to_reboot[0] #=> String
     #   resp.cluster.sse_description.status #=> String, one of "ENABLING", "ENABLED", "DISABLING", "DISABLED"
+    #   resp.cluster.cluster_endpoint_encryption_type #=> String, one of "NONE", "TLS"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/CreateCluster AWS API Documentation
     #
@@ -635,12 +704,14 @@ module Aws::DAX
     #   resp.cluster.status #=> String
     #   resp.cluster.cluster_discovery_endpoint.address #=> String
     #   resp.cluster.cluster_discovery_endpoint.port #=> Integer
+    #   resp.cluster.cluster_discovery_endpoint.url #=> String
     #   resp.cluster.node_ids_to_remove #=> Array
     #   resp.cluster.node_ids_to_remove[0] #=> String
     #   resp.cluster.nodes #=> Array
     #   resp.cluster.nodes[0].node_id #=> String
     #   resp.cluster.nodes[0].endpoint.address #=> String
     #   resp.cluster.nodes[0].endpoint.port #=> Integer
+    #   resp.cluster.nodes[0].endpoint.url #=> String
     #   resp.cluster.nodes[0].node_create_time #=> Time
     #   resp.cluster.nodes[0].availability_zone #=> String
     #   resp.cluster.nodes[0].node_status #=> String
@@ -658,6 +729,7 @@ module Aws::DAX
     #   resp.cluster.parameter_group.node_ids_to_reboot #=> Array
     #   resp.cluster.parameter_group.node_ids_to_reboot[0] #=> String
     #   resp.cluster.sse_description.status #=> String, one of "ENABLING", "ENABLED", "DISABLING", "DISABLED"
+    #   resp.cluster.cluster_endpoint_encryption_type #=> String, one of "NONE", "TLS"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/DecreaseReplicationFactor AWS API Documentation
     #
@@ -697,12 +769,14 @@ module Aws::DAX
     #   resp.cluster.status #=> String
     #   resp.cluster.cluster_discovery_endpoint.address #=> String
     #   resp.cluster.cluster_discovery_endpoint.port #=> Integer
+    #   resp.cluster.cluster_discovery_endpoint.url #=> String
     #   resp.cluster.node_ids_to_remove #=> Array
     #   resp.cluster.node_ids_to_remove[0] #=> String
     #   resp.cluster.nodes #=> Array
     #   resp.cluster.nodes[0].node_id #=> String
     #   resp.cluster.nodes[0].endpoint.address #=> String
     #   resp.cluster.nodes[0].endpoint.port #=> Integer
+    #   resp.cluster.nodes[0].endpoint.url #=> String
     #   resp.cluster.nodes[0].node_create_time #=> Time
     #   resp.cluster.nodes[0].availability_zone #=> String
     #   resp.cluster.nodes[0].node_status #=> String
@@ -720,6 +794,7 @@ module Aws::DAX
     #   resp.cluster.parameter_group.node_ids_to_reboot #=> Array
     #   resp.cluster.parameter_group.node_ids_to_reboot[0] #=> String
     #   resp.cluster.sse_description.status #=> String, one of "ENABLING", "ENABLED", "DISABLING", "DISABLED"
+    #   resp.cluster.cluster_endpoint_encryption_type #=> String, one of "NONE", "TLS"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/DeleteCluster AWS API Documentation
     #
@@ -854,12 +929,14 @@ module Aws::DAX
     #   resp.clusters[0].status #=> String
     #   resp.clusters[0].cluster_discovery_endpoint.address #=> String
     #   resp.clusters[0].cluster_discovery_endpoint.port #=> Integer
+    #   resp.clusters[0].cluster_discovery_endpoint.url #=> String
     #   resp.clusters[0].node_ids_to_remove #=> Array
     #   resp.clusters[0].node_ids_to_remove[0] #=> String
     #   resp.clusters[0].nodes #=> Array
     #   resp.clusters[0].nodes[0].node_id #=> String
     #   resp.clusters[0].nodes[0].endpoint.address #=> String
     #   resp.clusters[0].nodes[0].endpoint.port #=> Integer
+    #   resp.clusters[0].nodes[0].endpoint.url #=> String
     #   resp.clusters[0].nodes[0].node_create_time #=> Time
     #   resp.clusters[0].nodes[0].availability_zone #=> String
     #   resp.clusters[0].nodes[0].node_status #=> String
@@ -877,6 +954,7 @@ module Aws::DAX
     #   resp.clusters[0].parameter_group.node_ids_to_reboot #=> Array
     #   resp.clusters[0].parameter_group.node_ids_to_reboot[0] #=> String
     #   resp.clusters[0].sse_description.status #=> String, one of "ENABLING", "ENABLED", "DISABLING", "DISABLED"
+    #   resp.clusters[0].cluster_endpoint_encryption_type #=> String, one of "NONE", "TLS"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/DescribeClusters AWS API Documentation
     #
@@ -1221,12 +1299,14 @@ module Aws::DAX
     #   resp.cluster.status #=> String
     #   resp.cluster.cluster_discovery_endpoint.address #=> String
     #   resp.cluster.cluster_discovery_endpoint.port #=> Integer
+    #   resp.cluster.cluster_discovery_endpoint.url #=> String
     #   resp.cluster.node_ids_to_remove #=> Array
     #   resp.cluster.node_ids_to_remove[0] #=> String
     #   resp.cluster.nodes #=> Array
     #   resp.cluster.nodes[0].node_id #=> String
     #   resp.cluster.nodes[0].endpoint.address #=> String
     #   resp.cluster.nodes[0].endpoint.port #=> Integer
+    #   resp.cluster.nodes[0].endpoint.url #=> String
     #   resp.cluster.nodes[0].node_create_time #=> Time
     #   resp.cluster.nodes[0].availability_zone #=> String
     #   resp.cluster.nodes[0].node_status #=> String
@@ -1244,6 +1324,7 @@ module Aws::DAX
     #   resp.cluster.parameter_group.node_ids_to_reboot #=> Array
     #   resp.cluster.parameter_group.node_ids_to_reboot[0] #=> String
     #   resp.cluster.sse_description.status #=> String, one of "ENABLING", "ENABLED", "DISABLING", "DISABLED"
+    #   resp.cluster.cluster_endpoint_encryption_type #=> String, one of "NONE", "TLS"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/IncreaseReplicationFactor AWS API Documentation
     #
@@ -1330,12 +1411,14 @@ module Aws::DAX
     #   resp.cluster.status #=> String
     #   resp.cluster.cluster_discovery_endpoint.address #=> String
     #   resp.cluster.cluster_discovery_endpoint.port #=> Integer
+    #   resp.cluster.cluster_discovery_endpoint.url #=> String
     #   resp.cluster.node_ids_to_remove #=> Array
     #   resp.cluster.node_ids_to_remove[0] #=> String
     #   resp.cluster.nodes #=> Array
     #   resp.cluster.nodes[0].node_id #=> String
     #   resp.cluster.nodes[0].endpoint.address #=> String
     #   resp.cluster.nodes[0].endpoint.port #=> Integer
+    #   resp.cluster.nodes[0].endpoint.url #=> String
     #   resp.cluster.nodes[0].node_create_time #=> Time
     #   resp.cluster.nodes[0].availability_zone #=> String
     #   resp.cluster.nodes[0].node_status #=> String
@@ -1353,6 +1436,7 @@ module Aws::DAX
     #   resp.cluster.parameter_group.node_ids_to_reboot #=> Array
     #   resp.cluster.parameter_group.node_ids_to_reboot[0] #=> String
     #   resp.cluster.sse_description.status #=> String, one of "ENABLING", "ENABLED", "DISABLING", "DISABLED"
+    #   resp.cluster.cluster_endpoint_encryption_type #=> String, one of "NONE", "TLS"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/RebootNode AWS API Documentation
     #
@@ -1459,7 +1543,9 @@ module Aws::DAX
     #   The Amazon Resource Name (ARN) that identifies the topic.
     #
     # @option params [String] :notification_topic_status
-    #   The current state of the topic.
+    #   The current state of the topic. A value of “active” means that
+    #   notifications will be sent to the topic. A value of “inactive” means
+    #   that notifications will not be sent to the topic.
     #
     # @option params [String] :parameter_group_name
     #   The name of a parameter group for this cluster.
@@ -1496,12 +1582,14 @@ module Aws::DAX
     #   resp.cluster.status #=> String
     #   resp.cluster.cluster_discovery_endpoint.address #=> String
     #   resp.cluster.cluster_discovery_endpoint.port #=> Integer
+    #   resp.cluster.cluster_discovery_endpoint.url #=> String
     #   resp.cluster.node_ids_to_remove #=> Array
     #   resp.cluster.node_ids_to_remove[0] #=> String
     #   resp.cluster.nodes #=> Array
     #   resp.cluster.nodes[0].node_id #=> String
     #   resp.cluster.nodes[0].endpoint.address #=> String
     #   resp.cluster.nodes[0].endpoint.port #=> Integer
+    #   resp.cluster.nodes[0].endpoint.url #=> String
     #   resp.cluster.nodes[0].node_create_time #=> Time
     #   resp.cluster.nodes[0].availability_zone #=> String
     #   resp.cluster.nodes[0].node_status #=> String
@@ -1519,6 +1607,7 @@ module Aws::DAX
     #   resp.cluster.parameter_group.node_ids_to_reboot #=> Array
     #   resp.cluster.parameter_group.node_ids_to_reboot[0] #=> String
     #   resp.cluster.sse_description.status #=> String, one of "ENABLING", "ENABLED", "DISABLING", "DISABLED"
+    #   resp.cluster.cluster_endpoint_encryption_type #=> String, one of "NONE", "TLS"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/UpdateCluster AWS API Documentation
     #
@@ -1539,6 +1628,15 @@ module Aws::DAX
     # @option params [required, Array<Types::ParameterNameValue>] :parameter_name_values
     #   An array of name-value pairs for the parameters in the group. Each
     #   element in the array represents a single parameter.
+    #
+    #   <note markdown="1"> `record-ttl-millis` and `query-ttl-millis` are the only supported
+    #   parameter names. For more details, see [Configuring TTL Settings][1].
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.cluster-management.html#DAX.cluster-management.custom-settings.ttl
     #
     # @return [Types::UpdateParameterGroupResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1624,7 +1722,7 @@ module Aws::DAX
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-dax'
-      context[:gem_version] = '1.29.0'
+      context[:gem_version] = '1.45.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

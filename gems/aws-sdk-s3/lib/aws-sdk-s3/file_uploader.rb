@@ -11,7 +11,7 @@ module Aws
 
       # @param [Hash] options
       # @option options [Client] :client
-      # @option options [Integer] :multipart_threshold (15728640)
+      # @option options [Integer] :multipart_threshold (104857600)
       def initialize(options = {})
         @options = options
         @client = options[:client] || Client.new
@@ -32,12 +32,19 @@ module Aws
       # @option options [Proc] :progress_callback
       #   A Proc that will be called when each chunk of the upload is sent.
       #   It will be invoked with [bytes_read], [total_sizes]
+      # @option options [Integer] :thread_count
+      #   The thread count to use for multipart uploads. Ignored for
+      #   objects smaller than the multipart threshold.
       # @return [void]
       def upload(source, options = {})
-        if File.size(source) >= multipart_threshold
-          MultipartFileUploader.new(@options).upload(source, options)
-        else
-          put_object(source, options)
+        Aws::Plugins::UserAgent.feature('s3-transfer') do
+          if File.size(source) >= multipart_threshold
+            MultipartFileUploader.new(@options).upload(source, options)
+          else
+            # remove multipart parameters not supported by put_object
+            options.delete(:thread_count)
+            put_object(source, options)
+          end
         end
       end
 

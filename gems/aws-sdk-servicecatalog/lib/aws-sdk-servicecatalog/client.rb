@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:servicecatalog)
@@ -73,8 +77,13 @@ module Aws::ServiceCatalog
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::ServiceCatalog::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::ServiceCatalog
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::ServiceCatalog
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::ServiceCatalog
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::ServiceCatalog
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::ServiceCatalog
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::ServiceCatalog::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::ServiceCatalog::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::ServiceCatalog
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::ServiceCatalog
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -341,8 +398,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -413,10 +468,31 @@ module Aws::ServiceCatalog
 
     # Associates the specified principal ARN with the specified portfolio.
     #
+    # If you share the portfolio with principal name sharing enabled, the
+    # `PrincipalARN` association is included in the share.
+    #
+    # The `PortfolioID`, `PrincipalARN`, and `PrincipalType` parameters are
+    # required.
+    #
+    # You can associate a maximum of 10 Principals with a portfolio using
+    # `PrincipalType` as `IAM_PATTERN`
+    #
+    # <note markdown="1"> When you associate a principal with portfolio, a potential privilege
+    # escalation path may occur when that portfolio is then shared with
+    # other accounts. For a user in a recipient account who is *not* an
+    # Service Catalog Admin, but still has the ability to create Principals
+    # (Users/Groups/Roles), that user could create a role that matches a
+    # principal name association for the portfolio. Although this user may
+    # not know which principal names are associated through Service Catalog,
+    # they may be able to guess the user. If this potential escalation path
+    # is a concern, then Service Catalog recommends using `PrincipalType` as
+    # `IAM`. With this configuration, the `PrincipalARN` must already exist
+    # in the recipient account before it can be associated.
+    #
+    #  </note>
+    #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -426,10 +502,70 @@ module Aws::ServiceCatalog
     #   The portfolio identifier.
     #
     # @option params [required, String] :principal_arn
-    #   The ARN of the principal (IAM user, role, or group).
+    #   The ARN of the principal (user, role, or group). If the
+    #   `PrincipalType` is `IAM`, the supported value is a fully defined [IAM
+    #   Amazon Resource Name (ARN)][1]. If the `PrincipalType` is
+    #   `IAM_PATTERN`, the supported value is an `IAM` ARN *without an
+    #   AccountID* in the following format:
+    #
+    #   *arn:partition:iam:::resource-type/resource-id*
+    #
+    #   The ARN resource-id can be either:
+    #
+    #   * A fully formed resource-id. For example,
+    #     *arn:aws:iam:::role/resource-name* or
+    #     *arn:aws:iam:::role/resource-path/resource-name*
+    #
+    #   * A wildcard ARN. The wildcard ARN accepts `IAM_PATTERN` values with a
+    #     "*" or "?" in the resource-id segment of the ARN. For example
+    #     *arn:partition:service:::resource-type/resource-path/resource-name*.
+    #     The new symbols are exclusive to the **resource-path** and
+    #     **resource-name** and cannot replace the **resource-type** or other
+    #     ARN values.
+    #
+    #     The ARN path and principal name allow unlimited wildcard characters.
+    #
+    #   Examples of an **acceptable** wildcard ARN:
+    #
+    #   * arn:aws:iam:::role/ResourceName\_*
+    #
+    #   * arn:aws:iam:::role/*/ResourceName\_?
+    #
+    #   Examples of an **unacceptable** wildcard ARN:
+    #
+    #   * arn:aws:iam:::*/ResourceName
+    #
+    #   ^
+    #
+    #   You can associate multiple `IAM_PATTERN`s even if the account has no
+    #   principal with that name.
+    #
+    #   The "?" wildcard character matches zero or one of any character.
+    #   This is similar to ".?" in regular regex context. The "*"
+    #   wildcard character matches any number of any characters. This is
+    #   similar to ".*" in regular regex context.
+    #
+    #   In the IAM Principal ARN format
+    #   (*arn:partition:iam:::resource-type/resource-path/resource-name*),
+    #   valid resource-type values include **user/**, **group/**, or
+    #   **role/**. The "?" and "*" characters are allowed only after the
+    #   resource-type in the resource-id segment. You can use special
+    #   characters anywhere within the resource-id.
+    #
+    #   The "*" character also matches the "/" character, allowing paths
+    #   to be formed *within* the resource-id. For example,
+    #   *arn:aws:iam:::role/*****/ResourceName\_?* matches both
+    #   *arn:aws:iam:::role/pathA/pathB/ResourceName\_1* and
+    #   *arn:aws:iam:::role/pathA/ResourceName\_1*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-arns
     #
     # @option params [required, String] :principal_type
-    #   The principal type. The supported value is `IAM`.
+    #   The principal type. The supported value is `IAM` if you use a fully
+    #   defined Amazon Resource Name (ARN), or `IAM_PATTERN` if you use an ARN
+    #   with no `accountID`, with or without wildcard characters.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -439,7 +575,7 @@ module Aws::ServiceCatalog
     #     accept_language: "AcceptLanguage",
     #     portfolio_id: "Id", # required
     #     principal_arn: "PrincipalARN", # required
-    #     principal_type: "IAM", # required, accepts IAM
+    #     principal_type: "IAM", # required, accepts IAM, IAM_PATTERN
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociatePrincipalWithPortfolio AWS API Documentation
@@ -457,8 +593,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -507,8 +641,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -570,8 +702,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -599,7 +729,7 @@ module Aws::ServiceCatalog
     #   resp.failed_service_action_associations[0].service_action_id #=> String
     #   resp.failed_service_action_associations[0].product_id #=> String
     #   resp.failed_service_action_associations[0].provisioning_artifact_id #=> String
-    #   resp.failed_service_action_associations[0].error_code #=> String, one of "DUPLICATE_RESOURCE", "INTERNAL_FAILURE", "LIMIT_EXCEEDED", "RESOURCE_NOT_FOUND", "THROTTLING"
+    #   resp.failed_service_action_associations[0].error_code #=> String, one of "DUPLICATE_RESOURCE", "INTERNAL_FAILURE", "LIMIT_EXCEEDED", "RESOURCE_NOT_FOUND", "THROTTLING", "INVALID_PARAMETER"
     #   resp.failed_service_action_associations[0].error_message #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/BatchAssociateServiceActionWithProvisioningArtifact AWS API Documentation
@@ -620,8 +750,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -650,7 +778,7 @@ module Aws::ServiceCatalog
     #   resp.failed_service_action_associations[0].service_action_id #=> String
     #   resp.failed_service_action_associations[0].product_id #=> String
     #   resp.failed_service_action_associations[0].provisioning_artifact_id #=> String
-    #   resp.failed_service_action_associations[0].error_code #=> String, one of "DUPLICATE_RESOURCE", "INTERNAL_FAILURE", "LIMIT_EXCEEDED", "RESOURCE_NOT_FOUND", "THROTTLING"
+    #   resp.failed_service_action_associations[0].error_code #=> String, one of "DUPLICATE_RESOURCE", "INTERNAL_FAILURE", "LIMIT_EXCEEDED", "RESOURCE_NOT_FOUND", "THROTTLING", "INVALID_PARAMETER"
     #   resp.failed_service_action_associations[0].error_message #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/BatchDisassociateServiceActionFromProvisioningArtifact AWS API Documentation
@@ -666,15 +794,15 @@ module Aws::ServiceCatalog
     # a new product.
     #
     # You can copy a product to the same account or another account. You can
-    # copy a product to the same region or another region.
+    # copy a product to the same Region or another Region. If you copy a
+    # product to another account, you must first share the product in a
+    # portfolio using CreatePortfolioShare.
     #
     # This operation is performed asynchronously. To track the progress of
     # the operation, use DescribeCopyProductStatus.
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -747,8 +875,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -823,8 +949,8 @@ module Aws::ServiceCatalog
     #     You also cannot have more than one `STACKSET` constraint on a
     #     product and portfolio.
     #
-    #     Products with a `STACKSET` constraint will launch an AWS
-    #     CloudFormation stack set.
+    #     Products with a `STACKSET` constraint will launch an CloudFormation
+    #     stack set.
     #
     #   TEMPLATE
     #
@@ -903,8 +1029,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -992,10 +1116,22 @@ module Aws::ServiceCatalog
     # error. To update an existing share, you must use the `
     # UpdatePortfolioShare` API instead.
     #
+    # <note markdown="1"> When you associate a principal with portfolio, a potential privilege
+    # escalation path may occur when that portfolio is then shared with
+    # other accounts. For a user in a recipient account who is *not* an
+    # Service Catalog Admin, but still has the ability to create Principals
+    # (Users/Groups/Roles), that user could create a role that matches a
+    # principal name association for the portfolio. Although this user may
+    # not know which principal names are associated through Service Catalog,
+    # they may be able to guess the user. If this potential escalation path
+    # is a concern, then Service Catalog recommends using `PrincipalType` as
+    # `IAM`. With this configuration, the `PrincipalARN` must already exist
+    # in the recipient account before it can be associated.
+    #
+    #  </note>
+    #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -1005,19 +1141,31 @@ module Aws::ServiceCatalog
     #   The portfolio identifier.
     #
     # @option params [String] :account_id
-    #   The AWS account ID. For example, `123456789012`.
+    #   The Amazon Web Services account ID. For example, `123456789012`.
     #
     # @option params [Types::OrganizationNode] :organization_node
-    #   The organization node to whom you are going to share. If
-    #   `OrganizationNode` is passed in, `PortfolioShare` will be created for
-    #   the node an ListOrganizationPortfolioAccessd its children (when
-    #   applies), and a `PortfolioShareToken` will be returned in the output
-    #   in order for the administrator to monitor the status of the
-    #   `PortfolioShare` creation process.
+    #   The organization node to whom you are going to share. When you pass
+    #   `OrganizationNode`, it creates `PortfolioShare` for all of the Amazon
+    #   Web Services accounts that are associated to the `OrganizationNode`.
+    #   The output returns a `PortfolioShareToken`, which enables the
+    #   administrator to monitor the status of the `PortfolioShare` creation
+    #   process.
     #
     # @option params [Boolean] :share_tag_options
     #   Enables or disables `TagOptions ` sharing when creating the portfolio
     #   share. If this flag is not provided, TagOptions sharing is disabled.
+    #
+    # @option params [Boolean] :share_principals
+    #   Enables or disables `Principal` sharing when creating the portfolio
+    #   share. If this flag is not provided, principal sharing is disabled.
+    #
+    #   When you enable Principal Name Sharing for a portfolio share, the
+    #   share recipient account end users with a principal that matches any of
+    #   the associated IAM patterns can provision products from the portfolio.
+    #   Once shared, the share recipient can view associations of
+    #   `PrincipalType`: `IAM_PATTERN` on their portfolio. You can create the
+    #   principals in the recipient account before or after creating the
+    #   share.
     #
     # @return [Types::CreatePortfolioShareOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1034,6 +1182,7 @@ module Aws::ServiceCatalog
     #       value: "OrganizationNodeValue",
     #     },
     #     share_tag_options: false,
+    #     share_principals: false,
     #   })
     #
     # @example Response structure
@@ -1060,8 +1209,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -1096,7 +1243,7 @@ module Aws::ServiceCatalog
     # @option params [Array<Types::Tag>] :tags
     #   One or more tags.
     #
-    # @option params [required, Types::ProvisioningArtifactProperties] :provisioning_artifact_parameters
+    # @option params [Types::ProvisioningArtifactProperties] :provisioning_artifact_parameters
     #   The configuration of the provisioning artifact.
     #
     # @option params [required, String] :idempotency_token
@@ -1106,6 +1253,16 @@ module Aws::ServiceCatalog
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
+    #
+    # @option params [Types::SourceConnection] :source_connection
+    #   Specifies connection details for the created product and syncs the
+    #   product to the connection source artifact. This automatically manages
+    #   the product's artifacts based on changes to the source. The
+    #   `SourceConnection` parameter consists of the following sub-fields.
+    #
+    #   * `Type`
+    #
+    #   * `ConnectionParamters`
     #
     # @return [Types::CreateProductOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1124,23 +1281,34 @@ module Aws::ServiceCatalog
     #     support_description: "SupportDescription",
     #     support_email: "SupportEmail",
     #     support_url: "SupportUrl",
-    #     product_type: "CLOUD_FORMATION_TEMPLATE", # required, accepts CLOUD_FORMATION_TEMPLATE, MARKETPLACE
+    #     product_type: "CLOUD_FORMATION_TEMPLATE", # required, accepts CLOUD_FORMATION_TEMPLATE, MARKETPLACE, TERRAFORM_OPEN_SOURCE
     #     tags: [
     #       {
     #         key: "TagKey", # required
     #         value: "TagValue", # required
     #       },
     #     ],
-    #     provisioning_artifact_parameters: { # required
+    #     provisioning_artifact_parameters: {
     #       name: "ProvisioningArtifactName",
     #       description: "ProvisioningArtifactDescription",
-    #       info: { # required
+    #       info: {
     #         "ProvisioningArtifactInfoKey" => "ProvisioningArtifactInfoValue",
     #       },
-    #       type: "CLOUD_FORMATION_TEMPLATE", # accepts CLOUD_FORMATION_TEMPLATE, MARKETPLACE_AMI, MARKETPLACE_CAR
+    #       type: "CLOUD_FORMATION_TEMPLATE", # accepts CLOUD_FORMATION_TEMPLATE, MARKETPLACE_AMI, MARKETPLACE_CAR, TERRAFORM_OPEN_SOURCE
     #       disable_template_validation: false,
     #     },
     #     idempotency_token: "IdempotencyToken", # required
+    #     source_connection: {
+    #       type: "CODESTAR", # accepts CODESTAR
+    #       connection_parameters: { # required
+    #         code_star: {
+    #           connection_arn: "CodeStarConnectionArn", # required
+    #           repository: "Repository", # required
+    #           branch: "RepositoryBranch", # required
+    #           artifact_path: "RepositoryArtifactPath", # required
+    #         },
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -1150,7 +1318,7 @@ module Aws::ServiceCatalog
     #   resp.product_view_detail.product_view_summary.name #=> String
     #   resp.product_view_detail.product_view_summary.owner #=> String
     #   resp.product_view_detail.product_view_summary.short_description #=> String
-    #   resp.product_view_detail.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE"
+    #   resp.product_view_detail.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE", "TERRAFORM_OPEN_SOURCE"
     #   resp.product_view_detail.product_view_summary.distributor #=> String
     #   resp.product_view_detail.product_view_summary.has_default_path #=> Boolean
     #   resp.product_view_detail.product_view_summary.support_email #=> String
@@ -1159,13 +1327,24 @@ module Aws::ServiceCatalog
     #   resp.product_view_detail.status #=> String, one of "AVAILABLE", "CREATING", "FAILED"
     #   resp.product_view_detail.product_arn #=> String
     #   resp.product_view_detail.created_time #=> Time
+    #   resp.product_view_detail.source_connection.type #=> String, one of "CODESTAR"
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.connection_arn #=> String
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.repository #=> String
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.branch #=> String
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.artifact_path #=> String
+    #   resp.product_view_detail.source_connection.last_sync.last_sync_time #=> Time
+    #   resp.product_view_detail.source_connection.last_sync.last_sync_status #=> String, one of "SUCCEEDED", "FAILED"
+    #   resp.product_view_detail.source_connection.last_sync.last_sync_status_message #=> String
+    #   resp.product_view_detail.source_connection.last_sync.last_successful_sync_time #=> Time
+    #   resp.product_view_detail.source_connection.last_sync.last_successful_sync_provisioning_artifact_id #=> String
     #   resp.provisioning_artifact_detail.id #=> String
     #   resp.provisioning_artifact_detail.name #=> String
     #   resp.provisioning_artifact_detail.description #=> String
-    #   resp.provisioning_artifact_detail.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR"
+    #   resp.provisioning_artifact_detail.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR", "TERRAFORM_OPEN_SOURCE"
     #   resp.provisioning_artifact_detail.created_time #=> Time
     #   resp.provisioning_artifact_detail.active #=> Boolean
     #   resp.provisioning_artifact_detail.guidance #=> String, one of "DEFAULT", "DEPRECATED"
+    #   resp.provisioning_artifact_detail.source_revision #=> String
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
     #   resp.tags[0].value #=> String
@@ -1179,13 +1358,15 @@ module Aws::ServiceCatalog
       req.send_request(options)
     end
 
-    # Creates a plan. A plan includes the list of resources to be created
-    # (when provisioning a new product) or modified (when updating a
-    # provisioned product) when the plan is executed.
+    # Creates a plan.
     #
-    # You can create one plan per provisioned product. To create a plan for
-    # an existing provisioned product, the product status must be AVAILBLE
-    # or TAINTED.
+    # A plan includes the list of resources to be created (when provisioning
+    # a new product) or modified (when updating a provisioned product) when
+    # the plan is executed.
+    #
+    # You can create one plan for each provisioned product. To create a plan
+    # for an existing provisioned product, the product status must be
+    # AVAILABLE or TAINTED.
     #
     # To view the resource changes in the change set, use
     # DescribeProvisionedProductPlan. To create or modify the provisioned
@@ -1193,8 +1374,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -1220,8 +1399,8 @@ module Aws::ServiceCatalog
     #
     # @option params [required, String] :provisioned_product_name
     #   A user-friendly name for the provisioned product. This value must be
-    #   unique for the AWS account and cannot be updated after the product is
-    #   provisioned.
+    #   unique for the Amazon Web Services account and cannot be updated after
+    #   the product is provisioned.
     #
     # @option params [required, String] :provisioning_artifact_id
     #   The identifier of the provisioning artifact.
@@ -1312,8 +1491,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -1346,10 +1523,10 @@ module Aws::ServiceCatalog
     #     parameters: { # required
     #       name: "ProvisioningArtifactName",
     #       description: "ProvisioningArtifactDescription",
-    #       info: { # required
+    #       info: {
     #         "ProvisioningArtifactInfoKey" => "ProvisioningArtifactInfoValue",
     #       },
-    #       type: "CLOUD_FORMATION_TEMPLATE", # accepts CLOUD_FORMATION_TEMPLATE, MARKETPLACE_AMI, MARKETPLACE_CAR
+    #       type: "CLOUD_FORMATION_TEMPLATE", # accepts CLOUD_FORMATION_TEMPLATE, MARKETPLACE_AMI, MARKETPLACE_CAR, TERRAFORM_OPEN_SOURCE
     #       disable_template_validation: false,
     #     },
     #     idempotency_token: "IdempotencyToken", # required
@@ -1360,10 +1537,11 @@ module Aws::ServiceCatalog
     #   resp.provisioning_artifact_detail.id #=> String
     #   resp.provisioning_artifact_detail.name #=> String
     #   resp.provisioning_artifact_detail.description #=> String
-    #   resp.provisioning_artifact_detail.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR"
+    #   resp.provisioning_artifact_detail.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR", "TERRAFORM_OPEN_SOURCE"
     #   resp.provisioning_artifact_detail.created_time #=> Time
     #   resp.provisioning_artifact_detail.active #=> Boolean
     #   resp.provisioning_artifact_detail.guidance #=> String, one of "DEFAULT", "DEPRECATED"
+    #   resp.provisioning_artifact_detail.source_revision #=> String
     #   resp.info #=> Hash
     #   resp.info["ProvisioningArtifactInfoKey"] #=> String
     #   resp.status #=> String, one of "AVAILABLE", "CREATING", "FAILED"
@@ -1390,16 +1568,16 @@ module Aws::ServiceCatalog
     #
     #   Name
     #
-    #   : The name of the AWS Systems Manager document (SSM document). For
-    #     example, `AWS-RestartEC2Instance`.
+    #   : The name of the Amazon Web Services Systems Manager document (SSM
+    #     document). For example, `AWS-RestartEC2Instance`.
     #
     #     If you are using a shared SSM document, you must provide the ARN
     #     instead of the name.
     #
     #   Version
     #
-    #   : The AWS Systems Manager automation document version. For example,
-    #     `"Version": "1"`
+    #   : The Amazon Web Services Systems Manager automation document version.
+    #     For example, `"Version": "1"`
     #
     #   AssumeRole
     #
@@ -1422,8 +1600,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -1515,8 +1691,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -1551,8 +1725,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -1590,8 +1762,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -1600,7 +1770,7 @@ module Aws::ServiceCatalog
     #   The portfolio identifier.
     #
     # @option params [String] :account_id
-    #   The AWS account ID.
+    #   The Amazon Web Services account ID.
     #
     # @option params [Types::OrganizationNode] :organization_node
     #   The organization node to whom you are going to stop sharing.
@@ -1644,8 +1814,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -1676,8 +1844,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -1686,7 +1852,7 @@ module Aws::ServiceCatalog
     #   The plan identifier.
     #
     # @option params [Boolean] :ignore_errors
-    #   If set to true, AWS Service Catalog stops managing the specified
+    #   If set to true, Service Catalog stops managing the specified
     #   provisioned product even if it cannot delete the underlying resources.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
@@ -1718,8 +1884,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -1757,8 +1921,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -1812,8 +1974,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -1859,8 +2019,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -1903,8 +2061,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2061,6 +2217,7 @@ module Aws::ServiceCatalog
     #   resp.portfolio_share_details[0].type #=> String, one of "ACCOUNT", "ORGANIZATION", "ORGANIZATIONAL_UNIT", "ORGANIZATION_MEMBER_ACCOUNT"
     #   resp.portfolio_share_details[0].accepted #=> Boolean
     #   resp.portfolio_share_details[0].share_tag_options #=> Boolean
+    #   resp.portfolio_share_details[0].share_principals #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribePortfolioShares AWS API Documentation
     #
@@ -2073,10 +2230,13 @@ module Aws::ServiceCatalog
 
     # Gets information about the specified product.
     #
+    # <note markdown="1"> Running this operation with administrator access results in a failure.
+    # DescribeProductAsAdmin should be used instead.
+    #
+    #  </note>
+    #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2110,7 +2270,7 @@ module Aws::ServiceCatalog
     #   resp.product_view_summary.name #=> String
     #   resp.product_view_summary.owner #=> String
     #   resp.product_view_summary.short_description #=> String
-    #   resp.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE"
+    #   resp.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE", "TERRAFORM_OPEN_SOURCE"
     #   resp.product_view_summary.distributor #=> String
     #   resp.product_view_summary.has_default_path #=> Boolean
     #   resp.product_view_summary.support_email #=> String
@@ -2142,8 +2302,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2189,7 +2347,7 @@ module Aws::ServiceCatalog
     #   resp.product_view_detail.product_view_summary.name #=> String
     #   resp.product_view_detail.product_view_summary.owner #=> String
     #   resp.product_view_detail.product_view_summary.short_description #=> String
-    #   resp.product_view_detail.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE"
+    #   resp.product_view_detail.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE", "TERRAFORM_OPEN_SOURCE"
     #   resp.product_view_detail.product_view_summary.distributor #=> String
     #   resp.product_view_detail.product_view_summary.has_default_path #=> Boolean
     #   resp.product_view_detail.product_view_summary.support_email #=> String
@@ -2198,6 +2356,16 @@ module Aws::ServiceCatalog
     #   resp.product_view_detail.status #=> String, one of "AVAILABLE", "CREATING", "FAILED"
     #   resp.product_view_detail.product_arn #=> String
     #   resp.product_view_detail.created_time #=> Time
+    #   resp.product_view_detail.source_connection.type #=> String, one of "CODESTAR"
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.connection_arn #=> String
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.repository #=> String
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.branch #=> String
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.artifact_path #=> String
+    #   resp.product_view_detail.source_connection.last_sync.last_sync_time #=> Time
+    #   resp.product_view_detail.source_connection.last_sync.last_sync_status #=> String, one of "SUCCEEDED", "FAILED"
+    #   resp.product_view_detail.source_connection.last_sync.last_sync_status_message #=> String
+    #   resp.product_view_detail.source_connection.last_sync.last_successful_sync_time #=> Time
+    #   resp.product_view_detail.source_connection.last_sync.last_successful_sync_provisioning_artifact_id #=> String
     #   resp.provisioning_artifact_summaries #=> Array
     #   resp.provisioning_artifact_summaries[0].id #=> String
     #   resp.provisioning_artifact_summaries[0].name #=> String
@@ -2231,8 +2399,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -2259,7 +2425,7 @@ module Aws::ServiceCatalog
     #   resp.product_view_summary.name #=> String
     #   resp.product_view_summary.owner #=> String
     #   resp.product_view_summary.short_description #=> String
-    #   resp.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE"
+    #   resp.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE", "TERRAFORM_OPEN_SOURCE"
     #   resp.product_view_summary.distributor #=> String
     #   resp.product_view_summary.has_default_path #=> Boolean
     #   resp.product_view_summary.support_email #=> String
@@ -2285,8 +2451,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2351,8 +2515,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2437,8 +2599,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -2458,11 +2618,16 @@ module Aws::ServiceCatalog
     # @option params [Boolean] :verbose
     #   Indicates whether a verbose level of detail is enabled.
     #
+    # @option params [Boolean] :include_provisioning_artifact_parameters
+    #   Indicates if the API call response does or does not include additional
+    #   details about the provisioning parameters.
+    #
     # @return [Types::DescribeProvisioningArtifactOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::DescribeProvisioningArtifactOutput#provisioning_artifact_detail #provisioning_artifact_detail} => Types::ProvisioningArtifactDetail
     #   * {Types::DescribeProvisioningArtifactOutput#info #info} => Hash&lt;String,String&gt;
     #   * {Types::DescribeProvisioningArtifactOutput#status #status} => String
+    #   * {Types::DescribeProvisioningArtifactOutput#provisioning_artifact_parameters #provisioning_artifact_parameters} => Array&lt;Types::ProvisioningArtifactParameter&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -2473,6 +2638,7 @@ module Aws::ServiceCatalog
     #     provisioning_artifact_name: "ProvisioningArtifactName",
     #     product_name: "ProductViewName",
     #     verbose: false,
+    #     include_provisioning_artifact_parameters: false,
     #   })
     #
     # @example Response structure
@@ -2480,13 +2646,28 @@ module Aws::ServiceCatalog
     #   resp.provisioning_artifact_detail.id #=> String
     #   resp.provisioning_artifact_detail.name #=> String
     #   resp.provisioning_artifact_detail.description #=> String
-    #   resp.provisioning_artifact_detail.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR"
+    #   resp.provisioning_artifact_detail.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR", "TERRAFORM_OPEN_SOURCE"
     #   resp.provisioning_artifact_detail.created_time #=> Time
     #   resp.provisioning_artifact_detail.active #=> Boolean
     #   resp.provisioning_artifact_detail.guidance #=> String, one of "DEFAULT", "DEPRECATED"
+    #   resp.provisioning_artifact_detail.source_revision #=> String
     #   resp.info #=> Hash
     #   resp.info["ProvisioningArtifactInfoKey"] #=> String
     #   resp.status #=> String, one of "AVAILABLE", "CREATING", "FAILED"
+    #   resp.provisioning_artifact_parameters #=> Array
+    #   resp.provisioning_artifact_parameters[0].parameter_key #=> String
+    #   resp.provisioning_artifact_parameters[0].default_value #=> String
+    #   resp.provisioning_artifact_parameters[0].parameter_type #=> String
+    #   resp.provisioning_artifact_parameters[0].is_no_echo #=> Boolean
+    #   resp.provisioning_artifact_parameters[0].description #=> String
+    #   resp.provisioning_artifact_parameters[0].parameter_constraints.allowed_values #=> Array
+    #   resp.provisioning_artifact_parameters[0].parameter_constraints.allowed_values[0] #=> String
+    #   resp.provisioning_artifact_parameters[0].parameter_constraints.allowed_pattern #=> String
+    #   resp.provisioning_artifact_parameters[0].parameter_constraints.constraint_description #=> String
+    #   resp.provisioning_artifact_parameters[0].parameter_constraints.max_length #=> String
+    #   resp.provisioning_artifact_parameters[0].parameter_constraints.min_length #=> String
+    #   resp.provisioning_artifact_parameters[0].parameter_constraints.max_value #=> String
+    #   resp.provisioning_artifact_parameters[0].parameter_constraints.min_value #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisioningArtifact AWS API Documentation
     #
@@ -2510,8 +2691,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2550,6 +2729,7 @@ module Aws::ServiceCatalog
     #   * {Types::DescribeProvisioningParametersOutput#tag_options #tag_options} => Array&lt;Types::TagOptionSummary&gt;
     #   * {Types::DescribeProvisioningParametersOutput#provisioning_artifact_preferences #provisioning_artifact_preferences} => Types::ProvisioningArtifactPreferences
     #   * {Types::DescribeProvisioningParametersOutput#provisioning_artifact_outputs #provisioning_artifact_outputs} => Array&lt;Types::ProvisioningArtifactOutput&gt;
+    #   * {Types::DescribeProvisioningParametersOutput#provisioning_artifact_output_keys #provisioning_artifact_output_keys} => Array&lt;Types::ProvisioningArtifactOutput&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -2596,6 +2776,9 @@ module Aws::ServiceCatalog
     #   resp.provisioning_artifact_outputs #=> Array
     #   resp.provisioning_artifact_outputs[0].key #=> String
     #   resp.provisioning_artifact_outputs[0].description #=> String
+    #   resp.provisioning_artifact_output_keys #=> Array
+    #   resp.provisioning_artifact_output_keys[0].key #=> String
+    #   resp.provisioning_artifact_output_keys[0].description #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisioningParameters AWS API Documentation
     #
@@ -2623,8 +2806,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2699,8 +2880,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -2746,8 +2925,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2814,18 +2991,25 @@ module Aws::ServiceCatalog
       req.send_request(options)
     end
 
-    # Disable portfolio sharing through AWS Organizations feature. This
-    # feature will not delete your current shares but it will prevent you
-    # from creating new shares throughout your organization. Current shares
-    # will not be in sync with your organization structure if it changes
-    # after calling this API. This API can only be called by the management
-    # account in the organization.
+    # Disable portfolio sharing through the Organizations service. This
+    # command will not delete your current shares, but prevents you from
+    # creating new shares throughout your organization. Current shares are
+    # not kept in sync with your organization structure if the structure
+    # changes after calling this API. Only the management account in the
+    # organization can call this API.
     #
-    # This API can't be invoked if there are active delegated
-    # administrators in the organization.
+    # You cannot call this API if there are active delegated administrators
+    # in the organization.
     #
     # Note that a delegated administrator is not authorized to invoke
     # `DisableAWSOrganizationsAccess`.
+    #
+    # If you share an Service Catalog portfolio in an organization within
+    # Organizations, and then disable Organizations access for Service
+    # Catalog, the portfolio access permissions will not sync with the
+    # latest changes to the organization structure. Specifically, accounts
+    # that you removed from the organization after disabling Service Catalog
+    # access will retain access to the previously shared portfolio.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -2868,10 +3052,36 @@ module Aws::ServiceCatalog
     # Disassociates a previously associated principal ARN from a specified
     # portfolio.
     #
+    # The `PrincipalType` and `PrincipalARN` must match the
+    # `AssociatePrincipalWithPortfolio` call request details. For example,
+    # to disassociate an association created with a `PrincipalARN` of
+    # `PrincipalType` IAM you must use the `PrincipalType` IAM when calling
+    # `DisassociatePrincipalFromPortfolio`.
+    #
+    # For portfolios that have been shared with principal name sharing
+    # enabled: after disassociating a principal, share recipient accounts
+    # will no longer be able to provision products in this portfolio using a
+    # role matching the name of the associated principal.
+    #
+    # For more information, review [associate-principal-with-portfolio][1]
+    # in the Amazon Web Services CLI Command Reference.
+    #
+    # <note markdown="1"> If you disassociate a principal from a portfolio, with PrincipalType
+    # as `IAM`, the same principal will still have access to the portfolio
+    # if it matches one of the associated principals of type `IAM_PATTERN`.
+    # To fully remove access for a principal, verify all the associated
+    # Principals of type `IAM_PATTERN`, and then ensure you disassociate any
+    # `IAM_PATTERN` principals that match the principal whose access you are
+    # removing.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/cli/latest/reference/servicecatalog/associate-principal-with-portfolio.html#options
+    #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2881,7 +3091,14 @@ module Aws::ServiceCatalog
     #   The portfolio identifier.
     #
     # @option params [required, String] :principal_arn
-    #   The ARN of the principal (IAM user, role, or group).
+    #   The ARN of the principal (user, role, or group). This field allows an
+    #   ARN with no `accountID` with or without wildcard characters if
+    #   `PrincipalType` is `IAM_PATTERN`.
+    #
+    # @option params [String] :principal_type
+    #   The supported value is `IAM` if you use a fully defined ARN, or
+    #   `IAM_PATTERN` if you specify an `IAM` ARN with no AccountId, with or
+    #   without wildcard characters.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -2891,6 +3108,7 @@ module Aws::ServiceCatalog
     #     accept_language: "AcceptLanguage",
     #     portfolio_id: "Id", # required
     #     principal_arn: "PrincipalARN", # required
+    #     principal_type: "IAM", # accepts IAM, IAM_PATTERN
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociatePrincipalFromPortfolio AWS API Documentation
@@ -2908,8 +3126,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -2955,8 +3171,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3008,18 +3222,28 @@ module Aws::ServiceCatalog
       req.send_request(options)
     end
 
-    # Enable portfolio sharing feature through AWS Organizations. This API
-    # will allow Service Catalog to receive updates on your organization in
-    # order to sync your shares with the current structure. This API can
-    # only be called by the management account in the organization.
+    # Enable portfolio sharing feature through Organizations. This API will
+    # allow Service Catalog to receive updates on your organization in order
+    # to sync your shares with the current structure. This API can only be
+    # called by the management account in the organization.
     #
-    # By calling this API Service Catalog will make a call to
-    # organizations:EnableAWSServiceAccess on your behalf so that your
-    # shares can be in sync with any changes in your AWS Organizations
-    # structure.
+    # When you call this API, Service Catalog calls
+    # `organizations:EnableAWSServiceAccess` on your behalf so that your
+    # shares stay in sync with any changes in your Organizations structure.
     #
     # Note that a delegated administrator is not authorized to invoke
     # `EnableAWSOrganizationsAccess`.
+    #
+    # If you have previously disabled Organizations access for Service
+    # Catalog, and then enable access again, the portfolio access
+    # permissions might not sync with the latest changes to the organization
+    # structure. Specifically, accounts that you removed from the
+    # organization after disabling Service Catalog access, and before you
+    # enabled access again, can retain access to the previously shared
+    # portfolio. As a result, an account that has been removed from the
+    # organization might still be able to create or manage Amazon Web
+    # Services resources when it is no longer authorized to do so. Amazon
+    # Web Services is working to resolve this issue.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -3037,8 +3261,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3114,8 +3336,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -3123,10 +3343,10 @@ module Aws::ServiceCatalog
     # @option params [Hash<String,Array>] :parameters
     #   A map of all self-service action parameters and their values. If a
     #   provided parameter is of a special type, such as `TARGET`, the
-    #   provided value will override the default value generated by AWS
-    #   Service Catalog. If the parameters field is not provided, no
-    #   additional parameters are passed and default values will be used for
-    #   any special parameters such as `TARGET`.
+    #   provided value will override the default value generated by Service
+    #   Catalog. If the parameters field is not provided, no additional
+    #   parameters are passed and default values will be used for any special
+    #   parameters such as `TARGET`.
     #
     # @return [Types::ExecuteProvisionedProductServiceActionOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3174,9 +3394,9 @@ module Aws::ServiceCatalog
       req.send_request(options)
     end
 
-    # Get the Access Status for AWS Organization portfolio share feature.
-    # This API can only be called by the management account in the
-    # organization or by a delegated admin.
+    # Get the Access Status for Organizations portfolio share feature. This
+    # API can only be called by the management account in the organization
+    # or by a delegated admin.
     #
     # @return [Types::GetAWSOrganizationsAccessStatusOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3201,8 +3421,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3262,21 +3480,29 @@ module Aws::ServiceCatalog
       req.send_request(options)
     end
 
-    # Requests the import of a resource as a Service Catalog provisioned
-    # product that is associated to a Service Catalog product and
-    # provisioning artifact. Once imported, all supported Service Catalog
-    # governance actions are supported on the provisioned product.
+    # Requests the import of a resource as an Service Catalog provisioned
+    # product that is associated to an Service Catalog product and
+    # provisioning artifact. Once imported, all supported governance actions
+    # are supported on the provisioned product.
     #
     # Resource import only supports CloudFormation stack ARNs.
-    # CloudFormation StackSets and non-root nested stacks are not supported.
+    # CloudFormation StackSets, and non-root nested stacks are not
+    # supported.
     #
     # The CloudFormation stack must have one of the following statuses to be
     # imported: `CREATE_COMPLETE`, `UPDATE_COMPLETE`,
-    # `UPDATE_ROLLBACK_COMPLETE`, `IMPORT_COMPLETE`,
+    # `UPDATE_ROLLBACK_COMPLETE`, `IMPORT_COMPLETE`, and
     # `IMPORT_ROLLBACK_COMPLETE`.
     #
     # Import of the resource requires that the CloudFormation stack template
     # matches the associated Service Catalog product provisioning artifact.
+    #
+    # <note markdown="1"> When you import an existing CloudFormation stack into a portfolio,
+    # constraints that are associated with the product aren't applied
+    # during the import process. The constraints are applied after you call
+    # `UpdateProvisionedProduct` for the provisioned product.
+    #
+    #  </note>
     #
     # The user or role that performs this operation must have the
     # `cloudformation:GetTemplate` and `cloudformation:DescribeStacks` IAM
@@ -3284,8 +3510,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3299,8 +3523,8 @@ module Aws::ServiceCatalog
     #
     # @option params [required, String] :provisioned_product_name
     #   The user-friendly name of the provisioned product. The value must be
-    #   unique for the AWS account. The name cannot be updated after the
-    #   product is provisioned.
+    #   unique for the Amazon Web Services account. The name cannot be updated
+    #   after the product is provisioned.
     #
     # @option params [required, String] :physical_id
     #   The unique identifier of the resource to be imported. It only
@@ -3359,12 +3583,13 @@ module Aws::ServiceCatalog
       req.send_request(options)
     end
 
-    # Lists all portfolios for which sharing was accepted by this account.
+    # Lists all imported portfolios for which account-to-account shares were
+    # accepted by this account. By specifying the `PortfolioShareType`, you
+    # can list portfolios for which organizational shares were accepted by
+    # this account.
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3381,12 +3606,14 @@ module Aws::ServiceCatalog
     #   The type of shared portfolios to list. The default is to list imported
     #   portfolios.
     #
-    #   * `AWS_ORGANIZATIONS` - List portfolios shared by the management
-    #     account of your organization
+    #   * `AWS_ORGANIZATIONS` - List portfolios accepted and shared via
+    #     organizational sharing by the management account or delegated
+    #     administrator of your organization.
     #
-    #   * `AWS_SERVICECATALOG` - List default portfolios
+    #   * `AWS_SERVICECATALOG` - Deprecated type.
     #
-    #   * `IMPORTED` - List imported portfolios
+    #   * `IMPORTED` - List imported portfolios that have been accepted and
+    #     shared through account-to-account sharing.
     #
     # @return [Types::ListAcceptedPortfolioSharesOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3428,8 +3655,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3480,8 +3705,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3537,14 +3760,25 @@ module Aws::ServiceCatalog
       req.send_request(options)
     end
 
-    # Lists the paths to the specified product. A path is how the user has
-    # access to a specified product, and is necessary when provisioning a
-    # product. A path also determines the constraints put on the product.
+    # Lists the paths to the specified product. A path describes how the
+    # user gets access to a specified product and is necessary when
+    # provisioning a product. A path also determines the constraints that
+    # are put on a product. A path is dependent on a specific product,
+    # porfolio, and principal.
+    #
+    # <note markdown="1"> When provisioning a product that's been added to a portfolio, you
+    # must grant your user, group, or role access to the portfolio. For more
+    # information, see [Granting users access][1] in the *Service Catalog
+    # User Guide*.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/servicecatalog/latest/adminguide/catalogs_portfolios_users.html
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3607,8 +3841,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3677,8 +3909,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -3735,8 +3965,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -3788,8 +4016,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -3840,12 +4066,11 @@ module Aws::ServiceCatalog
       req.send_request(options)
     end
 
-    # Lists all principal ARNs associated with the specified portfolio.
+    # Lists all `PrincipalARN`s and corresponding `PrincipalType`s
+    # associated with the specified portfolio.
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3881,7 +4106,7 @@ module Aws::ServiceCatalog
     #
     #   resp.principals #=> Array
     #   resp.principals[0].principal_arn #=> String
-    #   resp.principals[0].principal_type #=> String, one of "IAM"
+    #   resp.principals[0].principal_type #=> String, one of "IAM", "IAM_PATTERN"
     #   resp.next_page_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPrincipalsForPortfolio AWS API Documentation
@@ -3898,8 +4123,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -3962,8 +4185,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -3989,10 +4210,11 @@ module Aws::ServiceCatalog
     #   resp.provisioning_artifact_details[0].id #=> String
     #   resp.provisioning_artifact_details[0].name #=> String
     #   resp.provisioning_artifact_details[0].description #=> String
-    #   resp.provisioning_artifact_details[0].type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR"
+    #   resp.provisioning_artifact_details[0].type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR", "TERRAFORM_OPEN_SOURCE"
     #   resp.provisioning_artifact_details[0].created_time #=> Time
     #   resp.provisioning_artifact_details[0].active #=> Boolean
     #   resp.provisioning_artifact_details[0].guidance #=> String, one of "DEFAULT", "DEPRECATED"
+    #   resp.provisioning_artifact_details[0].source_revision #=> String
     #   resp.next_page_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisioningArtifacts AWS API Documentation
@@ -4019,8 +4241,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -4050,7 +4270,7 @@ module Aws::ServiceCatalog
     #   resp.provisioning_artifact_views[0].product_view_summary.name #=> String
     #   resp.provisioning_artifact_views[0].product_view_summary.owner #=> String
     #   resp.provisioning_artifact_views[0].product_view_summary.short_description #=> String
-    #   resp.provisioning_artifact_views[0].product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE"
+    #   resp.provisioning_artifact_views[0].product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE", "TERRAFORM_OPEN_SOURCE"
     #   resp.provisioning_artifact_views[0].product_view_summary.distributor #=> String
     #   resp.provisioning_artifact_views[0].product_view_summary.has_default_path #=> Boolean
     #   resp.provisioning_artifact_views[0].product_view_summary.support_email #=> String
@@ -4076,8 +4296,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -4208,8 +4426,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -4274,8 +4490,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -4317,13 +4531,11 @@ module Aws::ServiceCatalog
 
     # Returns summary information about stack instances that are associated
     # with the specified `CFN_STACKSET` type provisioned product. You can
-    # filter for stack instances that are associated with a specific AWS
-    # account name or region.
+    # filter for stack instances that are associated with a specific Amazon
+    # Web Services account name or Region.
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -4421,22 +4633,192 @@ module Aws::ServiceCatalog
       req.send_request(options)
     end
 
+    # Notifies the result of the provisioning engine execution.
+    #
+    # @option params [required, String] :workflow_token
+    #   The encrypted contents of the provisioning engine execution payload
+    #   that Service Catalog sends after the Terraform product provisioning
+    #   workflow starts.
+    #
+    # @option params [required, String] :record_id
+    #   The identifier of the record.
+    #
+    # @option params [required, String] :status
+    #   The status of the provisioning engine execution.
+    #
+    # @option params [String] :failure_reason
+    #   The reason why the provisioning engine execution failed.
+    #
+    # @option params [Types::EngineWorkflowResourceIdentifier] :resource_identifier
+    #   The ID for the provisioned product resources that are part of a
+    #   resource group.
+    #
+    # @option params [Array<Types::RecordOutput>] :outputs
+    #   The output of the provisioning engine execution.
+    #
+    # @option params [required, String] :idempotency_token
+    #   The idempotency token that identifies the provisioning engine
+    #   execution.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.notify_provision_product_engine_workflow_result({
+    #     workflow_token: "EngineWorkflowToken", # required
+    #     record_id: "Id", # required
+    #     status: "SUCCEEDED", # required, accepts SUCCEEDED, FAILED
+    #     failure_reason: "EngineWorkflowFailureReason",
+    #     resource_identifier: {
+    #       unique_tag: {
+    #         key: "UniqueTagKey",
+    #         value: "UniqueTagValue",
+    #       },
+    #     },
+    #     outputs: [
+    #       {
+    #         output_key: "OutputKey",
+    #         output_value: "OutputValue",
+    #         description: "Description",
+    #       },
+    #     ],
+    #     idempotency_token: "IdempotencyToken", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/NotifyProvisionProductEngineWorkflowResult AWS API Documentation
+    #
+    # @overload notify_provision_product_engine_workflow_result(params = {})
+    # @param [Hash] params ({})
+    def notify_provision_product_engine_workflow_result(params = {}, options = {})
+      req = build_request(:notify_provision_product_engine_workflow_result, params)
+      req.send_request(options)
+    end
+
+    # Notifies the result of the terminate engine execution.
+    #
+    # @option params [required, String] :workflow_token
+    #   The encrypted contents of the terminate engine execution payload that
+    #   Service Catalog sends after the Terraform product terminate workflow
+    #   starts.
+    #
+    # @option params [required, String] :record_id
+    #   The identifier of the record.
+    #
+    # @option params [required, String] :status
+    #   The status of the terminate engine execution.
+    #
+    # @option params [String] :failure_reason
+    #   The reason why the terminate engine execution failed.
+    #
+    # @option params [required, String] :idempotency_token
+    #   The idempotency token that identifies the terminate engine execution.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.notify_terminate_provisioned_product_engine_workflow_result({
+    #     workflow_token: "EngineWorkflowToken", # required
+    #     record_id: "Id", # required
+    #     status: "SUCCEEDED", # required, accepts SUCCEEDED, FAILED
+    #     failure_reason: "EngineWorkflowFailureReason",
+    #     idempotency_token: "IdempotencyToken", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/NotifyTerminateProvisionedProductEngineWorkflowResult AWS API Documentation
+    #
+    # @overload notify_terminate_provisioned_product_engine_workflow_result(params = {})
+    # @param [Hash] params ({})
+    def notify_terminate_provisioned_product_engine_workflow_result(params = {}, options = {})
+      req = build_request(:notify_terminate_provisioned_product_engine_workflow_result, params)
+      req.send_request(options)
+    end
+
+    # Notifies the result of the update engine execution.
+    #
+    # @option params [required, String] :workflow_token
+    #   The encrypted contents of the update engine execution payload that
+    #   Service Catalog sends after the Terraform product update workflow
+    #   starts.
+    #
+    # @option params [required, String] :record_id
+    #   The identifier of the record.
+    #
+    # @option params [required, String] :status
+    #   The status of the update engine execution.
+    #
+    # @option params [String] :failure_reason
+    #   The reason why the update engine execution failed.
+    #
+    # @option params [Array<Types::RecordOutput>] :outputs
+    #   The output of the update engine execution.
+    #
+    # @option params [required, String] :idempotency_token
+    #   The idempotency token that identifies the update engine execution.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.notify_update_provisioned_product_engine_workflow_result({
+    #     workflow_token: "EngineWorkflowToken", # required
+    #     record_id: "Id", # required
+    #     status: "SUCCEEDED", # required, accepts SUCCEEDED, FAILED
+    #     failure_reason: "EngineWorkflowFailureReason",
+    #     outputs: [
+    #       {
+    #         output_key: "OutputKey",
+    #         output_value: "OutputValue",
+    #         description: "Description",
+    #       },
+    #     ],
+    #     idempotency_token: "IdempotencyToken", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/NotifyUpdateProvisionedProductEngineWorkflowResult AWS API Documentation
+    #
+    # @overload notify_update_provisioned_product_engine_workflow_result(params = {})
+    # @param [Hash] params ({})
+    def notify_update_provisioned_product_engine_workflow_result(params = {}, options = {})
+      req = build_request(:notify_update_provisioned_product_engine_workflow_result, params)
+      req.send_request(options)
+    end
+
     # Provisions the specified product.
     #
     # A provisioned product is a resourced instance of a product. For
-    # example, provisioning a product based on a CloudFormation template
-    # launches a CloudFormation stack and its underlying resources. You can
-    # check the status of this request using DescribeRecord.
+    # example, provisioning a product that's based on an CloudFormation
+    # template launches an CloudFormation stack and its underlying
+    # resources. You can check the status of this request using
+    # DescribeRecord.
     #
-    # If the request contains a tag key with an empty list of values, there
-    # is a tag conflict for that key. Do not include conflicted keys as
-    # tags, or this causes the error "Parameter validation failed: Missing
-    # required parameter in Tags\[*N*\]:*Value*".
+    # If the request contains a tag key with an empty list of values,
+    # there's a tag conflict for that key. Don't include conflicted keys
+    # as tags, or this will cause the error "Parameter validation failed:
+    # Missing required parameter in Tags\[*N*\]:*Value*".
+    #
+    # <note markdown="1"> When provisioning a product that's been added to a portfolio, you
+    # must grant your user, group, or role access to the portfolio. For more
+    # information, see [Granting users access][1] in the *Service Catalog
+    # User Guide*.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/servicecatalog/latest/adminguide/catalogs_portfolios_users.html
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -4468,8 +4850,8 @@ module Aws::ServiceCatalog
     #
     # @option params [required, String] :provisioned_product_name
     #   A user-friendly name for the provisioned product. This value must be
-    #   unique for the AWS account and cannot be updated after the product is
-    #   provisioned.
+    #   unique for the Amazon Web Services account and cannot be updated after
+    #   the product is provisioned.
     #
     # @option params [Array<Types::ProvisioningParameter>] :provisioning_parameters
     #   Parameters specified by the administrator that are required for
@@ -4567,8 +4949,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -4616,8 +4996,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -4683,8 +5061,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -4735,7 +5111,7 @@ module Aws::ServiceCatalog
     #   resp.product_view_summaries[0].name #=> String
     #   resp.product_view_summaries[0].owner #=> String
     #   resp.product_view_summaries[0].short_description #=> String
-    #   resp.product_view_summaries[0].type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE"
+    #   resp.product_view_summaries[0].type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE", "TERRAFORM_OPEN_SOURCE"
     #   resp.product_view_summaries[0].distributor #=> String
     #   resp.product_view_summaries[0].has_default_path #=> Boolean
     #   resp.product_view_summaries[0].support_email #=> String
@@ -4761,8 +5137,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -4821,7 +5195,7 @@ module Aws::ServiceCatalog
     #   resp.product_view_details[0].product_view_summary.name #=> String
     #   resp.product_view_details[0].product_view_summary.owner #=> String
     #   resp.product_view_details[0].product_view_summary.short_description #=> String
-    #   resp.product_view_details[0].product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE"
+    #   resp.product_view_details[0].product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE", "TERRAFORM_OPEN_SOURCE"
     #   resp.product_view_details[0].product_view_summary.distributor #=> String
     #   resp.product_view_details[0].product_view_summary.has_default_path #=> Boolean
     #   resp.product_view_details[0].product_view_summary.support_email #=> String
@@ -4830,6 +5204,16 @@ module Aws::ServiceCatalog
     #   resp.product_view_details[0].status #=> String, one of "AVAILABLE", "CREATING", "FAILED"
     #   resp.product_view_details[0].product_arn #=> String
     #   resp.product_view_details[0].created_time #=> Time
+    #   resp.product_view_details[0].source_connection.type #=> String, one of "CODESTAR"
+    #   resp.product_view_details[0].source_connection.connection_parameters.code_star.connection_arn #=> String
+    #   resp.product_view_details[0].source_connection.connection_parameters.code_star.repository #=> String
+    #   resp.product_view_details[0].source_connection.connection_parameters.code_star.branch #=> String
+    #   resp.product_view_details[0].source_connection.connection_parameters.code_star.artifact_path #=> String
+    #   resp.product_view_details[0].source_connection.last_sync.last_sync_time #=> Time
+    #   resp.product_view_details[0].source_connection.last_sync.last_sync_status #=> String, one of "SUCCEEDED", "FAILED"
+    #   resp.product_view_details[0].source_connection.last_sync.last_sync_status_message #=> String
+    #   resp.product_view_details[0].source_connection.last_sync.last_successful_sync_time #=> Time
+    #   resp.product_view_details[0].source_connection.last_sync.last_successful_sync_provisioning_artifact_id #=> String
     #   resp.next_page_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProductsAsAdmin AWS API Documentation
@@ -4846,8 +5230,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -4968,13 +5350,11 @@ module Aws::ServiceCatalog
     #   not need to pass this option.**
     #
     # @option params [Boolean] :ignore_errors
-    #   If set to true, AWS Service Catalog stops managing the specified
+    #   If set to true, Service Catalog stops managing the specified
     #   provisioned product even if it cannot delete the underlying resources.
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -5036,8 +5416,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -5112,8 +5490,8 @@ module Aws::ServiceCatalog
     #     You also cannot have more than one `STACKSET` constraint on a
     #     product and portfolio.
     #
-    #     Products with a `STACKSET` constraint will launch an AWS
-    #     CloudFormation stack set.
+    #     Products with a `STACKSET` constraint will launch an CloudFormation
+    #     stack set.
     #
     #   TEMPLATE
     #
@@ -5165,8 +5543,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -5234,9 +5610,10 @@ module Aws::ServiceCatalog
     end
 
     # Updates the specified portfolio share. You can use this API to enable
-    # or disable TagOptions sharing for an existing portfolio share.
+    # or disable `TagOptions` sharing or Principal sharing for an existing
+    # portfolio share.
     #
-    # The portfolio share cannot be updated if the ` CreatePortfolioShare`
+    # The portfolio share cannot be updated if the `CreatePortfolioShare`
     # operation is `IN_PROGRESS`, as the share is not available to recipient
     # entities. In this case, you must wait for the portfolio share to be
     # COMPLETED.
@@ -5251,10 +5628,22 @@ module Aws::ServiceCatalog
     # This API cannot be used for removing the portfolio share. You must use
     # `DeletePortfolioShare` API for that action.
     #
+    # <note markdown="1"> When you associate a principal with portfolio, a potential privilege
+    # escalation path may occur when that portfolio is then shared with
+    # other accounts. For a user in a recipient account who is *not* an
+    # Service Catalog Admin, but still has the ability to create Principals
+    # (Users/Groups/Roles), that user could create a role that matches a
+    # principal name association for the portfolio. Although this user may
+    # not know which principal names are associated through Service Catalog,
+    # they may be able to guess the user. If this potential escalation path
+    # is a concern, then Service Catalog recommends using `PrincipalType` as
+    # `IAM`. With this configuration, the `PrincipalARN` must already exist
+    # in the recipient account before it can be associated.
+    #
+    #  </note>
+    #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -5265,15 +5654,21 @@ module Aws::ServiceCatalog
     #   updated.
     #
     # @option params [String] :account_id
-    #   The AWS Account Id of the recipient account. This field is required
-    #   when updating an external account to account type share.
+    #   The Amazon Web Services account Id of the recipient account. This
+    #   field is required when updating an external account to account type
+    #   share.
     #
     # @option params [Types::OrganizationNode] :organization_node
     #   Information about the organization node.
     #
     # @option params [Boolean] :share_tag_options
-    #   A flag to enable or disable TagOptions sharing for the portfolio
-    #   share. If this field is not provided, the current state of TagOptions
+    #   Enables or disables `TagOptions` sharing for the portfolio share. If
+    #   this field is not provided, the current state of TagOptions sharing on
+    #   the portfolio share will not be modified.
+    #
+    # @option params [Boolean] :share_principals
+    #   A flag to enables or disables `Principals` sharing in the portfolio.
+    #   If this field is not provided, the current state of the `Principals`
     #   sharing on the portfolio share will not be modified.
     #
     # @return [Types::UpdatePortfolioShareOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -5292,6 +5687,7 @@ module Aws::ServiceCatalog
     #       value: "OrganizationNodeValue",
     #     },
     #     share_tag_options: false,
+    #     share_principals: false,
     #   })
     #
     # @example Response structure
@@ -5312,8 +5708,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -5349,6 +5743,16 @@ module Aws::ServiceCatalog
     # @option params [Array<String>] :remove_tags
     #   The tags to remove from the product.
     #
+    # @option params [Types::SourceConnection] :source_connection
+    #   Specifies connection details for the updated product and syncs the
+    #   product to the connection source artifact. This automatically manages
+    #   the product's artifacts based on changes to the source. The
+    #   `SourceConnection` parameter consists of the following sub-fields.
+    #
+    #   * `Type`
+    #
+    #   * `ConnectionParamters`
+    #
     # @return [Types::UpdateProductOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateProductOutput#product_view_detail #product_view_detail} => Types::ProductViewDetail
@@ -5373,6 +5777,17 @@ module Aws::ServiceCatalog
     #       },
     #     ],
     #     remove_tags: ["TagKey"],
+    #     source_connection: {
+    #       type: "CODESTAR", # accepts CODESTAR
+    #       connection_parameters: { # required
+    #         code_star: {
+    #           connection_arn: "CodeStarConnectionArn", # required
+    #           repository: "Repository", # required
+    #           branch: "RepositoryBranch", # required
+    #           artifact_path: "RepositoryArtifactPath", # required
+    #         },
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -5382,7 +5797,7 @@ module Aws::ServiceCatalog
     #   resp.product_view_detail.product_view_summary.name #=> String
     #   resp.product_view_detail.product_view_summary.owner #=> String
     #   resp.product_view_detail.product_view_summary.short_description #=> String
-    #   resp.product_view_detail.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE"
+    #   resp.product_view_detail.product_view_summary.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE", "TERRAFORM_OPEN_SOURCE"
     #   resp.product_view_detail.product_view_summary.distributor #=> String
     #   resp.product_view_detail.product_view_summary.has_default_path #=> Boolean
     #   resp.product_view_detail.product_view_summary.support_email #=> String
@@ -5391,6 +5806,16 @@ module Aws::ServiceCatalog
     #   resp.product_view_detail.status #=> String, one of "AVAILABLE", "CREATING", "FAILED"
     #   resp.product_view_detail.product_arn #=> String
     #   resp.product_view_detail.created_time #=> Time
+    #   resp.product_view_detail.source_connection.type #=> String, one of "CODESTAR"
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.connection_arn #=> String
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.repository #=> String
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.branch #=> String
+    #   resp.product_view_detail.source_connection.connection_parameters.code_star.artifact_path #=> String
+    #   resp.product_view_detail.source_connection.last_sync.last_sync_time #=> Time
+    #   resp.product_view_detail.source_connection.last_sync.last_sync_status #=> String, one of "SUCCEEDED", "FAILED"
+    #   resp.product_view_detail.source_connection.last_sync.last_sync_status_message #=> String
+    #   resp.product_view_detail.source_connection.last_sync.last_successful_sync_time #=> Time
+    #   resp.product_view_detail.source_connection.last_sync.last_successful_sync_provisioning_artifact_id #=> String
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
     #   resp.tags[0].value #=> String
@@ -5416,8 +5841,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -5550,8 +5973,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -5570,18 +5991,18 @@ module Aws::ServiceCatalog
     #   `ExecuteProvisionedProductServiceAction`. Only a role ARN is valid. A
     #   user ARN is invalid.
     #
-    #   The `OWNER` key accepts user ARNs and role ARNs. The owner is the user
-    #   that has permission to see, update, terminate, and execute service
-    #   actions in the provisioned product.
+    #   The `OWNER` key accepts user ARNs, IAM role ARNs, and STS assumed-role
+    #   ARNs. The owner is the user that has permission to see, update,
+    #   terminate, and execute service actions in the provisioned product.
     #
     #   The administrator can change the owner of a provisioned product to
-    #   another IAM user within the same account. Both end user owners and
-    #   administrators can see ownership history of the provisioned product
-    #   using the `ListRecordHistory` API. The new owner can describe all past
-    #   records for the provisioned product using the `DescribeRecord` API.
-    #   The previous owner can no longer use `DescribeRecord`, but can still
-    #   see the product's history from when he was an owner using
-    #   `ListRecordHistory`.
+    #   another IAM or STS entity within the same account. Both end user
+    #   owners and administrators can see ownership history of the provisioned
+    #   product using the `ListRecordHistory` API. The new owner can describe
+    #   all past records for the provisioned product using the
+    #   `DescribeRecord` API. The previous owner can no longer use
+    #   `DescribeRecord`, but can still see the product's history from when
+    #   he was an owner using `ListRecordHistory`.
     #
     #   If a provisioned product ownership is assigned to an end user, they
     #   can see and perform any action through the API or Service Catalog
@@ -5642,8 +6063,6 @@ module Aws::ServiceCatalog
     # @option params [String] :accept_language
     #   The language code.
     #
-    #   * `en` - English (default)
-    #
     #   * `jp` - Japanese
     #
     #   * `zh` - Chinese
@@ -5701,10 +6120,11 @@ module Aws::ServiceCatalog
     #   resp.provisioning_artifact_detail.id #=> String
     #   resp.provisioning_artifact_detail.name #=> String
     #   resp.provisioning_artifact_detail.description #=> String
-    #   resp.provisioning_artifact_detail.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR"
+    #   resp.provisioning_artifact_detail.type #=> String, one of "CLOUD_FORMATION_TEMPLATE", "MARKETPLACE_AMI", "MARKETPLACE_CAR", "TERRAFORM_OPEN_SOURCE"
     #   resp.provisioning_artifact_detail.created_time #=> Time
     #   resp.provisioning_artifact_detail.active #=> Boolean
     #   resp.provisioning_artifact_detail.guidance #=> String, one of "DEFAULT", "DEPRECATED"
+    #   resp.provisioning_artifact_detail.source_revision #=> String
     #   resp.info #=> Hash
     #   resp.info["ProvisioningArtifactInfoKey"] #=> String
     #   resp.status #=> String, one of "AVAILABLE", "CREATING", "FAILED"
@@ -5734,8 +6154,6 @@ module Aws::ServiceCatalog
     #
     # @option params [String] :accept_language
     #   The language code.
-    #
-    #   * `en` - English (default)
     #
     #   * `jp` - Japanese
     #
@@ -5828,7 +6246,7 @@ module Aws::ServiceCatalog
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-servicecatalog'
-      context[:gem_version] = '1.59.0'
+      context[:gem_version] = '1.84.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

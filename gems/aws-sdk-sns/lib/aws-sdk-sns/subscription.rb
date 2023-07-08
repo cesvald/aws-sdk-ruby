@@ -51,7 +51,16 @@ module Aws::SNS
     #   subscription. For more information, see [Amazon SNS Message
     #   Filtering][1] in the *Amazon SNS Developer Guide*.
     #
-    # * `Owner` – The AWS account ID of the subscription's owner.
+    # * `FilterPolicyScope` – This attribute lets you choose the filtering
+    #   scope by using one of the following string value types:
+    #
+    #   * `MessageAttributes` (default) – The filter is applied on the
+    #     message attributes.
+    #
+    #   * `MessageBody` – The filter is applied on the message body.
+    #
+    # * `Owner` – The Amazon Web Services account ID of the subscription's
+    #   owner.
     #
     # * `PendingConfirmation` – `true` if the subscription hasn't been
     #   confirmed. To confirm a pending subscription, call the
@@ -110,7 +119,9 @@ module Aws::SNS
     #
     # @return [self]
     def load
-      resp = @client.get_subscription_attributes(subscription_arn: @arn)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_subscription_attributes(subscription_arn: @arn)
+      end
       @data = resp.data
       self
     end
@@ -140,7 +151,9 @@ module Aws::SNS
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(subscription_arn: @arn)
-      resp = @client.unsubscribe(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.unsubscribe(options)
+      end
       resp.data
     end
 
@@ -163,6 +176,14 @@ module Aws::SNS
     #   * `FilterPolicy` – The simple JSON object that lets your subscriber
     #     receive only a subset of messages, rather than receiving every
     #     message published to the topic.
+    #
+    #   * `FilterPolicyScope` – This attribute lets you choose the filtering
+    #     scope by using one of the following string value types:
+    #
+    #     * `MessageAttributes` (default) – The filter is applied on the
+    #       message attributes.
+    #
+    #     * `MessageBody` – The filter is applied on the message body.
     #
     #   * `RawMessageDelivery` – When set to `true`, enables raw message
     #     delivery to Amazon SQS or HTTP/S endpoints. This eliminates the need
@@ -199,7 +220,9 @@ module Aws::SNS
     # @return [EmptyStructure]
     def set_attributes(options = {})
       options = options.merge(subscription_arn: @arn)
-      resp = @client.set_subscription_attributes(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.set_subscription_attributes(options)
+      end
       resp.data
     end
 

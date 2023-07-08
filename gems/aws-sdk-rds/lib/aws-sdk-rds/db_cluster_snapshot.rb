@@ -78,7 +78,14 @@ module Aws::RDS
       data[:allocated_storage]
     end
 
-    # Specifies the status of this DB cluster snapshot.
+    # Specifies the status of this DB cluster snapshot. Valid statuses are
+    # the following:
+    #
+    # * `available`
+    #
+    # * `copying`
+    #
+    # * `creating`
     # @return [String]
     def status
       data[:status]
@@ -142,11 +149,11 @@ module Aws::RDS
       data[:storage_encrypted]
     end
 
-    # If `StorageEncrypted` is true, the AWS KMS key identifier for the
-    # encrypted DB cluster snapshot.
+    # If `StorageEncrypted` is true, the Amazon Web Services KMS key
+    # identifier for the encrypted DB cluster snapshot.
     #
-    # The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias
-    # name for the AWS KMS customer master key (CMK).
+    # The Amazon Web Services KMS key identifier is the key ARN, key ID,
+    # alias ARN, or alias name for the KMS key.
     # @return [String]
     def kms_key_id
       data[:kms_key_id]
@@ -166,8 +173,8 @@ module Aws::RDS
       data[:source_db_cluster_snapshot_arn]
     end
 
-    # True if mapping of AWS Identity and Access Management (IAM) accounts
-    # to database accounts is enabled, and otherwise false.
+    # True if mapping of Amazon Web Services Identity and Access Management
+    # (IAM) accounts to database accounts is enabled, and otherwise false.
     # @return [Boolean]
     def iam_database_authentication_enabled
       data[:iam_database_authentication_enabled]
@@ -184,6 +191,20 @@ module Aws::RDS
       data[:tag_list]
     end
 
+    # Reserved for future use.
+    # @return [String]
+    def db_system_id
+      data[:db_system_id]
+    end
+
+    # The storage type associated with the DB cluster snapshot.
+    #
+    # This setting is only for Aurora DB clusters.
+    # @return [String]
+    def storage_type
+      data[:storage_type]
+    end
+
     # @!endgroup
 
     # @return [Client]
@@ -198,7 +219,9 @@ module Aws::RDS
     #
     # @return [self]
     def load
-      resp = @client.describe_db_cluster_snapshots(db_cluster_snapshot_identifier: @snapshot_id)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_db_cluster_snapshots(db_cluster_snapshot_identifier: @snapshot_id)
+      end
       @data = resp.db_cluster_snapshots[0]
       self
     end
@@ -313,7 +336,9 @@ module Aws::RDS
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -337,7 +362,9 @@ module Aws::RDS
         db_cluster_identifier: @cluster_id,
         db_cluster_snapshot_identifier: @snapshot_id
       )
-      resp = @client.create_db_cluster_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_db_cluster_snapshot(options)
+      end
       DBClusterSnapshot.new(
         cluster_id: resp.data.db_cluster_snapshot.db_cluster_identifier,
         snapshot_id: resp.data.db_cluster_snapshot.db_cluster_snapshot_identifier,
@@ -376,69 +403,78 @@ module Aws::RDS
     #
     #   Example: `my-cluster-snapshot2`
     # @option options [String] :kms_key_id
-    #   The AWS KMS key identifier for an encrypted DB cluster snapshot. The
-    #   AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias
-    #   name for the AWS KMS customer master key (CMK).
+    #   The Amazon Web Services KMS key identifier for an encrypted DB cluster
+    #   snapshot. The Amazon Web Services KMS key identifier is the key ARN,
+    #   key ID, alias ARN, or alias name for the Amazon Web Services KMS key.
     #
-    #   If you copy an encrypted DB cluster snapshot from your AWS account,
-    #   you can specify a value for `KmsKeyId` to encrypt the copy with a new
-    #   AWS KMS CMK. If you don't specify a value for `KmsKeyId`, then the
-    #   copy of the DB cluster snapshot is encrypted with the same AWS KMS key
-    #   as the source DB cluster snapshot.
+    #   If you copy an encrypted DB cluster snapshot from your Amazon Web
+    #   Services account, you can specify a value for `KmsKeyId` to encrypt
+    #   the copy with a new KMS key. If you don't specify a value for
+    #   `KmsKeyId`, then the copy of the DB cluster snapshot is encrypted with
+    #   the same KMS key as the source DB cluster snapshot.
     #
     #   If you copy an encrypted DB cluster snapshot that is shared from
-    #   another AWS account, then you must specify a value for `KmsKeyId`.
+    #   another Amazon Web Services account, then you must specify a value for
+    #   `KmsKeyId`.
     #
-    #   To copy an encrypted DB cluster snapshot to another AWS Region, you
-    #   must set `KmsKeyId` to the AWS KMS key identifier you want to use to
-    #   encrypt the copy of the DB cluster snapshot in the destination AWS
-    #   Region. AWS KMS CMKs are specific to the AWS Region that they are
-    #   created in, and you can't use CMKs from one AWS Region in another AWS
-    #   Region.
+    #   To copy an encrypted DB cluster snapshot to another Amazon Web
+    #   Services Region, you must set `KmsKeyId` to the Amazon Web Services
+    #   KMS key identifier you want to use to encrypt the copy of the DB
+    #   cluster snapshot in the destination Amazon Web Services Region. KMS
+    #   keys are specific to the Amazon Web Services Region that they are
+    #   created in, and you can't use KMS keys from one Amazon Web Services
+    #   Region in another Amazon Web Services Region.
     #
     #   If you copy an unencrypted DB cluster snapshot and specify a value for
     #   the `KmsKeyId` parameter, an error is returned.
     # @option options [String] :pre_signed_url
-    #   The URL that contains a Signature Version 4 signed request for the
-    #   `CopyDBClusterSnapshot` API action in the AWS Region that contains the
-    #   source DB cluster snapshot to copy. The `PreSignedUrl` parameter must
-    #   be used when copying an encrypted DB cluster snapshot from another AWS
-    #   Region. Don't specify `PreSignedUrl` when you are copying an
-    #   encrypted DB cluster snapshot in the same AWS Region.
+    #   When you are copying a DB cluster snapshot from one Amazon Web
+    #   Services GovCloud (US) Region to another, the URL that contains a
+    #   Signature Version 4 signed request for the `CopyDBClusterSnapshot` API
+    #   operation in the Amazon Web Services Region that contains the source
+    #   DB cluster snapshot to copy. Use the `PreSignedUrl` parameter when
+    #   copying an encrypted DB cluster snapshot from another Amazon Web
+    #   Services Region. Don't specify `PreSignedUrl` when copying an
+    #   encrypted DB cluster snapshot in the same Amazon Web Services Region.
     #
-    #   The pre-signed URL must be a valid request for the
-    #   `CopyDBClusterSnapshot` API action that can be executed in the source
-    #   AWS Region that contains the encrypted DB cluster snapshot to be
-    #   copied. The pre-signed URL request must contain the following
+    #   This setting applies only to Amazon Web Services GovCloud (US)
+    #   Regions. It's ignored in other Amazon Web Services Regions.
+    #
+    #   The presigned URL must be a valid request for the
+    #   `CopyDBClusterSnapshot` API operation that can run in the source
+    #   Amazon Web Services Region that contains the encrypted DB cluster
+    #   snapshot to copy. The presigned URL request must contain the following
     #   parameter values:
     #
-    #   * `KmsKeyId` - The AWS KMS key identifier for the customer master key
-    #     (CMK) to use to encrypt the copy of the DB cluster snapshot in the
-    #     destination AWS Region. This is the same identifier for both the
-    #     `CopyDBClusterSnapshot` action that is called in the destination AWS
-    #     Region, and the action contained in the pre-signed URL.
+    #   * `KmsKeyId` - The KMS key identifier for the KMS key to use to
+    #     encrypt the copy of the DB cluster snapshot in the destination
+    #     Amazon Web Services Region. This is the same identifier for both the
+    #     `CopyDBClusterSnapshot` operation that is called in the destination
+    #     Amazon Web Services Region, and the operation contained in the
+    #     presigned URL.
     #
-    #   * `DestinationRegion` - The name of the AWS Region that the DB cluster
-    #     snapshot is to be created in.
+    #   * `DestinationRegion` - The name of the Amazon Web Services Region
+    #     that the DB cluster snapshot is to be created in.
     #
     #   * `SourceDBClusterSnapshotIdentifier` - The DB cluster snapshot
     #     identifier for the encrypted DB cluster snapshot to be copied. This
     #     identifier must be in the Amazon Resource Name (ARN) format for the
-    #     source AWS Region. For example, if you are copying an encrypted DB
-    #     cluster snapshot from the us-west-2 AWS Region, then your
-    #     `SourceDBClusterSnapshotIdentifier` looks like the following
-    #     example:
+    #     source Amazon Web Services Region. For example, if you are copying
+    #     an encrypted DB cluster snapshot from the us-west-2 Amazon Web
+    #     Services Region, then your `SourceDBClusterSnapshotIdentifier` looks
+    #     like the following example:
     #     `arn:aws:rds:us-west-2:123456789012:cluster-snapshot:aurora-cluster1-snapshot-20161115`.
     #
     #   To learn how to generate a Signature Version 4 signed request, see [
-    #   Authenticating Requests: Using Query Parameters (AWS Signature Version
-    #   4)][1] and [ Signature Version 4 Signing Process][2].
+    #   Authenticating Requests: Using Query Parameters (Amazon Web Services
+    #   Signature Version 4)][1] and [ Signature Version 4 Signing
+    #   Process][2].
     #
-    #   <note markdown="1"> If you are using an AWS SDK tool or the AWS CLI, you can specify
-    #   `SourceRegion` (or `--source-region` for the AWS CLI) instead of
+    #   <note markdown="1"> If you are using an Amazon Web Services SDK tool or the CLI, you can
+    #   specify `SourceRegion` (or `--source-region` for the CLI) instead of
     #   specifying `PreSignedUrl` manually. Specifying `SourceRegion`
-    #   autogenerates a pre-signed URL that is a valid request for the
-    #   operation that can be executed in the source AWS Region.
+    #   autogenerates a presigned URL that is a valid request for the
+    #   operation that can run in the source Amazon Web Services Region.
     #
     #    </note>
     #
@@ -463,7 +499,9 @@ module Aws::RDS
     # @return [DBClusterSnapshot]
     def copy(options = {})
       options = options.merge(source_db_cluster_snapshot_identifier: @snapshot_id)
-      resp = @client.copy_db_cluster_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.copy_db_cluster_snapshot(options)
+      end
       DBClusterSnapshot.new(
         cluster_id: resp.data.db_cluster_snapshot.db_cluster_identifier,
         snapshot_id: resp.data.db_cluster_snapshot.db_cluster_snapshot_identifier,
@@ -479,7 +517,9 @@ module Aws::RDS
     # @return [DBClusterSnapshot]
     def delete(options = {})
       options = options.merge(db_cluster_snapshot_identifier: @snapshot_id)
-      resp = @client.delete_db_cluster_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_db_cluster_snapshot(options)
+      end
       DBClusterSnapshot.new(
         cluster_id: resp.data.db_cluster_snapshot.db_cluster_identifier,
         snapshot_id: resp.data.db_cluster_snapshot.db_cluster_snapshot_identifier,
@@ -517,17 +557,29 @@ module Aws::RDS
     #       auto_pause: false,
     #       seconds_until_auto_pause: 1,
     #       timeout_action: "String",
+    #       seconds_before_timeout: 1,
     #     },
     #     db_cluster_parameter_group_name: "String",
     #     deletion_protection: false,
     #     copy_tags_to_snapshot: false,
     #     domain: "String",
     #     domain_iam_role_name: "String",
+    #     db_cluster_instance_class: "String",
+    #     storage_type: "String",
+    #     iops: 1,
+    #     publicly_accessible: false,
+    #     serverless_v2_scaling_configuration: {
+    #       min_capacity: 1.0,
+    #       max_capacity: 1.0,
+    #     },
+    #     network_type: "String",
     #   })
     # @param [Hash] options ({})
     # @option options [Array<String>] :availability_zones
     #   Provides the list of Availability Zones (AZs) where instances in the
     #   restored DB cluster can be created.
+    #
+    #   Valid for: Aurora DB clusters only
     # @option options [required, String] :db_cluster_identifier
     #   The name of the DB cluster to create from the DB snapshot or DB
     #   cluster snapshot. This parameter isn't case-sensitive.
@@ -541,92 +593,135 @@ module Aws::RDS
     #   * Can't end with a hyphen or contain two consecutive hyphens
     #
     #   Example: `my-snapshot-id`
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [required, String] :engine
     #   The database engine to use for the new DB cluster.
     #
     #   Default: The same as source
     #
     #   Constraint: Must be compatible with the engine of the source
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [String] :engine_version
-    #   The version of the database engine to use for the new DB cluster.
+    #   The version of the database engine to use for the new DB cluster. If
+    #   you don't specify an engine version, the default version for the
+    #   database engine in the Amazon Web Services Region is used.
     #
-    #   To list all of the available engine versions for `aurora` (for MySQL
-    #   5.6-compatible Aurora), use the following command:
-    #
-    #   `aws rds describe-db-engine-versions --engine aurora --query
-    #   "DBEngineVersions[].EngineVersion"`
-    #
-    #   To list all of the available engine versions for `aurora-mysql` (for
-    #   MySQL 5.7-compatible Aurora), use the following command:
+    #   To list all of the available engine versions for Aurora MySQL, use the
+    #   following command:
     #
     #   `aws rds describe-db-engine-versions --engine aurora-mysql --query
     #   "DBEngineVersions[].EngineVersion"`
     #
-    #   To list all of the available engine versions for `aurora-postgresql`,
+    #   To list all of the available engine versions for Aurora PostgreSQL,
     #   use the following command:
     #
     #   `aws rds describe-db-engine-versions --engine aurora-postgresql
     #   --query "DBEngineVersions[].EngineVersion"`
     #
-    #   <note markdown="1"> If you aren't using the default engine version, then you must specify
-    #   the engine version.
+    #   To list all of the available engine versions for RDS for MySQL, use
+    #   the following command:
     #
-    #    </note>
+    #   `aws rds describe-db-engine-versions --engine mysql --query
+    #   "DBEngineVersions[].EngineVersion"`
+    #
+    #   To list all of the available engine versions for RDS for PostgreSQL,
+    #   use the following command:
+    #
+    #   `aws rds describe-db-engine-versions --engine postgres --query
+    #   "DBEngineVersions[].EngineVersion"`
     #
     #   **Aurora MySQL**
     #
-    #   Example: `5.6.10a`, `5.6.mysql_aurora.1.19.2`, `5.7.12`,
-    #   `5.7.mysql_aurora.2.04.5`
+    #   See [Database engine updates for Amazon Aurora MySQL][1] in the
+    #   *Amazon Aurora User Guide*.
     #
     #   **Aurora PostgreSQL**
     #
-    #   Example: `9.6.3`, `10.7`
+    #   See [Amazon Aurora PostgreSQL releases and engine versions][2] in the
+    #   *Amazon Aurora User Guide*.
+    #
+    #   **MySQL**
+    #
+    #   See [Amazon RDS for MySQL][3] in the *Amazon RDS User Guide.*
+    #
+    #   **PostgreSQL**
+    #
+    #   See [Amazon RDS for PostgreSQL versions and extensions][4] in the
+    #   *Amazon RDS User Guide.*
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Updates.html
+    #   [2]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Updates.20180305.html
+    #   [3]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_MySQL.html#MySQL.Concepts.VersionMgmt
+    #   [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
     # @option options [Integer] :port
     #   The port number on which the new DB cluster accepts connections.
     #
     #   Constraints: This value must be `1150-65535`
     #
     #   Default: The same port as the original DB cluster.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [String] :db_subnet_group_name
     #   The name of the DB subnet group to use for the new DB cluster.
     #
     #   Constraints: If supplied, must match the name of an existing DB subnet
     #   group.
     #
-    #   Example: `mySubnetgroup`
+    #   Example: `mydbsubnetgroup`
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [String] :database_name
     #   The database name for the restored DB cluster.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [String] :option_group_name
     #   The name of the option group to use for the restored DB cluster.
+    #
+    #   DB clusters are associated with a default option group that can't be
+    #   modified.
     # @option options [Array<String>] :vpc_security_group_ids
     #   A list of VPC security groups that the new DB cluster will belong to.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [Array<Types::Tag>] :tags
     #   The tags to be assigned to the restored DB cluster.
-    # @option options [String] :kms_key_id
-    #   The AWS KMS key identifier to use when restoring an encrypted DB
-    #   cluster from a DB snapshot or DB cluster snapshot.
     #
-    #   The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias
-    #   name for the AWS KMS customer master key (CMK). To use a CMK in a
-    #   different AWS account, specify the key ARN or alias ARN.
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
+    # @option options [String] :kms_key_id
+    #   The Amazon Web Services KMS key identifier to use when restoring an
+    #   encrypted DB cluster from a DB snapshot or DB cluster snapshot.
+    #
+    #   The Amazon Web Services KMS key identifier is the key ARN, key ID,
+    #   alias ARN, or alias name for the KMS key. To use a KMS key in a
+    #   different Amazon Web Services account, specify the key ARN or alias
+    #   ARN.
     #
     #   When you don't specify a value for the `KmsKeyId` parameter, then the
     #   following occurs:
     #
     #   * If the DB snapshot or DB cluster snapshot in `SnapshotIdentifier` is
-    #     encrypted, then the restored DB cluster is encrypted using the AWS
-    #     KMS CMK that was used to encrypt the DB snapshot or DB cluster
-    #     snapshot.
+    #     encrypted, then the restored DB cluster is encrypted using the KMS
+    #     key that was used to encrypt the DB snapshot or DB cluster snapshot.
     #
     #   * If the DB snapshot or DB cluster snapshot in `SnapshotIdentifier`
     #     isn't encrypted, then the restored DB cluster isn't encrypted.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [Boolean] :enable_iam_database_authentication
-    #   A value that indicates whether to enable mapping of AWS Identity and
-    #   Access Management (IAM) accounts to database accounts. By default,
-    #   mapping is disabled.
+    #   A value that indicates whether to enable mapping of Amazon Web
+    #   Services Identity and Access Management (IAM) accounts to database
+    #   accounts. By default, mapping isn't enabled.
     #
     #   For more information, see [ IAM Database Authentication][1] in the
-    #   *Amazon Aurora User Guide.*
+    #   *Amazon Aurora User Guide*.
+    #
+    #   Valid for: Aurora DB clusters only
     #
     #
     #
@@ -647,20 +742,50 @@ module Aws::RDS
     #     (72 hours).
     #
     #   ^
+    #
+    #   Valid for: Aurora DB clusters only
     # @option options [Array<String>] :enable_cloudwatch_logs_exports
     #   The list of logs that the restored DB cluster is to export to Amazon
     #   CloudWatch Logs. The values in the list depend on the DB engine being
-    #   used. For more information, see [Publishing Database Logs to Amazon
-    #   CloudWatch Logs ][1] in the *Amazon Aurora User Guide*.
+    #   used.
+    #
+    #   **RDS for MySQL**
+    #
+    #   Possible values are `error`, `general`, and `slowquery`.
+    #
+    #   **RDS for PostgreSQL**
+    #
+    #   Possible values are `postgresql` and `upgrade`.
+    #
+    #   **Aurora MySQL**
+    #
+    #   Possible values are `audit`, `error`, `general`, and `slowquery`.
+    #
+    #   **Aurora PostgreSQL**
+    #
+    #   Possible value is `postgresql`.
+    #
+    #   For more information about exporting CloudWatch Logs for Amazon RDS,
+    #   see [Publishing Database Logs to Amazon CloudWatch Logs][1] in the
+    #   *Amazon RDS User Guide*.
+    #
+    #   For more information about exporting CloudWatch Logs for Amazon
+    #   Aurora, see [Publishing Database Logs to Amazon CloudWatch Logs][2] in
+    #   the *Amazon Aurora User Guide*.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch
+    #   [2]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch
     # @option options [String] :engine_mode
-    #   The DB engine mode of the DB cluster, either `provisioned`,
-    #   `serverless`, `parallelquery`, `global`, or `multimaster`.
+    #   The DB engine mode of the DB cluster, either `provisioned` or
+    #   `serverless`.
     #
     #   For more information, see [ CreateDBCluster][1].
+    #
+    #   Valid for: Aurora DB clusters only
     #
     #
     #
@@ -668,6 +793,8 @@ module Aws::RDS
     # @option options [Types::ScalingConfiguration] :scaling_configuration
     #   For DB clusters in `serverless` DB engine mode, the scaling properties
     #   of the DB cluster.
+    #
+    #   Valid for: Aurora DB clusters only
     # @option options [String] :db_cluster_parameter_group_name
     #   The name of the DB cluster parameter group to associate with this DB
     #   cluster. If this argument is omitted, the default DB cluster parameter
@@ -683,14 +810,20 @@ module Aws::RDS
     #   * First character must be a letter.
     #
     #   * Can't end with a hyphen or contain two consecutive hyphens.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [Boolean] :deletion_protection
     #   A value that indicates whether the DB cluster has deletion protection
     #   enabled. The database can't be deleted when deletion protection is
-    #   enabled. By default, deletion protection is disabled.
+    #   enabled. By default, deletion protection isn't enabled.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [Boolean] :copy_tags_to_snapshot
     #   A value that indicates whether to copy all tags from the restored DB
     #   cluster to snapshots of the restored DB cluster. The default is not to
     #   copy them.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
     # @option options [String] :domain
     #   Specify the Active Directory directory ID to restore the DB cluster
     #   in. The domain must be created prior to this operation. Currently,
@@ -700,16 +833,131 @@ module Aws::RDS
     #   For more information, see [ Kerberos Authentication][1] in the *Amazon
     #   RDS User Guide*.
     #
+    #   Valid for: Aurora DB clusters only
+    #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/kerberos-authentication.html
     # @option options [String] :domain_iam_role_name
     #   Specify the name of the IAM role to be used when making API calls to
     #   the Directory Service.
+    #
+    #   Valid for: Aurora DB clusters only
+    # @option options [String] :db_cluster_instance_class
+    #   The compute and memory capacity of the each DB instance in the
+    #   Multi-AZ DB cluster, for example db.m6gd.xlarge. Not all DB instance
+    #   classes are available in all Amazon Web Services Regions, or for all
+    #   database engines.
+    #
+    #   For the full list of DB instance classes, and availability for your
+    #   engine, see [DB Instance Class][1] in the *Amazon RDS User Guide.*
+    #
+    #   Valid for: Multi-AZ DB clusters only
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
+    # @option options [String] :storage_type
+    #   Specifies the storage type to be associated with the DB cluster.
+    #
+    #   When specified for a Multi-AZ DB cluster, a value for the `Iops`
+    #   parameter is required.
+    #
+    #   Valid values: `aurora`, `aurora-iopt1` (Aurora DB clusters); `io1`
+    #   (Multi-AZ DB clusters)
+    #
+    #   Default: `aurora` (Aurora DB clusters); `io1` (Multi-AZ DB clusters)
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
+    # @option options [Integer] :iops
+    #   The amount of Provisioned IOPS (input/output operations per second) to
+    #   be initially allocated for each DB instance in the Multi-AZ DB
+    #   cluster.
+    #
+    #   For information about valid IOPS values, see [Amazon RDS Provisioned
+    #   IOPS storage][1] in the *Amazon RDS User Guide*.
+    #
+    #   Constraints: Must be a multiple between .5 and 50 of the storage
+    #   amount for the DB instance.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS
+    # @option options [Boolean] :publicly_accessible
+    #   A value that indicates whether the DB cluster is publicly accessible.
+    #
+    #   When the DB cluster is publicly accessible, its Domain Name System
+    #   (DNS) endpoint resolves to the private IP address from within the DB
+    #   cluster's virtual private cloud (VPC). It resolves to the public IP
+    #   address from outside of the DB cluster's VPC. Access to the DB
+    #   cluster is ultimately controlled by the security group it uses. That
+    #   public access is not permitted if the security group assigned to the
+    #   DB cluster doesn't permit it.
+    #
+    #   When the DB cluster isn't publicly accessible, it is an internal DB
+    #   cluster with a DNS name that resolves to a private IP address.
+    #
+    #   Default: The default behavior varies depending on whether
+    #   `DBSubnetGroupName` is specified.
+    #
+    #   If `DBSubnetGroupName` isn't specified, and `PubliclyAccessible`
+    #   isn't specified, the following applies:
+    #
+    #   * If the default VPC in the target Region doesn’t have an internet
+    #     gateway attached to it, the DB cluster is private.
+    #
+    #   * If the default VPC in the target Region has an internet gateway
+    #     attached to it, the DB cluster is public.
+    #
+    #   If `DBSubnetGroupName` is specified, and `PubliclyAccessible` isn't
+    #   specified, the following applies:
+    #
+    #   * If the subnets are part of a VPC that doesn’t have an internet
+    #     gateway attached to it, the DB cluster is private.
+    #
+    #   * If the subnets are part of a VPC that has an internet gateway
+    #     attached to it, the DB cluster is public.
+    #
+    #   Valid for: Aurora DB clusters and Multi-AZ DB clusters
+    # @option options [Types::ServerlessV2ScalingConfiguration] :serverless_v2_scaling_configuration
+    #   Contains the scaling configuration of an Aurora Serverless v2 DB
+    #   cluster.
+    #
+    #   For more information, see [Using Amazon Aurora Serverless v2][1] in
+    #   the *Amazon Aurora User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html
+    # @option options [String] :network_type
+    #   The network type of the DB cluster.
+    #
+    #   Valid values:
+    #
+    #   * `IPV4`
+    #
+    #   * `DUAL`
+    #
+    #   The network type is determined by the `DBSubnetGroup` specified for
+    #   the DB cluster. A `DBSubnetGroup` can support only the IPv4 protocol
+    #   or the IPv4 and the IPv6 protocols (`DUAL`).
+    #
+    #   For more information, see [ Working with a DB instance in a VPC][1] in
+    #   the *Amazon Aurora User Guide.*
+    #
+    #   Valid for: Aurora DB clusters only
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html
     # @return [DBCluster]
     def restore(options = {})
       options = options.merge(snapshot_identifier: @snapshot_id)
-      resp = @client.restore_db_cluster_from_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.restore_db_cluster_from_snapshot(options)
+      end
       DBCluster.new(
         id: resp.data.db_cluster.db_cluster_identifier,
         data: resp.data.db_cluster,
@@ -778,7 +1026,9 @@ module Aws::RDS
           source_type: "db-cluster-snapshot",
           source_identifier: @snapshot_id
         )
-        resp = @client.describe_events(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_events(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.events.each do |e|

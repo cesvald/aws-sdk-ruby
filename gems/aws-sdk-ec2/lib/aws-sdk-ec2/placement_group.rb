@@ -66,6 +66,19 @@ module Aws::EC2
       data[:tags]
     end
 
+    # The Amazon Resource Name (ARN) of the placement group.
+    # @return [String]
+    def group_arn
+      data[:group_arn]
+    end
+
+    # The spread level for the placement group. *Only* Outpost placement
+    # groups can be spread across hosts.
+    # @return [String]
+    def spread_level
+      data[:spread_level]
+    end
+
     # @!endgroup
 
     # @return [Client]
@@ -80,7 +93,9 @@ module Aws::EC2
     #
     # @return [self]
     def load
-      resp = @client.describe_placement_groups(group_names: [@name])
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_placement_groups(group_names: [@name])
+      end
       @data = resp.placement_groups[0]
       self
     end
@@ -195,7 +210,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -214,7 +231,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(group_name: @name)
-      resp = @client.delete_placement_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_placement_group(options)
+      end
       resp.data
     end
 
@@ -259,16 +278,13 @@ module Aws::EC2
     #
     #   * `block-device-mapping.volume-id` - The volume ID of the EBS volume.
     #
+    #   * `capacity-reservation-id` - The ID of the Capacity Reservation into
+    #     which the instance was launched.
+    #
     #   * `client-token` - The idempotency token you provided when you
     #     launched the instance.
     #
     #   * `dns-name` - The public DNS name of the instance.
-    #
-    #   * `group-id` - The ID of the security group for the instance.
-    #     EC2-Classic only.
-    #
-    #   * `group-name` - The name of the security group for the instance.
-    #     EC2-Classic only.
     #
     #   * `hibernation-options.configured` - A Boolean that indicates whether
     #     the instance is enabled for hibernation. A value of `true` means
@@ -318,17 +334,23 @@ module Aws::EC2
     #     index for the instance in the launch group (for example, 0, 1, 2,
     #     and so on).
     #
-    #   * `launch-time` - The time when the instance was launched.
+    #   * `launch-time` - The time when the instance was launched, in the ISO
+    #     8601 format in the UTC time zone (YYYY-MM-DDThh:mm:ss.sssZ), for
+    #     example, `2021-09-29T11:04:43.305Z`. You can use a wildcard (`*`),
+    #     for example, `2021-09-29T*`, which matches an entire day.
     #
     #   * `metadata-options.http-tokens` - The metadata request authorization
     #     state (`optional` \| `required`)
     #
-    #   * `metadata-options.http-put-response-hop-limit` - The http metadata
+    #   * `metadata-options.http-put-response-hop-limit` - The HTTP metadata
     #     request put response hop limit (integer, possible values `1` to
     #     `64`)
     #
-    #   * `metadata-options.http-endpoint` - Enable or disable metadata access
-    #     on http endpoint (`enabled` \| `disabled`)
+    #   * `metadata-options.http-endpoint` - The status of access to the HTTP
+    #     metadata endpoint on your instance (`enabled` \| `disabled`)
+    #
+    #   * `metadata-options.instance-metadata-tags` - The status of access to
+    #     instance tags from the instance metadata (`enabled` \| `disabled`)
     #
     #   * `monitoring-state` - Indicates whether detailed monitoring is
     #     enabled (`disabled` \| `enabled`).
@@ -413,7 +435,7 @@ module Aws::EC2
     #     interface.
     #
     #   * `network-interface.requester-managed` - Indicates whether the
-    #     network interface is being managed by AWS.
+    #     network interface is being managed by Amazon Web Services.
     #
     #   * `network-interface.status` - The status of the network interface
     #     (`available`) \| `in-use`).
@@ -432,7 +454,8 @@ module Aws::EC2
     #
     #   * `outpost-arn` - The Amazon Resource Name (ARN) of the Outpost.
     #
-    #   * `owner-id` - The AWS account ID of the instance owner.
+    #   * `owner-id` - The Amazon Web Services account ID of the instance
+    #     owner.
     #
     #   * `placement-group-name` - The name of the placement group for the
     #     instance.
@@ -460,8 +483,8 @@ module Aws::EC2
     #     terminate the instance). Similar to the state-reason-code filter.
     #
     #   * `requester-id` - The ID of the entity that launched the instance on
-    #     your behalf (for example, AWS Management Console, Auto Scaling, and
-    #     so on).
+    #     your behalf (for example, Amazon Web Services Management Console,
+    #     Auto Scaling, and so on).
     #
     #   * `reservation-id` - The ID of the instance's reservation. A
     #     reservation ID is created any time you launch an instance. A
@@ -492,11 +515,11 @@ module Aws::EC2
     #
     #   * `subnet-id` - The ID of the subnet for the instance.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
-    #     the resource. Use the tag key in the filter name and the tag value
-    #     as the filter value. For example, to find all resources that have a
-    #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
-    #     for the filter name and `TeamA` for the filter value.
+    #   * `tag:<key>` - The key/value combination of a tag assigned to the
+    #     resource. Use the tag key in the filter name and the tag value as
+    #     the filter value. For example, to find all resources that have a tag
+    #     with the key `Owner` and the value `TeamA`, specify `tag:Owner` for
+    #     the filter name and `TeamA` for the filter value.
     #
     #   * `tag-key` - The key of a tag assigned to the resource. Use this
     #     filter to find all resources that have a tag with a specific key,
@@ -525,7 +548,9 @@ module Aws::EC2
           name: "placement-group-name",
           values: [@name]
         }])
-        resp = @client.describe_instances(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_instances(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.reservations.each do |r|

@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/query.rb'
 require 'aws-sdk-docdb/plugins/cross_region_copying.rb'
 
@@ -74,9 +78,14 @@ module Aws::DocDB
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::Query)
     add_plugin(Aws::DocDB::Plugins::CrossRegionCopying)
+    add_plugin(Aws::DocDB::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -121,7 +130,9 @@ module Aws::DocDB
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -175,9 +186,17 @@ module Aws::DocDB
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -218,6 +237,11 @@ module Aws::DocDB
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -264,6 +288,11 @@ module Aws::DocDB
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -277,9 +306,34 @@ module Aws::DocDB
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::DocDB::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::DocDB::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -288,7 +342,7 @@ module Aws::DocDB
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -303,6 +357,9 @@ module Aws::DocDB
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -388,8 +445,8 @@ module Aws::DocDB
 
     # Adds metadata tags to an Amazon DocumentDB resource. You can use these
     # tags with cost allocation reporting to track costs that are associated
-    # with Amazon DocumentDB resources. or in a `Condition` statement in an
-    # AWS Identity and Access Management (IAM) policy for Amazon DocumentDB.
+    # with Amazon DocumentDB resources or in a `Condition` statement in an
+    # Identity and Access Management (IAM) policy for Amazon DocumentDB.
     #
     # @option params [required, String] :resource_name
     #   The Amazon DocumentDB resource that the tags are added to. This value
@@ -489,12 +546,14 @@ module Aws::DocDB
     #
     #   * Must specify a valid cluster parameter group.
     #
-    #   * If the source cluster parameter group is in the same AWS Region as
-    #     the copy, specify a valid parameter group identifier; for example,
-    #     `my-db-cluster-param-group`, or a valid ARN.
+    #   * If the source cluster parameter group is in the same Amazon Web
+    #     Services Region as the copy, specify a valid parameter group
+    #     identifier; for example, `my-db-cluster-param-group`, or a valid
+    #     ARN.
     #
-    #   * If the source parameter group is in a different AWS Region than the
-    #     copy, specify a valid cluster parameter group ARN; for example,
+    #   * If the source parameter group is in a different Amazon Web Services
+    #     Region than the copy, specify a valid cluster parameter group ARN;
+    #     for example,
     #     `arn:aws:rds:us-east-1:123456789012:sample-cluster:sample-parameter-group`.
     #
     # @option params [required, String] :target_db_cluster_parameter_group_identifier
@@ -557,7 +616,8 @@ module Aws::DocDB
     # To copy a cluster snapshot from a shared manual cluster snapshot,
     # `SourceDBClusterSnapshotIdentifier` must be the Amazon Resource Name
     # (ARN) of the shared cluster snapshot. You can only copy a shared DB
-    # cluster snapshot, whether encrypted or not, in the same AWS Region.
+    # cluster snapshot, whether encrypted or not, in the same Amazon Web
+    # Services Region.
     #
     # To cancel the copy operation after it is in progress, delete the
     # target cluster snapshot identified by
@@ -572,11 +632,11 @@ module Aws::DocDB
     #
     #   * Must specify a valid system snapshot in the *available* state.
     #
-    #   * If the source snapshot is in the same AWS Region as the copy,
-    #     specify a valid snapshot identifier.
+    #   * If the source snapshot is in the same Amazon Web Services Region as
+    #     the copy, specify a valid snapshot identifier.
     #
-    #   * If the source snapshot is in a different AWS Region than the copy,
-    #     specify a valid cluster snapshot ARN.
+    #   * If the source snapshot is in a different Amazon Web Services Region
+    #     than the copy, specify a valid cluster snapshot ARN.
     #
     #   Example: `my-cluster-snapshot1`
     #
@@ -595,55 +655,60 @@ module Aws::DocDB
     #   Example: `my-cluster-snapshot2`
     #
     # @option params [String] :kms_key_id
-    #   The AWS KMS key ID for an encrypted cluster snapshot. The AWS KMS key
-    #   ID is the Amazon Resource Name (ARN), AWS KMS key identifier, or the
-    #   AWS KMS key alias for the AWS KMS encryption key.
+    #   The KMS key ID for an encrypted cluster snapshot. The KMS key ID is
+    #   the Amazon Resource Name (ARN), KMS key identifier, or the KMS key
+    #   alias for the KMS encryption key.
     #
-    #   If you copy an encrypted cluster snapshot from your AWS account, you
-    #   can specify a value for `KmsKeyId` to encrypt the copy with a new AWS
-    #   KMS encryption key. If you don't specify a value for `KmsKeyId`, then
-    #   the copy of the cluster snapshot is encrypted with the same AWS KMS
-    #   key as the source cluster snapshot.
+    #   If you copy an encrypted cluster snapshot from your Amazon Web
+    #   Services account, you can specify a value for `KmsKeyId` to encrypt
+    #   the copy with a new KMS encryption key. If you don't specify a value
+    #   for `KmsKeyId`, then the copy of the cluster snapshot is encrypted
+    #   with the same KMS key as the source cluster snapshot.
     #
     #   If you copy an encrypted cluster snapshot that is shared from another
-    #   AWS account, then you must specify a value for `KmsKeyId`.
+    #   Amazon Web Services account, then you must specify a value for
+    #   `KmsKeyId`.
     #
-    #   To copy an encrypted cluster snapshot to another AWS Region, set
-    #   `KmsKeyId` to the AWS KMS key ID that you want to use to encrypt the
-    #   copy of the cluster snapshot in the destination Region. AWS KMS
-    #   encryption keys are specific to the AWS Region that they are created
-    #   in, and you can't use encryption keys from one AWS Region in another
-    #   AWS Region.
+    #   To copy an encrypted cluster snapshot to another Amazon Web Services
+    #   Region, set `KmsKeyId` to the KMS key ID that you want to use to
+    #   encrypt the copy of the cluster snapshot in the destination Region.
+    #   KMS encryption keys are specific to the Amazon Web Services Region
+    #   that they are created in, and you can't use encryption keys from one
+    #   Amazon Web Services Region in another Amazon Web Services Region.
     #
     #   If you copy an unencrypted cluster snapshot and specify a value for
     #   the `KmsKeyId` parameter, an error is returned.
     #
     # @option params [String] :pre_signed_url
-    #   The URL that contains a Signature Version 4 signed request for the
-    #   `CopyDBClusterSnapshot` API action in the AWS Region that contains the
-    #   source cluster snapshot to copy. You must use the `PreSignedUrl`
-    #   parameter when copying a cluster snapshot from another AWS Region.
+    #   The URL that contains a Signature Version 4 signed request for
+    #   the`CopyDBClusterSnapshot` API action in the Amazon Web Services
+    #   Region that contains the source cluster snapshot to copy. You must use
+    #   the `PreSignedUrl` parameter when copying a cluster snapshot from
+    #   another Amazon Web Services Region.
     #
-    #   If you are using an AWS SDK tool or the AWS CLI, you can specify
-    #   `SourceRegion` (or `--source-region` for the AWS CLI) instead of
+    #   If you are using an Amazon Web Services SDK tool or the CLI, you can
+    #   specify `SourceRegion` (or `--source-region` for the CLI) instead of
     #   specifying `PreSignedUrl` manually. Specifying `SourceRegion`
     #   autogenerates a pre-signed URL that is a valid request for the
-    #   operation that can be executed in the source AWS Region.
+    #   operation that can be executed in the source Amazon Web Services
+    #   Region.
     #
     #   The presigned URL must be a valid request for the
     #   `CopyDBClusterSnapshot` API action that can be executed in the source
-    #   AWS Region that contains the cluster snapshot to be copied. The
-    #   presigned URL request must contain the following parameter values:
+    #   Amazon Web Services Region that contains the cluster snapshot to be
+    #   copied. The presigned URL request must contain the following parameter
+    #   values:
     #
     #   * `SourceRegion` - The ID of the region that contains the snapshot to
     #     be copied.
     #
     #   * `SourceDBClusterSnapshotIdentifier` - The identifier for the the
     #     encrypted cluster snapshot to be copied. This identifier must be in
-    #     the Amazon Resource Name (ARN) format for the source AWS Region. For
-    #     example, if you are copying an encrypted cluster snapshot from the
-    #     us-east-1 AWS Region, then your `SourceDBClusterSnapshotIdentifier`
-    #     looks something like the following:
+    #     the Amazon Resource Name (ARN) format for the source Amazon Web
+    #     Services Region. For example, if you are copying an encrypted
+    #     cluster snapshot from the us-east-1 Amazon Web Services Region, then
+    #     your `SourceDBClusterSnapshotIdentifier` looks something like the
+    #     following:
     #     `arn:aws:rds:us-east-1:12345678012:sample-cluster:sample-cluster-snapshot`.
     #
     #   * `TargetDBClusterSnapshotIdentifier` - The identifier for the new
@@ -766,16 +831,16 @@ module Aws::DocDB
     #   Valid values: `docdb`
     #
     # @option params [String] :engine_version
-    #   The version number of the database engine to use. The --engine-version
-    #   will default to the latest major engine version. For production
-    #   workloads, we recommend explicitly declaring this parameter with the
-    #   intended major engine version.
+    #   The version number of the database engine to use. The
+    #   `--engine-version` will default to the latest major engine version.
+    #   For production workloads, we recommend explicitly declaring this
+    #   parameter with the intended major engine version.
     #
     # @option params [Integer] :port
     #   The port number on which the instances in the cluster accept
     #   connections.
     #
-    # @option params [required, String] :master_username
+    # @option params [String] :master_username
     #   The name of the master user for the cluster.
     #
     #   Constraints:
@@ -786,7 +851,7 @@ module Aws::DocDB
     #
     #   * Cannot be a reserved word for the chosen database engine.
     #
-    # @option params [required, String] :master_user_password
+    # @option params [String] :master_user_password
     #   The password for the master database user. This password can contain
     #   any printable ASCII character except forward slash (/), double quote
     #   ("), or the "at" symbol (@).
@@ -799,7 +864,7 @@ module Aws::DocDB
     #   parameter.
     #
     #   The default is a 30-minute window selected at random from an 8-hour
-    #   block of time for each AWS Region.
+    #   block of time for each Amazon Web Services Region.
     #
     #   Constraints:
     #
@@ -818,8 +883,8 @@ module Aws::DocDB
     #   Format: `ddd:hh24:mi-ddd:hh24:mi`
     #
     #   The default is a 30-minute window selected at random from an 8-hour
-    #   block of time for each AWS Region, occurring on a random day of the
-    #   week.
+    #   block of time for each Amazon Web Services Region, occurring on a
+    #   random day of the week.
     #
     #   Valid days: Mon, Tue, Wed, Thu, Fri, Sat, Sun
     #
@@ -832,24 +897,24 @@ module Aws::DocDB
     #   Specifies whether the cluster is encrypted.
     #
     # @option params [String] :kms_key_id
-    #   The AWS KMS key identifier for an encrypted cluster.
+    #   The KMS key identifier for an encrypted cluster.
     #
-    #   The AWS KMS key identifier is the Amazon Resource Name (ARN) for the
-    #   AWS KMS encryption key. If you are creating a cluster using the same
-    #   AWS account that owns the AWS KMS encryption key that is used to
-    #   encrypt the new cluster, you can use the AWS KMS key alias instead of
-    #   the ARN for the AWS KMS encryption key.
+    #   The KMS key identifier is the Amazon Resource Name (ARN) for the KMS
+    #   encryption key. If you are creating a cluster using the same Amazon
+    #   Web Services account that owns the KMS encryption key that is used to
+    #   encrypt the new cluster, you can use the KMS key alias instead of the
+    #   ARN for the KMS encryption key.
     #
-    #   If an encryption key is not specified in `KmsKeyId`\:
+    #   If an encryption key is not specified in `KmsKeyId`:
     #
     #   * If the `StorageEncrypted` parameter is `true`, Amazon DocumentDB
     #     uses your default encryption key.
     #
     #   ^
     #
-    #   AWS KMS creates the default encryption key for your AWS account. Your
-    #   AWS account has a different default encryption key for each AWS
-    #   Region.
+    #   KMS creates the default encryption key for your Amazon Web Services
+    #   account. Your Amazon Web Services account has a different default
+    #   encryption key for each Amazon Web Services Regions.
     #
     # @option params [String] :pre_signed_url
     #   Not currently supported.
@@ -871,6 +936,9 @@ module Aws::DocDB
     #   `DeletionProtection` is disabled. `DeletionProtection` protects
     #   clusters from being accidentally deleted.
     #
+    # @option params [String] :global_cluster_identifier
+    #   The cluster identifier of the new global cluster.
+    #
     # @option params [String] :source_region
     #   The source region of the snapshot. This is only needed when the
     #   shapshot is encrypted and in a different region.
@@ -891,8 +959,8 @@ module Aws::DocDB
     #     engine: "String", # required
     #     engine_version: "String",
     #     port: 1,
-    #     master_username: "String", # required
-    #     master_user_password: "String", # required
+    #     master_username: "String",
+    #     master_user_password: "String",
     #     preferred_backup_window: "String",
     #     preferred_maintenance_window: "String",
     #     tags: [
@@ -906,6 +974,7 @@ module Aws::DocDB
     #     pre_signed_url: "String",
     #     enable_cloudwatch_logs_exports: ["String"],
     #     deletion_protection: false,
+    #     global_cluster_identifier: "GlobalClusterIdentifier",
     #     source_region: "String",
     #   })
     #
@@ -930,6 +999,9 @@ module Aws::DocDB
     #   resp.db_cluster.master_username #=> String
     #   resp.db_cluster.preferred_backup_window #=> String
     #   resp.db_cluster.preferred_maintenance_window #=> String
+    #   resp.db_cluster.replication_source_identifier #=> String
+    #   resp.db_cluster.read_replica_identifiers #=> Array
+    #   resp.db_cluster.read_replica_identifiers[0] #=> String
     #   resp.db_cluster.db_cluster_members #=> Array
     #   resp.db_cluster.db_cluster_members[0].db_instance_identifier #=> String
     #   resp.db_cluster.db_cluster_members[0].is_cluster_writer #=> Boolean
@@ -946,6 +1018,7 @@ module Aws::DocDB
     #   resp.db_cluster.associated_roles #=> Array
     #   resp.db_cluster.associated_roles[0].role_arn #=> String
     #   resp.db_cluster.associated_roles[0].status #=> String
+    #   resp.db_cluster.clone_group_id #=> String
     #   resp.db_cluster.cluster_create_time #=> Time
     #   resp.db_cluster.enabled_cloudwatch_logs_exports #=> Array
     #   resp.db_cluster.enabled_cloudwatch_logs_exports[0] #=> String
@@ -1147,7 +1220,7 @@ module Aws::DocDB
     #   The Amazon EC2 Availability Zone that the instance is created in.
     #
     #   Default: A random, system-chosen Availability Zone in the endpoint's
-    #   AWS Region.
+    #   Amazon Web Services Region.
     #
     #   Example: `us-east-1d`
     #
@@ -1158,18 +1231,18 @@ module Aws::DocDB
     #   Format: `ddd:hh24:mi-ddd:hh24:mi`
     #
     #   The default is a 30-minute window selected at random from an 8-hour
-    #   block of time for each AWS Region, occurring on a random day of the
-    #   week.
+    #   block of time for each Amazon Web Services Region, occurring on a
+    #   random day of the week.
     #
     #   Valid days: Mon, Tue, Wed, Thu, Fri, Sat, Sun
     #
     #   Constraints: Minimum 30-minute window.
     #
     # @option params [Boolean] :auto_minor_version_upgrade
-    #   Indicates that minor engine upgrades are applied automatically to the
-    #   instance during the maintenance window.
+    #   This parameter does not apply to Amazon DocumentDB. Amazon DocumentDB
+    #   does not perform minor version upgrades regardless of the value set.
     #
-    #   Default: `true`
+    #   Default: `false`
     #
     # @option params [Array<Types::Tag>] :tags
     #   The tags to be assigned to the instance. You can assign up to 10 tags
@@ -1177,6 +1250,10 @@ module Aws::DocDB
     #
     # @option params [required, String] :db_cluster_identifier
     #   The identifier of the cluster that the instance will belong to.
+    #
+    # @option params [Boolean] :copy_tags_to_snapshot
+    #   A value that indicates whether to copy tags from the DB instance to
+    #   snapshots of the DB instance. By default, tags are not copied.
     #
     # @option params [Integer] :promotion_tier
     #   A value that specifies the order in which an Amazon DocumentDB replica
@@ -1186,6 +1263,27 @@ module Aws::DocDB
     #   Default: 1
     #
     #   Valid values: 0-15
+    #
+    # @option params [Boolean] :enable_performance_insights
+    #   A value that indicates whether to enable Performance Insights for the
+    #   DB Instance. For more information, see [Using Amazon Performance
+    #   Insights][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/documentdb/latest/developerguide/performance-insights.html
+    #
+    # @option params [String] :performance_insights_kms_key_id
+    #   The KMS key identifier for encryption of Performance Insights data.
+    #
+    #   The KMS key identifier is the key ARN, key ID, alias ARN, or alias
+    #   name for the KMS key.
+    #
+    #   If you do not specify a value for PerformanceInsightsKMSKeyId, then
+    #   Amazon DocumentDB uses your default KMS key. There is a default KMS
+    #   key for your Amazon Web Services account. Your Amazon Web Services
+    #   account has a different default KMS key for each Amazon Web Services
+    #   region.
     #
     # @return [Types::CreateDBInstanceResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1207,7 +1305,10 @@ module Aws::DocDB
     #       },
     #     ],
     #     db_cluster_identifier: "String", # required
+    #     copy_tags_to_snapshot: false,
     #     promotion_tier: 1,
+    #     enable_performance_insights: false,
+    #     performance_insights_kms_key_id: "String",
     #   })
     #
     # @example Response structure
@@ -1267,6 +1368,7 @@ module Aws::DocDB
     #   resp.db_instance.kms_key_id #=> String
     #   resp.db_instance.dbi_resource_id #=> String
     #   resp.db_instance.ca_certificate_identifier #=> String
+    #   resp.db_instance.copy_tags_to_snapshot #=> Boolean
     #   resp.db_instance.promotion_tier #=> Integer
     #   resp.db_instance.db_instance_arn #=> String
     #   resp.db_instance.enabled_cloudwatch_logs_exports #=> Array
@@ -1282,7 +1384,8 @@ module Aws::DocDB
     end
 
     # Creates a new subnet group. subnet groups must contain at least one
-    # subnet in at least two Availability Zones in the AWS Region.
+    # subnet in at least two Availability Zones in the Amazon Web Services
+    # Region.
     #
     # @option params [required, String] :db_subnet_group_name
     #   The name for the subnet group. This value is stored as a lowercase
@@ -1383,7 +1486,7 @@ module Aws::DocDB
     #   events are returned.
     #
     #   Valid values: `db-instance`, `db-cluster`, `db-parameter-group`,
-    #   `db-security-group`, `db-snapshot`, `db-cluster-snapshot`
+    #   `db-security-group`, `db-cluster-snapshot`
     #
     # @option params [Array<String>] :event_categories
     #   A list of event categories for a `SourceType` that you want to
@@ -1461,6 +1564,92 @@ module Aws::DocDB
     # @param [Hash] params ({})
     def create_event_subscription(params = {}, options = {})
       req = build_request(:create_event_subscription, params)
+      req.send_request(options)
+    end
+
+    # Creates an Amazon DocumentDB global cluster that can span multiple
+    # multiple Amazon Web Services Regions. The global cluster contains one
+    # primary cluster with read-write capability, and up-to give read-only
+    # secondary clusters. Global clusters uses storage-based fast
+    # replication across regions with latencies less than one second, using
+    # dedicated infrastructure with no impact to your workload’s
+    # performance.
+    #
+    #
+    #
+    # You can create a global cluster that is initially empty, and then add
+    # a primary and a secondary to it. Or you can specify an existing
+    # cluster during the create operation, and this cluster becomes the
+    # primary of the global cluster.
+    #
+    # <note markdown="1"> This action only applies to Amazon DocumentDB clusters.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :global_cluster_identifier
+    #   The cluster identifier of the new global cluster.
+    #
+    # @option params [String] :source_db_cluster_identifier
+    #   The Amazon Resource Name (ARN) to use as the primary cluster of the
+    #   global cluster. This parameter is optional.
+    #
+    # @option params [String] :engine
+    #   The name of the database engine to be used for this cluster.
+    #
+    # @option params [String] :engine_version
+    #   The engine version of the global cluster.
+    #
+    # @option params [Boolean] :deletion_protection
+    #   The deletion protection setting for the new global cluster. The global
+    #   cluster can't be deleted when deletion protection is enabled.
+    #
+    # @option params [String] :database_name
+    #   The name for your database of up to 64 alpha-numeric characters. If
+    #   you do not provide a name, Amazon DocumentDB will not create a
+    #   database in the global cluster you are creating.
+    #
+    # @option params [Boolean] :storage_encrypted
+    #   The storage encryption setting for the new global cluster.
+    #
+    # @return [Types::CreateGlobalClusterResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateGlobalClusterResult#global_cluster #global_cluster} => Types::GlobalCluster
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_global_cluster({
+    #     global_cluster_identifier: "GlobalClusterIdentifier", # required
+    #     source_db_cluster_identifier: "String",
+    #     engine: "String",
+    #     engine_version: "String",
+    #     deletion_protection: false,
+    #     database_name: "String",
+    #     storage_encrypted: false,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.global_cluster.global_cluster_identifier #=> String
+    #   resp.global_cluster.global_cluster_resource_id #=> String
+    #   resp.global_cluster.global_cluster_arn #=> String
+    #   resp.global_cluster.status #=> String
+    #   resp.global_cluster.engine #=> String
+    #   resp.global_cluster.engine_version #=> String
+    #   resp.global_cluster.database_name #=> String
+    #   resp.global_cluster.storage_encrypted #=> Boolean
+    #   resp.global_cluster.deletion_protection #=> Boolean
+    #   resp.global_cluster.global_cluster_members #=> Array
+    #   resp.global_cluster.global_cluster_members[0].db_cluster_arn #=> String
+    #   resp.global_cluster.global_cluster_members[0].readers #=> Array
+    #   resp.global_cluster.global_cluster_members[0].readers[0] #=> String
+    #   resp.global_cluster.global_cluster_members[0].is_writer #=> Boolean
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/CreateGlobalCluster AWS API Documentation
+    #
+    # @overload create_global_cluster(params = {})
+    # @param [Hash] params ({})
+    def create_global_cluster(params = {}, options = {})
+      req = build_request(:create_global_cluster, params)
       req.send_request(options)
     end
 
@@ -1542,6 +1731,9 @@ module Aws::DocDB
     #   resp.db_cluster.master_username #=> String
     #   resp.db_cluster.preferred_backup_window #=> String
     #   resp.db_cluster.preferred_maintenance_window #=> String
+    #   resp.db_cluster.replication_source_identifier #=> String
+    #   resp.db_cluster.read_replica_identifiers #=> Array
+    #   resp.db_cluster.read_replica_identifiers[0] #=> String
     #   resp.db_cluster.db_cluster_members #=> Array
     #   resp.db_cluster.db_cluster_members[0].db_instance_identifier #=> String
     #   resp.db_cluster.db_cluster_members[0].is_cluster_writer #=> Boolean
@@ -1558,6 +1750,7 @@ module Aws::DocDB
     #   resp.db_cluster.associated_roles #=> Array
     #   resp.db_cluster.associated_roles[0].role_arn #=> String
     #   resp.db_cluster.associated_roles[0].status #=> String
+    #   resp.db_cluster.clone_group_id #=> String
     #   resp.db_cluster.cluster_create_time #=> Time
     #   resp.db_cluster.enabled_cloudwatch_logs_exports #=> Array
     #   resp.db_cluster.enabled_cloudwatch_logs_exports[0] #=> String
@@ -1735,6 +1928,7 @@ module Aws::DocDB
     #   resp.db_instance.kms_key_id #=> String
     #   resp.db_instance.dbi_resource_id #=> String
     #   resp.db_instance.ca_certificate_identifier #=> String
+    #   resp.db_instance.copy_tags_to_snapshot #=> Boolean
     #   resp.db_instance.promotion_tier #=> Integer
     #   resp.db_instance.db_instance_arn #=> String
     #   resp.db_instance.enabled_cloudwatch_logs_exports #=> Array
@@ -1827,8 +2021,55 @@ module Aws::DocDB
       req.send_request(options)
     end
 
+    # Deletes a global cluster. The primary and secondary clusters must
+    # already be detached or deleted before attempting to delete a global
+    # cluster.
+    #
+    # <note markdown="1"> This action only applies to Amazon DocumentDB clusters.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :global_cluster_identifier
+    #   The cluster identifier of the global cluster being deleted.
+    #
+    # @return [Types::DeleteGlobalClusterResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteGlobalClusterResult#global_cluster #global_cluster} => Types::GlobalCluster
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_global_cluster({
+    #     global_cluster_identifier: "GlobalClusterIdentifier", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.global_cluster.global_cluster_identifier #=> String
+    #   resp.global_cluster.global_cluster_resource_id #=> String
+    #   resp.global_cluster.global_cluster_arn #=> String
+    #   resp.global_cluster.status #=> String
+    #   resp.global_cluster.engine #=> String
+    #   resp.global_cluster.engine_version #=> String
+    #   resp.global_cluster.database_name #=> String
+    #   resp.global_cluster.storage_encrypted #=> Boolean
+    #   resp.global_cluster.deletion_protection #=> Boolean
+    #   resp.global_cluster.global_cluster_members #=> Array
+    #   resp.global_cluster.global_cluster_members[0].db_cluster_arn #=> String
+    #   resp.global_cluster.global_cluster_members[0].readers #=> Array
+    #   resp.global_cluster.global_cluster_members[0].readers[0] #=> String
+    #   resp.global_cluster.global_cluster_members[0].is_writer #=> Boolean
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/DeleteGlobalCluster AWS API Documentation
+    #
+    # @overload delete_global_cluster(params = {})
+    # @param [Hash] params ({})
+    def delete_global_cluster(params = {}, options = {})
+      req = build_request(:delete_global_cluster, params)
+      req.send_request(options)
+    end
+
     # Returns a list of certificate authority (CA) certificates provided by
-    # Amazon DocumentDB for this AWS account.
+    # Amazon DocumentDB for this Amazon Web Services account.
     #
     # @option params [String] :certificate_identifier
     #   The user-supplied certificate identifier. If this parameter is
@@ -2063,12 +2304,13 @@ module Aws::DocDB
     # Returns a list of cluster snapshot attribute names and values for a
     # manual DB cluster snapshot.
     #
-    # When you share snapshots with other AWS accounts,
+    # When you share snapshots with other Amazon Web Services accounts,
     # `DescribeDBClusterSnapshotAttributes` returns the `restore` attribute
-    # and a list of IDs for the AWS accounts that are authorized to copy or
-    # restore the manual cluster snapshot. If `all` is included in the list
-    # of values for the `restore` attribute, then the manual cluster
-    # snapshot is public and can be copied or restored by all AWS accounts.
+    # and a list of IDs for the Amazon Web Services accounts that are
+    # authorized to copy or restore the manual cluster snapshot. If `all` is
+    # included in the list of values for the `restore` attribute, then the
+    # manual cluster snapshot is public and can be copied or restored by all
+    # Amazon Web Services accounts.
     #
     # @option params [required, String] :db_cluster_snapshot_identifier
     #   The identifier for the cluster snapshot to describe the attributes
@@ -2133,13 +2375,13 @@ module Aws::DocDB
     #   the following values:
     #
     #   * `automated` - Return all cluster snapshots that Amazon DocumentDB
-    #     has automatically created for your AWS account.
+    #     has automatically created for your Amazon Web Services account.
     #
     #   * `manual` - Return all cluster snapshots that you have manually
-    #     created for your AWS account.
+    #     created for your Amazon Web Services account.
     #
     #   * `shared` - Return all manual cluster snapshots that have been shared
-    #     to your AWS account.
+    #     to your Amazon Web Services account.
     #
     #   * `public` - Return all cluster snapshots that have been marked as
     #     public.
@@ -2148,7 +2390,7 @@ module Aws::DocDB
     #   manual cluster snapshots are returned. You can include shared cluster
     #   snapshots with these results by setting the `IncludeShared` parameter
     #   to `true`. You can include public cluster snapshots with these results
-    #   by setting the `IncludePublic` parameter to `true`.
+    #   by setting the`IncludePublic` parameter to `true`.
     #
     #   The `IncludeShared` and `IncludePublic` parameters don't apply for
     #   `SnapshotType` values of `manual` or `automated`. The `IncludePublic`
@@ -2176,13 +2418,14 @@ module Aws::DocDB
     #
     # @option params [Boolean] :include_shared
     #   Set to `true` to include shared manual cluster snapshots from other
-    #   AWS accounts that this AWS account has been given permission to copy
-    #   or restore, and otherwise `false`. The default is `false`.
+    #   Amazon Web Services accounts that this Amazon Web Services account has
+    #   been given permission to copy or restore, and otherwise `false`. The
+    #   default is `false`.
     #
     # @option params [Boolean] :include_public
     #   Set to `true` to include manual cluster snapshots that are public and
-    #   can be copied or restored by any AWS account, and otherwise `false`.
-    #   The default is `false`.
+    #   can be copied or restored by any Amazon Web Services account, and
+    #   otherwise `false`. The default is `false`.
     #
     # @return [Types::DBClusterSnapshotMessage] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2329,6 +2572,9 @@ module Aws::DocDB
     #   resp.db_clusters[0].master_username #=> String
     #   resp.db_clusters[0].preferred_backup_window #=> String
     #   resp.db_clusters[0].preferred_maintenance_window #=> String
+    #   resp.db_clusters[0].replication_source_identifier #=> String
+    #   resp.db_clusters[0].read_replica_identifiers #=> Array
+    #   resp.db_clusters[0].read_replica_identifiers[0] #=> String
     #   resp.db_clusters[0].db_cluster_members #=> Array
     #   resp.db_clusters[0].db_cluster_members[0].db_instance_identifier #=> String
     #   resp.db_clusters[0].db_cluster_members[0].is_cluster_writer #=> Boolean
@@ -2345,6 +2591,7 @@ module Aws::DocDB
     #   resp.db_clusters[0].associated_roles #=> Array
     #   resp.db_clusters[0].associated_roles[0].role_arn #=> String
     #   resp.db_clusters[0].associated_roles[0].status #=> String
+    #   resp.db_clusters[0].clone_group_id #=> String
     #   resp.db_clusters[0].cluster_create_time #=> Time
     #   resp.db_clusters[0].enabled_cloudwatch_logs_exports #=> Array
     #   resp.db_clusters[0].enabled_cloudwatch_logs_exports[0] #=> String
@@ -2587,6 +2834,7 @@ module Aws::DocDB
     #   resp.db_instances[0].kms_key_id #=> String
     #   resp.db_instances[0].dbi_resource_id #=> String
     #   resp.db_instances[0].ca_certificate_identifier #=> String
+    #   resp.db_instances[0].copy_tags_to_snapshot #=> Boolean
     #   resp.db_instances[0].promotion_tier #=> Integer
     #   resp.db_instances[0].db_instance_arn #=> String
     #   resp.db_instances[0].enabled_cloudwatch_logs_exports #=> Array
@@ -2750,8 +2998,7 @@ module Aws::DocDB
     # @option params [String] :source_type
     #   The type of source that is generating the events.
     #
-    #   Valid values: `db-instance`, `db-parameter-group`,
-    #   `db-security-group`, `db-snapshot`
+    #   Valid values: `db-instance`, `db-parameter-group`, `db-security-group`
     #
     # @option params [Array<Types::Filter>] :filters
     #   This parameter is not currently supported.
@@ -2984,6 +3231,86 @@ module Aws::DocDB
       req.send_request(options)
     end
 
+    # Returns information about Amazon DocumentDB global clusters. This API
+    # supports pagination.
+    #
+    # <note markdown="1"> This action only applies to Amazon DocumentDB clusters.
+    #
+    #  </note>
+    #
+    # @option params [String] :global_cluster_identifier
+    #   The user-supplied cluster identifier. If this parameter is specified,
+    #   information from only the specific cluster is returned. This parameter
+    #   isn't case-sensitive.
+    #
+    # @option params [Array<Types::Filter>] :filters
+    #   A filter that specifies one or more global DB clusters to describe.
+    #
+    #   Supported filters: `db-cluster-id` accepts cluster identifiers and
+    #   cluster Amazon Resource Names (ARNs). The results list will only
+    #   include information about the clusters identified by these ARNs.
+    #
+    # @option params [Integer] :max_records
+    #   The maximum number of records to include in the response. If more
+    #   records exist than the specified `MaxRecords` value, a pagination
+    #   token called a marker is included in the response so that you can
+    #   retrieve the remaining results.
+    #
+    # @option params [String] :marker
+    #   An optional pagination token provided by a previous
+    #   `DescribeGlobalClusters` request. If this parameter is specified, the
+    #   response includes only records beyond the marker, up to the value
+    #   specified by `MaxRecords`.
+    #
+    # @return [Types::GlobalClustersMessage] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GlobalClustersMessage#marker #marker} => String
+    #   * {Types::GlobalClustersMessage#global_clusters #global_clusters} => Array&lt;Types::GlobalCluster&gt;
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_global_clusters({
+    #     global_cluster_identifier: "GlobalClusterIdentifier",
+    #     filters: [
+    #       {
+    #         name: "String", # required
+    #         values: ["String"], # required
+    #       },
+    #     ],
+    #     max_records: 1,
+    #     marker: "String",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.marker #=> String
+    #   resp.global_clusters #=> Array
+    #   resp.global_clusters[0].global_cluster_identifier #=> String
+    #   resp.global_clusters[0].global_cluster_resource_id #=> String
+    #   resp.global_clusters[0].global_cluster_arn #=> String
+    #   resp.global_clusters[0].status #=> String
+    #   resp.global_clusters[0].engine #=> String
+    #   resp.global_clusters[0].engine_version #=> String
+    #   resp.global_clusters[0].database_name #=> String
+    #   resp.global_clusters[0].storage_encrypted #=> Boolean
+    #   resp.global_clusters[0].deletion_protection #=> Boolean
+    #   resp.global_clusters[0].global_cluster_members #=> Array
+    #   resp.global_clusters[0].global_cluster_members[0].db_cluster_arn #=> String
+    #   resp.global_clusters[0].global_cluster_members[0].readers #=> Array
+    #   resp.global_clusters[0].global_cluster_members[0].readers[0] #=> String
+    #   resp.global_clusters[0].global_cluster_members[0].is_writer #=> Boolean
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/DescribeGlobalClusters AWS API Documentation
+    #
+    # @overload describe_global_clusters(params = {})
+    # @param [Hash] params ({})
+    def describe_global_clusters(params = {}, options = {})
+      req = build_request(:describe_global_clusters, params)
+      req.send_request(options)
+    end
+
     # Returns a list of orderable instance options for the specified engine.
     #
     # @option params [required, String] :engine
@@ -3206,6 +3533,9 @@ module Aws::DocDB
     #   resp.db_cluster.master_username #=> String
     #   resp.db_cluster.preferred_backup_window #=> String
     #   resp.db_cluster.preferred_maintenance_window #=> String
+    #   resp.db_cluster.replication_source_identifier #=> String
+    #   resp.db_cluster.read_replica_identifiers #=> Array
+    #   resp.db_cluster.read_replica_identifiers[0] #=> String
     #   resp.db_cluster.db_cluster_members #=> Array
     #   resp.db_cluster.db_cluster_members[0].db_instance_identifier #=> String
     #   resp.db_cluster.db_cluster_members[0].is_cluster_writer #=> Boolean
@@ -3222,6 +3552,7 @@ module Aws::DocDB
     #   resp.db_cluster.associated_roles #=> Array
     #   resp.db_cluster.associated_roles[0].role_arn #=> String
     #   resp.db_cluster.associated_roles[0].status #=> String
+    #   resp.db_cluster.clone_group_id #=> String
     #   resp.db_cluster.cluster_create_time #=> Time
     #   resp.db_cluster.enabled_cloudwatch_logs_exports #=> Array
     #   resp.db_cluster.enabled_cloudwatch_logs_exports[0] #=> String
@@ -3360,7 +3691,7 @@ module Aws::DocDB
     #   parameter.
     #
     #   The default is a 30-minute window selected at random from an 8-hour
-    #   block of time for each AWS Region.
+    #   block of time for each Amazon Web Services Region.
     #
     #   Constraints:
     #
@@ -3379,8 +3710,8 @@ module Aws::DocDB
     #   Format: `ddd:hh24:mi-ddd:hh24:mi`
     #
     #   The default is a 30-minute window selected at random from an 8-hour
-    #   block of time for each AWS Region, occurring on a random day of the
-    #   week.
+    #   block of time for each Amazon Web Services Region, occurring on a
+    #   random day of the week.
     #
     #   Valid days: Mon, Tue, Wed, Thu, Fri, Sat, Sun
     #
@@ -3394,9 +3725,8 @@ module Aws::DocDB
     #
     # @option params [String] :engine_version
     #   The version number of the database engine to which you want to
-    #   upgrade. Changing this parameter results in an outage. The change is
-    #   applied during the next maintenance window unless the
-    #   `ApplyImmediately` parameter is set to `true`.
+    #   upgrade. Modifying engine version is not supported on Amazon
+    #   DocumentDB.
     #
     # @option params [Boolean] :deletion_protection
     #   Specifies whether this cluster can be deleted. If `DeletionProtection`
@@ -3450,6 +3780,9 @@ module Aws::DocDB
     #   resp.db_cluster.master_username #=> String
     #   resp.db_cluster.preferred_backup_window #=> String
     #   resp.db_cluster.preferred_maintenance_window #=> String
+    #   resp.db_cluster.replication_source_identifier #=> String
+    #   resp.db_cluster.read_replica_identifiers #=> Array
+    #   resp.db_cluster.read_replica_identifiers[0] #=> String
     #   resp.db_cluster.db_cluster_members #=> Array
     #   resp.db_cluster.db_cluster_members[0].db_instance_identifier #=> String
     #   resp.db_cluster.db_cluster_members[0].is_cluster_writer #=> Boolean
@@ -3466,6 +3799,7 @@ module Aws::DocDB
     #   resp.db_cluster.associated_roles #=> Array
     #   resp.db_cluster.associated_roles[0].role_arn #=> String
     #   resp.db_cluster.associated_roles[0].status #=> String
+    #   resp.db_cluster.clone_group_id #=> String
     #   resp.db_cluster.cluster_create_time #=> Time
     #   resp.db_cluster.enabled_cloudwatch_logs_exports #=> Array
     #   resp.db_cluster.enabled_cloudwatch_logs_exports[0] #=> String
@@ -3544,19 +3878,21 @@ module Aws::DocDB
     end
 
     # Adds an attribute and values to, or removes an attribute and values
-    # from, a manual DB cluster snapshot.
+    # from, a manual cluster snapshot.
     #
-    # To share a manual cluster snapshot with other AWS accounts, specify
-    # `restore` as the `AttributeName`, and use the `ValuesToAdd` parameter
-    # to add a list of IDs of the AWS accounts that are authorized to
-    # restore the manual cluster snapshot. Use the value `all` to make the
-    # manual cluster snapshot public, which means that it can be copied or
-    # restored by all AWS accounts. Do not add the `all` value for any
-    # manual DB cluster snapshots that contain private information that you
-    # don't want available to all AWS accounts. If a manual cluster
-    # snapshot is encrypted, it can be shared, but only by specifying a list
-    # of authorized AWS account IDs for the `ValuesToAdd` parameter. You
-    # can't use `all` as a value for that parameter in this case.
+    # To share a manual cluster snapshot with other Amazon Web Services
+    # accounts, specify `restore` as the `AttributeName`, and use the
+    # `ValuesToAdd` parameter to add a list of IDs of the Amazon Web
+    # Services accounts that are authorized to restore the manual cluster
+    # snapshot. Use the value `all` to make the manual cluster snapshot
+    # public, which means that it can be copied or restored by all Amazon
+    # Web Services accounts. Do not add the `all` value for any manual
+    # cluster snapshots that contain private information that you don't
+    # want available to all Amazon Web Services accounts. If a manual
+    # cluster snapshot is encrypted, it can be shared, but only by
+    # specifying a list of authorized Amazon Web Services account IDs for
+    # the `ValuesToAdd` parameter. You can't use `all` as a value for that
+    # parameter in this case.
     #
     # @option params [required, String] :db_cluster_snapshot_identifier
     #   The identifier for the cluster snapshot to modify the attributes for.
@@ -3564,31 +3900,32 @@ module Aws::DocDB
     # @option params [required, String] :attribute_name
     #   The name of the cluster snapshot attribute to modify.
     #
-    #   To manage authorization for other AWS accounts to copy or restore a
-    #   manual cluster snapshot, set this value to `restore`.
+    #   To manage authorization for other Amazon Web Services accounts to copy
+    #   or restore a manual cluster snapshot, set this value to `restore`.
     #
     # @option params [Array<String>] :values_to_add
     #   A list of cluster snapshot attributes to add to the attribute
     #   specified by `AttributeName`.
     #
-    #   To authorize other AWS accounts to copy or restore a manual cluster
-    #   snapshot, set this list to include one or more AWS account IDs. To
-    #   make the manual cluster snapshot restorable by any AWS account, set it
-    #   to `all`. Do not add the `all` value for any manual cluster snapshots
-    #   that contain private information that you don't want to be available
-    #   to all AWS accounts.
+    #   To authorize other Amazon Web Services accounts to copy or restore a
+    #   manual cluster snapshot, set this list to include one or more Amazon
+    #   Web Services account IDs. To make the manual cluster snapshot
+    #   restorable by any Amazon Web Services account, set it to `all`. Do not
+    #   add the `all` value for any manual cluster snapshots that contain
+    #   private information that you don't want to be available to all Amazon
+    #   Web Services accounts.
     #
     # @option params [Array<String>] :values_to_remove
     #   A list of cluster snapshot attributes to remove from the attribute
     #   specified by `AttributeName`.
     #
-    #   To remove authorization for other AWS accounts to copy or restore a
-    #   manual cluster snapshot, set this list to include one or more AWS
-    #   account identifiers. To remove authorization for any AWS account to
-    #   copy or restore the cluster snapshot, set it to `all` . If you specify
-    #   `all`, an AWS account whose account ID is explicitly added to the
-    #   `restore` attribute can still copy or restore a manual cluster
-    #   snapshot.
+    #   To remove authorization for other Amazon Web Services accounts to copy
+    #   or restore a manual cluster snapshot, set this list to include one or
+    #   more Amazon Web Services account identifiers. To remove authorization
+    #   for any Amazon Web Services account to copy or restore the cluster
+    #   snapshot, set it to `all` . If you specify `all`, an Amazon Web
+    #   Services account whose account ID is explicitly added to the `restore`
+    #   attribute can still copy or restore a manual cluster snapshot.
     #
     # @return [Types::ModifyDBClusterSnapshotAttributeResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3635,8 +3972,8 @@ module Aws::DocDB
     #
     # @option params [String] :db_instance_class
     #   The new compute and memory capacity of the instance; for example,
-    #   `db.r5.large`. Not all instance classes are available in all AWS
-    #   Regions.
+    #   `db.r5.large`. Not all instance classes are available in all Amazon
+    #   Web Services Regions.
     #
     #   If you modify the instance class, an outage occurs during the change.
     #   The change is applied during the next maintenance window, unless
@@ -3676,13 +4013,8 @@ module Aws::DocDB
     #   Constraints: Must be at least 30 minutes.
     #
     # @option params [Boolean] :auto_minor_version_upgrade
-    #   Indicates that minor version upgrades are applied automatically to the
-    #   instance during the maintenance window. Changing this parameter
-    #   doesn't result in an outage except in the following case, and the
-    #   change is asynchronously applied as soon as possible. An outage
-    #   results if this parameter is set to `true` during the maintenance
-    #   window, and a newer minor version is available, and Amazon DocumentDB
-    #   has enabled automatic patching for that engine version.
+    #   This parameter does not apply to Amazon DocumentDB. Amazon DocumentDB
+    #   does not perform minor version upgrades regardless of the value set.
     #
     # @option params [String] :new_db_instance_identifier
     #   The new instance identifier for the instance when renaming an
@@ -3705,6 +4037,10 @@ module Aws::DocDB
     #   Indicates the certificate that needs to be associated with the
     #   instance.
     #
+    # @option params [Boolean] :copy_tags_to_snapshot
+    #   A value that indicates whether to copy all tags from the DB instance
+    #   to snapshots of the DB instance. By default, tags are not copied.
+    #
     # @option params [Integer] :promotion_tier
     #   A value that specifies the order in which an Amazon DocumentDB replica
     #   is promoted to the primary instance after a failure of the existing
@@ -3713,6 +4049,27 @@ module Aws::DocDB
     #   Default: 1
     #
     #   Valid values: 0-15
+    #
+    # @option params [Boolean] :enable_performance_insights
+    #   A value that indicates whether to enable Performance Insights for the
+    #   DB Instance. For more information, see [Using Amazon Performance
+    #   Insights][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/documentdb/latest/developerguide/performance-insights.html
+    #
+    # @option params [String] :performance_insights_kms_key_id
+    #   The KMS key identifier for encryption of Performance Insights data.
+    #
+    #   The KMS key identifier is the key ARN, key ID, alias ARN, or alias
+    #   name for the KMS key.
+    #
+    #   If you do not specify a value for PerformanceInsightsKMSKeyId, then
+    #   Amazon DocumentDB uses your default KMS key. There is a default KMS
+    #   key for your Amazon Web Services account. Your Amazon Web Services
+    #   account has a different default KMS key for each Amazon Web Services
+    #   region.
     #
     # @return [Types::ModifyDBInstanceResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3728,7 +4085,10 @@ module Aws::DocDB
     #     auto_minor_version_upgrade: false,
     #     new_db_instance_identifier: "String",
     #     ca_certificate_identifier: "String",
+    #     copy_tags_to_snapshot: false,
     #     promotion_tier: 1,
+    #     enable_performance_insights: false,
+    #     performance_insights_kms_key_id: "String",
     #   })
     #
     # @example Response structure
@@ -3788,6 +4148,7 @@ module Aws::DocDB
     #   resp.db_instance.kms_key_id #=> String
     #   resp.db_instance.dbi_resource_id #=> String
     #   resp.db_instance.ca_certificate_identifier #=> String
+    #   resp.db_instance.copy_tags_to_snapshot #=> Boolean
     #   resp.db_instance.promotion_tier #=> Integer
     #   resp.db_instance.db_instance_arn #=> String
     #   resp.db_instance.enabled_cloudwatch_logs_exports #=> Array
@@ -3803,7 +4164,8 @@ module Aws::DocDB
     end
 
     # Modifies an existing subnet group. subnet groups must contain at least
-    # one subnet in at least two Availability Zones in the AWS Region.
+    # one subnet in at least two Availability Zones in the Amazon Web
+    # Services Region.
     #
     # @option params [required, String] :db_subnet_group_name
     #   The name for the subnet group. This value is stored as a lowercase
@@ -3870,8 +4232,7 @@ module Aws::DocDB
     #   parameter to `db-instance`. If this value is not specified, all events
     #   are returned.
     #
-    #   Valid values: `db-instance`, `db-parameter-group`,
-    #   `db-security-group`, `db-snapshot`
+    #   Valid values: `db-instance`, `db-parameter-group`, `db-security-group`
     #
     # @option params [Array<String>] :event_categories
     #   A list of event categories for a `SourceType` that you want to
@@ -3915,6 +4276,79 @@ module Aws::DocDB
     # @param [Hash] params ({})
     def modify_event_subscription(params = {}, options = {})
       req = build_request(:modify_event_subscription, params)
+      req.send_request(options)
+    end
+
+    # Modify a setting for an Amazon DocumentDB global cluster. You can
+    # change one or more configuration parameters (for example: deletion
+    # protection), or the global cluster identifier by specifying these
+    # parameters and the new values in the request.
+    #
+    # <note markdown="1"> This action only applies to Amazon DocumentDB clusters.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :global_cluster_identifier
+    #   The identifier for the global cluster being modified. This parameter
+    #   isn't case-sensitive.
+    #
+    #   Constraints:
+    #
+    #   * Must match the identifier of an existing global cluster.
+    #
+    #   ^
+    #
+    # @option params [String] :new_global_cluster_identifier
+    #   The new identifier for a global cluster when you modify a global
+    #   cluster. This value is stored as a lowercase string.
+    #
+    #   * Must contain from 1 to 63 letters, numbers, or hyphens
+    #
+    #     The first character must be a letter
+    #
+    #     Can't end with a hyphen or contain two consecutive hyphens
+    #
+    #   Example: `my-cluster2`
+    #
+    # @option params [Boolean] :deletion_protection
+    #   Indicates if the global cluster has deletion protection enabled. The
+    #   global cluster can't be deleted when deletion protection is enabled.
+    #
+    # @return [Types::ModifyGlobalClusterResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ModifyGlobalClusterResult#global_cluster #global_cluster} => Types::GlobalCluster
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.modify_global_cluster({
+    #     global_cluster_identifier: "GlobalClusterIdentifier", # required
+    #     new_global_cluster_identifier: "GlobalClusterIdentifier",
+    #     deletion_protection: false,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.global_cluster.global_cluster_identifier #=> String
+    #   resp.global_cluster.global_cluster_resource_id #=> String
+    #   resp.global_cluster.global_cluster_arn #=> String
+    #   resp.global_cluster.status #=> String
+    #   resp.global_cluster.engine #=> String
+    #   resp.global_cluster.engine_version #=> String
+    #   resp.global_cluster.database_name #=> String
+    #   resp.global_cluster.storage_encrypted #=> Boolean
+    #   resp.global_cluster.deletion_protection #=> Boolean
+    #   resp.global_cluster.global_cluster_members #=> Array
+    #   resp.global_cluster.global_cluster_members[0].db_cluster_arn #=> String
+    #   resp.global_cluster.global_cluster_members[0].readers #=> Array
+    #   resp.global_cluster.global_cluster_members[0].readers[0] #=> String
+    #   resp.global_cluster.global_cluster_members[0].is_writer #=> Boolean
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/ModifyGlobalCluster AWS API Documentation
+    #
+    # @overload modify_global_cluster(params = {})
+    # @param [Hash] params ({})
+    def modify_global_cluster(params = {}, options = {})
+      req = build_request(:modify_global_cluster, params)
       req.send_request(options)
     end
 
@@ -4011,6 +4445,7 @@ module Aws::DocDB
     #   resp.db_instance.kms_key_id #=> String
     #   resp.db_instance.dbi_resource_id #=> String
     #   resp.db_instance.ca_certificate_identifier #=> String
+    #   resp.db_instance.copy_tags_to_snapshot #=> Boolean
     #   resp.db_instance.promotion_tier #=> Integer
     #   resp.db_instance.db_instance_arn #=> String
     #   resp.db_instance.enabled_cloudwatch_logs_exports #=> Array
@@ -4022,6 +4457,60 @@ module Aws::DocDB
     # @param [Hash] params ({})
     def reboot_db_instance(params = {}, options = {})
       req = build_request(:reboot_db_instance, params)
+      req.send_request(options)
+    end
+
+    # Detaches an Amazon DocumentDB secondary cluster from a global cluster.
+    # The cluster becomes a standalone cluster with read-write capability
+    # instead of being read-only and receiving data from a primary in a
+    # different region.
+    #
+    # <note markdown="1"> This action only applies to Amazon DocumentDB clusters.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :global_cluster_identifier
+    #   The cluster identifier to detach from the Amazon DocumentDB global
+    #   cluster.
+    #
+    # @option params [required, String] :db_cluster_identifier
+    #   The Amazon Resource Name (ARN) identifying the cluster that was
+    #   detached from the Amazon DocumentDB global cluster.
+    #
+    # @return [Types::RemoveFromGlobalClusterResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::RemoveFromGlobalClusterResult#global_cluster #global_cluster} => Types::GlobalCluster
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.remove_from_global_cluster({
+    #     global_cluster_identifier: "GlobalClusterIdentifier", # required
+    #     db_cluster_identifier: "String", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.global_cluster.global_cluster_identifier #=> String
+    #   resp.global_cluster.global_cluster_resource_id #=> String
+    #   resp.global_cluster.global_cluster_arn #=> String
+    #   resp.global_cluster.status #=> String
+    #   resp.global_cluster.engine #=> String
+    #   resp.global_cluster.engine_version #=> String
+    #   resp.global_cluster.database_name #=> String
+    #   resp.global_cluster.storage_encrypted #=> Boolean
+    #   resp.global_cluster.deletion_protection #=> Boolean
+    #   resp.global_cluster.global_cluster_members #=> Array
+    #   resp.global_cluster.global_cluster_members[0].db_cluster_arn #=> String
+    #   resp.global_cluster.global_cluster_members[0].readers #=> Array
+    #   resp.global_cluster.global_cluster_members[0].readers[0] #=> String
+    #   resp.global_cluster.global_cluster_members[0].is_writer #=> Boolean
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/RemoveFromGlobalCluster AWS API Documentation
+    #
+    # @overload remove_from_global_cluster(params = {})
+    # @param [Hash] params ({})
+    def remove_from_global_cluster(params = {}, options = {})
+      req = build_request(:remove_from_global_cluster, params)
       req.send_request(options)
     end
 
@@ -4235,21 +4724,21 @@ module Aws::DocDB
     #   The tags to be assigned to the restored cluster.
     #
     # @option params [String] :kms_key_id
-    #   The AWS KMS key identifier to use when restoring an encrypted cluster
-    #   from a DB snapshot or cluster snapshot.
+    #   The KMS key identifier to use when restoring an encrypted cluster from
+    #   a DB snapshot or cluster snapshot.
     #
-    #   The AWS KMS key identifier is the Amazon Resource Name (ARN) for the
-    #   AWS KMS encryption key. If you are restoring a cluster with the same
-    #   AWS account that owns the AWS KMS encryption key used to encrypt the
-    #   new cluster, then you can use the AWS KMS key alias instead of the ARN
-    #   for the AWS KMS encryption key.
+    #   The KMS key identifier is the Amazon Resource Name (ARN) for the KMS
+    #   encryption key. If you are restoring a cluster with the same Amazon
+    #   Web Services account that owns the KMS encryption key used to encrypt
+    #   the new cluster, then you can use the KMS key alias instead of the ARN
+    #   for the KMS encryption key.
     #
     #   If you do not specify a value for the `KmsKeyId` parameter, then the
     #   following occurs:
     #
     #   * If the snapshot or cluster snapshot in `SnapshotIdentifier` is
-    #     encrypted, then the restored cluster is encrypted using the AWS KMS
-    #     key that was used to encrypt the snapshot or the cluster snapshot.
+    #     encrypted, then the restored cluster is encrypted using the KMS key
+    #     that was used to encrypt the snapshot or the cluster snapshot.
     #
     #   * If the snapshot or the cluster snapshot in `SnapshotIdentifier` is
     #     not encrypted, then the restored DB cluster is not encrypted.
@@ -4263,6 +4752,18 @@ module Aws::DocDB
     #   is enabled, the cluster cannot be deleted unless it is modified and
     #   `DeletionProtection` is disabled. `DeletionProtection` protects
     #   clusters from being accidentally deleted.
+    #
+    # @option params [String] :db_cluster_parameter_group_name
+    #   The name of the DB cluster parameter group to associate with this DB
+    #   cluster.
+    #
+    #   *Type:* String.       *Required:* No.
+    #
+    #   If this argument is omitted, the default DB cluster parameter group is
+    #   used. If supplied, must match the name of an existing default DB
+    #   cluster parameter group. The string must consist of from 1 to 255
+    #   letters, numbers or hyphens. Its first character must be a letter, and
+    #   it cannot end with a hyphen or contain two consecutive hyphens.
     #
     # @return [Types::RestoreDBClusterFromSnapshotResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -4288,6 +4789,7 @@ module Aws::DocDB
     #     kms_key_id: "String",
     #     enable_cloudwatch_logs_exports: ["String"],
     #     deletion_protection: false,
+    #     db_cluster_parameter_group_name: "String",
     #   })
     #
     # @example Response structure
@@ -4311,6 +4813,9 @@ module Aws::DocDB
     #   resp.db_cluster.master_username #=> String
     #   resp.db_cluster.preferred_backup_window #=> String
     #   resp.db_cluster.preferred_maintenance_window #=> String
+    #   resp.db_cluster.replication_source_identifier #=> String
+    #   resp.db_cluster.read_replica_identifiers #=> Array
+    #   resp.db_cluster.read_replica_identifiers[0] #=> String
     #   resp.db_cluster.db_cluster_members #=> Array
     #   resp.db_cluster.db_cluster_members[0].db_instance_identifier #=> String
     #   resp.db_cluster.db_cluster_members[0].is_cluster_writer #=> Boolean
@@ -4327,6 +4832,7 @@ module Aws::DocDB
     #   resp.db_cluster.associated_roles #=> Array
     #   resp.db_cluster.associated_roles[0].role_arn #=> String
     #   resp.db_cluster.associated_roles[0].status #=> String
+    #   resp.db_cluster.clone_group_id #=> String
     #   resp.db_cluster.cluster_create_time #=> Time
     #   resp.db_cluster.enabled_cloudwatch_logs_exports #=> Array
     #   resp.db_cluster.enabled_cloudwatch_logs_exports[0] #=> String
@@ -4358,6 +4864,22 @@ module Aws::DocDB
     #   * The first character must be a letter.
     #
     #   * Cannot end with a hyphen or contain two consecutive hyphens.
+    #
+    # @option params [String] :restore_type
+    #   The type of restore to be performed. You can specify one of the
+    #   following values:
+    #
+    #   * `full-copy` - The new DB cluster is restored as a full copy of the
+    #     source DB cluster.
+    #
+    #   * `copy-on-write` - The new DB cluster is restored as a clone of the
+    #     source DB cluster.
+    #
+    #   Constraints: You can't specify `copy-on-write` if the engine version
+    #   of the source DB cluster is earlier than 1.11.
+    #
+    #   If you don't specify a `RestoreType` value, then the new DB cluster
+    #   is restored as a full copy of the source DB cluster.
     #
     # @option params [required, String] :source_db_cluster_identifier
     #   The identifier of the source cluster from which to restore.
@@ -4419,25 +4941,25 @@ module Aws::DocDB
     #   The tags to be assigned to the restored cluster.
     #
     # @option params [String] :kms_key_id
-    #   The AWS KMS key identifier to use when restoring an encrypted cluster
-    #   from an encrypted cluster.
+    #   The KMS key identifier to use when restoring an encrypted cluster from
+    #   an encrypted cluster.
     #
-    #   The AWS KMS key identifier is the Amazon Resource Name (ARN) for the
-    #   AWS KMS encryption key. If you are restoring a cluster with the same
-    #   AWS account that owns the AWS KMS encryption key used to encrypt the
-    #   new cluster, then you can use the AWS KMS key alias instead of the ARN
-    #   for the AWS KMS encryption key.
+    #   The KMS key identifier is the Amazon Resource Name (ARN) for the KMS
+    #   encryption key. If you are restoring a cluster with the same Amazon
+    #   Web Services account that owns the KMS encryption key used to encrypt
+    #   the new cluster, then you can use the KMS key alias instead of the ARN
+    #   for the KMS encryption key.
     #
     #   You can restore to a new cluster and encrypt the new cluster with an
-    #   AWS KMS key that is different from the AWS KMS key used to encrypt the
-    #   source cluster. The new DB cluster is encrypted with the AWS KMS key
-    #   identified by the `KmsKeyId` parameter.
+    #   KMS key that is different from the KMS key used to encrypt the source
+    #   cluster. The new DB cluster is encrypted with the KMS key identified
+    #   by the `KmsKeyId` parameter.
     #
     #   If you do not specify a value for the `KmsKeyId` parameter, then the
     #   following occurs:
     #
     #   * If the cluster is encrypted, then the restored cluster is encrypted
-    #     using the AWS KMS key that was used to encrypt the source cluster.
+    #     using the KMS key that was used to encrypt the source cluster.
     #
     #   * If the cluster is not encrypted, then the restored cluster is not
     #     encrypted.
@@ -4463,6 +4985,7 @@ module Aws::DocDB
     #
     #   resp = client.restore_db_cluster_to_point_in_time({
     #     db_cluster_identifier: "String", # required
+    #     restore_type: "String",
     #     source_db_cluster_identifier: "String", # required
     #     restore_to_time: Time.now,
     #     use_latest_restorable_time: false,
@@ -4501,6 +5024,9 @@ module Aws::DocDB
     #   resp.db_cluster.master_username #=> String
     #   resp.db_cluster.preferred_backup_window #=> String
     #   resp.db_cluster.preferred_maintenance_window #=> String
+    #   resp.db_cluster.replication_source_identifier #=> String
+    #   resp.db_cluster.read_replica_identifiers #=> Array
+    #   resp.db_cluster.read_replica_identifiers[0] #=> String
     #   resp.db_cluster.db_cluster_members #=> Array
     #   resp.db_cluster.db_cluster_members[0].db_instance_identifier #=> String
     #   resp.db_cluster.db_cluster_members[0].is_cluster_writer #=> Boolean
@@ -4517,6 +5043,7 @@ module Aws::DocDB
     #   resp.db_cluster.associated_roles #=> Array
     #   resp.db_cluster.associated_roles[0].role_arn #=> String
     #   resp.db_cluster.associated_roles[0].status #=> String
+    #   resp.db_cluster.clone_group_id #=> String
     #   resp.db_cluster.cluster_create_time #=> Time
     #   resp.db_cluster.enabled_cloudwatch_logs_exports #=> Array
     #   resp.db_cluster.enabled_cloudwatch_logs_exports[0] #=> String
@@ -4574,6 +5101,9 @@ module Aws::DocDB
     #   resp.db_cluster.master_username #=> String
     #   resp.db_cluster.preferred_backup_window #=> String
     #   resp.db_cluster.preferred_maintenance_window #=> String
+    #   resp.db_cluster.replication_source_identifier #=> String
+    #   resp.db_cluster.read_replica_identifiers #=> Array
+    #   resp.db_cluster.read_replica_identifiers[0] #=> String
     #   resp.db_cluster.db_cluster_members #=> Array
     #   resp.db_cluster.db_cluster_members[0].db_instance_identifier #=> String
     #   resp.db_cluster.db_cluster_members[0].is_cluster_writer #=> Boolean
@@ -4590,6 +5120,7 @@ module Aws::DocDB
     #   resp.db_cluster.associated_roles #=> Array
     #   resp.db_cluster.associated_roles[0].role_arn #=> String
     #   resp.db_cluster.associated_roles[0].status #=> String
+    #   resp.db_cluster.clone_group_id #=> String
     #   resp.db_cluster.cluster_create_time #=> Time
     #   resp.db_cluster.enabled_cloudwatch_logs_exports #=> Array
     #   resp.db_cluster.enabled_cloudwatch_logs_exports[0] #=> String
@@ -4647,6 +5178,9 @@ module Aws::DocDB
     #   resp.db_cluster.master_username #=> String
     #   resp.db_cluster.preferred_backup_window #=> String
     #   resp.db_cluster.preferred_maintenance_window #=> String
+    #   resp.db_cluster.replication_source_identifier #=> String
+    #   resp.db_cluster.read_replica_identifiers #=> Array
+    #   resp.db_cluster.read_replica_identifiers[0] #=> String
     #   resp.db_cluster.db_cluster_members #=> Array
     #   resp.db_cluster.db_cluster_members[0].db_instance_identifier #=> String
     #   resp.db_cluster.db_cluster_members[0].is_cluster_writer #=> Boolean
@@ -4663,6 +5197,7 @@ module Aws::DocDB
     #   resp.db_cluster.associated_roles #=> Array
     #   resp.db_cluster.associated_roles[0].role_arn #=> String
     #   resp.db_cluster.associated_roles[0].status #=> String
+    #   resp.db_cluster.clone_group_id #=> String
     #   resp.db_cluster.cluster_create_time #=> Time
     #   resp.db_cluster.enabled_cloudwatch_logs_exports #=> Array
     #   resp.db_cluster.enabled_cloudwatch_logs_exports[0] #=> String
@@ -4690,7 +5225,7 @@ module Aws::DocDB
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-docdb'
-      context[:gem_version] = '1.30.0'
+      context[:gem_version] = '1.51.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

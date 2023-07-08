@@ -83,7 +83,8 @@ module Aws::EC2
       data[:outpost_arn]
     end
 
-    # The AWS account ID of the owner of the network interface.
+    # The Amazon Web Services account ID of the owner of the network
+    # interface.
     # @return [String]
     def owner_id
       data[:owner_id]
@@ -107,14 +108,27 @@ module Aws::EC2
       data[:private_ip_addresses]
     end
 
-    # The alias or AWS account ID of the principal or service that created
-    # the network interface.
+    # The IPv4 prefixes that are assigned to the network interface.
+    # @return [Array<Types::Ipv4PrefixSpecification>]
+    def ipv_4_prefixes
+      data[:ipv_4_prefixes]
+    end
+
+    # The IPv6 prefixes that are assigned to the network interface.
+    # @return [Array<Types::Ipv6PrefixSpecification>]
+    def ipv_6_prefixes
+      data[:ipv_6_prefixes]
+    end
+
+    # The alias or Amazon Web Services account ID of the principal or
+    # service that created the network interface.
     # @return [String]
     def requester_id
       data[:requester_id]
     end
 
-    # Indicates whether the network interface is being managed by AWS.
+    # Indicates whether the network interface is being managed by Amazon Web
+    # Services.
     # @return [Boolean]
     def requester_managed
       data[:requester_managed]
@@ -150,6 +164,30 @@ module Aws::EC2
       data[:vpc_id]
     end
 
+    # Indicates whether a network interface with an IPv6 address is
+    # unreachable from the public internet. If the value is `true`, inbound
+    # traffic from the internet is dropped and you cannot assign an elastic
+    # IP address to the network interface. The network interface is
+    # reachable from peered VPCs and resources connected through a transit
+    # gateway, including on-premises networks.
+    # @return [Boolean]
+    def deny_all_igw_traffic
+      data[:deny_all_igw_traffic]
+    end
+
+    # Indicates whether this is an IPv6 only network interface.
+    # @return [Boolean]
+    def ipv_6_native
+      data[:ipv_6_native]
+    end
+
+    # The IPv6 globally unique address associated with the network
+    # interface.
+    # @return [String]
+    def ipv_6_address
+      data[:ipv_6_address]
+    end
+
     # @!endgroup
 
     # @return [Client]
@@ -164,7 +202,9 @@ module Aws::EC2
     #
     # @return [self]
     def load
-      resp = @client.describe_network_interfaces(network_interface_ids: [@id])
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_network_interfaces(network_interface_ids: [@id])
+      end
       @data = resp.network_interfaces[0]
       self
     end
@@ -279,7 +319,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -290,6 +332,8 @@ module Aws::EC2
     #     allow_reassignment: false,
     #     private_ip_addresses: ["String"],
     #     secondary_private_ip_address_count: 1,
+    #     ipv_4_prefixes: ["String"],
+    #     ipv_4_prefix_count: 1,
     #   })
     # @param [Hash] options ({})
     # @option options [Boolean] :allow_reassignment
@@ -297,9 +341,9 @@ module Aws::EC2
     #   another network interface or instance to be reassigned to the
     #   specified network interface.
     # @option options [Array<String>] :private_ip_addresses
-    #   One or more IP addresses to be assigned as a secondary private IP
-    #   address to the network interface. You can't specify this parameter
-    #   when also specifying a number of secondary IP addresses.
+    #   The IP addresses to be assigned as a secondary private IP address to
+    #   the network interface. You can't specify this parameter when also
+    #   specifying a number of secondary IP addresses.
     #
     #   If you don't specify an IP address, Amazon EC2 automatically selects
     #   an IP address within the subnet range.
@@ -307,10 +351,19 @@ module Aws::EC2
     #   The number of secondary IP addresses to assign to the network
     #   interface. You can't specify this parameter when also specifying
     #   private IP addresses.
+    # @option options [Array<String>] :ipv_4_prefixes
+    #   One or more IPv4 prefixes assigned to the network interface. You
+    #   cannot use this option if you use the `Ipv4PrefixCount` option.
+    # @option options [Integer] :ipv_4_prefix_count
+    #   The number of IPv4 prefixes that Amazon Web Services automatically
+    #   assigns to the network interface. You cannot use this option if you
+    #   use the `Ipv4 Prefixes` option.
     # @return [Types::AssignPrivateIpAddressesResult]
     def assign_private_ip_addresses(options = {})
       options = options.merge(network_interface_id: @id)
-      resp = @client.assign_private_ip_addresses(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.assign_private_ip_addresses(options)
+      end
       resp.data
     end
 
@@ -321,6 +374,12 @@ module Aws::EC2
     #     dry_run: false,
     #     instance_id: "InstanceId", # required
     #     network_card_index: 1,
+    #     ena_srd_specification: {
+    #       ena_srd_enabled: false,
+    #       ena_srd_udp_specification: {
+    #         ena_srd_udp_enabled: false,
+    #       },
+    #     },
     #   })
     # @param [Hash] options ({})
     # @option options [required, Integer] :device_index
@@ -336,10 +395,15 @@ module Aws::EC2
     #   The index of the network card. Some instance types support multiple
     #   network cards. The primary network interface must be assigned to
     #   network card index 0. The default is network card index 0.
+    # @option options [Types::EnaSrdSpecification] :ena_srd_specification
+    #   Configures ENA Express for the network interface that this action
+    #   attaches to the instance.
     # @return [Types::AttachNetworkInterfaceResult]
     def attach(options = {})
       options = options.merge(network_interface_id: @id)
-      resp = @client.attach_network_interface(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.attach_network_interface(options)
+      end
       resp.data
     end
 
@@ -368,7 +432,9 @@ module Aws::EC2
     def create_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.create_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -405,13 +471,17 @@ module Aws::EC2
     #   if its value is an empty string.
     #
     #   If you omit this parameter, we delete all user-defined tags for the
-    #   specified resources. We do not delete AWS-generated tags (tags that
-    #   have the `aws:` prefix).
+    #   specified resources. We do not delete Amazon Web Services-generated
+    #   tags (tags that have the `aws:` prefix).
+    #
+    #   Constraints: Up to 1000 tags.
     # @return [Tag::Collection]
     def delete_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.delete_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -437,7 +507,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(network_interface_id: @id)
-      resp = @client.delete_network_interface(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_network_interface(options)
+      end
       resp.data
     end
 
@@ -458,7 +530,9 @@ module Aws::EC2
     # @return [Types::DescribeNetworkInterfaceAttributeResult]
     def describe_attribute(options = {})
       options = options.merge(network_interface_id: @id)
-      resp = @client.describe_network_interface_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_network_interface_attribute(options)
+      end
       resp.data
     end
 
@@ -499,7 +573,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def detach(options = {})
       options = options.merge(attachment_id: data[:attachment][:attachment_id])
-      resp = @client.detach_network_interface(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.detach_network_interface(options)
+      end
       resp.data
     end
 
@@ -516,11 +592,17 @@ module Aws::EC2
     #     source_dest_check: {
     #       value: false,
     #     },
+    #     ena_srd_specification: {
+    #       ena_srd_enabled: false,
+    #       ena_srd_udp_specification: {
+    #         ena_srd_udp_enabled: false,
+    #       },
+    #     },
     #   })
     # @param [Hash] options ({})
     # @option options [Types::NetworkInterfaceAttachmentChanges] :attachment
-    #   Information about the interface attachment. If modifying the 'delete
-    #   on termination' attribute, you must specify the ID of the interface
+    #   Information about the interface attachment. If modifying the `delete
+    #   on termination` attribute, you must specify the ID of the interface
     #   attachment.
     # @option options [Types::AttributeValue] :description
     #   A description for the network interface.
@@ -541,10 +623,15 @@ module Aws::EC2
     #   enabled; otherwise, they are disabled. The default value is `true`.
     #   You must disable source/destination checks if the instance runs
     #   services such as network address translation, routing, or firewalls.
+    # @option options [Types::EnaSrdSpecification] :ena_srd_specification
+    #   Updates the ENA Express configuration for the network interface that’s
+    #   attached to the instance.
     # @return [EmptyStructure]
     def modify_attribute(options = {})
       options = options.merge(network_interface_id: @id)
-      resp = @client.modify_network_interface_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.modify_network_interface_attribute(options)
+      end
       resp.data
     end
 
@@ -565,24 +652,31 @@ module Aws::EC2
     # @return [EmptyStructure]
     def reset_attribute(options = {})
       options = options.merge(network_interface_id: @id)
-      resp = @client.reset_network_interface_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.reset_network_interface_attribute(options)
+      end
       resp.data
     end
 
     # @example Request syntax with placeholder values
     #
     #   network_interface.unassign_private_ip_addresses({
-    #     private_ip_addresses: ["String"], # required
+    #     private_ip_addresses: ["String"],
+    #     ipv_4_prefixes: ["String"],
     #   })
     # @param [Hash] options ({})
-    # @option options [required, Array<String>] :private_ip_addresses
+    # @option options [Array<String>] :private_ip_addresses
     #   The secondary private IP addresses to unassign from the network
     #   interface. You can specify this option multiple times to unassign more
     #   than one IP address.
+    # @option options [Array<String>] :ipv_4_prefixes
+    #   The IPv4 prefixes to unassign from the network interface.
     # @return [EmptyStructure]
     def unassign_private_ip_addresses(options = {})
       options = options.merge(network_interface_id: @id)
-      resp = @client.unassign_private_ip_addresses(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.unassign_private_ip_addresses(options)
+      end
       resp.data
     end
 

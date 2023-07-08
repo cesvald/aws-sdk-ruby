@@ -67,14 +67,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateConnectionAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         alias_id: "ConnectionAliasId", # required
-    #         resource_id: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] alias_id
     #   The identifier of the connection alias.
     #   @return [String]
@@ -107,14 +99,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateIpGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_id: "DirectoryId", # required
-    #         group_ids: ["IpGroupId"], # required
-    #       }
-    #
     # @!attribute [rw] directory_id
     #   The identifier of the directory.
     #   @return [String]
@@ -136,19 +120,6 @@ module Aws::WorkSpaces
     #
     class AssociateIpGroupsResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass AuthorizeIpRulesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         group_id: "IpGroupId", # required
-    #         user_rules: [ # required
-    #           {
-    #             ip_rule: "IpRule",
-    #             rule_desc: "IpRuleDesc",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] group_id
     #   The identifier of the group.
     #   @return [String]
@@ -170,14 +141,28 @@ module Aws::WorkSpaces
     #
     class AuthorizeIpRulesResult < Aws::EmptyStructure; end
 
+    # Describes the properties of the certificate-based authentication you
+    # want to use with your WorkSpaces.
+    #
+    # @!attribute [rw] status
+    #   The status of the certificate-based authentication properties.
+    #   @return [String]
+    #
+    # @!attribute [rw] certificate_authority_arn
+    #   The Amazon Resource Name (ARN) of the Amazon Web Services
+    #   Certificate Manager Private CA resource.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CertificateBasedAuthProperties AWS API Documentation
+    #
+    class CertificateBasedAuthProperties < Struct.new(
+      :status,
+      :certificate_authority_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Describes an Amazon WorkSpaces client.
-    #
-    # @note When making an API call, you may pass ClientProperties
-    #   data as a hash:
-    #
-    #       {
-    #         reconnect_enabled: "ENABLED", # accepts ENABLED, DISABLED
-    #       }
     #
     # @!attribute [rw] reconnect_enabled
     #   Specifies whether users can cache their credentials on the Amazon
@@ -185,10 +170,19 @@ module Aws::WorkSpaces
     #   their WorkSpaces without re-entering their credentials.
     #   @return [String]
     #
+    # @!attribute [rw] log_upload_enabled
+    #   Specifies whether users can upload diagnostic log files of Amazon
+    #   WorkSpaces client directly to WorkSpaces to troubleshoot issues when
+    #   using the WorkSpaces client. When enabled, the log files will be
+    #   sent to WorkSpaces automatically and will be applied to all users in
+    #   the specified directory.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ClientProperties AWS API Documentation
     #
     class ClientProperties < Struct.new(
-      :reconnect_enabled)
+      :reconnect_enabled,
+      :log_upload_enabled)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -214,13 +208,6 @@ module Aws::WorkSpaces
 
     # Describes the compute type of the bundle.
     #
-    # @note When making an API call, you may pass ComputeType
-    #   data as a hash:
-    #
-    #       {
-    #         name: "VALUE", # accepts VALUE, STANDARD, PERFORMANCE, POWER, GRAPHICS, POWERPRO, GRAPHICSPRO
-    #       }
-    #
     # @!attribute [rw] name
     #   The compute type.
     #   @return [String]
@@ -229,6 +216,35 @@ module Aws::WorkSpaces
     #
     class ComputeType < Struct.new(
       :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes an Amazon Connect client add-in.
+    #
+    # @!attribute [rw] add_in_id
+    #   The client add-in identifier.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_id
+    #   The directory identifier for which the client add-in is configured.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The name of the client add in.
+    #   @return [String]
+    #
+    # @!attribute [rw] url
+    #   The endpoint URL of the client add-in.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ConnectClientAddIn AWS API Documentation
+    #
+    class ConnectClientAddIn < Struct.new(
+      :add_in_id,
+      :resource_id,
+      :name,
+      :url)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -256,7 +272,8 @@ module Aws::WorkSpaces
     #   @return [String]
     #
     # @!attribute [rw] owner_account_id
-    #   The identifier of the AWS account that owns the connection alias.
+    #   The identifier of the Amazon Web Services account that owns the
+    #   connection alias.
     #   @return [String]
     #
     # @!attribute [rw] associations
@@ -288,8 +305,8 @@ module Aws::WorkSpaces
     #   @return [String]
     #
     # @!attribute [rw] associated_account_id
-    #   The identifier of the AWS account that associated the connection
-    #   alias with a directory.
+    #   The identifier of the Amazon Web Services account that associated
+    #   the connection alias with a directory.
     #   @return [String]
     #
     # @!attribute [rw] resource_id
@@ -321,22 +338,14 @@ module Aws::WorkSpaces
     #
     # [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html
     #
-    # @note When making an API call, you may pass ConnectionAliasPermission
-    #   data as a hash:
-    #
-    #       {
-    #         shared_account_id: "AwsAccount", # required
-    #         allow_association: false, # required
-    #       }
-    #
     # @!attribute [rw] shared_account_id
-    #   The identifier of the AWS account that the connection alias is
-    #   shared with.
+    #   The identifier of the Amazon Web Services account that the
+    #   connection alias is shared with.
     #   @return [String]
     #
     # @!attribute [rw] allow_association
-    #   Indicates whether the specified AWS account is allowed to associate
-    #   the connection alias with a directory.
+    #   Indicates whether the specified Amazon Web Services account is
+    #   allowed to associate the connection alias with a directory.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ConnectionAliasPermission AWS API Documentation
@@ -348,22 +357,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CopyWorkspaceImageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "WorkspaceImageName", # required
-    #         description: "WorkspaceImageDescription",
-    #         source_image_id: "WorkspaceImageId", # required
-    #         source_region: "Region", # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the image.
     #   @return [String]
@@ -408,28 +401,49 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateConnectionAliasRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_id
+    #   The directory identifier for which to configure the client add-in.
+    #   @return [String]
     #
-    #       {
-    #         connection_string: "ConnectionString", # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
+    # @!attribute [rw] name
+    #   The name of the client add-in.
+    #   @return [String]
     #
+    # @!attribute [rw] url
+    #   The endpoint URL of the Amazon Connect client add-in.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateConnectClientAddInRequest AWS API Documentation
+    #
+    class CreateConnectClientAddInRequest < Struct.new(
+      :resource_id,
+      :name,
+      :url)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] add_in_id
+    #   The client add-in identifier.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateConnectClientAddInResult AWS API Documentation
+    #
+    class CreateConnectClientAddInResult < Struct.new(
+      :add_in_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] connection_string
     #   A connection string in the form of a fully qualified domain name
     #   (FQDN), such as `www.example.com`.
     #
     #   After you create a connection string, it is always associated to
-    #   your AWS account. You cannot recreate the same connection string
-    #   with a different account, even if you delete all instances of it
-    #   from the original account. The connection string is globally
-    #   reserved for your account.
+    #   your Amazon Web Services account. You cannot recreate the same
+    #   connection string with a different account, even if you delete all
+    #   instances of it from the original account. The connection string is
+    #   globally reserved for your account.
     #   @return [String]
     #
     # @!attribute [rw] tags
@@ -457,26 +471,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateIpGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         group_name: "IpGroupName", # required
-    #         group_desc: "IpGroupDesc",
-    #         user_rules: [
-    #           {
-    #             ip_rule: "IpRule",
-    #             rule_desc: "IpRuleDesc",
-    #           },
-    #         ],
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] group_name
     #   The name of the group.
     #   @return [String]
@@ -516,19 +510,40 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateTagsRequest
-    #   data as a hash:
+    # @!attribute [rw] primary_region
+    #   The Region of the primary WorkSpace.
+    #   @return [String]
     #
-    #       {
-    #         resource_id: "NonEmptyString", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
+    # @!attribute [rw] standby_workspaces
+    #   Information about the standby WorkSpace to be created.
+    #   @return [Array<Types::StandbyWorkspace>]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateStandbyWorkspacesRequest AWS API Documentation
+    #
+    class CreateStandbyWorkspacesRequest < Struct.new(
+      :primary_region,
+      :standby_workspaces)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] failed_standby_requests
+    #   Information about the standby WorkSpace that could not be created.
+    #   @return [Array<Types::FailedCreateStandbyWorkspacesRequest>]
+    #
+    # @!attribute [rw] pending_standby_requests
+    #   Information about the standby WorkSpace that was created.
+    #   @return [Array<Types::PendingCreateStandbyWorkspacesRequest>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateStandbyWorkspacesResult AWS API Documentation
+    #
+    class CreateStandbyWorkspacesResult < Struct.new(
+      :failed_standby_requests,
+      :pending_standby_requests)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_id
     #   The identifier of the WorkSpaces resource. The supported resource
     #   types are WorkSpaces, registered directories, images, custom
@@ -552,30 +567,52 @@ module Aws::WorkSpaces
     #
     class CreateTagsResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass CreateWorkspaceBundleRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the new updated WorkSpace image.
+    #   @return [String]
     #
-    #       {
-    #         bundle_name: "WorkspaceBundleName", # required
-    #         bundle_description: "WorkspaceBundleDescription", # required
-    #         image_id: "WorkspaceImageId", # required
-    #         compute_type: { # required
-    #           name: "VALUE", # accepts VALUE, STANDARD, PERFORMANCE, POWER, GRAPHICS, POWERPRO, GRAPHICSPRO
-    #         },
-    #         user_storage: { # required
-    #           capacity: "NonEmptyString",
-    #         },
-    #         root_storage: {
-    #           capacity: "NonEmptyString",
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
+    # @!attribute [rw] description
+    #   A description of whether updates for the WorkSpace image are
+    #   available.
+    #   @return [String]
     #
+    # @!attribute [rw] source_image_id
+    #   The identifier of the source WorkSpace image.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The tags that you want to add to the new updated WorkSpace image.
+    #
+    #   <note markdown="1"> To add tags at the same time when you're creating the updated
+    #   image, you must create an IAM policy that grants your IAM user
+    #   permissions to use `workspaces:CreateTags`.
+    #
+    #    </note>
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateUpdatedWorkspaceImageRequest AWS API Documentation
+    #
+    class CreateUpdatedWorkspaceImageRequest < Struct.new(
+      :name,
+      :description,
+      :source_image_id,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] image_id
+    #   The identifier of the new updated WorkSpace image.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateUpdatedWorkspaceImageResult AWS API Documentation
+    #
+    class CreateUpdatedWorkspaceImageResult < Struct.new(
+      :image_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] bundle_name
     #   The name of the bundle.
     #   @return [String]
@@ -603,7 +640,7 @@ module Aws::WorkSpaces
     # @!attribute [rw] tags
     #   The tags associated with the bundle.
     #
-    #   <note markdown="1"> To add tags at the same time that you're creating the bundle, you
+    #   <note markdown="1"> To add tags at the same time when you're creating the bundle, you
     #   must create an IAM policy that grants your IAM user permissions to
     #   use `workspaces:CreateTags`.
     #
@@ -636,35 +673,90 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateWorkspacesRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the new WorkSpace image.
+    #   @return [String]
     #
-    #       {
-    #         workspaces: [ # required
-    #           {
-    #             directory_id: "DirectoryId", # required
-    #             user_name: "UserName", # required
-    #             bundle_id: "BundleId", # required
-    #             volume_encryption_key: "VolumeEncryptionKey",
-    #             user_volume_encryption_enabled: false,
-    #             root_volume_encryption_enabled: false,
-    #             workspace_properties: {
-    #               running_mode: "AUTO_STOP", # accepts AUTO_STOP, ALWAYS_ON
-    #               running_mode_auto_stop_timeout_in_minutes: 1,
-    #               root_volume_size_gib: 1,
-    #               user_volume_size_gib: 1,
-    #               compute_type_name: "VALUE", # accepts VALUE, STANDARD, PERFORMANCE, POWER, GRAPHICS, POWERPRO, GRAPHICSPRO
-    #             },
-    #             tags: [
-    #               {
-    #                 key: "TagKey", # required
-    #                 value: "TagValue",
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #       }
+    # @!attribute [rw] description
+    #   The description of the new WorkSpace image.
+    #   @return [String]
     #
+    # @!attribute [rw] workspace_id
+    #   The identifier of the source WorkSpace
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The tags that you want to add to the new WorkSpace image. To add
+    #   tags when you're creating the image, you must create an IAM policy
+    #   that grants your IAM user permission to use `workspaces:CreateTags`.
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateWorkspaceImageRequest AWS API Documentation
+    #
+    class CreateWorkspaceImageRequest < Struct.new(
+      :name,
+      :description,
+      :workspace_id,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] image_id
+    #   The identifier of the new WorkSpace image.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The name of the image.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the image.
+    #   @return [String]
+    #
+    # @!attribute [rw] operating_system
+    #   The operating system that the image is running.
+    #   @return [Types::OperatingSystem]
+    #
+    # @!attribute [rw] state
+    #   The availability status of the image.
+    #   @return [String]
+    #
+    # @!attribute [rw] required_tenancy
+    #   Specifies whether the image is running on dedicated hardware. When
+    #   Bring Your Own License (BYOL) is enabled, this value is set to
+    #   DEDICATED. For more information, see [ Bring Your Own Windows
+    #   Desktop Images.][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.htm
+    #   @return [String]
+    #
+    # @!attribute [rw] created
+    #   The date when the image was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] owner_account_id
+    #   The identifier of the Amazon Web Services account that owns the
+    #   image.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateWorkspaceImageResult AWS API Documentation
+    #
+    class CreateWorkspaceImageResult < Struct.new(
+      :image_id,
+      :name,
+      :description,
+      :operating_system,
+      :state,
+      :required_tenancy,
+      :created,
+      :owner_account_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] workspaces
     #   The WorkSpaces to create. You can specify up to 25 WorkSpaces.
     #   @return [Array<Types::WorkspaceRequest>]
@@ -695,6 +787,130 @@ module Aws::WorkSpaces
     class CreateWorkspacesResult < Struct.new(
       :failed_requests,
       :pending_requests)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Returns default client branding attributes that were imported. These
+    # attributes display on the client login screen.
+    #
+    # Client branding attributes are public facing. Ensure that you don't
+    # include sensitive information.
+    #
+    # @!attribute [rw] logo_url
+    #   The logo. The only image format accepted is a binary data object
+    #   that is converted from a `.png` file.
+    #   @return [String]
+    #
+    # @!attribute [rw] support_email
+    #   The support email. The company's customer support email address.
+    #
+    #   <note markdown="1"> * In each platform type, the `SupportEmail` and `SupportLink`
+    #     parameters are mutually exclusive. You can specify one parameter
+    #     for each platform type, but not both.
+    #
+    #   * The default email is `workspaces-feedback@amazon.com`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] support_link
+    #   The support link. The link for the company's customer support page
+    #   for their WorkSpace.
+    #
+    #   <note markdown="1"> * In each platform type, the `SupportEmail` and `SupportLink`
+    #     parameters are mutually exclusive.You can specify one parameter
+    #     for each platform type, but not both.
+    #
+    #   * The default support link is `workspaces-feedback@amazon.com`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] forgot_password_link
+    #   The forgotten password link. This is the web address that users can
+    #   go to if they forget the password for their WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] login_message
+    #   The login message. Specified as a key value pair, in which the key
+    #   is a locale and the value is the localized message for that locale.
+    #   The only key supported is `en_US`. The HTML tags supported include
+    #   the following: `a, b, blockquote, br, cite, code, dd, dl, dt, div,
+    #   em, i, li, ol, p, pre, q, small, span, strike, strong, sub, sup, u,
+    #   ul`.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DefaultClientBrandingAttributes AWS API Documentation
+    #
+    class DefaultClientBrandingAttributes < Struct.new(
+      :logo_url,
+      :support_email,
+      :support_link,
+      :forgot_password_link,
+      :login_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The default client branding attributes to be imported. These
+    # attributes display on the client login screen.
+    #
+    # Client branding attributes are public facing. Ensure that you do not
+    # include sensitive information.
+    #
+    # @!attribute [rw] logo
+    #   The logo. The only image format accepted is a binary data object
+    #   that is converted from a `.png` file.
+    #   @return [String]
+    #
+    # @!attribute [rw] support_email
+    #   The support email. The company's customer support email address.
+    #
+    #   <note markdown="1"> * In each platform type, the `SupportEmail` and `SupportLink`
+    #     parameters are mutually exclusive. You can specify one parameter
+    #     for each platform type, but not both.
+    #
+    #   * The default email is `workspaces-feedback@amazon.com`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] support_link
+    #   The support link. The link for the company's customer support page
+    #   for their WorkSpace.
+    #
+    #   <note markdown="1"> * In each platform type, the `SupportEmail` and `SupportLink`
+    #     parameters are mutually exclusive. You can specify one parameter
+    #     for each platform type, but not both.
+    #
+    #   * The default support link is `workspaces-feedback@amazon.com`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] forgot_password_link
+    #   The forgotten password link. This is the web address that users can
+    #   go to if they forget the password for their WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] login_message
+    #   The login message. Specified as a key value pair, in which the key
+    #   is a locale and the value is the localized message for that locale.
+    #   The only key supported is `en_US`. The HTML tags supported include
+    #   the following: `a, b, blockquote, br, cite, code, dd, dl, dt, div,
+    #   em, i, li, ol, p, pre, q, small, span, strike, strong, sub, sup, u,
+    #   ul`.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DefaultImportClientBrandingAttributes AWS API Documentation
+    #
+    class DefaultImportClientBrandingAttributes < Struct.new(
+      :logo,
+      :support_email,
+      :support_link,
+      :forgot_password_link,
+      :login_message)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -771,13 +987,49 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteConnectionAliasRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_id
+    #   The directory identifier of the WorkSpace for which you want to
+    #   delete client branding.
+    #   @return [String]
     #
-    #       {
-    #         alias_id: "ConnectionAliasId", # required
-    #       }
+    # @!attribute [rw] platforms
+    #   The device type for which you want to delete client branding.
+    #   @return [Array<String>]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteClientBrandingRequest AWS API Documentation
+    #
+    class DeleteClientBrandingRequest < Struct.new(
+      :resource_id,
+      :platforms)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteClientBrandingResult AWS API Documentation
+    #
+    class DeleteClientBrandingResult < Aws::EmptyStructure; end
+
+    # @!attribute [rw] add_in_id
+    #   The identifier of the client add-in to delete.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_id
+    #   The directory identifier for which the client add-in is configured.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteConnectClientAddInRequest AWS API Documentation
+    #
+    class DeleteConnectClientAddInRequest < Struct.new(
+      :add_in_id,
+      :resource_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteConnectClientAddInResult AWS API Documentation
+    #
+    class DeleteConnectClientAddInResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] alias_id
     #   The identifier of the connection alias to delete.
     #   @return [String]
@@ -794,13 +1046,6 @@ module Aws::WorkSpaces
     #
     class DeleteConnectionAliasResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteIpGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         group_id: "IpGroupId", # required
-    #       }
-    #
     # @!attribute [rw] group_id
     #   The identifier of the IP access control group.
     #   @return [String]
@@ -817,14 +1062,6 @@ module Aws::WorkSpaces
     #
     class DeleteIpGroupResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_id: "NonEmptyString", # required
-    #         tag_keys: ["NonEmptyString"], # required
-    #       }
-    #
     # @!attribute [rw] resource_id
     #   The identifier of the WorkSpaces resource. The supported resource
     #   types are WorkSpaces, registered directories, images, custom
@@ -848,13 +1085,6 @@ module Aws::WorkSpaces
     #
     class DeleteTagsResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteWorkspaceBundleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         bundle_id: "BundleId",
-    #       }
-    #
     # @!attribute [rw] bundle_id
     #   The identifier of the bundle.
     #   @return [String]
@@ -871,13 +1101,6 @@ module Aws::WorkSpaces
     #
     class DeleteWorkspaceBundleResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteWorkspaceImageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         image_id: "WorkspaceImageId", # required
-    #       }
-    #
     # @!attribute [rw] image_id
     #   The identifier of the image.
     #   @return [String]
@@ -894,13 +1117,6 @@ module Aws::WorkSpaces
     #
     class DeleteWorkspaceImageResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeregisterWorkspaceDirectoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_id: "DirectoryId", # required
-    #       }
-    #
     # @!attribute [rw] directory_id
     #   The identifier of the directory. If any WorkSpaces are registered to
     #   this directory, you must remove them before you deregister the
@@ -920,13 +1136,6 @@ module Aws::WorkSpaces
     #
     class DeregisterWorkspaceDirectoryResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeAccountModificationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   If you received a `NextToken` from a previous call that was
     #   paginated, provide this token to receive the next set of results.
@@ -987,13 +1196,56 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeClientPropertiesRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_id
+    #   The directory identifier of the WorkSpace for which you want to view
+    #   client branding information.
+    #   @return [String]
     #
-    #       {
-    #         resource_ids: ["NonEmptyString"], # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeClientBrandingRequest AWS API Documentation
     #
+    class DescribeClientBrandingRequest < Struct.new(
+      :resource_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] device_type_windows
+    #   The branding information for Windows devices.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_osx
+    #   The branding information for macOS devices.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_android
+    #   The branding information for Android devices.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_ios
+    #   The branding information for iOS devices.
+    #   @return [Types::IosClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_linux
+    #   The branding information for Linux devices.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_web
+    #   The branding information for Web access.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeClientBrandingResult AWS API Documentation
+    #
+    class DescribeClientBrandingResult < Struct.new(
+      :device_type_windows,
+      :device_type_osx,
+      :device_type_android,
+      :device_type_ios,
+      :device_type_linux,
+      :device_type_web)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_ids
     #   The resource identifier, in the form of directory IDs.
     #   @return [Array<String>]
@@ -1018,15 +1270,47 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConnectionAliasPermissionsRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_id
+    #   The directory identifier for which the client add-in is configured.
+    #   @return [String]
     #
-    #       {
-    #         alias_id: "ConnectionAliasId", # required
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] next_token
+    #   If you received a `NextToken` from a previous call that was
+    #   paginated, provide this token to receive the next set of results.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   The maximum number of items to return.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeConnectClientAddInsRequest AWS API Documentation
+    #
+    class DescribeConnectClientAddInsRequest < Struct.new(
+      :resource_id,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] add_ins
+    #   Information about client add-ins.
+    #   @return [Array<Types::ConnectClientAddIn>]
+    #
+    # @!attribute [rw] next_token
+    #   The token to use to retrieve the next page of results. This value is
+    #   null when there are no more results to return.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeConnectClientAddInsResult AWS API Documentation
+    #
+    class DescribeConnectClientAddInsResult < Struct.new(
+      :add_ins,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] alias_id
     #   The identifier of the connection alias.
     #   @return [String]
@@ -1073,16 +1357,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConnectionAliasesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         alias_ids: ["ConnectionAliasId"],
-    #         resource_id: "NonEmptyString",
-    #         limit: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] alias_ids
     #   The identifiers of the connection aliases to describe.
     #   @return [Array<String>]
@@ -1130,15 +1404,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeIpGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         group_ids: ["IpGroupId"],
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] group_ids
     #   The identifiers of one or more IP access control groups.
     #   @return [Array<String>]
@@ -1180,13 +1445,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_id: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] resource_id
     #   The identifier of the WorkSpaces resource. The supported resource
     #   types are WorkSpaces, registered directories, images, custom
@@ -1213,15 +1471,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeWorkspaceBundlesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         bundle_ids: ["BundleId"],
-    #         owner: "BundleOwner",
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] bundle_ids
     #   The identifiers of the bundles. You cannot combine this parameter
     #   with any other filter.
@@ -1231,9 +1480,9 @@ module Aws::WorkSpaces
     #   The owner of the bundles. You cannot combine this parameter with any
     #   other filter.
     #
-    #   To describe the bundles provided by AWS, specify `AMAZON`. To
-    #   describe the bundles that belong to your account, don't specify a
-    #   value.
+    #   To describe the bundles provided by Amazon Web Services, specify
+    #   `AMAZON`. To describe the bundles that belong to your account,
+    #   don't specify a value.
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -1270,15 +1519,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeWorkspaceDirectoriesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_ids: ["DirectoryId"],
-    #         limit: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] directory_ids
     #   The identifiers of the directories. If the value is null, all
     #   directories are retrieved.
@@ -1321,15 +1561,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeWorkspaceImagePermissionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         image_id: "WorkspaceImageId", # required
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] image_id
     #   The identifier of the image.
     #   @return [String]
@@ -1358,8 +1589,8 @@ module Aws::WorkSpaces
     #   @return [String]
     #
     # @!attribute [rw] image_permissions
-    #   The identifiers of the AWS accounts that the image has been shared
-    #   with.
+    #   The identifiers of the Amazon Web Services accounts that the image
+    #   has been shared with.
     #   @return [Array<Types::ImagePermission>]
     #
     # @!attribute [rw] next_token
@@ -1377,16 +1608,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeWorkspaceImagesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         image_ids: ["WorkspaceImageId"],
-    #         image_type: "OWNED", # accepts OWNED, SHARED
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] image_ids
     #   The identifier of the image.
     #   @return [Array<String>]
@@ -1433,13 +1654,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeWorkspaceSnapshotsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_id: "WorkspaceId", # required
-    #       }
-    #
     # @!attribute [rw] workspace_id
     #   The identifier of the WorkSpace.
     #   @return [String]
@@ -1472,14 +1686,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeWorkspacesConnectionStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_ids: ["WorkspaceId"],
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] workspace_ids
     #   The identifiers of the WorkSpaces. You can specify up to 25
     #   WorkSpaces.
@@ -1517,18 +1723,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeWorkspacesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_ids: ["WorkspaceId"],
-    #         directory_id: "DirectoryId",
-    #         user_name: "UserName",
-    #         bundle_id: "BundleId",
-    #         limit: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] workspace_ids
     #   The identifiers of the WorkSpaces. You cannot combine this parameter
     #   with any other filter.
@@ -1599,13 +1793,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateConnectionAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         alias_id: "ConnectionAliasId", # required
-    #       }
-    #
     # @!attribute [rw] alias_id
     #   The identifier of the connection alias to disassociate.
     #   @return [String]
@@ -1622,14 +1809,6 @@ module Aws::WorkSpaces
     #
     class DisassociateConnectionAliasResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DisassociateIpGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_id: "DirectoryId", # required
-    #         group_ids: ["IpGroupId"], # required
-    #       }
-    #
     # @!attribute [rw] directory_id
     #   The identifier of the directory.
     #   @return [String]
@@ -1650,6 +1829,32 @@ module Aws::WorkSpaces
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DisassociateIpGroupsResult AWS API Documentation
     #
     class DisassociateIpGroupsResult < Aws::EmptyStructure; end
+
+    # Describes the standby WorkSpace that could not be created.
+    #
+    # @!attribute [rw] standby_workspace_request
+    #   Information about the standby WorkSpace that could not be created.
+    #   @return [Types::StandbyWorkspace]
+    #
+    # @!attribute [rw] error_code
+    #   The error code that is returned if the standby WorkSpace could not
+    #   be created.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_message
+    #   The text of the error message that is returned if the standby
+    #   WorkSpace could not be created.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/FailedCreateStandbyWorkspacesRequest AWS API Documentation
+    #
+    class FailedCreateStandbyWorkspacesRequest < Struct.new(
+      :standby_workspace_request,
+      :error_code,
+      :error_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
 
     # Describes a WorkSpace that cannot be created.
     #
@@ -1704,17 +1909,17 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # Describes the AWS accounts that have been granted permission to use a
-    # shared image. For more information about sharing images, see [ Share
-    # or Unshare a Custom WorkSpaces Image][1].
+    # Describes the Amazon Web Services accounts that have been granted
+    # permission to use a shared image. For more information about sharing
+    # images, see [ Share or Unshare a Custom WorkSpaces Image][1].
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/share-custom-image.html
     #
     # @!attribute [rw] shared_account_id
-    #   The identifier of the AWS account that an image has been shared
-    #   with.
+    #   The identifier of the Amazon Web Services account that an image has
+    #   been shared with.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ImagePermission AWS API Documentation
@@ -1725,23 +1930,86 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ImportWorkspaceImageRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_id
+    #   The directory identifier of the WorkSpace for which you want to
+    #   import client branding.
+    #   @return [String]
     #
-    #       {
-    #         ec2_image_id: "Ec2ImageId", # required
-    #         ingestion_process: "BYOL_REGULAR", # required, accepts BYOL_REGULAR, BYOL_GRAPHICS, BYOL_GRAPHICSPRO, BYOL_REGULAR_WSP
-    #         image_name: "WorkspaceImageName", # required
-    #         image_description: "WorkspaceImageDescription", # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #         applications: ["Microsoft_Office_2016"], # accepts Microsoft_Office_2016, Microsoft_Office_2019
-    #       }
+    # @!attribute [rw] device_type_windows
+    #   The branding information to import for Windows devices.
+    #   @return [Types::DefaultImportClientBrandingAttributes]
     #
+    # @!attribute [rw] device_type_osx
+    #   The branding information to import for macOS devices.
+    #   @return [Types::DefaultImportClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_android
+    #   The branding information to import for Android devices.
+    #   @return [Types::DefaultImportClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_ios
+    #   The branding information to import for iOS devices.
+    #   @return [Types::IosImportClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_linux
+    #   The branding information to import for Linux devices.
+    #   @return [Types::DefaultImportClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_web
+    #   The branding information to import for web access.
+    #   @return [Types::DefaultImportClientBrandingAttributes]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ImportClientBrandingRequest AWS API Documentation
+    #
+    class ImportClientBrandingRequest < Struct.new(
+      :resource_id,
+      :device_type_windows,
+      :device_type_osx,
+      :device_type_android,
+      :device_type_ios,
+      :device_type_linux,
+      :device_type_web)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] device_type_windows
+    #   The branding information configured for Windows devices.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_osx
+    #   The branding information configured for macOS devices.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_android
+    #   The branding information configured for Android devices.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_ios
+    #   The branding information configured for iOS devices.
+    #   @return [Types::IosClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_linux
+    #   The branding information configured for Linux devices.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @!attribute [rw] device_type_web
+    #   The branding information configured for web access.
+    #   @return [Types::DefaultClientBrandingAttributes]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ImportClientBrandingResult AWS API Documentation
+    #
+    class ImportClientBrandingResult < Struct.new(
+      :device_type_windows,
+      :device_type_osx,
+      :device_type_android,
+      :device_type_ios,
+      :device_type_linux,
+      :device_type_web)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] ec2_image_id
     #   The identifier of the EC2 image.
     #   @return [String]
@@ -1749,13 +2017,25 @@ module Aws::WorkSpaces
     # @!attribute [rw] ingestion_process
     #   The ingestion process to be used when importing the image, depending
     #   on which protocol you want to use for your BYOL Workspace image,
-    #   either PCoIP or WorkSpaces Streaming Protocol (WSP). To use WSP,
-    #   specify a value that ends in `_WSP`. To use PCoIP, specify a value
-    #   that does not end in `_WSP`.
+    #   either PCoIP, WorkSpaces Streaming Protocol (WSP), or bring your own
+    #   protocol (BYOP). To use WSP, specify a value that ends in `_WSP`. To
+    #   use PCoIP, specify a value that does not end in `_WSP`. To use BYOP,
+    #   specify a value that ends in `_BYOP`.
     #
     #   For non-GPU-enabled bundles (bundles other than Graphics or
-    #   GraphicsPro), specify `BYOL_REGULAR` or `BYOL_REGULAR_WSP`,
-    #   depending on the protocol.
+    #   GraphicsPro), specify `BYOL_REGULAR`, `BYOL_REGULAR_WSP`, or
+    #   `BYOL_REGULAR_BYOP`, depending on the protocol.
+    #
+    #   <note markdown="1"> The `BYOL_REGULAR_BYOP` and `BYOL_GRAPHICS_G4DN_BYOP` values are
+    #   only supported by Amazon WorkSpaces Core. Contact your account team
+    #   to be allow-listed to use these values. For more information, see
+    #   [Amazon WorkSpaces Core][1].
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: http://aws.amazon.com/workspaces/core/
     #   @return [String]
     #
     # @!attribute [rw] image_name
@@ -1772,12 +2052,14 @@ module Aws::WorkSpaces
     #
     # @!attribute [rw] applications
     #   If specified, the version of Microsoft Office to subscribe to. Valid
-    #   only for Windows 10 BYOL images. For more information about
+    #   only for Windows 10 and 11 BYOL images. For more information about
     #   subscribing to Office for BYOL images, see [ Bring Your Own Windows
     #   Desktop Licenses][1].
     #
-    #   <note markdown="1"> Although this parameter is an array, only one item is allowed at
-    #   this time.
+    #   <note markdown="1"> * Although this parameter is an array, only one item is allowed at
+    #     this time.
+    #
+    #   * Windows 11 only supports `Microsoft_Office_2019`.
     #
     #    </note>
     #
@@ -1838,15 +2120,203 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
+    # The client branding attributes for iOS device types. These attributes
+    # are displayed on the iOS client login screen only.
+    #
+    # Client branding attributes are public facing. Ensure you do not
+    # include sensitive information.
+    #
+    # @!attribute [rw] logo_url
+    #   The logo. This is the standard-resolution display that has a 1:1
+    #   pixel density (or @1x), where one pixel is equal to one point. The
+    #   only image format accepted is a binary data object that is converted
+    #   from a `.png` file.
+    #   @return [String]
+    #
+    # @!attribute [rw] logo_2x_url
+    #   The @2x version of the logo. This is the higher resolution display
+    #   that offers a scale factor of 2.0 (or @2x). The only image format
+    #   accepted is a binary data object that is converted from a `.png`
+    #   file.
+    #
+    #   <note markdown="1"> For more information about iOS image size and resolution, see [Image
+    #   Size and Resolution ][1] in the *Apple Human Interface Guidelines*.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://developer.apple.com/design/human-interface-guidelines/ios/icons-and-images/image-size-and-resolution/
+    #   @return [String]
+    #
+    # @!attribute [rw] logo_3x_url
+    #   The @3x version of the logo. This is the higher resolution display
+    #   that offers a scale factor of 3.0 (or @3x).The only image format
+    #   accepted is a binary data object that is converted from a `.png`
+    #   file.
+    #
+    #   <note markdown="1"> For more information about iOS image size and resolution, see [Image
+    #   Size and Resolution ][1] in the *Apple Human Interface Guidelines*.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://developer.apple.com/design/human-interface-guidelines/ios/icons-and-images/image-size-and-resolution/
+    #   @return [String]
+    #
+    # @!attribute [rw] support_email
+    #   The support email. The company's customer support email address.
+    #
+    #   <note markdown="1"> * In each platform type, the `SupportEmail` and `SupportLink`
+    #     parameters are mutually exclusive. You can specify one parameter
+    #     for each platform type, but not both.
+    #
+    #   * The default email is `workspaces-feedback@amazon.com`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] support_link
+    #   The support link. The link for the company's customer support page
+    #   for their WorkSpace.
+    #
+    #   <note markdown="1"> * In each platform type, the `SupportEmail` and `SupportLink`
+    #     parameters are mutually exclusive. You can specify one parameter
+    #     for each platform type, but not both.
+    #
+    #   * The default support link is `workspaces-feedback@amazon.com`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] forgot_password_link
+    #   The forgotten password link. This is the web address that users can
+    #   go to if they forget the password for their WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] login_message
+    #   The login message. Specified as a key value pair, in which the key
+    #   is a locale and the value is the localized message for that locale.
+    #   The only key supported is `en_US`. The HTML tags supported include
+    #   the following: `a, b, blockquote, br, cite, code, dd, dl, dt, div,
+    #   em, i, li, ol, p, pre, q, small, span, strike, strong, sub, sup, u,
+    #   ul`.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/IosClientBrandingAttributes AWS API Documentation
+    #
+    class IosClientBrandingAttributes < Struct.new(
+      :logo_url,
+      :logo_2x_url,
+      :logo_3x_url,
+      :support_email,
+      :support_link,
+      :forgot_password_link,
+      :login_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The client branding attributes to import for iOS device types. These
+    # attributes are displayed on the iOS client login screen.
+    #
+    # Client branding attributes are public facing. Ensure you do not
+    # include sensitive information.
+    #
+    # @!attribute [rw] logo
+    #   The logo. This is the standard-resolution display that has a 1:1
+    #   pixel density (or @1x), where one pixel is equal to one point. The
+    #   only image format accepted is a binary data object that is converted
+    #   from a `.png` file.
+    #   @return [String]
+    #
+    # @!attribute [rw] logo_2x
+    #   The @2x version of the logo. This is the higher resolution display
+    #   that offers a scale factor of 2.0 (or @2x). The only image format
+    #   accepted is a binary data object that is converted from a `.png`
+    #   file.
+    #
+    #   <note markdown="1"> For more information about iOS image size and resolution, see [Image
+    #   Size and Resolution ][1] in the *Apple Human Interface Guidelines*.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://developer.apple.com/design/human-interface-guidelines/ios/icons-and-images/image-size-and-resolution/
+    #   @return [String]
+    #
+    # @!attribute [rw] logo_3x
+    #   The @3x version of the logo. This is the higher resolution display
+    #   that offers a scale factor of 3.0 (or @3x). The only image format
+    #   accepted is a binary data object that is converted from a `.png`
+    #   file.
+    #
+    #   <note markdown="1"> For more information about iOS image size and resolution, see [Image
+    #   Size and Resolution ][1] in the *Apple Human Interface Guidelines*.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://developer.apple.com/design/human-interface-guidelines/ios/icons-and-images/image-size-and-resolution/
+    #   @return [String]
+    #
+    # @!attribute [rw] support_email
+    #   The support email. The company's customer support email address.
+    #
+    #   <note markdown="1"> * In each platform type, the `SupportEmail` and `SupportLink`
+    #     parameters are mutually exclusive. You can specify one parameter
+    #     for each platform type, but not both.
+    #
+    #   * The default email is `workspaces-feedback@amazon.com`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] support_link
+    #   The support link. The link for the company's customer support page
+    #   for their WorkSpace.
+    #
+    #   <note markdown="1"> * In each platform type, the `SupportEmail` and `SupportLink`
+    #     parameters are mutually exclusive. You can specify one parameter
+    #     for each platform type, but not both.
+    #
+    #   * The default support link is `workspaces-feedback@amazon.com`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] forgot_password_link
+    #   The forgotten password link. This is the web address that users can
+    #   go to if they forget the password for their WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] login_message
+    #   The login message. Specified as a key value pair, in which the key
+    #   is a locale and the value is the localized message for that locale.
+    #   The only key supported is `en_US`. The HTML tags supported include
+    #   the following: `a, b, blockquote, br, cite, code, dd, dl, dt, div,
+    #   em, i, li, ol, p, pre, q, small, span, strike, strong, sub, sup, u,
+    #   ul`.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/IosImportClientBrandingAttributes AWS API Documentation
+    #
+    class IosImportClientBrandingAttributes < Struct.new(
+      :logo,
+      :logo_2x,
+      :logo_3x,
+      :support_email,
+      :support_link,
+      :forgot_password_link,
+      :login_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Describes a rule for an IP access control group.
-    #
-    # @note When making an API call, you may pass IpRuleItem
-    #   data as a hash:
-    #
-    #       {
-    #         ip_rule: "IpRule",
-    #         rule_desc: "IpRuleDesc",
-    #       }
     #
     # @!attribute [rw] ip_rule
     #   The IP address range, in CIDR notation.
@@ -1865,15 +2335,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAvailableManagementCidrRangesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         management_cidr_range_constraint: "ManagementCidrRangeConstraint", # required
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] management_cidr_range_constraint
     #   The IP address range to search. Specify an IP address range that is
     #   compatible with your network and in CIDR notation (that is, specify
@@ -1918,14 +2379,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass MigrateWorkspaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         source_workspace_id: "WorkspaceId", # required
-    #         bundle_id: "BundleId", # required
-    #       }
-    #
     # @!attribute [rw] source_workspace_id
     #   The identifier of the WorkSpace to migrate from.
     #   @return [String]
@@ -1982,14 +2435,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ModifyAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dedicated_tenancy_support: "ENABLED", # accepts ENABLED
-    #         dedicated_tenancy_management_cidr_range: "DedicatedTenancyManagementCidrRange",
-    #       }
-    #
     # @!attribute [rw] dedicated_tenancy_support
     #   The status of BYOL.
     #   @return [String]
@@ -2016,16 +2461,33 @@ module Aws::WorkSpaces
     #
     class ModifyAccountResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ModifyClientPropertiesRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_id
+    #   The resource identifiers, in the form of directory IDs.
+    #   @return [String]
     #
-    #       {
-    #         resource_id: "NonEmptyString", # required
-    #         client_properties: { # required
-    #           reconnect_enabled: "ENABLED", # accepts ENABLED, DISABLED
-    #         },
-    #       }
+    # @!attribute [rw] certificate_based_auth_properties
+    #   The properties of the certificate-based authentication.
+    #   @return [Types::CertificateBasedAuthProperties]
     #
+    # @!attribute [rw] properties_to_delete
+    #   The properties of the certificate-based authentication you want to
+    #   delete.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyCertificateBasedAuthPropertiesRequest AWS API Documentation
+    #
+    class ModifyCertificateBasedAuthPropertiesRequest < Struct.new(
+      :resource_id,
+      :certificate_based_auth_properties,
+      :properties_to_delete)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyCertificateBasedAuthPropertiesResult AWS API Documentation
+    #
+    class ModifyCertificateBasedAuthPropertiesResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] resource_id
     #   The resource identifiers, in the form of directory IDs.
     #   @return [String]
@@ -2047,20 +2509,40 @@ module Aws::WorkSpaces
     #
     class ModifyClientPropertiesResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ModifySelfservicePermissionsRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_id
+    #   The directory identifier for which you want to configure SAML
+    #   properties.
+    #   @return [String]
     #
-    #       {
-    #         resource_id: "DirectoryId", # required
-    #         selfservice_permissions: { # required
-    #           restart_workspace: "ENABLED", # accepts ENABLED, DISABLED
-    #           increase_volume_size: "ENABLED", # accepts ENABLED, DISABLED
-    #           change_compute_type: "ENABLED", # accepts ENABLED, DISABLED
-    #           switch_running_mode: "ENABLED", # accepts ENABLED, DISABLED
-    #           rebuild_workspace: "ENABLED", # accepts ENABLED, DISABLED
-    #         },
-    #       }
+    # @!attribute [rw] saml_properties
+    #   The properties for configuring SAML 2.0 authentication.
+    #   @return [Types::SamlProperties]
     #
+    # @!attribute [rw] properties_to_delete
+    #   The SAML properties to delete as part of your request.
+    #
+    #   Specify one of the following options:
+    #
+    #   * `SAML_PROPERTIES_USER_ACCESS_URL` to delete the user access URL.
+    #
+    #   * `SAML_PROPERTIES_RELAY_STATE_PARAMETER_NAME` to delete the relay
+    #     state parameter name.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifySamlPropertiesRequest AWS API Documentation
+    #
+    class ModifySamlPropertiesRequest < Struct.new(
+      :resource_id,
+      :saml_properties,
+      :properties_to_delete)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifySamlPropertiesResult AWS API Documentation
+    #
+    class ModifySamlPropertiesResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] resource_id
     #   The identifier of the directory.
     #   @return [String]
@@ -2082,22 +2564,6 @@ module Aws::WorkSpaces
     #
     class ModifySelfservicePermissionsResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ModifyWorkspaceAccessPropertiesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_id: "DirectoryId", # required
-    #         workspace_access_properties: { # required
-    #           device_type_windows: "ALLOW", # accepts ALLOW, DENY
-    #           device_type_osx: "ALLOW", # accepts ALLOW, DENY
-    #           device_type_web: "ALLOW", # accepts ALLOW, DENY
-    #           device_type_ios: "ALLOW", # accepts ALLOW, DENY
-    #           device_type_android: "ALLOW", # accepts ALLOW, DENY
-    #           device_type_chrome_os: "ALLOW", # accepts ALLOW, DENY
-    #           device_type_zero_client: "ALLOW", # accepts ALLOW, DENY
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_id
     #   The identifier of the directory.
     #   @return [String]
@@ -2120,21 +2586,6 @@ module Aws::WorkSpaces
     #
     class ModifyWorkspaceAccessPropertiesResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ModifyWorkspaceCreationPropertiesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_id: "DirectoryId", # required
-    #         workspace_creation_properties: { # required
-    #           enable_work_docs: false,
-    #           enable_internet_access: false,
-    #           default_ou: "DefaultOu",
-    #           custom_security_group_id: "SecurityGroupId",
-    #           user_enabled_as_local_administrator: false,
-    #           enable_maintenance_mode: false,
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_id
     #   The identifier of the directory.
     #   @return [String]
@@ -2156,20 +2607,6 @@ module Aws::WorkSpaces
     #
     class ModifyWorkspaceCreationPropertiesResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ModifyWorkspacePropertiesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_id: "WorkspaceId", # required
-    #         workspace_properties: { # required
-    #           running_mode: "AUTO_STOP", # accepts AUTO_STOP, ALWAYS_ON
-    #           running_mode_auto_stop_timeout_in_minutes: 1,
-    #           root_volume_size_gib: 1,
-    #           user_volume_size_gib: 1,
-    #           compute_type_name: "VALUE", # accepts VALUE, STANDARD, PERFORMANCE, POWER, GRAPHICS, POWERPRO, GRAPHICSPRO
-    #         },
-    #       }
-    #
     # @!attribute [rw] workspace_id
     #   The identifier of the WorkSpace.
     #   @return [String]
@@ -2191,14 +2628,6 @@ module Aws::WorkSpaces
     #
     class ModifyWorkspacePropertiesResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ModifyWorkspaceStateRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_id: "WorkspaceId", # required
-    #         workspace_state: "AVAILABLE", # required, accepts AVAILABLE, ADMIN_MAINTENANCE
-    #       }
-    #
     # @!attribute [rw] workspace_id
     #   The identifier of the WorkSpace.
     #   @return [String]
@@ -2251,24 +2680,61 @@ module Aws::WorkSpaces
     # This operation is not supported.
     #
     # @!attribute [rw] message
+    #   The exception error message.
+    #   @return [String]
+    #
+    # @!attribute [rw] reason
+    #   The exception error reason.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/OperationNotSupportedException AWS API Documentation
     #
     class OperationNotSupportedException < Struct.new(
-      :message)
+      :message,
+      :reason)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about the standby WorkSpace.
+    #
+    # @!attribute [rw] user_name
+    #   Describes the standby WorkSpace that was created.
+    #
+    #   Because this operation is asynchronous, the identifier returned is
+    #   not immediately available for use with other operations. For
+    #   example, if you call [ DescribeWorkspaces][1] before the WorkSpace
+    #   is created, the information returned can be incomplete.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/workspaces/latest/api/API_DescribeWorkspaces.html
+    #   @return [String]
+    #
+    # @!attribute [rw] directory_id
+    #   The identifier of the directory for the standby WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] state
+    #   The operational state of the standby WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] workspace_id
+    #   The identifier of the standby WorkSpace.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/PendingCreateStandbyWorkspacesRequest AWS API Documentation
+    #
+    class PendingCreateStandbyWorkspacesRequest < Struct.new(
+      :user_name,
+      :directory_id,
+      :state,
+      :workspace_id)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Describes the information used to reboot a WorkSpace.
-    #
-    # @note When making an API call, you may pass RebootRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_id: "WorkspaceId", # required
-    #       }
     #
     # @!attribute [rw] workspace_id
     #   The identifier of the WorkSpace.
@@ -2282,17 +2748,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RebootWorkspacesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         reboot_workspace_requests: [ # required
-    #           {
-    #             workspace_id: "WorkspaceId", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] reboot_workspace_requests
     #   The WorkSpaces to reboot. You can specify up to 25 WorkSpaces.
     #   @return [Array<Types::RebootRequest>]
@@ -2319,13 +2774,6 @@ module Aws::WorkSpaces
 
     # Describes the information used to rebuild a WorkSpace.
     #
-    # @note When making an API call, you may pass RebuildRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_id: "WorkspaceId", # required
-    #       }
-    #
     # @!attribute [rw] workspace_id
     #   The identifier of the WorkSpace.
     #   @return [String]
@@ -2338,17 +2786,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RebuildWorkspacesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         rebuild_workspace_requests: [ # required
-    #           {
-    #             workspace_id: "WorkspaceId", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] rebuild_workspace_requests
     #   The WorkSpace to rebuild. You can specify a single WorkSpace.
     #   @return [Array<Types::RebuildRequest>]
@@ -2373,23 +2810,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RegisterWorkspaceDirectoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_id: "DirectoryId", # required
-    #         subnet_ids: ["SubnetId"],
-    #         enable_work_docs: false, # required
-    #         enable_self_service: false,
-    #         tenancy: "DEDICATED", # accepts DEDICATED, SHARED
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] directory_id
     #   The identifier of the directory. You cannot register a directory if
     #   it does not have a status of Active. If the directory does not have
@@ -2423,10 +2843,11 @@ module Aws::WorkSpaces
     # @!attribute [rw] tenancy
     #   Indicates whether your WorkSpace directory is dedicated or shared.
     #   To use Bring Your Own License (BYOL) images, this value must be set
-    #   to `DEDICATED` and your AWS account must be enabled for BYOL. If
-    #   your account has not been enabled for BYOL, you will receive an
-    #   InvalidParameterValuesException error. For more information about
-    #   BYOL images, see [Bring Your Own Windows Desktop Images][1].
+    #   to `DEDICATED` and your Amazon Web Services account must be enabled
+    #   for BYOL. If your account has not been enabled for BYOL, you will
+    #   receive an InvalidParameterValuesException error. For more
+    #   information about BYOL images, see [Bring Your Own Windows Desktop
+    #   Images][1].
     #
     #
     #
@@ -2453,6 +2874,37 @@ module Aws::WorkSpaces
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RegisterWorkspaceDirectoryResult AWS API Documentation
     #
     class RegisterWorkspaceDirectoryResult < Aws::EmptyStructure; end
+
+    # Describes the related WorkSpace. The related WorkSpace could be a
+    # standby WorkSpace or primary WorkSpace related to the specified
+    # WorkSpace.
+    #
+    # @!attribute [rw] workspace_id
+    #   The identifier of the related WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] region
+    #   The Region of the related WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] state
+    #   Indicates the state of the WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   Indicates the type of WorkSpace.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RelatedWorkspaceProperties AWS API Documentation
+    #
+    class RelatedWorkspaceProperties < Struct.new(
+      :workspace_id,
+      :region,
+      :state,
+      :type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
 
     # The specified resource already exists.
     #
@@ -2545,13 +2997,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RestoreWorkspaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_id: "WorkspaceId", # required
-    #       }
-    #
     # @!attribute [rw] workspace_id
     #   The identifier of the WorkSpace.
     #   @return [String]
@@ -2568,14 +3013,6 @@ module Aws::WorkSpaces
     #
     class RestoreWorkspaceResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass RevokeIpRulesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         group_id: "IpGroupId", # required
-    #         user_rules: ["IpRule"], # required
-    #       }
-    #
     # @!attribute [rw] group_id
     #   The identifier of the group.
     #   @return [String]
@@ -2599,13 +3036,6 @@ module Aws::WorkSpaces
 
     # Describes the root volume for a WorkSpace bundle.
     #
-    # @note When making an API call, you may pass RootStorage
-    #   data as a hash:
-    #
-    #       {
-    #         capacity: "NonEmptyString",
-    #       }
-    #
     # @!attribute [rw] capacity
     #   The size of the root volume.
     #   @return [String]
@@ -2618,6 +3048,59 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
+    # Describes the enablement status, user access URL, and relay state
+    # parameter name that are used for configuring federation with an SAML
+    # 2.0 identity provider.
+    #
+    # @!attribute [rw] status
+    #   Indicates the status of SAML 2.0 authentication. These statuses
+    #   include the following.
+    #
+    #   * If the setting is `DISABLED`, end users will be directed to login
+    #     with their directory credentials.
+    #
+    #   * If the setting is `ENABLED`, end users will be directed to login
+    #     via the user access URL. Users attempting to connect to WorkSpaces
+    #     from a client application that does not support SAML 2.0
+    #     authentication will not be able to connect.
+    #
+    #   * If the setting is `ENABLED_WITH_DIRECTORY_LOGIN_FALLBACK`, end
+    #     users will be directed to login via the user access URL on
+    #     supported client applications, but will not prevent clients that
+    #     do not support SAML 2.0 authentication from connecting as if SAML
+    #     2.0 authentication was disabled.
+    #   @return [String]
+    #
+    # @!attribute [rw] user_access_url
+    #   The SAML 2.0 identity provider (IdP) user access URL is the URL a
+    #   user would navigate to in their web browser in order to federate
+    #   from the IdP and directly access the application, without any SAML
+    #   2.0 service provider (SP) bindings.
+    #   @return [String]
+    #
+    # @!attribute [rw] relay_state_parameter_name
+    #   The relay state parameter name supported by the SAML 2.0 identity
+    #   provider (IdP). When the end user is redirected to the user access
+    #   URL from the WorkSpaces client application, this relay state
+    #   parameter name is appended as a query parameter to the URL along
+    #   with the relay state endpoint to return the user to the client
+    #   application session.
+    #
+    #   To use SAML 2.0 authentication with WorkSpaces, the IdP must support
+    #   IdP-initiated deep linking for the relay state URL. Consult your IdP
+    #   documentation for more information.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/SamlProperties AWS API Documentation
+    #
+    class SamlProperties < Struct.new(
+      :status,
+      :user_access_url,
+      :relay_state_parameter_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Describes the self-service permissions for a directory. For more
     # information, see [Enable Self-Service WorkSpace Management
     # Capabilities for Your Users][1].
@@ -2625,17 +3108,6 @@ module Aws::WorkSpaces
     #
     #
     # [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/enable-user-self-service-workspace-management.html
-    #
-    # @note When making an API call, you may pass SelfservicePermissions
-    #   data as a hash:
-    #
-    #       {
-    #         restart_workspace: "ENABLED", # accepts ENABLED, DISABLED
-    #         increase_volume_size: "ENABLED", # accepts ENABLED, DISABLED
-    #         change_compute_type: "ENABLED", # accepts ENABLED, DISABLED
-    #         switch_running_mode: "ENABLED", # accepts ENABLED, DISABLED
-    #         rebuild_workspace: "ENABLED", # accepts ENABLED, DISABLED
-    #       }
     #
     # @!attribute [rw] restart_workspace
     #   Specifies whether users can restart their WorkSpace.
@@ -2687,14 +3159,36 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
+    # Describes a standby WorkSpace.
+    #
+    # @!attribute [rw] primary_workspace_id
+    #   The identifier of the standby WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] volume_encryption_key
+    #   The volume encryption key of the standby WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] directory_id
+    #   The identifier of the directory for the standby WorkSpace.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The tags associated with the standby WorkSpace.
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StandbyWorkspace AWS API Documentation
+    #
+    class StandbyWorkspace < Struct.new(
+      :primary_workspace_id,
+      :volume_encryption_key,
+      :directory_id,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Information used to start a WorkSpace.
-    #
-    # @note When making an API call, you may pass StartRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_id: "WorkspaceId",
-    #       }
     #
     # @!attribute [rw] workspace_id
     #   The identifier of the WorkSpace.
@@ -2708,17 +3202,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartWorkspacesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         start_workspace_requests: [ # required
-    #           {
-    #             workspace_id: "WorkspaceId",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] start_workspace_requests
     #   The WorkSpaces to start. You can specify up to 25 WorkSpaces.
     #   @return [Array<Types::StartRequest>]
@@ -2745,13 +3228,6 @@ module Aws::WorkSpaces
 
     # Describes the information used to stop a WorkSpace.
     #
-    # @note When making an API call, you may pass StopRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_id: "WorkspaceId",
-    #       }
-    #
     # @!attribute [rw] workspace_id
     #   The identifier of the WorkSpace.
     #   @return [String]
@@ -2764,17 +3240,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopWorkspacesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         stop_workspace_requests: [ # required
-    #           {
-    #             workspace_id: "WorkspaceId",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] stop_workspace_requests
     #   The WorkSpaces to stop. You can specify up to 25 WorkSpaces.
     #   @return [Array<Types::StopRequest>]
@@ -2801,14 +3266,6 @@ module Aws::WorkSpaces
 
     # Describes a tag.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue",
-    #       }
-    #
     # @!attribute [rw] key
     #   The key of the tag.
     #   @return [String]
@@ -2828,13 +3285,6 @@ module Aws::WorkSpaces
 
     # Describes the information used to terminate a WorkSpace.
     #
-    # @note When making an API call, you may pass TerminateRequest
-    #   data as a hash:
-    #
-    #       {
-    #         workspace_id: "WorkspaceId", # required
-    #       }
-    #
     # @!attribute [rw] workspace_id
     #   The identifier of the WorkSpace.
     #   @return [String]
@@ -2847,17 +3297,6 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TerminateWorkspacesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         terminate_workspace_requests: [ # required
-    #           {
-    #             workspace_id: "WorkspaceId", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] terminate_workspace_requests
     #   The WorkSpaces to terminate. You can specify up to 25 WorkSpaces.
     #   @return [Array<Types::TerminateRequest>]
@@ -2921,17 +3360,37 @@ module Aws::WorkSpaces
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateConnectionAliasPermissionRequest
-    #   data as a hash:
+    # @!attribute [rw] add_in_id
+    #   The identifier of the client add-in to update.
+    #   @return [String]
     #
-    #       {
-    #         alias_id: "ConnectionAliasId", # required
-    #         connection_alias_permission: { # required
-    #           shared_account_id: "AwsAccount", # required
-    #           allow_association: false, # required
-    #         },
-    #       }
+    # @!attribute [rw] resource_id
+    #   The directory identifier for which the client add-in is configured.
+    #   @return [String]
     #
+    # @!attribute [rw] name
+    #   The name of the client add-in.
+    #   @return [String]
+    #
+    # @!attribute [rw] url
+    #   The endpoint URL of the Amazon Connect client add-in.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UpdateConnectClientAddInRequest AWS API Documentation
+    #
+    class UpdateConnectClientAddInRequest < Struct.new(
+      :add_in_id,
+      :resource_id,
+      :name,
+      :url)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UpdateConnectClientAddInResult AWS API Documentation
+    #
+    class UpdateConnectClientAddInResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] alias_id
     #   The identifier of the connection alias that you want to update
     #   permissions for.
@@ -2939,7 +3398,7 @@ module Aws::WorkSpaces
     #
     # @!attribute [rw] connection_alias_permission
     #   Indicates whether to share or unshare the connection alias with the
-    #   specified AWS account.
+    #   specified Amazon Web Services account.
     #   @return [Types::ConnectionAliasPermission]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UpdateConnectionAliasPermissionRequest AWS API Documentation
@@ -2955,19 +3414,33 @@ module Aws::WorkSpaces
     #
     class UpdateConnectionAliasPermissionResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateRulesOfIpGroupRequest
-    #   data as a hash:
+    # Describes whether a WorkSpace image needs to be updated with the
+    # latest drivers and other components required by Amazon WorkSpaces.
     #
-    #       {
-    #         group_id: "IpGroupId", # required
-    #         user_rules: [ # required
-    #           {
-    #             ip_rule: "IpRule",
-    #             rule_desc: "IpRuleDesc",
-    #           },
-    #         ],
-    #       }
+    # <note markdown="1"> Only Windows 10 WorkSpace images can be programmatically updated at
+    # this time.
     #
+    #  </note>
+    #
+    # @!attribute [rw] update_available
+    #   Indicates whether updated drivers or other components are available
+    #   for the specified WorkSpace image.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] description
+    #   A description of whether updates for the WorkSpace image are pending
+    #   or available.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UpdateResult AWS API Documentation
+    #
+    class UpdateResult < Struct.new(
+      :update_available,
+      :description)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] group_id
     #   The identifier of the group.
     #   @return [String]
@@ -2989,14 +3462,6 @@ module Aws::WorkSpaces
     #
     class UpdateRulesOfIpGroupResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateWorkspaceBundleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         bundle_id: "BundleId",
-    #         image_id: "WorkspaceImageId",
-    #       }
-    #
     # @!attribute [rw] bundle_id
     #   The identifier of the bundle.
     #   @return [String]
@@ -3018,15 +3483,6 @@ module Aws::WorkSpaces
     #
     class UpdateWorkspaceBundleResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateWorkspaceImagePermissionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         image_id: "WorkspaceImageId", # required
-    #         allow_copy_image: false, # required
-    #         shared_account_id: "AwsAccount", # required
-    #       }
-    #
     # @!attribute [rw] image_id
     #   The identifier of the image.
     #   @return [String]
@@ -3037,11 +3493,11 @@ module Aws::WorkSpaces
     #   @return [Boolean]
     #
     # @!attribute [rw] shared_account_id
-    #   The identifier of the AWS account to share or unshare the image
-    #   with.
+    #   The identifier of the Amazon Web Services account to share or
+    #   unshare the image with.
     #
     #   Before sharing the image, confirm that you are sharing to the
-    #   correct AWS account ID.
+    #   correct Amazon Web Services account ID.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UpdateWorkspaceImagePermissionRequest AWS API Documentation
@@ -3059,13 +3515,6 @@ module Aws::WorkSpaces
     class UpdateWorkspaceImagePermissionResult < Aws::EmptyStructure; end
 
     # Describes the user volume for a WorkSpace bundle.
-    #
-    # @note When making an API call, you may pass UserStorage
-    #   data as a hash:
-    #
-    #       {
-    #         capacity: "NonEmptyString",
-    #       }
     #
     # @!attribute [rw] capacity
     #   The size of the user volume.
@@ -3086,8 +3535,7 @@ module Aws::WorkSpaces
     #   @return [String]
     #
     # @!attribute [rw] directory_id
-    #   The identifier of the AWS Directory Service directory for the
-    #   WorkSpace.
+    #   The identifier of the Directory Service directory for the WorkSpace.
     #   @return [String]
     #
     # @!attribute [rw] user_name
@@ -3143,9 +3591,8 @@ module Aws::WorkSpaces
     #   @return [String]
     #
     # @!attribute [rw] volume_encryption_key
-    #   The symmetric AWS KMS customer master key (CMK) used to encrypt data
-    #   stored on your WorkSpace. Amazon WorkSpaces does not support
-    #   asymmetric CMKs.
+    #   The symmetric KMS key used to encrypt data stored on your WorkSpace.
+    #   Amazon WorkSpaces does not support asymmetric KMS keys.
     #   @return [String]
     #
     # @!attribute [rw] user_volume_encryption_enabled
@@ -3164,6 +3611,11 @@ module Aws::WorkSpaces
     #   The modification states of the WorkSpace.
     #   @return [Array<Types::ModificationState>]
     #
+    # @!attribute [rw] related_workspaces
+    #   The standby WorkSpace or primary WorkSpace related to the specified
+    #   WorkSpace.
+    #   @return [Array<Types::RelatedWorkspaceProperties>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/Workspace AWS API Documentation
     #
     class Workspace < Struct.new(
@@ -3181,7 +3633,8 @@ module Aws::WorkSpaces
       :user_volume_encryption_enabled,
       :root_volume_encryption_enabled,
       :workspace_properties,
-      :modification_states)
+      :modification_states,
+      :related_workspaces)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3194,41 +3647,14 @@ module Aws::WorkSpaces
     #
     # [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-network-requirements.html
     #
-    # @note When making an API call, you may pass WorkspaceAccessProperties
-    #   data as a hash:
-    #
-    #       {
-    #         device_type_windows: "ALLOW", # accepts ALLOW, DENY
-    #         device_type_osx: "ALLOW", # accepts ALLOW, DENY
-    #         device_type_web: "ALLOW", # accepts ALLOW, DENY
-    #         device_type_ios: "ALLOW", # accepts ALLOW, DENY
-    #         device_type_android: "ALLOW", # accepts ALLOW, DENY
-    #         device_type_chrome_os: "ALLOW", # accepts ALLOW, DENY
-    #         device_type_zero_client: "ALLOW", # accepts ALLOW, DENY
-    #       }
-    #
     # @!attribute [rw] device_type_windows
     #   Indicates whether users can use Windows clients to access their
-    #   WorkSpaces. To restrict WorkSpaces access to trusted devices (also
-    #   known as managed devices) with valid certificates, specify a value
-    #   of `TRUST`. For more information, see [Restrict WorkSpaces Access to
-    #   Trusted Devices][1].
-    #
-    #
-    #
-    #   [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/trusted-devices.html
+    #   WorkSpaces.
     #   @return [String]
     #
     # @!attribute [rw] device_type_osx
     #   Indicates whether users can use macOS clients to access their
-    #   WorkSpaces. To restrict WorkSpaces access to trusted devices (also
-    #   known as managed devices) with valid certificates, specify a value
-    #   of `TRUST`. For more information, see [Restrict WorkSpaces Access to
-    #   Trusted Devices][1].
-    #
-    #
-    #
-    #   [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/trusted-devices.html
+    #   WorkSpaces.
     #   @return [String]
     #
     # @!attribute [rw] device_type_web
@@ -3242,8 +3668,8 @@ module Aws::WorkSpaces
     #   @return [String]
     #
     # @!attribute [rw] device_type_android
-    #   Indicates whether users can use Android devices to access their
-    #   WorkSpaces.
+    #   Indicates whether users can use Android and Android-compatible
+    #   Chrome OS devices to access their WorkSpaces.
     #   @return [String]
     #
     # @!attribute [rw] device_type_chrome_os
@@ -3256,6 +3682,11 @@ module Aws::WorkSpaces
     #   WorkSpaces.
     #   @return [String]
     #
+    # @!attribute [rw] device_type_linux
+    #   Indicates whether users can use Linux clients to access their
+    #   WorkSpaces.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceAccessProperties AWS API Documentation
     #
     class WorkspaceAccessProperties < Struct.new(
@@ -3265,7 +3696,8 @@ module Aws::WorkSpaces
       :device_type_ios,
       :device_type_android,
       :device_type_chrome_os,
-      :device_type_zero_client)
+      :device_type_zero_client,
+      :device_type_linux)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3282,7 +3714,7 @@ module Aws::WorkSpaces
     #
     # @!attribute [rw] owner
     #   The owner of the bundle. This is the account identifier of the
-    #   owner, or `AMAZON` if the bundle is provided by AWS.
+    #   owner, or `AMAZON` if the bundle is provided by Amazon Web Services.
     #   @return [String]
     #
     # @!attribute [rw] description
@@ -3318,6 +3750,14 @@ module Aws::WorkSpaces
     #   The time when the bundle was created.
     #   @return [Time]
     #
+    # @!attribute [rw] state
+    #   The state of the WorkSpace bundle.
+    #   @return [String]
+    #
+    # @!attribute [rw] bundle_type
+    #   The type of WorkSpace bundle.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceBundle AWS API Documentation
     #
     class WorkspaceBundle < Struct.new(
@@ -3330,7 +3770,9 @@ module Aws::WorkSpaces
       :user_storage,
       :compute_type,
       :last_updated_time,
-      :creation_time)
+      :creation_time,
+      :state,
+      :bundle_type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3372,18 +3814,6 @@ module Aws::WorkSpaces
     #
     #
     # [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/update-directory-details.html
-    #
-    # @note When making an API call, you may pass WorkspaceCreationProperties
-    #   data as a hash:
-    #
-    #       {
-    #         enable_work_docs: false,
-    #         enable_internet_access: false,
-    #         default_ou: "DefaultOu",
-    #         custom_security_group_id: "SecurityGroupId",
-    #         user_enabled_as_local_administrator: false,
-    #         enable_maintenance_mode: false,
-    #       }
     #
     # @!attribute [rw] enable_work_docs
     #   Indicates whether Amazon WorkDocs is enabled for your WorkSpaces.
@@ -3554,6 +3984,18 @@ module Aws::WorkSpaces
     #   directory.
     #   @return [Types::SelfservicePermissions]
     #
+    # @!attribute [rw] saml_properties
+    #   Describes the enablement status, user access URL, and relay state
+    #   parameter name that are used for configuring federation with an SAML
+    #   2.0 identity provider.
+    #   @return [Types::SamlProperties]
+    #
+    # @!attribute [rw] certificate_based_auth_properties
+    #   The certificate-based authentication properties used to authenticate
+    #   SAML 2.0 Identity Provider (IdP) user identities to Active Directory
+    #   for WorkSpaces login.
+    #   @return [Types::CertificateBasedAuthProperties]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceDirectory AWS API Documentation
     #
     class WorkspaceDirectory < Struct.new(
@@ -3572,7 +4014,9 @@ module Aws::WorkSpaces
       :ip_group_ids,
       :workspace_access_properties,
       :tenancy,
-      :selfservice_permissions)
+      :selfservice_permissions,
+      :saml_properties,
+      :certificate_based_auth_properties)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3620,13 +4064,18 @@ module Aws::WorkSpaces
     #
     # @!attribute [rw] created
     #   The date when the image was created. If the image has been shared,
-    #   the AWS account that the image has been shared with sees the
-    #   original creation date of the image.
+    #   the Amazon Web Services account that the image has been shared with
+    #   sees the original creation date of the image.
     #   @return [Time]
     #
     # @!attribute [rw] owner_account_id
-    #   The identifier of the AWS account that owns the image.
+    #   The identifier of the Amazon Web Services account that owns the
+    #   image.
     #   @return [String]
+    #
+    # @!attribute [rw] updates
+    #   The updates (if any) that are available for the specified image.
+    #   @return [Types::UpdateResult]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceImage AWS API Documentation
     #
@@ -3640,31 +4089,28 @@ module Aws::WorkSpaces
       :error_code,
       :error_message,
       :created,
-      :owner_account_id)
+      :owner_account_id,
+      :updates)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Describes a WorkSpace.
     #
-    # @note When making an API call, you may pass WorkspaceProperties
-    #   data as a hash:
-    #
-    #       {
-    #         running_mode: "AUTO_STOP", # accepts AUTO_STOP, ALWAYS_ON
-    #         running_mode_auto_stop_timeout_in_minutes: 1,
-    #         root_volume_size_gib: 1,
-    #         user_volume_size_gib: 1,
-    #         compute_type_name: "VALUE", # accepts VALUE, STANDARD, PERFORMANCE, POWER, GRAPHICS, POWERPRO, GRAPHICSPRO
-    #       }
-    #
     # @!attribute [rw] running_mode
     #   The running mode. For more information, see [Manage the WorkSpace
     #   Running Mode][1].
     #
+    #   <note markdown="1"> The `MANUAL` value is only supported by Amazon WorkSpaces Core.
+    #   Contact your account team to be allow-listed to use this value. For
+    #   more information, see [Amazon WorkSpaces Core][2].
+    #
+    #    </note>
+    #
     #
     #
     #   [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html
+    #   [2]: http://aws.amazon.com/workspaces/core/
     #   @return [String]
     #
     # @!attribute [rw] running_mode_auto_stop_timeout_in_minutes
@@ -3701,6 +4147,26 @@ module Aws::WorkSpaces
     #   [1]: http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles
     #   @return [String]
     #
+    # @!attribute [rw] protocols
+    #   The protocol. For more information, see [ Protocols for Amazon
+    #   WorkSpaces][1].
+    #
+    #   <note markdown="1"> * Only available for WorkSpaces created with PCoIP bundles.
+    #
+    #   * The `Protocols` property is case sensitive. Ensure you use `PCOIP`
+    #     or `WSP`.
+    #
+    #   * Unavailable for Windows 7 WorkSpaces and WorkSpaces using
+    #     GPU-based bundles (Graphics, GraphicsPro, Graphics.g4dn, and
+    #     GraphicsPro.g4dn).
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces-protocols.html
+    #   @return [Array<String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceProperties AWS API Documentation
     #
     class WorkspaceProperties < Struct.new(
@@ -3708,47 +4174,23 @@ module Aws::WorkSpaces
       :running_mode_auto_stop_timeout_in_minutes,
       :root_volume_size_gib,
       :user_volume_size_gib,
-      :compute_type_name)
+      :compute_type_name,
+      :protocols)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Describes the information used to create a WorkSpace.
     #
-    # @note When making an API call, you may pass WorkspaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_id: "DirectoryId", # required
-    #         user_name: "UserName", # required
-    #         bundle_id: "BundleId", # required
-    #         volume_encryption_key: "VolumeEncryptionKey",
-    #         user_volume_encryption_enabled: false,
-    #         root_volume_encryption_enabled: false,
-    #         workspace_properties: {
-    #           running_mode: "AUTO_STOP", # accepts AUTO_STOP, ALWAYS_ON
-    #           running_mode_auto_stop_timeout_in_minutes: 1,
-    #           root_volume_size_gib: 1,
-    #           user_volume_size_gib: 1,
-    #           compute_type_name: "VALUE", # accepts VALUE, STANDARD, PERFORMANCE, POWER, GRAPHICS, POWERPRO, GRAPHICSPRO
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] directory_id
-    #   The identifier of the AWS Directory Service directory for the
-    #   WorkSpace. You can use DescribeWorkspaceDirectories to list the
-    #   available directories.
+    #   The identifier of the Directory Service directory for the WorkSpace.
+    #   You can use DescribeWorkspaceDirectories to list the available
+    #   directories.
     #   @return [String]
     #
     # @!attribute [rw] user_name
     #   The user name of the user for the WorkSpace. This user name must
-    #   exist in the AWS Directory Service directory for the WorkSpace.
+    #   exist in the Directory Service directory for the WorkSpace.
     #   @return [String]
     #
     # @!attribute [rw] bundle_id
@@ -3757,9 +4199,8 @@ module Aws::WorkSpaces
     #   @return [String]
     #
     # @!attribute [rw] volume_encryption_key
-    #   The symmetric AWS KMS customer master key (CMK) used to encrypt data
-    #   stored on your WorkSpace. Amazon WorkSpaces does not support
-    #   asymmetric CMKs.
+    #   The symmetric KMS key used to encrypt data stored on your WorkSpace.
+    #   Amazon WorkSpaces does not support asymmetric KMS keys.
     #   @return [String]
     #
     # @!attribute [rw] user_volume_encryption_enabled

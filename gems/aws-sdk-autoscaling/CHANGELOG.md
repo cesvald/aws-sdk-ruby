@@ -1,6 +1,168 @@
 Unreleased Changes
 ------------------
 
+1.93.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.92.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.91.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.90.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.89.0 (2023-04-04)
+------------------
+
+* Feature - Documentation updates for Amazon EC2 Auto Scaling
+
+1.88.0 (2023-04-04)
+------------------
+
+* Feature - Documentation updates for Amazon EC2 Auto Scaling
+
+1.87.0 (2023-03-30)
+------------------
+
+* Feature - Amazon EC2 Auto Scaling now supports Elastic Load Balancing traffic sources with the AttachTrafficSources, DetachTrafficSources, and DescribeTrafficSources APIs. This release also introduces a new activity status, "WaitingForConnectionDraining", for VPC Lattice to the DescribeScalingActivities API.
+
+1.86.0 (2023-02-10)
+------------------
+
+* Feature - You can now either terminate/replace, ignore, or wait for EC2 Auto Scaling instances on standby or protected from scale in. Also, you can also roll back changes from a failed instance refresh.
+
+1.85.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.84.0 (2022-12-08)
+------------------
+
+* Feature - Adds support for metric math for target tracking scaling policies, saving you the cost and effort of publishing a custom metric to CloudWatch. Also adds support for VPC Lattice by adding the Attach/Detach/DescribeTrafficSources APIs and a new health check type to the CreateAutoScalingGroup API.
+
+1.83.0 (2022-11-10)
+------------------
+
+* Feature - This release adds a new price capacity optimized allocation strategy for Spot Instances to help customers optimize provisioning of Spot Instances via EC2 Auto Scaling, EC2 Fleet, and Spot Fleet. It allocates Spot Instances based on both spare capacity availability and Spot Instance price.
+
+1.82.0 (2022-11-07)
+------------------
+
+* Feature - This release adds support for two new attributes for attribute-based instance type selection - NetworkBandwidthGbps and AllowedInstanceTypes.
+
+1.81.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.80.0 (2022-07-25)
+------------------
+
+* Feature - Documentation update for Amazon EC2 Auto Scaling.
+
+1.79.0 (2022-04-19)
+------------------
+
+* Feature - EC2 Auto Scaling now adds default instance warm-up times for all scaling activities, health check replacements, and other replacement events in the Auto Scaling instance lifecycle.
+
+1.78.0 (2022-02-24)
+------------------
+
+* Feature - You can now hibernate instances in a warm pool to stop instances without deleting their RAM contents. You can now also return instances to the warm pool on scale in, instead of always terminating capacity that you will need later.
+
+1.77.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.76.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.75.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.74.0 (2021-11-26)
+------------------
+
+* Feature - Documentation updates for Amazon EC2 Auto Scaling.
+
+1.73.0 (2021-11-24)
+------------------
+
+* Feature - Customers can now configure predictive scaling policies to proactively scale EC2 Auto Scaling groups based on any CloudWatch metrics that more accurately represent the load on the group than the four predefined metrics. They can also use math expressions to further customize the metrics.
+
+1.72.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.71.0 (2021-10-27)
+------------------
+
+* Feature - This release adds support for attribute-based instance type selection, a new EC2 Auto Scaling feature that lets customers express their instance requirements as a set of attributes, such as vCPU, memory, and storage.
+
+1.70.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.69.0 (2021-10-14)
+------------------
+
+* Feature - Amazon EC2 Auto Scaling now supports filtering describe Auto Scaling groups API using tags
+
+1.68.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.67.0 (2021-08-05)
+------------------
+
+* Feature - EC2 Auto Scaling adds configuration checks and Launch Template validation to Instance Refresh.
+
+1.66.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.65.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.64.0 (2021-06-30)
+------------------
+
+* Feature - Amazon EC2 Auto Scaling infrastructure improvements and optimizations.
+
+1.63.0 (2021-06-04)
+------------------
+
+* Feature - Documentation updates for Amazon EC2 Auto Scaling
+
+1.62.0 (2021-06-02)
+------------------
+
+* Feature - You can now launch EC2 instances with GP3 volumes when using Auto Scaling groups with Launch Configurations
+
 1.61.0 (2021-05-19)
 ------------------
 

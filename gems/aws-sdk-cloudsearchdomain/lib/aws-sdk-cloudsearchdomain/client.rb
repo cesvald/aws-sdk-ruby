@@ -24,6 +24,10 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
 require 'aws-sdk-core/plugins/signature_v4.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 require 'aws-sdk-cloudsearchdomain/plugins/conditional_signing.rb'
@@ -69,6 +73,10 @@ module Aws::CloudSearchDomain
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
     add_plugin(Aws::Plugins::SignatureV4)
     add_plugin(Aws::Plugins::Protocols::RestJson)
     add_plugin(Aws::CloudSearchDomain::Plugins::ConditionalSigning)
@@ -117,7 +125,9 @@ module Aws::CloudSearchDomain
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [String] :access_key_id
     #
@@ -155,6 +165,14 @@ module Aws::CloudSearchDomain
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
+    #
     #   @option options [Aws::Log::Formatter] :log_formatter (Aws::Log::Formatter.default)
     #     The log formatter.
     #
@@ -174,6 +192,11 @@ module Aws::CloudSearchDomain
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -220,6 +243,11 @@ module Aws::CloudSearchDomain
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -237,6 +265,19 @@ module Aws::CloudSearchDomain
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
@@ -248,7 +289,7 @@ module Aws::CloudSearchDomain
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -263,6 +304,9 @@ module Aws::CloudSearchDomain
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -293,16 +337,16 @@ module Aws::CloudSearchDomain
     # criteria. How you specify the search criteria depends on which query
     # parser you use. Amazon CloudSearch supports four query parsers:
     #
-    # * `simple`\: search all `text` and `text-array` fields for the
+    # * `simple`: search all `text` and `text-array` fields for the
     #   specified string. Search for phrases, individual terms, and
     #   prefixes.
-    # * `structured`\: search specific fields, construct compound queries
+    # * `structured`: search specific fields, construct compound queries
     #   using Boolean operators, and use advanced features such as term
     #   boosting and proximity searching.
-    # * `lucene`\: specify search criteria using the Apache Lucene query
+    # * `lucene`: specify search criteria using the Apache Lucene query
     #   parser syntax.
-    # * `dismax`\: specify search criteria using the simplified subset of
-    #   the Apache Lucene query parser syntax defined by the DisMax query
+    # * `dismax`: specify search criteria using the simplified subset of the
+    #   Apache Lucene query parser syntax defined by the DisMax query
     #   parser.
     #
     # For more information, see [Searching Your Data][1] in the *Amazon
@@ -443,16 +487,16 @@ module Aws::CloudSearchDomain
     #
     #   You can specify the following highlight options:
     #
-    #   * `format`\: specifies the format of the data in the text field:
-    #     `text` or `html`. When data is returned as HTML, all
-    #     non-alphanumeric characters are encoded. The default is `html`.
-    #   * `max_phrases`\: specifies the maximum number of occurrences of the
+    #   * `format`: specifies the format of the data in the text field: `text`
+    #     or `html`. When data is returned as HTML, all non-alphanumeric
+    #     characters are encoded. The default is `html`.
+    #   * `max_phrases`: specifies the maximum number of occurrences of the
     #     search term(s) you want to highlight. By default, the first
     #     occurrence is highlighted.
-    #   * `pre_tag`\: specifies the string to prepend to an occurrence of a
+    #   * `pre_tag`: specifies the string to prepend to an occurrence of a
     #     search term. The default for HTML highlights is `&lt;em&gt;`. The
     #     default for text highlights is `*`.
-    #   * `post_tag`\: specifies the string to append to an occurrence of a
+    #   * `post_tag`: specifies the string to append to an occurrence of a
     #     search term. The default for HTML highlights is `&lt;/em&gt;`. The
     #     default for text highlights is `*`.
     #
@@ -502,7 +546,7 @@ module Aws::CloudSearchDomain
     #
     #   The options you can configure vary according to which parser you use:
     #
-    #   * `defaultOperator`\: The default operator used to combine individual
+    #   * `defaultOperator`: The default operator used to combine individual
     #     terms in the search string. For example: `defaultOperator: 'or'`.
     #     For the `dismax` parser, you specify a percentage that represents
     #     the percentage of terms in the search string (rounded down) that
@@ -514,7 +558,7 @@ module Aws::CloudSearchDomain
     #     (`dismax`). Default: `and` (`simple`, `structured`, `lucene`) or
     #     `100` (`dismax`). Valid for: `simple`, `structured`, `lucene`, and
     #     `dismax`.
-    #   * `fields`\: An array of the fields to search when no fields are
+    #   * `fields`: An array of the fields to search when no fields are
     #     specified in a search. If no fields are specified in a search and
     #     this option is not specified, all text and text-array fields are
     #     searched. You can specify a weight for each field to control the
@@ -526,7 +570,7 @@ module Aws::CloudSearchDomain
     #     The name of any configured field and an optional numeric value
     #     greater than zero. Default: All `text` and `text-array` fields.
     #     Valid for: `simple`, `structured`, `lucene`, and `dismax`.
-    #   * `operators`\: An array of the operators or special characters you
+    #   * `operators`: An array of the operators or special characters you
     #     want to disable for the simple query parser. If you disable the
     #     `and`, `or`, or `not` operators, the corresponding operators (`+`,
     #     `|`, `-`) have no special meaning and are dropped from the search
@@ -548,7 +592,7 @@ module Aws::CloudSearchDomain
     #     `escape`, `fuzzy`, `near`, `not`, `or`, `phrase`, `precedence`,
     #     `prefix`, `whitespace`. Default: All operators and special
     #     characters are enabled. Valid for: `simple`.
-    #   * `phraseFields`\: An array of the `text` or `text-array` fields you
+    #   * `phraseFields`: An array of the `text` or `text-array` fields you
     #     want to use for phrase searches. When the terms in the search string
     #     appear in close proximity within a field, the field scores higher.
     #     You can specify a weight for each field to boost that score. The
@@ -562,20 +606,20 @@ module Aws::CloudSearchDomain
     #     If you don't specify any fields with `phraseFields`, proximity
     #     scoring is disabled even if `phraseSlop` is specified. Valid for:
     #     `dismax`.
-    #   * `phraseSlop`\: An integer value that specifies how much matches can
+    #   * `phraseSlop`: An integer value that specifies how much matches can
     #     deviate from the search phrase and still be boosted according to the
     #     weights specified in the `phraseFields` option; for example,
     #     `phraseSlop: 2`. You must also specify `phraseFields` to enable
     #     proximity scoring. Valid values: positive integers. Default: 0.
     #     Valid for: `dismax`.
-    #   * `explicitPhraseSlop`\: An integer value that specifies how much a
+    #   * `explicitPhraseSlop`: An integer value that specifies how much a
     #     match can deviate from the search phrase when the phrase is enclosed
     #     in double quotes in the search string. (Phrases that exceed this
     #     proximity distance are not considered a match.) For example, to
     #     specify a slop of three for dismax phrase queries, you would specify
     #     `"explicitPhraseSlop":3`. Valid values: positive integers. Default:
     #     0. Valid for: `dismax`.
-    #   * `tieBreaker`\: When a term in the search string is found in a
+    #   * `tieBreaker`: When a term in the search string is found in a
     #     document's field, a score is calculated for that field based on how
     #     common the word is in that field compared to other documents. If the
     #     term occurs in multiple fields within a document, by default only
@@ -599,11 +643,11 @@ module Aws::CloudSearchDomain
     #
     #   Amazon CloudSearch supports four query parsers:
     #
-    #   * `simple`\: perform simple searches of `text` and `text-array`
-    #     fields. By default, the `simple` query parser searches all `text`
-    #     and `text-array` fields. You can specify which fields to search by
-    #     with the `queryOptions` parameter. If you prefix a search term with
-    #     a plus sign (+) documents must contain the term to be considered a
+    #   * `simple`: perform simple searches of `text` and `text-array` fields.
+    #     By default, the `simple` query parser searches all `text` and
+    #     `text-array` fields. You can specify which fields to search by with
+    #     the `queryOptions` parameter. If you prefix a search term with a
+    #     plus sign (+) documents must contain the term to be considered a
     #     match. (This is the default, unless you configure the default
     #     operator with the `queryOptions` parameter.) You can use the `-`
     #     (NOT), `|` (OR), and `*` (wildcard) operators to exclude particular
@@ -611,15 +655,15 @@ module Aws::CloudSearchDomain
     #     for a prefix. To search for a phrase rather than individual terms,
     #     enclose the phrase in double quotes. For more information, see
     #     [Searching for Text][1] in the *Amazon CloudSearch Developer Guide*.
-    #   * `structured`\: perform advanced searches by combining multiple
+    #   * `structured`: perform advanced searches by combining multiple
     #     expressions to define the search criteria. You can also search
     #     within particular fields, search for values and ranges of values,
     #     and use advanced options such as term boosting, `matchall`, and
     #     `near`. For more information, see [Constructing Compound Queries][2]
     #     in the *Amazon CloudSearch Developer Guide*.
-    #   * `lucene`\: search using the Apache Lucene query parser syntax. For
+    #   * `lucene`: search using the Apache Lucene query parser syntax. For
     #     more information, see [Apache Lucene Query Parser Syntax][3].
-    #   * `dismax`\: search using the simplified subset of the Apache Lucene
+    #   * `dismax`: search using the simplified subset of the Apache Lucene
     #     query parser syntax defined by the DisMax query parser. For more
     #     information, see [DisMax Query Parser Syntax][4].
     #
@@ -888,7 +932,7 @@ module Aws::CloudSearchDomain
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-cloudsearchdomain'
-      context[:gem_version] = '1.24.0'
+      context[:gem_version] = '1.37.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

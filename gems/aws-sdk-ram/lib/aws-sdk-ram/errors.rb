@@ -32,11 +32,16 @@ module Aws::RAM
   # * {InvalidMaxResultsException}
   # * {InvalidNextTokenException}
   # * {InvalidParameterException}
+  # * {InvalidPolicyException}
   # * {InvalidResourceTypeException}
   # * {InvalidStateTransitionException}
   # * {MalformedArnException}
+  # * {MalformedPolicyTemplateException}
   # * {MissingRequiredParameterException}
   # * {OperationNotPermittedException}
+  # * {PermissionAlreadyExistsException}
+  # * {PermissionLimitExceededException}
+  # * {PermissionVersionsLimitExceededException}
   # * {ResourceArnNotFoundException}
   # * {ResourceShareInvitationAlreadyAcceptedException}
   # * {ResourceShareInvitationAlreadyRejectedException}
@@ -47,7 +52,9 @@ module Aws::RAM
   # * {ServiceUnavailableException}
   # * {TagLimitExceededException}
   # * {TagPolicyViolationException}
+  # * {ThrottlingException}
   # * {UnknownResourceException}
+  # * {UnmatchedPolicyPermissionException}
   #
   # Additionally, error classes are dynamically generated for service errors based on the error code
   # if they are not defined above.
@@ -130,6 +137,21 @@ module Aws::RAM
       end
     end
 
+    class InvalidPolicyException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RAM::Types::InvalidPolicyException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class InvalidResourceTypeException < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -175,6 +197,21 @@ module Aws::RAM
       end
     end
 
+    class MalformedPolicyTemplateException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RAM::Types::MalformedPolicyTemplateException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class MissingRequiredParameterException < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -195,6 +232,51 @@ module Aws::RAM
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::RAM::Types::OperationNotPermittedException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class PermissionAlreadyExistsException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RAM::Types::PermissionAlreadyExistsException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class PermissionLimitExceededException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RAM::Types::PermissionLimitExceededException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class PermissionVersionsLimitExceededException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RAM::Types::PermissionVersionsLimitExceededException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -355,11 +437,41 @@ module Aws::RAM
       end
     end
 
+    class ThrottlingException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RAM::Types::ThrottlingException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class UnknownResourceException < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::RAM::Types::UnknownResourceException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class UnmatchedPolicyPermissionException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RAM::Types::UnmatchedPolicyPermissionException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end

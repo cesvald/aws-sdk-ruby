@@ -1,6 +1,338 @@
 Unreleased Changes
 ------------------
 
+1.184.0 (2023-07-06)
+------------------
+
+* Feature - Updates Amazon RDS documentation for creating DB instances and creating Aurora global clusters.
+
+1.183.0 (2023-06-28)
+------------------
+
+* Feature - Amazon Relational Database Service (RDS) now supports joining a RDS for SQL Server instance to a self-managed Active Directory.
+
+1.182.0 (2023-06-23)
+------------------
+
+* Feature - Documentation improvements for create, describe, and modify DB clusters and DB instances.
+
+1.181.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.180.0 (2023-05-31)
+------------------
+
+* Feature - This release adds support for changing the engine for Oracle using the ModifyDbInstance API
+
+1.179.0 (2023-05-18)
+------------------
+
+* Feature - RDS documentation update for the EngineVersion parameter of ModifyDBSnapshot
+
+1.178.0 (2023-05-10)
+------------------
+
+* Feature - Amazon Relational Database Service (RDS) updates for the new Aurora I/O-Optimized storage type for Amazon Aurora DB clusters
+
+1.177.0 (2023-04-19)
+------------------
+
+* Feature - Adds support for the ImageId parameter of CreateCustomDBEngineVersion to RDS Custom for Oracle
+
+1.176.0 (2023-04-14)
+------------------
+
+* Feature - This release adds support of modifying the engine mode of database clusters.
+
+1.175.0 (2023-04-06)
+------------------
+
+* Feature - Adds and updates the SDK examples
+
+1.174.0 (2023-03-29)
+------------------
+
+* Feature - Add support for creating a read replica DB instance from a Multi-AZ DB cluster.
+
+1.173.0 (2023-03-24)
+------------------
+
+* Feature - Added error code CreateCustomDBEngineVersionFault for when the create custom engine version for Custom engines fails.
+
+1.172.0 (2023-02-15)
+------------------
+
+* Feature - Database Activity Stream support for RDS for SQL Server.
+
+1.171.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.170.0 (2023-01-10)
+------------------
+
+* Feature - This release adds support for configuring allocated storage on the CreateDBInstanceReadReplica, RestoreDBInstanceFromDBSnapshot, and RestoreDBInstanceToPointInTime APIs.
+
+1.169.0 (2023-01-05)
+------------------
+
+* Feature - This release adds support for specifying which certificate authority (CA) to use for a DB instance's server certificate during DB instance creation, as well as other CA enhancements.
+
+1.168.0 (2022-12-28)
+------------------
+
+* Feature - This release adds support for Custom Engine Version (CEV) on RDS Custom SQL Server.
+
+1.167.0 (2022-12-22)
+------------------
+
+* Feature - Add support for managing master user password in AWS Secrets Manager for the DBInstance and DBCluster.
+
+1.166.0 (2022-12-19)
+------------------
+
+* Feature - Add support for --enable-customer-owned-ip to RDS create-db-instance-read-replica API for RDS on Outposts.
+
+1.165.0 (2022-12-13)
+------------------
+
+* Feature - This deployment adds ClientPasswordAuthType field to the Auth structure of the DBProxy.
+
+1.164.0 (2022-12-12)
+------------------
+
+* Feature - Update the RDS API model to support copying option groups during the CopyDBSnapshot operation
+
+1.163.0 (2022-12-06)
+------------------
+
+* Feature - This release adds the BlueGreenDeploymentNotFoundFault to the AddTagsToResource, ListTagsForResource, and RemoveTagsFromResource operations.
+
+1.162.0 (2022-12-05)
+------------------
+
+* Feature - This release adds the InvalidDBInstanceStateFault to the RestoreDBClusterFromSnapshot operation.
+
+1.161.0 (2022-11-28)
+------------------
+
+* Feature - This release enables new Aurora and RDS feature called Blue/Green Deployments that makes updates to databases safer, simpler and faster.
+
+1.160.0 (2022-11-16)
+------------------
+
+* Feature - This release adds support for container databases (CDBs) to Amazon RDS Custom for Oracle. A CDB contains one PDB at creation. You can add more PDBs using Oracle SQL. You can also customize your database installation by setting the Oracle base, Oracle home, and the OS user name and group.
+
+1.159.0 (2022-11-14)
+------------------
+
+* Feature - This release adds support for restoring an RDS Multi-AZ DB cluster snapshot to a Single-AZ deployment or a Multi-AZ DB instance deployment.
+
+1.158.0 (2022-11-01)
+------------------
+
+* Feature - Relational Database Service - This release adds support for configuring Storage Throughput on RDS database instances.
+
+1.157.0 (2022-10-25)
+------------------
+
+* Feature - Relational Database Service - This release adds support for exporting DB cluster data to Amazon S3.
+
+1.156.0 (2022-09-19)
+------------------
+
+* Feature - This release adds support for Amazon RDS Proxy with SQL Server compatibility.
+
+1.155.0 (2022-08-26)
+------------------
+
+* Feature - Removes support for RDS Custom from DBInstanceClass in ModifyDBInstance
+
+1.154.0 (2022-08-23)
+------------------
+
+* Feature - RDS for Oracle supports Oracle Data Guard switchover and read replica backups.
+
+1.153.0 (2022-08-17)
+------------------
+
+* Feature - Adds support for Internet Protocol Version 6 (IPv6) for RDS Aurora database clusters.
+
+1.152.0 (2022-08-12)
+------------------
+
+* Feature - Adds support for RDS Custom to DBInstanceClass in ModifyDBInstance
+
+1.151.0 (2022-07-26)
+------------------
+
+* Feature - Adds support for using RDS Proxies with RDS for MariaDB databases.
+
+1.150.0 (2022-07-22)
+------------------
+
+* Feature - This release adds the "ModifyActivityStream" API with support for audit policy state locking and unlocking.
+
+1.149.0 (2022-07-21)
+------------------
+
+* Feature - Adds support for creating an RDS Proxy for an RDS for MariaDB database.
+
+1.148.0 (2022-07-05)
+------------------
+
+* Feature - Adds waiters support for DBCluster.
+
+1.147.0 (2022-07-01)
+------------------
+
+* Feature - Adds support for additional retention periods to Performance Insights.
+
+1.146.0 (2022-05-06)
+------------------
+
+* Feature - Various documentation improvements.
+
+1.145.0 (2022-04-29)
+------------------
+
+* Feature - Feature - Adds support for Internet Protocol Version 6 (IPv6) on RDS database instances.
+
+1.144.0 (2022-04-20)
+------------------
+
+* Feature - Added a new cluster-level attribute to set the capacity range for Aurora Serverless v2 instances.
+
+1.143.0 (2022-04-15)
+------------------
+
+* Feature - Removes Amazon RDS on VMware with the deletion of APIs related to Custom Availability Zones and Media installation
+
+1.142.0 (2022-03-15)
+------------------
+
+* Feature - Various documentation improvements
+
+1.141.0 (2022-03-01)
+------------------
+
+* Feature - Documentation updates for Multi-AZ DB clusters.
+
+1.140.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.139.0 (2022-02-14)
+------------------
+
+* Feature - Adds support for determining which Aurora PostgreSQL versions support Babelfish.
+
+1.138.0 (2022-02-04)
+------------------
+
+* Feature - updates for RDS Custom for Oracle 12.1 support
+
+1.137.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.136.0 (2022-01-11)
+------------------
+
+* Feature - This release adds the db-proxy event type to support subscribing to RDS Proxy events.
+
+1.135.0 (2022-01-03)
+------------------
+
+* Feature - Multiple doc-only updates for Relational Database Service (RDS)
+
+1.134.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.133.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.132.0 (2021-11-23)
+------------------
+
+* Feature - Adds support for Multi-AZ DB clusters for RDS for MySQL and RDS for PostgreSQL.
+
+1.131.0 (2021-11-22)
+------------------
+
+* Feature - Adds local backup support to Amazon RDS on AWS Outposts.
+
+1.130.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.129.0 (2021-10-25)
+------------------
+
+* Feature - This release adds support for Amazon RDS Custom, which is a new RDS management type that gives you full access to your database and operating system. For more information, see https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-custom.html
+
+1.128.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.127.0 (2021-09-10)
+------------------
+
+* Feature - This release adds support for providing a custom timeout value for finding a scaling point during autoscaling in Aurora Serverless v1.
+
+1.126.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.125.0 (2021-08-04)
+------------------
+
+* Feature - This release adds AutomaticRestartTime to the DescribeDBInstances and DescribeDBClusters operations. AutomaticRestartTime indicates the time when a stopped DB instance or DB cluster is restarted automatically.
+
+1.124.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.123.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.122.0 (2021-07-21)
+------------------
+
+* Feature - Adds the OriginalSnapshotCreateTime field to the DBSnapshot response object. This field timestamps the underlying data of a snapshot and doesn't change when the snapshot is copied.
+
+1.121.0 (2021-06-17)
+------------------
+
+* Feature - This release enables Database Activity Streams for RDS Oracle
+
+1.120.0 (2021-06-16)
+------------------
+
+* Feature - This release enables fast cloning in Aurora Serverless. You can now clone between Aurora Serverless clusters and Aurora Provisioned clusters.
+
+1.119.0 (2021-06-04)
+------------------
+
+* Feature - Documentation updates for RDS: fixing an outdated link to the RDS documentation in DBInstance$DBInstanceStatus
+
 1.118.0 (2021-04-13)
 ------------------
 

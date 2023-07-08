@@ -30,6 +30,7 @@ module Aws::Organizations
   # * {AWSOrganizationsNotInUseException}
   # * {AccessDeniedException}
   # * {AccessDeniedForDependencyException}
+  # * {AccountAlreadyClosedException}
   # * {AccountAlreadyRegisteredException}
   # * {AccountNotFoundException}
   # * {AccountNotRegisteredException}
@@ -37,6 +38,7 @@ module Aws::Organizations
   # * {AlreadyInOrganizationException}
   # * {ChildNotFoundException}
   # * {ConcurrentModificationException}
+  # * {ConflictException}
   # * {ConstraintViolationException}
   # * {CreateAccountStatusNotFoundException}
   # * {DestinationParentNotFoundException}
@@ -65,6 +67,7 @@ module Aws::Organizations
   # * {PolicyTypeAlreadyEnabledException}
   # * {PolicyTypeNotAvailableForOrganizationException}
   # * {PolicyTypeNotEnabledException}
+  # * {ResourcePolicyNotFoundException}
   # * {RootNotFoundException}
   # * {ServiceException}
   # * {SourceParentNotFoundException}
@@ -125,6 +128,21 @@ module Aws::Organizations
       # @return [String]
       def reason
         @data[:reason]
+      end
+    end
+
+    class AccountAlreadyClosedException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Organizations::Types::AccountAlreadyClosedException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
       end
     end
 
@@ -223,6 +241,21 @@ module Aws::Organizations
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::Organizations::Types::ConcurrentModificationException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class ConflictException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Organizations::Types::ConflictException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -658,6 +691,21 @@ module Aws::Organizations
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::Organizations::Types::PolicyTypeNotEnabledException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class ResourcePolicyNotFoundException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Organizations::Types::ResourcePolicyNotFoundException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end

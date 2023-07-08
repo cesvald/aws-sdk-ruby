@@ -1,6 +1,138 @@
 Unreleased Changes
 ------------------
 
+1.77.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.76.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.75.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.74.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.73.0 (2023-05-04)
+------------------
+
+* Feature - Adds support for filtering by metric names in CloudWatch Metric Streams.
+
+1.72.0 (2023-03-24)
+------------------
+
+* Feature - Doc-only update to correct alarm actions list
+
+1.71.0 (2023-01-18)
+------------------
+
+* Feature - Enable cross-account streams in CloudWatch Metric Streams via Observability Access Manager.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.70.0 (2022-12-14)
+------------------
+
+* Feature - Adding support for Metrics Insights Alarms
+
+1.69.0 (2022-11-28)
+------------------
+
+* Feature - Adds cross-account support to the GetMetricData API. Adds cross-account support to the ListMetrics API through the usage of the IncludeLinkedAccounts flag and the new OwningAccounts field.
+
+1.68.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.67.0 (2022-08-18)
+------------------
+
+* Feature - Add support for managed Contributor Insights Rules
+
+1.66.0 (2022-08-09)
+------------------
+
+* Feature - Various quota increases related to dimensions and custom metrics
+
+1.65.0 (2022-07-21)
+------------------
+
+* Feature - Adding support for the suppression of Composite Alarm actions
+
+1.64.0 (2022-04-14)
+------------------
+
+* Feature - Updates documentation for additional statistics in CloudWatch Metric Streams.
+
+1.63.0 (2022-04-13)
+------------------
+
+* Feature - Adds support for additional statistics in CloudWatch Metric Streams.
+
+1.62.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.61.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.60.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.59.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.58.0 (2021-11-18)
+------------------
+
+* Feature - CloudWatch Anomaly Detection now supports anomaly detectors that use metric math as input.
+
+1.57.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.56.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.55.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.54.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.53.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.52.0 (2021-07-26)
+------------------
+
+* Feature - SDK update to support creation of Cross-Account Metric Alarms and update API documentation.
+
 1.51.0 (2021-03-30)
 ------------------
 

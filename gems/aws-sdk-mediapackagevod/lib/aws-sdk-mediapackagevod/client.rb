@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:mediapackagevod)
@@ -73,8 +77,13 @@ module Aws::MediaPackageVod
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::MediaPackageVod::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::MediaPackageVod
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::MediaPackageVod
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::MediaPackageVod
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::MediaPackageVod
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::MediaPackageVod
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::MediaPackageVod::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::MediaPackageVod::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::MediaPackageVod
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::MediaPackageVod
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -339,6 +396,7 @@ module Aws::MediaPackageVod
     #
     #   * {Types::ConfigureLogsResponse#arn #arn} => String
     #   * {Types::ConfigureLogsResponse#authorization #authorization} => Types::Authorization
+    #   * {Types::ConfigureLogsResponse#created_at #created_at} => String
     #   * {Types::ConfigureLogsResponse#domain_name #domain_name} => String
     #   * {Types::ConfigureLogsResponse#egress_access_logs #egress_access_logs} => Types::EgressAccessLogs
     #   * {Types::ConfigureLogsResponse#id #id} => String
@@ -358,6 +416,7 @@ module Aws::MediaPackageVod
     #   resp.arn #=> String
     #   resp.authorization.cdn_identifier_secret #=> String
     #   resp.authorization.secrets_role_arn #=> String
+    #   resp.created_at #=> String
     #   resp.domain_name #=> String
     #   resp.egress_access_logs.log_group_name #=> String
     #   resp.id #=> String
@@ -419,6 +478,7 @@ module Aws::MediaPackageVod
     #   resp.created_at #=> String
     #   resp.egress_endpoints #=> Array
     #   resp.egress_endpoints[0].packaging_configuration_id #=> String
+    #   resp.egress_endpoints[0].status #=> String
     #   resp.egress_endpoints[0].url #=> String
     #   resp.id #=> String
     #   resp.packaging_group_id #=> String
@@ -462,6 +522,7 @@ module Aws::MediaPackageVod
     #
     #   * {Types::CreatePackagingConfigurationResponse#arn #arn} => String
     #   * {Types::CreatePackagingConfigurationResponse#cmaf_package #cmaf_package} => Types::CmafPackage
+    #   * {Types::CreatePackagingConfigurationResponse#created_at #created_at} => String
     #   * {Types::CreatePackagingConfigurationResponse#dash_package #dash_package} => Types::DashPackage
     #   * {Types::CreatePackagingConfigurationResponse#hls_package #hls_package} => Types::HlsPackage
     #   * {Types::CreatePackagingConfigurationResponse#id #id} => String
@@ -474,7 +535,12 @@ module Aws::MediaPackageVod
     #   resp = client.create_packaging_configuration({
     #     cmaf_package: {
     #       encryption: {
+    #         constant_initialization_vector: "__string",
     #         speke_key_provider: { # required
+    #           encryption_contract_configuration: {
+    #             preset_speke_20_audio: "PRESET-AUDIO-1", # required, accepts PRESET-AUDIO-1, PRESET-AUDIO-2, PRESET-AUDIO-3, SHARED, UNENCRYPTED
+    #             preset_speke_20_video: "PRESET-VIDEO-1", # required, accepts PRESET-VIDEO-1, PRESET-VIDEO-2, PRESET-VIDEO-3, PRESET-VIDEO-4, PRESET-VIDEO-5, PRESET-VIDEO-6, PRESET-VIDEO-7, PRESET-VIDEO-8, SHARED, UNENCRYPTED
+    #           },
     #           role_arn: "__string", # required
     #           system_ids: ["__string"], # required
     #           url: "__string", # required
@@ -504,6 +570,7 @@ module Aws::MediaPackageVod
     #           manifest_name: "__string",
     #           min_buffer_time_seconds: 1,
     #           profile: "NONE", # accepts NONE, HBBTV_1_5
+    #           scte_markers_source: "SEGMENTS", # accepts SEGMENTS, MANIFEST
     #           stream_selection: {
     #             max_video_bits_per_second: 1,
     #             min_video_bits_per_second: 1,
@@ -513,12 +580,17 @@ module Aws::MediaPackageVod
     #       ],
     #       encryption: {
     #         speke_key_provider: { # required
+    #           encryption_contract_configuration: {
+    #             preset_speke_20_audio: "PRESET-AUDIO-1", # required, accepts PRESET-AUDIO-1, PRESET-AUDIO-2, PRESET-AUDIO-3, SHARED, UNENCRYPTED
+    #             preset_speke_20_video: "PRESET-VIDEO-1", # required, accepts PRESET-VIDEO-1, PRESET-VIDEO-2, PRESET-VIDEO-3, PRESET-VIDEO-4, PRESET-VIDEO-5, PRESET-VIDEO-6, PRESET-VIDEO-7, PRESET-VIDEO-8, SHARED, UNENCRYPTED
+    #           },
     #           role_arn: "__string", # required
     #           system_ids: ["__string"], # required
     #           url: "__string", # required
     #         },
     #       },
     #       include_encoder_configuration_in_segments: false,
+    #       include_iframe_only_stream: false,
     #       period_triggers: ["ADS"], # accepts ADS
     #       segment_duration_seconds: 1,
     #       segment_template_format: "NUMBER_WITH_TIMELINE", # accepts NUMBER_WITH_TIMELINE, TIME_WITH_TIMELINE, NUMBER_WITH_DURATION
@@ -528,6 +600,10 @@ module Aws::MediaPackageVod
     #         constant_initialization_vector: "__string",
     #         encryption_method: "AES_128", # accepts AES_128, SAMPLE_AES
     #         speke_key_provider: { # required
+    #           encryption_contract_configuration: {
+    #             preset_speke_20_audio: "PRESET-AUDIO-1", # required, accepts PRESET-AUDIO-1, PRESET-AUDIO-2, PRESET-AUDIO-3, SHARED, UNENCRYPTED
+    #             preset_speke_20_video: "PRESET-VIDEO-1", # required, accepts PRESET-VIDEO-1, PRESET-VIDEO-2, PRESET-VIDEO-3, PRESET-VIDEO-4, PRESET-VIDEO-5, PRESET-VIDEO-6, PRESET-VIDEO-7, PRESET-VIDEO-8, SHARED, UNENCRYPTED
+    #           },
     #           role_arn: "__string", # required
     #           system_ids: ["__string"], # required
     #           url: "__string", # required
@@ -547,6 +623,7 @@ module Aws::MediaPackageVod
     #           },
     #         },
     #       ],
+    #       include_dvb_subtitles: false,
     #       segment_duration_seconds: 1,
     #       use_audio_rendition_group: false,
     #     },
@@ -554,6 +631,10 @@ module Aws::MediaPackageVod
     #     mss_package: {
     #       encryption: {
     #         speke_key_provider: { # required
+    #           encryption_contract_configuration: {
+    #             preset_speke_20_audio: "PRESET-AUDIO-1", # required, accepts PRESET-AUDIO-1, PRESET-AUDIO-2, PRESET-AUDIO-3, SHARED, UNENCRYPTED
+    #             preset_speke_20_video: "PRESET-VIDEO-1", # required, accepts PRESET-VIDEO-1, PRESET-VIDEO-2, PRESET-VIDEO-3, PRESET-VIDEO-4, PRESET-VIDEO-5, PRESET-VIDEO-6, PRESET-VIDEO-7, PRESET-VIDEO-8, SHARED, UNENCRYPTED
+    #           },
     #           role_arn: "__string", # required
     #           system_ids: ["__string"], # required
     #           url: "__string", # required
@@ -580,6 +661,9 @@ module Aws::MediaPackageVod
     # @example Response structure
     #
     #   resp.arn #=> String
+    #   resp.cmaf_package.encryption.constant_initialization_vector #=> String
+    #   resp.cmaf_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.cmaf_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.cmaf_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.cmaf_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.cmaf_package.encryption.speke_key_provider.system_ids[0] #=> String
@@ -595,25 +679,32 @@ module Aws::MediaPackageVod
     #   resp.cmaf_package.hls_manifests[0].stream_selection.stream_order #=> String, one of "ORIGINAL", "VIDEO_BITRATE_ASCENDING", "VIDEO_BITRATE_DESCENDING"
     #   resp.cmaf_package.include_encoder_configuration_in_segments #=> Boolean
     #   resp.cmaf_package.segment_duration_seconds #=> Integer
+    #   resp.created_at #=> String
     #   resp.dash_package.dash_manifests #=> Array
     #   resp.dash_package.dash_manifests[0].manifest_layout #=> String, one of "FULL", "COMPACT"
     #   resp.dash_package.dash_manifests[0].manifest_name #=> String
     #   resp.dash_package.dash_manifests[0].min_buffer_time_seconds #=> Integer
     #   resp.dash_package.dash_manifests[0].profile #=> String, one of "NONE", "HBBTV_1_5"
+    #   resp.dash_package.dash_manifests[0].scte_markers_source #=> String, one of "SEGMENTS", "MANIFEST"
     #   resp.dash_package.dash_manifests[0].stream_selection.max_video_bits_per_second #=> Integer
     #   resp.dash_package.dash_manifests[0].stream_selection.min_video_bits_per_second #=> Integer
     #   resp.dash_package.dash_manifests[0].stream_selection.stream_order #=> String, one of "ORIGINAL", "VIDEO_BITRATE_ASCENDING", "VIDEO_BITRATE_DESCENDING"
+    #   resp.dash_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.dash_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.dash_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.dash_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.dash_package.encryption.speke_key_provider.system_ids[0] #=> String
     #   resp.dash_package.encryption.speke_key_provider.url #=> String
     #   resp.dash_package.include_encoder_configuration_in_segments #=> Boolean
+    #   resp.dash_package.include_iframe_only_stream #=> Boolean
     #   resp.dash_package.period_triggers #=> Array
     #   resp.dash_package.period_triggers[0] #=> String, one of "ADS"
     #   resp.dash_package.segment_duration_seconds #=> Integer
     #   resp.dash_package.segment_template_format #=> String, one of "NUMBER_WITH_TIMELINE", "TIME_WITH_TIMELINE", "NUMBER_WITH_DURATION"
     #   resp.hls_package.encryption.constant_initialization_vector #=> String
     #   resp.hls_package.encryption.encryption_method #=> String, one of "AES_128", "SAMPLE_AES"
+    #   resp.hls_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.hls_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.hls_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.hls_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.hls_package.encryption.speke_key_provider.system_ids[0] #=> String
@@ -627,9 +718,12 @@ module Aws::MediaPackageVod
     #   resp.hls_package.hls_manifests[0].stream_selection.max_video_bits_per_second #=> Integer
     #   resp.hls_package.hls_manifests[0].stream_selection.min_video_bits_per_second #=> Integer
     #   resp.hls_package.hls_manifests[0].stream_selection.stream_order #=> String, one of "ORIGINAL", "VIDEO_BITRATE_ASCENDING", "VIDEO_BITRATE_DESCENDING"
+    #   resp.hls_package.include_dvb_subtitles #=> Boolean
     #   resp.hls_package.segment_duration_seconds #=> Integer
     #   resp.hls_package.use_audio_rendition_group #=> Boolean
     #   resp.id #=> String
+    #   resp.mss_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.mss_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.mss_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.mss_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.mss_package.encryption.speke_key_provider.system_ids[0] #=> String
@@ -670,6 +764,7 @@ module Aws::MediaPackageVod
     #
     #   * {Types::CreatePackagingGroupResponse#arn #arn} => String
     #   * {Types::CreatePackagingGroupResponse#authorization #authorization} => Types::Authorization
+    #   * {Types::CreatePackagingGroupResponse#created_at #created_at} => String
     #   * {Types::CreatePackagingGroupResponse#domain_name #domain_name} => String
     #   * {Types::CreatePackagingGroupResponse#egress_access_logs #egress_access_logs} => Types::EgressAccessLogs
     #   * {Types::CreatePackagingGroupResponse#id #id} => String
@@ -696,6 +791,7 @@ module Aws::MediaPackageVod
     #   resp.arn #=> String
     #   resp.authorization.cdn_identifier_secret #=> String
     #   resp.authorization.secrets_role_arn #=> String
+    #   resp.created_at #=> String
     #   resp.domain_name #=> String
     #   resp.egress_access_logs.log_group_name #=> String
     #   resp.id #=> String
@@ -802,6 +898,7 @@ module Aws::MediaPackageVod
     #   resp.created_at #=> String
     #   resp.egress_endpoints #=> Array
     #   resp.egress_endpoints[0].packaging_configuration_id #=> String
+    #   resp.egress_endpoints[0].status #=> String
     #   resp.egress_endpoints[0].url #=> String
     #   resp.id #=> String
     #   resp.packaging_group_id #=> String
@@ -829,6 +926,7 @@ module Aws::MediaPackageVod
     #
     #   * {Types::DescribePackagingConfigurationResponse#arn #arn} => String
     #   * {Types::DescribePackagingConfigurationResponse#cmaf_package #cmaf_package} => Types::CmafPackage
+    #   * {Types::DescribePackagingConfigurationResponse#created_at #created_at} => String
     #   * {Types::DescribePackagingConfigurationResponse#dash_package #dash_package} => Types::DashPackage
     #   * {Types::DescribePackagingConfigurationResponse#hls_package #hls_package} => Types::HlsPackage
     #   * {Types::DescribePackagingConfigurationResponse#id #id} => String
@@ -845,6 +943,9 @@ module Aws::MediaPackageVod
     # @example Response structure
     #
     #   resp.arn #=> String
+    #   resp.cmaf_package.encryption.constant_initialization_vector #=> String
+    #   resp.cmaf_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.cmaf_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.cmaf_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.cmaf_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.cmaf_package.encryption.speke_key_provider.system_ids[0] #=> String
@@ -860,25 +961,32 @@ module Aws::MediaPackageVod
     #   resp.cmaf_package.hls_manifests[0].stream_selection.stream_order #=> String, one of "ORIGINAL", "VIDEO_BITRATE_ASCENDING", "VIDEO_BITRATE_DESCENDING"
     #   resp.cmaf_package.include_encoder_configuration_in_segments #=> Boolean
     #   resp.cmaf_package.segment_duration_seconds #=> Integer
+    #   resp.created_at #=> String
     #   resp.dash_package.dash_manifests #=> Array
     #   resp.dash_package.dash_manifests[0].manifest_layout #=> String, one of "FULL", "COMPACT"
     #   resp.dash_package.dash_manifests[0].manifest_name #=> String
     #   resp.dash_package.dash_manifests[0].min_buffer_time_seconds #=> Integer
     #   resp.dash_package.dash_manifests[0].profile #=> String, one of "NONE", "HBBTV_1_5"
+    #   resp.dash_package.dash_manifests[0].scte_markers_source #=> String, one of "SEGMENTS", "MANIFEST"
     #   resp.dash_package.dash_manifests[0].stream_selection.max_video_bits_per_second #=> Integer
     #   resp.dash_package.dash_manifests[0].stream_selection.min_video_bits_per_second #=> Integer
     #   resp.dash_package.dash_manifests[0].stream_selection.stream_order #=> String, one of "ORIGINAL", "VIDEO_BITRATE_ASCENDING", "VIDEO_BITRATE_DESCENDING"
+    #   resp.dash_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.dash_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.dash_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.dash_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.dash_package.encryption.speke_key_provider.system_ids[0] #=> String
     #   resp.dash_package.encryption.speke_key_provider.url #=> String
     #   resp.dash_package.include_encoder_configuration_in_segments #=> Boolean
+    #   resp.dash_package.include_iframe_only_stream #=> Boolean
     #   resp.dash_package.period_triggers #=> Array
     #   resp.dash_package.period_triggers[0] #=> String, one of "ADS"
     #   resp.dash_package.segment_duration_seconds #=> Integer
     #   resp.dash_package.segment_template_format #=> String, one of "NUMBER_WITH_TIMELINE", "TIME_WITH_TIMELINE", "NUMBER_WITH_DURATION"
     #   resp.hls_package.encryption.constant_initialization_vector #=> String
     #   resp.hls_package.encryption.encryption_method #=> String, one of "AES_128", "SAMPLE_AES"
+    #   resp.hls_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.hls_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.hls_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.hls_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.hls_package.encryption.speke_key_provider.system_ids[0] #=> String
@@ -892,9 +1000,12 @@ module Aws::MediaPackageVod
     #   resp.hls_package.hls_manifests[0].stream_selection.max_video_bits_per_second #=> Integer
     #   resp.hls_package.hls_manifests[0].stream_selection.min_video_bits_per_second #=> Integer
     #   resp.hls_package.hls_manifests[0].stream_selection.stream_order #=> String, one of "ORIGINAL", "VIDEO_BITRATE_ASCENDING", "VIDEO_BITRATE_DESCENDING"
+    #   resp.hls_package.include_dvb_subtitles #=> Boolean
     #   resp.hls_package.segment_duration_seconds #=> Integer
     #   resp.hls_package.use_audio_rendition_group #=> Boolean
     #   resp.id #=> String
+    #   resp.mss_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.mss_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.mss_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.mss_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.mss_package.encryption.speke_key_provider.system_ids[0] #=> String
@@ -924,8 +1035,10 @@ module Aws::MediaPackageVod
     #
     # @return [Types::DescribePackagingGroupResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
+    #   * {Types::DescribePackagingGroupResponse#approximate_asset_count #approximate_asset_count} => Integer
     #   * {Types::DescribePackagingGroupResponse#arn #arn} => String
     #   * {Types::DescribePackagingGroupResponse#authorization #authorization} => Types::Authorization
+    #   * {Types::DescribePackagingGroupResponse#created_at #created_at} => String
     #   * {Types::DescribePackagingGroupResponse#domain_name #domain_name} => String
     #   * {Types::DescribePackagingGroupResponse#egress_access_logs #egress_access_logs} => Types::EgressAccessLogs
     #   * {Types::DescribePackagingGroupResponse#id #id} => String
@@ -939,9 +1052,11 @@ module Aws::MediaPackageVod
     #
     # @example Response structure
     #
+    #   resp.approximate_asset_count #=> Integer
     #   resp.arn #=> String
     #   resp.authorization.cdn_identifier_secret #=> String
     #   resp.authorization.secrets_role_arn #=> String
+    #   resp.created_at #=> String
     #   resp.domain_name #=> String
     #   resp.egress_access_logs.log_group_name #=> String
     #   resp.id #=> String
@@ -1032,6 +1147,9 @@ module Aws::MediaPackageVod
     #   resp.next_token #=> String
     #   resp.packaging_configurations #=> Array
     #   resp.packaging_configurations[0].arn #=> String
+    #   resp.packaging_configurations[0].cmaf_package.encryption.constant_initialization_vector #=> String
+    #   resp.packaging_configurations[0].cmaf_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.packaging_configurations[0].cmaf_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.packaging_configurations[0].cmaf_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.packaging_configurations[0].cmaf_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.packaging_configurations[0].cmaf_package.encryption.speke_key_provider.system_ids[0] #=> String
@@ -1047,25 +1165,32 @@ module Aws::MediaPackageVod
     #   resp.packaging_configurations[0].cmaf_package.hls_manifests[0].stream_selection.stream_order #=> String, one of "ORIGINAL", "VIDEO_BITRATE_ASCENDING", "VIDEO_BITRATE_DESCENDING"
     #   resp.packaging_configurations[0].cmaf_package.include_encoder_configuration_in_segments #=> Boolean
     #   resp.packaging_configurations[0].cmaf_package.segment_duration_seconds #=> Integer
+    #   resp.packaging_configurations[0].created_at #=> String
     #   resp.packaging_configurations[0].dash_package.dash_manifests #=> Array
     #   resp.packaging_configurations[0].dash_package.dash_manifests[0].manifest_layout #=> String, one of "FULL", "COMPACT"
     #   resp.packaging_configurations[0].dash_package.dash_manifests[0].manifest_name #=> String
     #   resp.packaging_configurations[0].dash_package.dash_manifests[0].min_buffer_time_seconds #=> Integer
     #   resp.packaging_configurations[0].dash_package.dash_manifests[0].profile #=> String, one of "NONE", "HBBTV_1_5"
+    #   resp.packaging_configurations[0].dash_package.dash_manifests[0].scte_markers_source #=> String, one of "SEGMENTS", "MANIFEST"
     #   resp.packaging_configurations[0].dash_package.dash_manifests[0].stream_selection.max_video_bits_per_second #=> Integer
     #   resp.packaging_configurations[0].dash_package.dash_manifests[0].stream_selection.min_video_bits_per_second #=> Integer
     #   resp.packaging_configurations[0].dash_package.dash_manifests[0].stream_selection.stream_order #=> String, one of "ORIGINAL", "VIDEO_BITRATE_ASCENDING", "VIDEO_BITRATE_DESCENDING"
+    #   resp.packaging_configurations[0].dash_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.packaging_configurations[0].dash_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.packaging_configurations[0].dash_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.packaging_configurations[0].dash_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.packaging_configurations[0].dash_package.encryption.speke_key_provider.system_ids[0] #=> String
     #   resp.packaging_configurations[0].dash_package.encryption.speke_key_provider.url #=> String
     #   resp.packaging_configurations[0].dash_package.include_encoder_configuration_in_segments #=> Boolean
+    #   resp.packaging_configurations[0].dash_package.include_iframe_only_stream #=> Boolean
     #   resp.packaging_configurations[0].dash_package.period_triggers #=> Array
     #   resp.packaging_configurations[0].dash_package.period_triggers[0] #=> String, one of "ADS"
     #   resp.packaging_configurations[0].dash_package.segment_duration_seconds #=> Integer
     #   resp.packaging_configurations[0].dash_package.segment_template_format #=> String, one of "NUMBER_WITH_TIMELINE", "TIME_WITH_TIMELINE", "NUMBER_WITH_DURATION"
     #   resp.packaging_configurations[0].hls_package.encryption.constant_initialization_vector #=> String
     #   resp.packaging_configurations[0].hls_package.encryption.encryption_method #=> String, one of "AES_128", "SAMPLE_AES"
+    #   resp.packaging_configurations[0].hls_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.packaging_configurations[0].hls_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.packaging_configurations[0].hls_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.packaging_configurations[0].hls_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.packaging_configurations[0].hls_package.encryption.speke_key_provider.system_ids[0] #=> String
@@ -1079,9 +1204,12 @@ module Aws::MediaPackageVod
     #   resp.packaging_configurations[0].hls_package.hls_manifests[0].stream_selection.max_video_bits_per_second #=> Integer
     #   resp.packaging_configurations[0].hls_package.hls_manifests[0].stream_selection.min_video_bits_per_second #=> Integer
     #   resp.packaging_configurations[0].hls_package.hls_manifests[0].stream_selection.stream_order #=> String, one of "ORIGINAL", "VIDEO_BITRATE_ASCENDING", "VIDEO_BITRATE_DESCENDING"
+    #   resp.packaging_configurations[0].hls_package.include_dvb_subtitles #=> Boolean
     #   resp.packaging_configurations[0].hls_package.segment_duration_seconds #=> Integer
     #   resp.packaging_configurations[0].hls_package.use_audio_rendition_group #=> Boolean
     #   resp.packaging_configurations[0].id #=> String
+    #   resp.packaging_configurations[0].mss_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_audio #=> String, one of "PRESET-AUDIO-1", "PRESET-AUDIO-2", "PRESET-AUDIO-3", "SHARED", "UNENCRYPTED"
+    #   resp.packaging_configurations[0].mss_package.encryption.speke_key_provider.encryption_contract_configuration.preset_speke_20_video #=> String, one of "PRESET-VIDEO-1", "PRESET-VIDEO-2", "PRESET-VIDEO-3", "PRESET-VIDEO-4", "PRESET-VIDEO-5", "PRESET-VIDEO-6", "PRESET-VIDEO-7", "PRESET-VIDEO-8", "SHARED", "UNENCRYPTED"
     #   resp.packaging_configurations[0].mss_package.encryption.speke_key_provider.role_arn #=> String
     #   resp.packaging_configurations[0].mss_package.encryption.speke_key_provider.system_ids #=> Array
     #   resp.packaging_configurations[0].mss_package.encryption.speke_key_provider.system_ids[0] #=> String
@@ -1129,9 +1257,11 @@ module Aws::MediaPackageVod
     #
     #   resp.next_token #=> String
     #   resp.packaging_groups #=> Array
+    #   resp.packaging_groups[0].approximate_asset_count #=> Integer
     #   resp.packaging_groups[0].arn #=> String
     #   resp.packaging_groups[0].authorization.cdn_identifier_secret #=> String
     #   resp.packaging_groups[0].authorization.secrets_role_arn #=> String
+    #   resp.packaging_groups[0].created_at #=> String
     #   resp.packaging_groups[0].domain_name #=> String
     #   resp.packaging_groups[0].egress_access_logs.log_group_name #=> String
     #   resp.packaging_groups[0].id #=> String
@@ -1237,8 +1367,10 @@ module Aws::MediaPackageVod
     #
     # @return [Types::UpdatePackagingGroupResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
+    #   * {Types::UpdatePackagingGroupResponse#approximate_asset_count #approximate_asset_count} => Integer
     #   * {Types::UpdatePackagingGroupResponse#arn #arn} => String
     #   * {Types::UpdatePackagingGroupResponse#authorization #authorization} => Types::Authorization
+    #   * {Types::UpdatePackagingGroupResponse#created_at #created_at} => String
     #   * {Types::UpdatePackagingGroupResponse#domain_name #domain_name} => String
     #   * {Types::UpdatePackagingGroupResponse#egress_access_logs #egress_access_logs} => Types::EgressAccessLogs
     #   * {Types::UpdatePackagingGroupResponse#id #id} => String
@@ -1256,9 +1388,11 @@ module Aws::MediaPackageVod
     #
     # @example Response structure
     #
+    #   resp.approximate_asset_count #=> Integer
     #   resp.arn #=> String
     #   resp.authorization.cdn_identifier_secret #=> String
     #   resp.authorization.secrets_role_arn #=> String
+    #   resp.created_at #=> String
     #   resp.domain_name #=> String
     #   resp.egress_access_logs.log_group_name #=> String
     #   resp.id #=> String
@@ -1287,7 +1421,7 @@ module Aws::MediaPackageVod
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-mediapackagevod'
-      context[:gem_version] = '1.23.0'
+      context[:gem_version] = '1.46.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

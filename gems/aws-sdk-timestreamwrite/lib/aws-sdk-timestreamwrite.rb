@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-timestreamwrite/types'
 require_relative 'aws-sdk-timestreamwrite/client_api'
+require_relative 'aws-sdk-timestreamwrite/plugins/endpoints.rb'
 require_relative 'aws-sdk-timestreamwrite/client'
 require_relative 'aws-sdk-timestreamwrite/errors'
 require_relative 'aws-sdk-timestreamwrite/resource'
+require_relative 'aws-sdk-timestreamwrite/endpoint_parameters'
+require_relative 'aws-sdk-timestreamwrite/endpoint_provider'
+require_relative 'aws-sdk-timestreamwrite/endpoints'
 require_relative 'aws-sdk-timestreamwrite/customizations'
 
 # This module provides support for Amazon Timestream Write. This module is available in the
@@ -28,7 +32,7 @@ require_relative 'aws-sdk-timestreamwrite/customizations'
 # structure.
 #
 #     timestream_write = Aws::TimestreamWrite::Client.new
-#     resp = timestream_write.create_database(params)
+#     resp = timestream_write.create_batch_load_task(params)
 #
 # See {Client} for more information.
 #
@@ -48,6 +52,6 @@ require_relative 'aws-sdk-timestreamwrite/customizations'
 # @!group service
 module Aws::TimestreamWrite
 
-  GEM_VERSION = '1.4.0'
+  GEM_VERSION = '1.22.0'
 
 end

@@ -18,10 +18,13 @@ module Aws
     #
     class Presigner
 
-      # @option options [required, Credentials] :credentials
-      #   You need provide an object that responds to `#credentials`
-      #   returning another object that responds to `#access_key_id`, `#secret_access_key`,
-      #   and `#session_token`.
+      # @option options [Client] :client Optionally provide an existing Polly
+      #   client.
+      #
+      # @option options [Credentials] :credentials This option is deprecated,
+      #   please use :client instead. Provide an object that responds to
+      #   `#credentials` that returns another object that responds to
+      #   `#access_key_id`, `#secret_access_key`, and `#session_token`.
       #
       #   For example, you could provide an instance of following classes:
       #     * `Aws::Credentials`
@@ -30,38 +33,46 @@ module Aws
       #     * `Aws::AssumeRoleCredentials`
       #     * `Aws::ECSCredentials`
       #
-      # @option options [required, string] :region
-      #   The region name, e.g. 'us-west-2'
+      # @option options [String] :region This option is deprecated, please use
+      #   :client instead. The region name, e.g. 'us-west-2'.
+      #
       def initialize(options = {})
-        @credentials = options.fetch(:credentials)
-        @region = options.fetch(:region)
+        if !(options.keys - [:credentials, :region, :client]).empty?
+          raise ArgumentError,
+                ':options may only contain :client, :region, :credentials '\
+                'keys. Please use the :client option instead.'
+        end
+        @client = options[:client] || Aws::Polly::Client.new(options)
       end
 
-      # @param [Hash] params parameter inputs for synthesize_speech operation
+      # @param [Hash] params Parameter inputs for {Client#synthesize_speech}
+      #  operation.
       def synthesize_speech_presigned_url(params = {})
-        input_shape = Client.api.operation(:synthesize_speech).input.shape
-        sign_but_dont_send(input_shape, params)
-      end
+        req = @client.build_request(:synthesize_speech, params)
+        context = req.context
 
-      private
-
-      def sign_but_dont_send(input_shape, params)
         parts = []
-        input_shape.members.each do |name, ref|
+        req.context.operation.input.shape.members.each do |name, ref|
           parts << [ ref, params[name] ] unless params[name].nil?
         end
         query = Aws::Rest::Request::QuerystringBuilder.new.build(parts)
 
-        signer = Aws::Sigv4::Signer.new(
-          service: 'polly',
-          region: @region,
-          credentials_provider: @credentials
+        endpoint_params = Aws::Polly::EndpointParameters.new(
+          region: context.config.region,
+          use_dual_stack: context.config.use_dualstack_endpoint,
+          use_fips: context.config.use_fips_endpoint
         )
-        url = Aws::Partitions::EndpointProvider.resolve(signer.region, 'polly')
-        url += "/v1/speech?#{query}"
+        endpoint = context.config.endpoint_provider
+                          .resolve_endpoint(endpoint_params)
+        auth_scheme = Aws::Endpoints.resolve_auth_scheme(context, endpoint)
+
+        signer = Aws::Plugins::Sign.signer_for(
+          auth_scheme, context.config
+        )
+
         pre_signed_url = signer.presign_url(
           http_method: 'GET',
-          url: url,
+          url: "#{endpoint.url}/v1/speech?#{query}",
           body: '',
           expires_in: 900
         ).to_s

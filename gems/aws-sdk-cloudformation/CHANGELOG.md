@@ -1,6 +1,168 @@
 Unreleased Changes
 ------------------
 
+1.84.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.83.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.82.0 (2023-06-19)
+------------------
+
+* Feature - Specify desired CloudFormation behavior in the event of ChangeSet execution failure using the CreateChangeSet OnStackFailure parameter
+
+1.81.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.80.0 (2023-06-07)
+------------------
+
+* Feature - AWS CloudFormation StackSets is updating the deployment experience for all stackset operations to skip suspended AWS accounts during deployments. StackSets will skip target AWS accounts that are suspended and set the Detailed Status of the corresponding stack instances as SKIPPED_SUSPENDED_ACCOUNT
+
+1.79.0 (2023-06-05)
+------------------
+
+* Feature - AWS CloudFormation StackSets provides customers with three new APIs to activate, deactivate, and describe AWS Organizations trusted access which is needed to get started with service-managed StackSets.
+
+1.78.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.77.0 (2023-04-06)
+------------------
+
+* Feature - Including UPDATE_COMPLETE as a failed status for DeleteStack waiter.
+
+1.76.0 (2023-01-30)
+------------------
+
+* Feature - This feature provides a method of obtaining which regions a stackset has stack instances deployed in.
+
+1.75.0 (2023-01-25)
+------------------
+
+* Feature - Enabled FIPS aws-us-gov endpoints in SDK.
+
+1.74.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.73.0 (2022-11-16)
+------------------
+
+* Feature - Added UnsupportedTarget HandlerErrorCode for use with CFN Resource Hooks
+
+1.72.0 (2022-10-28)
+------------------
+
+* Feature - This release adds more fields to improves visibility of AWS CloudFormation StackSets information in following APIs: ListStackInstances, DescribeStackInstance, ListStackSetOperationResults, ListStackSetOperations, DescribeStackSetOperation.
+
+1.71.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.70.0 (2022-07-06)
+------------------
+
+* Feature - My AWS Service (placeholder) - Add a new feature Account-level Targeting for StackSet operation
+
+1.69.0 (2022-05-25)
+------------------
+
+* Feature - Add a new parameter statusReason to DescribeStackSetOperation output for additional details
+
+1.68.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.67.0 (2022-02-10)
+------------------
+
+* Feature - This SDK release adds AWS CloudFormation Hooks HandlerErrorCodes
+
+1.66.0 (2022-02-09)
+------------------
+
+* Feature - This SDK release is for the feature launch of AWS CloudFormation Hooks.
+
+1.65.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.64.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.63.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.62.0 (2021-11-22)
+------------------
+
+* Feature - This release include SDK changes for the feature launch of Stack Import to Service Managed StackSet.
+
+1.61.0 (2021-11-19)
+------------------
+
+* Feature - The StackSets ManagedExecution feature will allow concurrency for non-conflicting StackSet operations and queuing the StackSet operations that conflict at a given time for later execution.
+
+1.60.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.59.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.58.0 (2021-09-10)
+------------------
+
+* Feature - Doc only update for CloudFormation that fixes several customer-reported issues.
+
+1.57.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.56.0 (2021-08-30)
+------------------
+
+* Feature - AWS CloudFormation allows you to iteratively develop your applications when failures are encountered without rolling back successfully provisioned resources. By specifying stack failure options, you can troubleshoot resources in a CREATE_FAILED or UPDATE_FAILED status.
+
+1.55.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.54.0 (2021-07-28)
+------------------
+
+* Feature - SDK update to support Importing existing Stacks to new/existing Self Managed StackSet - Stack Import feature.
+
+1.53.0 (2021-06-21)
+------------------
+
+* Feature - CloudFormation registry service now supports 3rd party public type sharing
+
 1.52.0 (2021-04-28)
 ------------------
 

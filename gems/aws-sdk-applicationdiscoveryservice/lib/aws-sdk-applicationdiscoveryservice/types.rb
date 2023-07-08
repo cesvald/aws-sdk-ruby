@@ -10,20 +10,19 @@
 module Aws::ApplicationDiscoveryService
   module Types
 
-    # Information about agents or connectors that were instructed to start
-    # collecting data. Information includes the agent/connector ID, a
-    # description of the operation, and whether the agent/connector
-    # configuration was updated.
+    # Information about agents that were instructed to start collecting
+    # data. Information includes the agent ID, a description of the
+    # operation, and whether the agent configuration was updated.
     #
     # @!attribute [rw] agent_id
-    #   The agent/connector ID.
+    #   The agent ID.
     #   @return [String]
     #
     # @!attribute [rw] operation_succeeded
     #   Information about the status of the `StartDataCollection` and
     #   `StopDataCollection` operations. The system has recorded the data
-    #   collection operation. The agent/connector receives this command the
-    #   next time it polls for a new command.
+    #   collection operation. The agent receives this command the next time
+    #   it polls for a new command.
     #   @return [Boolean]
     #
     # @!attribute [rw] description
@@ -38,23 +37,22 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # Information about agents or connectors associated with the user’s AWS
-    # account. Information includes agent or connector IDs, IP addresses,
-    # media access control (MAC) addresses, agent or connector health,
-    # hostname where the agent or connector resides, and agent version for
-    # each agent.
+    # Information about agents associated with the user’s Amazon Web
+    # Services account. Information includes agent IDs, IP addresses, media
+    # access control (MAC) addresses, agent or collector status, hostname
+    # where the agent resides, and agent version for each agent.
     #
     # @!attribute [rw] agent_id
-    #   The agent or connector ID.
+    #   The agent or collector ID.
     #   @return [String]
     #
     # @!attribute [rw] host_name
-    #   The name of the host where the agent or connector resides. The host
+    #   The name of the host where the agent or collector resides. The host
     #   can be a server or virtual machine.
     #   @return [String]
     #
     # @!attribute [rw] agent_network_info_list
-    #   Network details about the host where the agent or connector resides.
+    #   Network details about the host where the agent or collector resides.
     #   @return [Array<Types::AgentNetworkInfo>]
     #
     # @!attribute [rw] connector_id
@@ -62,19 +60,19 @@ module Aws::ApplicationDiscoveryService
     #   @return [String]
     #
     # @!attribute [rw] version
-    #   The agent or connector version.
+    #   The agent or collector version.
     #   @return [String]
     #
     # @!attribute [rw] health
-    #   The health of the agent or connector.
+    #   The health of the agent.
     #   @return [String]
     #
     # @!attribute [rw] last_health_ping_time
-    #   Time since agent or connector health was reported.
+    #   Time since agent health was reported.
     #   @return [String]
     #
     # @!attribute [rw] collection_status
-    #   Status of the collection process for an agent or connector.
+    #   Status of the collection process for an agent.
     #   @return [String]
     #
     # @!attribute [rw] agent_type
@@ -100,14 +98,14 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # Network details about the host where the agent/connector resides.
+    # Network details about the host where the agent/collector resides.
     #
     # @!attribute [rw] ip_address
-    #   The IP address for the host where the agent/connector resides.
+    #   The IP address for the host where the agent/collector resides.
     #   @return [String]
     #
     # @!attribute [rw] mac_address
-    #   The MAC address for the host where the agent/connector resides.
+    #   The MAC address for the host where the agent/collector resides.
     #   @return [String]
     #
     class AgentNetworkInfo < Struct.new(
@@ -117,14 +115,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateConfigurationItemsToApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_configuration_id: "ApplicationId", # required
-    #         configuration_ids: ["ConfigurationId"], # required
-    #       }
-    #
     # @!attribute [rw] application_configuration_id
     #   The configuration ID of an application with which items are to be
     #   associated.
@@ -144,8 +134,8 @@ module Aws::ApplicationDiscoveryService
 
     class AssociateConfigurationItemsToApplicationResponse < Aws::EmptyStructure; end
 
-    # The AWS user account does not have permission to perform the action.
-    # Check the IAM policy associated with this account.
+    # The user does not have permission to perform the action. Check the IAM
+    # policy associated with this user.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -180,13 +170,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchDeleteImportDataRequest
-    #   data as a hash:
-    #
-    #       {
-    #         import_task_ids: ["ImportTaskIdentifier"], # required
-    #       }
-    #
     # @!attribute [rw] import_task_ids
     #   The IDs for the import tasks that you want to delete.
     #   @return [Array<String>]
@@ -288,10 +271,10 @@ module Aws::ApplicationDiscoveryService
     #   type can have the following values:
     #
     #   * ACCESS\_DENIED - You don’t have permission to start Data
-    #     Exploration in Amazon Athena. Contact your AWS administrator for
-    #     help. For more information, see [Setting Up AWS Application
-    #     Discovery Service][1] in the Application Discovery Service User
-    #     Guide.
+    #     Exploration in Amazon Athena. Contact your Amazon Web Services
+    #     administrator for help. For more information, see [Setting Up
+    #     Amazon Web Services Application Discovery Service][1] in the
+    #     Application Discovery Service User Guide.
     #
     #   * DELIVERY\_STREAM\_LIMIT\_FAILURE - You reached the limit for
     #     Amazon Kinesis Data Firehose delivery streams. Reduce the number
@@ -300,38 +283,74 @@ module Aws::ApplicationDiscoveryService
     #     Kinesis Data Streams Developer Guide.
     #
     #   * FIREHOSE\_ROLE\_MISSING - The Data Exploration feature is in an
-    #     error state because your IAM User is missing the
-    #     AWSApplicationDiscoveryServiceFirehose role. Turn on Data
+    #     error state because your user is missing the Amazon Web
+    #     ServicesApplicationDiscoveryServiceFirehose role. Turn on Data
     #     Exploration in Amazon Athena and try again. For more information,
-    #     see [Step 3: Provide Application Discovery Service Access to
-    #     Non-Administrator Users by Attaching Policies][3] in the
+    #     see [Creating the Amazon Web
+    #     ServicesApplicationDiscoveryServiceFirehose Role][3] in the
     #     Application Discovery Service User Guide.
     #
     #   * FIREHOSE\_STREAM\_DOES\_NOT\_EXIST - The Data Exploration feature
-    #     is in an error state because your IAM User is missing one or more
-    #     of the Kinesis data delivery streams.
+    #     is in an error state because your user is missing one or more of
+    #     the Kinesis data delivery streams.
     #
     #   * INTERNAL\_FAILURE - The Data Exploration feature is in an error
     #     state because of an internal failure. Try again later. If this
-    #     problem persists, contact AWS Support.
+    #     problem persists, contact Amazon Web Services Support.
+    #
+    #   * LAKE\_FORMATION\_ACCESS\_DENIED - You don't have sufficient lake
+    #     formation permissions to start continuous export. For more
+    #     information, see [ Upgrading Amazon Web Services Glue Data
+    #     Permissions to the Amazon Web Services Lake Formation Model ][4]
+    #     in the Amazon Web Services *Lake Formation Developer Guide*.
+    #
+    #     You can use one of the following two ways to resolve this issue.
+    #
+    #     1.  If you don’t want to use the Lake Formation permission model,
+    #         you can change the default Data Catalog settings to use only
+    #         Amazon Web Services Identity and Access Management (IAM)
+    #         access control for new databases. For more information, see
+    #         [Change Data Catalog Settings][5] in the *Lake Formation
+    #         Developer Guide*.
+    #
+    #     2.  You can give the service-linked IAM roles
+    #         AWSServiceRoleForApplicationDiscoveryServiceContinuousExport
+    #         and AWSApplicationDiscoveryServiceFirehose the required Lake
+    #         Formation permissions. For more information, see [ Granting
+    #         Database Permissions][6] in the *Lake Formation Developer
+    #         Guide*.
+    #
+    #         1.  AWSServiceRoleForApplicationDiscoveryServiceContinuousExport
+    #             - Grant database creator permissions, which gives the role
+    #             database creation ability and implicit permissions for any
+    #             created tables. For more information, see [ Implicit Lake
+    #             Formation Permissions ][7] in the *Lake Formation
+    #             Developer Guide*.
+    #
+    #         2.  AWSApplicationDiscoveryServiceFirehose - Grant describe
+    #             permissions for all tables in the database.
     #
     #   * S3\_BUCKET\_LIMIT\_FAILURE - You reached the limit for Amazon S3
-    #     buckets. Reduce the number of Amazon S3 buckets or request a limit
+    #     buckets. Reduce the number of S3 buckets or request a limit
     #     increase and try again. For more information, see [Bucket
-    #     Restrictions and Limitations][4] in the Amazon Simple Storage
+    #     Restrictions and Limitations][8] in the Amazon Simple Storage
     #     Service Developer Guide.
     #
     #   * S3\_NOT\_SIGNED\_UP - Your account is not signed up for the Amazon
     #     S3 service. You must sign up before you can use Amazon S3. You can
-    #     sign up at the following URL: [https://aws.amazon.com/s3][5].
+    #     sign up at the following URL: [https://aws.amazon.com/s3][9].
     #
     #
     #
     #   [1]: http://docs.aws.amazon.com/application-discovery/latest/userguide/setting-up.html
     #   [2]: http://docs.aws.amazon.com/streams/latest/dev/service-sizes-and-limits.html
-    #   [3]: http://docs.aws.amazon.com/application-discovery/latest/userguide/setting-up.html#setting-up-user-policy
-    #   [4]: http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html
-    #   [5]: https://aws.amazon.com/s3
+    #   [3]: https://docs.aws.amazon.com/application-discovery/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-create-firehose-role
+    #   [4]: http://docs.aws.amazon.com/lake-formation/latest/dg/upgrade-glue-lake-formation.html
+    #   [5]: https://docs.aws.amazon.com/lake-formation/latest/dg/getting-started-setup.html#setup-change-cat-settings
+    #   [6]: https://docs.aws.amazon.com/lake-formation/latest/dg/granting-database-permissions.html
+    #   [7]: https://docs.aws.amazon.com/lake-formation/latest/dg/implicit-permissions.html
+    #   [8]: http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html
+    #   [9]: https://aws.amazon.com/s3
     #   @return [String]
     #
     # @!attribute [rw] s3_bucket
@@ -375,14 +394,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "String", # required
-    #         description: "String",
-    #       }
-    #
     # @!attribute [rw] name
     #   Name of the application to be created.
     #   @return [String]
@@ -408,19 +419,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_ids: ["ConfigurationId"], # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] configuration_ids
     #   A list of configuration items that you want to tag.
     #   @return [Array<String>]
@@ -484,6 +482,48 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
+    # The inventory data for installed Agentless Collector collectors.
+    #
+    # @!attribute [rw] active_agentless_collectors
+    #   The number of active Agentless Collector collectors.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] healthy_agentless_collectors
+    #   The number of healthy Agentless Collector collectors.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] deny_listed_agentless_collectors
+    #   The number of deny-listed Agentless Collector collectors.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] shutdown_agentless_collectors
+    #   The number of Agentless Collector collectors with `SHUTDOWN` status.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] unhealthy_agentless_collectors
+    #   The number of unhealthy Agentless Collector collectors.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] total_agentless_collectors
+    #   The total number of Agentless Collector collectors.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] unknown_agentless_collectors
+    #   The number of unknown Agentless Collector collectors.
+    #   @return [Integer]
+    #
+    class CustomerAgentlessCollectorInfo < Struct.new(
+      :active_agentless_collectors,
+      :healthy_agentless_collectors,
+      :deny_listed_agentless_collectors,
+      :shutdown_agentless_collectors,
+      :unhealthy_agentless_collectors,
+      :total_agentless_collectors,
+      :unknown_agentless_collectors)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Inventory data for installed discovery connectors.
     #
     # @!attribute [rw] active_connectors
@@ -526,13 +566,48 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteApplicationsRequest
-    #   data as a hash:
+    # The inventory data for installed Migration Evaluator collectors.
     #
-    #       {
-    #         configuration_ids: ["ApplicationId"], # required
-    #       }
+    # @!attribute [rw] active_me_collectors
+    #   The number of active Migration Evaluator collectors.
+    #   @return [Integer]
     #
+    # @!attribute [rw] healthy_me_collectors
+    #   The number of healthy Migration Evaluator collectors.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] deny_listed_me_collectors
+    #   The number of deny-listed Migration Evaluator collectors.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] shutdown_me_collectors
+    #   The number of Migration Evaluator collectors with `SHUTDOWN` status.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] unhealthy_me_collectors
+    #   The number of unhealthy Migration Evaluator collectors.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] total_me_collectors
+    #   The total number of Migration Evaluator collectors.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] unknown_me_collectors
+    #   The number of unknown Migration Evaluator collectors.
+    #   @return [Integer]
+    #
+    class CustomerMeCollectorInfo < Struct.new(
+      :active_me_collectors,
+      :healthy_me_collectors,
+      :deny_listed_me_collectors,
+      :shutdown_me_collectors,
+      :unhealthy_me_collectors,
+      :total_me_collectors,
+      :unknown_me_collectors)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] configuration_ids
     #   Configuration ID of an application to be deleted.
     #   @return [Array<String>]
@@ -545,19 +620,6 @@ module Aws::ApplicationDiscoveryService
 
     class DeleteApplicationsResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_ids: ["ConfigurationId"], # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] configuration_ids
     #   A list of configuration items with tags that you want to delete.
     #   @return [Array<String>]
@@ -579,26 +641,10 @@ module Aws::ApplicationDiscoveryService
 
     class DeleteTagsResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeAgentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         agent_ids: ["AgentId"],
-    #         filters: [
-    #           {
-    #             name: "String", # required
-    #             values: ["FilterValue"], # required
-    #             condition: "Condition", # required
-    #           },
-    #         ],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] agent_ids
-    #   The agent or the Connector IDs for which you want information. If
+    #   The agent or the collector IDs for which you want information. If
     #   you specify no IDs, the system returns information about all
-    #   agents/Connectors associated with your AWS user account.
+    #   agents/collectors associated with your user.
     #   @return [Array<String>]
     #
     # @!attribute [rw] filters
@@ -609,7 +655,7 @@ module Aws::ApplicationDiscoveryService
     #   @return [Array<Types::Filter>]
     #
     # @!attribute [rw] max_results
-    #   The total number of agents/Connectors to return in a single page of
+    #   The total number of agents/collectors to return in a single page of
     #   output. The maximum value is 100.
     #   @return [Integer]
     #
@@ -631,12 +677,12 @@ module Aws::ApplicationDiscoveryService
     end
 
     # @!attribute [rw] agents_info
-    #   Lists agents or the Connector by ID or lists all agents/Connectors
-    #   associated with your user account if you did not specify an
-    #   agent/Connector ID. The output includes agent/Connector IDs, IP
-    #   addresses, media access control (MAC) addresses, agent/Connector
-    #   health, host name where the agent/Connector resides, and the version
-    #   number of each agent/Connector.
+    #   Lists agents or the collector by ID or lists all agents/collectors
+    #   associated with your user, if you did not specify an agent/collector
+    #   ID. The output includes agent/collector IDs, IP addresses, media
+    #   access control (MAC) addresses, agent/collector health, host name
+    #   where the agent/collector resides, and the version number of each
+    #   agent/collector.
     #   @return [Array<Types::AgentInfo>]
     #
     # @!attribute [rw] next_token
@@ -654,13 +700,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConfigurationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_ids: ["ConfigurationId"], # required
-    #       }
-    #
     # @!attribute [rw] configuration_ids
     #   One or more configuration IDs.
     #   @return [Array<String>]
@@ -681,15 +720,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeContinuousExportsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         export_ids: ["ConfigurationsExportId"],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] export_ids
     #   The unique IDs assigned to the exports.
     #   @return [Array<String>]
@@ -726,15 +756,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeExportConfigurationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         export_ids: ["ConfigurationsExportId"],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] export_ids
     #   A list of continuous export IDs to search for.
     #   @return [Array<String>]
@@ -770,22 +791,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeExportTasksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         export_ids: ["ConfigurationsExportId"],
-    #         filters: [
-    #           {
-    #             name: "FilterName", # required
-    #             values: ["FilterValue"], # required
-    #             condition: "Condition", # required
-    #           },
-    #         ],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] export_ids
     #   One or more unique identifiers used to query the status of an export
     #   request.
@@ -844,20 +849,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeImportTasksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [
-    #           {
-    #             name: "IMPORT_TASK_ID", # accepts IMPORT_TASK_ID, STATUS, NAME
-    #             values: ["ImportTaskFilterValue"],
-    #           },
-    #         ],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] filters
     #   An array of name-value pairs that you provide to filter the results
     #   for the `DescribeImportTask` request to a specific subset of
@@ -897,20 +888,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [
-    #           {
-    #             name: "FilterName", # required
-    #             values: ["FilterValue"], # required
-    #           },
-    #         ],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] filters
     #   You can filter the list using a *key*-*value* format. You can
     #   separate these items by using logical operators. Allowed filters
@@ -953,14 +930,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateConfigurationItemsFromApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_configuration_id: "ApplicationId", # required
-    #         configuration_ids: ["ConfigurationId"], # required
-    #       }
-    #
     # @!attribute [rw] application_configuration_id
     #   Configuration ID of an application from which each item is
     #   disassociated.
@@ -980,6 +949,65 @@ module Aws::ApplicationDiscoveryService
 
     class DisassociateConfigurationItemsFromApplicationResponse < Aws::EmptyStructure; end
 
+    # Indicates that the exported data must include EC2 instance type
+    # matches for on-premises servers that are discovered through Amazon Web
+    # Services Application Discovery Service.
+    #
+    # @!attribute [rw] enabled
+    #   If set to true, the export [preferences][1] is set to
+    #   `Ec2RecommendationsExportPreferences`.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/application-discovery/latest/APIReference/API_StartExportTask.html#API_StartExportTask_RequestSyntax
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] cpu_performance_metric_basis
+    #   The recommended EC2 instance type that matches the CPU usage metric
+    #   of server performance data.
+    #   @return [Types::UsageMetricBasis]
+    #
+    # @!attribute [rw] ram_performance_metric_basis
+    #   The recommended EC2 instance type that matches the Memory usage
+    #   metric of server performance data.
+    #   @return [Types::UsageMetricBasis]
+    #
+    # @!attribute [rw] tenancy
+    #   The target tenancy to use for your recommended EC2 instances.
+    #   @return [String]
+    #
+    # @!attribute [rw] excluded_instance_types
+    #   An array of instance types to exclude from recommendations.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] preferred_region
+    #   The target Amazon Web Services Region for the recommendations. You
+    #   can use any of the Region codes available for the chosen service, as
+    #   listed in [Amazon Web Services service endpoints][1] in the *Amazon
+    #   Web Services General Reference*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/general/latest/gr/rande.html
+    #   @return [String]
+    #
+    # @!attribute [rw] reserved_instance_options
+    #   The contract type for a reserved instance. If blank, we assume an
+    #   On-Demand instance is preferred.
+    #   @return [Types::ReservedInstanceOptions]
+    #
+    class Ec2RecommendationsExportPreferences < Struct.new(
+      :enabled,
+      :cpu_performance_metric_basis,
+      :ram_performance_metric_basis,
+      :tenancy,
+      :excluded_instance_types,
+      :preferred_region,
+      :reserved_instance_options)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] export_id
     #   A unique identifier that you can use to query the export status.
     #   @return [String]
@@ -997,27 +1025,18 @@ module Aws::ApplicationDiscoveryService
     #
     # [1]: http://docs.aws.amazon.com/application-discovery/latest/APIReference/API_StartExportTask.html
     #
-    # @note When making an API call, you may pass ExportFilter
-    #   data as a hash:
-    #
-    #       {
-    #         name: "FilterName", # required
-    #         values: ["FilterValue"], # required
-    #         condition: "Condition", # required
-    #       }
-    #
     # @!attribute [rw] name
-    #   A single `ExportFilter` name. Supported filters: `agentId`.
+    #   A single `ExportFilter` name. Supported filters: `agentIds`.
     #   @return [String]
     #
     # @!attribute [rw] values
-    #   A single `agentId` for a Discovery Agent. An `agentId` can be found
-    #   using the [DescribeAgents][1] action. Typically an ADS `agentId` is
+    #   A single agent ID for a Discovery Agent. An agent ID can be found
+    #   using the [DescribeAgents][1] action. Typically an ADS agent ID is
     #   in the form `o-0123456789abcdef0`.
     #
     #
     #
-    #   [1]: http://docs.aws.amazon.com/application-discovery/latest/APIReference/API_DescribeExportTasks.html
+    #   [1]: http://docs.aws.amazon.com/application-discovery/latest/APIReference/API_DescribeAgents.html
     #   @return [Array<String>]
     #
     # @!attribute [rw] condition
@@ -1087,24 +1106,41 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
+    # Indicates the type of data that is being exported. Only one
+    # `ExportPreferences` can be enabled for a [StartExportTask][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/application-discovery/latest/APIReference/API_StartExportTask.html
+    #
+    # @note ExportPreferences is a union - when making an API calls you must set exactly one of the members.
+    #
+    # @!attribute [rw] ec2_recommendations_preferences
+    #   If enabled, exported data includes EC2 instance type matches for
+    #   on-premises servers discovered through Amazon Web Services
+    #   Application Discovery Service.
+    #   @return [Types::Ec2RecommendationsExportPreferences]
+    #
+    class ExportPreferences < Struct.new(
+      :ec2_recommendations_preferences,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class Ec2RecommendationsPreferences < ExportPreferences; end
+      class Unknown < ExportPreferences; end
+    end
+
     # A filter that can use conditional operators.
     #
     # For more information about filters, see [Querying Discovered
-    # Configuration Items][1] in the *AWS Application Discovery Service User
-    # Guide*.
+    # Configuration Items][1] in the *Amazon Web Services Application
+    # Discovery Service User Guide*.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/application-discovery/latest/userguide/discovery-api-queries.html
-    #
-    # @note When making an API call, you may pass Filter
-    #   data as a hash:
-    #
-    #       {
-    #         name: "String", # required
-    #         values: ["FilterValue"], # required
-    #         condition: "Condition", # required
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the filter.
@@ -1163,18 +1199,29 @@ module Aws::ApplicationDiscoveryService
     #   health.
     #   @return [Types::CustomerConnectorInfo]
     #
+    # @!attribute [rw] me_collector_summary
+    #   Details about Migration Evaluator collectors, including collector
+    #   status and health.
+    #   @return [Types::CustomerMeCollectorInfo]
+    #
+    # @!attribute [rw] agentless_collector_summary
+    #   Details about Agentless Collector collectors, including status.
+    #   @return [Types::CustomerAgentlessCollectorInfo]
+    #
     class GetDiscoverySummaryResponse < Struct.new(
       :servers,
       :applications,
       :servers_mapped_to_applications,
       :servers_mappedto_tags,
       :agent_summary,
-      :connector_summary)
+      :connector_summary,
+      :me_collector_summary,
+      :agentless_collector_summary)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # The home region is not set. Set the home region to continue.
+    # The home Region is not set. Set the home Region to continue.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1191,7 +1238,7 @@ module Aws::ApplicationDiscoveryService
     #
     # @!attribute [rw] import_task_id
     #   The unique ID for a specific import task. These IDs aren't globally
-    #   unique, but they are unique within an AWS account.
+    #   unique, but they are unique within an Amazon Web Services account.
     #   @return [String]
     #
     # @!attribute [rw] client_request_token
@@ -1299,14 +1346,6 @@ module Aws::ApplicationDiscoveryService
     #
     #  </note>
     #
-    # @note When making an API call, you may pass ImportTaskFilter
-    #   data as a hash:
-    #
-    #       {
-    #         name: "IMPORT_TASK_ID", # accepts IMPORT_TASK_ID, STATUS, NAME
-    #         values: ["ImportTaskFilterValue"],
-    #       }
-    #
     # @!attribute [rw] name
     #   The name, status, or import task ID for a specific import task.
     #   @return [String]
@@ -1348,28 +1387,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListConfigurationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_type: "SERVER", # required, accepts SERVER, PROCESS, CONNECTION, APPLICATION
-    #         filters: [
-    #           {
-    #             name: "String", # required
-    #             values: ["FilterValue"], # required
-    #             condition: "Condition", # required
-    #           },
-    #         ],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #         order_by: [
-    #           {
-    #             field_name: "String", # required
-    #             sort_order: "ASC", # accepts ASC, DESC
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] configuration_type
     #   A valid configuration identified by Application Discovery Service.
     #   @return [String]
@@ -1382,7 +1399,7 @@ module Aws::ApplicationDiscoveryService
     #
     #   For a complete list of filter options and guidance about using them
     #   with this action, see [Using the ListConfigurations Action][1] in
-    #   the *AWS Application Discovery Service User Guide*.
+    #   the *Amazon Web Services Application Discovery Service User Guide*.
     #
     #
     #
@@ -1405,7 +1422,7 @@ module Aws::ApplicationDiscoveryService
     #   Certain filter criteria return output that can be sorted in
     #   ascending or descending order. For a list of output characteristics
     #   for each filter, see [Using the ListConfigurations Action][1] in the
-    #   *AWS Application Discovery Service User Guide*.
+    #   *Amazon Web Services Application Discovery Service User Guide*.
     #
     #
     #
@@ -1442,17 +1459,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListServerNeighborsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_id: "ConfigurationId", # required
-    #         port_information_needed: false,
-    #         neighbor_configuration_ids: ["ConfigurationId"],
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] configuration_id
     #   Configuration ID of the server for which neighbors are being listed.
     #   @return [String]
@@ -1561,14 +1567,6 @@ module Aws::ApplicationDiscoveryService
 
     # A field and direction for ordered output.
     #
-    # @note When making an API call, you may pass OrderByElement
-    #   data as a hash:
-    #
-    #       {
-    #         field_name: "String", # required
-    #         sort_order: "ASC", # accepts ASC, DESC
-    #       }
-    #
     # @!attribute [rw] field_name
     #   The field on which to order.
     #   @return [String]
@@ -1580,6 +1578,29 @@ module Aws::ApplicationDiscoveryService
     class OrderByElement < Struct.new(
       :field_name,
       :sort_order)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Used to provide Reserved Instance preferences for the recommendation.
+    #
+    # @!attribute [rw] purchasing_option
+    #   The payment plan to use for your Reserved Instance.
+    #   @return [String]
+    #
+    # @!attribute [rw] offering_class
+    #   The flexibility to change the instance types needed for your
+    #   Reserved Instance.
+    #   @return [String]
+    #
+    # @!attribute [rw] term_length
+    #   The preferred duration of the Reserved Instance term.
+    #   @return [String]
+    #
+    class ReservedInstanceOptions < Struct.new(
+      :purchasing_option,
+      :offering_class,
+      :term_length)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1663,22 +1684,15 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartDataCollectionByAgentIdsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         agent_ids: ["AgentId"], # required
-    #       }
-    #
     # @!attribute [rw] agent_ids
-    #   The IDs of the agents or connectors from which to start collecting
-    #   data. If you send a request to an agent/connector ID that you do not
-    #   have permission to contact, according to your AWS account, the
-    #   service does not throw an exception. Instead, it returns the error
-    #   in the *Description* field. If you send a request to multiple
-    #   agents/connectors and you do not have permission to contact some of
-    #   those agents/connectors, the system does not throw an exception.
-    #   Instead, the system shows `Failed` in the *Description* field.
+    #   The IDs of the agents from which to start collecting data. If you
+    #   send a request to an agent ID that you do not have permission to
+    #   contact, according to your Amazon Web Services account, the service
+    #   does not throw an exception. Instead, it returns the error in the
+    #   *Description* field. If you send a request to multiple agents and
+    #   you do not have permission to contact some of those agents, the
+    #   system does not throw an exception. Instead, the system shows
+    #   `Failed` in the *Description* field.
     #   @return [Array<String>]
     #
     class StartDataCollectionByAgentIdsRequest < Struct.new(
@@ -1688,10 +1702,10 @@ module Aws::ApplicationDiscoveryService
     end
 
     # @!attribute [rw] agents_configuration_status
-    #   Information about agents or the connector that were instructed to
-    #   start collecting data. Information includes the agent/connector ID,
-    #   a description of the operation performed, and whether the
-    #   agent/connector configuration was updated.
+    #   Information about agents that were instructed to start collecting
+    #   data. Information includes the agent ID, a description of the
+    #   operation performed, and whether the agent configuration was
+    #   updated.
     #   @return [Array<Types::AgentConfigurationStatus>]
     #
     class StartDataCollectionByAgentIdsResponse < Struct.new(
@@ -1700,22 +1714,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartExportTaskRequest
-    #   data as a hash:
-    #
-    #       {
-    #         export_data_format: ["CSV"], # accepts CSV, GRAPHML
-    #         filters: [
-    #           {
-    #             name: "FilterName", # required
-    #             values: ["FilterValue"], # required
-    #             condition: "Condition", # required
-    #           },
-    #         ],
-    #         start_time: Time.now,
-    #         end_time: Time.now,
-    #       }
-    #
     # @!attribute [rw] export_data_format
     #   The file format for the returned export data. Default value is
     #   `CSV`. **Note:** *The* `GRAPHML` *option has been deprecated.*
@@ -1726,8 +1724,9 @@ module Aws::ApplicationDiscoveryService
     #   Application Discovery Agent for which data is exported. The
     #   `agentId` can be found in the results of the `DescribeAgents` API or
     #   CLI. If no filter is present, `startTime` and `endTime` are ignored
-    #   and exported data includes both Agentless Discovery Connector data
-    #   and summary data from Application Discovery agents.
+    #   and exported data includes both Amazon Web Services Application
+    #   Discovery Service Agentless Collector collectors data and summary
+    #   data from Application Discovery Agent agents.
     #   @return [Array<Types::ExportFilter>]
     #
     # @!attribute [rw] start_time
@@ -1743,11 +1742,21 @@ module Aws::ApplicationDiscoveryService
     #   exported data includes the most recent data collected by the agent.
     #   @return [Time]
     #
+    # @!attribute [rw] preferences
+    #   Indicates the type of data that needs to be exported. Only one
+    #   [ExportPreferences][1] can be enabled at any time.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/application-discovery/latest/APIReference/API_ExportPreferences.html
+    #   @return [Types::ExportPreferences]
+    #
     class StartExportTaskRequest < Struct.new(
       :export_data_format,
       :filters,
       :start_time,
-      :end_time)
+      :end_time,
+      :preferences)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1762,15 +1771,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartImportTaskRequest
-    #   data as a hash:
-    #
-    #       {
-    #         client_request_token: "ClientRequestToken",
-    #         name: "ImportTaskName", # required
-    #         import_url: "ImportURL", # required
-    #       }
-    #
     # @!attribute [rw] client_request_token
     #   Optional. A unique token that you can provide to prevent the same
     #   import request from occurring more than once. If you don't provide
@@ -1794,8 +1794,8 @@ module Aws::ApplicationDiscoveryService
     # @!attribute [rw] import_url
     #   The URL for your import file that you've uploaded to Amazon S3.
     #
-    #   <note markdown="1"> If you're using the AWS CLI, this URL is structured as follows:
-    #   `s3://BucketName/ImportFileName.CSV`
+    #   <note markdown="1"> If you're using the Amazon Web Services CLI, this URL is structured
+    #   as follows: `s3://BucketName/ImportFileName.CSV`
     #
     #    </note>
     #   @return [String]
@@ -1820,13 +1820,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopContinuousExportRequest
-    #   data as a hash:
-    #
-    #       {
-    #         export_id: "ConfigurationsExportId", # required
-    #       }
-    #
     # @!attribute [rw] export_id
     #   The unique ID assigned to this export.
     #   @return [String]
@@ -1853,16 +1846,8 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopDataCollectionByAgentIdsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         agent_ids: ["AgentId"], # required
-    #       }
-    #
     # @!attribute [rw] agent_ids
-    #   The IDs of the agents or connectors from which to stop collecting
-    #   data.
+    #   The IDs of the agents from which to stop collecting data.
     #   @return [Array<String>]
     #
     class StopDataCollectionByAgentIdsRequest < Struct.new(
@@ -1872,10 +1857,10 @@ module Aws::ApplicationDiscoveryService
     end
 
     # @!attribute [rw] agents_configuration_status
-    #   Information about the agents or connector that were instructed to
-    #   stop collecting data. Information includes the agent/connector ID, a
-    #   description of the operation performed, and whether the
-    #   agent/connector configuration was updated.
+    #   Information about the agents that were instructed to stop collecting
+    #   data. Information includes the agent ID, a description of the
+    #   operation performed, and whether the agent configuration was
+    #   updated.
     #   @return [Array<Types::AgentConfigurationStatus>]
     #
     class StopDataCollectionByAgentIdsResponse < Struct.new(
@@ -1886,13 +1871,7 @@ module Aws::ApplicationDiscoveryService
 
     # Metadata that help you categorize IT assets.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
+    # Do not store sensitive information (like personal data) in tags.
     #
     # @!attribute [rw] key
     #   The type of tag on which to filter.
@@ -1912,14 +1891,6 @@ module Aws::ApplicationDiscoveryService
     # The tag filter. Valid names are: `tagKey`, `tagValue`,
     # `configurationId`.
     #
-    # @note When making an API call, you may pass TagFilter
-    #   data as a hash:
-    #
-    #       {
-    #         name: "FilterName", # required
-    #         values: ["FilterValue"], # required
-    #       }
-    #
     # @!attribute [rw] name
     #   A name of the tag filter.
     #   @return [String]
@@ -1935,15 +1906,6 @@ module Aws::ApplicationDiscoveryService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         configuration_id: "ApplicationId", # required
-    #         name: "String",
-    #         description: "String",
-    #       }
-    #
     # @!attribute [rw] configuration_id
     #   Configuration ID of the application to be updated.
     #   @return [String]
@@ -1965,6 +1927,25 @@ module Aws::ApplicationDiscoveryService
     end
 
     class UpdateApplicationResponse < Aws::EmptyStructure; end
+
+    # Specifies the performance metrics to use for the server that is used
+    # for recommendations.
+    #
+    # @!attribute [rw] name
+    #   A utilization metric that is used by the recommendations.
+    #   @return [String]
+    #
+    # @!attribute [rw] percentage_adjust
+    #   Specifies the percentage of the specified utilization metric that is
+    #   used by the recommendations.
+    #   @return [Float]
+    #
+    class UsageMetricBasis < Struct.new(
+      :name,
+      :percentage_adjust)
+      SENSITIVE = []
+      include Aws::Structure
+    end
 
   end
 end

@@ -45,7 +45,7 @@ module Aws::RDS
     alias :db_snapshot_identifier :snapshot_id
 
     # Specifies when the snapshot was taken in Coordinated Universal Time
-    # (UTC).
+    # (UTC). Changes for the copy when the snapshot is copied.
     # @return [Time]
     def snapshot_create_time
       data[:snapshot_create_time]
@@ -139,15 +139,16 @@ module Aws::RDS
       data[:percent_progress]
     end
 
-    # The AWS Region that the DB snapshot was created in or copied from.
+    # The Amazon Web Services Region that the DB snapshot was created in or
+    # copied from.
     # @return [String]
     def source_region
       data[:source_region]
     end
 
     # The DB snapshot Amazon Resource Name (ARN) that the DB snapshot was
-    # copied from. It only has value in case of cross-customer or
-    # cross-region copy.
+    # copied from. It only has a value in the case of a cross-account or
+    # cross-Region copy.
     # @return [String]
     def source_db_snapshot_identifier
       data[:source_db_snapshot_identifier]
@@ -172,11 +173,11 @@ module Aws::RDS
       data[:encrypted]
     end
 
-    # If `Encrypted` is true, the AWS KMS key identifier for the encrypted
-    # DB snapshot.
+    # If `Encrypted` is true, the Amazon Web Services KMS key identifier for
+    # the encrypted DB snapshot.
     #
-    # The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias
-    # name for the AWS KMS customer master key (CMK).
+    # The Amazon Web Services KMS key identifier is the key ARN, key ID,
+    # alias ARN, or alias name for the KMS key.
     # @return [String]
     def kms_key_id
       data[:kms_key_id]
@@ -197,8 +198,8 @@ module Aws::RDS
       data[:timezone]
     end
 
-    # True if mapping of AWS Identity and Access Management (IAM) accounts
-    # to database accounts is enabled, and otherwise false.
+    # True if mapping of Amazon Web Services Identity and Access Management
+    # (IAM) accounts to database accounts is enabled, and otherwise false.
     # @return [Boolean]
     def iam_database_authentication_enabled
       data[:iam_database_authentication_enabled]
@@ -212,7 +213,7 @@ module Aws::RDS
     end
 
     # The identifier for the source DB instance, which can't be changed and
-    # which is unique to an AWS Region.
+    # which is unique to an Amazon Web Services Region.
     # @return [String]
     def dbi_resource_id
       data[:dbi_resource_id]
@@ -229,6 +230,41 @@ module Aws::RDS
       data[:tag_list]
     end
 
+    # Specifies the time of the CreateDBSnapshot operation in Coordinated
+    # Universal Time (UTC). Doesn't change when the snapshot is copied.
+    # @return [Time]
+    def original_snapshot_create_time
+      data[:original_snapshot_create_time]
+    end
+
+    # The timestamp of the most recent transaction applied to the database
+    # that you're backing up. Thus, if you restore a snapshot,
+    # SnapshotDatabaseTime is the most recent transaction in the restored DB
+    # instance. In contrast, originalSnapshotCreateTime specifies the system
+    # time that the snapshot completed.
+    #
+    # If you back up a read replica, you can determine the replica lag by
+    # comparing SnapshotDatabaseTime with originalSnapshotCreateTime. For
+    # example, if originalSnapshotCreateTime is two hours later than
+    # SnapshotDatabaseTime, then the replica lag is two hours.
+    # @return [Time]
+    def snapshot_database_time
+      data[:snapshot_database_time]
+    end
+
+    # Specifies where manual snapshots are stored: Amazon Web Services
+    # Outposts or the Amazon Web Services Region.
+    # @return [String]
+    def snapshot_target
+      data[:snapshot_target]
+    end
+
+    # Specifies the storage throughput for the DB snapshot.
+    # @return [Integer]
+    def storage_throughput
+      data[:storage_throughput]
+    end
+
     # @!endgroup
 
     # @return [Client]
@@ -243,7 +279,9 @@ module Aws::RDS
     #
     # @return [self]
     def load
-      resp = @client.describe_db_snapshots(db_snapshot_identifier: @snapshot_id)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_db_snapshots(db_snapshot_identifier: @snapshot_id)
+      end
       @data = resp.db_snapshots[0]
       self
     end
@@ -358,7 +396,9 @@ module Aws::RDS
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -387,7 +427,9 @@ module Aws::RDS
         db_instance_identifier: @instance_id,
         db_snapshot_identifier: @snapshot_id
       )
-      resp = @client.create_db_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_db_snapshot(options)
+      end
       DBSnapshot.new(
         instance_id: resp.data.db_snapshot.db_instance_identifier,
         snapshot_id: resp.data.db_snapshot.db_snapshot_identifier,
@@ -411,6 +453,7 @@ module Aws::RDS
     #     pre_signed_url: "String",
     #     option_group_name: "String",
     #     target_custom_availability_zone: "String",
+    #     copy_option_group: false,
     #     source_region: "String",
     #   })
     # @param [Hash] options ({})
@@ -429,26 +472,29 @@ module Aws::RDS
     #
     #   Example: `my-db-snapshot`
     # @option options [String] :kms_key_id
-    #   The AWS KMS key identifier for an encrypted DB snapshot. The AWS KMS
-    #   key identifier is the key ARN, key ID, alias ARN, or alias name for
-    #   the AWS KMS customer master key (CMK).
+    #   The Amazon Web Services KMS key identifier for an encrypted DB
+    #   snapshot. The Amazon Web Services KMS key identifier is the key ARN,
+    #   key ID, alias ARN, or alias name for the KMS key.
     #
-    #   If you copy an encrypted DB snapshot from your AWS account, you can
-    #   specify a value for this parameter to encrypt the copy with a new AWS
-    #   KMS CMK. If you don't specify a value for this parameter, then the
-    #   copy of the DB snapshot is encrypted with the same AWS KMS key as the
-    #   source DB snapshot.
+    #   If you copy an encrypted DB snapshot from your Amazon Web Services
+    #   account, you can specify a value for this parameter to encrypt the
+    #   copy with a new KMS key. If you don't specify a value for this
+    #   parameter, then the copy of the DB snapshot is encrypted with the same
+    #   Amazon Web Services KMS key as the source DB snapshot.
     #
-    #   If you copy an encrypted DB snapshot that is shared from another AWS
-    #   account, then you must specify a value for this parameter.
+    #   If you copy an encrypted DB snapshot that is shared from another
+    #   Amazon Web Services account, then you must specify a value for this
+    #   parameter.
     #
     #   If you specify this parameter when you copy an unencrypted snapshot,
     #   the copy is encrypted.
     #
-    #   If you copy an encrypted snapshot to a different AWS Region, then you
-    #   must specify a AWS KMS key identifier for the destination AWS Region.
-    #   AWS KMS CMKs are specific to the AWS Region that they are created in,
-    #   and you can't use CMKs from one AWS Region in another AWS Region.
+    #   If you copy an encrypted snapshot to a different Amazon Web Services
+    #   Region, then you must specify an Amazon Web Services KMS key
+    #   identifier for the destination Amazon Web Services Region. KMS keys
+    #   are specific to the Amazon Web Services Region that they are created
+    #   in, and you can't use KMS keys from one Amazon Web Services Region in
+    #   another Amazon Web Services Region.
     # @option options [Array<Types::Tag>] :tags
     #   A list of tags. For more information, see [Tagging Amazon RDS
     #   Resources][1] in the *Amazon RDS User Guide.*
@@ -458,56 +504,66 @@ module Aws::RDS
     #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Tagging.html
     # @option options [Boolean] :copy_tags
     #   A value that indicates whether to copy all tags from the source DB
-    #   snapshot to the target DB snapshot. By default, tags are not copied.
+    #   snapshot to the target DB snapshot. By default, tags aren't copied.
     # @option options [String] :pre_signed_url
-    #   The URL that contains a Signature Version 4 signed request for the
-    #   `CopyDBSnapshot` API action in the source AWS Region that contains the
-    #   source DB snapshot to copy.
+    #   When you are copying a snapshot from one Amazon Web Services GovCloud
+    #   (US) Region to another, the URL that contains a Signature Version 4
+    #   signed request for the `CopyDBSnapshot` API operation in the source
+    #   Amazon Web Services Region that contains the source DB snapshot to
+    #   copy.
+    #
+    #   This setting applies only to Amazon Web Services GovCloud (US)
+    #   Regions. It's ignored in other Amazon Web Services Regions.
     #
     #   You must specify this parameter when you copy an encrypted DB snapshot
-    #   from another AWS Region by using the Amazon RDS API. Don't specify
-    #   `PreSignedUrl` when you are copying an encrypted DB snapshot in the
-    #   same AWS Region.
+    #   from another Amazon Web Services Region by using the Amazon RDS API.
+    #   Don't specify `PreSignedUrl` when you are copying an encrypted DB
+    #   snapshot in the same Amazon Web Services Region.
     #
-    #   The presigned URL must be a valid request for the `CopyDBSnapshot` API
-    #   action that can be executed in the source AWS Region that contains the
-    #   encrypted DB snapshot to be copied. The presigned URL request must
-    #   contain the following parameter values:
+    #   The presigned URL must be a valid request for the
+    #   `CopyDBClusterSnapshot` API operation that can run in the source
+    #   Amazon Web Services Region that contains the encrypted DB cluster
+    #   snapshot to copy. The presigned URL request must contain the following
+    #   parameter values:
     #
-    #   * `DestinationRegion` - The AWS Region that the encrypted DB snapshot
-    #     is copied to. This AWS Region is the same one where the
-    #     `CopyDBSnapshot` action is called that contains this presigned URL.
+    #   * `DestinationRegion` - The Amazon Web Services Region that the
+    #     encrypted DB snapshot is copied to. This Amazon Web Services Region
+    #     is the same one where the `CopyDBSnapshot` operation is called that
+    #     contains this presigned URL.
     #
     #     For example, if you copy an encrypted DB snapshot from the us-west-2
-    #     AWS Region to the us-east-1 AWS Region, then you call the
-    #     `CopyDBSnapshot` action in the us-east-1 AWS Region and provide a
-    #     presigned URL that contains a call to the `CopyDBSnapshot` action in
-    #     the us-west-2 AWS Region. For this example, the `DestinationRegion`
-    #     in the presigned URL must be set to the us-east-1 AWS Region.
+    #     Amazon Web Services Region to the us-east-1 Amazon Web Services
+    #     Region, then you call the `CopyDBSnapshot` operation in the
+    #     us-east-1 Amazon Web Services Region and provide a presigned URL
+    #     that contains a call to the `CopyDBSnapshot` operation in the
+    #     us-west-2 Amazon Web Services Region. For this example, the
+    #     `DestinationRegion` in the presigned URL must be set to the
+    #     us-east-1 Amazon Web Services Region.
     #
-    #   * `KmsKeyId` - The AWS KMS key identifier for the customer master key
-    #     (CMK) to use to encrypt the copy of the DB snapshot in the
-    #     destination AWS Region. This is the same identifier for both the
-    #     `CopyDBSnapshot` action that is called in the destination AWS
-    #     Region, and the action contained in the presigned URL.
+    #   * `KmsKeyId` - The KMS key identifier for the KMS key to use to
+    #     encrypt the copy of the DB snapshot in the destination Amazon Web
+    #     Services Region. This is the same identifier for both the
+    #     `CopyDBSnapshot` operation that is called in the destination Amazon
+    #     Web Services Region, and the operation contained in the presigned
+    #     URL.
     #
     #   * `SourceDBSnapshotIdentifier` - The DB snapshot identifier for the
     #     encrypted snapshot to be copied. This identifier must be in the
-    #     Amazon Resource Name (ARN) format for the source AWS Region. For
-    #     example, if you are copying an encrypted DB snapshot from the
-    #     us-west-2 AWS Region, then your `SourceDBSnapshotIdentifier` looks
-    #     like the following example:
+    #     Amazon Resource Name (ARN) format for the source Amazon Web Services
+    #     Region. For example, if you are copying an encrypted DB snapshot
+    #     from the us-west-2 Amazon Web Services Region, then your
+    #     `SourceDBSnapshotIdentifier` looks like the following example:
     #     `arn:aws:rds:us-west-2:123456789012:snapshot:mysql-instance1-snapshot-20161115`.
     #
     #   To learn how to generate a Signature Version 4 signed request, see
-    #   [Authenticating Requests: Using Query Parameters (AWS Signature
-    #   Version 4)][1] and [Signature Version 4 Signing Process][2].
+    #   [Authenticating Requests: Using Query Parameters (Amazon Web Services
+    #   Signature Version 4)][1] and [Signature Version 4 Signing Process][2].
     #
-    #   <note markdown="1"> If you are using an AWS SDK tool or the AWS CLI, you can specify
-    #   `SourceRegion` (or `--source-region` for the AWS CLI) instead of
+    #   <note markdown="1"> If you are using an Amazon Web Services SDK tool or the CLI, you can
+    #   specify `SourceRegion` (or `--source-region` for the CLI) instead of
     #   specifying `PreSignedUrl` manually. Specifying `SourceRegion`
-    #   autogenerates a pre-signed URL that is a valid request for the
-    #   operation that can be executed in the source AWS Region.
+    #   autogenerates a presigned URL that is a valid request for the
+    #   operation that can run in the source Amazon Web Services Region.
     #
     #    </note>
     #
@@ -519,12 +575,13 @@ module Aws::RDS
     #   The name of an option group to associate with the copy of the
     #   snapshot.
     #
-    #   Specify this option if you are copying a snapshot from one AWS Region
-    #   to another, and your DB instance uses a nondefault option group. If
-    #   your source DB instance uses Transparent Data Encryption for Oracle or
-    #   Microsoft SQL Server, you must specify this option when copying across
-    #   AWS Regions. For more information, see [Option group
-    #   considerations][1] in the *Amazon RDS User Guide.*
+    #   Specify this option if you are copying a snapshot from one Amazon Web
+    #   Services Region to another, and your DB instance uses a nondefault
+    #   option group. If your source DB instance uses Transparent Data
+    #   Encryption for Oracle or Microsoft SQL Server, you must specify this
+    #   option when copying across Amazon Web Services Regions. For more
+    #   information, see [Option group considerations][1] in the *Amazon RDS
+    #   User Guide*.
     #
     #
     #
@@ -534,13 +591,20 @@ module Aws::RDS
     #   CAZ.
     #
     #   Example: `rds-caz-aiqhTgQv`.
+    # @option options [Boolean] :copy_option_group
+    #   A value that indicates whether to copy the DB option group associated
+    #   with the source DB snapshot to the target Amazon Web Services account
+    #   and associate with the target DB snapshot. The associated option group
+    #   can be copied only with cross-account snapshot copy calls.
     # @option options [String] :source_region
     #   The source region of the snapshot. This is only needed when the
     #   shapshot is encrypted and in a different region.
     # @return [DBSnapshot]
     def copy(options = {})
       options = options.merge(source_db_snapshot_identifier: @snapshot_id)
-      resp = @client.copy_db_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.copy_db_snapshot(options)
+      end
       DBSnapshot.new(
         instance_id: resp.data.db_snapshot.db_instance_identifier,
         snapshot_id: resp.data.db_snapshot.db_snapshot_identifier,
@@ -556,7 +620,9 @@ module Aws::RDS
     # @return [DBSnapshot]
     def delete(options = {})
       options = options.merge(db_snapshot_identifier: @snapshot_id)
-      resp = @client.delete_db_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_db_snapshot(options)
+      end
       DBSnapshot.new(
         instance_id: resp.data.db_snapshot.db_instance_identifier,
         snapshot_id: resp.data.db_snapshot.db_snapshot_identifier,
@@ -592,6 +658,10 @@ module Aws::RDS
     #     tde_credential_password: "String",
     #     vpc_security_group_ids: ["String"],
     #     domain: "String",
+    #     domain_fqdn: "String",
+    #     domain_ou: "String",
+    #     domain_auth_secret_arn: "String",
+    #     domain_dns_ips: ["String"],
     #     copy_tags_to_snapshot: false,
     #     domain_iam_role_name: "String",
     #     enable_iam_database_authentication: false,
@@ -606,6 +676,12 @@ module Aws::RDS
     #     db_parameter_group_name: "String",
     #     deletion_protection: false,
     #     enable_customer_owned_ip: false,
+    #     custom_iam_instance_profile: "String",
+    #     backup_target: "String",
+    #     network_type: "String",
+    #     storage_throughput: 1,
+    #     db_cluster_snapshot_identifier: "String",
+    #     allocated_storage: 1,
     #   })
     # @param [Hash] options ({})
     # @option options [required, String] :db_instance_identifier
@@ -623,10 +699,10 @@ module Aws::RDS
     #   Example: `my-snapshot-id`
     # @option options [String] :db_instance_class
     #   The compute and memory capacity of the Amazon RDS DB instance, for
-    #   example, `db.m4.large`. Not all DB instance classes are available in
-    #   all AWS Regions, or for all database engines. For the full list of DB
-    #   instance classes, and availability for your engine, see [DB Instance
-    #   Class][1] in the *Amazon RDS User Guide.*
+    #   example db.m4.large. Not all DB instance classes are available in all
+    #   Amazon Web Services Regions, or for all database engines. For the full
+    #   list of DB instance classes, and availability for your engine, see [DB
+    #   Instance Class][1] in the *Amazon RDS User Guide.*
     #
     #   Default: The same DBInstanceClass as the original DB instance.
     #
@@ -654,22 +730,25 @@ module Aws::RDS
     #   Constraints: If supplied, must match the name of an existing
     #   DBSubnetGroup.
     #
-    #   Example: `mySubnetgroup`
+    #   Example: `mydbsubnetgroup`
     # @option options [Boolean] :multi_az
     #   A value that indicates whether the DB instance is a Multi-AZ
     #   deployment.
+    #
+    #   This setting doesn't apply to RDS Custom.
     #
     #   Constraint: You can't specify the `AvailabilityZone` parameter if the
     #   DB instance is a Multi-AZ deployment.
     # @option options [Boolean] :publicly_accessible
     #   A value that indicates whether the DB instance is publicly accessible.
     #
-    #   When the DB instance is publicly accessible, its DNS endpoint resolves
-    #   to the private IP address from within the DB instance's VPC, and to
-    #   the public IP address from outside of the DB instance's VPC. Access
-    #   to the DB instance is ultimately controlled by the security group it
-    #   uses, and that public access is not permitted if the security group
-    #   assigned to the DB instance doesn't permit it.
+    #   When the DB instance is publicly accessible, its Domain Name System
+    #   (DNS) endpoint resolves to the private IP address from within the DB
+    #   instance's virtual private cloud (VPC). It resolves to the public IP
+    #   address from outside of the DB instance's VPC. Access to the DB
+    #   instance is ultimately controlled by the security group it uses. That
+    #   public access is not permitted if the security group assigned to the
+    #   DB instance doesn't permit it.
     #
     #   When the DB instance isn't publicly accessible, it is an internal DB
     #   instance with a DNS name that resolves to a private IP address.
@@ -678,8 +757,13 @@ module Aws::RDS
     # @option options [Boolean] :auto_minor_version_upgrade
     #   A value that indicates whether minor version upgrades are applied
     #   automatically to the DB instance during the maintenance window.
+    #
+    #   If you restore an RDS Custom DB instance, you must disable this
+    #   parameter.
     # @option options [String] :license_model
     #   License model information for the restored DB instance.
+    #
+    #   This setting doesn't apply to RDS Custom.
     #
     #   Default: Same as source.
     #
@@ -688,12 +772,12 @@ module Aws::RDS
     # @option options [String] :db_name
     #   The database name for the restored DB instance.
     #
-    #   <note markdown="1"> This parameter doesn't apply to the MySQL, PostgreSQL, or MariaDB
-    #   engines.
-    #
-    #    </note>
+    #   This parameter doesn't apply to the MySQL, PostgreSQL, or MariaDB
+    #   engines. It also doesn't apply to RDS Custom DB instances.
     # @option options [String] :engine
     #   The database engine to use for the new instance.
+    #
+    #   This setting doesn't apply to RDS Custom.
     #
     #   Default: The same as source
     #
@@ -709,11 +793,11 @@ module Aws::RDS
     #
     #   * `oracle-ee`
     #
+    #   * `oracle-ee-cdb`
+    #
     #   * `oracle-se2`
     #
-    #   * `oracle-se1`
-    #
-    #   * `oracle-se`
+    #   * `oracle-se2-cdb`
     #
     #   * `postgres`
     #
@@ -734,8 +818,7 @@ module Aws::RDS
     #
     #   The provisioned IOPS value must follow the requirements for your
     #   database engine. For more information, see [Amazon RDS Provisioned
-    #   IOPS Storage to Improve Performance][1] in the *Amazon RDS User
-    #   Guide.*
+    #   IOPS storage][1] in the *Amazon RDS User Guide.*
     #
     #   Constraints: Must be an integer greater than 1000.
     #
@@ -747,8 +830,10 @@ module Aws::RDS
     #
     #   Permanent options, such as the TDE option for Oracle Advanced Security
     #   TDE, can't be removed from an option group, and that option group
-    #   can't be removed from a DB instance once it is associated with a DB
-    #   instance
+    #   can't be removed from a DB instance after it is associated with a DB
+    #   instance.
+    #
+    #   This setting doesn't apply to RDS Custom.
     # @option options [Array<Types::Tag>] :tags
     #   A list of tags. For more information, see [Tagging Amazon RDS
     #   Resources][1] in the *Amazon RDS User Guide.*
@@ -759,18 +844,22 @@ module Aws::RDS
     # @option options [String] :storage_type
     #   Specifies the storage type to be associated with the DB instance.
     #
-    #   Valid values: `standard | gp2 | io1`
+    #   Valid values: `gp2 | gp3 | io1 | standard`
     #
-    #   If you specify `io1`, you must also include a value for the `Iops`
-    #   parameter.
+    #   If you specify `io1` or `gp3`, you must also include a value for the
+    #   `Iops` parameter.
     #
     #   Default: `io1` if the `Iops` parameter is specified, otherwise `gp2`
     # @option options [String] :tde_credential_arn
     #   The ARN from the key store with which to associate the instance for
     #   TDE encryption.
+    #
+    #   This setting doesn't apply to RDS Custom.
     # @option options [String] :tde_credential_password
     #   The password for the given ARN from the key store in order to access
     #   the device.
+    #
+    #   This setting doesn't apply to RDS Custom.
     # @option options [Array<String>] :vpc_security_group_ids
     #   A list of EC2 VPC security groups to associate with this DB instance.
     #
@@ -778,31 +867,92 @@ module Aws::RDS
     #   VPC.
     # @option options [String] :domain
     #   Specify the Active Directory directory ID to restore the DB instance
-    #   in. The domain must be created prior to this operation. Currently,
-    #   only MySQL, Microsoft SQL Server, Oracle, and PostgreSQL DB instances
-    #   can be created in an Active Directory Domain.
+    #   in. The domain/ must be created prior to this operation. Currently,
+    #   you can create only MySQL, Microsoft SQL Server, Oracle, and
+    #   PostgreSQL DB instances in an Active Directory Domain.
     #
     #   For more information, see [ Kerberos Authentication][1] in the *Amazon
     #   RDS User Guide*.
     #
+    #   This setting doesn't apply to RDS Custom.
+    #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/kerberos-authentication.html
+    # @option options [String] :domain_fqdn
+    #   The fully qualified domain name (FQDN) of an Active Directory domain.
+    #
+    #   Constraints:
+    #
+    #   * Can't be longer than 64 characters.
+    #
+    #   ^
+    #
+    #   Example: `mymanagedADtest.mymanagedAD.mydomain`
+    # @option options [String] :domain_ou
+    #   The Active Directory organizational unit for your DB instance to join.
+    #
+    #   Constraints:
+    #
+    #   * Must be in the distinguished name format.
+    #
+    #   * Can't be longer than 64 characters.
+    #
+    #   Example:
+    #   `OU=mymanagedADtestOU,DC=mymanagedADtest,DC=mymanagedAD,DC=mydomain`
+    # @option options [String] :domain_auth_secret_arn
+    #   The ARN for the Secrets Manager secret with the credentials for the
+    #   user joining the domain.
+    #
+    #   Constraints:
+    #
+    #   Example:
+    #   `arn:aws:secretsmanager:region:account-number:secret:myselfmanagedADtestsecret-123456`
+    # @option options [Array<String>] :domain_dns_ips
+    #   The IPv4 DNS IP addresses of your primary and secondary Active
+    #   Directory domain controllers.
+    #
+    #   Constraints:
+    #
+    #   * Two IP addresses must be provided. If there isn't a secondary
+    #     domain controller, use the IP address of the primary domain
+    #     controller for both entries in the list.
+    #
+    #   ^
+    #
+    #   Example: `123.124.125.126,234.235.236.237`
     # @option options [Boolean] :copy_tags_to_snapshot
     #   A value that indicates whether to copy all tags from the restored DB
-    #   instance to snapshots of the DB instance. By default, tags are not
-    #   copied.
+    #   instance to snapshots of the DB instance.
+    #
+    #   In most cases, tags aren't copied by default. However, when you
+    #   restore a DB instance from a DB snapshot, RDS checks whether you
+    #   specify new tags. If yes, the new tags are added to the restored DB
+    #   instance. If there are no new tags, RDS looks for the tags from the
+    #   source DB instance for the DB snapshot, and then adds those tags to
+    #   the restored DB instance.
+    #
+    #   For more information, see [ Copying tags to DB instance snapshots][1]
+    #   in the *Amazon RDS User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Tagging.html#USER_Tagging.CopyTags
     # @option options [String] :domain_iam_role_name
-    #   Specify the name of the IAM role to be used when making API calls to
-    #   the Directory Service.
+    #   The name of the IAM role to use when making API calls to the Directory
+    #   Service.
+    #
+    #   This setting doesn't apply to RDS Custom DB instances.
     # @option options [Boolean] :enable_iam_database_authentication
-    #   A value that indicates whether to enable mapping of AWS Identity and
-    #   Access Management (IAM) accounts to database accounts. By default,
-    #   mapping is disabled.
+    #   A value that indicates whether to enable mapping of Amazon Web
+    #   Services Identity and Access Management (IAM) accounts to database
+    #   accounts. By default, mapping is disabled.
     #
     #   For more information about IAM database authentication, see [ IAM
     #   Database Authentication for MySQL and PostgreSQL][1] in the *Amazon
     #   RDS User Guide.*
+    #
+    #   This setting doesn't apply to RDS Custom.
     #
     #
     #
@@ -813,20 +963,28 @@ module Aws::RDS
     #   used. For more information, see [Publishing Database Logs to Amazon
     #   CloudWatch Logs][1] in the *Amazon RDS User Guide*.
     #
+    #   This setting doesn't apply to RDS Custom.
+    #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch
     # @option options [Array<Types::ProcessorFeature>] :processor_features
     #   The number of CPU cores and the number of threads per core for the DB
     #   instance class of the DB instance.
+    #
+    #   This setting doesn't apply to RDS Custom.
     # @option options [Boolean] :use_default_processor_features
     #   A value that indicates whether the DB instance class of the DB
     #   instance uses its default processor features.
+    #
+    #   This setting doesn't apply to RDS Custom.
     # @option options [String] :db_parameter_group_name
     #   The name of the DB parameter group to associate with this DB instance.
     #
-    #   If you do not specify a value for `DBParameterGroupName`, then the
-    #   default `DBParameterGroup` for the specified DB engine is used.
+    #   If you don't specify a value for `DBParameterGroupName`, then RDS
+    #   uses the default `DBParameterGroup` for the specified DB engine.
+    #
+    #   This setting doesn't apply to RDS Custom.
     #
     #   Constraints:
     #
@@ -840,7 +998,7 @@ module Aws::RDS
     # @option options [Boolean] :deletion_protection
     #   A value that indicates whether the DB instance has deletion protection
     #   enabled. The database can't be deleted when deletion protection is
-    #   enabled. By default, deletion protection is disabled. For more
+    #   enabled. By default, deletion protection isn't enabled. For more
     #   information, see [ Deleting a DB Instance][1].
     #
     #
@@ -855,20 +1013,119 @@ module Aws::RDS
     #   a CoIP can provide lower latency for connections to the DB instance
     #   from outside of its virtual private cloud (VPC) on your local network.
     #
+    #   This setting doesn't apply to RDS Custom.
+    #
     #   For more information about RDS on Outposts, see [Working with Amazon
-    #   RDS on AWS Outposts][1] in the *Amazon RDS User Guide*.
+    #   RDS on Amazon Web Services Outposts][1] in the *Amazon RDS User
+    #   Guide*.
     #
     #   For more information about CoIPs, see [Customer-owned IP addresses][2]
-    #   in the *AWS Outposts User Guide*.
+    #   in the *Amazon Web Services Outposts User Guide*.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html
-    #   [2]: https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing
+    #   [2]: https://docs.aws.amazon.com/outposts/latest/userguide/routing.html#ip-addressing
+    # @option options [String] :custom_iam_instance_profile
+    #   The instance profile associated with the underlying Amazon EC2
+    #   instance of an RDS Custom DB instance. The instance profile must meet
+    #   the following requirements:
+    #
+    #   * The profile must exist in your account.
+    #
+    #   * The profile must have an IAM role that Amazon EC2 has permissions to
+    #     assume.
+    #
+    #   * The instance profile name and the associated IAM role name must
+    #     start with the prefix `AWSRDSCustom`.
+    #
+    #   For the list of permissions required for the IAM role, see [ Configure
+    #   IAM and your VPC][1] in the *Amazon RDS User Guide*.
+    #
+    #   This setting is required for RDS Custom.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-orcl.html#custom-setup-orcl.iam-vpc
+    # @option options [String] :backup_target
+    #   Specifies where automated backups and manual snapshots are stored for
+    #   the restored DB instance.
+    #
+    #   Possible values are `outposts` (Amazon Web Services Outposts) and
+    #   `region` (Amazon Web Services Region). The default is `region`.
+    #
+    #   For more information, see [Working with Amazon RDS on Amazon Web
+    #   Services Outposts][1] in the *Amazon RDS User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html
+    # @option options [String] :network_type
+    #   The network type of the DB instance.
+    #
+    #   Valid values:
+    #
+    #   * `IPV4`
+    #
+    #   * `DUAL`
+    #
+    #   The network type is determined by the `DBSubnetGroup` specified for
+    #   the DB instance. A `DBSubnetGroup` can support only the IPv4 protocol
+    #   or the IPv4 and the IPv6 protocols (`DUAL`).
+    #
+    #   For more information, see [ Working with a DB instance in a VPC][1] in
+    #   the *Amazon RDS User Guide.*
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html
+    # @option options [Integer] :storage_throughput
+    #   Specifies the storage throughput value for the DB instance.
+    #
+    #   This setting doesn't apply to RDS Custom or Amazon Aurora.
+    # @option options [String] :db_cluster_snapshot_identifier
+    #   The identifier for the RDS for MySQL Multi-AZ DB cluster snapshot to
+    #   restore from.
+    #
+    #   For more information on Multi-AZ DB clusters, see [ Multi-AZ DB
+    #   cluster deployments][1] in the *Amazon RDS User Guide*.
+    #
+    #   Constraints:
+    #
+    #   * Must match the identifier of an existing Multi-AZ DB cluster
+    #     snapshot.
+    #
+    #   * Can't be specified when `DBSnapshotIdentifier` is specified.
+    #
+    #   * Must be specified when `DBSnapshotIdentifier` isn't specified.
+    #
+    #   * If you are restoring from a shared manual Multi-AZ DB cluster
+    #     snapshot, the `DBClusterSnapshotIdentifier` must be the ARN of the
+    #     shared snapshot.
+    #
+    #   * Can't be the identifier of an Aurora DB cluster snapshot.
+    #
+    #   * Can't be the identifier of an RDS for PostgreSQL Multi-AZ DB
+    #     cluster snapshot.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/multi-az-db-clusters-concepts.html
+    # @option options [Integer] :allocated_storage
+    #   The amount of storage (in gibibytes) to allocate initially for the DB
+    #   instance. Follow the allocation rules specified in CreateDBInstance.
+    #
+    #   <note markdown="1"> Be sure to allocate enough storage for your new DB instance so that
+    #   the restore operation can succeed. You can also allocate additional
+    #   storage for future growth.
+    #
+    #    </note>
     # @return [DBInstance]
     def restore(options = {})
       options = options.merge(db_snapshot_identifier: @snapshot_id)
-      resp = @client.restore_db_instance_from_db_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.restore_db_instance_from_db_snapshot(options)
+      end
       DBInstance.new(
         id: resp.data.db_instance.db_instance_identifier,
         data: resp.data.db_instance,
@@ -888,7 +1145,9 @@ module Aws::RDS
     # @return [EventSubscription]
     def subscribe_to(options = {})
       options = options.merge(source_identifier: @snapshot_id)
-      resp = @client.add_source_identifier_to_subscription(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.add_source_identifier_to_subscription(options)
+      end
       EventSubscription.new(
         name: resp.data.event_subscription.cust_subscription_id,
         data: resp.data.event_subscription,
@@ -908,7 +1167,9 @@ module Aws::RDS
     # @return [EventSubscription]
     def unsubscribe_from(options = {})
       options = options.merge(source_identifier: @snapshot_id)
-      resp = @client.remove_source_identifier_from_subscription(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.remove_source_identifier_from_subscription(options)
+      end
       EventSubscription.new(
         name: resp.data.event_subscription.cust_subscription_id,
         data: resp.data.event_subscription,
@@ -927,7 +1188,9 @@ module Aws::RDS
       batches = Enumerator.new do |y|
         batch = []
         options = options.merge(db_snapshot_identifier: @snapshot_id)
-        resp = @client.describe_db_snapshot_attributes(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_db_snapshot_attributes(options)
+        end
         resp.data.db_snapshot_attributes_result.db_snapshot_attributes.each do |d|
           batch << DBSnapshotAttribute.new(
             snapshot_id: @snapshot_id,
@@ -992,7 +1255,9 @@ module Aws::RDS
           source_type: "db-snapshot",
           source_identifier: @snapshot_id
         )
-        resp = @client.describe_events(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_events(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.events.each do |e|

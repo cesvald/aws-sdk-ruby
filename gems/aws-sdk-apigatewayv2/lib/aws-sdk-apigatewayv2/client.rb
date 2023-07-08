@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:apigatewayv2)
@@ -73,8 +77,13 @@ module Aws::ApiGatewayV2
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::ApiGatewayV2::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::ApiGatewayV2
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::ApiGatewayV2
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::ApiGatewayV2
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::ApiGatewayV2
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::ApiGatewayV2
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::ApiGatewayV2::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::ApiGatewayV2::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::ApiGatewayV2
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::ApiGatewayV2
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -706,11 +763,12 @@ module Aws::ApiGatewayV2
     #         certificate_arn: "Arn",
     #         certificate_name: "StringWithLengthBetween1And128",
     #         certificate_upload_date: Time.now,
-    #         domain_name_status: "AVAILABLE", # accepts AVAILABLE, UPDATING
+    #         domain_name_status: "AVAILABLE", # accepts AVAILABLE, UPDATING, PENDING_CERTIFICATE_REIMPORT, PENDING_OWNERSHIP_VERIFICATION
     #         domain_name_status_message: "__string",
     #         endpoint_type: "REGIONAL", # accepts REGIONAL, EDGE
     #         hosted_zone_id: "__string",
     #         security_policy: "TLS_1_0", # accepts TLS_1_0, TLS_1_2
+    #         ownership_verification_certificate_arn: "Arn",
     #       },
     #     ],
     #     mutual_tls_authentication: {
@@ -731,11 +789,12 @@ module Aws::ApiGatewayV2
     #   resp.domain_name_configurations[0].certificate_arn #=> String
     #   resp.domain_name_configurations[0].certificate_name #=> String
     #   resp.domain_name_configurations[0].certificate_upload_date #=> Time
-    #   resp.domain_name_configurations[0].domain_name_status #=> String, one of "AVAILABLE", "UPDATING"
+    #   resp.domain_name_configurations[0].domain_name_status #=> String, one of "AVAILABLE", "UPDATING", "PENDING_CERTIFICATE_REIMPORT", "PENDING_OWNERSHIP_VERIFICATION"
     #   resp.domain_name_configurations[0].domain_name_status_message #=> String
     #   resp.domain_name_configurations[0].endpoint_type #=> String, one of "REGIONAL", "EDGE"
     #   resp.domain_name_configurations[0].hosted_zone_id #=> String
     #   resp.domain_name_configurations[0].security_policy #=> String, one of "TLS_1_0", "TLS_1_2"
+    #   resp.domain_name_configurations[0].ownership_verification_certificate_arn #=> String
     #   resp.mutual_tls_authentication.truststore_uri #=> String
     #   resp.mutual_tls_authentication.truststore_version #=> String
     #   resp.mutual_tls_authentication.truststore_warnings #=> Array
@@ -811,7 +870,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -980,7 +1039,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -2294,11 +2353,12 @@ module Aws::ApiGatewayV2
     #   resp.domain_name_configurations[0].certificate_arn #=> String
     #   resp.domain_name_configurations[0].certificate_name #=> String
     #   resp.domain_name_configurations[0].certificate_upload_date #=> Time
-    #   resp.domain_name_configurations[0].domain_name_status #=> String, one of "AVAILABLE", "UPDATING"
+    #   resp.domain_name_configurations[0].domain_name_status #=> String, one of "AVAILABLE", "UPDATING", "PENDING_CERTIFICATE_REIMPORT", "PENDING_OWNERSHIP_VERIFICATION"
     #   resp.domain_name_configurations[0].domain_name_status_message #=> String
     #   resp.domain_name_configurations[0].endpoint_type #=> String, one of "REGIONAL", "EDGE"
     #   resp.domain_name_configurations[0].hosted_zone_id #=> String
     #   resp.domain_name_configurations[0].security_policy #=> String, one of "TLS_1_0", "TLS_1_2"
+    #   resp.domain_name_configurations[0].ownership_verification_certificate_arn #=> String
     #   resp.mutual_tls_authentication.truststore_uri #=> String
     #   resp.mutual_tls_authentication.truststore_version #=> String
     #   resp.mutual_tls_authentication.truststore_warnings #=> Array
@@ -2341,11 +2401,12 @@ module Aws::ApiGatewayV2
     #   resp.items[0].domain_name_configurations[0].certificate_arn #=> String
     #   resp.items[0].domain_name_configurations[0].certificate_name #=> String
     #   resp.items[0].domain_name_configurations[0].certificate_upload_date #=> Time
-    #   resp.items[0].domain_name_configurations[0].domain_name_status #=> String, one of "AVAILABLE", "UPDATING"
+    #   resp.items[0].domain_name_configurations[0].domain_name_status #=> String, one of "AVAILABLE", "UPDATING", "PENDING_CERTIFICATE_REIMPORT", "PENDING_OWNERSHIP_VERIFICATION"
     #   resp.items[0].domain_name_configurations[0].domain_name_status_message #=> String
     #   resp.items[0].domain_name_configurations[0].endpoint_type #=> String, one of "REGIONAL", "EDGE"
     #   resp.items[0].domain_name_configurations[0].hosted_zone_id #=> String
     #   resp.items[0].domain_name_configurations[0].security_policy #=> String, one of "TLS_1_0", "TLS_1_2"
+    #   resp.items[0].domain_name_configurations[0].ownership_verification_certificate_arn #=> String
     #   resp.items[0].mutual_tls_authentication.truststore_uri #=> String
     #   resp.items[0].mutual_tls_authentication.truststore_version #=> String
     #   resp.items[0].mutual_tls_authentication.truststore_warnings #=> Array
@@ -3671,11 +3732,12 @@ module Aws::ApiGatewayV2
     #         certificate_arn: "Arn",
     #         certificate_name: "StringWithLengthBetween1And128",
     #         certificate_upload_date: Time.now,
-    #         domain_name_status: "AVAILABLE", # accepts AVAILABLE, UPDATING
+    #         domain_name_status: "AVAILABLE", # accepts AVAILABLE, UPDATING, PENDING_CERTIFICATE_REIMPORT, PENDING_OWNERSHIP_VERIFICATION
     #         domain_name_status_message: "__string",
     #         endpoint_type: "REGIONAL", # accepts REGIONAL, EDGE
     #         hosted_zone_id: "__string",
     #         security_policy: "TLS_1_0", # accepts TLS_1_0, TLS_1_2
+    #         ownership_verification_certificate_arn: "Arn",
     #       },
     #     ],
     #     mutual_tls_authentication: {
@@ -3693,11 +3755,12 @@ module Aws::ApiGatewayV2
     #   resp.domain_name_configurations[0].certificate_arn #=> String
     #   resp.domain_name_configurations[0].certificate_name #=> String
     #   resp.domain_name_configurations[0].certificate_upload_date #=> Time
-    #   resp.domain_name_configurations[0].domain_name_status #=> String, one of "AVAILABLE", "UPDATING"
+    #   resp.domain_name_configurations[0].domain_name_status #=> String, one of "AVAILABLE", "UPDATING", "PENDING_CERTIFICATE_REIMPORT", "PENDING_OWNERSHIP_VERIFICATION"
     #   resp.domain_name_configurations[0].domain_name_status_message #=> String
     #   resp.domain_name_configurations[0].endpoint_type #=> String, one of "REGIONAL", "EDGE"
     #   resp.domain_name_configurations[0].hosted_zone_id #=> String
     #   resp.domain_name_configurations[0].security_policy #=> String, one of "TLS_1_0", "TLS_1_2"
+    #   resp.domain_name_configurations[0].ownership_verification_certificate_arn #=> String
     #   resp.mutual_tls_authentication.truststore_uri #=> String
     #   resp.mutual_tls_authentication.truststore_version #=> String
     #   resp.mutual_tls_authentication.truststore_warnings #=> Array
@@ -3775,7 +3838,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -3947,7 +4010,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -4451,7 +4514,7 @@ module Aws::ApiGatewayV2
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-apigatewayv2'
-      context[:gem_version] = '1.32.0'
+      context[:gem_version] = '1.48.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

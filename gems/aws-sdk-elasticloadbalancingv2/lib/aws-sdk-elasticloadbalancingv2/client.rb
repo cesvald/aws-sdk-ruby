@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/query.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:elasticloadbalancingv2)
@@ -73,8 +77,13 @@ module Aws::ElasticLoadBalancingV2
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::Query)
+    add_plugin(Aws::ElasticLoadBalancingV2::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::ElasticLoadBalancingV2
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::ElasticLoadBalancingV2
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::ElasticLoadBalancingV2
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::ElasticLoadBalancingV2
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::ElasticLoadBalancingV2
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::ElasticLoadBalancingV2::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::ElasticLoadBalancingV2::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::ElasticLoadBalancingV2
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::ElasticLoadBalancingV2
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -785,7 +842,9 @@ module Aws::ElasticLoadBalancingV2
     #
     # @option params [Array<String>] :subnets
     #   The IDs of the public subnets. You can specify only one subnet per
-    #   Availability Zone. You must specify either subnets or subnet mappings.
+    #   Availability Zone. You must specify either subnets or subnet mappings,
+    #   but not both. To specify an Elastic IP address, specify subnet
+    #   mappings instead of subnets.
     #
     #   \[Application Load Balancers\] You must specify subnets from at least
     #   two Availability Zones.
@@ -804,7 +863,8 @@ module Aws::ElasticLoadBalancingV2
     #
     # @option params [Array<Types::SubnetMapping>] :subnet_mappings
     #   The IDs of the public subnets. You can specify only one subnet per
-    #   Availability Zone. You must specify either subnets or subnet mappings.
+    #   Availability Zone. You must specify either subnets or subnet mappings,
+    #   but not both.
     #
     #   \[Application Load Balancers\] You must specify subnets from at least
     #   two Availability Zones. You cannot specify Elastic IP addresses for
@@ -858,8 +918,7 @@ module Aws::ElasticLoadBalancingV2
     # @option params [String] :ip_address_type
     #   The type of IP addresses used by the subnets for your load balancer.
     #   The possible values are `ipv4` (for IPv4 addresses) and `dualstack`
-    #   (for IPv4 and IPv6 addresses). Internal load balancers must use
-    #   `ipv4`.
+    #   (for IPv4 and IPv6 addresses).
     #
     # @option params [String] :customer_owned_ipv_4_pool
     #   \[Application Load Balancers on Outposts\] The ID of the
@@ -1355,8 +1414,8 @@ module Aws::ElasticLoadBalancingV2
     # @option params [Boolean] :health_check_enabled
     #   Indicates whether health checks are enabled. If the target type is
     #   `lambda`, health checks are disabled by default but can be enabled. If
-    #   the target type is `instance` or `ip`, health checks are always
-    #   enabled and cannot be disabled.
+    #   the target type is `instance`, `ip`, or `alb`, health checks are
+    #   always enabled and cannot be disabled.
     #
     # @option params [String] :health_check_path
     #   \[HTTP/HTTPS health checks\] The destination for health checks on the
@@ -1365,43 +1424,44 @@ module Aws::ElasticLoadBalancingV2
     #   \[HTTP1 or HTTP2 protocol version\] The ping path. The default is /.
     #
     #   \[GRPC protocol version\] The path of a custom health check method
-    #   with the format /package.service/method. The default is
-    #   /AWS.ALB/healthcheck.
+    #   with the format /package.service/method. The default is /Amazon Web
+    #   Services.ALB/healthcheck.
     #
     # @option params [Integer] :health_check_interval_seconds
     #   The approximate amount of time, in seconds, between health checks of
-    #   an individual target. If the target group protocol is TCP, TLS, UDP,
-    #   or TCP\_UDP, the supported values are 10 and 30 seconds. If the target
-    #   group protocol is HTTP or HTTPS, the default is 30 seconds. If the
-    #   target group protocol is GENEVE, the default is 10 seconds. If the
-    #   target type is `lambda`, the default is 35 seconds.
+    #   an individual target. The range is 5-300. If the target group protocol
+    #   is TCP, TLS, UDP, TCP\_UDP, HTTP or HTTPS, the default is 30 seconds.
+    #   If the target group protocol is GENEVE, the default is 10 seconds. If
+    #   the target type is `lambda`, the default is 35 seconds.
     #
     # @option params [Integer] :health_check_timeout_seconds
     #   The amount of time, in seconds, during which no response from a target
-    #   means a failed health check. For target groups with a protocol of
-    #   HTTP, HTTPS, or GENEVE, the default is 5 seconds. For target groups
-    #   with a protocol of TCP or TLS, this value must be 6 seconds for HTTP
-    #   health checks and 10 seconds for TCP and HTTPS health checks. If the
-    #   target type is `lambda`, the default is 30 seconds.
+    #   means a failed health check. The range is 2–120 seconds. For target
+    #   groups with a protocol of HTTP, the default is 6 seconds. For target
+    #   groups with a protocol of TCP, TLS or HTTPS, the default is 10
+    #   seconds. For target groups with a protocol of GENEVE, the default is 5
+    #   seconds. If the target type is `lambda`, the default is 30 seconds.
     #
     # @option params [Integer] :healthy_threshold_count
-    #   The number of consecutive health checks successes required before
-    #   considering an unhealthy target healthy. For target groups with a
-    #   protocol of HTTP or HTTPS, the default is 5. For target groups with a
-    #   protocol of TCP, TLS, or GENEVE, the default is 3. If the target type
-    #   is `lambda`, the default is 5.
+    #   The number of consecutive health check successes required before
+    #   considering a target healthy. The range is 2-10. If the target group
+    #   protocol is TCP, TCP\_UDP, UDP, TLS, HTTP or HTTPS, the default is 5.
+    #   For target groups with a protocol of GENEVE, the default is 5. If the
+    #   target type is `lambda`, the default is 5.
     #
     # @option params [Integer] :unhealthy_threshold_count
     #   The number of consecutive health check failures required before
-    #   considering a target unhealthy. If the target group protocol is HTTP
-    #   or HTTPS, the default is 2. If the target group protocol is TCP or
-    #   TLS, this value must be the same as the healthy threshold count. If
-    #   the target group protocol is GENEVE, the default is 3. If the target
-    #   type is `lambda`, the default is 2.
+    #   considering a target unhealthy. The range is 2-10. If the target group
+    #   protocol is TCP, TCP\_UDP, UDP, TLS, HTTP or HTTPS, the default is 2.
+    #   For target groups with a protocol of GENEVE, the default is 2. If the
+    #   target type is `lambda`, the default is 5.
     #
     # @option params [Types::Matcher] :matcher
     #   \[HTTP/HTTPS health checks\] The HTTP or gRPC codes to use when
-    #   checking for a successful response from a target.
+    #   checking for a successful response from a target. For target groups
+    #   with a protocol of TCP, TCP\_UDP, UDP or TLS the range is 200-599. For
+    #   target groups with a protocol of HTTP or HTTPS, the range is 200-499.
+    #   For target groups with a protocol of GENEVE, the range is 200-399.
     #
     # @option params [String] :target_type
     #   The type of target that you must specify when registering targets with
@@ -1419,8 +1479,15 @@ module Aws::ElasticLoadBalancingV2
     #
     #   * `lambda` - Register a single Lambda function as a target.
     #
+    #   * `alb` - Register a single Application Load Balancer as a target.
+    #
     # @option params [Array<Types::Tag>] :tags
     #   The tags to assign to the target group.
+    #
+    # @option params [String] :ip_address_type
+    #   The type of IP address used for this target group. The possible values
+    #   are `ipv4` and `ipv6`. This is an optional parameter. If not
+    #   specified, the IP address type defaults to `ipv4`.
     #
     # @return [Types::CreateTargetGroupOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1482,13 +1549,14 @@ module Aws::ElasticLoadBalancingV2
     #       http_code: "HttpCode",
     #       grpc_code: "GrpcCode",
     #     },
-    #     target_type: "instance", # accepts instance, ip, lambda
+    #     target_type: "instance", # accepts instance, ip, lambda, alb
     #     tags: [
     #       {
     #         key: "TagKey", # required
     #         value: "TagValue",
     #       },
     #     ],
+    #     ip_address_type: "ipv4", # accepts ipv4, ipv6
     #   })
     #
     # @example Response structure
@@ -1511,8 +1579,9 @@ module Aws::ElasticLoadBalancingV2
     #   resp.target_groups[0].matcher.grpc_code #=> String
     #   resp.target_groups[0].load_balancer_arns #=> Array
     #   resp.target_groups[0].load_balancer_arns[0] #=> String
-    #   resp.target_groups[0].target_type #=> String, one of "instance", "ip", "lambda"
+    #   resp.target_groups[0].target_type #=> String, one of "instance", "ip", "lambda", "alb"
     #   resp.target_groups[0].protocol_version #=> String
+    #   resp.target_groups[0].ip_address_type #=> String, one of "ipv4", "ipv6"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/CreateTargetGroup AWS API Documentation
     #
@@ -1720,7 +1789,7 @@ module Aws::ElasticLoadBalancingV2
     end
 
     # Describes the current Elastic Load Balancing resource limits for your
-    # AWS account.
+    # Amazon Web Services account.
     #
     # For more information, see the following:
     #
@@ -2316,6 +2385,10 @@ module Aws::ElasticLoadBalancingV2
     # @option params [Integer] :page_size
     #   The maximum number of results to return with this call.
     #
+    # @option params [String] :load_balancer_type
+    #   The type of load balancer. The default lists the SSL policies for all
+    #   load balancers.
+    #
     # @return [Types::DescribeSSLPoliciesOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::DescribeSSLPoliciesOutput#ssl_policies #ssl_policies} => Array&lt;Types::SslPolicy&gt;
@@ -2430,6 +2503,7 @@ module Aws::ElasticLoadBalancingV2
     #     names: ["SslPolicyName"],
     #     marker: "Marker",
     #     page_size: 1,
+    #     load_balancer_type: "application", # accepts application, network, gateway
     #   })
     #
     # @example Response structure
@@ -2441,6 +2515,8 @@ module Aws::ElasticLoadBalancingV2
     #   resp.ssl_policies[0].ciphers[0].name #=> String
     #   resp.ssl_policies[0].ciphers[0].priority #=> Integer
     #   resp.ssl_policies[0].name #=> String
+    #   resp.ssl_policies[0].supported_load_balancer_types #=> Array
+    #   resp.ssl_policies[0].supported_load_balancer_types[0] #=> String
     #   resp.next_marker #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/DescribeSSLPolicies AWS API Documentation
@@ -2690,8 +2766,9 @@ module Aws::ElasticLoadBalancingV2
     #   resp.target_groups[0].matcher.grpc_code #=> String
     #   resp.target_groups[0].load_balancer_arns #=> Array
     #   resp.target_groups[0].load_balancer_arns[0] #=> String
-    #   resp.target_groups[0].target_type #=> String, one of "instance", "ip", "lambda"
+    #   resp.target_groups[0].target_type #=> String, one of "instance", "ip", "lambda", "alb"
     #   resp.target_groups[0].protocol_version #=> String
+    #   resp.target_groups[0].ip_address_type #=> String, one of "ipv4", "ipv6"
     #   resp.next_marker #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/DescribeTargetGroups AWS API Documentation
@@ -3520,12 +3597,13 @@ module Aws::ElasticLoadBalancingV2
     #
     # @option params [String] :health_check_protocol
     #   The protocol the load balancer uses when performing health checks on
-    #   targets. The TCP protocol is supported for health checks only if the
-    #   protocol of the target group is TCP, TLS, UDP, or TCP\_UDP. The
-    #   GENEVE, TLS, UDP, and TCP\_UDP protocols are not supported for health
-    #   checks.
-    #
-    #   With Network Load Balancers, you can't modify this setting.
+    #   targets. For Application Load Balancers, the default is HTTP. For
+    #   Network Load Balancers and Gateway Load Balancers, the default is TCP.
+    #   The TCP protocol is not supported for health checks if the protocol of
+    #   the target group is HTTP or HTTPS. It is supported for health checks
+    #   only if the protocol of the target group is TCP, TLS, UDP, or
+    #   TCP\_UDP. The GENEVE, TLS, UDP, and TCP\_UDP protocols are not
+    #   supported for health checks.
     #
     # @option params [String] :health_check_port
     #   The port the load balancer uses when performing health checks on
@@ -3538,24 +3616,19 @@ module Aws::ElasticLoadBalancingV2
     #   \[HTTP1 or HTTP2 protocol version\] The ping path. The default is /.
     #
     #   \[GRPC protocol version\] The path of a custom health check method
-    #   with the format /package.service/method. The default is
-    #   /AWS.ALB/healthcheck.
+    #   with the format /package.service/method. The default is /Amazon Web
+    #   Services.ALB/healthcheck.
     #
     # @option params [Boolean] :health_check_enabled
     #   Indicates whether health checks are enabled.
     #
     # @option params [Integer] :health_check_interval_seconds
     #   The approximate amount of time, in seconds, between health checks of
-    #   an individual target. For TCP health checks, the supported values are
-    #   10 or 30 seconds.
-    #
-    #   With Network Load Balancers, you can't modify this setting.
+    #   an individual target.
     #
     # @option params [Integer] :health_check_timeout_seconds
     #   \[HTTP/HTTPS health checks\] The amount of time, in seconds, during
     #   which no response means a failed health check.
-    #
-    #   With Network Load Balancers, you can't modify this setting.
     #
     # @option params [Integer] :healthy_threshold_count
     #   The number of consecutive health checks successes required before
@@ -3563,15 +3636,14 @@ module Aws::ElasticLoadBalancingV2
     #
     # @option params [Integer] :unhealthy_threshold_count
     #   The number of consecutive health check failures required before
-    #   considering the target unhealthy. For target groups with a protocol of
-    #   TCP or TLS, this value must be the same as the healthy threshold
-    #   count.
+    #   considering the target unhealthy.
     #
     # @option params [Types::Matcher] :matcher
     #   \[HTTP/HTTPS health checks\] The HTTP or gRPC codes to use when
-    #   checking for a successful response from a target.
-    #
-    #   With Network Load Balancers, you can't modify this setting.
+    #   checking for a successful response from a target. For target groups
+    #   with a protocol of TCP, TCP\_UDP, UDP or TLS the range is 200-599. For
+    #   target groups with a protocol of HTTP or HTTPS, the range is 200-499.
+    #   For target groups with a protocol of GENEVE, the range is 200-399.
     #
     # @return [Types::ModifyTargetGroupOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3652,8 +3724,9 @@ module Aws::ElasticLoadBalancingV2
     #   resp.target_groups[0].matcher.grpc_code #=> String
     #   resp.target_groups[0].load_balancer_arns #=> Array
     #   resp.target_groups[0].load_balancer_arns[0] #=> String
-    #   resp.target_groups[0].target_type #=> String, one of "instance", "ip", "lambda"
+    #   resp.target_groups[0].target_type #=> String, one of "instance", "ip", "lambda", "alb"
     #   resp.target_groups[0].protocol_version #=> String
+    #   resp.target_groups[0].ip_address_type #=> String, one of "ipv4", "ipv6"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/ModifyTargetGroup AWS API Documentation
     #
@@ -3901,16 +3974,16 @@ module Aws::ElasticLoadBalancingV2
     end
 
     # Sets the type of IP addresses used by the subnets of the specified
-    # Application Load Balancer or Network Load Balancer.
+    # load balancer.
     #
     # @option params [required, String] :load_balancer_arn
     #   The Amazon Resource Name (ARN) of the load balancer.
     #
     # @option params [required, String] :ip_address_type
     #   The IP address type. The possible values are `ipv4` (for IPv4
-    #   addresses) and `dualstack` (for IPv4 and IPv6 addresses). Internal
-    #   load balancers must use `ipv4`. You can’t specify `dualstack` for a
-    #   load balancer with a UDP or TCP\_UDP listener.
+    #   addresses) and `dualstack` (for IPv4 and IPv6 addresses). You can’t
+    #   specify `dualstack` for a load balancer with a UDP or TCP\_UDP
+    #   listener.
     #
     # @return [Types::SetIpAddressTypeOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -4184,7 +4257,7 @@ module Aws::ElasticLoadBalancingV2
     #   subnets for your load balancer. The possible values are `ipv4` (for
     #   IPv4 addresses) and `dualstack` (for IPv4 and IPv6 addresses). You
     #   can’t specify `dualstack` for a load balancer with a UDP or TCP\_UDP
-    #   listener. Internal load balancers must use `ipv4`.
+    #   listener. .
     #
     # @return [Types::SetSubnetsOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -4269,7 +4342,7 @@ module Aws::ElasticLoadBalancingV2
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-elasticloadbalancingv2'
-      context[:gem_version] = '1.61.0'
+      context[:gem_version] = '1.88.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

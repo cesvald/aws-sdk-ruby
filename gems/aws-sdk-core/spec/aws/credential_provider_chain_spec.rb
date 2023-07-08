@@ -11,7 +11,8 @@ module Aws
     end
 
     def with_shared_credentials(profile_name = SecureRandom.hex, credentials_file = nil)
-      path = File.join('HOME', '.aws', 'credentials')
+      path = File.expand_path(
+        File.join('HOME', '.aws', 'credentials'))
       creds = random_creds
       credentials_file ||= <<-CREDS
 [#{profile_name}]
@@ -19,9 +20,9 @@ aws_access_key_id = #{creds[:access_key_id]}
 aws_secret_access_key = #{creds[:secret_access_key]}
 aws_session_token = #{creds[:session_token]}
 CREDS
+      allow(Dir).to receive(:home).and_return('HOME')
       allow(File).to receive(:exist?).with(path).and_return(true)
       allow(File).to receive(:readable?).with(path).and_return(true)
-      allow(Dir).to receive(:home).and_return('HOME')
       allow(File).to receive(:read).with(path).and_return(credentials_file)
       creds.merge(profile_name: profile_name)
     end
@@ -116,6 +117,14 @@ CREDS
 
     it 'hydrates credentials from ECS when AWS_CONTAINER_CREDENTIALS_RELATIVE_URI is set' do
       ENV['AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'] = 'test_uri'
+      mock_ecs_creds = double('ECSCredentials')
+      expect(ECSCredentials).to receive(:new).and_return(mock_ecs_creds)
+      expect(mock_ecs_creds).to receive(:set?).and_return(true)
+      expect(credentials).to be(mock_ecs_creds)
+    end
+
+    it 'hydrates credentials from ECS when AWS_CONTAINER_CREDENTIALS_FULL_URI is set' do
+      ENV['AWS_CONTAINER_CREDENTIALS_FULL_URI'] = 'test_uri'
       mock_ecs_creds = double('ECSCredentials')
       expect(ECSCredentials).to receive(:new).and_return(mock_ecs_creds)
       expect(mock_ecs_creds).to receive(:set?).and_return(true)

@@ -120,7 +120,7 @@ module Aws
     #       attr_reader :encryption_materials
     #
     #       def key_for(matdesc)
-    #         key_name = JSON.load(matdesc)['key']
+    #         key_name = JSON.parse(matdesc)['key']
     #         if key = @keys[key_name]
     #           key
     #         else
@@ -270,7 +270,9 @@ module Aws
             envelope_location: @envelope_location,
             instruction_file_suffix: @instruction_file_suffix,
           }
-          req.send_request
+          Aws::Plugins::UserAgent.feature('S3CryptoV1n') do
+            req.send_request
+          end
         end
 
         # Gets an object from Amazon S3, decrypting  data locally.
@@ -298,7 +300,9 @@ module Aws
             envelope_location: envelope_location,
             instruction_file_suffix: instruction_file_suffix,
           }
-          req.send_request(target: block)
+          Aws::Plugins::UserAgent.feature('S3CryptoV1n') do
+            req.send_request(target: block)
+          end
         end
 
         private

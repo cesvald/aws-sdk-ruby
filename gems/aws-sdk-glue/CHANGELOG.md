@@ -1,6 +1,308 @@
 Unreleased Changes
 ------------------
 
+1.147.0 (2023-07-07)
+------------------
+
+* Feature - This release enables customers to create new Apache Iceberg tables and associated metadata in Amazon S3 by using native AWS Glue CreateTable operation.
+
+1.146.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.145.0 (2023-06-29)
+------------------
+
+* Feature - This release adds support for AWS Glue Crawler with Iceberg Tables, allowing Crawlers to discover Iceberg Tables in S3 and register them in Glue Data Catalog for query engines to query against.
+
+1.144.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.143.0 (2023-06-26)
+------------------
+
+* Feature - Timestamp Starting Position For Kinesis and Kafka Data Sources in a Glue Streaming Job
+
+1.142.0 (2023-06-19)
+------------------
+
+* Feature - This release adds support for creating cross region table/database resource links
+
+1.141.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.140.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.139.0 (2023-05-30)
+------------------
+
+* Feature - Added Runtime parameter to allow selection of Ray Runtime
+
+1.138.0 (2023-05-25)
+------------------
+
+* Feature - Added ability to create data quality rulesets for shared, cross-account Glue Data Catalog tables. Added support for dataset comparison rules through a new parameter called AdditionalDataSources. Enhanced the data quality results with a map containing profiled metric values.
+
+1.137.0 (2023-05-16)
+------------------
+
+* Feature - Add Support for Tags for Custom Entity Types
+
+1.136.0 (2023-05-09)
+------------------
+
+* Feature - This release adds AmazonRedshift Source and Target nodes in addition to DynamicTransform OutputSchemas
+
+1.135.0 (2023-05-08)
+------------------
+
+* Feature - Support large worker types G.4x and G.8x for Glue Spark.
+
+1.134.0 (2023-04-03)
+------------------
+
+* Feature - Add support for database-level federation
+
+1.133.0 (2023-03-30)
+------------------
+
+* Feature - This release adds support for AWS Glue Data Quality, which helps you evaluate and monitor the quality of your data and includes the API for creating, deleting, or updating data quality rulesets, runs and evaluations.
+
+1.132.0 (2023-02-17)
+------------------
+
+* Feature - Release of Delta Lake Data Lake Format for Glue Studio Service
+
+1.131.0 (2023-02-15)
+------------------
+
+* Feature - Fix DirectJDBCSource not showing up in CLI code gen
+
+1.130.0 (2023-02-08)
+------------------
+
+* Feature - DirectJDBCSource + Glue 4.0 streaming options
+
+1.129.0 (2023-01-19)
+------------------
+
+* Feature - Release Glue Studio Hudi Data Lake Format for SDK/CLI
+
+1.128.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.127.0 (2022-12-15)
+------------------
+
+* Feature - This release adds support for AWS Glue Crawler with native DeltaLake tables, allowing Crawlers to classify Delta Lake format tables and catalog them for query engines to query against.
+
+1.126.0 (2022-11-30)
+------------------
+
+* Feature - This release adds support for AWS Glue Data Quality, which helps you evaluate and monitor the quality of your data and includes the API for creating, deleting, or updating data quality rulesets, runs and evaluations.
+
+1.125.0 (2022-11-29)
+------------------
+
+* Feature - This release allows the creation of Custom Visual Transforms (Dynamic Transforms) to be created via AWS Glue CLI/SDK.
+
+1.124.0 (2022-11-18)
+------------------
+
+* Feature - AWSGlue Crawler - Adding support for Table and Column level Comments with database level datatypes for JDBC based crawler.
+
+1.123.0 (2022-11-11)
+------------------
+
+* Feature - Added links related to enabling job bookmarks.
+
+1.122.0 (2022-10-27)
+------------------
+
+* Feature - Added support for custom datatypes when using custom csv classifier.
+
+1.121.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.120.0 (2022-10-05)
+------------------
+
+* Feature - This SDK release adds support to sync glue jobs with source control provider. Additionally, a new parameter called SourceControlDetails will be added to Job model.
+
+1.119.0 (2022-09-22)
+------------------
+
+* Feature - Added support for S3 Event Notifications for Catalog Target Crawlers.
+
+1.118.0 (2022-08-11)
+------------------
+
+* Feature - Add support for Python 3.9 AWS Glue Python Shell jobs
+
+1.117.0 (2022-08-08)
+------------------
+
+* Feature - Add an option to run non-urgent or non-time sensitive Glue Jobs on spare capacity
+
+1.116.0 (2022-07-19)
+------------------
+
+* Feature - Documentation updates for AWS Glue Job Timeout and Autoscaling
+
+1.115.0 (2022-07-14)
+------------------
+
+* Feature - This release adds an additional worker type for Glue Streaming jobs.
+
+1.114.0 (2022-06-30)
+------------------
+
+* Feature - This release adds tag as an input of CreateDatabase
+
+1.113.0 (2022-06-24)
+------------------
+
+* Feature - This release enables the new ListCrawls API for viewing the AWS Glue Crawler run history.
+
+1.112.0 (2022-05-17)
+------------------
+
+* Feature - This release adds a new optional parameter called codeGenNodeConfiguration to CRUD job APIs that allows users to manage visual jobs via APIs. The updated CreateJob and UpdateJob will create jobs that can be viewed in Glue Studio as a visual graph. GetJob can be used to get codeGenNodeConfiguration.
+
+1.111.0 (2022-04-26)
+------------------
+
+* Feature - This release adds documentation for the APIs to create, read, delete, list, and batch read of AWS Glue custom patterns, and for Lake Formation configuration settings in the AWS Glue crawler.
+
+1.110.0 (2022-04-21)
+------------------
+
+* Feature - This release adds APIs to create, read, delete, list, and batch read of Glue custom entity types
+
+1.109.0 (2022-04-14)
+------------------
+
+* Feature - Auto Scaling for Glue version 3.0 and later jobs to dynamically scale compute resources. This SDK change provides customers with the auto-scaled DPU usage
+
+1.108.0 (2022-03-18)
+------------------
+
+* Feature - Added 9 new APIs for AWS Glue Interactive Sessions: ListSessions, StopSession, CreateSession, GetSession, DeleteSession, RunStatement, GetStatement, ListStatements, CancelStatement
+
+1.107.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.106.0 (2022-02-16)
+------------------
+
+* Feature - Support for optimistic locking in UpdateTable
+
+1.105.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.104.0 (2022-02-02)
+------------------
+
+* Feature - Launch Protobuf support for AWS Glue Schema Registry
+
+1.103.0 (2022-01-13)
+------------------
+
+* Feature - This SDK release adds support to pass run properties when starting a workflow run
+
+1.102.0 (2022-01-05)
+------------------
+
+* Feature - Add Delta Lake target support for Glue Crawler and 3rd Party Support for Lake Formation
+
+1.101.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.100.0 (2021-11-30)
+------------------
+
+* Feature - Support for DataLake transactions
+
+1.99.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.98.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.97.0 (2021-10-15)
+------------------
+
+* Feature - Enable S3 event base crawler API.
+
+1.96.0 (2021-10-05)
+------------------
+
+* Feature - This release adds tag as an input of CreateConnection
+
+1.95.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.94.0 (2021-08-23)
+------------------
+
+* Feature - Add support for Custom Blueprints
+
+1.93.0 (2021-08-03)
+------------------
+
+* Feature - Add ConcurrentModificationException to create-table, delete-table, create-database, update-database, delete-database
+
+1.92.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.91.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.90.0 (2021-07-14)
+------------------
+
+* Feature - Add support for Event Driven Workflows
+
+1.89.0 (2021-06-28)
+------------------
+
+* Feature - Add JSON Support for Glue Schema Registry
+
+1.88.0 (2021-06-07)
+------------------
+
+* Feature - Add SampleSize variable to S3Target to enable s3-sampling feature through API.
+
 1.87.0 (2021-04-26)
 ------------------
 

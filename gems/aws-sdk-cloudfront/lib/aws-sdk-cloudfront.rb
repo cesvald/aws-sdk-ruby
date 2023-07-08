@@ -13,10 +13,14 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-cloudfront/types'
 require_relative 'aws-sdk-cloudfront/client_api'
+require_relative 'aws-sdk-cloudfront/plugins/endpoints.rb'
 require_relative 'aws-sdk-cloudfront/client'
 require_relative 'aws-sdk-cloudfront/errors'
 require_relative 'aws-sdk-cloudfront/waiters'
 require_relative 'aws-sdk-cloudfront/resource'
+require_relative 'aws-sdk-cloudfront/endpoint_parameters'
+require_relative 'aws-sdk-cloudfront/endpoint_provider'
+require_relative 'aws-sdk-cloudfront/endpoints'
 require_relative 'aws-sdk-cloudfront/customizations'
 
 # This module provides support for Amazon CloudFront. This module is available in the
@@ -29,7 +33,7 @@ require_relative 'aws-sdk-cloudfront/customizations'
 # structure.
 #
 #     cloud_front = Aws::CloudFront::Client.new
-#     resp = cloud_front.create_cache_policy(params)
+#     resp = cloud_front.associate_alias(params)
 #
 # See {Client} for more information.
 #
@@ -49,6 +53,6 @@ require_relative 'aws-sdk-cloudfront/customizations'
 # @!group service
 module Aws::CloudFront
 
-  GEM_VERSION = '1.50.0'
+  GEM_VERSION = '1.80.0'
 
 end

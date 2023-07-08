@@ -13,7 +13,8 @@ module Aws
             'InvalidAccessKeyId',          # s3
             'AuthFailure',                 # ec2
             'InvalidIdentityToken',        # sts
-            'ExpiredToken'                 # route53
+            'ExpiredToken',                # route53
+            'ExpiredTokenException'        # kinesis
           ]
         )
 
@@ -38,13 +39,15 @@ module Aws
 
         CHECKSUM_ERRORS = Set.new(
           [
-            'CRC32CheckFailed' # dynamodb
+            'CRC32CheckFailed', # dynamodb
+            'BadDigest' # s3
           ]
         )
 
         NETWORKING_ERRORS = Set.new(
           [
             'RequestTimeout',          # s3
+            'InternalError',           # s3
             'RequestTimeoutException', # glacier
             'IDPCommunicationError'    # sts
           ]
@@ -80,7 +83,7 @@ module Aws
         end
 
         def checksum?
-          CHECKSUM_ERRORS.include?(@name) || @error.is_a?(Errors::ChecksumError)
+          CHECKSUM_ERRORS.include?(@name)
         end
 
         def networking?

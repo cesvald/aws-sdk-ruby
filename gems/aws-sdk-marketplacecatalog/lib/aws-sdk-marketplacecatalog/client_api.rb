@@ -29,6 +29,8 @@ module Aws::MarketplaceCatalog
     ChangeType = Shapes::StringShape.new(name: 'ChangeType')
     ClientRequestToken = Shapes::StringShape.new(name: 'ClientRequestToken')
     DateTimeISO8601 = Shapes::StringShape.new(name: 'DateTimeISO8601')
+    DeleteResourcePolicyRequest = Shapes::StructureShape.new(name: 'DeleteResourcePolicyRequest')
+    DeleteResourcePolicyResponse = Shapes::StructureShape.new(name: 'DeleteResourcePolicyResponse')
     DescribeChangeSetRequest = Shapes::StructureShape.new(name: 'DescribeChangeSetRequest')
     DescribeChangeSetResponse = Shapes::StructureShape.new(name: 'DescribeChangeSetResponse')
     DescribeEntityRequest = Shapes::StructureShape.new(name: 'DescribeEntityRequest')
@@ -47,28 +49,47 @@ module Aws::MarketplaceCatalog
     FilterList = Shapes::ListShape.new(name: 'FilterList')
     FilterName = Shapes::StringShape.new(name: 'FilterName')
     FilterValueContent = Shapes::StringShape.new(name: 'FilterValueContent')
+    GetResourcePolicyRequest = Shapes::StructureShape.new(name: 'GetResourcePolicyRequest')
+    GetResourcePolicyResponse = Shapes::StructureShape.new(name: 'GetResourcePolicyResponse')
     Identifier = Shapes::StringShape.new(name: 'Identifier')
     InternalServiceException = Shapes::StructureShape.new(name: 'InternalServiceException')
     Json = Shapes::StringShape.new(name: 'Json')
+    ListChangeSetsMaxResultInteger = Shapes::IntegerShape.new(name: 'ListChangeSetsMaxResultInteger')
     ListChangeSetsRequest = Shapes::StructureShape.new(name: 'ListChangeSetsRequest')
     ListChangeSetsResponse = Shapes::StructureShape.new(name: 'ListChangeSetsResponse')
+    ListEntitiesMaxResultInteger = Shapes::IntegerShape.new(name: 'ListEntitiesMaxResultInteger')
     ListEntitiesRequest = Shapes::StructureShape.new(name: 'ListEntitiesRequest')
     ListEntitiesResponse = Shapes::StructureShape.new(name: 'ListEntitiesResponse')
-    MaxResultInteger = Shapes::IntegerShape.new(name: 'MaxResultInteger')
+    ListTagsForResourceRequest = Shapes::StructureShape.new(name: 'ListTagsForResourceRequest')
+    ListTagsForResourceResponse = Shapes::StructureShape.new(name: 'ListTagsForResourceResponse')
     NextToken = Shapes::StringShape.new(name: 'NextToken')
+    OwnershipType = Shapes::StringShape.new(name: 'OwnershipType')
+    PutResourcePolicyRequest = Shapes::StructureShape.new(name: 'PutResourcePolicyRequest')
+    PutResourcePolicyResponse = Shapes::StructureShape.new(name: 'PutResourcePolicyResponse')
     RequestedChangeList = Shapes::ListShape.new(name: 'RequestedChangeList')
+    ResourceARN = Shapes::StringShape.new(name: 'ResourceARN')
     ResourceId = Shapes::StringShape.new(name: 'ResourceId')
     ResourceIdList = Shapes::ListShape.new(name: 'ResourceIdList')
     ResourceInUseException = Shapes::StructureShape.new(name: 'ResourceInUseException')
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
     ResourceNotSupportedException = Shapes::StructureShape.new(name: 'ResourceNotSupportedException')
+    ResourcePolicyJson = Shapes::StringShape.new(name: 'ResourcePolicyJson')
     ServiceQuotaExceededException = Shapes::StructureShape.new(name: 'ServiceQuotaExceededException')
     Sort = Shapes::StructureShape.new(name: 'Sort')
     SortBy = Shapes::StringShape.new(name: 'SortBy')
     SortOrder = Shapes::StringShape.new(name: 'SortOrder')
     StartChangeSetRequest = Shapes::StructureShape.new(name: 'StartChangeSetRequest')
     StartChangeSetResponse = Shapes::StructureShape.new(name: 'StartChangeSetResponse')
+    Tag = Shapes::StructureShape.new(name: 'Tag')
+    TagKey = Shapes::StringShape.new(name: 'TagKey')
+    TagKeyList = Shapes::ListShape.new(name: 'TagKeyList')
+    TagList = Shapes::ListShape.new(name: 'TagList')
+    TagResourceRequest = Shapes::StructureShape.new(name: 'TagResourceRequest')
+    TagResourceResponse = Shapes::StructureShape.new(name: 'TagResourceResponse')
+    TagValue = Shapes::StringShape.new(name: 'TagValue')
     ThrottlingException = Shapes::StructureShape.new(name: 'ThrottlingException')
+    UntagResourceRequest = Shapes::StructureShape.new(name: 'UntagResourceRequest')
+    UntagResourceResponse = Shapes::StructureShape.new(name: 'UntagResourceResponse')
     ValidationException = Shapes::StructureShape.new(name: 'ValidationException')
     ValueList = Shapes::ListShape.new(name: 'ValueList')
     VisibilityValue = Shapes::StringShape.new(name: 'VisibilityValue')
@@ -86,6 +107,7 @@ module Aws::MarketplaceCatalog
 
     Change.add_member(:change_type, Shapes::ShapeRef.new(shape: ChangeType, required: true, location_name: "ChangeType"))
     Change.add_member(:entity, Shapes::ShapeRef.new(shape: Entity, required: true, location_name: "Entity"))
+    Change.add_member(:entity_tags, Shapes::ShapeRef.new(shape: TagList, location_name: "EntityTags"))
     Change.add_member(:details, Shapes::ShapeRef.new(shape: Json, required: true, location_name: "Details"))
     Change.add_member(:change_name, Shapes::ShapeRef.new(shape: ChangeName, location_name: "ChangeName"))
     Change.struct_class = Types::Change
@@ -110,6 +132,11 @@ module Aws::MarketplaceCatalog
     ChangeSummary.add_member(:error_detail_list, Shapes::ShapeRef.new(shape: ErrorDetailList, location_name: "ErrorDetailList"))
     ChangeSummary.add_member(:change_name, Shapes::ShapeRef.new(shape: ChangeName, location_name: "ChangeName"))
     ChangeSummary.struct_class = Types::ChangeSummary
+
+    DeleteResourcePolicyRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceARN, required: true, location: "querystring", location_name: "resourceArn"))
+    DeleteResourcePolicyRequest.struct_class = Types::DeleteResourcePolicyRequest
+
+    DeleteResourcePolicyResponse.struct_class = Types::DeleteResourcePolicyResponse
 
     DescribeChangeSetRequest.add_member(:catalog, Shapes::ShapeRef.new(shape: Catalog, required: true, location: "querystring", location_name: "catalog"))
     DescribeChangeSetRequest.add_member(:change_set_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location: "querystring", location_name: "changeSetId"))
@@ -163,13 +190,19 @@ module Aws::MarketplaceCatalog
 
     FilterList.member = Shapes::ShapeRef.new(shape: Filter)
 
+    GetResourcePolicyRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceARN, required: true, location: "querystring", location_name: "resourceArn"))
+    GetResourcePolicyRequest.struct_class = Types::GetResourcePolicyRequest
+
+    GetResourcePolicyResponse.add_member(:policy, Shapes::ShapeRef.new(shape: ResourcePolicyJson, location_name: "Policy"))
+    GetResourcePolicyResponse.struct_class = Types::GetResourcePolicyResponse
+
     InternalServiceException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessageContent, location_name: "Message"))
     InternalServiceException.struct_class = Types::InternalServiceException
 
     ListChangeSetsRequest.add_member(:catalog, Shapes::ShapeRef.new(shape: Catalog, required: true, location_name: "Catalog"))
     ListChangeSetsRequest.add_member(:filter_list, Shapes::ShapeRef.new(shape: FilterList, location_name: "FilterList"))
     ListChangeSetsRequest.add_member(:sort, Shapes::ShapeRef.new(shape: Sort, location_name: "Sort"))
-    ListChangeSetsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResultInteger, location_name: "MaxResults"))
+    ListChangeSetsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: ListChangeSetsMaxResultInteger, location_name: "MaxResults"))
     ListChangeSetsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     ListChangeSetsRequest.struct_class = Types::ListChangeSetsRequest
 
@@ -182,12 +215,26 @@ module Aws::MarketplaceCatalog
     ListEntitiesRequest.add_member(:filter_list, Shapes::ShapeRef.new(shape: FilterList, location_name: "FilterList"))
     ListEntitiesRequest.add_member(:sort, Shapes::ShapeRef.new(shape: Sort, location_name: "Sort"))
     ListEntitiesRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
-    ListEntitiesRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResultInteger, location_name: "MaxResults"))
+    ListEntitiesRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: ListEntitiesMaxResultInteger, location_name: "MaxResults"))
+    ListEntitiesRequest.add_member(:ownership_type, Shapes::ShapeRef.new(shape: OwnershipType, location_name: "OwnershipType"))
     ListEntitiesRequest.struct_class = Types::ListEntitiesRequest
 
     ListEntitiesResponse.add_member(:entity_summary_list, Shapes::ShapeRef.new(shape: EntitySummaryList, location_name: "EntitySummaryList"))
     ListEntitiesResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     ListEntitiesResponse.struct_class = Types::ListEntitiesResponse
+
+    ListTagsForResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceARN, required: true, location_name: "ResourceArn"))
+    ListTagsForResourceRequest.struct_class = Types::ListTagsForResourceRequest
+
+    ListTagsForResourceResponse.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "ResourceArn"))
+    ListTagsForResourceResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, location_name: "Tags"))
+    ListTagsForResourceResponse.struct_class = Types::ListTagsForResourceResponse
+
+    PutResourcePolicyRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceARN, required: true, location_name: "ResourceArn"))
+    PutResourcePolicyRequest.add_member(:policy, Shapes::ShapeRef.new(shape: ResourcePolicyJson, required: true, location_name: "Policy"))
+    PutResourcePolicyRequest.struct_class = Types::PutResourcePolicyRequest
+
+    PutResourcePolicyResponse.struct_class = Types::PutResourcePolicyResponse
 
     RequestedChangeList.member = Shapes::ShapeRef.new(shape: Change)
 
@@ -212,15 +259,36 @@ module Aws::MarketplaceCatalog
     StartChangeSetRequest.add_member(:catalog, Shapes::ShapeRef.new(shape: Catalog, required: true, location_name: "Catalog"))
     StartChangeSetRequest.add_member(:change_set, Shapes::ShapeRef.new(shape: RequestedChangeList, required: true, location_name: "ChangeSet"))
     StartChangeSetRequest.add_member(:change_set_name, Shapes::ShapeRef.new(shape: ChangeSetName, location_name: "ChangeSetName"))
-    StartChangeSetRequest.add_member(:client_request_token, Shapes::ShapeRef.new(shape: ClientRequestToken, location_name: "ClientRequestToken"))
+    StartChangeSetRequest.add_member(:client_request_token, Shapes::ShapeRef.new(shape: ClientRequestToken, location_name: "ClientRequestToken", metadata: {"idempotencyToken"=>true}))
+    StartChangeSetRequest.add_member(:change_set_tags, Shapes::ShapeRef.new(shape: TagList, location_name: "ChangeSetTags"))
     StartChangeSetRequest.struct_class = Types::StartChangeSetRequest
 
     StartChangeSetResponse.add_member(:change_set_id, Shapes::ShapeRef.new(shape: ResourceId, location_name: "ChangeSetId"))
     StartChangeSetResponse.add_member(:change_set_arn, Shapes::ShapeRef.new(shape: ARN, location_name: "ChangeSetArn"))
     StartChangeSetResponse.struct_class = Types::StartChangeSetResponse
 
+    Tag.add_member(:key, Shapes::ShapeRef.new(shape: TagKey, required: true, location_name: "Key"))
+    Tag.add_member(:value, Shapes::ShapeRef.new(shape: TagValue, required: true, location_name: "Value"))
+    Tag.struct_class = Types::Tag
+
+    TagKeyList.member = Shapes::ShapeRef.new(shape: TagKey)
+
+    TagList.member = Shapes::ShapeRef.new(shape: Tag)
+
+    TagResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceARN, required: true, location_name: "ResourceArn"))
+    TagResourceRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, required: true, location_name: "Tags"))
+    TagResourceRequest.struct_class = Types::TagResourceRequest
+
+    TagResourceResponse.struct_class = Types::TagResourceResponse
+
     ThrottlingException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessageContent, location_name: "Message"))
     ThrottlingException.struct_class = Types::ThrottlingException
+
+    UntagResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceARN, required: true, location_name: "ResourceArn"))
+    UntagResourceRequest.add_member(:tag_keys, Shapes::ShapeRef.new(shape: TagKeyList, required: true, location_name: "TagKeys"))
+    UntagResourceRequest.struct_class = Types::UntagResourceRequest
+
+    UntagResourceResponse.struct_class = Types::UntagResourceResponse
 
     ValidationException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessageContent, location_name: "Message"))
     ValidationException.struct_class = Types::ValidationException
@@ -260,6 +328,19 @@ module Aws::MarketplaceCatalog
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
       end)
 
+      api.add_operation(:delete_resource_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteResourcePolicy"
+        o.http_method = "DELETE"
+        o.http_request_uri = "/DeleteResourcePolicy"
+        o.input = Shapes::ShapeRef.new(shape: DeleteResourcePolicyRequest)
+        o.output = Shapes::ShapeRef.new(shape: DeleteResourcePolicyResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
+
       api.add_operation(:describe_change_set, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DescribeChangeSet"
         o.http_method = "GET"
@@ -283,6 +364,19 @@ module Aws::MarketplaceCatalog
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: ValidationException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotSupportedException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
+
+      api.add_operation(:get_resource_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetResourcePolicy"
+        o.http_method = "GET"
+        o.http_request_uri = "/GetResourcePolicy"
+        o.input = Shapes::ShapeRef.new(shape: GetResourcePolicyRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetResourcePolicyResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
       end)
@@ -324,6 +418,32 @@ module Aws::MarketplaceCatalog
         )
       end)
 
+      api.add_operation(:list_tags_for_resource, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListTagsForResource"
+        o.http_method = "POST"
+        o.http_request_uri = "/ListTagsForResource"
+        o.input = Shapes::ShapeRef.new(shape: ListTagsForResourceRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListTagsForResourceResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
+
+      api.add_operation(:put_resource_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "PutResourcePolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/PutResourcePolicy"
+        o.input = Shapes::ShapeRef.new(shape: PutResourcePolicyRequest)
+        o.output = Shapes::ShapeRef.new(shape: PutResourcePolicyResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
+
       api.add_operation(:start_change_set, Seahorse::Model::Operation.new.tap do |o|
         o.name = "StartChangeSet"
         o.http_method = "POST"
@@ -337,6 +457,32 @@ module Aws::MarketplaceCatalog
         o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
         o.errors << Shapes::ShapeRef.new(shape: ServiceQuotaExceededException)
+      end)
+
+      api.add_operation(:tag_resource, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "TagResource"
+        o.http_method = "POST"
+        o.http_request_uri = "/TagResource"
+        o.input = Shapes::ShapeRef.new(shape: TagResourceRequest)
+        o.output = Shapes::ShapeRef.new(shape: TagResourceResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
+
+      api.add_operation(:untag_resource, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UntagResource"
+        o.http_method = "POST"
+        o.http_request_uri = "/UntagResource"
+        o.input = Shapes::ShapeRef.new(shape: UntagResourceRequest)
+        o.output = Shapes::ShapeRef.new(shape: UntagResourceResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
       end)
     end
 

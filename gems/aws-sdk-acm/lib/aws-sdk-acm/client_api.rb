@@ -47,6 +47,7 @@ module Aws::ACM
     ExtendedKeyUsageFilterList = Shapes::ListShape.new(name: 'ExtendedKeyUsageFilterList')
     ExtendedKeyUsageList = Shapes::ListShape.new(name: 'ExtendedKeyUsageList')
     ExtendedKeyUsageName = Shapes::StringShape.new(name: 'ExtendedKeyUsageName')
+    ExtendedKeyUsageNames = Shapes::ListShape.new(name: 'ExtendedKeyUsageNames')
     FailureReason = Shapes::StringShape.new(name: 'FailureReason')
     Filters = Shapes::StructureShape.new(name: 'Filters')
     GetAccountConfigurationResponse = Shapes::StructureShape.new(name: 'GetAccountConfigurationResponse')
@@ -68,6 +69,7 @@ module Aws::ACM
     KeyUsageFilterList = Shapes::ListShape.new(name: 'KeyUsageFilterList')
     KeyUsageList = Shapes::ListShape.new(name: 'KeyUsageList')
     KeyUsageName = Shapes::StringShape.new(name: 'KeyUsageName')
+    KeyUsageNames = Shapes::ListShape.new(name: 'KeyUsageNames')
     LimitExceededException = Shapes::StructureShape.new(name: 'LimitExceededException')
     ListCertificatesRequest = Shapes::StructureShape.new(name: 'ListCertificatesRequest')
     ListCertificatesResponse = Shapes::StructureShape.new(name: 'ListCertificatesResponse')
@@ -75,7 +77,9 @@ module Aws::ACM
     ListTagsForCertificateResponse = Shapes::StructureShape.new(name: 'ListTagsForCertificateResponse')
     MaxItems = Shapes::IntegerShape.new(name: 'MaxItems')
     NextToken = Shapes::StringShape.new(name: 'NextToken')
+    NullableBoolean = Shapes::BooleanShape.new(name: 'NullableBoolean')
     PassphraseBlob = Shapes::BlobShape.new(name: 'PassphraseBlob')
+    PcaArn = Shapes::StringShape.new(name: 'PcaArn')
     PositiveInteger = Shapes::IntegerShape.new(name: 'PositiveInteger')
     PrivateKey = Shapes::StringShape.new(name: 'PrivateKey')
     PrivateKeyBlob = Shapes::BlobShape.new(name: 'PrivateKeyBlob')
@@ -95,6 +99,8 @@ module Aws::ACM
     ResourceRecord = Shapes::StructureShape.new(name: 'ResourceRecord')
     RevocationReason = Shapes::StringShape.new(name: 'RevocationReason')
     ServiceErrorMessage = Shapes::StringShape.new(name: 'ServiceErrorMessage')
+    SortBy = Shapes::StringShape.new(name: 'SortBy')
+    SortOrder = Shapes::StringShape.new(name: 'SortOrder')
     String = Shapes::StringShape.new(name: 'String')
     TStamp = Shapes::TimestampShape.new(name: 'TStamp')
     Tag = Shapes::StructureShape.new(name: 'Tag')
@@ -152,6 +158,22 @@ module Aws::ACM
 
     CertificateSummary.add_member(:certificate_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "CertificateArn"))
     CertificateSummary.add_member(:domain_name, Shapes::ShapeRef.new(shape: DomainNameString, location_name: "DomainName"))
+    CertificateSummary.add_member(:subject_alternative_name_summaries, Shapes::ShapeRef.new(shape: DomainList, location_name: "SubjectAlternativeNameSummaries"))
+    CertificateSummary.add_member(:has_additional_subject_alternative_names, Shapes::ShapeRef.new(shape: NullableBoolean, location_name: "HasAdditionalSubjectAlternativeNames", metadata: {"box"=>true}))
+    CertificateSummary.add_member(:status, Shapes::ShapeRef.new(shape: CertificateStatus, location_name: "Status"))
+    CertificateSummary.add_member(:type, Shapes::ShapeRef.new(shape: CertificateType, location_name: "Type"))
+    CertificateSummary.add_member(:key_algorithm, Shapes::ShapeRef.new(shape: KeyAlgorithm, location_name: "KeyAlgorithm"))
+    CertificateSummary.add_member(:key_usages, Shapes::ShapeRef.new(shape: KeyUsageNames, location_name: "KeyUsages"))
+    CertificateSummary.add_member(:extended_key_usages, Shapes::ShapeRef.new(shape: ExtendedKeyUsageNames, location_name: "ExtendedKeyUsages"))
+    CertificateSummary.add_member(:in_use, Shapes::ShapeRef.new(shape: NullableBoolean, location_name: "InUse", metadata: {"box"=>true}))
+    CertificateSummary.add_member(:exported, Shapes::ShapeRef.new(shape: NullableBoolean, location_name: "Exported", metadata: {"box"=>true}))
+    CertificateSummary.add_member(:renewal_eligibility, Shapes::ShapeRef.new(shape: RenewalEligibility, location_name: "RenewalEligibility"))
+    CertificateSummary.add_member(:not_before, Shapes::ShapeRef.new(shape: TStamp, location_name: "NotBefore"))
+    CertificateSummary.add_member(:not_after, Shapes::ShapeRef.new(shape: TStamp, location_name: "NotAfter"))
+    CertificateSummary.add_member(:created_at, Shapes::ShapeRef.new(shape: TStamp, location_name: "CreatedAt"))
+    CertificateSummary.add_member(:issued_at, Shapes::ShapeRef.new(shape: TStamp, location_name: "IssuedAt"))
+    CertificateSummary.add_member(:imported_at, Shapes::ShapeRef.new(shape: TStamp, location_name: "ImportedAt"))
+    CertificateSummary.add_member(:revoked_at, Shapes::ShapeRef.new(shape: TStamp, location_name: "RevokedAt"))
     CertificateSummary.struct_class = Types::CertificateSummary
 
     CertificateSummaryList.member = Shapes::ShapeRef.new(shape: CertificateSummary)
@@ -205,6 +227,8 @@ module Aws::ACM
     ExtendedKeyUsageFilterList.member = Shapes::ShapeRef.new(shape: ExtendedKeyUsageName)
 
     ExtendedKeyUsageList.member = Shapes::ShapeRef.new(shape: ExtendedKeyUsage)
+
+    ExtendedKeyUsageNames.member = Shapes::ShapeRef.new(shape: ExtendedKeyUsageName)
 
     Filters.add_member(:extended_key_usage, Shapes::ShapeRef.new(shape: ExtendedKeyUsageFilterList, location_name: "extendedKeyUsage"))
     Filters.add_member(:key_usage, Shapes::ShapeRef.new(shape: KeyUsageFilterList, location_name: "keyUsage"))
@@ -260,6 +284,8 @@ module Aws::ACM
 
     KeyUsageList.member = Shapes::ShapeRef.new(shape: KeyUsage)
 
+    KeyUsageNames.member = Shapes::ShapeRef.new(shape: KeyUsageName)
+
     LimitExceededException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "message"))
     LimitExceededException.struct_class = Types::LimitExceededException
 
@@ -267,6 +293,8 @@ module Aws::ACM
     ListCertificatesRequest.add_member(:includes, Shapes::ShapeRef.new(shape: Filters, location_name: "Includes"))
     ListCertificatesRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     ListCertificatesRequest.add_member(:max_items, Shapes::ShapeRef.new(shape: MaxItems, location_name: "MaxItems"))
+    ListCertificatesRequest.add_member(:sort_by, Shapes::ShapeRef.new(shape: SortBy, location_name: "SortBy"))
+    ListCertificatesRequest.add_member(:sort_order, Shapes::ShapeRef.new(shape: SortOrder, location_name: "SortOrder"))
     ListCertificatesRequest.struct_class = Types::ListCertificatesRequest
 
     ListCertificatesResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
@@ -302,8 +330,9 @@ module Aws::ACM
     RequestCertificateRequest.add_member(:idempotency_token, Shapes::ShapeRef.new(shape: IdempotencyToken, location_name: "IdempotencyToken"))
     RequestCertificateRequest.add_member(:domain_validation_options, Shapes::ShapeRef.new(shape: DomainValidationOptionList, location_name: "DomainValidationOptions"))
     RequestCertificateRequest.add_member(:options, Shapes::ShapeRef.new(shape: CertificateOptions, location_name: "Options"))
-    RequestCertificateRequest.add_member(:certificate_authority_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "CertificateAuthorityArn"))
+    RequestCertificateRequest.add_member(:certificate_authority_arn, Shapes::ShapeRef.new(shape: PcaArn, location_name: "CertificateAuthorityArn"))
     RequestCertificateRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, location_name: "Tags"))
+    RequestCertificateRequest.add_member(:key_algorithm, Shapes::ShapeRef.new(shape: KeyAlgorithm, location_name: "KeyAlgorithm"))
     RequestCertificateRequest.struct_class = Types::RequestCertificateRequest
 
     RequestCertificateResponse.add_member(:certificate_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "CertificateArn"))
@@ -394,6 +423,9 @@ module Aws::ACM
         o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: ConflictException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidArnException)
       end)
 
@@ -461,6 +493,7 @@ module Aws::ACM
         o.input = Shapes::ShapeRef.new(shape: ListCertificatesRequest)
         o.output = Shapes::ShapeRef.new(shape: ListCertificatesResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidArgsException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
         o[:pager] = Aws::Pager.new(
           limit_key: "max_items",
           tokens: {

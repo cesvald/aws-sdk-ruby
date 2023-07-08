@@ -59,15 +59,15 @@ module Aws::EC2
       data[:encrypted]
     end
 
-    # The Amazon Resource Name (ARN) of the AWS Key Management Service (AWS
-    # KMS) customer master key (CMK) that was used to protect the volume
-    # encryption key for the parent volume.
+    # The Amazon Resource Name (ARN) of the Key Management Service (KMS) KMS
+    # key that was used to protect the volume encryption key for the parent
+    # volume.
     # @return [String]
     def kms_key_id
       data[:kms_key_id]
     end
 
-    # The AWS account ID of the EBS snapshot owner.
+    # The ID of the Amazon Web Services account that owns the EBS snapshot.
     # @return [String]
     def owner_id
       data[:owner_id]
@@ -92,8 +92,8 @@ module Aws::EC2
     end
 
     # Encrypted Amazon EBS snapshots are copied asynchronously. If a
-    # snapshot copy operation fails (for example, if the proper AWS Key
-    # Management Service (AWS KMS) permissions are not obtained) this field
+    # snapshot copy operation fails (for example, if the proper Key
+    # Management Service (KMS) permissions are not obtained) this field
     # displays error state details to help you diagnose why the error
     # occurred. This parameter is only returned by DescribeSnapshots.
     # @return [String]
@@ -115,17 +115,17 @@ module Aws::EC2
       data[:volume_size]
     end
 
-    # The AWS owner alias, from an Amazon-maintained list (`amazon`). This
-    # is not the user-configured AWS account alias set using the IAM
-    # console.
+    # The Amazon Web Services owner alias, from an Amazon-maintained list
+    # (`amazon`). This is not the user-configured Amazon Web Services
+    # account alias set using the IAM console.
     # @return [String]
     def owner_alias
       data[:owner_alias]
     end
 
-    # The ARN of the AWS Outpost on which the snapshot is stored. For more
-    # information, see [EBS Local Snapshot on Outposts][1] in the *Amazon
-    # Elastic Compute Cloud User Guide*.
+    # The ARN of the Outpost on which the snapshot is stored. For more
+    # information, see [Amazon EBS local snapshots on Outposts][1] in the
+    # *Amazon Elastic Compute Cloud User Guide*.
     #
     #
     #
@@ -139,6 +139,23 @@ module Aws::EC2
     # @return [Array<Types::Tag>]
     def tags
       data[:tags]
+    end
+
+    # The storage tier in which the snapshot is stored. `standard` indicates
+    # that the snapshot is stored in the standard snapshot storage tier and
+    # that it is ready for use. `archive` indicates that the snapshot is
+    # currently archived and that it must be restored before it can be used.
+    # @return [String]
+    def storage_tier
+      data[:storage_tier]
+    end
+
+    # Only for archived snapshots that are temporarily restored. Indicates
+    # the date and time when a temporarily restored snapshot will be
+    # automatically re-archived.
+    # @return [Time]
+    def restore_expiry_time
+      data[:restore_expiry_time]
     end
 
     # @!endgroup
@@ -155,7 +172,9 @@ module Aws::EC2
     #
     # @return [self]
     def load
-      resp = @client.describe_snapshots(snapshot_ids: [@id])
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_snapshots(snapshot_ids: [@id])
+      end
       @data = resp.snapshots[0]
       self
     end
@@ -186,7 +205,9 @@ module Aws::EC2
       options, params = separate_params_and_options(options)
       waiter = Waiters::SnapshotCompleted.new(options)
       yield_waiter_and_warn(waiter, &block) if block_given?
-      resp = waiter.wait(params.merge(snapshot_ids: [@id]))
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        waiter.wait(params.merge(snapshot_ids: [@id]))
+      end
       Snapshot.new({
         id: @id,
         data: resp.data.snapshots[0],
@@ -288,7 +309,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -301,11 +324,11 @@ module Aws::EC2
     #     destination_region: "String",
     #     encrypted: false,
     #     kms_key_id: "KmsKeyId",
-    #     presigned_url: "String",
+    #     presigned_url: "CopySnapshotRequestPSU",
     #     source_region: "String", # required
     #     tag_specifications: [
     #       {
-    #         resource_type: "client-vpn-endpoint", # accepts client-vpn-endpoint, customer-gateway, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, internet-gateway, key-pair, launch-template, local-gateway-route-table-vpc-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, placement-group, reserved-instances, route-table, security-group, snapshot, spot-fleet-request, spot-instances-request, subnet, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-route-table, volume, vpc, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log
+    #         resource_type: "capacity-reservation", # accepts capacity-reservation, client-vpn-endpoint, customer-gateway, carrier-gateway, coip-pool, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, instance-event-window, internet-gateway, ipam, ipam-pool, ipam-scope, ipv4pool-ec2, ipv6pool-ec2, key-pair, launch-template, local-gateway, local-gateway-route-table, local-gateway-virtual-interface, local-gateway-virtual-interface-group, local-gateway-route-table-vpc-association, local-gateway-route-table-virtual-interface-group-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, network-insights-access-scope, network-insights-access-scope-analysis, placement-group, prefix-list, replace-root-volume-task, reserved-instances, route-table, security-group, security-group-rule, snapshot, spot-fleet-request, spot-instances-request, subnet, subnet-cidr-reservation, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-policy-table, transit-gateway-route-table, transit-gateway-route-table-announcement, volume, vpc, vpc-endpoint, vpc-endpoint-connection, vpc-endpoint-service, vpc-endpoint-service-permission, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log, capacity-reservation-fleet, traffic-mirror-filter-rule, vpc-endpoint-connection-device-type, verified-access-instance, verified-access-group, verified-access-endpoint, verified-access-policy, verified-access-trust-provider, vpn-connection-device-type, vpc-block-public-access-exclusion, ipam-resource-discovery, ipam-resource-discovery-association, instance-connect-endpoint
     #         tags: [
     #           {
     #             key: "String",
@@ -322,12 +345,14 @@ module Aws::EC2
     # @option options [String] :destination_outpost_arn
     #   The Amazon Resource Name (ARN) of the Outpost to which to copy the
     #   snapshot. Only specify this parameter when copying a snapshot from an
-    #   AWS Region to an Outpost. The snapshot must be in the Region for the
-    #   destination Outpost. You cannot copy a snapshot from an Outpost to a
-    #   Region, from one Outpost to another, or within the same Outpost.
+    #   Amazon Web Services Region to an Outpost. The snapshot must be in the
+    #   Region for the destination Outpost. You cannot copy a snapshot from an
+    #   Outpost to a Region, from one Outpost to another, or within the same
+    #   Outpost.
     #
-    #   For more information, see [ Copying snapshots from an AWS Region to an
-    #   Outpost][1] in the *Amazon Elastic Compute Cloud User Guide*.
+    #   For more information, see [ Copy snapshots from an Amazon Web Services
+    #   Region to an Outpost][1] in the *Amazon Elastic Compute Cloud User
+    #   Guide*.
     #
     #
     #
@@ -340,8 +365,8 @@ module Aws::EC2
     #
     #   The snapshot copy is sent to the regional endpoint that you sent the
     #   HTTP request to (for example, `ec2.us-east-1.amazonaws.com`). With the
-    #   AWS CLI, this is specified using the `--region` parameter or the
-    #   default Region in your AWS configuration file.
+    #   CLI, this is specified using the `--region` parameter or the default
+    #   Region in your Amazon Web Services configuration file.
     # @option options [Boolean] :encrypted
     #   To encrypt a copy of an unencrypted snapshot if encryption by default
     #   is not enabled, enable encryption using this parameter. Otherwise,
@@ -354,12 +379,12 @@ module Aws::EC2
     #
     #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
     # @option options [String] :kms_key_id
-    #   The identifier of the AWS Key Management Service (AWS KMS) customer
-    #   master key (CMK) to use for Amazon EBS encryption. If this parameter
-    #   is not specified, your AWS managed CMK for EBS is used. If `KmsKeyId`
-    #   is specified, the encrypted state must be `true`.
+    #   The identifier of the Key Management Service (KMS) KMS key to use for
+    #   Amazon EBS encryption. If this parameter is not specified, your KMS
+    #   key for Amazon EBS is used. If `KmsKeyId` is specified, the encrypted
+    #   state must be `true`.
     #
-    #   You can specify the CMK using any of the following:
+    #   You can specify the KMS key using any of the following:
     #
     #   * Key ID. For example, 1234abcd-12ab-34cd-56ef-1234567890ab.
     #
@@ -371,9 +396,9 @@ module Aws::EC2
     #   * Alias ARN. For example,
     #     arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
     #
-    #   AWS authenticates the CMK asynchronously. Therefore, if you specify an
-    #   ID, alias, or ARN that is not valid, the action can appear to
-    #   complete, but eventually fails.
+    #   Amazon Web Services authenticates the KMS key asynchronously.
+    #   Therefore, if you specify an ID, alias, or ARN that is not valid, the
+    #   action can appear to complete, but eventually fails.
     # @option options [String] :presigned_url
     #   When you copy an encrypted source snapshot using the Amazon EC2 Query
     #   API, you must supply a pre-signed URL. This parameter is optional for
@@ -382,13 +407,14 @@ module Aws::EC2
     #   The `PresignedUrl` should use the snapshot source endpoint, the
     #   `CopySnapshot` action, and include the `SourceRegion`,
     #   `SourceSnapshotId`, and `DestinationRegion` parameters. The
-    #   `PresignedUrl` must be signed using AWS Signature Version 4. Because
-    #   EBS snapshots are stored in Amazon S3, the signing algorithm for this
-    #   parameter uses the same logic that is described in [Authenticating
-    #   Requests: Using Query Parameters (AWS Signature Version 4)][2] in the
-    #   *Amazon Simple Storage Service API Reference*. An invalid or
-    #   improperly signed `PresignedUrl` will cause the copy operation to fail
-    #   asynchronously, and the snapshot will move to an `error` state.
+    #   `PresignedUrl` must be signed using Amazon Web Services Signature
+    #   Version 4. Because EBS snapshots are stored in Amazon S3, the signing
+    #   algorithm for this parameter uses the same logic that is described in
+    #   [Authenticating Requests: Using Query Parameters (Amazon Web Services
+    #   Signature Version 4)][2] in the *Amazon Simple Storage Service API
+    #   Reference*. An invalid or improperly signed `PresignedUrl` will cause
+    #   the copy operation to fail asynchronously, and the snapshot will move
+    #   to an `error` state.
     #
     #
     #
@@ -406,7 +432,9 @@ module Aws::EC2
     # @return [Types::CopySnapshotResult]
     def copy(options = {})
       options = options.merge(source_snapshot_id: @id)
-      resp = @client.copy_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.copy_snapshot(options)
+      end
       resp.data
     end
 
@@ -435,7 +463,9 @@ module Aws::EC2
     def create_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.create_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -472,13 +502,17 @@ module Aws::EC2
     #   if its value is an empty string.
     #
     #   If you omit this parameter, we delete all user-defined tags for the
-    #   specified resources. We do not delete AWS-generated tags (tags that
-    #   have the `aws:` prefix).
+    #   specified resources. We do not delete Amazon Web Services-generated
+    #   tags (tags that have the `aws:` prefix).
+    #
+    #   Constraints: Up to 1000 tags.
     # @return [Tag::Collection]
     def delete_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.delete_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -504,7 +538,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(snapshot_id: @id)
-      resp = @client.delete_snapshot(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_snapshot(options)
+      end
       resp.data
     end
 
@@ -525,7 +561,9 @@ module Aws::EC2
     # @return [Types::DescribeSnapshotAttributeResult]
     def describe_attribute(options = {})
       options = options.merge(snapshot_id: @id)
-      resp = @client.describe_snapshot_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_snapshot_attribute(options)
+      end
       resp.data
     end
 
@@ -572,7 +610,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def modify_attribute(options = {})
       options = options.merge(snapshot_id: @id)
-      resp = @client.modify_snapshot_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.modify_snapshot_attribute(options)
+      end
       resp.data
     end
 
@@ -594,7 +634,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def reset_attribute(options = {})
       options = options.merge(snapshot_id: @id)
-      resp = @client.reset_snapshot_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.reset_snapshot_attribute(options)
+      end
       resp.data
     end
 

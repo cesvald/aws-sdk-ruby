@@ -27,18 +27,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AddProfilePermissionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         profile_name: "ProfileName", # required
-    #         profile_version: "ProfileVersion",
-    #         action: "String", # required
-    #         principal: "String", # required
-    #         revision_id: "String",
-    #         statement_id: "String", # required
-    #       }
-    #
     # @!attribute [rw] profile_name
     #   The human-readable name of the signing profile.
     #   @return [String]
@@ -109,13 +97,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CancelSigningProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         profile_name: "ProfileName", # required
-    #       }
-    #
     # @!attribute [rw] profile_name
     #   The name of the signing profile to be canceled.
     #   @return [String]
@@ -145,13 +126,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeSigningJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         job_id: "JobId", # required
-    #       }
-    #
     # @!attribute [rw] job_id
     #   The ID of the signing job on input.
     #   @return [String]
@@ -278,16 +252,6 @@ module Aws::Signer
     # Points to an `S3Destination` object that contains information about
     # your S3 bucket.
     #
-    # @note When making an API call, you may pass Destination
-    #   data as a hash:
-    #
-    #       {
-    #         s3: {
-    #           bucket_name: "BucketName",
-    #           prefix: "Prefix",
-    #         },
-    #       }
-    #
     # @!attribute [rw] s3
     #   The `S3Destination` object.
     #   @return [Types::S3Destination]
@@ -321,13 +285,57 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetSigningPlatformRequest
-    #   data as a hash:
+    # @!attribute [rw] signature_timestamp
+    #   The timestamp of the signature that validates the profile or job.
+    #   @return [Time]
     #
-    #       {
-    #         platform_id: "PlatformId", # required
-    #       }
+    # @!attribute [rw] platform_id
+    #   The ID of a signing platform.
+    #   @return [String]
     #
+    # @!attribute [rw] profile_version_arn
+    #   The version of a signing profile.
+    #   @return [String]
+    #
+    # @!attribute [rw] job_arn
+    #   The ARN of a signing job.
+    #   @return [String]
+    #
+    # @!attribute [rw] certificate_hashes
+    #   A list of composite signed hashes that identify certificates.
+    #
+    #   A certificate identifier consists of a subject certificate TBS hash
+    #   (signed by the parent CA) combined with a parent CA TBS hash (signed
+    #   by the parent CA’s CA). Root certificates are defined as their own
+    #   CA.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/signer-2017-08-25/GetRevocationStatusRequest AWS API Documentation
+    #
+    class GetRevocationStatusRequest < Struct.new(
+      :signature_timestamp,
+      :platform_id,
+      :profile_version_arn,
+      :job_arn,
+      :certificate_hashes)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] revoked_entities
+    #   A list of revoked entities (including one or more of the signing
+    #   profile ARN, signing job ID, and certificate hash) supplied as input
+    #   to the API.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/signer-2017-08-25/GetRevocationStatusResponse AWS API Documentation
+    #
+    class GetRevocationStatusResponse < Struct.new(
+      :revoked_entities)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] platform_id
     #   The ID of the target signing platform.
     #   @return [String]
@@ -394,14 +402,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetSigningProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         profile_name: "ProfileName", # required
-    #         profile_owner: "AccountId",
-    #       }
-    #
     # @!attribute [rw] profile_name
     #   The name of the target signing profile.
     #   @return [String]
@@ -536,14 +536,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListProfilePermissionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         profile_name: "ProfileName", # required
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] profile_name
     #   Name of the signing profile containing the cross-account
     #   permissions.
@@ -590,21 +582,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListSigningJobsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         status: "InProgress", # accepts InProgress, Failed, Succeeded
-    #         platform_id: "PlatformId",
-    #         requested_by: "RequestedBy",
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #         is_revoked: false,
-    #         signature_expires_before: Time.now,
-    #         signature_expires_after: Time.now,
-    #         job_invoker: "AccountId",
-    #       }
-    #
     # @!attribute [rw] status
     #   A status value with which to filter your results.
     #   @return [String]
@@ -685,17 +662,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListSigningPlatformsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         category: "String",
-    #         partner: "String",
-    #         target: "String",
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] category
     #   The category type of a signing platform.
     #   @return [String]
@@ -748,17 +714,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListSigningProfilesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         include_canceled: false,
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #         platform_id: "PlatformId",
-    #         statuses: ["Active"], # accepts Active, Canceled, Revoked
-    #       }
-    #
     # @!attribute [rw] include_canceled
     #   Designates whether to include profiles with the status of
     #   `CANCELED`.
@@ -816,13 +771,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "String", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) for the signing profile.
     #   @return [String]
@@ -893,34 +841,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutSigningProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         profile_name: "ProfileName", # required
-    #         signing_material: {
-    #           certificate_arn: "CertificateArn", # required
-    #         },
-    #         signature_validity_period: {
-    #           value: 1,
-    #           type: "DAYS", # accepts DAYS, MONTHS, YEARS
-    #         },
-    #         platform_id: "PlatformId", # required
-    #         overrides: {
-    #           signing_configuration: {
-    #             encryption_algorithm: "RSA", # accepts RSA, ECDSA
-    #             hash_algorithm: "SHA1", # accepts SHA1, SHA256
-    #           },
-    #           signing_image_format: "JSON", # accepts JSON, JSONEmbedded, JSONDetached
-    #         },
-    #         signing_parameters: {
-    #           "SigningParameterKey" => "SigningParameterValue",
-    #         },
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] profile_name
     #   The name of the signing profile to be created.
     #   @return [String]
@@ -992,15 +912,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RemoveProfilePermissionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         profile_name: "ProfileName", # required
-    #         revision_id: "String", # required
-    #         statement_id: "String", # required
-    #       }
-    #
     # @!attribute [rw] profile_name
     #   A human-readable name for the signing profile with permissions to be
     #   removed.
@@ -1054,15 +965,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RevokeSignatureRequest
-    #   data as a hash:
-    #
-    #       {
-    #         job_id: "JobId", # required
-    #         job_owner: "AccountId",
-    #         reason: "RevocationReasonString", # required
-    #       }
-    #
     # @!attribute [rw] job_id
     #   ID of the signing job to be revoked.
     #   @return [String]
@@ -1085,16 +987,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RevokeSigningProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         profile_name: "ProfileName", # required
-    #         profile_version: "ProfileVersion", # required
-    #         reason: "RevocationReasonString", # required
-    #         effective_time: Time.now, # required
-    #       }
-    #
     # @!attribute [rw] profile_name
     #   The name of the signing profile to be revoked.
     #   @return [String]
@@ -1126,14 +1018,6 @@ module Aws::Signer
 
     # The name and prefix of the S3 bucket where code signing saves your
     # signed objects.
-    #
-    # @note When making an API call, you may pass S3Destination
-    #   data as a hash:
-    #
-    #       {
-    #         bucket_name: "BucketName",
-    #         prefix: "Prefix",
-    #       }
     #
     # @!attribute [rw] bucket_name
     #   Name of the S3 bucket.
@@ -1176,15 +1060,6 @@ module Aws::Signer
 
     # Information about the S3 bucket where you saved your unsigned code.
     #
-    # @note When making an API call, you may pass S3Source
-    #   data as a hash:
-    #
-    #       {
-    #         bucket_name: "BucketName", # required
-    #         key: "Key", # required
-    #         version: "Version", # required
-    #       }
-    #
     # @!attribute [rw] bucket_name
     #   Name of the S3 bucket.
     #   @return [String]
@@ -1224,15 +1099,63 @@ module Aws::Signer
       include Aws::Structure
     end
 
+    # @!attribute [rw] profile_name
+    #   The name of the signing profile.
+    #   @return [String]
+    #
+    # @!attribute [rw] profile_owner
+    #   The AWS account ID of the profile owner.
+    #   @return [String]
+    #
+    # @!attribute [rw] payload
+    #   Specifies the object digest (hash) to sign.
+    #   @return [String]
+    #
+    # @!attribute [rw] payload_format
+    #   Payload content type
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/signer-2017-08-25/SignPayloadRequest AWS API Documentation
+    #
+    class SignPayloadRequest < Struct.new(
+      :profile_name,
+      :profile_owner,
+      :payload,
+      :payload_format)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] job_id
+    #   Unique identifier of the signing job.
+    #   @return [String]
+    #
+    # @!attribute [rw] job_owner
+    #   The AWS account ID of the job owner.
+    #   @return [String]
+    #
+    # @!attribute [rw] metadata
+    #   Information including the signing profile ARN and the signing job
+    #   ID. Clients use metadata to signature records, for example, as
+    #   annotations added to the signature manifest inside an OCI registry.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] signature
+    #   A cryptographic signature.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/signer-2017-08-25/SignPayloadResponse AWS API Documentation
+    #
+    class SignPayloadResponse < Struct.new(
+      :job_id,
+      :job_owner,
+      :metadata,
+      :signature)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The validity period for a signing job.
-    #
-    # @note When making an API call, you may pass SignatureValidityPeriod
-    #   data as a hash:
-    #
-    #       {
-    #         value: 1,
-    #         type: "DAYS", # accepts DAYS, MONTHS, YEARS
-    #       }
     #
     # @!attribute [rw] value
     #   The numerical value of the time unit for signature validity.
@@ -1289,14 +1212,6 @@ module Aws::Signer
 
     # A signing configuration that overrides the default encryption or hash
     # algorithm of a signing job.
-    #
-    # @note When making an API call, you may pass SigningConfigurationOverrides
-    #   data as a hash:
-    #
-    #       {
-    #         encryption_algorithm: "RSA", # accepts RSA, ECDSA
-    #         hash_algorithm: "SHA1", # accepts SHA1, SHA256
-    #       }
     #
     # @!attribute [rw] encryption_algorithm
     #   A specified override of the default encryption algorithm that is
@@ -1444,13 +1359,6 @@ module Aws::Signer
 
     # The ACM certificate that is used to sign your code.
     #
-    # @note When making an API call, you may pass SigningMaterial
-    #   data as a hash:
-    #
-    #       {
-    #         certificate_arn: "CertificateArn", # required
-    #       }
-    #
     # @!attribute [rw] certificate_arn
     #   The Amazon Resource Name (ARN) of the certificates that is used to
     #   sign your code.
@@ -1468,7 +1376,7 @@ module Aws::Signer
     # that are used to perform a code signing job.
     #
     # @!attribute [rw] platform_id
-    #   The ID of a code signing; platform.
+    #   The ID of a code signing platform.
     #   @return [String]
     #
     # @!attribute [rw] display_name
@@ -1524,17 +1432,6 @@ module Aws::Signer
 
     # Any overrides that are applied to the signing configuration of a code
     # signing platform.
-    #
-    # @note When making an API call, you may pass SigningPlatformOverrides
-    #   data as a hash:
-    #
-    #       {
-    #         signing_configuration: {
-    #           encryption_algorithm: "RSA", # accepts RSA, ECDSA
-    #           hash_algorithm: "SHA1", # accepts SHA1, SHA256
-    #         },
-    #         signing_image_format: "JSON", # accepts JSON, JSONEmbedded, JSONDetached
-    #       }
     #
     # @!attribute [rw] signing_configuration
     #   A signing configuration that overrides the default encryption or
@@ -1653,17 +1550,6 @@ module Aws::Signer
     # An `S3Source` object that contains information about the S3 bucket
     # where you saved your unsigned code.
     #
-    # @note When making an API call, you may pass Source
-    #   data as a hash:
-    #
-    #       {
-    #         s3: {
-    #           bucket_name: "BucketName", # required
-    #           key: "Key", # required
-    #           version: "Version", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] s3
     #   The `S3Source` object.
     #   @return [Types::S3Source]
@@ -1676,28 +1562,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartSigningJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         source: { # required
-    #           s3: {
-    #             bucket_name: "BucketName", # required
-    #             key: "Key", # required
-    #             version: "Version", # required
-    #           },
-    #         },
-    #         destination: { # required
-    #           s3: {
-    #             bucket_name: "BucketName",
-    #             prefix: "Prefix",
-    #           },
-    #         },
-    #         profile_name: "ProfileName", # required
-    #         client_request_token: "ClientRequestToken", # required
-    #         profile_owner: "AccountId",
-    #       }
-    #
     # @!attribute [rw] source
     #   The S3 bucket that contains the object to sign or a BLOB that
     #   contains your raw code.
@@ -1754,16 +1618,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "String", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) for the signing profile.
     #   @return [String]
@@ -1823,14 +1677,6 @@ module Aws::Signer
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "String", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) for the signing profile.
     #   @return [String]

@@ -53,7 +53,7 @@ module Aws::EC2
       data[:state]
     end
 
-    # The ID of the AWS account that owns the VPC.
+    # The ID of the Amazon Web Services account that owns the VPC.
     # @return [String]
     def owner_id
       data[:owner_id]
@@ -103,7 +103,9 @@ module Aws::EC2
     #
     # @return [self]
     def load
-      resp = @client.describe_vpcs(vpc_ids: [@id])
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_vpcs(vpc_ids: [@id])
+      end
       @data = resp.vpcs[0]
       self
     end
@@ -148,7 +150,9 @@ module Aws::EC2
       options, params = separate_params_and_options(options)
       waiter = Waiters::VpcAvailable.new(options)
       yield_waiter_and_warn(waiter, &block) if block_given?
-      waiter.wait(params.merge(vpc_ids: [@id]))
+      Aws::Plugins::UserAgent.feature('resource') do
+        waiter.wait(params.merge(vpc_ids: [@id]))
+      end
       Vpc.new({
         id: @id,
         client: @client
@@ -165,7 +169,9 @@ module Aws::EC2
       options, params = separate_params_and_options(options)
       waiter = Waiters::VpcExists.new(options)
       yield_waiter_and_warn(waiter, &block) if block_given?
-      waiter.wait(params.merge(vpc_ids: [@id]))
+      Aws::Plugins::UserAgent.feature('resource') do
+        waiter.wait(params.merge(vpc_ids: [@id]))
+      end
       Vpc.new({
         id: @id,
         client: @client
@@ -266,7 +272,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -289,7 +297,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def associate_dhcp_options(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.associate_dhcp_options(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.associate_dhcp_options(options)
+      end
       resp.data
     end
 
@@ -297,7 +307,7 @@ module Aws::EC2
     #
     #   vpc.attach_classic_link_instance({
     #     dry_run: false,
-    #     groups: ["String"], # required
+    #     groups: ["SecurityGroupId"], # required
     #     instance_id: "InstanceId", # required
     #   })
     # @param [Hash] options ({})
@@ -315,7 +325,9 @@ module Aws::EC2
     # @return [Types::AttachClassicLinkVpcResult]
     def attach_classic_link_instance(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.attach_classic_link_vpc(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.attach_classic_link_vpc(options)
+      end
       resp.data
     end
 
@@ -336,7 +348,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def attach_internet_gateway(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.attach_internet_gateway(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.attach_internet_gateway(options)
+      end
       resp.data
     end
 
@@ -346,7 +360,7 @@ module Aws::EC2
     #     dry_run: false,
     #     tag_specifications: [
     #       {
-    #         resource_type: "client-vpn-endpoint", # accepts client-vpn-endpoint, customer-gateway, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, internet-gateway, key-pair, launch-template, local-gateway-route-table-vpc-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, placement-group, reserved-instances, route-table, security-group, snapshot, spot-fleet-request, spot-instances-request, subnet, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-route-table, volume, vpc, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log
+    #         resource_type: "capacity-reservation", # accepts capacity-reservation, client-vpn-endpoint, customer-gateway, carrier-gateway, coip-pool, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, instance-event-window, internet-gateway, ipam, ipam-pool, ipam-scope, ipv4pool-ec2, ipv6pool-ec2, key-pair, launch-template, local-gateway, local-gateway-route-table, local-gateway-virtual-interface, local-gateway-virtual-interface-group, local-gateway-route-table-vpc-association, local-gateway-route-table-virtual-interface-group-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, network-insights-access-scope, network-insights-access-scope-analysis, placement-group, prefix-list, replace-root-volume-task, reserved-instances, route-table, security-group, security-group-rule, snapshot, spot-fleet-request, spot-instances-request, subnet, subnet-cidr-reservation, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-policy-table, transit-gateway-route-table, transit-gateway-route-table-announcement, volume, vpc, vpc-endpoint, vpc-endpoint-connection, vpc-endpoint-service, vpc-endpoint-service-permission, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log, capacity-reservation-fleet, traffic-mirror-filter-rule, vpc-endpoint-connection-device-type, verified-access-instance, verified-access-group, verified-access-endpoint, verified-access-policy, verified-access-trust-provider, vpn-connection-device-type, vpc-block-public-access-exclusion, ipam-resource-discovery, ipam-resource-discovery-association, instance-connect-endpoint
     #         tags: [
     #           {
     #             key: "String",
@@ -367,7 +381,9 @@ module Aws::EC2
     # @return [NetworkAcl]
     def create_network_acl(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.create_network_acl(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_network_acl(options)
+      end
       NetworkAcl.new(
         id: resp.data.network_acl.network_acl_id,
         data: resp.data.network_acl,
@@ -381,7 +397,7 @@ module Aws::EC2
     #     dry_run: false,
     #     tag_specifications: [
     #       {
-    #         resource_type: "client-vpn-endpoint", # accepts client-vpn-endpoint, customer-gateway, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, internet-gateway, key-pair, launch-template, local-gateway-route-table-vpc-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, placement-group, reserved-instances, route-table, security-group, snapshot, spot-fleet-request, spot-instances-request, subnet, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-route-table, volume, vpc, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log
+    #         resource_type: "capacity-reservation", # accepts capacity-reservation, client-vpn-endpoint, customer-gateway, carrier-gateway, coip-pool, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, instance-event-window, internet-gateway, ipam, ipam-pool, ipam-scope, ipv4pool-ec2, ipv6pool-ec2, key-pair, launch-template, local-gateway, local-gateway-route-table, local-gateway-virtual-interface, local-gateway-virtual-interface-group, local-gateway-route-table-vpc-association, local-gateway-route-table-virtual-interface-group-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, network-insights-access-scope, network-insights-access-scope-analysis, placement-group, prefix-list, replace-root-volume-task, reserved-instances, route-table, security-group, security-group-rule, snapshot, spot-fleet-request, spot-instances-request, subnet, subnet-cidr-reservation, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-policy-table, transit-gateway-route-table, transit-gateway-route-table-announcement, volume, vpc, vpc-endpoint, vpc-endpoint-connection, vpc-endpoint-service, vpc-endpoint-service-permission, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log, capacity-reservation-fleet, traffic-mirror-filter-rule, vpc-endpoint-connection-device-type, verified-access-instance, verified-access-group, verified-access-endpoint, verified-access-policy, verified-access-trust-provider, vpn-connection-device-type, vpc-block-public-access-exclusion, ipam-resource-discovery, ipam-resource-discovery-association, instance-connect-endpoint
     #         tags: [
     #           {
     #             key: "String",
@@ -402,7 +418,9 @@ module Aws::EC2
     # @return [RouteTable]
     def create_route_table(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.create_route_table(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_route_table(options)
+      end
       RouteTable.new(
         id: resp.data.route_table.route_table_id,
         data: resp.data.route_table,
@@ -417,7 +435,7 @@ module Aws::EC2
     #     group_name: "String", # required
     #     tag_specifications: [
     #       {
-    #         resource_type: "client-vpn-endpoint", # accepts client-vpn-endpoint, customer-gateway, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, internet-gateway, key-pair, launch-template, local-gateway-route-table-vpc-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, placement-group, reserved-instances, route-table, security-group, snapshot, spot-fleet-request, spot-instances-request, subnet, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-route-table, volume, vpc, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log
+    #         resource_type: "capacity-reservation", # accepts capacity-reservation, client-vpn-endpoint, customer-gateway, carrier-gateway, coip-pool, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, instance-event-window, internet-gateway, ipam, ipam-pool, ipam-scope, ipv4pool-ec2, ipv6pool-ec2, key-pair, launch-template, local-gateway, local-gateway-route-table, local-gateway-virtual-interface, local-gateway-virtual-interface-group, local-gateway-route-table-vpc-association, local-gateway-route-table-virtual-interface-group-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, network-insights-access-scope, network-insights-access-scope-analysis, placement-group, prefix-list, replace-root-volume-task, reserved-instances, route-table, security-group, security-group-rule, snapshot, spot-fleet-request, spot-instances-request, subnet, subnet-cidr-reservation, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-policy-table, transit-gateway-route-table, transit-gateway-route-table-announcement, volume, vpc, vpc-endpoint, vpc-endpoint-connection, vpc-endpoint-service, vpc-endpoint-service-permission, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log, capacity-reservation-fleet, traffic-mirror-filter-rule, vpc-endpoint-connection-device-type, verified-access-instance, verified-access-group, verified-access-endpoint, verified-access-policy, verified-access-trust-provider, vpn-connection-device-type, vpc-block-public-access-exclusion, ipam-resource-discovery, ipam-resource-discovery-association, instance-connect-endpoint
     #         tags: [
     #           {
     #             key: "String",
@@ -430,7 +448,7 @@ module Aws::EC2
     #   })
     # @param [Hash] options ({})
     # @option options [required, String] :description
-    #   A description for the security group. This is informational only.
+    #   A description for the security group.
     #
     #   Constraints: Up to 255 characters in length
     #
@@ -457,7 +475,9 @@ module Aws::EC2
     # @return [SecurityGroup]
     def create_security_group(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.create_security_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_security_group(options)
+      end
       SecurityGroup.new(
         id: resp.data.group_id,
         client: @client
@@ -469,7 +489,7 @@ module Aws::EC2
     #   subnet = vpc.create_subnet({
     #     tag_specifications: [
     #       {
-    #         resource_type: "client-vpn-endpoint", # accepts client-vpn-endpoint, customer-gateway, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, internet-gateway, key-pair, launch-template, local-gateway-route-table-vpc-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, placement-group, reserved-instances, route-table, security-group, snapshot, spot-fleet-request, spot-instances-request, subnet, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-route-table, volume, vpc, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log
+    #         resource_type: "capacity-reservation", # accepts capacity-reservation, client-vpn-endpoint, customer-gateway, carrier-gateway, coip-pool, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, instance-event-window, internet-gateway, ipam, ipam-pool, ipam-scope, ipv4pool-ec2, ipv6pool-ec2, key-pair, launch-template, local-gateway, local-gateway-route-table, local-gateway-virtual-interface, local-gateway-virtual-interface-group, local-gateway-route-table-vpc-association, local-gateway-route-table-virtual-interface-group-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, network-insights-access-scope, network-insights-access-scope-analysis, placement-group, prefix-list, replace-root-volume-task, reserved-instances, route-table, security-group, security-group-rule, snapshot, spot-fleet-request, spot-instances-request, subnet, subnet-cidr-reservation, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-policy-table, transit-gateway-route-table, transit-gateway-route-table-announcement, volume, vpc, vpc-endpoint, vpc-endpoint-connection, vpc-endpoint-service, vpc-endpoint-service-permission, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log, capacity-reservation-fleet, traffic-mirror-filter-rule, vpc-endpoint-connection-device-type, verified-access-instance, verified-access-group, verified-access-endpoint, verified-access-policy, verified-access-trust-provider, vpn-connection-device-type, vpc-block-public-access-exclusion, ipam-resource-discovery, ipam-resource-discovery-association, instance-connect-endpoint
     #         tags: [
     #           {
     #             key: "String",
@@ -480,10 +500,11 @@ module Aws::EC2
     #     ],
     #     availability_zone: "String",
     #     availability_zone_id: "String",
+    #     cidr_block: "String",
     #     ipv_6_cidr_block: "String",
     #     outpost_arn: "String",
     #     dry_run: false,
-    #     cidr_block: "String", # required
+    #     ipv_6_native: false,
     #   })
     # @param [Hash] options ({})
     # @option options [Array<Types::TagSpecification>] :tag_specifications
@@ -491,9 +512,9 @@ module Aws::EC2
     # @option options [String] :availability_zone
     #   The Availability Zone or Local Zone for the subnet.
     #
-    #   Default: AWS selects one for you. If you create more than one subnet
-    #   in your VPC, we do not necessarily select a different zone for each
-    #   subnet.
+    #   Default: Amazon Web Services selects one for you. If you create more
+    #   than one subnet in your VPC, we do not necessarily select a different
+    #   zone for each subnet.
     #
     #   To create a subnet in a Local Zone, set this value to the Local Zone
     #   ID, for example `us-west-2-lax-1a`. For information about the Regions
@@ -508,9 +529,18 @@ module Aws::EC2
     #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
     # @option options [String] :availability_zone_id
     #   The AZ ID or the Local Zone ID of the subnet.
+    # @option options [String] :cidr_block
+    #   The IPv4 network range for the subnet, in CIDR notation. For example,
+    #   `10.0.0.0/24`. We modify the specified CIDR block to its canonical
+    #   form; for example, if you specify `100.68.0.18/18`, we modify it to
+    #   `100.68.0.0/18`.
+    #
+    #   This parameter is not supported for an IPv6 only subnet.
     # @option options [String] :ipv_6_cidr_block
     #   The IPv6 network range for the subnet, in CIDR notation. The subnet
     #   size must use a /64 prefix length.
+    #
+    #   This parameter is required for an IPv6 only subnet.
     # @option options [String] :outpost_arn
     #   The Amazon Resource Name (ARN) of the Outpost. If you specify an
     #   Outpost ARN, you must also specify the Availability Zone of the
@@ -520,15 +550,14 @@ module Aws::EC2
     #   without actually making the request, and provides an error response.
     #   If you have the required permissions, the error response is
     #   `DryRunOperation`. Otherwise, it is `UnauthorizedOperation`.
-    # @option options [required, String] :cidr_block
-    #   The IPv4 network range for the subnet, in CIDR notation. For example,
-    #   `10.0.0.0/24`. We modify the specified CIDR block to its canonical
-    #   form; for example, if you specify `100.68.0.18/18`, we modify it to
-    #   `100.68.0.0/18`.
+    # @option options [Boolean] :ipv_6_native
+    #   Indicates whether to create an IPv6 only subnet.
     # @return [Subnet]
     def create_subnet(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.create_subnet(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_subnet(options)
+      end
       Subnet.new(
         id: resp.data.subnet.subnet_id,
         data: resp.data.subnet,
@@ -561,7 +590,9 @@ module Aws::EC2
     def create_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.create_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -598,13 +629,17 @@ module Aws::EC2
     #   if its value is an empty string.
     #
     #   If you omit this parameter, we delete all user-defined tags for the
-    #   specified resources. We do not delete AWS-generated tags (tags that
-    #   have the `aws:` prefix).
+    #   specified resources. We do not delete Amazon Web Services-generated
+    #   tags (tags that have the `aws:` prefix).
+    #
+    #   Constraints: Up to 1000 tags.
     # @return [Tag::Collection]
     def delete_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.delete_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -630,14 +665,16 @@ module Aws::EC2
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.delete_vpc(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_vpc(options)
+      end
       resp.data
     end
 
     # @example Request syntax with placeholder values
     #
     #   vpc.describe_attribute({
-    #     attribute: "enableDnsSupport", # required, accepts enableDnsSupport, enableDnsHostnames
+    #     attribute: "enableDnsSupport", # required, accepts enableDnsSupport, enableDnsHostnames, enableNetworkAddressUsageMetrics
     #     dry_run: false,
     #   })
     # @param [Hash] options ({})
@@ -651,7 +688,9 @@ module Aws::EC2
     # @return [Types::DescribeVpcAttributeResult]
     def describe_attribute(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.describe_vpc_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_vpc_attribute(options)
+      end
       resp.data
     end
 
@@ -672,7 +711,9 @@ module Aws::EC2
     # @return [Types::DetachClassicLinkVpcResult]
     def detach_classic_link_instance(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.detach_classic_link_vpc(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.detach_classic_link_vpc(options)
+      end
       resp.data
     end
 
@@ -693,7 +734,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def detach_internet_gateway(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.detach_internet_gateway(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.detach_internet_gateway(options)
+      end
       resp.data
     end
 
@@ -711,7 +754,9 @@ module Aws::EC2
     # @return [Types::DisableVpcClassicLinkResult]
     def disable_classic_link(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.disable_vpc_classic_link(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.disable_vpc_classic_link(options)
+      end
       resp.data
     end
 
@@ -729,7 +774,9 @@ module Aws::EC2
     # @return [Types::EnableVpcClassicLinkResult]
     def enable_classic_link(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.enable_vpc_classic_link(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.enable_vpc_classic_link(options)
+      end
       resp.data
     end
 
@@ -740,6 +787,9 @@ module Aws::EC2
     #       value: false,
     #     },
     #     enable_dns_support: {
+    #       value: false,
+    #     },
+    #     enable_network_address_usage_metrics: {
     #       value: false,
     #     },
     #   })
@@ -762,10 +812,15 @@ module Aws::EC2
     #
     #   You cannot modify the DNS resolution and DNS hostnames attributes in
     #   the same request. Use separate requests for each attribute.
+    # @option options [Types::AttributeBooleanValue] :enable_network_address_usage_metrics
+    #   Indicates whether Network Address Usage metrics are enabled for your
+    #   VPC.
     # @return [EmptyStructure]
     def modify_attribute(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.modify_vpc_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.modify_vpc_attribute(options)
+      end
       resp.data
     end
 
@@ -778,7 +833,7 @@ module Aws::EC2
     #     peer_region: "String",
     #     tag_specifications: [
     #       {
-    #         resource_type: "client-vpn-endpoint", # accepts client-vpn-endpoint, customer-gateway, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, internet-gateway, key-pair, launch-template, local-gateway-route-table-vpc-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, placement-group, reserved-instances, route-table, security-group, snapshot, spot-fleet-request, spot-instances-request, subnet, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-route-table, volume, vpc, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log
+    #         resource_type: "capacity-reservation", # accepts capacity-reservation, client-vpn-endpoint, customer-gateway, carrier-gateway, coip-pool, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, instance-event-window, internet-gateway, ipam, ipam-pool, ipam-scope, ipv4pool-ec2, ipv6pool-ec2, key-pair, launch-template, local-gateway, local-gateway-route-table, local-gateway-virtual-interface, local-gateway-virtual-interface-group, local-gateway-route-table-vpc-association, local-gateway-route-table-virtual-interface-group-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, network-insights-access-scope, network-insights-access-scope-analysis, placement-group, prefix-list, replace-root-volume-task, reserved-instances, route-table, security-group, security-group-rule, snapshot, spot-fleet-request, spot-instances-request, subnet, subnet-cidr-reservation, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-policy-table, transit-gateway-route-table, transit-gateway-route-table-announcement, volume, vpc, vpc-endpoint, vpc-endpoint-connection, vpc-endpoint-service, vpc-endpoint-service-permission, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log, capacity-reservation-fleet, traffic-mirror-filter-rule, vpc-endpoint-connection-device-type, verified-access-instance, verified-access-group, verified-access-endpoint, verified-access-policy, verified-access-trust-provider, vpn-connection-device-type, vpc-block-public-access-exclusion, ipam-resource-discovery, ipam-resource-discovery-association, instance-connect-endpoint
     #         tags: [
     #           {
     #             key: "String",
@@ -795,9 +850,9 @@ module Aws::EC2
     #   If you have the required permissions, the error response is
     #   `DryRunOperation`. Otherwise, it is `UnauthorizedOperation`.
     # @option options [String] :peer_owner_id
-    #   The AWS account ID of the owner of the accepter VPC.
+    #   The Amazon Web Services account ID of the owner of the accepter VPC.
     #
-    #   Default: Your AWS account ID
+    #   Default: Your Amazon Web Services account ID
     # @option options [String] :peer_vpc_id
     #   The ID of the VPC with which you are creating the VPC peering
     #   connection. You must specify this parameter in the request.
@@ -811,7 +866,9 @@ module Aws::EC2
     # @return [VpcPeeringConnection]
     def request_vpc_peering_connection(options = {})
       options = options.merge(vpc_id: @id)
-      resp = @client.create_vpc_peering_connection(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_vpc_peering_connection(options)
+      end
       VpcPeeringConnection.new(
         id: resp.data.vpc_peering_connection.vpc_peering_connection_id,
         data: resp.data.vpc_peering_connection,
@@ -840,8 +897,8 @@ module Aws::EC2
     #   * `accepter-vpc-info.cidr-block` - The IPv4 CIDR block of the accepter
     #     VPC.
     #
-    #   * `accepter-vpc-info.owner-id` - The AWS account ID of the owner of
-    #     the accepter VPC.
+    #   * `accepter-vpc-info.owner-id` - The ID of the Amazon Web Services
+    #     account that owns the accepter VPC.
     #
     #   * `accepter-vpc-info.vpc-id` - The ID of the accepter VPC.
     #
@@ -851,8 +908,8 @@ module Aws::EC2
     #   * `requester-vpc-info.cidr-block` - The IPv4 CIDR block of the
     #     requester's VPC.
     #
-    #   * `requester-vpc-info.owner-id` - The AWS account ID of the owner of
-    #     the requester VPC.
+    #   * `requester-vpc-info.owner-id` - The ID of the Amazon Web Services
+    #     account that owns the requester VPC.
     #
     #   * `requester-vpc-info.vpc-id` - The ID of the requester VPC.
     #
@@ -863,7 +920,7 @@ module Aws::EC2
     #   * `status-message` - A message that provides more information about
     #     the status of the VPC peering connection, if applicable.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -890,7 +947,9 @@ module Aws::EC2
           name: "accepter-vpc-info.vpc-id",
           values: [@id]
         }])
-        resp = @client.describe_vpc_peering_connections(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_vpc_peering_connections(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.vpc_peering_connections.each do |v|
@@ -957,16 +1016,13 @@ module Aws::EC2
     #
     #   * `block-device-mapping.volume-id` - The volume ID of the EBS volume.
     #
+    #   * `capacity-reservation-id` - The ID of the Capacity Reservation into
+    #     which the instance was launched.
+    #
     #   * `client-token` - The idempotency token you provided when you
     #     launched the instance.
     #
     #   * `dns-name` - The public DNS name of the instance.
-    #
-    #   * `group-id` - The ID of the security group for the instance.
-    #     EC2-Classic only.
-    #
-    #   * `group-name` - The name of the security group for the instance.
-    #     EC2-Classic only.
     #
     #   * `hibernation-options.configured` - A Boolean that indicates whether
     #     the instance is enabled for hibernation. A value of `true` means
@@ -1016,17 +1072,23 @@ module Aws::EC2
     #     index for the instance in the launch group (for example, 0, 1, 2,
     #     and so on).
     #
-    #   * `launch-time` - The time when the instance was launched.
+    #   * `launch-time` - The time when the instance was launched, in the ISO
+    #     8601 format in the UTC time zone (YYYY-MM-DDThh:mm:ss.sssZ), for
+    #     example, `2021-09-29T11:04:43.305Z`. You can use a wildcard (`*`),
+    #     for example, `2021-09-29T*`, which matches an entire day.
     #
     #   * `metadata-options.http-tokens` - The metadata request authorization
     #     state (`optional` \| `required`)
     #
-    #   * `metadata-options.http-put-response-hop-limit` - The http metadata
+    #   * `metadata-options.http-put-response-hop-limit` - The HTTP metadata
     #     request put response hop limit (integer, possible values `1` to
     #     `64`)
     #
-    #   * `metadata-options.http-endpoint` - Enable or disable metadata access
-    #     on http endpoint (`enabled` \| `disabled`)
+    #   * `metadata-options.http-endpoint` - The status of access to the HTTP
+    #     metadata endpoint on your instance (`enabled` \| `disabled`)
+    #
+    #   * `metadata-options.instance-metadata-tags` - The status of access to
+    #     instance tags from the instance metadata (`enabled` \| `disabled`)
     #
     #   * `monitoring-state` - Indicates whether detailed monitoring is
     #     enabled (`disabled` \| `enabled`).
@@ -1111,7 +1173,7 @@ module Aws::EC2
     #     interface.
     #
     #   * `network-interface.requester-managed` - Indicates whether the
-    #     network interface is being managed by AWS.
+    #     network interface is being managed by Amazon Web Services.
     #
     #   * `network-interface.status` - The status of the network interface
     #     (`available`) \| `in-use`).
@@ -1130,7 +1192,8 @@ module Aws::EC2
     #
     #   * `outpost-arn` - The Amazon Resource Name (ARN) of the Outpost.
     #
-    #   * `owner-id` - The AWS account ID of the instance owner.
+    #   * `owner-id` - The Amazon Web Services account ID of the instance
+    #     owner.
     #
     #   * `placement-group-name` - The name of the placement group for the
     #     instance.
@@ -1158,8 +1221,8 @@ module Aws::EC2
     #     terminate the instance). Similar to the state-reason-code filter.
     #
     #   * `requester-id` - The ID of the entity that launched the instance on
-    #     your behalf (for example, AWS Management Console, Auto Scaling, and
-    #     so on).
+    #     your behalf (for example, Amazon Web Services Management Console,
+    #     Auto Scaling, and so on).
     #
     #   * `reservation-id` - The ID of the instance's reservation. A
     #     reservation ID is created any time you launch an instance. A
@@ -1190,11 +1253,11 @@ module Aws::EC2
     #
     #   * `subnet-id` - The ID of the subnet for the instance.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
-    #     the resource. Use the tag key in the filter name and the tag value
-    #     as the filter value. For example, to find all resources that have a
-    #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
-    #     for the filter name and `TeamA` for the filter value.
+    #   * `tag:<key>` - The key/value combination of a tag assigned to the
+    #     resource. Use the tag key in the filter name and the tag value as
+    #     the filter value. For example, to find all resources that have a tag
+    #     with the key `Owner` and the value `TeamA`, specify `tag:Owner` for
+    #     the filter name and `TeamA` for the filter value.
     #
     #   * `tag-key` - The key of a tag assigned to the resource. Use this
     #     filter to find all resources that have a tag with a specific key,
@@ -1223,7 +1286,9 @@ module Aws::EC2
           name: "vpc-id",
           values: [@id]
         }])
-        resp = @client.describe_instances(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_instances(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.reservations.each do |r|
@@ -1265,10 +1330,10 @@ module Aws::EC2
     #
     #   * `internet-gateway-id` - The ID of the Internet gateway.
     #
-    #   * `owner-id` - The ID of the AWS account that owns the internet
-    #     gateway.
+    #   * `owner-id` - The ID of the Amazon Web Services account that owns the
+    #     internet gateway.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1293,7 +1358,9 @@ module Aws::EC2
           name: "attachment.vpc-id",
           values: [@id]
         }])
-        resp = @client.describe_internet_gateways(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_internet_gateways(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.internet_gateways.each do |i|
@@ -1357,14 +1424,18 @@ module Aws::EC2
     #   * `entry.rule-action` - Allows or denies the matching traffic (`allow`
     #     \| `deny`).
     #
+    #   * `entry.egress` - A Boolean that indicates the type of rule. Specify
+    #     `true` for egress rules, or `false` for ingress rules.
+    #
     #   * `entry.rule-number` - The number of an entry (in other words, rule)
     #     in the set of ACL entries.
     #
     #   * `network-acl-id` - The ID of the network ACL.
     #
-    #   * `owner-id` - The ID of the AWS account that owns the network ACL.
+    #   * `owner-id` - The ID of the Amazon Web Services account that owns the
+    #     network ACL.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1391,7 +1462,9 @@ module Aws::EC2
           name: "vpc-id",
           values: [@id]
         }])
-        resp = @client.describe_network_acls(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_network_acls(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.network_acls.each do |n|
@@ -1485,11 +1558,20 @@ module Aws::EC2
     #   * `ipv6-addresses.ipv6-address` - An IPv6 address associated with the
     #     network interface.
     #
+    #   * `interface-type` - The type of network interface
+    #     (`api_gateway_managed` \| `aws_codestar_connections_managed` \|
+    #     `branch` \| `efa` \| `gateway_load_balancer` \|
+    #     `gateway_load_balancer_endpoint` \| `global_accelerator_managed` \|
+    #     `interface` \| `iot_rules_managed` \| `lambda` \| `load_balancer` \|
+    #     `nat_gateway` \| `network_load_balancer` \| `quicksight` \|
+    #     `transit_gateway` \| `trunk` \| `vpc_endpoint`).
+    #
     #   * `mac-address` - The MAC address of the network interface.
     #
     #   * `network-interface-id` - The ID of the network interface.
     #
-    #   * `owner-id` - The AWS account ID of the network interface owner.
+    #   * `owner-id` - The Amazon Web Services account ID of the network
+    #     interface owner.
     #
     #   * `private-ip-address` - The private IPv4 address or addresses of the
     #     network interface.
@@ -1497,12 +1579,12 @@ module Aws::EC2
     #   * `private-dns-name` - The private DNS name of the network interface
     #     (IPv4).
     #
-    #   * `requester-id` - The alias or AWS account ID of the principal or
-    #     service that created the network interface.
+    #   * `requester-id` - The alias or Amazon Web Services account ID of the
+    #     principal or service that created the network interface.
     #
     #   * `requester-managed` - Indicates whether the network interface is
-    #     being managed by an AWS service (for example, AWS Management
-    #     Console, Auto Scaling, and so on).
+    #     being managed by an Amazon Web Service (for example, Amazon Web
+    #     Services Management Console, Auto Scaling, and so on).
     #
     #   * `source-dest-check` - Indicates whether the network interface
     #     performs source/destination checking. A value of `true` means
@@ -1517,7 +1599,7 @@ module Aws::EC2
     #
     #   * `subnet-id` - The ID of the subnet for the network interface.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1534,7 +1616,7 @@ module Aws::EC2
     #   If you have the required permissions, the error response is
     #   `DryRunOperation`. Otherwise, it is `UnauthorizedOperation`.
     # @option options [Array<String>] :network_interface_ids
-    #   One or more network interface IDs.
+    #   The network interface IDs.
     #
     #   Default: Describes all your network interfaces.
     # @return [NetworkInterface::Collection]
@@ -1544,7 +1626,9 @@ module Aws::EC2
           name: "vpc-id",
           values: [@id]
         }])
-        resp = @client.describe_network_interfaces(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_network_interfaces(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.network_interfaces.each do |n|
@@ -1579,8 +1663,8 @@ module Aws::EC2
     #   * `accepter-vpc-info.cidr-block` - The IPv4 CIDR block of the accepter
     #     VPC.
     #
-    #   * `accepter-vpc-info.owner-id` - The AWS account ID of the owner of
-    #     the accepter VPC.
+    #   * `accepter-vpc-info.owner-id` - The ID of the Amazon Web Services
+    #     account that owns the accepter VPC.
     #
     #   * `accepter-vpc-info.vpc-id` - The ID of the accepter VPC.
     #
@@ -1590,8 +1674,8 @@ module Aws::EC2
     #   * `requester-vpc-info.cidr-block` - The IPv4 CIDR block of the
     #     requester's VPC.
     #
-    #   * `requester-vpc-info.owner-id` - The AWS account ID of the owner of
-    #     the requester VPC.
+    #   * `requester-vpc-info.owner-id` - The ID of the Amazon Web Services
+    #     account that owns the requester VPC.
     #
     #   * `requester-vpc-info.vpc-id` - The ID of the requester VPC.
     #
@@ -1602,7 +1686,7 @@ module Aws::EC2
     #   * `status-message` - A message that provides more information about
     #     the status of the VPC peering connection, if applicable.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1629,7 +1713,9 @@ module Aws::EC2
           name: "requester-vpc-info.vpc-id",
           values: [@id]
         }])
-        resp = @client.describe_vpc_peering_connections(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_vpc_peering_connections(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.vpc_peering_connections.each do |v|
@@ -1674,7 +1760,8 @@ module Aws::EC2
     #     route table for the VPC (`true` \| `false`). Route tables that do
     #     not have an association ID are not returned in the response.
     #
-    #   * `owner-id` - The ID of the AWS account that owns the route table.
+    #   * `owner-id` - The ID of the Amazon Web Services account that owns the
+    #     route table.
     #
     #   * `route-table-id` - The ID of the route table.
     #
@@ -1684,8 +1771,8 @@ module Aws::EC2
     #   * `route.destination-ipv6-cidr-block` - The IPv6 CIDR range specified
     #     in a route in the route table.
     #
-    #   * `route.destination-prefix-list-id` - The ID (prefix) of the AWS
-    #     service specified in a route in the table.
+    #   * `route.destination-prefix-list-id` - The ID (prefix) of the Amazon
+    #     Web Service specified in a route in the table.
     #
     #   * `route.egress-only-internet-gateway-id` - The ID of an egress-only
     #     Internet gateway specified in a route in the route table.
@@ -1716,7 +1803,7 @@ module Aws::EC2
     #   * `route.vpc-peering-connection-id` - The ID of a VPC peering
     #     connection specified in a route in the table.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1743,7 +1830,9 @@ module Aws::EC2
           name: "vpc-id",
           values: [@id]
         }])
-        resp = @client.describe_route_tables(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_route_tables(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.route_tables.each do |r|
@@ -1768,7 +1857,7 @@ module Aws::EC2
     #         values: ["String"],
     #       },
     #     ],
-    #     group_ids: ["String"],
+    #     group_ids: ["SecurityGroupId"],
     #     group_names: ["SecurityGroupName"],
     #     dry_run: false,
     #   })
@@ -1805,8 +1894,8 @@ module Aws::EC2
     #   * `egress.ip-permission.to-port` - For an outbound rule, the end of
     #     port range for the TCP and UDP protocols, or an ICMP code.
     #
-    #   * `egress.ip-permission.user-id` - The ID of an AWS account that has
-    #     been referenced in an outbound security group rule.
+    #   * `egress.ip-permission.user-id` - The ID of an Amazon Web Services
+    #     account that has been referenced in an outbound security group rule.
     #
     #   * `group-id` - The ID of the security group.
     #
@@ -1837,12 +1926,13 @@ module Aws::EC2
     #   * `ip-permission.to-port` - For an inbound rule, the end of port range
     #     for the TCP and UDP protocols, or an ICMP code.
     #
-    #   * `ip-permission.user-id` - The ID of an AWS account that has been
-    #     referenced in an inbound security group rule.
+    #   * `ip-permission.user-id` - The ID of an Amazon Web Services account
+    #     that has been referenced in an inbound security group rule.
     #
-    #   * `owner-id` - The AWS account ID of the owner of the security group.
+    #   * `owner-id` - The Amazon Web Services account ID of the owner of the
+    #     security group.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1858,14 +1948,14 @@ module Aws::EC2
     #   The IDs of the security groups. Required for security groups in a
     #   nondefault VPC.
     #
-    #   Default: Describes all your security groups.
+    #   Default: Describes all of your security groups.
     # @option options [Array<String>] :group_names
     #   \[EC2-Classic and default VPC only\] The names of the security groups.
     #   You can specify either the security group name or the security group
     #   ID. For security groups in a nondefault VPC, use the `group-name`
     #   filter to describe security groups by name.
     #
-    #   Default: Describes all your security groups.
+    #   Default: Describes all of your security groups.
     # @option options [Boolean] :dry_run
     #   Checks whether you have the required permissions for the action,
     #   without actually making the request, and provides an error response.
@@ -1878,7 +1968,9 @@ module Aws::EC2
           name: "vpc-id",
           values: [@id]
         }])
-        resp = @client.describe_security_groups(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_security_groups(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.security_groups.each do |s|
@@ -1924,9 +2016,21 @@ module Aws::EC2
     #     to be returned for the subnet. You can also use `cidr` or
     #     `cidrBlock` as the filter names.
     #
+    #   * `customer-owned-ipv4-pool` - The customer-owned IPv4 address pool
+    #     associated with the subnet.
+    #
     #   * `default-for-az` - Indicates whether this is the default subnet for
-    #     the Availability Zone. You can also use `defaultForAz` as the filter
-    #     name.
+    #     the Availability Zone (`true` \| `false`). You can also use
+    #     `defaultForAz` as the filter name.
+    #
+    #   * `enable-dns64` - Indicates whether DNS queries made to the
+    #     Amazon-provided DNS Resolver in this subnet should return synthetic
+    #     IPv6 addresses for IPv4-only destinations.
+    #
+    #   * `enable-lni-at-device-index` - Indicates the device position for
+    #     local network interfaces in this subnet. For example, `1` indicates
+    #     local network interfaces in this subnet are the secondary network
+    #     interface (eth1).
     #
     #   * `ipv6-cidr-block-association.ipv6-cidr-block` - An IPv6 CIDR block
     #     associated with the subnet.
@@ -1937,9 +2041,35 @@ module Aws::EC2
     #   * `ipv6-cidr-block-association.state` - The state of an IPv6 CIDR
     #     block associated with the subnet.
     #
+    #   * `ipv6-native` - Indicates whether this is an IPv6 only subnet
+    #     (`true` \| `false`).
+    #
+    #   * `map-customer-owned-ip-on-launch` - Indicates whether a network
+    #     interface created in this subnet (including a network interface
+    #     created by RunInstances) receives a customer-owned IPv4 address.
+    #
+    #   * `map-public-ip-on-launch` - Indicates whether instances launched in
+    #     this subnet receive a public IPv4 address.
+    #
     #   * `outpost-arn` - The Amazon Resource Name (ARN) of the Outpost.
     #
-    #   * `owner-id` - The ID of the AWS account that owns the subnet.
+    #   * `owner-id` - The ID of the Amazon Web Services account that owns the
+    #     subnet.
+    #
+    #   * `private-dns-name-options-on-launch.hostname-type` - The type of
+    #     hostname to assign to instances in the subnet at launch. For
+    #     IPv4-only and dual-stack (IPv4 and IPv6) subnets, an instance DNS
+    #     name can be based on the instance IPv4 address (ip-name) or the
+    #     instance ID (resource-name). For IPv6 only subnets, an instance DNS
+    #     name must be based on the instance ID (resource-name).
+    #
+    #   * `private-dns-name-options-on-launch.enable-resource-name-dns-a-record`
+    #     - Indicates whether to respond to DNS queries for instance hostnames
+    #     with DNS A records.
+    #
+    #   * `private-dns-name-options-on-launch.enable-resource-name-dns-aaaa-record`
+    #     - Indicates whether to respond to DNS queries for instance hostnames
+    #     with DNS AAAA records.
     #
     #   * `state` - The state of the subnet (`pending` \| `available`).
     #
@@ -1947,7 +2077,7 @@ module Aws::EC2
     #
     #   * `subnet-id` - The ID of the subnet.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1974,7 +2104,9 @@ module Aws::EC2
           name: "vpc-id",
           values: [@id]
         }])
-        resp = @client.describe_subnets(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_subnets(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.subnets.each do |s|

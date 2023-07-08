@@ -37,6 +37,22 @@ module Aws::EC2InstanceConnect
       include Aws::Structure
     end
 
+    # Unable to connect because the instance is not in a valid state.
+    # Connecting to a stopped or terminated instance is not supported. If
+    # the instance is stopped, start your instance, and try to connect
+    # again.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ec2-instance-connect-2018-04-02/EC2InstanceStateInvalidException AWS API Documentation
+    #
+    class EC2InstanceStateInvalidException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The instance type is not supported for connecting via the serial
     # console. Only Nitro instance types are currently supported.
     #
@@ -46,6 +62,20 @@ module Aws::EC2InstanceConnect
     # @see http://docs.aws.amazon.com/goto/WebAPI/ec2-instance-connect-2018-04-02/EC2InstanceTypeInvalidException AWS API Documentation
     #
     class EC2InstanceTypeInvalidException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The instance is currently unavailable. Wait a few minutes and try
+    # again.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ec2-instance-connect-2018-04-02/EC2InstanceUnavailableException AWS API Documentation
+    #
+    class EC2InstanceUnavailableException < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -64,16 +94,6 @@ module Aws::EC2InstanceConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SendSSHPublicKeyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         instance_id: "InstanceId", # required
-    #         instance_os_user: "InstanceOSUser", # required
-    #         ssh_public_key: "SSHPublicKey", # required
-    #         availability_zone: "AvailabilityZone", # required
-    #       }
-    #
     # @!attribute [rw] instance_id
     #   The ID of the EC2 instance.
     #   @return [String]
@@ -121,15 +141,6 @@ module Aws::EC2InstanceConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SendSerialConsoleSSHPublicKeyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         instance_id: "InstanceId", # required
-    #         serial_port: 1,
-    #         ssh_public_key: "SSHPublicKey", # required
-    #       }
-    #
     # @!attribute [rw] instance_id
     #   The ID of the EC2 instance.
     #   @return [String]

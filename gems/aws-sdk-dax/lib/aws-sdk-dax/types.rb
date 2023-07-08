@@ -43,11 +43,9 @@ module Aws::DAX
     #   @return [String]
     #
     # @!attribute [rw] cluster_discovery_endpoint
-    #   The configuration endpoint for this DAX cluster, consisting of a DNS
-    #   name and a port number. Client applications can specify this
-    #   endpoint, rather than an individual node endpoint, and allow the DAX
-    #   client software to intelligently route requests and responses to
-    #   nodes in the DAX cluster.
+    #   The endpoint for this DAX cluster, consisting of a DNS name, a port
+    #   number, and a URL. Applications should use the URL to configure the
+    #   DAX client to find their cluster.
     #   @return [Types::Endpoint]
     #
     # @!attribute [rw] node_ids_to_remove
@@ -95,6 +93,15 @@ module Aws::DAX
     #   specified DAX cluster.
     #   @return [Types::SSEDescription]
     #
+    # @!attribute [rw] cluster_endpoint_encryption_type
+    #   The type of encryption supported by the cluster's endpoint. Values
+    #   are:
+    #
+    #   * `NONE` for no encryption
+    #
+    #     `TLS` for Transport Layer Security
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/Cluster AWS API Documentation
     #
     class Cluster < Struct.new(
@@ -114,7 +121,8 @@ module Aws::DAX
       :security_groups,
       :iam_role_arn,
       :parameter_group,
-      :sse_description)
+      :sse_description,
+      :cluster_endpoint_encryption_type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -138,32 +146,6 @@ module Aws::DAX
     #
     class ClusterQuotaForCustomerExceededFault < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass CreateClusterRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cluster_name: "String", # required
-    #         node_type: "String", # required
-    #         description: "String",
-    #         replication_factor: 1, # required
-    #         availability_zones: ["String"],
-    #         subnet_group_name: "String",
-    #         security_group_ids: ["String"],
-    #         preferred_maintenance_window: "String",
-    #         notification_topic_arn: "String",
-    #         iam_role_arn: "String", # required
-    #         parameter_group_name: "String",
-    #         tags: [
-    #           {
-    #             key: "String",
-    #             value: "String",
-    #           },
-    #         ],
-    #         sse_specification: {
-    #           enabled: false, # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] cluster_name
     #   The cluster identifier. This parameter is stored as a lowercase
     #   string.
@@ -283,6 +265,15 @@ module Aws::DAX
     #   cluster.
     #   @return [Types::SSESpecification]
     #
+    # @!attribute [rw] cluster_endpoint_encryption_type
+    #   The type of encryption the cluster's endpoint should support.
+    #   Values are:
+    #
+    #   * `NONE` for no encryption
+    #
+    #   * `TLS` for Transport Layer Security
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/CreateClusterRequest AWS API Documentation
     #
     class CreateClusterRequest < Struct.new(
@@ -298,7 +289,8 @@ module Aws::DAX
       :iam_role_arn,
       :parameter_group_name,
       :tags,
-      :sse_specification)
+      :sse_specification,
+      :cluster_endpoint_encryption_type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -315,14 +307,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateParameterGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         parameter_group_name: "String", # required
-    #         description: "String",
-    #       }
-    #
     # @!attribute [rw] parameter_group_name
     #   The name of the parameter group to apply to all of the clusters in
     #   this replication group.
@@ -353,15 +337,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateSubnetGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         subnet_group_name: "String", # required
-    #         description: "String",
-    #         subnet_ids: ["String"], # required
-    #       }
-    #
     # @!attribute [rw] subnet_group_name
     #   A name for the subnet group. This value is stored as a lowercase
     #   string.
@@ -397,16 +372,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DecreaseReplicationFactorRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cluster_name: "String", # required
-    #         new_replication_factor: 1, # required
-    #         availability_zones: ["String"],
-    #         node_ids_to_remove: ["String"],
-    #       }
-    #
     # @!attribute [rw] cluster_name
     #   The name of the DAX cluster from which you want to remove nodes.
     #   @return [String]
@@ -447,13 +412,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteClusterRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cluster_name: "String", # required
-    #       }
-    #
     # @!attribute [rw] cluster_name
     #   The name of the cluster to be deleted.
     #   @return [String]
@@ -478,13 +436,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteParameterGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         parameter_group_name: "String", # required
-    #       }
-    #
     # @!attribute [rw] parameter_group_name
     #   The name of the parameter group to delete.
     #   @return [String]
@@ -510,13 +461,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteSubnetGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         subnet_group_name: "String", # required
-    #       }
-    #
     # @!attribute [rw] subnet_group_name
     #   The name of the subnet group to delete.
     #   @return [String]
@@ -542,15 +486,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeClustersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cluster_names: ["String"],
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] cluster_names
     #   The names of the DAX clusters being described.
     #   @return [Array<String>]
@@ -599,14 +534,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDefaultParametersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   The maximum number of results to include in the response. If more
     #   results exist than the specified `MaxResults` value, a token is
@@ -650,19 +577,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         source_name: "String",
-    #         source_type: "CLUSTER", # accepts CLUSTER, PARAMETER_GROUP, SUBNET_GROUP
-    #         start_time: Time.now,
-    #         end_time: Time.now,
-    #         duration: 1,
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] source_name
     #   The identifier of the event source for which events will be
     #   returned. If not specified, then all sources are included in the
@@ -735,15 +649,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeParameterGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         parameter_group_names: ["String"],
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] parameter_group_names
     #   The names of the parameter groups.
     #   @return [Array<String>]
@@ -792,16 +697,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeParametersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         parameter_group_name: "String", # required
-    #         source: "String",
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] parameter_group_name
     #   The name of the parameter group.
     #   @return [String]
@@ -856,15 +751,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeSubnetGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         subnet_group_names: ["String"],
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] subnet_group_names
     #   The name of the subnet group.
     #   @return [Array<String>]
@@ -914,8 +800,7 @@ module Aws::DAX
     end
 
     # Represents the information required for client programs to connect to
-    # the configuration endpoint for a DAX cluster, or to an individual node
-    # within the cluster.
+    # the endpoint for a DAX cluster.
     #
     # @!attribute [rw] address
     #   The DNS hostname of the endpoint.
@@ -926,11 +811,18 @@ module Aws::DAX
     #   endpoint.
     #   @return [Integer]
     #
+    # @!attribute [rw] url
+    #   The URL that applications should use to connect to the endpoint. The
+    #   default ports are 8111 for the "dax" protocol and 9111 for the
+    #   "daxs" protocol.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/Endpoint AWS API Documentation
     #
     class Endpoint < Struct.new(
       :address,
-      :port)
+      :port,
+      :url)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -968,15 +860,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass IncreaseReplicationFactorRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cluster_name: "String", # required
-    #         new_replication_factor: 1, # required
-    #         availability_zones: ["String"],
-    #       }
-    #
     # @!attribute [rw] cluster_name
     #   The name of the DAX cluster that will receive additional nodes.
     #   @return [String]
@@ -1077,14 +960,6 @@ module Aws::DAX
     #
     class InvalidVPCNetworkStateFault < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ListTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_name: "String", # required
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] resource_name
     #   The name of the DAX resource to which the tags belong.
     #   @return [String]
@@ -1216,7 +1091,9 @@ module Aws::DAX
     #   @return [String]
     #
     # @!attribute [rw] topic_status
-    #   The current state of the topic.
+    #   The current state of the topic. A value of “active” means that
+    #   notifications will be sent to the topic. A value of “inactive” means
+    #   that notifications will not be sent to the topic.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/NotificationConfiguration AWS API Documentation
@@ -1258,7 +1135,7 @@ module Aws::DAX
     #   @return [String]
     #
     # @!attribute [rw] data_type
-    #   The data type of the parameter. For example, `integer`\:
+    #   The data type of the parameter. For example, `integer`:
     #   @return [String]
     #
     # @!attribute [rw] allowed_values
@@ -1356,14 +1233,6 @@ module Aws::DAX
 
     # An individual DAX parameter.
     #
-    # @note When making an API call, you may pass ParameterNameValue
-    #   data as a hash:
-    #
-    #       {
-    #         parameter_name: "String",
-    #         parameter_value: "String",
-    #       }
-    #
     # @!attribute [rw] parameter_name
     #   The name of the parameter.
     #   @return [String]
@@ -1381,14 +1250,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RebootNodeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cluster_name: "String", # required
-    #         node_id: "String", # required
-    #       }
-    #
     # @!attribute [rw] cluster_name
     #   The name of the DAX cluster containing the node to be rebooted.
     #   @return [String]
@@ -1443,13 +1304,6 @@ module Aws::DAX
 
     # Represents the settings used to enable server-side encryption.
     #
-    # @note When making an API call, you may pass SSESpecification
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #       }
-    #
     # @!attribute [rw] enabled
     #   Indicates whether server-side encryption is enabled (true) or
     #   disabled (false) on the cluster.
@@ -1487,6 +1341,15 @@ module Aws::DAX
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/ServiceLinkedRoleNotFoundFault AWS API Documentation
     #
     class ServiceLinkedRoleNotFoundFault < Aws::EmptyStructure; end
+
+    # You have reached the maximum number of x509 certificates that can be
+    # created for encrypted clusters in a 30 day period. Contact AWS
+    # customer support to discuss options for continuing to create encrypted
+    # clusters.
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/ServiceQuotaExceededException AWS API Documentation
+    #
+    class ServiceQuotaExceededException < Aws::EmptyStructure; end
 
     # Represents the subnet associated with a DAX cluster. This parameter
     # refers to subnets defined in Amazon Virtual Private Cloud (Amazon VPC)
@@ -1592,14 +1455,6 @@ module Aws::DAX
     #
     # You cannot backdate the application of a tag.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "String",
-    #         value: "String",
-    #       }
-    #
     # @!attribute [rw] key
     #   The key for the tag. Tag keys are case sensitive. Every DAX cluster
     #   can only have one tag with the same key. If you try to add an
@@ -1632,19 +1487,6 @@ module Aws::DAX
     #
     class TagQuotaPerResourceExceeded < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_name: "String", # required
-    #         tags: [ # required
-    #           {
-    #             key: "String",
-    #             value: "String",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_name
     #   The name of the DAX resource to which tags should be added.
     #   @return [String]
@@ -1674,14 +1516,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_name: "String", # required
-    #         tag_keys: ["String"], # required
-    #       }
-    #
     # @!attribute [rw] resource_name
     #   The name of the DAX resource from which the tags should be removed.
     #   @return [String]
@@ -1712,19 +1546,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateClusterRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cluster_name: "String", # required
-    #         description: "String",
-    #         preferred_maintenance_window: "String",
-    #         notification_topic_arn: "String",
-    #         notification_topic_status: "String",
-    #         parameter_group_name: "String",
-    #         security_group_ids: ["String"],
-    #       }
-    #
     # @!attribute [rw] cluster_name
     #   The name of the DAX cluster to be modified.
     #   @return [String]
@@ -1745,7 +1566,9 @@ module Aws::DAX
     #   @return [String]
     #
     # @!attribute [rw] notification_topic_status
-    #   The current state of the topic.
+    #   The current state of the topic. A value of “active” means that
+    #   notifications will be sent to the topic. A value of “inactive” means
+    #   that notifications will not be sent to the topic.
     #   @return [String]
     #
     # @!attribute [rw] parameter_group_name
@@ -1784,19 +1607,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateParameterGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         parameter_group_name: "String", # required
-    #         parameter_name_values: [ # required
-    #           {
-    #             parameter_name: "String",
-    #             parameter_value: "String",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] parameter_group_name
     #   The name of the parameter group.
     #   @return [String]
@@ -1804,6 +1614,16 @@ module Aws::DAX
     # @!attribute [rw] parameter_name_values
     #   An array of name-value pairs for the parameters in the group. Each
     #   element in the array represents a single parameter.
+    #
+    #   <note markdown="1"> `record-ttl-millis` and `query-ttl-millis` are the only supported
+    #   parameter names. For more details, see [Configuring TTL
+    #   Settings][1].
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.cluster-management.html#DAX.cluster-management.custom-settings.ttl
     #   @return [Array<Types::ParameterNameValue>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/UpdateParameterGroupRequest AWS API Documentation
@@ -1827,15 +1647,6 @@ module Aws::DAX
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateSubnetGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         subnet_group_name: "String", # required
-    #         description: "String",
-    #         subnet_ids: ["String"],
-    #       }
-    #
     # @!attribute [rw] subnet_group_name
     #   The name of the subnet group.
     #   @return [String]

@@ -69,7 +69,9 @@ module Aws::RDS
     #
     # @return [self]
     def load
-      resp = @client.describe_db_cluster_parameter_groups(db_cluster_parameter_group_name: @name)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_db_cluster_parameter_groups(db_cluster_parameter_group_name: @name)
+      end
       @data = resp.db_cluster_parameter_groups[0]
       self
     end
@@ -184,7 +186,9 @@ module Aws::RDS
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -211,11 +215,46 @@ module Aws::RDS
     #
     #   **Aurora MySQL**
     #
-    #   Example: `aurora5.6`, `aurora-mysql5.7`
+    #   Example: `aurora-mysql5.7`, `aurora-mysql8.0`
     #
     #   **Aurora PostgreSQL**
     #
-    #   Example: `aurora-postgresql9.6`
+    #   Example: `aurora-postgresql14`
+    #
+    #   **RDS for MySQL**
+    #
+    #   Example: `mysql8.0`
+    #
+    #   **RDS for PostgreSQL**
+    #
+    #   Example: `postgres12`
+    #
+    #   To list all of the available parameter group families for a DB engine,
+    #   use the following command:
+    #
+    #   `aws rds describe-db-engine-versions --query
+    #   "DBEngineVersions[].DBParameterGroupFamily" --engine <engine>`
+    #
+    #   For example, to list all of the available parameter group families for
+    #   the Aurora PostgreSQL DB engine, use the following command:
+    #
+    #   `aws rds describe-db-engine-versions --query
+    #   "DBEngineVersions[].DBParameterGroupFamily" --engine
+    #   aurora-postgresql`
+    #
+    #   <note markdown="1"> The output contains duplicates.
+    #
+    #    </note>
+    #
+    #   The following are the valid DB engine values:
+    #
+    #   * `aurora-mysql`
+    #
+    #   * `aurora-postgresql`
+    #
+    #   * `mysql`
+    #
+    #   * `postgres`
     # @option options [required, String] :description
     #   The description for the DB cluster parameter group.
     # @option options [Array<Types::Tag>] :tags
@@ -223,7 +262,9 @@ module Aws::RDS
     # @return [DBClusterParameterGroup]
     def create(options = {})
       options = options.merge(db_cluster_parameter_group_name: @name)
-      resp = @client.create_db_cluster_parameter_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_db_cluster_parameter_group(options)
+      end
       DBClusterParameterGroup.new(
         name: resp.data.db_cluster_parameter_group.db_cluster_parameter_group_name,
         data: resp.data.db_cluster_parameter_group,
@@ -238,7 +279,9 @@ module Aws::RDS
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(db_cluster_parameter_group_name: @name)
-      resp = @client.delete_db_cluster_parameter_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_db_cluster_parameter_group(options)
+      end
       resp.data
     end
 
@@ -264,10 +307,28 @@ module Aws::RDS
     # @param [Hash] options ({})
     # @option options [required, Array<Types::Parameter>] :parameters
     #   A list of parameters in the DB cluster parameter group to modify.
+    #
+    #   Valid Values (for the application method): `immediate |
+    #   pending-reboot`
+    #
+    #   <note markdown="1"> You can use the `immediate` value with dynamic parameters only. You
+    #   can use the `pending-reboot` value for both dynamic and static
+    #   parameters.
+    #
+    #    When the application method is `immediate`, changes to dynamic
+    #   parameters are applied immediately to the DB clusters associated with
+    #   the parameter group. When the application method is `pending-reboot`,
+    #   changes to dynamic and static parameters are applied after a reboot
+    #   without failover to the DB clusters associated with the parameter
+    #   group.
+    #
+    #    </note>
     # @return [DBClusterParameterGroup]
     def modify(options = {})
       options = options.merge(db_cluster_parameter_group_name: @name)
-      resp = @client.modify_db_cluster_parameter_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.modify_db_cluster_parameter_group(options)
+      end
       DBClusterParameterGroup.new(
         name: resp.data.db_cluster_parameter_group_name,
         client: @client
@@ -307,7 +368,9 @@ module Aws::RDS
     # @return [DBClusterParameterGroup]
     def reset(options = {})
       options = options.merge(db_cluster_parameter_group_name: @name)
-      resp = @client.reset_db_cluster_parameter_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.reset_db_cluster_parameter_group(options)
+      end
       DBClusterParameterGroup.new(
         name: resp.data.db_cluster_parameter_group_name,
         client: @client

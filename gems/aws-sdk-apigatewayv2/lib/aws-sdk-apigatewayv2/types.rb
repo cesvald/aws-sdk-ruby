@@ -21,14 +21,6 @@ module Aws::ApiGatewayV2
 
     # Settings for logging access in a stage.
     #
-    # @note When making an API call, you may pass AccessLogSettings
-    #   data as a hash:
-    #
-    #       {
-    #         destination_arn: "Arn",
-    #         format: "StringWithLengthBetween1And1024",
-    #       }
-    #
     # @!attribute [rw] destination_arn
     #   The ARN of the CloudWatch Logs log group to receive access logs.
     #   @return [String]
@@ -249,9 +241,9 @@ module Aws::ApiGatewayV2
     #   The authorizer's Uniform Resource Identifier (URI). For REQUEST
     #   authorizers, this must be a well-formed Lambda function URI, for
     #   example,
-    #   arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:*\\\{account\_id\\}*\:function:*\\\{lambda\_function\_name\\}*/invocations.
+    #   arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:*\\\{account\_id\\}*:function:*\\\{lambda\_function\_name\\}*/invocations.
     #   In general, the URI has this form:
-    #   arn:aws:apigateway:*\\\{region\\}*\:lambda:path/*\\\{service\_api\\}*
+    #   arn:aws:apigateway:*\\\{region\\}*:lambda:path/*\\\{service\_api\\}*
     #   , where <replaceable />
     #
     #   \\\{region\\} is the same as the region hosting the Lambda function,
@@ -396,18 +388,6 @@ module Aws::ApiGatewayV2
     #
     #
     # [1]: https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-cors.html
-    #
-    # @note When making an API call, you may pass Cors
-    #   data as a hash:
-    #
-    #       {
-    #         allow_credentials: false,
-    #         allow_headers: ["__string"],
-    #         allow_methods: ["StringWithLengthBetween1And64"],
-    #         allow_origins: ["__string"],
-    #         expose_headers: ["__string"],
-    #         max_age: 1,
-    #       }
     #
     # @!attribute [rw] allow_credentials
     #   Specifies whether credentials are included in the CORS request.
@@ -576,16 +556,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateApiMappingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "Id", # required
-    #         api_mapping_key: "SelectionKey",
-    #         domain_name: "__string", # required
-    #         stage: "StringWithLengthBetween1And128", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   The identifier.
     #   @return [String]
@@ -649,34 +619,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateApiRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_key_selection_expression: "SelectionExpression",
-    #         cors_configuration: {
-    #           allow_credentials: false,
-    #           allow_headers: ["__string"],
-    #           allow_methods: ["StringWithLengthBetween1And64"],
-    #           allow_origins: ["__string"],
-    #           expose_headers: ["__string"],
-    #           max_age: 1,
-    #         },
-    #         credentials_arn: "Arn",
-    #         description: "StringWithLengthBetween0And1024",
-    #         disable_schema_validation: false,
-    #         disable_execute_api_endpoint: false,
-    #         name: "StringWithLengthBetween1And128", # required
-    #         protocol_type: "WEBSOCKET", # required, accepts WEBSOCKET, HTTP
-    #         route_key: "SelectionKey",
-    #         route_selection_expression: "SelectionExpression",
-    #         tags: {
-    #           "__string" => "StringWithLengthBetween1And1600",
-    #         },
-    #         target: "UriWithLengthBetween1And2048",
-    #         version: "StringWithLengthBetween1And64",
-    #       }
-    #
     # @!attribute [rw] api_key_selection_expression
     #   An expression used to extract information at runtime. See [Selection
     #   Expressions][1] for more information.
@@ -887,9 +829,9 @@ module Aws::ApiGatewayV2
     #   The authorizer's Uniform Resource Identifier (URI). For REQUEST
     #   authorizers, this must be a well-formed Lambda function URI, for
     #   example,
-    #   arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:*\\\{account\_id\\}*\:function:*\\\{lambda\_function\_name\\}*/invocations.
+    #   arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:*\\\{account\_id\\}*:function:*\\\{lambda\_function\_name\\}*/invocations.
     #   In general, the URI has this form:
-    #   arn:aws:apigateway:*\\\{region\\}*\:lambda:path/*\\\{service\_api\\}*
+    #   arn:aws:apigateway:*\\\{region\\}*:lambda:path/*\\\{service\_api\\}*
     #   , where <replaceable />
     #
     #   \\\{region\\} is the same as the region hosting the Lambda function,
@@ -982,26 +924,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateAuthorizerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         authorizer_credentials_arn: "Arn",
-    #         authorizer_result_ttl_in_seconds: 1,
-    #         authorizer_type: "REQUEST", # required, accepts REQUEST, JWT
-    #         authorizer_uri: "UriWithLengthBetween1And2048",
-    #         identity_source: ["__string"], # required
-    #         identity_validation_expression: "StringWithLengthBetween0And1024",
-    #         jwt_configuration: {
-    #           audience: ["__string"],
-    #           issuer: "UriWithLengthBetween1And2048",
-    #         },
-    #         name: "StringWithLengthBetween1And128", # required
-    #         authorizer_payload_format_version: "StringWithLengthBetween1And64",
-    #         enable_simple_responses: false,
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -1173,15 +1095,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDeploymentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         description: "StringWithLengthBetween0And1024",
-    #         stage_name: "StringWithLengthBetween1And128",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -1261,33 +1174,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDomainNameRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "StringWithLengthBetween1And512", # required
-    #         domain_name_configurations: [
-    #           {
-    #             api_gateway_domain_name: "__string",
-    #             certificate_arn: "Arn",
-    #             certificate_name: "StringWithLengthBetween1And128",
-    #             certificate_upload_date: Time.now,
-    #             domain_name_status: "AVAILABLE", # accepts AVAILABLE, UPDATING
-    #             domain_name_status_message: "__string",
-    #             endpoint_type: "REGIONAL", # accepts REGIONAL, EDGE
-    #             hosted_zone_id: "__string",
-    #             security_policy: "TLS_1_0", # accepts TLS_1_0, TLS_1_2
-    #           },
-    #         ],
-    #         mutual_tls_authentication: {
-    #           truststore_uri: "UriWithLengthBetween1And2048",
-    #           truststore_version: "StringWithLengthBetween1And64",
-    #         },
-    #         tags: {
-    #           "__string" => "StringWithLengthBetween1And1600",
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   A string with a length between \[1-512\].
     #   @return [String]
@@ -1501,7 +1387,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -1520,7 +1406,7 @@ module Aws::ApiGatewayV2
     #   selection key to response parameters. The selection key must be a
     #   valid HTTP status code within the range of 200-599. Response
     #   parameters are a key-value map. The key must match pattern
-    #   &lt;action&gt;\:&lt;header&gt;.&lt;location&gt; or
+    #   &lt;action&gt;:&lt;header&gt;.&lt;location&gt; or
     #   overwrite.statuscode. The action can be append, overwrite or remove.
     #   The value can be a static value, or map to response data, stage
     #   variables, or context variables that are evaluated at runtime. To
@@ -1578,40 +1464,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateIntegrationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         connection_id: "StringWithLengthBetween1And1024",
-    #         connection_type: "INTERNET", # accepts INTERNET, VPC_LINK
-    #         content_handling_strategy: "CONVERT_TO_BINARY", # accepts CONVERT_TO_BINARY, CONVERT_TO_TEXT
-    #         credentials_arn: "Arn",
-    #         description: "StringWithLengthBetween0And1024",
-    #         integration_method: "StringWithLengthBetween1And64",
-    #         integration_subtype: "StringWithLengthBetween1And128",
-    #         integration_type: "AWS", # required, accepts AWS, HTTP, MOCK, HTTP_PROXY, AWS_PROXY
-    #         integration_uri: "UriWithLengthBetween1And2048",
-    #         passthrough_behavior: "WHEN_NO_MATCH", # accepts WHEN_NO_MATCH, NEVER, WHEN_NO_TEMPLATES
-    #         payload_format_version: "StringWithLengthBetween1And64",
-    #         request_parameters: {
-    #           "__string" => "StringWithLengthBetween1And512",
-    #         },
-    #         response_parameters: {
-    #           "__string" => {
-    #             "__string" => "StringWithLengthBetween1And512",
-    #           },
-    #         },
-    #         request_templates: {
-    #           "__string" => "StringWithLengthBetween0And32K",
-    #         },
-    #         template_selection_expression: "SelectionExpression",
-    #         timeout_in_millis: 1,
-    #         tls_config: {
-    #           server_name_to_verify: "StringWithLengthBetween1And512",
-    #         },
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -1683,7 +1535,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -1833,7 +1685,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -1962,23 +1814,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateIntegrationResponseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         content_handling_strategy: "CONVERT_TO_BINARY", # accepts CONVERT_TO_BINARY, CONVERT_TO_TEXT
-    #         integration_id: "__string", # required
-    #         integration_response_key: "SelectionKey", # required
-    #         response_parameters: {
-    #           "__string" => "StringWithLengthBetween1And512",
-    #         },
-    #         response_templates: {
-    #           "__string" => "StringWithLengthBetween0And32K",
-    #         },
-    #         template_selection_expression: "SelectionExpression",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -2023,7 +1858,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -2104,7 +1939,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -2170,17 +2005,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateModelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         content_type: "StringWithLengthBetween1And256",
-    #         description: "StringWithLengthBetween0And1024",
-    #         name: "StringWithLengthBetween1And128", # required
-    #         schema: "StringWithLengthBetween0And32K", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -2313,30 +2137,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateRouteRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         api_key_required: false,
-    #         authorization_scopes: ["StringWithLengthBetween1And64"],
-    #         authorization_type: "NONE", # accepts NONE, AWS_IAM, CUSTOM, JWT
-    #         authorizer_id: "Id",
-    #         model_selection_expression: "SelectionExpression",
-    #         operation_name: "StringWithLengthBetween1And64",
-    #         request_models: {
-    #           "__string" => "StringWithLengthBetween1And128",
-    #         },
-    #         request_parameters: {
-    #           "__string" => {
-    #             required: false,
-    #           },
-    #         },
-    #         route_key: "SelectionKey", # required
-    #         route_response_selection_expression: "SelectionExpression",
-    #         target: "StringWithLengthBetween1And128",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -2554,24 +2354,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateRouteResponseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         model_selection_expression: "SelectionExpression",
-    #         response_models: {
-    #           "__string" => "StringWithLengthBetween1And128",
-    #         },
-    #         response_parameters: {
-    #           "__string" => {
-    #             required: false,
-    #           },
-    #         },
-    #         route_id: "__string", # required
-    #         route_response_key: "SelectionKey", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -2721,44 +2503,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateStageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         access_log_settings: {
-    #           destination_arn: "Arn",
-    #           format: "StringWithLengthBetween1And1024",
-    #         },
-    #         api_id: "__string", # required
-    #         auto_deploy: false,
-    #         client_certificate_id: "Id",
-    #         default_route_settings: {
-    #           data_trace_enabled: false,
-    #           detailed_metrics_enabled: false,
-    #           logging_level: "ERROR", # accepts ERROR, INFO, OFF
-    #           throttling_burst_limit: 1,
-    #           throttling_rate_limit: 1.0,
-    #         },
-    #         deployment_id: "Id",
-    #         description: "StringWithLengthBetween0And1024",
-    #         route_settings: {
-    #           "__string" => {
-    #             data_trace_enabled: false,
-    #             detailed_metrics_enabled: false,
-    #             logging_level: "ERROR", # accepts ERROR, INFO, OFF
-    #             throttling_burst_limit: 1,
-    #             throttling_rate_limit: 1.0,
-    #           },
-    #         },
-    #         stage_name: "StringWithLengthBetween1And128", # required
-    #         stage_variables: {
-    #           "__string" => "StringWithLengthBetween0And2048",
-    #         },
-    #         tags: {
-    #           "__string" => "StringWithLengthBetween1And1600",
-    #         },
-    #       }
-    #
     # @!attribute [rw] access_log_settings
     #   Settings for logging access in a stage.
     #   @return [Types::AccessLogSettings]
@@ -2914,18 +2658,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateVpcLinkRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "StringWithLengthBetween1And128", # required
-    #         security_group_ids: ["__string"],
-    #         subnet_ids: ["__string"], # required
-    #         tags: {
-    #           "__string" => "StringWithLengthBetween1And1600",
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   A string with a length between \[1-128\].
     #   @return [String]
@@ -3000,14 +2732,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteAccessLogSettingsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         stage_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3021,14 +2745,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteApiMappingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_mapping_id: "__string", # required
-    #         domain_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_mapping_id
     #   @return [String]
     #
@@ -3042,13 +2758,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteApiRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3058,14 +2767,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteAuthorizerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         authorizer_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3079,13 +2780,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteCorsConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3095,14 +2789,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDeploymentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         deployment_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3116,13 +2802,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDomainNameRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   @return [String]
     #
@@ -3132,14 +2811,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteIntegrationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         integration_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3153,15 +2824,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteIntegrationResponseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         integration_id: "__string", # required
-    #         integration_response_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3179,14 +2841,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteModelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         model_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3200,14 +2854,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRouteRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         route_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3221,15 +2867,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRouteRequestParameterRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         request_parameter_key: "__string", # required
-    #         route_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3247,15 +2884,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRouteResponseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         route_id: "__string", # required
-    #         route_response_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3273,15 +2901,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRouteSettingsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         route_key: "__string", # required
-    #         stage_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3299,14 +2918,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteStageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         stage_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3320,13 +2931,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteVpcLinkRequest
-    #   data as a hash:
-    #
-    #       {
-    #         vpc_link_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] vpc_link_id
     #   @return [String]
     #
@@ -3433,21 +3037,6 @@ module Aws::ApiGatewayV2
 
     # The domain name configuration.
     #
-    # @note When making an API call, you may pass DomainNameConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         api_gateway_domain_name: "__string",
-    #         certificate_arn: "Arn",
-    #         certificate_name: "StringWithLengthBetween1And128",
-    #         certificate_upload_date: Time.now,
-    #         domain_name_status: "AVAILABLE", # accepts AVAILABLE, UPDATING
-    #         domain_name_status_message: "__string",
-    #         endpoint_type: "REGIONAL", # accepts REGIONAL, EDGE
-    #         hosted_zone_id: "__string",
-    #         security_policy: "TLS_1_0", # accepts TLS_1_0, TLS_1_2
-    #       }
-    #
     # @!attribute [rw] api_gateway_domain_name
     #   A domain name for the API.
     #   @return [String]
@@ -3470,9 +3059,10 @@ module Aws::ApiGatewayV2
     #
     # @!attribute [rw] domain_name_status
     #   The status of the domain name migration. The valid values are
-    #   AVAILABLE and UPDATING. If the status is UPDATING, the domain cannot
-    #   be modified further until the existing operation is complete. If it
-    #   is AVAILABLE, the domain can be updated.
+    #   AVAILABLE, UPDATING, PENDING\_CERTIFICATE\_REIMPORT, and
+    #   PENDING\_OWNERSHIP\_VERIFICATION. If the status is UPDATING, the
+    #   domain cannot be modified further until the existing operation is
+    #   complete. If it is AVAILABLE, the domain can be updated.
     #   @return [String]
     #
     # @!attribute [rw] domain_name_status_message
@@ -3493,6 +3083,13 @@ module Aws::ApiGatewayV2
     #   for this domain name. The valid values are TLS\_1\_0 and TLS\_1\_2.
     #   @return [String]
     #
+    # @!attribute [rw] ownership_verification_certificate_arn
+    #   The ARN of the public certificate issued by ACM to validate
+    #   ownership of your custom domain. Only required when configuring
+    #   mutual TLS and using an ACM imported or private CA certificate ARN
+    #   as the regionalCertificateArn
+    #   @return [String]
+    #
     class DomainNameConfiguration < Struct.new(
       :api_gateway_domain_name,
       :certificate_arn,
@@ -3502,7 +3099,8 @@ module Aws::ApiGatewayV2
       :domain_name_status_message,
       :endpoint_type,
       :hosted_zone_id,
-      :security_policy)
+      :security_policy,
+      :ownership_verification_certificate_arn)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3525,18 +3123,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ExportApiRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         export_version: "__string",
-    #         include_extensions: false,
-    #         output_type: "__string", # required
-    #         specification: "__string", # required
-    #         stage_name: "__string",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3578,14 +3164,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ResetAuthorizersCacheRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         stage_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3599,14 +3177,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetApiMappingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_mapping_id: "__string", # required
-    #         domain_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_mapping_id
     #   @return [String]
     #
@@ -3652,15 +3222,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetApiMappingsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "__string", # required
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   @return [String]
     #
@@ -3693,13 +3254,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetApiRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3802,14 +3356,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetApisRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   @return [String]
     #
@@ -3838,14 +3384,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAuthorizerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         authorizer_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3936,15 +3474,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAuthorizersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -3977,14 +3506,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDeploymentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         deployment_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4030,15 +3551,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDeploymentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4071,13 +3583,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDomainNameRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   @return [String]
     #
@@ -4124,14 +3629,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDomainNamesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   @return [String]
     #
@@ -4160,14 +3657,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetIntegrationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         integration_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4265,7 +3754,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -4333,15 +3822,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetIntegrationResponseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         integration_id: "__string", # required
-    #         integration_response_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4401,7 +3881,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -4439,16 +3919,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetIntegrationResponsesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         integration_id: "__string", # required
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4485,15 +3955,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetIntegrationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4526,14 +3987,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetModelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         model_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4577,14 +4030,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetModelTemplateRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         model_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4607,15 +4052,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetModelsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4648,14 +4084,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetRouteRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         route_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4766,15 +4194,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetRouteResponseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         route_id: "__string", # required
-    #         route_response_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4834,16 +4253,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetRouteResponsesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #         route_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4880,15 +4289,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetRoutesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -4921,14 +4321,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetStageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         stage_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -5012,15 +4404,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetStagesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -5053,13 +4436,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "__string", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   @return [String]
     #
@@ -5079,13 +4455,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetVpcLinkRequest
-    #   data as a hash:
-    #
-    #       {
-    #         vpc_link_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] vpc_link_id
     #   @return [String]
     #
@@ -5144,14 +4513,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetVpcLinksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: "__string",
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   @return [String]
     #
@@ -5192,15 +4553,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ImportApiRequest
-    #   data as a hash:
-    #
-    #       {
-    #         basepath: "__string",
-    #         body: "__string", # required
-    #         fail_on_warnings: false,
-    #       }
-    #
     # @!attribute [rw] basepath
     #   @return [String]
     #
@@ -5480,7 +4832,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to backend integrations. The key
     #   should follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;.
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;.
     #   The action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -5499,7 +4851,7 @@ module Aws::ApiGatewayV2
     #   selection key to response parameters. The selection key must be a
     #   valid HTTP status code within the range of 200-599. Response
     #   parameters are a key-value map. The key must match pattern
-    #   &lt;action&gt;\:&lt;header&gt;.&lt;location&gt; or
+    #   &lt;action&gt;:&lt;header&gt;.&lt;location&gt; or
     #   overwrite.statuscode. The action can be append, overwrite or remove.
     #   The value can be a static value, or map to response data, stage
     #   variables, or context variables that are evaluated at runtime. To
@@ -5664,14 +5016,6 @@ module Aws::ApiGatewayV2
     # Represents the configuration of a JWT authorizer. Required for the JWT
     # authorizer type. Supported only for HTTP APIs.
     #
-    # @note When making an API call, you may pass JWTConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         audience: ["__string"],
-    #         issuer: "UriWithLengthBetween1And2048",
-    #       }
-    #
     # @!attribute [rw] audience
     #   A list of the intended recipients of the JWT. A valid JWT must
     #   provide an aud that matches at least one entry in this list. See
@@ -5818,14 +5162,6 @@ module Aws::ApiGatewayV2
     # client and the server. Clients must present a trusted certificate to
     # access your API.
     #
-    # @note When making an API call, you may pass MutualTlsAuthenticationInput
-    #   data as a hash:
-    #
-    #       {
-    #         truststore_uri: "UriWithLengthBetween1And2048",
-    #         truststore_version: "StringWithLengthBetween1And64",
-    #       }
-    #
     # @!attribute [rw] truststore_uri
     #   An Amazon S3 URL that specifies the truststore for mutual TLS
     #   authentication, for example, s3://*bucket-name*/*key-name* . The
@@ -5870,13 +5206,6 @@ module Aws::ApiGatewayV2
     # Validation constraints imposed on parameters of a request (path, query
     # string, headers).
     #
-    # @note When making an API call, you may pass ParameterConstraints
-    #   data as a hash:
-    #
-    #       {
-    #         required: false,
-    #       }
-    #
     # @!attribute [rw] required
     #   Whether or not the parameter is required.
     #   @return [Boolean]
@@ -5900,16 +5229,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ReimportApiRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         basepath: "__string",
-    #         body: "__string", # required
-    #         fail_on_warnings: false,
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -6170,17 +5489,6 @@ module Aws::ApiGatewayV2
 
     # Represents a collection of route settings.
     #
-    # @note When making an API call, you may pass RouteSettings
-    #   data as a hash:
-    #
-    #       {
-    #         data_trace_enabled: false,
-    #         detailed_metrics_enabled: false,
-    #         logging_level: "ERROR", # accepts ERROR, INFO, OFF
-    #         throttling_burst_limit: 1,
-    #         throttling_rate_limit: 1.0,
-    #       }
-    #
     # @!attribute [rw] data_trace_enabled
     #   Specifies whether (true) or not (false) data trace logging is
     #   enabled for this route. This property affects the log entries pushed
@@ -6351,16 +5659,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "__string", # required
-    #         tags: {
-    #           "__string" => "StringWithLengthBetween1And1600",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   @return [String]
     #
@@ -6410,13 +5708,6 @@ module Aws::ApiGatewayV2
     # configuration, private integration traffic uses the HTTPS protocol.
     # Supported only for HTTP APIs.
     #
-    # @note When making an API call, you may pass TlsConfigInput
-    #   data as a hash:
-    #
-    #       {
-    #         server_name_to_verify: "StringWithLengthBetween1And512",
-    #       }
-    #
     # @!attribute [rw] server_name_to_verify
     #   If you specify a server name, API Gateway uses it to verify the
     #   hostname on the integration's certificate. The server name is also
@@ -6446,14 +5737,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "__string", # required
-    #         tag_keys: ["__string"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   @return [String]
     #
@@ -6576,17 +5859,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateApiMappingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "Id", # required
-    #         api_mapping_id: "__string", # required
-    #         api_mapping_key: "SelectionKey",
-    #         domain_name: "__string", # required
-    #         stage: "StringWithLengthBetween1And128",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   The identifier.
     #   @return [String]
@@ -6654,31 +5926,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateApiRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         api_key_selection_expression: "SelectionExpression",
-    #         cors_configuration: {
-    #           allow_credentials: false,
-    #           allow_headers: ["__string"],
-    #           allow_methods: ["StringWithLengthBetween1And64"],
-    #           allow_origins: ["__string"],
-    #           expose_headers: ["__string"],
-    #           max_age: 1,
-    #         },
-    #         credentials_arn: "Arn",
-    #         description: "StringWithLengthBetween0And1024",
-    #         disable_schema_validation: false,
-    #         disable_execute_api_endpoint: false,
-    #         name: "StringWithLengthBetween1And128",
-    #         route_key: "SelectionKey",
-    #         route_selection_expression: "SelectionExpression",
-    #         target: "UriWithLengthBetween1And2048",
-    #         version: "StringWithLengthBetween1And64",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -6882,9 +6129,9 @@ module Aws::ApiGatewayV2
     #   The authorizer's Uniform Resource Identifier (URI). For REQUEST
     #   authorizers, this must be a well-formed Lambda function URI, for
     #   example,
-    #   arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:*\\\{account\_id\\}*\:function:*\\\{lambda\_function\_name\\}*/invocations.
+    #   arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:*\\\{account\_id\\}*:function:*\\\{lambda\_function\_name\\}*/invocations.
     #   In general, the URI has this form:
-    #   arn:aws:apigateway:*\\\{region\\}*\:lambda:path/*\\\{service\_api\\}*
+    #   arn:aws:apigateway:*\\\{region\\}*:lambda:path/*\\\{service\_api\\}*
     #   , where <replaceable />
     #
     #   \\\{region\\} is the same as the region hosting the Lambda function,
@@ -6977,27 +6224,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateAuthorizerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         authorizer_credentials_arn: "Arn",
-    #         authorizer_id: "__string", # required
-    #         authorizer_result_ttl_in_seconds: 1,
-    #         authorizer_type: "REQUEST", # accepts REQUEST, JWT
-    #         authorizer_uri: "UriWithLengthBetween1And2048",
-    #         identity_source: ["__string"],
-    #         identity_validation_expression: "StringWithLengthBetween0And1024",
-    #         jwt_configuration: {
-    #           audience: ["__string"],
-    #           issuer: "UriWithLengthBetween1And2048",
-    #         },
-    #         name: "StringWithLengthBetween1And128",
-    #         authorizer_payload_format_version: "StringWithLengthBetween1And64",
-    #         enable_simple_responses: false,
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -7167,15 +6393,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateDeploymentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         deployment_id: "__string", # required
-    #         description: "StringWithLengthBetween0And1024",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -7244,30 +6461,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateDomainNameRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "__string", # required
-    #         domain_name_configurations: [
-    #           {
-    #             api_gateway_domain_name: "__string",
-    #             certificate_arn: "Arn",
-    #             certificate_name: "StringWithLengthBetween1And128",
-    #             certificate_upload_date: Time.now,
-    #             domain_name_status: "AVAILABLE", # accepts AVAILABLE, UPDATING
-    #             domain_name_status_message: "__string",
-    #             endpoint_type: "REGIONAL", # accepts REGIONAL, EDGE
-    #             hosted_zone_id: "__string",
-    #             security_policy: "TLS_1_0", # accepts TLS_1_0, TLS_1_2
-    #           },
-    #         ],
-    #         mutual_tls_authentication: {
-    #           truststore_uri: "UriWithLengthBetween1And2048",
-    #           truststore_version: "StringWithLengthBetween1And64",
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   @return [String]
     #
@@ -7475,7 +6668,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -7494,7 +6687,7 @@ module Aws::ApiGatewayV2
     #   selection key to response parameters. The selection key must be a
     #   valid HTTP status code within the range of 200-599. Response
     #   parameters are a key-value map. The key must match pattern
-    #   &lt;action&gt;\:&lt;header&gt;.&lt;location&gt; or
+    #   &lt;action&gt;:&lt;header&gt;.&lt;location&gt; or
     #   overwrite.statuscode. The action can be append, overwrite or remove.
     #   The value can be a static value, or map to response data, stage
     #   variables, or context variables that are evaluated at runtime. To
@@ -7552,41 +6745,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateIntegrationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         connection_id: "StringWithLengthBetween1And1024",
-    #         connection_type: "INTERNET", # accepts INTERNET, VPC_LINK
-    #         content_handling_strategy: "CONVERT_TO_BINARY", # accepts CONVERT_TO_BINARY, CONVERT_TO_TEXT
-    #         credentials_arn: "Arn",
-    #         description: "StringWithLengthBetween0And1024",
-    #         integration_id: "__string", # required
-    #         integration_method: "StringWithLengthBetween1And64",
-    #         integration_subtype: "StringWithLengthBetween1And128",
-    #         integration_type: "AWS", # accepts AWS, HTTP, MOCK, HTTP_PROXY, AWS_PROXY
-    #         integration_uri: "UriWithLengthBetween1And2048",
-    #         passthrough_behavior: "WHEN_NO_MATCH", # accepts WHEN_NO_MATCH, NEVER, WHEN_NO_TEMPLATES
-    #         payload_format_version: "StringWithLengthBetween1And64",
-    #         request_parameters: {
-    #           "__string" => "StringWithLengthBetween1And512",
-    #         },
-    #         response_parameters: {
-    #           "__string" => {
-    #             "__string" => "StringWithLengthBetween1And512",
-    #           },
-    #         },
-    #         request_templates: {
-    #           "__string" => "StringWithLengthBetween0And32K",
-    #         },
-    #         template_selection_expression: "SelectionExpression",
-    #         timeout_in_millis: 1,
-    #         tls_config: {
-    #           server_name_to_verify: "StringWithLengthBetween1And512",
-    #         },
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -7661,7 +6819,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -7812,7 +6970,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -7942,24 +7100,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateIntegrationResponseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         content_handling_strategy: "CONVERT_TO_BINARY", # accepts CONVERT_TO_BINARY, CONVERT_TO_TEXT
-    #         integration_id: "__string", # required
-    #         integration_response_id: "__string", # required
-    #         integration_response_key: "SelectionKey",
-    #         response_parameters: {
-    #           "__string" => "StringWithLengthBetween1And512",
-    #         },
-    #         response_templates: {
-    #           "__string" => "StringWithLengthBetween0And32K",
-    #         },
-    #         template_selection_expression: "SelectionExpression",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -8007,7 +7147,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -8089,7 +7229,7 @@ module Aws::ApiGatewayV2
     #   request parameters are a key-value map specifying how to transform
     #   HTTP requests before sending them to the backend. The key should
     #   follow the pattern
-    #   &lt;action&gt;\:&lt;header\|querystring\|path&gt;.&lt;location&gt;
+    #   &lt;action&gt;:&lt;header\|querystring\|path&gt;.&lt;location&gt;
     #   where action can be append, overwrite or remove. For values, you can
     #   provide static values, or map request data, stage variables, or
     #   context variables that are evaluated at runtime. To learn more, see
@@ -8156,18 +7296,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateModelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         content_type: "StringWithLengthBetween1And256",
-    #         description: "StringWithLengthBetween0And1024",
-    #         model_id: "__string", # required
-    #         name: "StringWithLengthBetween1And128",
-    #         schema: "StringWithLengthBetween0And32K",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -8304,31 +7432,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateRouteRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         api_key_required: false,
-    #         authorization_scopes: ["StringWithLengthBetween1And64"],
-    #         authorization_type: "NONE", # accepts NONE, AWS_IAM, CUSTOM, JWT
-    #         authorizer_id: "Id",
-    #         model_selection_expression: "SelectionExpression",
-    #         operation_name: "StringWithLengthBetween1And64",
-    #         request_models: {
-    #           "__string" => "StringWithLengthBetween1And128",
-    #         },
-    #         request_parameters: {
-    #           "__string" => {
-    #             required: false,
-    #           },
-    #         },
-    #         route_id: "__string", # required
-    #         route_key: "SelectionKey",
-    #         route_response_selection_expression: "SelectionExpression",
-    #         target: "StringWithLengthBetween1And128",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -8550,25 +7653,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateRouteResponseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         api_id: "__string", # required
-    #         model_selection_expression: "SelectionExpression",
-    #         response_models: {
-    #           "__string" => "StringWithLengthBetween1And128",
-    #         },
-    #         response_parameters: {
-    #           "__string" => {
-    #             required: false,
-    #           },
-    #         },
-    #         route_id: "__string", # required
-    #         route_response_id: "__string", # required
-    #         route_response_key: "SelectionKey",
-    #       }
-    #
     # @!attribute [rw] api_id
     #   @return [String]
     #
@@ -8711,41 +7795,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateStageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         access_log_settings: {
-    #           destination_arn: "Arn",
-    #           format: "StringWithLengthBetween1And1024",
-    #         },
-    #         api_id: "__string", # required
-    #         auto_deploy: false,
-    #         client_certificate_id: "Id",
-    #         default_route_settings: {
-    #           data_trace_enabled: false,
-    #           detailed_metrics_enabled: false,
-    #           logging_level: "ERROR", # accepts ERROR, INFO, OFF
-    #           throttling_burst_limit: 1,
-    #           throttling_rate_limit: 1.0,
-    #         },
-    #         deployment_id: "Id",
-    #         description: "StringWithLengthBetween0And1024",
-    #         route_settings: {
-    #           "__string" => {
-    #             data_trace_enabled: false,
-    #             detailed_metrics_enabled: false,
-    #             logging_level: "ERROR", # accepts ERROR, INFO, OFF
-    #             throttling_burst_limit: 1,
-    #             throttling_rate_limit: 1.0,
-    #           },
-    #         },
-    #         stage_name: "__string", # required
-    #         stage_variables: {
-    #           "__string" => "StringWithLengthBetween0And2048",
-    #         },
-    #       }
-    #
     # @!attribute [rw] access_log_settings
     #   Settings for logging access in a stage.
     #   @return [Types::AccessLogSettings]
@@ -8880,14 +7929,6 @@ module Aws::ApiGatewayV2
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateVpcLinkRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "StringWithLengthBetween1And128",
-    #         vpc_link_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   A string with a length between \[1-128\].
     #   @return [String]

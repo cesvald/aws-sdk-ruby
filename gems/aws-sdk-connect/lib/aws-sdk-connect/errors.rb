@@ -27,19 +27,25 @@ module Aws::Connect
   # See {Seahorse::Client::RequestContext} for more information.
   #
   # ## Error Classes
+  # * {AccessDeniedException}
   # * {ContactFlowNotPublishedException}
   # * {ContactNotFoundException}
   # * {DestinationNotAllowedException}
   # * {DuplicateResourceException}
+  # * {IdempotencyException}
   # * {InternalServiceException}
   # * {InvalidContactFlowException}
+  # * {InvalidContactFlowModuleException}
   # * {InvalidParameterException}
   # * {InvalidRequestException}
   # * {LimitExceededException}
+  # * {MaximumResultReturnedException}
   # * {OutboundContactNotPermittedException}
+  # * {PropertyValidationException}
   # * {ResourceConflictException}
   # * {ResourceInUseException}
   # * {ResourceNotFoundException}
+  # * {ResourceNotReadyException}
   # * {ServiceQuotaExceededException}
   # * {ThrottlingException}
   # * {UserNotFoundException}
@@ -49,6 +55,21 @@ module Aws::Connect
   module Errors
 
     extend Aws::Errors::DynamicErrors
+
+    class AccessDeniedException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Connect::Types::AccessDeniedException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
 
     class ContactFlowNotPublishedException < ServiceError
 
@@ -110,6 +131,21 @@ module Aws::Connect
       end
     end
 
+    class IdempotencyException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Connect::Types::IdempotencyException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class InternalServiceException < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -130,6 +166,21 @@ module Aws::Connect
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::Connect::Types::InvalidContactFlowException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def problems
+        @data[:problems]
+      end
+    end
+
+    class InvalidContactFlowModuleException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Connect::Types::InvalidContactFlowModuleException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -185,6 +236,21 @@ module Aws::Connect
       end
     end
 
+    class MaximumResultReturnedException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Connect::Types::MaximumResultReturnedException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class OutboundContactNotPermittedException < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -197,6 +263,26 @@ module Aws::Connect
       # @return [String]
       def message
         @message || @data[:message]
+      end
+    end
+
+    class PropertyValidationException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Connect::Types::PropertyValidationException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+
+      # @return [String]
+      def property_list
+        @data[:property_list]
       end
     end
 
@@ -245,6 +331,21 @@ module Aws::Connect
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::Connect::Types::ResourceNotFoundException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class ResourceNotReadyException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Connect::Types::ResourceNotReadyException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end

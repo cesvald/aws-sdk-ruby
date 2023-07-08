@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-datasync/types'
 require_relative 'aws-sdk-datasync/client_api'
+require_relative 'aws-sdk-datasync/plugins/endpoints.rb'
 require_relative 'aws-sdk-datasync/client'
 require_relative 'aws-sdk-datasync/errors'
 require_relative 'aws-sdk-datasync/resource'
+require_relative 'aws-sdk-datasync/endpoint_parameters'
+require_relative 'aws-sdk-datasync/endpoint_provider'
+require_relative 'aws-sdk-datasync/endpoints'
 require_relative 'aws-sdk-datasync/customizations'
 
 # This module provides support for AWS DataSync. This module is available in the
@@ -28,7 +32,7 @@ require_relative 'aws-sdk-datasync/customizations'
 # structure.
 #
 #     data_sync = Aws::DataSync::Client.new
-#     resp = data_sync.cancel_task_execution(params)
+#     resp = data_sync.add_storage_system(params)
 #
 # See {Client} for more information.
 #
@@ -48,6 +52,6 @@ require_relative 'aws-sdk-datasync/customizations'
 # @!group service
 module Aws::DataSync
 
-  GEM_VERSION = '1.31.0'
+  GEM_VERSION = '1.60.0'
 
 end

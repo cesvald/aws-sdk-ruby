@@ -25,7 +25,7 @@ module Aws::Lambda
     #
     # @!attribute [rw] code_size_zipped
     #   The maximum size of a deployment package when it's uploaded
-    #   directly to AWS Lambda. Use Amazon S3 for larger files.
+    #   directly to Lambda. Use Amazon S3 for larger files.
     #   @return [Integer]
     #
     # @!attribute [rw] concurrent_executions
@@ -70,19 +70,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AddLayerVersionPermissionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         layer_name: "LayerName", # required
-    #         version_number: 1, # required
-    #         statement_id: "StatementId", # required
-    #         action: "LayerPermissionAllowedAction", # required
-    #         principal: "LayerPermissionAllowedPrincipal", # required
-    #         organization_id: "OrganizationId",
-    #         revision_id: "String",
-    #       }
-    #
     # @!attribute [rw] layer_name
     #   The name or Amazon Resource Name (ARN) of the layer.
     #   @return [String]
@@ -102,7 +89,11 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] principal
-    #   An account ID, or `*` to grant permission to all AWS accounts.
+    #   An account ID, or `*` to grant layer usage permission to all
+    #   accounts in an organization, or all Amazon Web Services accounts (if
+    #   `organizationId` is not specified). For the last case, make sure
+    #   that you really do want all Amazon Web Services accounts to have
+    #   usage permission to this layer.
     #   @return [String]
     #
     # @!attribute [rw] organization_id
@@ -147,33 +138,18 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AddPermissionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         statement_id: "StatementId", # required
-    #         action: "Action", # required
-    #         principal: "Principal", # required
-    #         source_arn: "Arn",
-    #         source_account: "SourceOwner",
-    #         event_source_token: "EventSourceToken",
-    #         qualifier: "Qualifier",
-    #         revision_id: "String",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function` (name-only), `my-function:v1`
+    #   * **Function name** – `my-function` (name-only), `my-function:v1`
     #     (with alias).
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   You can append a version number or alias to any of the formats. The
     #   length constraint applies only to the full ARN. If you specify only
@@ -191,26 +167,32 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] principal
-    #   The AWS service or account that invokes the function. If you specify
-    #   a service, use `SourceArn` or `SourceAccount` to limit who can
-    #   invoke the function through that service.
+    #   The Amazon Web Service or Amazon Web Services account that invokes
+    #   the function. If you specify a service, use `SourceArn` or
+    #   `SourceAccount` to limit who can invoke the function through that
+    #   service.
     #   @return [String]
     #
     # @!attribute [rw] source_arn
-    #   For AWS services, the ARN of the AWS resource that invokes the
-    #   function. For example, an Amazon S3 bucket or Amazon SNS topic.
+    #   For Amazon Web Services, the ARN of the Amazon Web Services resource
+    #   that invokes the function. For example, an Amazon S3 bucket or
+    #   Amazon SNS topic.
+    #
+    #   Note that Lambda configures the comparison using the `StringLike`
+    #   operator.
     #   @return [String]
     #
     # @!attribute [rw] source_account
-    #   For Amazon S3, the ID of the account that owns the resource. Use
-    #   this together with `SourceArn` to ensure that the resource is owned
-    #   by the specified account. It is possible for an Amazon S3 bucket to
-    #   be deleted by its owner and recreated by another account.
+    #   For Amazon Web Service, the ID of the Amazon Web Services account
+    #   that owns the resource. Use this together with `SourceArn` to ensure
+    #   that the specified account owns the resource. It is possible for an
+    #   Amazon S3 bucket to be deleted by its owner and recreated by another
+    #   account.
     #   @return [String]
     #
     # @!attribute [rw] event_source_token
-    #   For Alexa Smart Home functions, a token that must be supplied by the
-    #   invoker.
+    #   For Alexa Smart Home functions, a token that the invoker must
+    #   supply.
     #   @return [String]
     #
     # @!attribute [rw] qualifier
@@ -219,9 +201,27 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] revision_id
-    #   Only update the policy if the revision ID matches the ID that's
+    #   Update the policy only if the revision ID matches the ID that's
     #   specified. Use this option to avoid modifying a policy that has
     #   changed since you last read it.
+    #   @return [String]
+    #
+    # @!attribute [rw] principal_org_id
+    #   The identifier for your organization in Organizations. Use this to
+    #   grant permissions to all the Amazon Web Services accounts under this
+    #   organization.
+    #   @return [String]
+    #
+    # @!attribute [rw] function_url_auth_type
+    #   The type of authentication that your function URL uses. Set to
+    #   `AWS_IAM` if you want to restrict access to authenticated users
+    #   only. Set to `NONE` if you want to bypass IAM authentication to
+    #   create a public endpoint. For more information, see [Security and
+    #   auth model for Lambda function URLs][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/AddPermissionRequest AWS API Documentation
@@ -235,7 +235,9 @@ module Aws::Lambda
       :source_account,
       :event_source_token,
       :qualifier,
-      :revision_id)
+      :revision_id,
+      :principal_org_id,
+      :function_url_auth_type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -256,7 +258,7 @@ module Aws::Lambda
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html
     #
     # @!attribute [rw] alias_arn
     #   The Amazon Resource Name (ARN) of the alias.
@@ -305,15 +307,6 @@ module Aws::Lambda
     #
     # [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-traffic-shifting-using-aliases.html
     #
-    # @note When making an API call, you may pass AliasRoutingConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         additional_version_weights: {
-    #           "AdditionalVersion" => 1.0,
-    #         },
-    #       }
-    #
     # @!attribute [rw] additional_version_weights
     #   The second version, and the percentage of traffic that's routed to
     #   it.
@@ -329,13 +322,6 @@ module Aws::Lambda
 
     # List of signing profiles that can sign a code package.
     #
-    # @note When making an API call, you may pass AllowedPublishers
-    #   data as a hash:
-    #
-    #       {
-    #         signing_profile_version_arns: ["Arn"], # required
-    #       }
-    #
     # @!attribute [rw] signing_profile_version_arns
     #   The Amazon Resource Name (ARN) for each of the signing profiles. A
     #   signing profile defines a trusted user who can sign a code package.
@@ -349,7 +335,34 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Details about a Code signing configuration.
+    # Specific configuration settings for an Amazon Managed Streaming for
+    # Apache Kafka (Amazon MSK) event source.
+    #
+    # @!attribute [rw] consumer_group_id
+    #   The identifier for the Kafka consumer group to join. The consumer
+    #   group ID must be unique among all your Kafka event sources. After
+    #   creating a Kafka event source mapping with the consumer group ID
+    #   specified, you cannot update this value. For more information, see
+    #   [Customizable consumer group ID][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/with-msk.html#services-msk-consumer-group-id
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/AmazonManagedKafkaEventSourceConfig AWS API Documentation
+    #
+    class AmazonManagedKafkaEventSourceConfig < Struct.new(
+      :consumer_group_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Details about a [Code signing configuration][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html
     #
     # @!attribute [rw] code_signing_config_id
     #   Unique identifer for the Code signing configuration.
@@ -407,15 +420,12 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Code signing configuration policies specifies the validation failure
-    # action for signature mismatch or expiry.
+    # Code signing configuration [policies][1] specify the validation
+    # failure action for signature mismatch or expiry.
     #
-    # @note When making an API call, you may pass CodeSigningPolicies
-    #   data as a hash:
     #
-    #       {
-    #         untrusted_artifact_on_deployment: "Warn", # accepts Warn, Enforce
-    #       }
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html#config-codesigning-policies
     #
     # @!attribute [rw] untrusted_artifact_on_deployment
     #   Code signing configuration policy for deployment validation failure.
@@ -435,12 +445,12 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # You have exceeded your maximum total code size per account. [Learn
-    # more][1]
+    # Your Amazon Web Services account has exceeded its maximum total code
+    # size. For more information, see [Lambda quotas][1].
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/limits.html
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html
     #
     # @!attribute [rw] type
     #   The exception type.
@@ -479,11 +489,12 @@ module Aws::Lambda
 
     # @!attribute [rw] reserved_concurrent_executions
     #   The number of concurrent executions that are reserved for this
-    #   function. For more information, see [Managing Concurrency][1].
+    #   function. For more information, see [Managing Lambda reserved
+    #   concurrency][1].
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/Concurrency AWS API Documentation
@@ -494,21 +505,65 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateAliasRequest
-    #   data as a hash:
+    # The [cross-origin resource sharing (CORS)][1] settings for your Lambda
+    # function URL. Use CORS to grant access to your function URL from any
+    # origin. You can also use CORS to control access for specific HTTP
+    # headers and methods in requests to your function URL.
     #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         name: "Alias", # required
-    #         function_version: "Version", # required
-    #         description: "Description",
-    #         routing_config: {
-    #           additional_version_weights: {
-    #             "AdditionalVersion" => 1.0,
-    #           },
-    #         },
-    #       }
     #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    #
+    # @!attribute [rw] allow_credentials
+    #   Whether to allow cookies or other credentials in requests to your
+    #   function URL. The default is `false`.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] allow_headers
+    #   The HTTP headers that origins can include in requests to your
+    #   function URL. For example: `Date`, `Keep-Alive`, `X-Custom-Header`.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] allow_methods
+    #   The HTTP methods that are allowed when calling your function URL.
+    #   For example: `GET`, `POST`, `DELETE`, or the wildcard character
+    #   (`*`).
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] allow_origins
+    #   The origins that can access your function URL. You can list any
+    #   number of specific origins, separated by a comma. For example:
+    #   `https://www.example.com`, `http://localhost:60905`.
+    #
+    #   Alternatively, you can grant access to all origins using the
+    #   wildcard character (`*`).
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] expose_headers
+    #   The HTTP headers in your function response that you want to expose
+    #   to origins that call your function URL. For example: `Date`,
+    #   `Keep-Alive`, `X-Custom-Header`.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] max_age
+    #   The maximum amount of time, in seconds, that web browsers can cache
+    #   results of a preflight request. By default, this is set to `0`,
+    #   which means that the browser doesn't cache results.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/Cors AWS API Documentation
+    #
+    class Cors < Struct.new(
+      :allow_credentials,
+      :allow_headers,
+      :allow_methods,
+      :allow_origins,
+      :expose_headers,
+      :max_age)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -557,19 +612,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateCodeSigningConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         description: "Description",
-    #         allowed_publishers: { # required
-    #           signing_profile_version_arns: ["Arn"], # required
-    #         },
-    #         code_signing_policies: {
-    #           untrusted_artifact_on_deployment: "Warn", # accepts Warn, Enforce
-    #         },
-    #       }
-    #
     # @!attribute [rw] description
     #   Descriptive name for this code signing configuration.
     #   @return [String]
@@ -605,58 +647,22 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateEventSourceMappingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         event_source_arn: "Arn",
-    #         function_name: "FunctionName", # required
-    #         enabled: false,
-    #         batch_size: 1,
-    #         maximum_batching_window_in_seconds: 1,
-    #         parallelization_factor: 1,
-    #         starting_position: "TRIM_HORIZON", # accepts TRIM_HORIZON, LATEST, AT_TIMESTAMP
-    #         starting_position_timestamp: Time.now,
-    #         destination_config: {
-    #           on_success: {
-    #             destination: "DestinationArn",
-    #           },
-    #           on_failure: {
-    #             destination: "DestinationArn",
-    #           },
-    #         },
-    #         maximum_record_age_in_seconds: 1,
-    #         bisect_batch_on_function_error: false,
-    #         maximum_retry_attempts: 1,
-    #         tumbling_window_in_seconds: 1,
-    #         topics: ["Topic"],
-    #         queues: ["Queue"],
-    #         source_access_configurations: [
-    #           {
-    #             type: "BASIC_AUTH", # accepts BASIC_AUTH, VPC_SUBNET, VPC_SECURITY_GROUP, SASL_SCRAM_512_AUTH, SASL_SCRAM_256_AUTH
-    #             uri: "URI",
-    #           },
-    #         ],
-    #         self_managed_event_source: {
-    #           endpoints: {
-    #             "KAFKA_BOOTSTRAP_SERVERS" => ["Endpoint"],
-    #           },
-    #         },
-    #         function_response_types: ["ReportBatchItemFailures"], # accepts ReportBatchItemFailures
-    #       }
-    #
     # @!attribute [rw] event_source_arn
     #   The Amazon Resource Name (ARN) of the event source.
     #
-    #   * **Amazon Kinesis** - The ARN of the data stream or a stream
+    #   * **Amazon Kinesis** – The ARN of the data stream or a stream
     #     consumer.
     #
-    #   * **Amazon DynamoDB Streams** - The ARN of the stream.
+    #   * **Amazon DynamoDB Streams** – The ARN of the stream.
     #
-    #   * **Amazon Simple Queue Service** - The ARN of the queue.
+    #   * **Amazon Simple Queue Service** – The ARN of the queue.
     #
-    #   * **Amazon Managed Streaming for Apache Kafka** - The ARN of the
+    #   * **Amazon Managed Streaming for Apache Kafka** – The ARN of the
     #     cluster.
+    #
+    #   * **Amazon MQ** – The ARN of the broker.
+    #
+    #   * **Amazon DocumentDB** – The ARN of the DocumentDB change stream.
     #   @return [String]
     #
     # @!attribute [rw] function_name
@@ -664,86 +670,124 @@ module Aws::Lambda
     #
     #   **Name formats**
     #
-    #   * **Function name** - `MyFunction`.
+    #   * **Function name** – `MyFunction`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:MyFunction`.
     #
-    #   * **Version or Alias ARN** -
+    #   * **Version or Alias ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD`.
     #
-    #   * **Partial ARN** - `123456789012:function:MyFunction`.
+    #   * **Partial ARN** – `123456789012:function:MyFunction`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it's limited to 64 characters in length.
     #   @return [String]
     #
     # @!attribute [rw] enabled
-    #   If true, the event source mapping is active. Set to false to pause
-    #   polling and invocation.
+    #   When true, the event source mapping is active. When false, Lambda
+    #   pauses polling and invocation.
+    #
+    #   Default: True
     #   @return [Boolean]
     #
     # @!attribute [rw] batch_size
-    #   The maximum number of items to retrieve in a single batch.
+    #   The maximum number of records in each batch that Lambda pulls from
+    #   your stream or queue and sends to your function. Lambda passes all
+    #   of the records in the batch to the function in a single call, up to
+    #   the payload limit for synchronous invocation (6 MB).
     #
-    #   * **Amazon Kinesis** - Default 100. Max 10,000.
+    #   * **Amazon Kinesis** – Default 100. Max 10,000.
     #
-    #   * **Amazon DynamoDB Streams** - Default 100. Max 1,000.
+    #   * **Amazon DynamoDB Streams** – Default 100. Max 10,000.
     #
-    #   * **Amazon Simple Queue Service** - Default 10. For standard queues
+    #   * **Amazon Simple Queue Service** – Default 10. For standard queues
     #     the max is 10,000. For FIFO queues the max is 10.
     #
-    #   * **Amazon Managed Streaming for Apache Kafka** - Default 100. Max
+    #   * **Amazon Managed Streaming for Apache Kafka** – Default 100. Max
     #     10,000.
     #
-    #   * **Self-Managed Apache Kafka** - Default 100. Max 10,000.
+    #   * **Self-managed Apache Kafka** – Default 100. Max 10,000.
+    #
+    #   * **Amazon MQ (ActiveMQ and RabbitMQ)** – Default 100. Max 10,000.
+    #
+    #   * **DocumentDB** – Default 100. Max 10,000.
     #   @return [Integer]
     #
+    # @!attribute [rw] filter_criteria
+    #   An object that defines the filter criteria that determine whether
+    #   Lambda should process an event. For more information, see [Lambda
+    #   event filtering][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html
+    #   @return [Types::FilterCriteria]
+    #
     # @!attribute [rw] maximum_batching_window_in_seconds
-    #   (Streams and SQS standard queues) The maximum amount of time to
-    #   gather records before invoking the function, in seconds.
+    #   The maximum amount of time, in seconds, that Lambda spends gathering
+    #   records before invoking the function. You can configure
+    #   `MaximumBatchingWindowInSeconds` to any value from 0 seconds to 300
+    #   seconds in increments of seconds.
+    #
+    #   For streams and Amazon SQS event sources, the default batching
+    #   window is 0 seconds. For Amazon MSK, Self-managed Apache Kafka,
+    #   Amazon MQ, and DocumentDB event sources, the default batching window
+    #   is 500 ms. Note that because you can only change
+    #   `MaximumBatchingWindowInSeconds` in increments of seconds, you
+    #   cannot revert back to the 500 ms default batching window after you
+    #   have changed it. To restore the default batching window, you must
+    #   create a new event source mapping.
+    #
+    #   Related setting: For streams and Amazon SQS event sources, when you
+    #   set `BatchSize` to a value greater than 10, you must set
+    #   `MaximumBatchingWindowInSeconds` to at least 1.
     #   @return [Integer]
     #
     # @!attribute [rw] parallelization_factor
-    #   (Streams) The number of batches to process from each shard
-    #   concurrently.
+    #   (Kinesis and DynamoDB Streams only) The number of batches to process
+    #   from each shard concurrently.
     #   @return [Integer]
     #
     # @!attribute [rw] starting_position
     #   The position in a stream from which to start reading. Required for
-    #   Amazon Kinesis, Amazon DynamoDB, and Amazon MSK Streams sources.
-    #   `AT_TIMESTAMP` is only supported for Amazon Kinesis streams.
+    #   Amazon Kinesis and Amazon DynamoDB Stream event sources.
+    #   `AT_TIMESTAMP` is supported only for Amazon Kinesis streams, Amazon
+    #   DocumentDB, Amazon MSK, and self-managed Apache Kafka.
     #   @return [String]
     #
     # @!attribute [rw] starting_position_timestamp
     #   With `StartingPosition` set to `AT_TIMESTAMP`, the time from which
-    #   to start reading.
+    #   to start reading. `StartingPositionTimestamp` cannot be in the
+    #   future.
     #   @return [Time]
     #
     # @!attribute [rw] destination_config
-    #   (Streams) An Amazon SQS queue or Amazon SNS topic destination for
-    #   discarded records.
+    #   (Kinesis and DynamoDB Streams only) A standard Amazon SQS queue or
+    #   standard Amazon SNS topic destination for discarded records.
     #   @return [Types::DestinationConfig]
     #
     # @!attribute [rw] maximum_record_age_in_seconds
-    #   (Streams) Discard records older than the specified age. The default
-    #   value is infinite (-1).
+    #   (Kinesis and DynamoDB Streams only) Discard records older than the
+    #   specified age. The default value is infinite (-1).
     #   @return [Integer]
     #
     # @!attribute [rw] bisect_batch_on_function_error
-    #   (Streams) If the function returns an error, split the batch in two
-    #   and retry.
+    #   (Kinesis and DynamoDB Streams only) If the function returns an
+    #   error, split the batch in two and retry.
     #   @return [Boolean]
     #
     # @!attribute [rw] maximum_retry_attempts
-    #   (Streams) Discard records after the specified number of retries. The
-    #   default value is infinite (-1). When set to infinite (-1), failed
-    #   records will be retried until the record expires.
+    #   (Kinesis and DynamoDB Streams only) Discard records after the
+    #   specified number of retries. The default value is infinite (-1).
+    #   When set to infinite (-1), failed records are retried until the
+    #   record expires.
     #   @return [Integer]
     #
     # @!attribute [rw] tumbling_window_in_seconds
-    #   (Streams) The duration in seconds of a processing window. The range
-    #   is between 1 second up to 900 seconds.
+    #   (Kinesis and DynamoDB Streams only) The duration in seconds of a
+    #   processing window for DynamoDB and Kinesis Streams event sources. A
+    #   value of 0 seconds indicates no tumbling window.
     #   @return [Integer]
     #
     # @!attribute [rw] topics
@@ -755,18 +799,42 @@ module Aws::Lambda
     #   @return [Array<String>]
     #
     # @!attribute [rw] source_access_configurations
-    #   An array of the authentication protocol, or the VPC components to
+    #   An array of authentication protocols or VPC components required to
     #   secure your event source.
     #   @return [Array<Types::SourceAccessConfiguration>]
     #
     # @!attribute [rw] self_managed_event_source
-    #   The Self-Managed Apache Kafka cluster to send records.
+    #   The self-managed Apache Kafka cluster to receive records from.
     #   @return [Types::SelfManagedEventSource]
     #
     # @!attribute [rw] function_response_types
-    #   (Streams) A list of current response type enums applied to the event
-    #   source mapping.
+    #   (Kinesis, DynamoDB Streams, and Amazon SQS) A list of current
+    #   response type enums applied to the event source mapping.
     #   @return [Array<String>]
+    #
+    # @!attribute [rw] amazon_managed_kafka_event_source_config
+    #   Specific configuration settings for an Amazon Managed Streaming for
+    #   Apache Kafka (Amazon MSK) event source.
+    #   @return [Types::AmazonManagedKafkaEventSourceConfig]
+    #
+    # @!attribute [rw] self_managed_kafka_event_source_config
+    #   Specific configuration settings for a self-managed Apache Kafka
+    #   event source.
+    #   @return [Types::SelfManagedKafkaEventSourceConfig]
+    #
+    # @!attribute [rw] scaling_config
+    #   (Amazon SQS only) The scaling configuration for the event source.
+    #   For more information, see [Configuring maximum concurrency for
+    #   Amazon SQS event sources][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-max-concurrency
+    #   @return [Types::ScalingConfig]
+    #
+    # @!attribute [rw] document_db_event_source_config
+    #   Specific configuration settings for a DocumentDB event source.
+    #   @return [Types::DocumentDBEventSourceConfig]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateEventSourceMappingRequest AWS API Documentation
     #
@@ -775,6 +843,7 @@ module Aws::Lambda
       :function_name,
       :enabled,
       :batch_size,
+      :filter_criteria,
       :maximum_batching_window_in_seconds,
       :parallelization_factor,
       :starting_position,
@@ -788,87 +857,42 @@ module Aws::Lambda
       :queues,
       :source_access_configurations,
       :self_managed_event_source,
-      :function_response_types)
+      :function_response_types,
+      :amazon_managed_kafka_event_source_config,
+      :self_managed_kafka_event_source_config,
+      :scaling_config,
+      :document_db_event_source_config)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         runtime: "nodejs", # accepts nodejs, nodejs4.3, nodejs6.10, nodejs8.10, nodejs10.x, nodejs12.x, nodejs14.x, java8, java8.al2, java11, python2.7, python3.6, python3.7, python3.8, dotnetcore1.0, dotnetcore2.0, dotnetcore2.1, dotnetcore3.1, nodejs4.3-edge, go1.x, ruby2.5, ruby2.7, provided, provided.al2
-    #         role: "RoleArn", # required
-    #         handler: "Handler",
-    #         code: { # required
-    #           zip_file: "data",
-    #           s3_bucket: "S3Bucket",
-    #           s3_key: "S3Key",
-    #           s3_object_version: "S3ObjectVersion",
-    #           image_uri: "String",
-    #         },
-    #         description: "Description",
-    #         timeout: 1,
-    #         memory_size: 1,
-    #         publish: false,
-    #         vpc_config: {
-    #           subnet_ids: ["SubnetId"],
-    #           security_group_ids: ["SecurityGroupId"],
-    #         },
-    #         package_type: "Zip", # accepts Zip, Image
-    #         dead_letter_config: {
-    #           target_arn: "ResourceArn",
-    #         },
-    #         environment: {
-    #           variables: {
-    #             "EnvironmentVariableName" => "EnvironmentVariableValue",
-    #           },
-    #         },
-    #         kms_key_arn: "KMSKeyArn",
-    #         tracing_config: {
-    #           mode: "Active", # accepts Active, PassThrough
-    #         },
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         layers: ["LayerVersionArn"],
-    #         file_system_configs: [
-    #           {
-    #             arn: "FileSystemArn", # required
-    #             local_mount_path: "LocalMountPath", # required
-    #           },
-    #         ],
-    #         image_config: {
-    #           entry_point: ["String"],
-    #           command: ["String"],
-    #           working_directory: "WorkingDirectory",
-    #         },
-    #         code_signing_config_arn: "CodeSigningConfigArn",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
     #   @return [String]
     #
     # @!attribute [rw] runtime
-    #   The identifier of the function's [runtime][1].
+    #   The identifier of the function's [runtime][1]. Runtime is required
+    #   if the deployment package is a .zip file archive.
+    #
+    #   The following list includes deprecated runtimes. For more
+    #   information, see [Runtime deprecation policy][2].
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
+    #   [2]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
     #   @return [String]
     #
     # @!attribute [rw] role
@@ -876,14 +900,15 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] handler
-    #   The name of the method within your code that Lambda calls to execute
-    #   your function. The format includes the file name. It can also
+    #   The name of the method within your code that Lambda calls to run
+    #   your function. Handler is required if the deployment package is a
+    #   .zip file archive. The format includes the file name. It can also
     #   include namespaces and other qualifiers, depending on the runtime.
-    #   For more information, see [Programming Model][1].
+    #   For more information, see [Lambda programming model][1].
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/programming-model-v2.html
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/foundation-progmodel.html
     #   @return [String]
     #
     # @!attribute [rw] code
@@ -895,15 +920,24 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] timeout
-    #   The amount of time that Lambda allows a function to run before
-    #   stopping it. The default is 3 seconds. The maximum allowed value is
-    #   900 seconds.
+    #   The amount of time (in seconds) that Lambda allows a function to run
+    #   before stopping it. The default is 3 seconds. The maximum allowed
+    #   value is 900 seconds. For more information, see [Lambda execution
+    #   environment][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html
     #   @return [Integer]
     #
     # @!attribute [rw] memory_size
-    #   The amount of memory available to the function at runtime.
-    #   Increasing the function's memory also increases its CPU allocation.
+    #   The amount of [memory available to the function][1] at runtime.
+    #   Increasing the function memory also increases its CPU allocation.
     #   The default value is 128 MB. The value can be any multiple of 1 MB.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-function-common.html#configuration-memory-console
     #   @return [Integer]
     #
     # @!attribute [rw] publish
@@ -912,10 +946,11 @@ module Aws::Lambda
     #   @return [Boolean]
     #
     # @!attribute [rw] vpc_config
-    #   For network connectivity to AWS resources in a VPC, specify a list
-    #   of security groups and subnets in the VPC. When you connect a
-    #   function to a VPC, it can only access resources and the internet
-    #   through that VPC. For more information, see [VPC Settings][1].
+    #   For network connectivity to Amazon Web Services resources in a VPC,
+    #   specify a list of security groups and subnets in the VPC. When you
+    #   connect a function to a VPC, it can access resources and the
+    #   internet only through that VPC. For more information, see
+    #   [Configuring a Lambda function to access resources in a VPC][1].
     #
     #
     #
@@ -924,17 +959,17 @@ module Aws::Lambda
     #
     # @!attribute [rw] package_type
     #   The type of deployment package. Set to `Image` for container image
-    #   and set `Zip` for ZIP archive.
+    #   and set to `Zip` for .zip file archive.
     #   @return [String]
     #
     # @!attribute [rw] dead_letter_config
-    #   A dead letter queue configuration that specifies the queue or topic
+    #   A dead-letter queue configuration that specifies the queue or topic
     #   where Lambda sends asynchronous events when they fail processing.
-    #   For more information, see [Dead Letter Queues][1].
+    #   For more information, see [Dead-letter queues][1].
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-dlq
     #   @return [Types::DeadLetterConfig]
     #
     # @!attribute [rw] environment
@@ -943,14 +978,29 @@ module Aws::Lambda
     #   @return [Types::Environment]
     #
     # @!attribute [rw] kms_key_arn
-    #   The ARN of the AWS Key Management Service (AWS KMS) key that's used
-    #   to encrypt your function's environment variables. If it's not
-    #   provided, AWS Lambda uses a default service key.
+    #   The ARN of the Key Management Service (KMS) customer managed key
+    #   that's used to encrypt your function's [environment variables][1].
+    #   When [Lambda SnapStart][2] is activated, Lambda also uses this key
+    #   is to encrypt your function's snapshot. If you deploy your function
+    #   using a container image, Lambda also uses this key to encrypt your
+    #   function when it's deployed. Note that this is not the same key
+    #   that's used to protect your container image in the Amazon Elastic
+    #   Container Registry (Amazon ECR). If you don't provide a customer
+    #   managed key, Lambda uses a default service key.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption
+    #   [2]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html
     #   @return [String]
     #
     # @!attribute [rw] tracing_config
     #   Set `Mode` to `Active` to sample and trace a subset of incoming
-    #   requests with AWS X-Ray.
+    #   requests with [X-Ray][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html
     #   @return [Types::TracingConfig]
     #
     # @!attribute [rw] tags
@@ -975,12 +1025,12 @@ module Aws::Lambda
     #   @return [Array<Types::FileSystemConfig>]
     #
     # @!attribute [rw] image_config
-    #   [Container image configuration values][1] that override the values
+    #   Container image [configuration values][1] that override the values
     #   in the container image Dockerfile.
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/images-parms.html
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-images.html#configuration-images-settings
     #   @return [Types::ImageConfig]
     #
     # @!attribute [rw] code_signing_config_arn
@@ -989,6 +1039,25 @@ module Aws::Lambda
     #   set of signing profiles, which define the trusted publishers for
     #   this function.
     #   @return [String]
+    #
+    # @!attribute [rw] architectures
+    #   The instruction set architecture that the function supports. Enter a
+    #   string array with one of the valid values (arm64 or x86\_64). The
+    #   default value is `x86_64`.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] ephemeral_storage
+    #   The size of the function's `/tmp` directory in MB. The default
+    #   value is 512, but can be any whole number between 512 and 10,240 MB.
+    #   @return [Types::EphemeralStorage]
+    #
+    # @!attribute [rw] snap_start
+    #   The function's [SnapStart][1] setting.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html
+    #   @return [Types::SnapStart]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateFunctionRequest AWS API Documentation
     #
@@ -1012,7 +1081,152 @@ module Aws::Lambda
       :layers,
       :file_system_configs,
       :image_config,
-      :code_signing_config_arn)
+      :code_signing_config_arn,
+      :architectures,
+      :ephemeral_storage,
+      :snap_start)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] function_name
+    #   The name of the Lambda function.
+    #
+    #   **Name formats**
+    #
+    #   * **Function name** – `my-function`.
+    #
+    #   * **Function ARN** –
+    #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
+    #
+    #   * **Partial ARN** – `123456789012:function:my-function`.
+    #
+    #   The length constraint applies only to the full ARN. If you specify
+    #   only the function name, it is limited to 64 characters in length.
+    #   @return [String]
+    #
+    # @!attribute [rw] qualifier
+    #   The alias name.
+    #   @return [String]
+    #
+    # @!attribute [rw] auth_type
+    #   The type of authentication that your function URL uses. Set to
+    #   `AWS_IAM` if you want to restrict access to authenticated users
+    #   only. Set to `NONE` if you want to bypass IAM authentication to
+    #   create a public endpoint. For more information, see [Security and
+    #   auth model for Lambda function URLs][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
+    #   @return [String]
+    #
+    # @!attribute [rw] cors
+    #   The [cross-origin resource sharing (CORS)][1] settings for your
+    #   function URL.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    #   @return [Types::Cors]
+    #
+    # @!attribute [rw] invoke_mode
+    #   Use one of the following options:
+    #
+    #   * `BUFFERED` – This is the default option. Lambda invokes your
+    #     function using the `Invoke` API operation. Invocation results are
+    #     available when the payload is complete. The maximum payload size
+    #     is 6 MB.
+    #
+    #   * `RESPONSE_STREAM` – Your function streams payload results as they
+    #     become available. Lambda invokes your function using the
+    #     `InvokeWithResponseStream` API operation. The maximum response
+    #     payload size is 20 MB, however, you can [request a quota
+    #     increase][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateFunctionUrlConfigRequest AWS API Documentation
+    #
+    class CreateFunctionUrlConfigRequest < Struct.new(
+      :function_name,
+      :qualifier,
+      :auth_type,
+      :cors,
+      :invoke_mode)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] function_url
+    #   The HTTP URL endpoint for your function.
+    #   @return [String]
+    #
+    # @!attribute [rw] function_arn
+    #   The Amazon Resource Name (ARN) of your function.
+    #   @return [String]
+    #
+    # @!attribute [rw] auth_type
+    #   The type of authentication that your function URL uses. Set to
+    #   `AWS_IAM` if you want to restrict access to authenticated users
+    #   only. Set to `NONE` if you want to bypass IAM authentication to
+    #   create a public endpoint. For more information, see [Security and
+    #   auth model for Lambda function URLs][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
+    #   @return [String]
+    #
+    # @!attribute [rw] cors
+    #   The [cross-origin resource sharing (CORS)][1] settings for your
+    #   function URL.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    #   @return [Types::Cors]
+    #
+    # @!attribute [rw] creation_time
+    #   When the function URL was created, in [ISO-8601 format][1]
+    #   (YYYY-MM-DDThh:mm:ss.sTZD).
+    #
+    #
+    #
+    #   [1]: https://www.w3.org/TR/NOTE-datetime
+    #   @return [Time]
+    #
+    # @!attribute [rw] invoke_mode
+    #   Use one of the following options:
+    #
+    #   * `BUFFERED` – This is the default option. Lambda invokes your
+    #     function using the `Invoke` API operation. Invocation results are
+    #     available when the payload is complete. The maximum payload size
+    #     is 6 MB.
+    #
+    #   * `RESPONSE_STREAM` – Your function streams payload results as they
+    #     become available. Lambda invokes your function using the
+    #     `InvokeWithResponseStream` API operation. The maximum response
+    #     payload size is 20 MB, however, you can [request a quota
+    #     increase][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateFunctionUrlConfigResponse AWS API Documentation
+    #
+    class CreateFunctionUrlConfigResponse < Struct.new(
+      :function_url,
+      :function_arn,
+      :auth_type,
+      :cors,
+      :creation_time,
+      :invoke_mode)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1022,13 +1236,6 @@ module Aws::Lambda
     #
     #
     # [1]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq
-    #
-    # @note When making an API call, you may pass DeadLetterConfig
-    #   data as a hash:
-    #
-    #       {
-    #         target_arn: "ResourceArn",
-    #       }
     #
     # @!attribute [rw] target_arn
     #   The Amazon Resource Name (ARN) of an Amazon SQS queue or Amazon SNS
@@ -1043,14 +1250,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         name: "Alias", # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -1080,13 +1279,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteCodeSigningConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         code_signing_config_arn: "CodeSigningConfigArn", # required
-    #       }
-    #
     # @!attribute [rw] code_signing_config_arn
     #   The The Amazon Resource Name (ARN) of the code signing
     #   configuration.
@@ -1104,13 +1296,6 @@ module Aws::Lambda
     #
     class DeleteCodeSigningConfigResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteEventSourceMappingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         uuid: "String", # required
-    #       }
-    #
     # @!attribute [rw] uuid
     #   The identifier of the event source mapping.
     #   @return [String]
@@ -1123,13 +1308,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFunctionCodeSigningConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -1154,24 +1332,17 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFunctionConcurrencyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
@@ -1185,14 +1356,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFunctionEventInvokeConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         qualifier: "Qualifier",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
@@ -1224,26 +1387,18 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         qualifier: "Qualifier",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function or version.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function` (name-only), `my-function:1`
+    #   * **Function name** – `my-function` (name-only), `my-function:1`
     #     (with version).
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   You can append a version number or alias to any of the formats. The
     #   length constraint applies only to the full ARN. If you specify only
@@ -1251,8 +1406,8 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] qualifier
-    #   Specify a version to delete. You can't delete a version that's
-    #   referenced by an alias.
+    #   Specify a version to delete. You can't delete a version that an
+    #   alias references.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteFunctionRequest AWS API Documentation
@@ -1264,14 +1419,35 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteLayerVersionRequest
-    #   data as a hash:
+    # @!attribute [rw] function_name
+    #   The name of the Lambda function.
     #
-    #       {
-    #         layer_name: "LayerName", # required
-    #         version_number: 1, # required
-    #       }
+    #   **Name formats**
     #
+    #   * **Function name** – `my-function`.
+    #
+    #   * **Function ARN** –
+    #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
+    #
+    #   * **Partial ARN** – `123456789012:function:my-function`.
+    #
+    #   The length constraint applies only to the full ARN. If you specify
+    #   only the function name, it is limited to 64 characters in length.
+    #   @return [String]
+    #
+    # @!attribute [rw] qualifier
+    #   The alias name.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteFunctionUrlConfigRequest AWS API Documentation
+    #
+    class DeleteFunctionUrlConfigRequest < Struct.new(
+      :function_name,
+      :qualifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] layer_name
     #   The name or Amazon Resource Name (ARN) of the layer.
     #   @return [String]
@@ -1289,25 +1465,17 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteProvisionedConcurrencyConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         qualifier: "Qualifier", # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
@@ -1329,18 +1497,6 @@ module Aws::Lambda
     # A configuration object that specifies the destination of an event
     # after Lambda processes it.
     #
-    # @note When making an API call, you may pass DestinationConfig
-    #   data as a hash:
-    #
-    #       {
-    #         on_success: {
-    #           destination: "DestinationArn",
-    #         },
-    #         on_failure: {
-    #           destination: "DestinationArn",
-    #         },
-    #       }
-    #
     # @!attribute [rw] on_success
     #   The destination configuration for successful invocations.
     #   @return [Types::OnSuccess]
@@ -1354,6 +1510,35 @@ module Aws::Lambda
     class DestinationConfig < Struct.new(
       :on_success,
       :on_failure)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Specific configuration settings for a DocumentDB event source.
+    #
+    # @!attribute [rw] database_name
+    #   The name of the database to consume within the DocumentDB cluster.
+    #   @return [String]
+    #
+    # @!attribute [rw] collection_name
+    #   The name of the collection to consume within the database. If you do
+    #   not specify a collection, Lambda consumes all collections.
+    #   @return [String]
+    #
+    # @!attribute [rw] full_document
+    #   Determines what DocumentDB sends to your event stream during
+    #   document update operations. If set to UpdateLookup, DocumentDB sends
+    #   a delta describing the changes, along with a copy of the entire
+    #   document. Otherwise, DocumentDB sends only a partial document that
+    #   contains the changes.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DocumentDBEventSourceConfig AWS API Documentation
+    #
+    class DocumentDBEventSourceConfig < Struct.new(
+      :database_name,
+      :collection_name,
+      :full_document)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1375,9 +1560,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # AWS Lambda was throttled by Amazon EC2 during Lambda function
-    # initialization using the execution role provided for the Lambda
-    # function.
+    # Amazon EC2 throttled Lambda during Lambda function initialization
+    # using the execution role provided for the function.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -1394,8 +1578,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # AWS Lambda received an unexpected EC2 client exception while setting
-    # up for the Lambda function.
+    # Lambda received an unexpected Amazon EC2 client exception while
+    # setting up for the Lambda function.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -1416,7 +1600,7 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # An error occured when reading from or writing to a connected file
+    # An error occurred when reading from or writing to a connected file
     # system.
     #
     # @!attribute [rw] type
@@ -1434,8 +1618,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The function couldn't make a network connection to the configured
-    # file system.
+    # The Lambda function couldn't make a network connection to the
+    # configured file system.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -1452,8 +1636,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The function couldn't mount the configured file system due to a
-    # permission or configuration issue.
+    # The Lambda function couldn't mount the configured file system due to
+    # a permission or configuration issue.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -1470,8 +1654,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The function was able to make a network connection to the configured
-    # file system, but the mount operation timed out.
+    # The Lambda function made a network connection to the configured file
+    # system, but the mount operation timed out.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -1488,9 +1672,14 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # AWS Lambda was not able to create an elastic network interface in the
-    # VPC, specified as part of Lambda function configuration, because the
-    # limit for network interfaces has been reached.
+    # Lambda couldn't create an elastic network interface in the VPC,
+    # specified as part of Lambda function configuration, because the limit
+    # for network interfaces has been reached. For more information, see
+    # [Lambda quotas][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -1507,19 +1696,18 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # A function's environment variable settings.
-    #
-    # @note When making an API call, you may pass Environment
-    #   data as a hash:
-    #
-    #       {
-    #         variables: {
-    #           "EnvironmentVariableName" => "EnvironmentVariableValue",
-    #         },
-    #       }
+    # A function's environment variable settings. You can use environment
+    # variables to adjust your function's behavior without updating code.
+    # An environment variable is a pair of strings that are stored in a
+    # function's version-specific configuration.
     #
     # @!attribute [rw] variables
-    #   Environment variable key-value pairs.
+    #   Environment variable key-value pairs. For more information, see
+    #   [Using Lambda environment variables][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/Environment AWS API Documentation
@@ -1550,12 +1738,11 @@ module Aws::Lambda
     end
 
     # The results of an operation to update or read environment variables.
-    # If the operation is successful, the response contains the environment
-    # variables. If it failed, the response contains details about the
-    # error.
+    # If the operation succeeds, the response contains the environment
+    # variables. If it fails, the response contains details about the error.
     #
     # @!attribute [rw] variables
-    #   Environment variable key-value pairs.
+    #   Environment variable key-value pairs. Omitted from CloudTrail logs.
     #   @return [Hash<String,String>]
     #
     # @!attribute [rw] error
@@ -1571,8 +1758,23 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # A mapping between an AWS resource and an AWS Lambda function. See
-    # CreateEventSourceMapping for details.
+    # The size of the function's `/tmp` directory in MB. The default value
+    # is 512, but it can be any whole number between 512 and 10,240 MB.
+    #
+    # @!attribute [rw] size
+    #   The size of the function's `/tmp` directory.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/EphemeralStorage AWS API Documentation
+    #
+    class EphemeralStorage < Struct.new(
+      :size)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A mapping between an Amazon Web Services resource and a Lambda
+    # function. For details, see CreateEventSourceMapping.
     #
     # @!attribute [rw] uuid
     #   The identifier of the event source mapping.
@@ -1580,46 +1782,80 @@ module Aws::Lambda
     #
     # @!attribute [rw] starting_position
     #   The position in a stream from which to start reading. Required for
-    #   Amazon Kinesis, Amazon DynamoDB, and Amazon MSK Streams sources.
-    #   `AT_TIMESTAMP` is only supported for Amazon Kinesis streams.
+    #   Amazon Kinesis and Amazon DynamoDB Stream event sources.
+    #   `AT_TIMESTAMP` is supported only for Amazon Kinesis streams, Amazon
+    #   DocumentDB, Amazon MSK, and self-managed Apache Kafka.
     #   @return [String]
     #
     # @!attribute [rw] starting_position_timestamp
     #   With `StartingPosition` set to `AT_TIMESTAMP`, the time from which
-    #   to start reading.
+    #   to start reading. `StartingPositionTimestamp` cannot be in the
+    #   future.
     #   @return [Time]
     #
     # @!attribute [rw] batch_size
-    #   The maximum number of items to retrieve in a single batch.
+    #   The maximum number of records in each batch that Lambda pulls from
+    #   your stream or queue and sends to your function. Lambda passes all
+    #   of the records in the batch to the function in a single call, up to
+    #   the payload limit for synchronous invocation (6 MB).
+    #
+    #   Default value: Varies by service. For Amazon SQS, the default is 10.
+    #   For all other services, the default is 100.
+    #
+    #   Related setting: When you set `BatchSize` to a value greater than
+    #   10, you must set `MaximumBatchingWindowInSeconds` to at least 1.
     #   @return [Integer]
     #
     # @!attribute [rw] maximum_batching_window_in_seconds
-    #   (Streams and SQS standard queues) The maximum amount of time to
-    #   gather records before invoking the function, in seconds. The default
-    #   value is zero.
+    #   The maximum amount of time, in seconds, that Lambda spends gathering
+    #   records before invoking the function. You can configure
+    #   `MaximumBatchingWindowInSeconds` to any value from 0 seconds to 300
+    #   seconds in increments of seconds.
+    #
+    #   For streams and Amazon SQS event sources, the default batching
+    #   window is 0 seconds. For Amazon MSK, Self-managed Apache Kafka,
+    #   Amazon MQ, and DocumentDB event sources, the default batching window
+    #   is 500 ms. Note that because you can only change
+    #   `MaximumBatchingWindowInSeconds` in increments of seconds, you
+    #   cannot revert back to the 500 ms default batching window after you
+    #   have changed it. To restore the default batching window, you must
+    #   create a new event source mapping.
+    #
+    #   Related setting: For streams and Amazon SQS event sources, when you
+    #   set `BatchSize` to a value greater than 10, you must set
+    #   `MaximumBatchingWindowInSeconds` to at least 1.
     #   @return [Integer]
     #
     # @!attribute [rw] parallelization_factor
-    #   (Streams) The number of batches to process from each shard
-    #   concurrently. The default value is 1.
+    #   (Kinesis and DynamoDB Streams only) The number of batches to process
+    #   concurrently from each shard. The default value is 1.
     #   @return [Integer]
     #
     # @!attribute [rw] event_source_arn
     #   The Amazon Resource Name (ARN) of the event source.
     #   @return [String]
     #
+    # @!attribute [rw] filter_criteria
+    #   An object that defines the filter criteria that determine whether
+    #   Lambda should process an event. For more information, see [Lambda
+    #   event filtering][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html
+    #   @return [Types::FilterCriteria]
+    #
     # @!attribute [rw] function_arn
     #   The ARN of the Lambda function.
     #   @return [String]
     #
     # @!attribute [rw] last_modified
-    #   The date that the event source mapping was last updated, or its
+    #   The date that the event source mapping was last updated or that its
     #   state changed.
     #   @return [Time]
     #
     # @!attribute [rw] last_processing_result
-    #   The result of the last AWS Lambda invocation of your Lambda
-    #   function.
+    #   The result of the last Lambda invocation of your function.
     #   @return [String]
     #
     # @!attribute [rw] state
@@ -1629,13 +1865,13 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] state_transition_reason
-    #   Indicates whether the last change to the event source mapping was
-    #   made by a user, or by the Lambda service.
+    #   Indicates whether a user or Lambda made the last change to the event
+    #   source mapping.
     #   @return [String]
     #
     # @!attribute [rw] destination_config
-    #   (Streams) An Amazon SQS queue or Amazon SNS topic destination for
-    #   discarded records.
+    #   (Kinesis and DynamoDB Streams only) An Amazon SQS queue or Amazon
+    #   SNS topic destination for discarded records.
     #   @return [Types::DestinationConfig]
     #
     # @!attribute [rw] topics
@@ -1643,44 +1879,79 @@ module Aws::Lambda
     #   @return [Array<String>]
     #
     # @!attribute [rw] queues
-    #   (MQ) The name of the Amazon MQ broker destination queue to consume.
+    #   (Amazon MQ) The name of the Amazon MQ broker destination queue to
+    #   consume.
     #   @return [Array<String>]
     #
     # @!attribute [rw] source_access_configurations
-    #   An array of the authentication protocol, or the VPC components to
-    #   secure your event source.
+    #   An array of the authentication protocol, VPC components, or virtual
+    #   host to secure and define your event source.
     #   @return [Array<Types::SourceAccessConfiguration>]
     #
     # @!attribute [rw] self_managed_event_source
-    #   The Self-Managed Apache Kafka cluster for your event source.
+    #   The self-managed Apache Kafka cluster for your event source.
     #   @return [Types::SelfManagedEventSource]
     #
     # @!attribute [rw] maximum_record_age_in_seconds
-    #   (Streams) Discard records older than the specified age. The default
-    #   value is infinite (-1). When set to infinite (-1), failed records
-    #   are retried until the record expires.
+    #   (Kinesis and DynamoDB Streams only) Discard records older than the
+    #   specified age. The default value is -1, which sets the maximum age
+    #   to infinite. When the value is set to infinite, Lambda never
+    #   discards old records.
+    #
+    #   <note markdown="1"> The minimum valid value for maximum record age is 60s. Although
+    #   values less than 60 and greater than -1 fall within the parameter's
+    #   absolute range, they are not allowed
+    #
+    #    </note>
     #   @return [Integer]
     #
     # @!attribute [rw] bisect_batch_on_function_error
-    #   (Streams) If the function returns an error, split the batch in two
-    #   and retry. The default value is false.
+    #   (Kinesis and DynamoDB Streams only) If the function returns an
+    #   error, split the batch in two and retry. The default value is false.
     #   @return [Boolean]
     #
     # @!attribute [rw] maximum_retry_attempts
-    #   (Streams) Discard records after the specified number of retries. The
-    #   default value is infinite (-1). When set to infinite (-1), failed
-    #   records are retried until the record expires.
+    #   (Kinesis and DynamoDB Streams only) Discard records after the
+    #   specified number of retries. The default value is -1, which sets the
+    #   maximum number of retries to infinite. When MaximumRetryAttempts is
+    #   infinite, Lambda retries failed records until the record expires in
+    #   the event source.
     #   @return [Integer]
     #
     # @!attribute [rw] tumbling_window_in_seconds
-    #   (Streams) The duration in seconds of a processing window. The range
-    #   is between 1 second up to 900 seconds.
+    #   (Kinesis and DynamoDB Streams only) The duration in seconds of a
+    #   processing window for DynamoDB and Kinesis Streams event sources. A
+    #   value of 0 seconds indicates no tumbling window.
     #   @return [Integer]
     #
     # @!attribute [rw] function_response_types
-    #   (Streams) A list of current response type enums applied to the event
-    #   source mapping.
+    #   (Kinesis, DynamoDB Streams, and Amazon SQS) A list of current
+    #   response type enums applied to the event source mapping.
     #   @return [Array<String>]
+    #
+    # @!attribute [rw] amazon_managed_kafka_event_source_config
+    #   Specific configuration settings for an Amazon Managed Streaming for
+    #   Apache Kafka (Amazon MSK) event source.
+    #   @return [Types::AmazonManagedKafkaEventSourceConfig]
+    #
+    # @!attribute [rw] self_managed_kafka_event_source_config
+    #   Specific configuration settings for a self-managed Apache Kafka
+    #   event source.
+    #   @return [Types::SelfManagedKafkaEventSourceConfig]
+    #
+    # @!attribute [rw] scaling_config
+    #   (Amazon SQS only) The scaling configuration for the event source.
+    #   For more information, see [Configuring maximum concurrency for
+    #   Amazon SQS event sources][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-max-concurrency
+    #   @return [Types::ScalingConfig]
+    #
+    # @!attribute [rw] document_db_event_source_config
+    #   Specific configuration settings for a DocumentDB event source.
+    #   @return [Types::DocumentDBEventSourceConfig]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/EventSourceMappingConfiguration AWS API Documentation
     #
@@ -1692,6 +1963,7 @@ module Aws::Lambda
       :maximum_batching_window_in_seconds,
       :parallelization_factor,
       :event_source_arn,
+      :filter_criteria,
       :function_arn,
       :last_modified,
       :last_processing_result,
@@ -1706,21 +1978,21 @@ module Aws::Lambda
       :bisect_batch_on_function_error,
       :maximum_retry_attempts,
       :tumbling_window_in_seconds,
-      :function_response_types)
+      :function_response_types,
+      :amazon_managed_kafka_event_source_config,
+      :self_managed_kafka_event_source_config,
+      :scaling_config,
+      :document_db_event_source_config)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Details about the connection between a Lambda function and an Amazon
-    # EFS file system.
+    # Details about the connection between a Lambda function and an [Amazon
+    # EFS file system][1].
     #
-    # @note When making an API call, you may pass FileSystemConfig
-    #   data as a hash:
     #
-    #       {
-    #         arn: "FileSystemArn", # required
-    #         local_mount_path: "LocalMountPath", # required
-    #       }
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-filesystem.html
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the Amazon EFS access point that
@@ -1741,29 +2013,53 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The code for the Lambda function. You can specify either an object in
+    # A structure within a `FilterCriteria` object that defines an event
+    # filtering pattern.
+    #
+    # @!attribute [rw] pattern
+    #   A filter pattern. For more information on the syntax of a filter
+    #   pattern, see [ Filter rule syntax][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/Filter AWS API Documentation
+    #
+    class Filter < Struct.new(
+      :pattern)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object that contains the filters for an event source.
+    #
+    # @!attribute [rw] filters
+    #   A list of filters.
+    #   @return [Array<Types::Filter>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/FilterCriteria AWS API Documentation
+    #
+    class FilterCriteria < Struct.new(
+      :filters)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The code for the Lambda function. You can either specify an object in
     # Amazon S3, upload a .zip file archive deployment package directly, or
     # specify the URI of a container image.
     #
-    # @note When making an API call, you may pass FunctionCode
-    #   data as a hash:
-    #
-    #       {
-    #         zip_file: "data",
-    #         s3_bucket: "S3Bucket",
-    #         s3_key: "S3Key",
-    #         s3_object_version: "S3ObjectVersion",
-    #         image_uri: "String",
-    #       }
-    #
     # @!attribute [rw] zip_file
-    #   The base64-encoded contents of the deployment package. AWS SDK and
-    #   AWS CLI clients handle the encoding for you.
+    #   The base64-encoded contents of the deployment package. Amazon Web
+    #   Services SDK and CLI clients handle the encoding for you.
     #   @return [String]
     #
     # @!attribute [rw] s3_bucket
-    #   An Amazon S3 bucket in the same AWS Region as your function. The
-    #   bucket can be in a different AWS account.
+    #   An Amazon S3 bucket in the same Amazon Web Services Region as your
+    #   function. The bucket can be in a different Amazon Web Services
+    #   account.
     #   @return [String]
     #
     # @!attribute [rw] s3_key
@@ -1776,7 +2072,11 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] image_uri
-    #   URI of a container image in the Amazon ECR registry.
+    #   URI of a [container image][1] in the Amazon ECR registry.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-images.html
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/FunctionCode AWS API Documentation
@@ -1831,7 +2131,16 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] runtime
-    #   The runtime environment for the Lambda function.
+    #   The identifier of the function's [runtime][1]. Runtime is required
+    #   if the deployment package is a .zip file archive.
+    #
+    #   The following list includes deprecated runtimes. For more
+    #   information, see [Runtime deprecation policy][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
+    #   [2]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
     #   @return [String]
     #
     # @!attribute [rw] role
@@ -1839,7 +2148,7 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] handler
-    #   The function that Lambda calls to begin executing your function.
+    #   The function that Lambda calls to begin running your function.
     #   @return [String]
     #
     # @!attribute [rw] code_size
@@ -1885,21 +2194,32 @@ module Aws::Lambda
     #   @return [Types::DeadLetterConfig]
     #
     # @!attribute [rw] environment
-    #   The function's environment variables.
+    #   The function's [environment variables][1]. Omitted from CloudTrail
+    #   logs.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
     #   @return [Types::EnvironmentResponse]
     #
     # @!attribute [rw] kms_key_arn
-    #   The KMS key that's used to encrypt the function's environment
-    #   variables. This key is only returned if you've configured a
-    #   customer managed CMK.
+    #   The KMS key that's used to encrypt the function's [environment
+    #   variables][1]. When [Lambda SnapStart][2] is activated, this key is
+    #   also used to encrypt the function's snapshot. This key is returned
+    #   only if you've configured a customer managed key.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption
+    #   [2]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html
     #   @return [String]
     #
     # @!attribute [rw] tracing_config
-    #   The function's AWS X-Ray tracing configuration.
+    #   The function's X-Ray tracing configuration.
     #   @return [Types::TracingConfigResponse]
     #
     # @!attribute [rw] master_arn
-    #   For Lambda@Edge functions, the ARN of the master function.
+    #   For Lambda@Edge functions, the ARN of the main function.
     #   @return [String]
     #
     # @!attribute [rw] revision_id
@@ -1907,7 +2227,7 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] layers
-    #   The function's [ layers][1].
+    #   The function's [layers][1].
     #
     #
     #
@@ -1943,7 +2263,11 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] file_system_configs
-    #   Connection settings for an Amazon EFS file system.
+    #   Connection settings for an [Amazon EFS file system][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-filesystem.html
     #   @return [Array<Types::FileSystemConfig>]
     #
     # @!attribute [rw] package_type
@@ -1962,6 +2286,32 @@ module Aws::Lambda
     # @!attribute [rw] signing_job_arn
     #   The ARN of the signing job.
     #   @return [String]
+    #
+    # @!attribute [rw] architectures
+    #   The instruction set architecture that the function supports.
+    #   Architecture is a string array with one of the valid values. The
+    #   default architecture value is `x86_64`.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] ephemeral_storage
+    #   The size of the function’s `/tmp` directory in MB. The default value
+    #   is 512, but it can be any whole number between 512 and 10,240 MB.
+    #   @return [Types::EphemeralStorage]
+    #
+    # @!attribute [rw] snap_start
+    #   Set `ApplyOn` to `PublishedVersions` to create a snapshot of the
+    #   initialized execution environment when you publish a function
+    #   version. For more information, see [Improving startup performance
+    #   with Lambda SnapStart][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html
+    #   @return [Types::SnapStartResponse]
+    #
+    # @!attribute [rw] runtime_version_config
+    #   The ARN of the runtime and any errors that occured.
+    #   @return [Types::RuntimeVersionConfig]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/FunctionConfiguration AWS API Documentation
     #
@@ -1996,7 +2346,11 @@ module Aws::Lambda
       :package_type,
       :image_config_response,
       :signing_profile_version_arn,
-      :signing_job_arn)
+      :signing_job_arn,
+      :architectures,
+      :ephemeral_storage,
+      :snap_start,
+      :runtime_version_config)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2028,9 +2382,9 @@ module Aws::Lambda
     #   * **Function** - The Amazon Resource Name (ARN) of a Lambda
     #     function.
     #
-    #   * **Queue** - The ARN of an SQS queue.
+    #   * **Queue** - The ARN of a standard SQS queue.
     #
-    #   * **Topic** - The ARN of an SNS topic.
+    #   * **Topic** - The ARN of a standard SNS topic.
     #
     #   * **Event Bus** - The ARN of an Amazon EventBridge event bus.
     #   @return [Types::DestinationConfig]
@@ -2043,6 +2397,88 @@ module Aws::Lambda
       :maximum_retry_attempts,
       :maximum_event_age_in_seconds,
       :destination_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Details about a Lambda function URL.
+    #
+    # @!attribute [rw] function_url
+    #   The HTTP URL endpoint for your function.
+    #   @return [String]
+    #
+    # @!attribute [rw] function_arn
+    #   The Amazon Resource Name (ARN) of your function.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_time
+    #   When the function URL was created, in [ISO-8601 format][1]
+    #   (YYYY-MM-DDThh:mm:ss.sTZD).
+    #
+    #
+    #
+    #   [1]: https://www.w3.org/TR/NOTE-datetime
+    #   @return [Time]
+    #
+    # @!attribute [rw] last_modified_time
+    #   When the function URL configuration was last updated, in [ISO-8601
+    #   format][1] (YYYY-MM-DDThh:mm:ss.sTZD).
+    #
+    #
+    #
+    #   [1]: https://www.w3.org/TR/NOTE-datetime
+    #   @return [Time]
+    #
+    # @!attribute [rw] cors
+    #   The [cross-origin resource sharing (CORS)][1] settings for your
+    #   function URL.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    #   @return [Types::Cors]
+    #
+    # @!attribute [rw] auth_type
+    #   The type of authentication that your function URL uses. Set to
+    #   `AWS_IAM` if you want to restrict access to authenticated users
+    #   only. Set to `NONE` if you want to bypass IAM authentication to
+    #   create a public endpoint. For more information, see [Security and
+    #   auth model for Lambda function URLs][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
+    #   @return [String]
+    #
+    # @!attribute [rw] invoke_mode
+    #   Use one of the following options:
+    #
+    #   * `BUFFERED` – This is the default option. Lambda invokes your
+    #     function using the `Invoke` API operation. Invocation results are
+    #     available when the payload is complete. The maximum payload size
+    #     is 6 MB.
+    #
+    #   * `RESPONSE_STREAM` – Your function streams payload results as they
+    #     become available. Lambda invokes your function using the
+    #     `InvokeWithResponseStream` API operation. The maximum response
+    #     payload size is 20 MB, however, you can [request a quota
+    #     increase][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/FunctionUrlConfig AWS API Documentation
+    #
+    class FunctionUrlConfig < Struct.new(
+      :function_url,
+      :function_arn,
+      :creation_time,
+      :last_modified_time,
+      :cors,
+      :auth_type,
+      :invoke_mode)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2070,14 +2506,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         name: "Alias", # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -2107,13 +2535,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetCodeSigningConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         code_signing_config_arn: "CodeSigningConfigArn", # required
-    #       }
-    #
     # @!attribute [rw] code_signing_config_arn
     #   The The Amazon Resource Name (ARN) of the code signing
     #   configuration.
@@ -2139,13 +2560,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetEventSourceMappingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         uuid: "String", # required
-    #       }
-    #
     # @!attribute [rw] uuid
     #   The identifier of the event source mapping.
     #   @return [String]
@@ -2158,13 +2572,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFunctionCodeSigningConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -2219,24 +2626,17 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFunctionConcurrencyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
@@ -2263,26 +2663,18 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFunctionConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "NamespacedFunctionName", # required
-    #         qualifier: "Qualifier",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function` (name-only), `my-function:v1`
+    #   * **Function name** – `my-function` (name-only), `my-function:v1`
     #     (with alias).
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   You can append a version number or alias to any of the formats. The
     #   length constraint applies only to the full ARN. If you specify only
@@ -2303,14 +2695,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFunctionEventInvokeConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         qualifier: "Qualifier",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
@@ -2342,26 +2726,18 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "NamespacedFunctionName", # required
-    #         qualifier: "Qualifier",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function` (name-only), `my-function:v1`
+    #   * **Function name** – `my-function` (name-only), `my-function:v1`
     #     (with alias).
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   You can append a version number or alias to any of the formats. The
     #   length constraint applies only to the full ARN. If you specify only
@@ -2417,13 +2793,115 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetLayerVersionByArnRequest
-    #   data as a hash:
+    # @!attribute [rw] function_name
+    #   The name of the Lambda function.
     #
-    #       {
-    #         arn: "LayerVersionArn", # required
-    #       }
+    #   **Name formats**
     #
+    #   * **Function name** – `my-function`.
+    #
+    #   * **Function ARN** –
+    #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
+    #
+    #   * **Partial ARN** – `123456789012:function:my-function`.
+    #
+    #   The length constraint applies only to the full ARN. If you specify
+    #   only the function name, it is limited to 64 characters in length.
+    #   @return [String]
+    #
+    # @!attribute [rw] qualifier
+    #   The alias name.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionUrlConfigRequest AWS API Documentation
+    #
+    class GetFunctionUrlConfigRequest < Struct.new(
+      :function_name,
+      :qualifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] function_url
+    #   The HTTP URL endpoint for your function.
+    #   @return [String]
+    #
+    # @!attribute [rw] function_arn
+    #   The Amazon Resource Name (ARN) of your function.
+    #   @return [String]
+    #
+    # @!attribute [rw] auth_type
+    #   The type of authentication that your function URL uses. Set to
+    #   `AWS_IAM` if you want to restrict access to authenticated users
+    #   only. Set to `NONE` if you want to bypass IAM authentication to
+    #   create a public endpoint. For more information, see [Security and
+    #   auth model for Lambda function URLs][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
+    #   @return [String]
+    #
+    # @!attribute [rw] cors
+    #   The [cross-origin resource sharing (CORS)][1] settings for your
+    #   function URL.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    #   @return [Types::Cors]
+    #
+    # @!attribute [rw] creation_time
+    #   When the function URL was created, in [ISO-8601 format][1]
+    #   (YYYY-MM-DDThh:mm:ss.sTZD).
+    #
+    #
+    #
+    #   [1]: https://www.w3.org/TR/NOTE-datetime
+    #   @return [Time]
+    #
+    # @!attribute [rw] last_modified_time
+    #   When the function URL configuration was last updated, in [ISO-8601
+    #   format][1] (YYYY-MM-DDThh:mm:ss.sTZD).
+    #
+    #
+    #
+    #   [1]: https://www.w3.org/TR/NOTE-datetime
+    #   @return [Time]
+    #
+    # @!attribute [rw] invoke_mode
+    #   Use one of the following options:
+    #
+    #   * `BUFFERED` – This is the default option. Lambda invokes your
+    #     function using the `Invoke` API operation. Invocation results are
+    #     available when the payload is complete. The maximum payload size
+    #     is 6 MB.
+    #
+    #   * `RESPONSE_STREAM` – Your function streams payload results as they
+    #     become available. Lambda invokes your function using the
+    #     `InvokeWithResponseStream` API operation. The maximum response
+    #     payload size is 20 MB, however, you can [request a quota
+    #     increase][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionUrlConfigResponse AWS API Documentation
+    #
+    class GetFunctionUrlConfigResponse < Struct.new(
+      :function_url,
+      :function_arn,
+      :auth_type,
+      :cors,
+      :creation_time,
+      :last_modified_time,
+      :invoke_mode)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] arn
     #   The ARN of the layer version.
     #   @return [String]
@@ -2436,14 +2914,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetLayerVersionPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         layer_name: "LayerName", # required
-    #         version_number: 1, # required
-    #       }
-    #
     # @!attribute [rw] layer_name
     #   The name or Amazon Resource Name (ARN) of the layer.
     #   @return [String]
@@ -2478,14 +2948,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetLayerVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         layer_name: "LayerName", # required
-    #         version_number: 1, # required
-    #       }
-    #
     # @!attribute [rw] layer_name
     #   The name or Amazon Resource Name (ARN) of the layer.
     #   @return [String]
@@ -2534,11 +2996,26 @@ module Aws::Lambda
     #
     # @!attribute [rw] compatible_runtimes
     #   The layer's compatible runtimes.
+    #
+    #   The following list includes deprecated runtimes. For more
+    #   information, see [Runtime deprecation policy][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
     #   @return [Array<String>]
     #
     # @!attribute [rw] license_info
     #   The layer's software license.
     #   @return [String]
+    #
+    # @!attribute [rw] compatible_architectures
+    #   A list of compatible [instruction set architectures][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html
+    #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersionResponse AWS API Documentation
     #
@@ -2550,31 +3027,24 @@ module Aws::Lambda
       :created_date,
       :version,
       :compatible_runtimes,
-      :license_info)
+      :license_info,
+      :compatible_architectures)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "NamespacedFunctionName", # required
-    #         qualifier: "Qualifier",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function` (name-only), `my-function:v1`
+    #   * **Function name** – `my-function` (name-only), `my-function:v1`
     #     (with alias).
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   You can append a version number or alias to any of the formats. The
     #   length constraint applies only to the full ARN. If you specify only
@@ -2611,25 +3081,17 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetProvisionedConcurrencyConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         qualifier: "Qualifier", # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
@@ -2657,7 +3119,10 @@ module Aws::Lambda
     #   @return [Integer]
     #
     # @!attribute [rw] allocated_provisioned_concurrent_executions
-    #   The amount of provisioned concurrency allocated.
+    #   The amount of provisioned concurrency allocated. When a weighted
+    #   alias is used during linear and canary deployments, this value
+    #   fluctuates depending on the amount of concurrency that is
+    #   provisioned for the function versions.
     #   @return [Integer]
     #
     # @!attribute [rw] status
@@ -2691,21 +3156,67 @@ module Aws::Lambda
       include Aws::Structure
     end
 
+    # @!attribute [rw] function_name
+    #   The name of the Lambda function.
+    #
+    #   **Name formats**
+    #
+    #   * **Function name** – `my-function`.
+    #
+    #   * **Function ARN** –
+    #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
+    #
+    #   * **Partial ARN** – `123456789012:function:my-function`.
+    #
+    #   The length constraint applies only to the full ARN. If you specify
+    #   only the function name, it is limited to 64 characters in length.
+    #   @return [String]
+    #
+    # @!attribute [rw] qualifier
+    #   Specify a version of the function. This can be `$LATEST` or a
+    #   published version number. If no value is specified, the
+    #   configuration for the `$LATEST` version is returned.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetRuntimeManagementConfigRequest AWS API Documentation
+    #
+    class GetRuntimeManagementConfigRequest < Struct.new(
+      :function_name,
+      :qualifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] update_runtime_on
+    #   The current runtime update mode of the function.
+    #   @return [String]
+    #
+    # @!attribute [rw] runtime_version_arn
+    #   The ARN of the runtime the function is configured to use. If the
+    #   runtime update mode is **Manual**, the ARN is returned, otherwise
+    #   `null` is returned.
+    #   @return [String]
+    #
+    # @!attribute [rw] function_arn
+    #   The Amazon Resource Name (ARN) of your function.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetRuntimeManagementConfigResponse AWS API Documentation
+    #
+    class GetRuntimeManagementConfigResponse < Struct.new(
+      :update_runtime_on,
+      :runtime_version_arn,
+      :function_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Configuration values that override the container image Dockerfile
-    # settings. See [Container settings][1].
+    # settings. For more information, see [Container image settings][1].
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-parms
-    #
-    # @note When making an API call, you may pass ImageConfig
-    #   data as a hash:
-    #
-    #       {
-    #         entry_point: ["String"],
-    #         command: ["String"],
-    #         working_directory: "WorkingDirectory",
-    #       }
     #
     # @!attribute [rw] entry_point
     #   Specifies the entry point to their application, which is typically
@@ -2730,7 +3241,7 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Error response to GetFunctionConfiguration.
+    # Error response to `GetFunctionConfiguration`.
     #
     # @!attribute [rw] error_code
     #   Error code.
@@ -2749,14 +3260,14 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Response to GetFunctionConfiguration request.
+    # Response to a `GetFunctionConfiguration` request.
     #
     # @!attribute [rw] image_config
     #   Configuration values that override the container image Dockerfile.
     #   @return [Types::ImageConfig]
     #
     # @!attribute [rw] error
-    #   Error response to GetFunctionConfiguration.
+    #   Error response to `GetFunctionConfiguration`.
     #   @return [Types::ImageConfigError]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ImageConfigResponse AWS API Documentation
@@ -2768,8 +3279,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The code signature failed the integrity check. Lambda always blocks
-    # deployment if the integrity check fails, even if code signing policy
+    # The code signature failed the integrity check. If the integrity check
+    # fails, then Lambda blocks deployment, even if the code signing policy
     # is set to WARN.
     #
     # @!attribute [rw] type
@@ -2787,7 +3298,7 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # One of the parameters in the request is invalid.
+    # One of the parameters in the request is not valid.
     #
     # @!attribute [rw] type
     #   The exception type.
@@ -2842,8 +3353,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The Security Group ID provided in the Lambda function VPC
-    # configuration is invalid.
+    # The security group ID provided in the Lambda function VPC
+    # configuration is not valid.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -2860,8 +3371,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The Subnet ID provided in the Lambda function VPC configuration is
-    # invalid.
+    # The subnet ID provided in the Lambda function VPC configuration is not
+    # valid.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -2878,7 +3389,7 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # AWS Lambda could not unzip the deployment package.
+    # Lambda could not unzip the deployment package.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -2895,30 +3406,18 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass InvocationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "NamespacedFunctionName", # required
-    #         invocation_type: "Event", # accepts Event, RequestResponse, DryRun
-    #         log_type: "None", # accepts None, Tail
-    #         client_context: "String",
-    #         payload: "data",
-    #         qualifier: "Qualifier",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function` (name-only), `my-function:v1`
+    #   * **Function name** – `my-function` (name-only), `my-function:v1`
     #     (with alias).
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   You can append a version number or alias to any of the formats. The
     #   length constraint applies only to the full ARN. If you specify only
@@ -2928,30 +3427,35 @@ module Aws::Lambda
     # @!attribute [rw] invocation_type
     #   Choose from the following options.
     #
-    #   * `RequestResponse` (default) - Invoke the function synchronously.
+    #   * `RequestResponse` (default) – Invoke the function synchronously.
     #     Keep the connection open until the function returns a response or
     #     times out. The API response includes the function response and
     #     additional data.
     #
-    #   * `Event` - Invoke the function asynchronously. Send events that
-    #     fail multiple times to the function's dead-letter queue (if it's
-    #     configured). The API response only includes a status code.
+    #   * `Event` – Invoke the function asynchronously. Send events that
+    #     fail multiple times to the function's dead-letter queue (if one
+    #     is configured). The API response only includes a status code.
     #
-    #   * `DryRun` - Validate parameter values and verify that the user or
+    #   * `DryRun` – Validate parameter values and verify that the user or
     #     role has permission to invoke the function.
     #   @return [String]
     #
     # @!attribute [rw] log_type
-    #   Set to `Tail` to include the execution log in the response.
+    #   Set to `Tail` to include the execution log in the response. Applies
+    #   to synchronously invoked functions only.
     #   @return [String]
     #
     # @!attribute [rw] client_context
-    #   Up to 3583 bytes of base64-encoded data about the invoking client to
-    #   pass to the function in the context object.
+    #   Up to 3,583 bytes of base64-encoded data about the invoking client
+    #   to pass to the function in the context object.
     #   @return [String]
     #
     # @!attribute [rw] payload
     #   The JSON that you want to provide to your Lambda function as input.
+    #
+    #   You can enter the JSON directly. For example, `--payload '\{ "key":
+    #   "value" \}'`. You can also specify a file path. For example,
+    #   `--payload file://payload.json`.
     #   @return [String]
     #
     # @!attribute [rw] qualifier
@@ -2986,7 +3490,7 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] log_result
-    #   The last 4 KB of the execution log, which is base64 encoded.
+    #   The last 4 KB of the execution log, which is base64-encoded.
     #   @return [String]
     #
     # @!attribute [rw] payload
@@ -3011,25 +3515,17 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass InvokeAsyncRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "NamespacedFunctionName", # required
-    #         invoke_args: "data", # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
@@ -3063,8 +3559,142 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Lambda was unable to decrypt the environment variables because KMS
-    # access was denied. Check the Lambda function's KMS permissions.
+    # A chunk of the streamed response payload.
+    #
+    # @!attribute [rw] payload
+    #   Data returned by your Lambda function.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/InvokeResponseStreamUpdate AWS API Documentation
+    #
+    class InvokeResponseStreamUpdate < Struct.new(
+      :payload,
+      :event_type)
+      SENSITIVE = [:payload]
+      include Aws::Structure
+    end
+
+    # A response confirming that the event stream is complete.
+    #
+    # @!attribute [rw] error_code
+    #   An error code.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_details
+    #   The details of any returned error.
+    #   @return [String]
+    #
+    # @!attribute [rw] log_result
+    #   The last 4 KB of the execution log, which is base64-encoded.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/InvokeWithResponseStreamCompleteEvent AWS API Documentation
+    #
+    class InvokeWithResponseStreamCompleteEvent < Struct.new(
+      :error_code,
+      :error_details,
+      :log_result,
+      :event_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] function_name
+    #   The name of the Lambda function.
+    #
+    #   **Name formats**
+    #
+    #   * **Function name** – `my-function`.
+    #
+    #   * **Function ARN** –
+    #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
+    #
+    #   * **Partial ARN** – `123456789012:function:my-function`.
+    #
+    #   The length constraint applies only to the full ARN. If you specify
+    #   only the function name, it is limited to 64 characters in length.
+    #   @return [String]
+    #
+    # @!attribute [rw] invocation_type
+    #   Use one of the following options:
+    #
+    #   * `RequestResponse` (default) – Invoke the function synchronously.
+    #     Keep the connection open until the function returns a response or
+    #     times out. The API operation response includes the function
+    #     response and additional data.
+    #
+    #   * `DryRun` – Validate parameter values and verify that the IAM user
+    #     or role has permission to invoke the function.
+    #   @return [String]
+    #
+    # @!attribute [rw] log_type
+    #   Set to `Tail` to include the execution log in the response. Applies
+    #   to synchronously invoked functions only.
+    #   @return [String]
+    #
+    # @!attribute [rw] client_context
+    #   Up to 3,583 bytes of base64-encoded data about the invoking client
+    #   to pass to the function in the context object.
+    #   @return [String]
+    #
+    # @!attribute [rw] qualifier
+    #   The alias name.
+    #   @return [String]
+    #
+    # @!attribute [rw] payload
+    #   The JSON that you want to provide to your Lambda function as input.
+    #
+    #   You can enter the JSON directly. For example, `--payload '\{ "key":
+    #   "value" \}'`. You can also specify a file path. For example,
+    #   `--payload file://payload.json`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/InvokeWithResponseStreamRequest AWS API Documentation
+    #
+    class InvokeWithResponseStreamRequest < Struct.new(
+      :function_name,
+      :invocation_type,
+      :log_type,
+      :client_context,
+      :qualifier,
+      :payload)
+      SENSITIVE = [:payload]
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] status_code
+    #   For a successful request, the HTTP status code is in the 200 range.
+    #   For the `RequestResponse` invocation type, this status code is 200.
+    #   For the `DryRun` invocation type, this status code is 204.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] executed_version
+    #   The version of the function that executed. When you invoke a
+    #   function with an alias, this indicates which version the alias
+    #   resolved to.
+    #   @return [String]
+    #
+    # @!attribute [rw] event_stream
+    #   The stream of response payloads.
+    #   @return [Types::InvokeWithResponseStreamResponseEvent]
+    #
+    # @!attribute [rw] response_stream_content_type
+    #   The type of data the stream is returning.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/InvokeWithResponseStreamResponse AWS API Documentation
+    #
+    class InvokeWithResponseStreamResponse < Struct.new(
+      :status_code,
+      :executed_version,
+      :event_stream,
+      :response_stream_content_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Lambda couldn't decrypt the environment variables because KMS access
+    # was denied. Check the Lambda function's KMS permissions.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -3081,8 +3711,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Lambda was unable to decrypt the environment variables because the KMS
-    # key used is disabled. Check the Lambda function's KMS key settings.
+    # Lambda couldn't decrypt the environment variables because the KMS key
+    # used is disabled. Check the Lambda function's KMS key settings.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -3099,9 +3729,9 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Lambda was unable to decrypt the environment variables because the KMS
-    # key used is in an invalid state for Decrypt. Check the function's KMS
-    # key settings.
+    # Lambda couldn't decrypt the environment variables because the state
+    # of the KMS key used is not valid for Decrypt. Check the function's
+    # KMS key settings.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -3118,8 +3748,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Lambda was unable to decrypt the environment variables because the KMS
-    # key was not found. Check the function's KMS key settings.
+    # Lambda couldn't decrypt the environment variables because the KMS key
+    # was not found. Check the function's KMS key settings.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -3136,7 +3766,7 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # An [AWS Lambda layer][1].
+    # An [Lambda layer][1].
     #
     #
     #
@@ -3169,23 +3799,13 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # A ZIP archive that contains the contents of an [AWS Lambda layer][1].
-    # You can specify either an Amazon S3 location, or upload a layer
-    # archive directly.
+    # A ZIP archive that contains the contents of an [Lambda layer][1]. You
+    # can specify either an Amazon S3 location, or upload a layer archive
+    # directly.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
-    #
-    # @note When making an API call, you may pass LayerVersionContentInput
-    #   data as a hash:
-    #
-    #       {
-    #         s3_bucket: "S3Bucket",
-    #         s3_key: "S3Key",
-    #         s3_object_version: "S3ObjectVersion",
-    #         zip_file: "data",
-    #       }
     #
     # @!attribute [rw] s3_bucket
     #   The Amazon S3 bucket of the layer archive.
@@ -3201,8 +3821,9 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] zip_file
-    #   The base64-encoded contents of the layer archive. AWS SDK and AWS
-    #   CLI clients handle the encoding for you.
+    #   The base64-encoded contents of the layer archive. Amazon Web
+    #   Services SDK and Amazon Web Services CLI clients handle the encoding
+    #   for you.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/LayerVersionContentInput AWS API Documentation
@@ -3216,7 +3837,7 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Details about a version of an [AWS Lambda layer][1].
+    # Details about a version of an [Lambda layer][1].
     #
     #
     #
@@ -3255,7 +3876,7 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # Details about a version of an [AWS Lambda layer][1].
+    # Details about a version of an [Lambda layer][1].
     #
     #
     #
@@ -3280,11 +3901,26 @@ module Aws::Lambda
     #
     # @!attribute [rw] compatible_runtimes
     #   The layer's compatible runtimes.
+    #
+    #   The following list includes deprecated runtimes. For more
+    #   information, see [Runtime deprecation policy][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
     #   @return [Array<String>]
     #
     # @!attribute [rw] license_info
     #   The layer's open-source license.
     #   @return [String]
+    #
+    # @!attribute [rw] compatible_architectures
+    #   A list of compatible [instruction set architectures][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html
+    #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/LayerVersionsListItem AWS API Documentation
     #
@@ -3294,12 +3930,13 @@ module Aws::Lambda
       :description,
       :created_date,
       :compatible_runtimes,
-      :license_info)
+      :license_info,
+      :compatible_architectures)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Details about an [AWS Lambda layer][1].
+    # Details about an [Lambda layer][1].
     #
     #
     #
@@ -3327,16 +3964,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAliasesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         function_version: "Version",
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -3395,14 +4022,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListCodeSigningConfigsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] marker
     #   Specify the pagination token that's returned by a previous request
     #   to retrieve the next page of results.
@@ -3438,28 +4057,22 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListEventSourceMappingsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         event_source_arn: "Arn",
-    #         function_name: "FunctionName",
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] event_source_arn
     #   The Amazon Resource Name (ARN) of the event source.
     #
-    #   * **Amazon Kinesis** - The ARN of the data stream or a stream
+    #   * **Amazon Kinesis** – The ARN of the data stream or a stream
     #     consumer.
     #
-    #   * **Amazon DynamoDB Streams** - The ARN of the stream.
+    #   * **Amazon DynamoDB Streams** – The ARN of the stream.
     #
-    #   * **Amazon Simple Queue Service** - The ARN of the queue.
+    #   * **Amazon Simple Queue Service** – The ARN of the queue.
     #
-    #   * **Amazon Managed Streaming for Apache Kafka** - The ARN of the
+    #   * **Amazon Managed Streaming for Apache Kafka** – The ARN of the
     #     cluster.
+    #
+    #   * **Amazon MQ** – The ARN of the broker.
+    #
+    #   * **Amazon DocumentDB** – The ARN of the DocumentDB change stream.
     #   @return [String]
     #
     # @!attribute [rw] function_name
@@ -3467,15 +4080,15 @@ module Aws::Lambda
     #
     #   **Name formats**
     #
-    #   * **Function name** - `MyFunction`.
+    #   * **Function name** – `MyFunction`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:MyFunction`.
     #
-    #   * **Version or Alias ARN** -
+    #   * **Version or Alias ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD`.
     #
-    #   * **Partial ARN** - `123456789012:function:MyFunction`.
+    #   * **Partial ARN** – `123456789012:function:MyFunction`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it's limited to 64 characters in length.
@@ -3486,7 +4099,9 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] max_items
-    #   The maximum number of event source mappings to return.
+    #   The maximum number of event source mappings to return. Note that
+    #   ListEventSourceMappings returns a maximum of 100 items in each
+    #   response, even if you set the number higher.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListEventSourceMappingsRequest AWS API Documentation
@@ -3518,15 +4133,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFunctionEventInvokeConfigsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -3579,15 +4185,60 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFunctionsByCodeSigningConfigRequest
-    #   data as a hash:
+    # @!attribute [rw] function_name
+    #   The name of the Lambda function.
     #
-    #       {
-    #         code_signing_config_arn: "CodeSigningConfigArn", # required
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
+    #   **Name formats**
     #
+    #   * **Function name** – `my-function`.
+    #
+    #   * **Function ARN** –
+    #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
+    #
+    #   * **Partial ARN** – `123456789012:function:my-function`.
+    #
+    #   The length constraint applies only to the full ARN. If you specify
+    #   only the function name, it is limited to 64 characters in length.
+    #   @return [String]
+    #
+    # @!attribute [rw] marker
+    #   Specify the pagination token that's returned by a previous request
+    #   to retrieve the next page of results.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   The maximum number of function URLs to return in the response. Note
+    #   that `ListFunctionUrlConfigs` returns a maximum of 50 items in each
+    #   response, even if you set the number higher.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListFunctionUrlConfigsRequest AWS API Documentation
+    #
+    class ListFunctionUrlConfigsRequest < Struct.new(
+      :function_name,
+      :marker,
+      :max_items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] function_url_configs
+    #   A list of function URL configurations.
+    #   @return [Array<Types::FunctionUrlConfig>]
+    #
+    # @!attribute [rw] next_marker
+    #   The pagination token that's included if more results are available.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListFunctionUrlConfigsResponse AWS API Documentation
+    #
+    class ListFunctionUrlConfigsResponse < Struct.new(
+      :function_url_configs,
+      :next_marker)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] code_signing_config_arn
     #   The The Amazon Resource Name (ARN) of the code signing
     #   configuration.
@@ -3629,22 +4280,12 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFunctionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         master_region: "MasterRegion",
-    #         function_version: "ALL", # accepts ALL
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] master_region
-    #   For Lambda@Edge functions, the AWS Region of the master function.
-    #   For example, `us-east-1` filters the list of functions to only
-    #   include Lambda@Edge functions replicated from a master function in
-    #   US East (N. Virginia). If specified, you must set `FunctionVersion`
-    #   to `ALL`.
+    #   For Lambda@Edge functions, the Amazon Web Services Region of the
+    #   master function. For example, `us-east-1` filters the list of
+    #   functions to include only Lambda@Edge functions replicated from a
+    #   master function in US East (N. Virginia). If specified, you must set
+    #   `FunctionVersion` to `ALL`.
     #   @return [String]
     #
     # @!attribute [rw] function_version
@@ -3693,18 +4334,15 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListLayerVersionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         compatible_runtime: "nodejs", # accepts nodejs, nodejs4.3, nodejs6.10, nodejs8.10, nodejs10.x, nodejs12.x, nodejs14.x, java8, java8.al2, java11, python2.7, python3.6, python3.7, python3.8, dotnetcore1.0, dotnetcore2.0, dotnetcore2.1, dotnetcore3.1, nodejs4.3-edge, go1.x, ruby2.5, ruby2.7, provided, provided.al2
-    #         layer_name: "LayerName", # required
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] compatible_runtime
     #   A runtime identifier. For example, `go1.x`.
+    #
+    #   The following list includes deprecated runtimes. For more
+    #   information, see [Runtime deprecation policy][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
     #   @return [String]
     #
     # @!attribute [rw] layer_name
@@ -3719,13 +4357,22 @@ module Aws::Lambda
     #   The maximum number of versions to return.
     #   @return [Integer]
     #
+    # @!attribute [rw] compatible_architecture
+    #   The compatible [instruction set architecture][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayerVersionsRequest AWS API Documentation
     #
     class ListLayerVersionsRequest < Struct.new(
       :compatible_runtime,
       :layer_name,
       :marker,
-      :max_items)
+      :max_items,
+      :compatible_architecture)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3748,17 +4395,15 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListLayersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         compatible_runtime: "nodejs", # accepts nodejs, nodejs4.3, nodejs6.10, nodejs8.10, nodejs10.x, nodejs12.x, nodejs14.x, java8, java8.al2, java11, python2.7, python3.6, python3.7, python3.8, dotnetcore1.0, dotnetcore2.0, dotnetcore2.1, dotnetcore3.1, nodejs4.3-edge, go1.x, ruby2.5, ruby2.7, provided, provided.al2
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] compatible_runtime
     #   A runtime identifier. For example, `go1.x`.
+    #
+    #   The following list includes deprecated runtimes. For more
+    #   information, see [Runtime deprecation policy][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
     #   @return [String]
     #
     # @!attribute [rw] marker
@@ -3769,12 +4414,21 @@ module Aws::Lambda
     #   The maximum number of layers to return.
     #   @return [Integer]
     #
+    # @!attribute [rw] compatible_architecture
+    #   The compatible [instruction set architecture][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayersRequest AWS API Documentation
     #
     class ListLayersRequest < Struct.new(
       :compatible_runtime,
       :marker,
-      :max_items)
+      :max_items,
+      :compatible_architecture)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3797,26 +4451,17 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListProvisionedConcurrencyConfigsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
@@ -3858,15 +4503,9 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource: "FunctionArn", # required
-    #       }
-    #
     # @!attribute [rw] resource
-    #   The function's Amazon Resource Name (ARN).
+    #   The function's Amazon Resource Name (ARN). Note: Lambda does not
+    #   support adding tags to aliases or versions.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListTagsRequest AWS API Documentation
@@ -3889,15 +4528,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListVersionsByFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "NamespacedFunctionName", # required
-    #         marker: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -3920,7 +4550,9 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] max_items
-    #   The maximum number of versions to return.
+    #   The maximum number of versions to return. Note that
+    #   `ListVersionsByFunction` returns a maximum of 50 items in each
+    #   response, even if you set the number higher.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListVersionsByFunctionRequest AWS API Documentation
@@ -3952,13 +4584,6 @@ module Aws::Lambda
 
     # A destination for events that failed processing.
     #
-    # @note When making an API call, you may pass OnFailure
-    #   data as a hash:
-    #
-    #       {
-    #         destination: "DestinationArn",
-    #       }
-    #
     # @!attribute [rw] destination
     #   The Amazon Resource Name (ARN) of the destination resource.
     #   @return [String]
@@ -3973,13 +4598,6 @@ module Aws::Lambda
 
     # A destination for events that were processed successfully.
     #
-    # @note When making an API call, you may pass OnSuccess
-    #   data as a hash:
-    #
-    #       {
-    #         destination: "DestinationArn",
-    #       }
-    #
     # @!attribute [rw] destination
     #   The Amazon Resource Name (ARN) of the destination resource.
     #   @return [String]
@@ -3992,11 +4610,12 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The permissions policy for the resource is too large. [Learn more][1]
+    # The permissions policy for the resource is too large. For more
+    # information, see [Lambda quotas][1].
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/limits.html
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -4015,7 +4634,7 @@ module Aws::Lambda
 
     # The RevisionId provided does not match the latest RevisionId for the
     # Lambda function or alias. Call the `GetFunction` or the `GetAlias` API
-    # to retrieve the latest RevisionId for your resource.
+    # operation to retrieve the latest RevisionId for your resource.
     #
     # @!attribute [rw] type
     #   The exception type.
@@ -4050,7 +4669,10 @@ module Aws::Lambda
     #   @return [Integer]
     #
     # @!attribute [rw] allocated_provisioned_concurrent_executions
-    #   The amount of provisioned concurrency allocated.
+    #   The amount of provisioned concurrency allocated. When a weighted
+    #   alias is used during linear and canary deployments, this value
+    #   fluctuates depending on the amount of concurrency that is
+    #   provisioned for the function versions.
     #   @return [Integer]
     #
     # @!attribute [rw] status
@@ -4102,22 +4724,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PublishLayerVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         layer_name: "LayerName", # required
-    #         description: "Description",
-    #         content: { # required
-    #           s3_bucket: "S3Bucket",
-    #           s3_key: "S3Key",
-    #           s3_object_version: "S3ObjectVersion",
-    #           zip_file: "data",
-    #         },
-    #         compatible_runtimes: ["nodejs"], # accepts nodejs, nodejs4.3, nodejs6.10, nodejs8.10, nodejs10.x, nodejs12.x, nodejs14.x, java8, java8.al2, java11, python2.7, python3.6, python3.7, python3.8, dotnetcore1.0, dotnetcore2.0, dotnetcore2.1, dotnetcore3.1, nodejs4.3-edge, go1.x, ruby2.5, ruby2.7, provided, provided.al2
-    #         license_info: "LicenseInfo",
-    #       }
-    #
     # @!attribute [rw] layer_name
     #   The name or Amazon Resource Name (ARN) of the layer.
     #   @return [String]
@@ -4134,9 +4740,13 @@ module Aws::Lambda
     #   A list of compatible [function runtimes][1]. Used for filtering with
     #   ListLayers and ListLayerVersions.
     #
+    #   The following list includes deprecated runtimes. For more
+    #   information, see [Runtime deprecation policy][2].
+    #
     #
     #
     #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
+    #   [2]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
     #   @return [Array<String>]
     #
     # @!attribute [rw] license_info
@@ -4154,6 +4764,14 @@ module Aws::Lambda
     #   [1]: https://spdx.org/licenses/
     #   @return [String]
     #
+    # @!attribute [rw] compatible_architectures
+    #   A list of compatible [instruction set architectures][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html
+    #   @return [Array<String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PublishLayerVersionRequest AWS API Documentation
     #
     class PublishLayerVersionRequest < Struct.new(
@@ -4161,7 +4779,8 @@ module Aws::Lambda
       :description,
       :content,
       :compatible_runtimes,
-      :license_info)
+      :license_info,
+      :compatible_architectures)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -4197,11 +4816,26 @@ module Aws::Lambda
     #
     # @!attribute [rw] compatible_runtimes
     #   The layer's compatible runtimes.
+    #
+    #   The following list includes deprecated runtimes. For more
+    #   information, see [Runtime deprecation policy][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
     #   @return [Array<String>]
     #
     # @!attribute [rw] license_info
     #   The layer's software license.
     #   @return [String]
+    #
+    # @!attribute [rw] compatible_architectures
+    #   A list of compatible [instruction set architectures][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/foundation-arch.html
+    #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PublishLayerVersionResponse AWS API Documentation
     #
@@ -4213,21 +4847,12 @@ module Aws::Lambda
       :created_date,
       :version,
       :compatible_runtimes,
-      :license_info)
+      :license_info,
+      :compatible_architectures)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PublishVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         code_sha_256: "String",
-    #         description: "Description",
-    #         revision_id: "String",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -4274,14 +4899,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutFunctionCodeSigningConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         code_signing_config_arn: "CodeSigningConfigArn", # required
-    #         function_name: "FunctionName", # required
-    #       }
-    #
     # @!attribute [rw] code_signing_config_arn
     #   The The Amazon Resource Name (ARN) of the code signing
     #   configuration.
@@ -4342,25 +4959,17 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutFunctionConcurrencyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         reserved_concurrent_executions: 1, # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
@@ -4379,24 +4988,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutFunctionEventInvokeConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         qualifier: "Qualifier",
-    #         maximum_retry_attempts: 1,
-    #         maximum_event_age_in_seconds: 1,
-    #         destination_config: {
-    #           on_success: {
-    #             destination: "DestinationArn",
-    #           },
-    #           on_failure: {
-    #             destination: "DestinationArn",
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
@@ -4438,9 +5029,9 @@ module Aws::Lambda
     #   * **Function** - The Amazon Resource Name (ARN) of a Lambda
     #     function.
     #
-    #   * **Queue** - The ARN of an SQS queue.
+    #   * **Queue** - The ARN of a standard SQS queue.
     #
-    #   * **Topic** - The ARN of an SNS topic.
+    #   * **Topic** - The ARN of a standard SNS topic.
     #
     #   * **Event Bus** - The ARN of an Amazon EventBridge event bus.
     #   @return [Types::DestinationConfig]
@@ -4457,26 +5048,17 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutProvisionedConcurrencyConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         qualifier: "Qualifier", # required
-    #         provisioned_concurrent_executions: 1, # required
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
@@ -4510,7 +5092,10 @@ module Aws::Lambda
     #   @return [Integer]
     #
     # @!attribute [rw] allocated_provisioned_concurrent_executions
-    #   The amount of provisioned concurrency allocated.
+    #   The amount of provisioned concurrency allocated. When a weighted
+    #   alias is used during linear and canary deployments, this value
+    #   fluctuates depending on the amount of concurrency that is
+    #   provisioned for the function versions.
     #   @return [Integer]
     #
     # @!attribute [rw] status
@@ -4544,16 +5129,123 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RemoveLayerVersionPermissionRequest
-    #   data as a hash:
+    # @!attribute [rw] function_name
+    #   The name of the Lambda function.
     #
-    #       {
-    #         layer_name: "LayerName", # required
-    #         version_number: 1, # required
-    #         statement_id: "StatementId", # required
-    #         revision_id: "String",
-    #       }
+    #   **Name formats**
     #
+    #   * **Function name** – `my-function`.
+    #
+    #   * **Function ARN** –
+    #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
+    #
+    #   * **Partial ARN** – `123456789012:function:my-function`.
+    #
+    #   The length constraint applies only to the full ARN. If you specify
+    #   only the function name, it is limited to 64 characters in length.
+    #   @return [String]
+    #
+    # @!attribute [rw] qualifier
+    #   Specify a version of the function. This can be `$LATEST` or a
+    #   published version number. If no value is specified, the
+    #   configuration for the `$LATEST` version is returned.
+    #   @return [String]
+    #
+    # @!attribute [rw] update_runtime_on
+    #   Specify the runtime update mode.
+    #
+    #   * **Auto (default)** - Automatically update to the most recent and
+    #     secure runtime version using a [Two-phase runtime version
+    #     rollout][1]. This is the best choice for most customers to ensure
+    #     they always benefit from runtime updates.
+    #
+    #   * **Function update** - Lambda updates the runtime of your function
+    #     to the most recent and secure runtime version when you update your
+    #     function. This approach synchronizes runtime updates with function
+    #     deployments, giving you control over when runtime updates are
+    #     applied and allowing you to detect and mitigate rare runtime
+    #     update incompatibilities early. When using this setting, you need
+    #     to regularly update your functions to keep their runtime
+    #     up-to-date.
+    #
+    #   * **Manual** - You specify a runtime version in your function
+    #     configuration. The function will use this runtime version
+    #     indefinitely. In the rare case where a new runtime version is
+    #     incompatible with an existing function, this allows you to roll
+    #     back your function to an earlier runtime version. For more
+    #     information, see [Roll back a runtime version][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/runtimes-update.html#runtime-management-two-phase
+    #   [2]: https://docs.aws.amazon.com/lambda/latest/dg/runtimes-update.html#runtime-management-rollback
+    #   @return [String]
+    #
+    # @!attribute [rw] runtime_version_arn
+    #   The ARN of the runtime version you want the function to use.
+    #
+    #   <note markdown="1"> This is only required if you're using the **Manual** runtime update
+    #   mode.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutRuntimeManagementConfigRequest AWS API Documentation
+    #
+    class PutRuntimeManagementConfigRequest < Struct.new(
+      :function_name,
+      :qualifier,
+      :update_runtime_on,
+      :runtime_version_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] update_runtime_on
+    #   The runtime update mode.
+    #   @return [String]
+    #
+    # @!attribute [rw] function_arn
+    #   The ARN of the function
+    #   @return [String]
+    #
+    # @!attribute [rw] runtime_version_arn
+    #   The ARN of the runtime the function is configured to use. If the
+    #   runtime update mode is **manual**, the ARN is returned, otherwise
+    #   `null` is returned.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutRuntimeManagementConfigResponse AWS API Documentation
+    #
+    class PutRuntimeManagementConfigResponse < Struct.new(
+      :update_runtime_on,
+      :function_arn,
+      :runtime_version_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Lambda has detected your function being invoked in a recursive loop
+    # with other Amazon Web Services resources and stopped your function's
+    # invocation.
+    #
+    # @!attribute [rw] type
+    #   The exception type.
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   The exception message.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/RecursiveInvocationException AWS API Documentation
+    #
+    class RecursiveInvocationException < Struct.new(
+      :type,
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] layer_name
     #   The name or Amazon Resource Name (ARN) of the layer.
     #   @return [String]
@@ -4583,28 +5275,18 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RemovePermissionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         statement_id: "NamespacedStatementId", # required
-    #         qualifier: "Qualifier",
-    #         revision_id: "String",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function` (name-only), `my-function:v1`
+    #   * **Function name** – `my-function` (name-only), `my-function:v1`
     #     (with alias).
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   You can append a version number or alias to any of the formats. The
     #   length constraint applies only to the full ARN. If you specify only
@@ -4621,7 +5303,7 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] revision_id
-    #   Only update the policy if the revision ID matches the ID that's
+    #   Update the policy only if the revision ID matches the ID that's
     #   specified. Use this option to avoid modifying a policy that has
     #   changed since you last read it.
     #   @return [String]
@@ -4638,11 +5320,11 @@ module Aws::Lambda
     end
 
     # The request payload exceeded the `Invoke` request body JSON input
-    # limit. For more information, see [Limits][1].
+    # quota. For more information, see [Lambda quotas][1].
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/limits.html
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -4679,9 +5361,9 @@ module Aws::Lambda
     end
 
     # The operation conflicts with the resource's availability. For
-    # example, you attempted to update an EventSource Mapping in CREATING,
-    # or tried to delete a EventSource mapping currently in the UPDATING
-    # state.
+    # example, you tried to update an event source mapping in the CREATING
+    # state, or you tried to delete an event source mapping currently
+    # UPDATING.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -4735,16 +5417,63 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The Self-Managed Apache Kafka cluster for your event source.
+    # The ARN of the runtime and any errors that occured.
     #
-    # @note When making an API call, you may pass SelfManagedEventSource
-    #   data as a hash:
+    # @!attribute [rw] runtime_version_arn
+    #   The ARN of the runtime version you want the function to use.
+    #   @return [String]
     #
-    #       {
-    #         endpoints: {
-    #           "KAFKA_BOOTSTRAP_SERVERS" => ["Endpoint"],
-    #         },
-    #       }
+    # @!attribute [rw] error
+    #   Error response when Lambda is unable to retrieve the runtime version
+    #   for a function.
+    #   @return [Types::RuntimeVersionError]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/RuntimeVersionConfig AWS API Documentation
+    #
+    class RuntimeVersionConfig < Struct.new(
+      :runtime_version_arn,
+      :error)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Any error returned when the runtime version information for the
+    # function could not be retrieved.
+    #
+    # @!attribute [rw] error_code
+    #   The error code.
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   The error message.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/RuntimeVersionError AWS API Documentation
+    #
+    class RuntimeVersionError < Struct.new(
+      :error_code,
+      :message)
+      SENSITIVE = [:message]
+      include Aws::Structure
+    end
+
+    # (Amazon SQS only) The scaling configuration for the event source. To
+    # remove the configuration, pass an empty value.
+    #
+    # @!attribute [rw] maximum_concurrency
+    #   Limits the number of concurrent instances that the Amazon SQS event
+    #   source can invoke.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ScalingConfig AWS API Documentation
+    #
+    class ScalingConfig < Struct.new(
+      :maximum_concurrency)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The self-managed Apache Kafka cluster for your event source.
     #
     # @!attribute [rw] endpoints
     #   The list of bootstrap servers for your Kafka brokers in the
@@ -4760,7 +5489,30 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The AWS Lambda service encountered an internal error.
+    # Specific configuration settings for a self-managed Apache Kafka event
+    # source.
+    #
+    # @!attribute [rw] consumer_group_id
+    #   The identifier for the Kafka consumer group to join. The consumer
+    #   group ID must be unique among all your Kafka event sources. After
+    #   creating a Kafka event source mapping with the consumer group ID
+    #   specified, you cannot update this value. For more information, see
+    #   [Customizable consumer group ID][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/with-msk.html#services-msk-consumer-group-id
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/SelfManagedKafkaEventSourceConfig AWS API Documentation
+    #
+    class SelfManagedKafkaEventSourceConfig < Struct.new(
+      :consumer_group_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The Lambda service encountered an internal error.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -4777,37 +5529,162 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # You can specify the authentication protocol, or the VPC components to
-    # secure access to your event source.
+    # The function's [Lambda SnapStart][1] setting. Set `ApplyOn` to
+    # `PublishedVersions` to create a snapshot of the initialized execution
+    # environment when you publish a function version.
     #
-    # @note When making an API call, you may pass SourceAccessConfiguration
-    #   data as a hash:
     #
-    #       {
-    #         type: "BASIC_AUTH", # accepts BASIC_AUTH, VPC_SUBNET, VPC_SECURITY_GROUP, SASL_SCRAM_512_AUTH, SASL_SCRAM_256_AUTH
-    #         uri: "URI",
-    #       }
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html
+    #
+    # @!attribute [rw] apply_on
+    #   Set to `PublishedVersions` to create a snapshot of the initialized
+    #   execution environment when you publish a function version.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/SnapStart AWS API Documentation
+    #
+    class SnapStart < Struct.new(
+      :apply_on)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The `afterRestore()` [runtime hook][1] encountered an error. For more
+    # information, check the Amazon CloudWatch logs.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart-runtime-hooks.html
     #
     # @!attribute [rw] type
-    #   The type of authentication protocol or the VPC components for your
-    #   event source. For example: `"Type":"SASL_SCRAM_512_AUTH"`.
+    #   @return [String]
     #
-    #   * `BASIC_AUTH` - (MQ) The Secrets Manager secret that stores your
-    #     broker credentials.
+    # @!attribute [rw] message
+    #   @return [String]
     #
-    #   * `VPC_SUBNET` - The subnets associated with your VPC. Lambda
-    #     connects to these subnets to fetch data from your Self-Managed
-    #     Apache Kafka cluster.
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/SnapStartException AWS API Documentation
     #
-    #   * `VPC_SECURITY_GROUP` - The VPC security group used to manage
-    #     access to your Self-Managed Apache Kafka brokers.
+    class SnapStartException < Struct.new(
+      :type,
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Lambda is initializing your function. You can invoke the function when
+    # the [function state][1] becomes `Active`.
     #
-    #   * `SASL_SCRAM_256_AUTH` - The Secrets Manager ARN of your secret key
-    #     used for SASL SCRAM-256 authentication of your Self-Managed Apache
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/functions-states.html
+    #
+    # @!attribute [rw] type
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/SnapStartNotReadyException AWS API Documentation
+    #
+    class SnapStartNotReadyException < Struct.new(
+      :type,
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The function's [SnapStart][1] setting.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html
+    #
+    # @!attribute [rw] apply_on
+    #   When set to `PublishedVersions`, Lambda creates a snapshot of the
+    #   execution environment when you publish a function version.
+    #   @return [String]
+    #
+    # @!attribute [rw] optimization_status
+    #   When you provide a [qualified Amazon Resource Name (ARN)][1], this
+    #   response element indicates whether SnapStart is activated for the
+    #   specified function version.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-versions.html#versioning-versions-using
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/SnapStartResponse AWS API Documentation
+    #
+    class SnapStartResponse < Struct.new(
+      :apply_on,
+      :optimization_status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Lambda couldn't restore the snapshot within the timeout limit.
+    #
+    # @!attribute [rw] type
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/SnapStartTimeoutException AWS API Documentation
+    #
+    class SnapStartTimeoutException < Struct.new(
+      :type,
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # To secure and define access to your event source, you can specify the
+    # authentication protocol, VPC components, or virtual host.
+    #
+    # @!attribute [rw] type
+    #   The type of authentication protocol, VPC components, or virtual host
+    #   for your event source. For example: `"Type":"SASL_SCRAM_512_AUTH"`.
+    #
+    #   * `BASIC_AUTH` – (Amazon MQ) The Secrets Manager secret that stores
+    #     your broker credentials.
+    #
+    #   * `BASIC_AUTH` – (Self-managed Apache Kafka) The Secrets Manager ARN
+    #     of your secret key used for SASL/PLAIN authentication of your
+    #     Apache Kafka brokers.
+    #
+    #   * `VPC_SUBNET` – (Self-managed Apache Kafka) The subnets associated
+    #     with your VPC. Lambda connects to these subnets to fetch data from
+    #     your self-managed Apache Kafka cluster.
+    #
+    #   * `VPC_SECURITY_GROUP` – (Self-managed Apache Kafka) The VPC
+    #     security group used to manage access to your self-managed Apache
     #     Kafka brokers.
     #
-    #   * `SASL_SCRAM_512_AUTH` - The Secrets Manager ARN of your secret key
-    #     used for SASL SCRAM-512 authentication of your Self-Managed Apache
+    #   * `SASL_SCRAM_256_AUTH` – (Self-managed Apache Kafka) The Secrets
+    #     Manager ARN of your secret key used for SASL SCRAM-256
+    #     authentication of your self-managed Apache Kafka brokers.
+    #
+    #   * `SASL_SCRAM_512_AUTH` – (Amazon MSK, Self-managed Apache Kafka)
+    #     The Secrets Manager ARN of your secret key used for SASL SCRAM-512
+    #     authentication of your self-managed Apache Kafka brokers.
+    #
+    #   * `VIRTUAL_HOST` –- (RabbitMQ) The name of the virtual host in your
+    #     RabbitMQ broker. Lambda uses this RabbitMQ host as the event
+    #     source. This property cannot be specified in an
+    #     UpdateEventSourceMapping API call.
+    #
+    #   * `CLIENT_CERTIFICATE_TLS_AUTH` – (Amazon MSK, self-managed Apache
+    #     Kafka) The Secrets Manager ARN of your secret key containing the
+    #     certificate chain (X.509 PEM), private key (PKCS#8 PEM), and
+    #     private key password (optional) used for mutual TLS authentication
+    #     of your MSK/Apache Kafka brokers.
+    #
+    #   * `SERVER_ROOT_CA_CERTIFICATE` – (Self-managed Apache Kafka) The
+    #     Secrets Manager ARN of your secret key containing the root CA
+    #     certificate (X.509 PEM) used for TLS encryption of your Apache
     #     Kafka brokers.
     #   @return [String]
     #
@@ -4826,8 +5703,8 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # AWS Lambda was not able to set up VPC access for the Lambda function
-    # because one or more configured subnets has no available IP addresses.
+    # Lambda couldn't set up VPC access for the Lambda function because one
+    # or more configured subnets has no available IP addresses.
     #
     # @!attribute [rw] type
     #   @return [String]
@@ -4844,16 +5721,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource: "FunctionArn", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource
     #   The function's Amazon Resource Name (ARN).
     #   @return [String]
@@ -4871,7 +5738,12 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The request throughput limit was exceeded.
+    # The request throughput limit was exceeded. For more information, see
+    # [Lambda quotas][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html#api-requests
     #
     # @!attribute [rw] retry_after_seconds
     #   The number of seconds the caller should wait before retrying.
@@ -4897,15 +5769,12 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The function's AWS X-Ray tracing configuration. To sample and record
+    # The function's [X-Ray][1] tracing configuration. To sample and record
     # incoming requests, set `Mode` to `Active`.
     #
-    # @note When making an API call, you may pass TracingConfig
-    #   data as a hash:
     #
-    #       {
-    #         mode: "Active", # accepts Active, PassThrough
-    #       }
+    #
+    # [1]: https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html
     #
     # @!attribute [rw] mode
     #   The tracing mode.
@@ -4919,7 +5788,7 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # The function's AWS X-Ray tracing configuration.
+    # The function's X-Ray tracing configuration.
     #
     # @!attribute [rw] mode
     #   The tracing mode.
@@ -4950,14 +5819,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource: "FunctionArn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource
     #   The function's Amazon Resource Name (ARN).
     #   @return [String]
@@ -4975,22 +5836,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         name: "Alias", # required
-    #         function_version: "Version",
-    #         description: "Description",
-    #         routing_config: {
-    #           additional_version_weights: {
-    #             "AdditionalVersion" => 1.0,
-    #           },
-    #         },
-    #         revision_id: "String",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
@@ -5046,20 +5891,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateCodeSigningConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         code_signing_config_arn: "CodeSigningConfigArn", # required
-    #         description: "Description",
-    #         allowed_publishers: {
-    #           signing_profile_version_arns: ["Arn"], # required
-    #         },
-    #         code_signing_policies: {
-    #           untrusted_artifact_on_deployment: "Warn", # accepts Warn, Enforce
-    #         },
-    #       }
-    #
     # @!attribute [rw] code_signing_config_arn
     #   The The Amazon Resource Name (ARN) of the code signing
     #   configuration.
@@ -5100,37 +5931,6 @@ module Aws::Lambda
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateEventSourceMappingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         uuid: "String", # required
-    #         function_name: "FunctionName",
-    #         enabled: false,
-    #         batch_size: 1,
-    #         maximum_batching_window_in_seconds: 1,
-    #         destination_config: {
-    #           on_success: {
-    #             destination: "DestinationArn",
-    #           },
-    #           on_failure: {
-    #             destination: "DestinationArn",
-    #           },
-    #         },
-    #         maximum_record_age_in_seconds: 1,
-    #         bisect_batch_on_function_error: false,
-    #         maximum_retry_attempts: 1,
-    #         parallelization_factor: 1,
-    #         source_access_configurations: [
-    #           {
-    #             type: "BASIC_AUTH", # accepts BASIC_AUTH, VPC_SUBNET, VPC_SECURITY_GROUP, SASL_SCRAM_512_AUTH, SASL_SCRAM_256_AUTH
-    #             uri: "URI",
-    #           },
-    #         ],
-    #         tumbling_window_in_seconds: 1,
-    #         function_response_types: ["ReportBatchItemFailures"], # accepts ReportBatchItemFailures
-    #       }
-    #
     # @!attribute [rw] uuid
     #   The identifier of the event source mapping.
     #   @return [String]
@@ -5140,86 +5940,136 @@ module Aws::Lambda
     #
     #   **Name formats**
     #
-    #   * **Function name** - `MyFunction`.
+    #   * **Function name** – `MyFunction`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:MyFunction`.
     #
-    #   * **Version or Alias ARN** -
+    #   * **Version or Alias ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:MyFunction:PROD`.
     #
-    #   * **Partial ARN** - `123456789012:function:MyFunction`.
+    #   * **Partial ARN** – `123456789012:function:MyFunction`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it's limited to 64 characters in length.
     #   @return [String]
     #
     # @!attribute [rw] enabled
-    #   If true, the event source mapping is active. Set to false to pause
-    #   polling and invocation.
+    #   When true, the event source mapping is active. When false, Lambda
+    #   pauses polling and invocation.
+    #
+    #   Default: True
     #   @return [Boolean]
     #
     # @!attribute [rw] batch_size
-    #   The maximum number of items to retrieve in a single batch.
+    #   The maximum number of records in each batch that Lambda pulls from
+    #   your stream or queue and sends to your function. Lambda passes all
+    #   of the records in the batch to the function in a single call, up to
+    #   the payload limit for synchronous invocation (6 MB).
     #
-    #   * **Amazon Kinesis** - Default 100. Max 10,000.
+    #   * **Amazon Kinesis** – Default 100. Max 10,000.
     #
-    #   * **Amazon DynamoDB Streams** - Default 100. Max 1,000.
+    #   * **Amazon DynamoDB Streams** – Default 100. Max 10,000.
     #
-    #   * **Amazon Simple Queue Service** - Default 10. For standard queues
+    #   * **Amazon Simple Queue Service** – Default 10. For standard queues
     #     the max is 10,000. For FIFO queues the max is 10.
     #
-    #   * **Amazon Managed Streaming for Apache Kafka** - Default 100. Max
+    #   * **Amazon Managed Streaming for Apache Kafka** – Default 100. Max
     #     10,000.
     #
-    #   * **Self-Managed Apache Kafka** - Default 100. Max 10,000.
+    #   * **Self-managed Apache Kafka** – Default 100. Max 10,000.
+    #
+    #   * **Amazon MQ (ActiveMQ and RabbitMQ)** – Default 100. Max 10,000.
+    #
+    #   * **DocumentDB** – Default 100. Max 10,000.
     #   @return [Integer]
     #
+    # @!attribute [rw] filter_criteria
+    #   An object that defines the filter criteria that determine whether
+    #   Lambda should process an event. For more information, see [Lambda
+    #   event filtering][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html
+    #   @return [Types::FilterCriteria]
+    #
     # @!attribute [rw] maximum_batching_window_in_seconds
-    #   (Streams and SQS standard queues) The maximum amount of time to
-    #   gather records before invoking the function, in seconds.
+    #   The maximum amount of time, in seconds, that Lambda spends gathering
+    #   records before invoking the function. You can configure
+    #   `MaximumBatchingWindowInSeconds` to any value from 0 seconds to 300
+    #   seconds in increments of seconds.
+    #
+    #   For streams and Amazon SQS event sources, the default batching
+    #   window is 0 seconds. For Amazon MSK, Self-managed Apache Kafka,
+    #   Amazon MQ, and DocumentDB event sources, the default batching window
+    #   is 500 ms. Note that because you can only change
+    #   `MaximumBatchingWindowInSeconds` in increments of seconds, you
+    #   cannot revert back to the 500 ms default batching window after you
+    #   have changed it. To restore the default batching window, you must
+    #   create a new event source mapping.
+    #
+    #   Related setting: For streams and Amazon SQS event sources, when you
+    #   set `BatchSize` to a value greater than 10, you must set
+    #   `MaximumBatchingWindowInSeconds` to at least 1.
     #   @return [Integer]
     #
     # @!attribute [rw] destination_config
-    #   (Streams) An Amazon SQS queue or Amazon SNS topic destination for
-    #   discarded records.
+    #   (Kinesis and DynamoDB Streams only) A standard Amazon SQS queue or
+    #   standard Amazon SNS topic destination for discarded records.
     #   @return [Types::DestinationConfig]
     #
     # @!attribute [rw] maximum_record_age_in_seconds
-    #   (Streams) Discard records older than the specified age. The default
-    #   value is infinite (-1).
+    #   (Kinesis and DynamoDB Streams only) Discard records older than the
+    #   specified age. The default value is infinite (-1).
     #   @return [Integer]
     #
     # @!attribute [rw] bisect_batch_on_function_error
-    #   (Streams) If the function returns an error, split the batch in two
-    #   and retry.
+    #   (Kinesis and DynamoDB Streams only) If the function returns an
+    #   error, split the batch in two and retry.
     #   @return [Boolean]
     #
     # @!attribute [rw] maximum_retry_attempts
-    #   (Streams) Discard records after the specified number of retries. The
-    #   default value is infinite (-1). When set to infinite (-1), failed
-    #   records will be retried until the record expires.
+    #   (Kinesis and DynamoDB Streams only) Discard records after the
+    #   specified number of retries. The default value is infinite (-1).
+    #   When set to infinite (-1), failed records are retried until the
+    #   record expires.
     #   @return [Integer]
     #
     # @!attribute [rw] parallelization_factor
-    #   (Streams) The number of batches to process from each shard
-    #   concurrently.
+    #   (Kinesis and DynamoDB Streams only) The number of batches to process
+    #   from each shard concurrently.
     #   @return [Integer]
     #
     # @!attribute [rw] source_access_configurations
-    #   An array of the authentication protocol, or the VPC components to
+    #   An array of authentication protocols or VPC components required to
     #   secure your event source.
     #   @return [Array<Types::SourceAccessConfiguration>]
     #
     # @!attribute [rw] tumbling_window_in_seconds
-    #   (Streams) The duration in seconds of a processing window. The range
-    #   is between 1 second up to 900 seconds.
+    #   (Kinesis and DynamoDB Streams only) The duration in seconds of a
+    #   processing window for DynamoDB and Kinesis Streams event sources. A
+    #   value of 0 seconds indicates no tumbling window.
     #   @return [Integer]
     #
     # @!attribute [rw] function_response_types
-    #   (Streams) A list of current response type enums applied to the event
-    #   source mapping.
+    #   (Kinesis, DynamoDB Streams, and Amazon SQS) A list of current
+    #   response type enums applied to the event source mapping.
     #   @return [Array<String>]
+    #
+    # @!attribute [rw] scaling_config
+    #   (Amazon SQS only) The scaling configuration for the event source.
+    #   For more information, see [Configuring maximum concurrency for
+    #   Amazon SQS event sources][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-max-concurrency
+    #   @return [Types::ScalingConfig]
+    #
+    # @!attribute [rw] document_db_event_source_config
+    #   Specific configuration settings for a DocumentDB event source.
+    #   @return [Types::DocumentDBEventSourceConfig]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateEventSourceMappingRequest AWS API Documentation
     #
@@ -5228,6 +6078,7 @@ module Aws::Lambda
       :function_name,
       :enabled,
       :batch_size,
+      :filter_criteria,
       :maximum_batching_window_in_seconds,
       :destination_config,
       :maximum_record_age_in_seconds,
@@ -5236,54 +6087,45 @@ module Aws::Lambda
       :parallelization_factor,
       :source_access_configurations,
       :tumbling_window_in_seconds,
-      :function_response_types)
+      :function_response_types,
+      :scaling_config,
+      :document_db_event_source_config)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFunctionCodeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         zip_file: "data",
-    #         s3_bucket: "S3Bucket",
-    #         s3_key: "S3Key",
-    #         s3_object_version: "S3ObjectVersion",
-    #         image_uri: "String",
-    #         publish: false,
-    #         dry_run: false,
-    #         revision_id: "String",
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
     #   @return [String]
     #
     # @!attribute [rw] zip_file
-    #   The base64-encoded contents of the deployment package. AWS SDK and
-    #   AWS CLI clients handle the encoding for you.
+    #   The base64-encoded contents of the deployment package. Amazon Web
+    #   Services SDK and CLI clients handle the encoding for you. Use only
+    #   with a function defined with a .zip file archive deployment package.
     #   @return [String]
     #
     # @!attribute [rw] s3_bucket
-    #   An Amazon S3 bucket in the same AWS Region as your function. The
-    #   bucket can be in a different AWS account.
+    #   An Amazon S3 bucket in the same Amazon Web Services Region as your
+    #   function. The bucket can be in a different Amazon Web Services
+    #   account. Use only with a function defined with a .zip file archive
+    #   deployment package.
     #   @return [String]
     #
     # @!attribute [rw] s3_key
-    #   The Amazon S3 key of the deployment package.
+    #   The Amazon S3 key of the deployment package. Use only with a
+    #   function defined with a .zip file archive deployment package.
     #   @return [String]
     #
     # @!attribute [rw] s3_object_version
@@ -5292,7 +6134,8 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] image_uri
-    #   URI of a container image in the Amazon ECR registry.
+    #   URI of a container image in the Amazon ECR registry. Do not use for
+    #   a function defined with a .zip file archive.
     #   @return [String]
     #
     # @!attribute [rw] publish
@@ -5307,10 +6150,16 @@ module Aws::Lambda
     #   @return [Boolean]
     #
     # @!attribute [rw] revision_id
-    #   Only update the function if the revision ID matches the ID that's
+    #   Update the function only if the revision ID matches the ID that's
     #   specified. Use this option to avoid modifying a function that has
     #   changed since you last read it.
     #   @return [String]
+    #
+    # @!attribute [rw] architectures
+    #   The instruction set architecture that the function supports. Enter a
+    #   string array with one of the valid values (arm64 or x86\_64). The
+    #   default value is `x86_64`.
+    #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateFunctionCodeRequest AWS API Documentation
     #
@@ -5323,64 +6172,23 @@ module Aws::Lambda
       :image_uri,
       :publish,
       :dry_run,
-      :revision_id)
+      :revision_id,
+      :architectures)
       SENSITIVE = [:zip_file]
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFunctionConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         role: "RoleArn",
-    #         handler: "Handler",
-    #         description: "Description",
-    #         timeout: 1,
-    #         memory_size: 1,
-    #         vpc_config: {
-    #           subnet_ids: ["SubnetId"],
-    #           security_group_ids: ["SecurityGroupId"],
-    #         },
-    #         environment: {
-    #           variables: {
-    #             "EnvironmentVariableName" => "EnvironmentVariableValue",
-    #           },
-    #         },
-    #         runtime: "nodejs", # accepts nodejs, nodejs4.3, nodejs6.10, nodejs8.10, nodejs10.x, nodejs12.x, nodejs14.x, java8, java8.al2, java11, python2.7, python3.6, python3.7, python3.8, dotnetcore1.0, dotnetcore2.0, dotnetcore2.1, dotnetcore3.1, nodejs4.3-edge, go1.x, ruby2.5, ruby2.7, provided, provided.al2
-    #         dead_letter_config: {
-    #           target_arn: "ResourceArn",
-    #         },
-    #         kms_key_arn: "KMSKeyArn",
-    #         tracing_config: {
-    #           mode: "Active", # accepts Active, PassThrough
-    #         },
-    #         revision_id: "String",
-    #         layers: ["LayerVersionArn"],
-    #         file_system_configs: [
-    #           {
-    #             arn: "FileSystemArn", # required
-    #             local_mount_path: "LocalMountPath", # required
-    #           },
-    #         ],
-    #         image_config: {
-    #           entry_point: ["String"],
-    #           command: ["String"],
-    #           working_directory: "WorkingDirectory",
-    #         },
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function.
     #
     #   **Name formats**
     #
-    #   * **Function name** - `my-function`.
+    #   * **Function name** – `my-function`.
     #
-    #   * **Function ARN** -
+    #   * **Function ARN** –
     #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
     #
-    #   * **Partial ARN** - `123456789012:function:my-function`.
+    #   * **Partial ARN** – `123456789012:function:my-function`.
     #
     #   The length constraint applies only to the full ARN. If you specify
     #   only the function name, it is limited to 64 characters in length.
@@ -5391,14 +6199,15 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] handler
-    #   The name of the method within your code that Lambda calls to execute
-    #   your function. The format includes the file name. It can also
+    #   The name of the method within your code that Lambda calls to run
+    #   your function. Handler is required if the deployment package is a
+    #   .zip file archive. The format includes the file name. It can also
     #   include namespaces and other qualifiers, depending on the runtime.
-    #   For more information, see [Programming Model][1].
+    #   For more information, see [Lambda programming model][1].
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/programming-model-v2.html
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/foundation-progmodel.html
     #   @return [String]
     #
     # @!attribute [rw] description
@@ -5406,22 +6215,32 @@ module Aws::Lambda
     #   @return [String]
     #
     # @!attribute [rw] timeout
-    #   The amount of time that Lambda allows a function to run before
-    #   stopping it. The default is 3 seconds. The maximum allowed value is
-    #   900 seconds.
+    #   The amount of time (in seconds) that Lambda allows a function to run
+    #   before stopping it. The default is 3 seconds. The maximum allowed
+    #   value is 900 seconds. For more information, see [Lambda execution
+    #   environment][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html
     #   @return [Integer]
     #
     # @!attribute [rw] memory_size
-    #   The amount of memory available to the function at runtime.
-    #   Increasing the function's memory also increases its CPU allocation.
+    #   The amount of [memory available to the function][1] at runtime.
+    #   Increasing the function memory also increases its CPU allocation.
     #   The default value is 128 MB. The value can be any multiple of 1 MB.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-function-common.html#configuration-memory-console
     #   @return [Integer]
     #
     # @!attribute [rw] vpc_config
-    #   For network connectivity to AWS resources in a VPC, specify a list
-    #   of security groups and subnets in the VPC. When you connect a
-    #   function to a VPC, it can only access resources and the internet
-    #   through that VPC. For more information, see [VPC Settings][1].
+    #   For network connectivity to Amazon Web Services resources in a VPC,
+    #   specify a list of security groups and subnets in the VPC. When you
+    #   connect a function to a VPC, it can access resources and the
+    #   internet only through that VPC. For more information, see
+    #   [Configuring a Lambda function to access resources in a VPC][1].
     #
     #
     #
@@ -5434,36 +6253,56 @@ module Aws::Lambda
     #   @return [Types::Environment]
     #
     # @!attribute [rw] runtime
-    #   The identifier of the function's [runtime][1].
+    #   The identifier of the function's [runtime][1]. Runtime is required
+    #   if the deployment package is a .zip file archive.
+    #
+    #   The following list includes deprecated runtimes. For more
+    #   information, see [Runtime deprecation policy][2].
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
+    #   [2]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
     #   @return [String]
     #
     # @!attribute [rw] dead_letter_config
-    #   A dead letter queue configuration that specifies the queue or topic
+    #   A dead-letter queue configuration that specifies the queue or topic
     #   where Lambda sends asynchronous events when they fail processing.
-    #   For more information, see [Dead Letter Queues][1].
+    #   For more information, see [Dead-letter queues][1].
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-dlq
     #   @return [Types::DeadLetterConfig]
     #
     # @!attribute [rw] kms_key_arn
-    #   The ARN of the AWS Key Management Service (AWS KMS) key that's used
-    #   to encrypt your function's environment variables. If it's not
-    #   provided, AWS Lambda uses a default service key.
+    #   The ARN of the Key Management Service (KMS) customer managed key
+    #   that's used to encrypt your function's [environment variables][1].
+    #   When [Lambda SnapStart][2] is activated, Lambda also uses this key
+    #   is to encrypt your function's snapshot. If you deploy your function
+    #   using a container image, Lambda also uses this key to encrypt your
+    #   function when it's deployed. Note that this is not the same key
+    #   that's used to protect your container image in the Amazon Elastic
+    #   Container Registry (Amazon ECR). If you don't provide a customer
+    #   managed key, Lambda uses a default service key.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption
+    #   [2]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html
     #   @return [String]
     #
     # @!attribute [rw] tracing_config
     #   Set `Mode` to `Active` to sample and trace a subset of incoming
-    #   requests with AWS X-Ray.
+    #   requests with [X-Ray][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html
     #   @return [Types::TracingConfig]
     #
     # @!attribute [rw] revision_id
-    #   Only update the function if the revision ID matches the ID that's
+    #   Update the function only if the revision ID matches the ID that's
     #   specified. Use this option to avoid modifying a function that has
     #   changed since you last read it.
     #   @return [String]
@@ -5483,12 +6322,25 @@ module Aws::Lambda
     #
     # @!attribute [rw] image_config
     #   [Container image configuration values][1] that override the values
-    #   in the container image Dockerfile.
+    #   in the container image Docker file.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/images-parms.html
     #   @return [Types::ImageConfig]
+    #
+    # @!attribute [rw] ephemeral_storage
+    #   The size of the function's `/tmp` directory in MB. The default
+    #   value is 512, but can be any whole number between 512 and 10,240 MB.
+    #   @return [Types::EphemeralStorage]
+    #
+    # @!attribute [rw] snap_start
+    #   The function's [SnapStart][1] setting.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html
+    #   @return [Types::SnapStart]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateFunctionConfigurationRequest AWS API Documentation
     #
@@ -5508,29 +6360,13 @@ module Aws::Lambda
       :revision_id,
       :layers,
       :file_system_configs,
-      :image_config)
+      :image_config,
+      :ephemeral_storage,
+      :snap_start)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFunctionEventInvokeConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         function_name: "FunctionName", # required
-    #         qualifier: "Qualifier",
-    #         maximum_retry_attempts: 1,
-    #         maximum_event_age_in_seconds: 1,
-    #         destination_config: {
-    #           on_success: {
-    #             destination: "DestinationArn",
-    #           },
-    #           on_failure: {
-    #             destination: "DestinationArn",
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] function_name
     #   The name of the Lambda function, version, or alias.
     #
@@ -5572,9 +6408,9 @@ module Aws::Lambda
     #   * **Function** - The Amazon Resource Name (ARN) of a Lambda
     #     function.
     #
-    #   * **Queue** - The ARN of an SQS queue.
+    #   * **Queue** - The ARN of a standard SQS queue.
     #
-    #   * **Topic** - The ARN of an SNS topic.
+    #   * **Topic** - The ARN of a standard SNS topic.
     #
     #   * **Event Bus** - The ARN of an Amazon EventBridge event bus.
     #   @return [Types::DestinationConfig]
@@ -5591,27 +6427,172 @@ module Aws::Lambda
       include Aws::Structure
     end
 
+    # @!attribute [rw] function_name
+    #   The name of the Lambda function.
+    #
+    #   **Name formats**
+    #
+    #   * **Function name** – `my-function`.
+    #
+    #   * **Function ARN** –
+    #     `arn:aws:lambda:us-west-2:123456789012:function:my-function`.
+    #
+    #   * **Partial ARN** – `123456789012:function:my-function`.
+    #
+    #   The length constraint applies only to the full ARN. If you specify
+    #   only the function name, it is limited to 64 characters in length.
+    #   @return [String]
+    #
+    # @!attribute [rw] qualifier
+    #   The alias name.
+    #   @return [String]
+    #
+    # @!attribute [rw] auth_type
+    #   The type of authentication that your function URL uses. Set to
+    #   `AWS_IAM` if you want to restrict access to authenticated users
+    #   only. Set to `NONE` if you want to bypass IAM authentication to
+    #   create a public endpoint. For more information, see [Security and
+    #   auth model for Lambda function URLs][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
+    #   @return [String]
+    #
+    # @!attribute [rw] cors
+    #   The [cross-origin resource sharing (CORS)][1] settings for your
+    #   function URL.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    #   @return [Types::Cors]
+    #
+    # @!attribute [rw] invoke_mode
+    #   Use one of the following options:
+    #
+    #   * `BUFFERED` – This is the default option. Lambda invokes your
+    #     function using the `Invoke` API operation. Invocation results are
+    #     available when the payload is complete. The maximum payload size
+    #     is 6 MB.
+    #
+    #   * `RESPONSE_STREAM` – Your function streams payload results as they
+    #     become available. Lambda invokes your function using the
+    #     `InvokeWithResponseStream` API operation. The maximum response
+    #     payload size is 20 MB, however, you can [request a quota
+    #     increase][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateFunctionUrlConfigRequest AWS API Documentation
+    #
+    class UpdateFunctionUrlConfigRequest < Struct.new(
+      :function_name,
+      :qualifier,
+      :auth_type,
+      :cors,
+      :invoke_mode)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] function_url
+    #   The HTTP URL endpoint for your function.
+    #   @return [String]
+    #
+    # @!attribute [rw] function_arn
+    #   The Amazon Resource Name (ARN) of your function.
+    #   @return [String]
+    #
+    # @!attribute [rw] auth_type
+    #   The type of authentication that your function URL uses. Set to
+    #   `AWS_IAM` if you want to restrict access to authenticated users
+    #   only. Set to `NONE` if you want to bypass IAM authentication to
+    #   create a public endpoint. For more information, see [Security and
+    #   auth model for Lambda function URLs][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
+    #   @return [String]
+    #
+    # @!attribute [rw] cors
+    #   The [cross-origin resource sharing (CORS)][1] settings for your
+    #   function URL.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    #   @return [Types::Cors]
+    #
+    # @!attribute [rw] creation_time
+    #   When the function URL was created, in [ISO-8601 format][1]
+    #   (YYYY-MM-DDThh:mm:ss.sTZD).
+    #
+    #
+    #
+    #   [1]: https://www.w3.org/TR/NOTE-datetime
+    #   @return [Time]
+    #
+    # @!attribute [rw] last_modified_time
+    #   When the function URL configuration was last updated, in [ISO-8601
+    #   format][1] (YYYY-MM-DDThh:mm:ss.sTZD).
+    #
+    #
+    #
+    #   [1]: https://www.w3.org/TR/NOTE-datetime
+    #   @return [Time]
+    #
+    # @!attribute [rw] invoke_mode
+    #   Use one of the following options:
+    #
+    #   * `BUFFERED` – This is the default option. Lambda invokes your
+    #     function using the `Invoke` API operation. Invocation results are
+    #     available when the payload is complete. The maximum payload size
+    #     is 6 MB.
+    #
+    #   * `RESPONSE_STREAM` – Your function streams payload results as they
+    #     become available. Lambda invokes your function using the
+    #     `InvokeWithResponseStream` API operation. The maximum response
+    #     payload size is 20 MB, however, you can [request a quota
+    #     increase][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateFunctionUrlConfigResponse AWS API Documentation
+    #
+    class UpdateFunctionUrlConfigResponse < Struct.new(
+      :function_url,
+      :function_arn,
+      :auth_type,
+      :cors,
+      :creation_time,
+      :last_modified_time,
+      :invoke_mode)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The VPC security groups and subnets that are attached to a Lambda
-    # function. For more information, see [VPC Settings][1].
+    # function. For more information, see [Configuring a Lambda function to
+    # access resources in a VPC][1].
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html
-    #
-    # @note When making an API call, you may pass VpcConfig
-    #   data as a hash:
-    #
-    #       {
-    #         subnet_ids: ["SubnetId"],
-    #         security_group_ids: ["SecurityGroupId"],
-    #       }
     #
     # @!attribute [rw] subnet_ids
     #   A list of VPC subnet IDs.
     #   @return [Array<String>]
     #
     # @!attribute [rw] security_group_ids
-    #   A list of VPC security groups IDs.
+    #   A list of VPC security group IDs.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/VpcConfig AWS API Documentation
@@ -5631,7 +6612,7 @@ module Aws::Lambda
     #   @return [Array<String>]
     #
     # @!attribute [rw] security_group_ids
-    #   A list of VPC security groups IDs.
+    #   A list of VPC security group IDs.
     #   @return [Array<String>]
     #
     # @!attribute [rw] vpc_id
@@ -5646,6 +6627,25 @@ module Aws::Lambda
       :vpc_id)
       SENSITIVE = []
       include Aws::Structure
+    end
+
+    # An object that includes a chunk of the response payload. When the
+    # stream has ended, Lambda includes a `InvokeComplete` object.
+    #
+    # EventStream is an Enumerator of Events.
+    #  #event_types #=> Array, returns all modeled event types in the stream
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/InvokeWithResponseStreamResponseEvent AWS API Documentation
+    #
+    class InvokeWithResponseStreamResponseEvent < Enumerator
+
+      def event_types
+        [
+          :payload_chunk,
+          :invoke_complete
+        ]
+      end
+
     end
 
   end

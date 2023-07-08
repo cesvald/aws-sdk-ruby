@@ -27,9 +27,12 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
-require 'aws-sdk-lookoutmetrics/plugins/content_type.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:lookoutmetrics)
 
@@ -74,9 +77,13 @@ module Aws::LookoutMetrics
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
-    add_plugin(Aws::LookoutMetrics::Plugins::ContentType)
+    add_plugin(Aws::LookoutMetrics::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -121,7 +128,9 @@ module Aws::LookoutMetrics
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -175,9 +184,17 @@ module Aws::LookoutMetrics
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -218,6 +235,11 @@ module Aws::LookoutMetrics
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -264,6 +286,11 @@ module Aws::LookoutMetrics
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -277,9 +304,34 @@ module Aws::LookoutMetrics
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::LookoutMetrics::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::LookoutMetrics::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -288,7 +340,7 @@ module Aws::LookoutMetrics
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -303,6 +355,9 @@ module Aws::LookoutMetrics
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -378,7 +433,7 @@ module Aws::LookoutMetrics
     # @option params [required, String] :alert_name
     #   The name of the alert.
     #
-    # @option params [required, Integer] :alert_sensitivity_threshold
+    # @option params [Integer] :alert_sensitivity_threshold
     #   An integer from 0 to 100 specifying the alert sensitivity threshold.
     #
     # @option params [String] :alert_description
@@ -397,6 +452,10 @@ module Aws::LookoutMetrics
     #
     #   [1]: https://docs.aws.amazon.com/lookoutmetrics/latest/dev/detectors-tags.html
     #
+    # @option params [Types::AlertFilters] :alert_filters
+    #   The configuration of the alert filters, containing MetricList and
+    #   DimensionFilterList.
+    #
     # @return [Types::CreateAlertResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateAlertResponse#alert_arn #alert_arn} => String
@@ -405,13 +464,14 @@ module Aws::LookoutMetrics
     #
     #   resp = client.create_alert({
     #     alert_name: "AlertName", # required
-    #     alert_sensitivity_threshold: 1, # required
+    #     alert_sensitivity_threshold: 1,
     #     alert_description: "AlertDescription",
     #     anomaly_detector_arn: "Arn", # required
     #     action: { # required
     #       sns_configuration: {
     #         role_arn: "Arn", # required
     #         sns_topic_arn: "Arn", # required
+    #         sns_format: "LONG_TEXT", # accepts LONG_TEXT, SHORT_TEXT, JSON
     #       },
     #       lambda_configuration: {
     #         role_arn: "Arn", # required
@@ -420,6 +480,15 @@ module Aws::LookoutMetrics
     #     },
     #     tags: {
     #       "TagKey" => "TagValue",
+    #     },
+    #     alert_filters: {
+    #       metric_list: ["MetricName"],
+    #       dimension_filter_list: [
+    #         {
+    #           dimension_name: "ColumnName",
+    #           dimension_value_list: ["DimensionValue"],
+    #         },
+    #       ],
     #     },
     #   })
     #
@@ -503,8 +572,9 @@ module Aws::LookoutMetrics
     #   A list of metrics that the dataset will contain.
     #
     # @option params [Integer] :offset
-    #   After an interval ends, the amount of time that the detector waits
-    #   before importing data.
+    #   After an interval ends, the amount of seconds that the detector waits
+    #   before importing data. Offset is only supported for S3, Redshift,
+    #   Athena and datasources.
     #
     # @option params [Types::TimestampColumn] :timestamp_column
     #   Contains information about the column used for tracking time in your
@@ -529,6 +599,10 @@ module Aws::LookoutMetrics
     #
     #
     #   [1]: https://docs.aws.amazon.com/lookoutmetrics/latest/dev/detectors-tags.html
+    #
+    # @option params [Array<Types::MetricSetDimensionFilter>] :dimension_filter_list
+    #   A list of filters that specify which data is kept for anomaly
+    #   detection.
     #
     # @return [Types::CreateMetricSetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -556,7 +630,7 @@ module Aws::LookoutMetrics
     #     metric_set_frequency: "P1D", # accepts P1D, PT1H, PT10M, PT5M
     #     metric_source: { # required
     #       s3_source_config: {
-    #         role_arn: "Arn", # required
+    #         role_arn: "Arn",
     #         templated_path_list: ["TemplatedPath"],
     #         historical_data_path_list: ["HistoricalDataPath"],
     #         file_format_descriptor: {
@@ -575,36 +649,50 @@ module Aws::LookoutMetrics
     #         },
     #       },
     #       app_flow_config: {
-    #         role_arn: "Arn", # required
-    #         flow_name: "FlowName", # required
+    #         role_arn: "Arn",
+    #         flow_name: "FlowName",
     #       },
     #       cloud_watch_config: {
-    #         role_arn: "Arn", # required
+    #         role_arn: "Arn",
+    #         back_test_configuration: {
+    #           run_back_test_mode: false, # required
+    #         },
     #       },
     #       rds_source_config: {
-    #         db_instance_identifier: "RDSDatabaseIdentifier", # required
-    #         database_host: "DatabaseHost", # required
-    #         database_port: 1, # required
-    #         secret_manager_arn: "PoirotSecretManagerArn", # required
-    #         database_name: "RDSDatabaseName", # required
-    #         table_name: "TableName", # required
-    #         role_arn: "Arn", # required
-    #         vpc_configuration: { # required
+    #         db_instance_identifier: "RDSDatabaseIdentifier",
+    #         database_host: "DatabaseHost",
+    #         database_port: 1,
+    #         secret_manager_arn: "PoirotSecretManagerArn",
+    #         database_name: "RDSDatabaseName",
+    #         table_name: "TableName",
+    #         role_arn: "Arn",
+    #         vpc_configuration: {
     #           subnet_id_list: ["SubnetId"], # required
     #           security_group_id_list: ["SecurityGroupId"], # required
     #         },
     #       },
     #       redshift_source_config: {
-    #         cluster_identifier: "RedshiftClusterIdentifier", # required
-    #         database_host: "DatabaseHost", # required
-    #         database_port: 1, # required
-    #         secret_manager_arn: "PoirotSecretManagerArn", # required
-    #         database_name: "RedshiftDatabaseName", # required
-    #         table_name: "TableName", # required
-    #         role_arn: "Arn", # required
-    #         vpc_configuration: { # required
+    #         cluster_identifier: "RedshiftClusterIdentifier",
+    #         database_host: "DatabaseHost",
+    #         database_port: 1,
+    #         secret_manager_arn: "PoirotSecretManagerArn",
+    #         database_name: "RedshiftDatabaseName",
+    #         table_name: "TableName",
+    #         role_arn: "Arn",
+    #         vpc_configuration: {
     #           subnet_id_list: ["SubnetId"], # required
     #           security_group_id_list: ["SecurityGroupId"], # required
+    #         },
+    #       },
+    #       athena_source_config: {
+    #         role_arn: "Arn",
+    #         database_name: "AthenaDatabaseName",
+    #         data_catalog: "AthenaDataCatalog",
+    #         table_name: "AthenaTableName",
+    #         work_group_name: "AthenaWorkGroupName",
+    #         s3_results_path: "AthenaS3ResultsPath",
+    #         back_test_configuration: {
+    #           run_back_test_mode: false, # required
     #         },
     #       },
     #     },
@@ -612,6 +700,17 @@ module Aws::LookoutMetrics
     #     tags: {
     #       "TagKey" => "TagValue",
     #     },
+    #     dimension_filter_list: [
+    #       {
+    #         name: "ColumnName",
+    #         filter_list: [
+    #           {
+    #             dimension_value: "DimensionValue",
+    #             filter_operation: "EQUALS", # accepts EQUALS
+    #           },
+    #         ],
+    #       },
+    #     ],
     #   })
     #
     # @example Response structure
@@ -624,6 +723,28 @@ module Aws::LookoutMetrics
     # @param [Hash] params ({})
     def create_metric_set(params = {}, options = {})
       req = build_request(:create_metric_set, params)
+      req.send_request(options)
+    end
+
+    # Deactivates an anomaly detector.
+    #
+    # @option params [required, String] :anomaly_detector_arn
+    #   The Amazon Resource Name (ARN) of the anomaly detector.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.deactivate_anomaly_detector({
+    #     anomaly_detector_arn: "Arn", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutmetrics-2017-07-25/DeactivateAnomalyDetector AWS API Documentation
+    #
+    # @overload deactivate_anomaly_detector(params = {})
+    # @param [Hash] params ({})
+    def deactivate_anomaly_detector(params = {}, options = {})
+      req = build_request(:deactivate_anomaly_detector, params)
       req.send_request(options)
     end
 
@@ -697,6 +818,7 @@ module Aws::LookoutMetrics
     #
     #   resp.alert.action.sns_configuration.role_arn #=> String
     #   resp.alert.action.sns_configuration.sns_topic_arn #=> String
+    #   resp.alert.action.sns_configuration.sns_format #=> String, one of "LONG_TEXT", "SHORT_TEXT", "JSON"
     #   resp.alert.action.lambda_configuration.role_arn #=> String
     #   resp.alert.action.lambda_configuration.lambda_arn #=> String
     #   resp.alert.alert_description #=> String
@@ -708,6 +830,12 @@ module Aws::LookoutMetrics
     #   resp.alert.alert_status #=> String, one of "ACTIVE", "INACTIVE"
     #   resp.alert.last_modification_time #=> Time
     #   resp.alert.creation_time #=> Time
+    #   resp.alert.alert_filters.metric_list #=> Array
+    #   resp.alert.alert_filters.metric_list[0] #=> String
+    #   resp.alert.alert_filters.dimension_filter_list #=> Array
+    #   resp.alert.alert_filters.dimension_filter_list[0].dimension_name #=> String
+    #   resp.alert.alert_filters.dimension_filter_list[0].dimension_value_list #=> Array
+    #   resp.alert.alert_filters.dimension_filter_list[0].dimension_value_list[0] #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutmetrics-2017-07-25/DescribeAlert AWS API Documentation
     #
@@ -788,6 +916,7 @@ module Aws::LookoutMetrics
     #   * {Types::DescribeAnomalyDetectorResponse#status #status} => String
     #   * {Types::DescribeAnomalyDetectorResponse#failure_reason #failure_reason} => String
     #   * {Types::DescribeAnomalyDetectorResponse#kms_key_arn #kms_key_arn} => String
+    #   * {Types::DescribeAnomalyDetectorResponse#failure_type #failure_type} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -803,9 +932,10 @@ module Aws::LookoutMetrics
     #   resp.anomaly_detector_config.anomaly_detector_frequency #=> String, one of "P1D", "PT1H", "PT10M", "PT5M"
     #   resp.creation_time #=> Time
     #   resp.last_modification_time #=> Time
-    #   resp.status #=> String, one of "ACTIVE", "ACTIVATING", "DELETING", "FAILED", "INACTIVE", "BACK_TEST_ACTIVATING", "BACK_TEST_ACTIVE", "BACK_TEST_COMPLETE"
+    #   resp.status #=> String, one of "ACTIVE", "ACTIVATING", "DELETING", "FAILED", "INACTIVE", "LEARNING", "BACK_TEST_ACTIVATING", "BACK_TEST_ACTIVE", "BACK_TEST_COMPLETE", "DEACTIVATED", "DEACTIVATING"
     #   resp.failure_reason #=> String
     #   resp.kms_key_arn #=> String
+    #   resp.failure_type #=> String, one of "ACTIVATION_FAILURE", "BACK_TEST_ACTIVATION_FAILURE", "DELETION_FAILURE", "DEACTIVATION_FAILURE"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutmetrics-2017-07-25/DescribeAnomalyDetector AWS API Documentation
     #
@@ -841,6 +971,7 @@ module Aws::LookoutMetrics
     #   * {Types::DescribeMetricSetResponse#metric_set_frequency #metric_set_frequency} => String
     #   * {Types::DescribeMetricSetResponse#timezone #timezone} => String
     #   * {Types::DescribeMetricSetResponse#metric_source #metric_source} => Types::MetricSource
+    #   * {Types::DescribeMetricSetResponse#dimension_filter_list #dimension_filter_list} => Array&lt;Types::MetricSetDimensionFilter&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -884,6 +1015,7 @@ module Aws::LookoutMetrics
     #   resp.metric_source.app_flow_config.role_arn #=> String
     #   resp.metric_source.app_flow_config.flow_name #=> String
     #   resp.metric_source.cloud_watch_config.role_arn #=> String
+    #   resp.metric_source.cloud_watch_config.back_test_configuration.run_back_test_mode #=> Boolean
     #   resp.metric_source.rds_source_config.db_instance_identifier #=> String
     #   resp.metric_source.rds_source_config.database_host #=> String
     #   resp.metric_source.rds_source_config.database_port #=> Integer
@@ -906,6 +1038,18 @@ module Aws::LookoutMetrics
     #   resp.metric_source.redshift_source_config.vpc_configuration.subnet_id_list[0] #=> String
     #   resp.metric_source.redshift_source_config.vpc_configuration.security_group_id_list #=> Array
     #   resp.metric_source.redshift_source_config.vpc_configuration.security_group_id_list[0] #=> String
+    #   resp.metric_source.athena_source_config.role_arn #=> String
+    #   resp.metric_source.athena_source_config.database_name #=> String
+    #   resp.metric_source.athena_source_config.data_catalog #=> String
+    #   resp.metric_source.athena_source_config.table_name #=> String
+    #   resp.metric_source.athena_source_config.work_group_name #=> String
+    #   resp.metric_source.athena_source_config.s3_results_path #=> String
+    #   resp.metric_source.athena_source_config.back_test_configuration.run_back_test_mode #=> Boolean
+    #   resp.dimension_filter_list #=> Array
+    #   resp.dimension_filter_list[0].name #=> String
+    #   resp.dimension_filter_list[0].filter_list #=> Array
+    #   resp.dimension_filter_list[0].filter_list[0].dimension_value #=> String
+    #   resp.dimension_filter_list[0].filter_list[0].filter_operation #=> String, one of "EQUALS"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutmetrics-2017-07-25/DescribeMetricSet AWS API Documentation
     #
@@ -913,6 +1057,72 @@ module Aws::LookoutMetrics
     # @param [Hash] params ({})
     def describe_metric_set(params = {}, options = {})
       req = build_request(:describe_metric_set, params)
+      req.send_request(options)
+    end
+
+    # Detects an Amazon S3 dataset's file format, interval, and offset.
+    #
+    # @option params [required, String] :anomaly_detector_arn
+    #   An anomaly detector ARN.
+    #
+    # @option params [required, Types::AutoDetectionMetricSource] :auto_detection_metric_source
+    #   A data source.
+    #
+    # @return [Types::DetectMetricSetConfigResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DetectMetricSetConfigResponse#detected_metric_set_config #detected_metric_set_config} => Types::DetectedMetricSetConfig
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.detect_metric_set_config({
+    #     anomaly_detector_arn: "Arn", # required
+    #     auto_detection_metric_source: { # required
+    #       s3_source_config: {
+    #         templated_path_list: ["TemplatedPath"],
+    #         historical_data_path_list: ["HistoricalDataPath"],
+    #       },
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.detected_metric_set_config.offset.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.offset.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.offset.message #=> String
+    #   resp.detected_metric_set_config.metric_set_frequency.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.metric_set_frequency.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.metric_set_frequency.message #=> String
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.file_compression.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.file_compression.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.file_compression.message #=> String
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.charset.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.charset.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.charset.message #=> String
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.contains_header.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.contains_header.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.contains_header.message #=> String
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.delimiter.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.delimiter.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.delimiter.message #=> String
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.header_list.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.header_list.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.header_list.message #=> String
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.quote_symbol.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.quote_symbol.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.csv_format_descriptor.quote_symbol.message #=> String
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.json_format_descriptor.file_compression.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.json_format_descriptor.file_compression.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.json_format_descriptor.file_compression.message #=> String
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.json_format_descriptor.charset.value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.json_format_descriptor.charset.confidence #=> String, one of "HIGH", "LOW", "NONE"
+    #   resp.detected_metric_set_config.metric_source.s3_source_config.file_format_descriptor.json_format_descriptor.charset.message #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutmetrics-2017-07-25/DetectMetricSetConfig AWS API Documentation
+    #
+    # @overload detect_metric_set_config(params = {})
+    # @param [Hash] params ({})
+    def detect_metric_set_config(params = {}, options = {})
+      req = build_request(:detect_metric_set_config, params)
       req.send_request(options)
     end
 
@@ -957,6 +1167,47 @@ module Aws::LookoutMetrics
     # @param [Hash] params ({})
     def get_anomaly_group(params = {}, options = {})
       req = build_request(:get_anomaly_group, params)
+      req.send_request(options)
+    end
+
+    # Returns details about the requested data quality metrics.
+    #
+    # @option params [required, String] :anomaly_detector_arn
+    #   The Amazon Resource Name (ARN) of the anomaly detector that you want
+    #   to investigate.
+    #
+    # @option params [String] :metric_set_arn
+    #   The Amazon Resource Name (ARN) of a specific data quality metric set.
+    #
+    # @return [Types::GetDataQualityMetricsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetDataQualityMetricsResponse#anomaly_detector_data_quality_metric_list #anomaly_detector_data_quality_metric_list} => Array&lt;Types::AnomalyDetectorDataQualityMetric&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_data_quality_metrics({
+    #     anomaly_detector_arn: "Arn", # required
+    #     metric_set_arn: "Arn",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.anomaly_detector_data_quality_metric_list #=> Array
+    #   resp.anomaly_detector_data_quality_metric_list[0].start_timestamp #=> Time
+    #   resp.anomaly_detector_data_quality_metric_list[0].metric_set_data_quality_metric_list #=> Array
+    #   resp.anomaly_detector_data_quality_metric_list[0].metric_set_data_quality_metric_list[0].metric_set_arn #=> String
+    #   resp.anomaly_detector_data_quality_metric_list[0].metric_set_data_quality_metric_list[0].data_quality_metric_list #=> Array
+    #   resp.anomaly_detector_data_quality_metric_list[0].metric_set_data_quality_metric_list[0].data_quality_metric_list[0].metric_type #=> String, one of "COLUMN_COMPLETENESS", "DIMENSION_UNIQUENESS", "TIME_SERIES_COUNT", "ROWS_PROCESSED", "ROWS_PARTIAL_COMPLIANCE", "INVALID_ROWS_COMPLIANCE", "BACKTEST_TRAINING_DATA_START_TIME_STAMP", "BACKTEST_TRAINING_DATA_END_TIME_STAMP", "BACKTEST_INFERENCE_DATA_START_TIME_STAMP", "BACKTEST_INFERENCE_DATA_END_TIME_STAMP"
+    #   resp.anomaly_detector_data_quality_metric_list[0].metric_set_data_quality_metric_list[0].data_quality_metric_list[0].metric_description #=> String
+    #   resp.anomaly_detector_data_quality_metric_list[0].metric_set_data_quality_metric_list[0].data_quality_metric_list[0].related_column_name #=> String
+    #   resp.anomaly_detector_data_quality_metric_list[0].metric_set_data_quality_metric_list[0].data_quality_metric_list[0].metric_value #=> Float
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutmetrics-2017-07-25/GetDataQualityMetrics AWS API Documentation
+    #
+    # @overload get_data_quality_metrics(params = {})
+    # @param [Hash] params ({})
+    def get_data_quality_metrics(params = {}, options = {})
+      req = build_request(:get_data_quality_metrics, params)
       req.send_request(options)
     end
 
@@ -1155,7 +1406,7 @@ module Aws::LookoutMetrics
     #   resp.anomaly_detector_summary_list[0].anomaly_detector_description #=> String
     #   resp.anomaly_detector_summary_list[0].creation_time #=> Time
     #   resp.anomaly_detector_summary_list[0].last_modification_time #=> Time
-    #   resp.anomaly_detector_summary_list[0].status #=> String, one of "ACTIVE", "ACTIVATING", "DELETING", "FAILED", "INACTIVE", "BACK_TEST_ACTIVATING", "BACK_TEST_ACTIVE", "BACK_TEST_COMPLETE"
+    #   resp.anomaly_detector_summary_list[0].status #=> String, one of "ACTIVE", "ACTIVATING", "DELETING", "FAILED", "INACTIVE", "LEARNING", "BACK_TEST_ACTIVATING", "BACK_TEST_ACTIVE", "BACK_TEST_COMPLETE", "DEACTIVATED", "DEACTIVATING"
     #   resp.anomaly_detector_summary_list[0].tags #=> Hash
     #   resp.anomaly_detector_summary_list[0].tags["TagKey"] #=> String
     #   resp.next_token #=> String
@@ -1166,6 +1417,62 @@ module Aws::LookoutMetrics
     # @param [Hash] params ({})
     def list_anomaly_detectors(params = {}, options = {})
       req = build_request(:list_anomaly_detectors, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of measures that are potential causes or effects of an
+    # anomaly group.
+    #
+    # @option params [required, String] :anomaly_detector_arn
+    #   The Amazon Resource Name (ARN) of the anomaly detector.
+    #
+    # @option params [required, String] :anomaly_group_id
+    #   The ID of the anomaly group.
+    #
+    # @option params [String] :relationship_type_filter
+    #   Filter for potential causes (`CAUSE_OF_INPUT_ANOMALY_GROUP`) or
+    #   downstream effects (`EFFECT_OF_INPUT_ANOMALY_GROUP`) of the anomaly
+    #   group.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return.
+    #
+    # @option params [String] :next_token
+    #   Specify the pagination token that's returned by a previous request to
+    #   retrieve the next page of results.
+    #
+    # @return [Types::ListAnomalyGroupRelatedMetricsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListAnomalyGroupRelatedMetricsResponse#inter_metric_impact_list #inter_metric_impact_list} => Array&lt;Types::InterMetricImpactDetails&gt;
+    #   * {Types::ListAnomalyGroupRelatedMetricsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_anomaly_group_related_metrics({
+    #     anomaly_detector_arn: "Arn", # required
+    #     anomaly_group_id: "UUID", # required
+    #     relationship_type_filter: "CAUSE_OF_INPUT_ANOMALY_GROUP", # accepts CAUSE_OF_INPUT_ANOMALY_GROUP, EFFECT_OF_INPUT_ANOMALY_GROUP
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.inter_metric_impact_list #=> Array
+    #   resp.inter_metric_impact_list[0].metric_name #=> String
+    #   resp.inter_metric_impact_list[0].anomaly_group_id #=> String
+    #   resp.inter_metric_impact_list[0].relationship_type #=> String, one of "CAUSE_OF_INPUT_ANOMALY_GROUP", "EFFECT_OF_INPUT_ANOMALY_GROUP"
+    #   resp.inter_metric_impact_list[0].contribution_percentage #=> Float
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutmetrics-2017-07-25/ListAnomalyGroupRelatedMetrics AWS API Documentation
+    #
+    # @overload list_anomaly_group_related_metrics(params = {})
+    # @param [Hash] params ({})
+    def list_anomaly_group_related_metrics(params = {}, options = {})
+      req = build_request(:list_anomaly_group_related_metrics, params)
       req.send_request(options)
     end
 
@@ -1468,6 +1775,69 @@ module Aws::LookoutMetrics
       req.send_request(options)
     end
 
+    # Make changes to an existing alert.
+    #
+    # @option params [required, String] :alert_arn
+    #   The ARN of the alert to update.
+    #
+    # @option params [String] :alert_description
+    #   A description of the alert.
+    #
+    # @option params [Integer] :alert_sensitivity_threshold
+    #   An integer from 0 to 100 specifying the alert sensitivity threshold.
+    #
+    # @option params [Types::Action] :action
+    #   Action that will be triggered when there is an alert.
+    #
+    # @option params [Types::AlertFilters] :alert_filters
+    #   The configuration of the alert filters, containing MetricList and
+    #   DimensionFilterList.
+    #
+    # @return [Types::UpdateAlertResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateAlertResponse#alert_arn #alert_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_alert({
+    #     alert_arn: "Arn", # required
+    #     alert_description: "AlertDescription",
+    #     alert_sensitivity_threshold: 1,
+    #     action: {
+    #       sns_configuration: {
+    #         role_arn: "Arn", # required
+    #         sns_topic_arn: "Arn", # required
+    #         sns_format: "LONG_TEXT", # accepts LONG_TEXT, SHORT_TEXT, JSON
+    #       },
+    #       lambda_configuration: {
+    #         role_arn: "Arn", # required
+    #         lambda_arn: "Arn", # required
+    #       },
+    #     },
+    #     alert_filters: {
+    #       metric_list: ["MetricName"],
+    #       dimension_filter_list: [
+    #         {
+    #           dimension_name: "ColumnName",
+    #           dimension_value_list: ["DimensionValue"],
+    #         },
+    #       ],
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.alert_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutmetrics-2017-07-25/UpdateAlert AWS API Documentation
+    #
+    # @overload update_alert(params = {})
+    # @param [Hash] params ({})
+    def update_alert(params = {}, options = {})
+      req = build_request(:update_alert, params)
+      req.send_request(options)
+    end
+
     # Updates a detector. After activation, you can only change a
     # detector's ingestion delay and description.
     #
@@ -1524,8 +1894,9 @@ module Aws::LookoutMetrics
     #   The metric list.
     #
     # @option params [Integer] :offset
-    #   After an interval ends, the amount of time that the detector waits
-    #   before importing data.
+    #   After an interval ends, the amount of seconds that the detector waits
+    #   before importing data. Offset is only supported for S3, Redshift,
+    #   Athena and datasources.
     #
     # @option params [Types::TimestampColumn] :timestamp_column
     #   The timestamp column.
@@ -1537,7 +1908,14 @@ module Aws::LookoutMetrics
     #   The dataset's interval.
     #
     # @option params [Types::MetricSource] :metric_source
-    #   Contains information about source data used to generate a metric.
+    #   Contains information about source data used to generate metrics.
+    #
+    # @option params [Array<Types::MetricSetDimensionFilter>] :dimension_filter_list
+    #   Describes a list of filters for choosing specific dimensions and
+    #   specific values. Each filter consists of the dimension and one of its
+    #   values that you want to include. When multiple dimensions or values
+    #   are specified, the dimensions are joined with an AND operation and the
+    #   values are joined with an OR operation.
     #
     # @return [Types::UpdateMetricSetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1564,7 +1942,7 @@ module Aws::LookoutMetrics
     #     metric_set_frequency: "P1D", # accepts P1D, PT1H, PT10M, PT5M
     #     metric_source: {
     #       s3_source_config: {
-    #         role_arn: "Arn", # required
+    #         role_arn: "Arn",
     #         templated_path_list: ["TemplatedPath"],
     #         historical_data_path_list: ["HistoricalDataPath"],
     #         file_format_descriptor: {
@@ -1583,39 +1961,64 @@ module Aws::LookoutMetrics
     #         },
     #       },
     #       app_flow_config: {
-    #         role_arn: "Arn", # required
-    #         flow_name: "FlowName", # required
+    #         role_arn: "Arn",
+    #         flow_name: "FlowName",
     #       },
     #       cloud_watch_config: {
-    #         role_arn: "Arn", # required
+    #         role_arn: "Arn",
+    #         back_test_configuration: {
+    #           run_back_test_mode: false, # required
+    #         },
     #       },
     #       rds_source_config: {
-    #         db_instance_identifier: "RDSDatabaseIdentifier", # required
-    #         database_host: "DatabaseHost", # required
-    #         database_port: 1, # required
-    #         secret_manager_arn: "PoirotSecretManagerArn", # required
-    #         database_name: "RDSDatabaseName", # required
-    #         table_name: "TableName", # required
-    #         role_arn: "Arn", # required
-    #         vpc_configuration: { # required
+    #         db_instance_identifier: "RDSDatabaseIdentifier",
+    #         database_host: "DatabaseHost",
+    #         database_port: 1,
+    #         secret_manager_arn: "PoirotSecretManagerArn",
+    #         database_name: "RDSDatabaseName",
+    #         table_name: "TableName",
+    #         role_arn: "Arn",
+    #         vpc_configuration: {
     #           subnet_id_list: ["SubnetId"], # required
     #           security_group_id_list: ["SecurityGroupId"], # required
     #         },
     #       },
     #       redshift_source_config: {
-    #         cluster_identifier: "RedshiftClusterIdentifier", # required
-    #         database_host: "DatabaseHost", # required
-    #         database_port: 1, # required
-    #         secret_manager_arn: "PoirotSecretManagerArn", # required
-    #         database_name: "RedshiftDatabaseName", # required
-    #         table_name: "TableName", # required
-    #         role_arn: "Arn", # required
-    #         vpc_configuration: { # required
+    #         cluster_identifier: "RedshiftClusterIdentifier",
+    #         database_host: "DatabaseHost",
+    #         database_port: 1,
+    #         secret_manager_arn: "PoirotSecretManagerArn",
+    #         database_name: "RedshiftDatabaseName",
+    #         table_name: "TableName",
+    #         role_arn: "Arn",
+    #         vpc_configuration: {
     #           subnet_id_list: ["SubnetId"], # required
     #           security_group_id_list: ["SecurityGroupId"], # required
     #         },
     #       },
+    #       athena_source_config: {
+    #         role_arn: "Arn",
+    #         database_name: "AthenaDatabaseName",
+    #         data_catalog: "AthenaDataCatalog",
+    #         table_name: "AthenaTableName",
+    #         work_group_name: "AthenaWorkGroupName",
+    #         s3_results_path: "AthenaS3ResultsPath",
+    #         back_test_configuration: {
+    #           run_back_test_mode: false, # required
+    #         },
+    #       },
     #     },
+    #     dimension_filter_list: [
+    #       {
+    #         name: "ColumnName",
+    #         filter_list: [
+    #           {
+    #             dimension_value: "DimensionValue",
+    #             filter_operation: "EQUALS", # accepts EQUALS
+    #           },
+    #         ],
+    #       },
+    #     ],
     #   })
     #
     # @example Response structure
@@ -1644,7 +2047,7 @@ module Aws::LookoutMetrics
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-lookoutmetrics'
-      context[:gem_version] = '1.2.0'
+      context[:gem_version] = '1.28.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

@@ -43,7 +43,8 @@ module Aws::SQS
     end
 
     # A unique identifier for the message. A `MessageId`is considered unique
-    # across all AWS accounts for an extended period of time.
+    # across all Amazon Web Services accounts for an extended period of
+    # time.
     # @return [String]
     def message_id
       data[:message_id]
@@ -104,8 +105,8 @@ module Aws::SQS
     end
 
     # Each message attribute consists of a `Name`, `Type`, and `Value`. For
-    # more information, see [Amazon SQS Message Attributes][1] in the
-    # *Amazon Simple Queue Service Developer Guide*.
+    # more information, see [Amazon SQS message attributes][1] in the
+    # *Amazon SQS Developer Guide*.
     #
     #
     #
@@ -162,7 +163,9 @@ module Aws::SQS
         queue_url: @queue_url,
         receipt_handle: @receipt_handle
       )
-      resp = @client.change_message_visibility(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.change_message_visibility(options)
+      end
       resp.data
     end
 
@@ -176,7 +179,9 @@ module Aws::SQS
         queue_url: @queue_url,
         receipt_handle: @receipt_handle
       )
-      resp = @client.delete_message(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_message(options)
+      end
       resp.data
     end
 
@@ -241,7 +246,9 @@ module Aws::SQS
               receipt_handle: item.receipt_handle
             }
           end
-          batch[0].client.delete_message_batch(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.delete_message_batch(params)
+          end
         end
         nil
       end

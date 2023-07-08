@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:apprunner)
@@ -73,8 +77,13 @@ module Aws::AppRunner
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::AppRunner::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::AppRunner
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::AppRunner
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::AppRunner
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::AppRunner
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::AppRunner
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::AppRunner::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::AppRunner::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::AppRunner
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::AppRunner
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -337,8 +394,8 @@ module Aws::AppRunner
 
     # @!group API Operations
 
-    # Associate your own domain name with the AWS App Runner subdomain URL
-    # of your App Runner service.
+    # Associate your own domain name with the App Runner subdomain URL of
+    # your App Runner service.
     #
     # After you call `AssociateCustomDomain` and receive a successful
     # response, use the information in the CustomDomain record that's
@@ -374,6 +431,7 @@ module Aws::AppRunner
     #   * {Types::AssociateCustomDomainResponse#dns_target #dns_target} => String
     #   * {Types::AssociateCustomDomainResponse#service_arn #service_arn} => String
     #   * {Types::AssociateCustomDomainResponse#custom_domain #custom_domain} => Types::CustomDomain
+    #   * {Types::AssociateCustomDomainResponse#vpc_dns_targets #vpc_dns_targets} => Array&lt;Types::VpcDNSTarget&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -395,6 +453,10 @@ module Aws::AppRunner
     #   resp.custom_domain.certificate_validation_records[0].value #=> String
     #   resp.custom_domain.certificate_validation_records[0].status #=> String, one of "PENDING_VALIDATION", "SUCCESS", "FAILED"
     #   resp.custom_domain.status #=> String, one of "CREATING", "CREATE_FAILED", "ACTIVE", "DELETING", "DELETE_FAILED", "PENDING_CERTIFICATE_DNS_VALIDATION", "BINDING_CERTIFICATE"
+    #   resp.vpc_dns_targets #=> Array
+    #   resp.vpc_dns_targets[0].vpc_ingress_connection_arn #=> String
+    #   resp.vpc_dns_targets[0].vpc_id #=> String
+    #   resp.vpc_dns_targets[0].domain_name #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/AssociateCustomDomain AWS API Documentation
     #
@@ -405,29 +467,43 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Create an AWS App Runner automatic scaling configuration resource. App
-    # Runner requires this resource when you create App Runner services that
-    # require non-default auto scaling settings. You can share an auto
-    # scaling configuration across multiple services.
+    # Create an App Runner automatic scaling configuration resource. App
+    # Runner requires this resource when you create or update App Runner
+    # services and you require non-default auto scaling settings. You can
+    # share an auto scaling configuration across multiple services.
     #
-    # Create multiple revisions of a configuration by using the same
-    # `AutoScalingConfigurationName` and different
-    # `AutoScalingConfigurationRevision` values. When you create a service,
-    # you can set it to use the latest active revision of an auto scaling
-    # configuration or a specific revision.
+    # Create multiple revisions of a configuration by calling this action
+    # multiple times using the same `AutoScalingConfigurationName`. The call
+    # returns incremental `AutoScalingConfigurationRevision` values. When
+    # you create a service and configure an auto scaling configuration
+    # resource, the service uses the latest active revision of the auto
+    # scaling configuration by default. You can optionally configure the
+    # service to use a specific revision.
     #
     # Configure a higher `MinSize` to increase the spread of your App Runner
-    # service over more Availability Zones in the AWS Region. The tradeoff
-    # is a higher minimal cost.
+    # service over more Availability Zones in the Amazon Web Services
+    # Region. The tradeoff is a higher minimal cost.
     #
     # Configure a lower `MaxSize` to control your cost. The tradeoff is
     # lower responsiveness during peak demand.
     #
     # @option params [required, String] :auto_scaling_configuration_name
     #   A name for the auto scaling configuration. When you use it for the
-    #   first time in an AWS Region, App Runner creates revision number `1` of
-    #   this name. When you use the same name in subsequent calls, App Runner
-    #   creates incremental revisions of the configuration.
+    #   first time in an Amazon Web Services Region, App Runner creates
+    #   revision number `1` of this name. When you use the same name in
+    #   subsequent calls, App Runner creates incremental revisions of the
+    #   configuration.
+    #
+    #   <note markdown="1"> The name `DefaultConfiguration` is reserved (it's the configuration
+    #   that App Runner uses if you don't provide a custome one). You can't
+    #   use it to create a new auto scaling configuration, and you can't
+    #   create a revision of it.
+    #
+    #    When you want to use your own auto scaling configuration for your App
+    #   Runner service, *create a configuration with a different name*, and
+    #   then provide it when you create or update your service.
+    #
+    #    </note>
     #
     # @option params [Integer] :max_concurrency
     #   The maximum number of concurrent requests that you want an instance to
@@ -502,7 +578,7 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Create an AWS App Runner connection resource. App Runner requires a
+    # Create an App Runner connection resource. App Runner requires a
     # connection resource when you create App Runner services that access
     # private repositories from certain third-party providers. You can share
     # a connection across multiple services.
@@ -513,7 +589,8 @@ module Aws::AppRunner
     #
     # @option params [required, String] :connection_name
     #   A name for the new connection. It must be unique across all App Runner
-    #   connections for the AWS account in the AWS Region.
+    #   connections for the Amazon Web Services account in the Amazon Web
+    #   Services Region.
     #
     # @option params [required, String] :provider_type
     #   The source repository provider.
@@ -556,8 +633,92 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Create an AWS App Runner service. After the service is created, the
-    # action also automatically starts a deployment.
+    # Create an App Runner observability configuration resource. App Runner
+    # requires this resource when you create or update App Runner services
+    # and you want to enable non-default observability features. You can
+    # share an observability configuration across multiple services.
+    #
+    # Create multiple revisions of a configuration by calling this action
+    # multiple times using the same `ObservabilityConfigurationName`. The
+    # call returns incremental `ObservabilityConfigurationRevision` values.
+    # When you create a service and configure an observability configuration
+    # resource, the service uses the latest active revision of the
+    # observability configuration by default. You can optionally configure
+    # the service to use a specific revision.
+    #
+    # The observability configuration resource is designed to configure
+    # multiple features (currently one feature, tracing). This action takes
+    # optional parameters that describe the configuration of these features
+    # (currently one parameter, `TraceConfiguration`). If you don't specify
+    # a feature parameter, App Runner doesn't enable the feature.
+    #
+    # @option params [required, String] :observability_configuration_name
+    #   A name for the observability configuration. When you use it for the
+    #   first time in an Amazon Web Services Region, App Runner creates
+    #   revision number `1` of this name. When you use the same name in
+    #   subsequent calls, App Runner creates incremental revisions of the
+    #   configuration.
+    #
+    #   <note markdown="1"> The name `DefaultConfiguration` is reserved. You can't use it to
+    #   create a new observability configuration, and you can't create a
+    #   revision of it.
+    #
+    #    When you want to use your own observability configuration for your App
+    #   Runner service, *create a configuration with a different name*, and
+    #   then provide it when you create or update your service.
+    #
+    #    </note>
+    #
+    # @option params [Types::TraceConfiguration] :trace_configuration
+    #   The configuration of the tracing feature within this observability
+    #   configuration. If you don't specify it, App Runner doesn't enable
+    #   tracing.
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   A list of metadata items that you can associate with your
+    #   observability configuration resource. A tag is a key-value pair.
+    #
+    # @return [Types::CreateObservabilityConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateObservabilityConfigurationResponse#observability_configuration #observability_configuration} => Types::ObservabilityConfiguration
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_observability_configuration({
+    #     observability_configuration_name: "ObservabilityConfigurationName", # required
+    #     trace_configuration: {
+    #       vendor: "AWSXRAY", # required, accepts AWSXRAY
+    #     },
+    #     tags: [
+    #       {
+    #         key: "TagKey",
+    #         value: "TagValue",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.observability_configuration.observability_configuration_arn #=> String
+    #   resp.observability_configuration.observability_configuration_name #=> String
+    #   resp.observability_configuration.trace_configuration.vendor #=> String, one of "AWSXRAY"
+    #   resp.observability_configuration.observability_configuration_revision #=> Integer
+    #   resp.observability_configuration.latest #=> Boolean
+    #   resp.observability_configuration.status #=> String, one of "ACTIVE", "INACTIVE"
+    #   resp.observability_configuration.created_at #=> Time
+    #   resp.observability_configuration.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/CreateObservabilityConfiguration AWS API Documentation
+    #
+    # @overload create_observability_configuration(params = {})
+    # @param [Hash] params ({})
+    def create_observability_configuration(params = {}, options = {})
+      req = build_request(:create_observability_configuration, params)
+      req.send_request(options)
+    end
+
+    # Create an App Runner service. After the service is created, the action
+    # also automatically starts a deployment.
     #
     # This is an asynchronous operation. On a successful call, you can use
     # the returned `OperationId` and the [ListOperations][1] call to track
@@ -568,35 +729,50 @@ module Aws::AppRunner
     # [1]: https://docs.aws.amazon.com/apprunner/latest/api/API_ListOperations.html
     #
     # @option params [required, String] :service_name
-    #   A name for the new service. It must be unique across all the running
-    #   App Runner services in your AWS account in the AWS Region.
+    #   A name for the App Runner service. It must be unique across all the
+    #   running App Runner services in your Amazon Web Services account in the
+    #   Amazon Web Services Region.
     #
     # @option params [required, Types::SourceConfiguration] :source_configuration
     #   The source to deploy to the App Runner service. It can be a code or an
     #   image repository.
     #
     # @option params [Types::InstanceConfiguration] :instance_configuration
-    #   The runtime configuration of instances (scaling units) of the App
-    #   Runner service.
+    #   The runtime configuration of instances (scaling units) of your
+    #   service.
     #
     # @option params [Array<Types::Tag>] :tags
-    #   An optional list of metadata items that you can associate with your
-    #   service resource. A tag is a key-value pair.
+    #   An optional list of metadata items that you can associate with the App
+    #   Runner service resource. A tag is a key-value pair.
     #
     # @option params [Types::EncryptionConfiguration] :encryption_configuration
     #   An optional custom encryption key that App Runner uses to encrypt the
     #   copy of your source repository that it maintains and your service
-    #   logs. By default, App Runner uses an AWS managed CMK.
+    #   logs. By default, App Runner uses an Amazon Web Services managed key.
     #
     # @option params [Types::HealthCheckConfiguration] :health_check_configuration
-    #   The settings for the health check that AWS App Runner performs to
-    #   monitor the health of your service.
+    #   The settings for the health check that App Runner performs to monitor
+    #   the health of the App Runner service.
     #
     # @option params [String] :auto_scaling_configuration_arn
     #   The Amazon Resource Name (ARN) of an App Runner automatic scaling
     #   configuration resource that you want to associate with your service.
     #   If not provided, App Runner associates the latest revision of a
     #   default auto scaling configuration.
+    #
+    #   Specify an ARN with a name and a revision number to associate that
+    #   revision. For example:
+    #   `arn:aws:apprunner:us-east-1:123456789012:autoscalingconfiguration/high-availability/3`
+    #
+    #   Specify just the name to associate the latest revision. For example:
+    #   `arn:aws:apprunner:us-east-1:123456789012:autoscalingconfiguration/high-availability`
+    #
+    # @option params [Types::NetworkConfiguration] :network_configuration
+    #   Configuration settings related to network traffic of the web
+    #   application that the App Runner service runs.
+    #
+    # @option params [Types::ServiceObservabilityConfiguration] :observability_configuration
+    #   The observability configuration of your service.
     #
     # @return [Types::CreateServiceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -617,12 +793,15 @@ module Aws::AppRunner
     #         code_configuration: {
     #           configuration_source: "REPOSITORY", # required, accepts REPOSITORY, API
     #           code_configuration_values: {
-    #             runtime: "PYTHON_3", # required, accepts PYTHON_3, NODEJS_12
+    #             runtime: "PYTHON_3", # required, accepts PYTHON_3, NODEJS_12, NODEJS_14, CORRETTO_8, CORRETTO_11, NODEJS_16, GO_1, DOTNET_6, PHP_81, RUBY_31
     #             build_command: "BuildCommand",
     #             start_command: "StartCommand",
     #             port: "String",
     #             runtime_environment_variables: {
     #               "RuntimeEnvironmentVariablesKey" => "RuntimeEnvironmentVariablesValue",
+    #             },
+    #             runtime_environment_secrets: {
+    #               "RuntimeEnvironmentSecretsName" => "RuntimeEnvironmentSecretsValue",
     #             },
     #           },
     #         },
@@ -633,8 +812,11 @@ module Aws::AppRunner
     #           runtime_environment_variables: {
     #             "RuntimeEnvironmentVariablesKey" => "RuntimeEnvironmentVariablesValue",
     #           },
-    #           start_command: "String",
+    #           start_command: "StartCommand",
     #           port: "String",
+    #           runtime_environment_secrets: {
+    #             "RuntimeEnvironmentSecretsName" => "RuntimeEnvironmentSecretsValue",
+    #           },
     #         },
     #         image_repository_type: "ECR", # required, accepts ECR, ECR_PUBLIC
     #       },
@@ -660,13 +842,26 @@ module Aws::AppRunner
     #     },
     #     health_check_configuration: {
     #       protocol: "TCP", # accepts TCP, HTTP
-    #       path: "String",
+    #       path: "HealthCheckPath",
     #       interval: 1,
     #       timeout: 1,
     #       healthy_threshold: 1,
     #       unhealthy_threshold: 1,
     #     },
     #     auto_scaling_configuration_arn: "AppRunnerResourceArn",
+    #     network_configuration: {
+    #       egress_configuration: {
+    #         egress_type: "DEFAULT", # accepts DEFAULT, VPC
+    #         vpc_connector_arn: "AppRunnerResourceArn",
+    #       },
+    #       ingress_configuration: {
+    #         is_publicly_accessible: false,
+    #       },
+    #     },
+    #     observability_configuration: {
+    #       observability_enabled: false, # required
+    #       observability_configuration_arn: "AppRunnerResourceArn",
+    #     },
     #   })
     #
     # @example Response structure
@@ -683,17 +878,21 @@ module Aws::AppRunner
     #   resp.service.source_configuration.code_repository.source_code_version.type #=> String, one of "BRANCH"
     #   resp.service.source_configuration.code_repository.source_code_version.value #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.configuration_source #=> String, one of "REPOSITORY", "API"
-    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12"
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12", "NODEJS_14", "CORRETTO_8", "CORRETTO_11", "NODEJS_16", "GO_1", "DOTNET_6", "PHP_81", "RUBY_31"
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.build_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.start_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.port #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_identifier #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.start_command #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.port #=> String
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_repository_type #=> String, one of "ECR", "ECR_PUBLIC"
     #   resp.service.source_configuration.auto_deployments_enabled #=> Boolean
     #   resp.service.source_configuration.authentication_configuration.connection_arn #=> String
@@ -711,6 +910,11 @@ module Aws::AppRunner
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_arn #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_name #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_revision #=> Integer
+    #   resp.service.network_configuration.egress_configuration.egress_type #=> String, one of "DEFAULT", "VPC"
+    #   resp.service.network_configuration.egress_configuration.vpc_connector_arn #=> String
+    #   resp.service.network_configuration.ingress_configuration.is_publicly_accessible #=> Boolean
+    #   resp.service.observability_configuration.observability_enabled #=> Boolean
+    #   resp.service.observability_configuration.observability_configuration_arn #=> String
     #   resp.operation_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/CreateService AWS API Documentation
@@ -722,9 +926,141 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Delete an AWS App Runner automatic scaling configuration resource. You
-    # can delete a specific revision or the latest active revision. You
-    # can't delete a configuration that's used by one or more App Runner
+    # Create an App Runner VPC connector resource. App Runner requires this
+    # resource when you want to associate your App Runner service to a
+    # custom Amazon Virtual Private Cloud (Amazon VPC).
+    #
+    # @option params [required, String] :vpc_connector_name
+    #   A name for the VPC connector.
+    #
+    # @option params [required, Array<String>] :subnets
+    #   A list of IDs of subnets that App Runner should use when it associates
+    #   your service with a custom Amazon VPC. Specify IDs of subnets of a
+    #   single Amazon VPC. App Runner determines the Amazon VPC from the
+    #   subnets you specify.
+    #
+    #   <note markdown="1"> App Runner currently only provides support for IPv4.
+    #
+    #    </note>
+    #
+    # @option params [Array<String>] :security_groups
+    #   A list of IDs of security groups that App Runner should use for access
+    #   to Amazon Web Services resources under the specified subnets. If not
+    #   specified, App Runner uses the default security group of the Amazon
+    #   VPC. The default security group allows all outbound traffic.
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   A list of metadata items that you can associate with your VPC
+    #   connector resource. A tag is a key-value pair.
+    #
+    # @return [Types::CreateVpcConnectorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateVpcConnectorResponse#vpc_connector #vpc_connector} => Types::VpcConnector
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_vpc_connector({
+    #     vpc_connector_name: "VpcConnectorName", # required
+    #     subnets: ["String"], # required
+    #     security_groups: ["String"],
+    #     tags: [
+    #       {
+    #         key: "TagKey",
+    #         value: "TagValue",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.vpc_connector.vpc_connector_name #=> String
+    #   resp.vpc_connector.vpc_connector_arn #=> String
+    #   resp.vpc_connector.vpc_connector_revision #=> Integer
+    #   resp.vpc_connector.subnets #=> Array
+    #   resp.vpc_connector.subnets[0] #=> String
+    #   resp.vpc_connector.security_groups #=> Array
+    #   resp.vpc_connector.security_groups[0] #=> String
+    #   resp.vpc_connector.status #=> String, one of "ACTIVE", "INACTIVE"
+    #   resp.vpc_connector.created_at #=> Time
+    #   resp.vpc_connector.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/CreateVpcConnector AWS API Documentation
+    #
+    # @overload create_vpc_connector(params = {})
+    # @param [Hash] params ({})
+    def create_vpc_connector(params = {}, options = {})
+      req = build_request(:create_vpc_connector, params)
+      req.send_request(options)
+    end
+
+    # Create an App Runner VPC Ingress Connection resource. App Runner
+    # requires this resource when you want to associate your App Runner
+    # service with an Amazon VPC endpoint.
+    #
+    # @option params [required, String] :service_arn
+    #   The Amazon Resource Name (ARN) for this App Runner service that is
+    #   used to create the VPC Ingress Connection resource.
+    #
+    # @option params [required, String] :vpc_ingress_connection_name
+    #   A name for the VPC Ingress Connection resource. It must be unique
+    #   across all the active VPC Ingress Connections in your Amazon Web
+    #   Services account in the Amazon Web Services Region.
+    #
+    # @option params [required, Types::IngressVpcConfiguration] :ingress_vpc_configuration
+    #   Specifications for the customer’s Amazon VPC and the related Amazon
+    #   Web Services PrivateLink VPC endpoint that are used to create the VPC
+    #   Ingress Connection resource.
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   An optional list of metadata items that you can associate with the VPC
+    #   Ingress Connection resource. A tag is a key-value pair.
+    #
+    # @return [Types::CreateVpcIngressConnectionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateVpcIngressConnectionResponse#vpc_ingress_connection #vpc_ingress_connection} => Types::VpcIngressConnection
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_vpc_ingress_connection({
+    #     service_arn: "AppRunnerResourceArn", # required
+    #     vpc_ingress_connection_name: "VpcIngressConnectionName", # required
+    #     ingress_vpc_configuration: { # required
+    #       vpc_id: "String",
+    #       vpc_endpoint_id: "String",
+    #     },
+    #     tags: [
+    #       {
+    #         key: "TagKey",
+    #         value: "TagValue",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.vpc_ingress_connection.vpc_ingress_connection_arn #=> String
+    #   resp.vpc_ingress_connection.vpc_ingress_connection_name #=> String
+    #   resp.vpc_ingress_connection.service_arn #=> String
+    #   resp.vpc_ingress_connection.status #=> String, one of "AVAILABLE", "PENDING_CREATION", "PENDING_UPDATE", "PENDING_DELETION", "FAILED_CREATION", "FAILED_UPDATE", "FAILED_DELETION", "DELETED"
+    #   resp.vpc_ingress_connection.account_id #=> String
+    #   resp.vpc_ingress_connection.domain_name #=> String
+    #   resp.vpc_ingress_connection.ingress_vpc_configuration.vpc_id #=> String
+    #   resp.vpc_ingress_connection.ingress_vpc_configuration.vpc_endpoint_id #=> String
+    #   resp.vpc_ingress_connection.created_at #=> Time
+    #   resp.vpc_ingress_connection.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/CreateVpcIngressConnection AWS API Documentation
+    #
+    # @overload create_vpc_ingress_connection(params = {})
+    # @param [Hash] params ({})
+    def create_vpc_ingress_connection(params = {}, options = {})
+      req = build_request(:create_vpc_ingress_connection, params)
+      req.send_request(options)
+    end
+
+    # Delete an App Runner automatic scaling configuration resource. You can
+    # delete a specific revision or the latest active revision. You can't
+    # delete a configuration that's used by one or more App Runner
     # services.
     #
     # @option params [required, String] :auto_scaling_configuration_arn
@@ -767,9 +1103,9 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Delete an AWS App Runner connection. You must first ensure that there
-    # are no running App Runner services that use this connection. If there
-    # are any, the `DeleteConnection` action fails.
+    # Delete an App Runner connection. You must first ensure that there are
+    # no running App Runner services that use this connection. If there are
+    # any, the `DeleteConnection` action fails.
     #
     # @option params [required, String] :connection_arn
     #   The Amazon Resource Name (ARN) of the App Runner connection that you
@@ -802,11 +1138,59 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Delete an AWS App Runner service.
+    # Delete an App Runner observability configuration resource. You can
+    # delete a specific revision or the latest active revision. You can't
+    # delete a configuration that's used by one or more App Runner
+    # services.
+    #
+    # @option params [required, String] :observability_configuration_arn
+    #   The Amazon Resource Name (ARN) of the App Runner observability
+    #   configuration that you want to delete.
+    #
+    #   The ARN can be a full observability configuration ARN, or a partial
+    #   ARN ending with either `.../name ` or `.../name/revision `. If a
+    #   revision isn't specified, the latest active revision is deleted.
+    #
+    # @return [Types::DeleteObservabilityConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteObservabilityConfigurationResponse#observability_configuration #observability_configuration} => Types::ObservabilityConfiguration
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_observability_configuration({
+    #     observability_configuration_arn: "AppRunnerResourceArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.observability_configuration.observability_configuration_arn #=> String
+    #   resp.observability_configuration.observability_configuration_name #=> String
+    #   resp.observability_configuration.trace_configuration.vendor #=> String, one of "AWSXRAY"
+    #   resp.observability_configuration.observability_configuration_revision #=> Integer
+    #   resp.observability_configuration.latest #=> Boolean
+    #   resp.observability_configuration.status #=> String, one of "ACTIVE", "INACTIVE"
+    #   resp.observability_configuration.created_at #=> Time
+    #   resp.observability_configuration.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DeleteObservabilityConfiguration AWS API Documentation
+    #
+    # @overload delete_observability_configuration(params = {})
+    # @param [Hash] params ({})
+    def delete_observability_configuration(params = {}, options = {})
+      req = build_request(:delete_observability_configuration, params)
+      req.send_request(options)
+    end
+
+    # Delete an App Runner service.
     #
     # This is an asynchronous operation. On a successful call, you can use
     # the returned `OperationId` and the ListOperations call to track the
     # operation's progress.
+    #
+    # <note markdown="1"> Make sure that you don't have any active VPCIngressConnections
+    # associated with the service you want to delete.
+    #
+    #  </note>
     #
     # @option params [required, String] :service_arn
     #   The Amazon Resource Name (ARN) of the App Runner service that you want
@@ -837,17 +1221,21 @@ module Aws::AppRunner
     #   resp.service.source_configuration.code_repository.source_code_version.type #=> String, one of "BRANCH"
     #   resp.service.source_configuration.code_repository.source_code_version.value #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.configuration_source #=> String, one of "REPOSITORY", "API"
-    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12"
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12", "NODEJS_14", "CORRETTO_8", "CORRETTO_11", "NODEJS_16", "GO_1", "DOTNET_6", "PHP_81", "RUBY_31"
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.build_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.start_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.port #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_identifier #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.start_command #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.port #=> String
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_repository_type #=> String, one of "ECR", "ECR_PUBLIC"
     #   resp.service.source_configuration.auto_deployments_enabled #=> Boolean
     #   resp.service.source_configuration.authentication_configuration.connection_arn #=> String
@@ -865,6 +1253,11 @@ module Aws::AppRunner
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_arn #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_name #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_revision #=> Integer
+    #   resp.service.network_configuration.egress_configuration.egress_type #=> String, one of "DEFAULT", "VPC"
+    #   resp.service.network_configuration.egress_configuration.vpc_connector_arn #=> String
+    #   resp.service.network_configuration.ingress_configuration.is_publicly_accessible #=> Boolean
+    #   resp.service.observability_configuration.observability_enabled #=> Boolean
+    #   resp.service.observability_configuration.observability_configuration_arn #=> String
     #   resp.operation_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DeleteService AWS API Documentation
@@ -876,7 +1269,96 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Return a full description of an AWS App Runner automatic scaling
+    # Delete an App Runner VPC connector resource. You can't delete a
+    # connector that's used by one or more App Runner services.
+    #
+    # @option params [required, String] :vpc_connector_arn
+    #   The Amazon Resource Name (ARN) of the App Runner VPC connector that
+    #   you want to delete.
+    #
+    #   The ARN must be a full VPC connector ARN.
+    #
+    # @return [Types::DeleteVpcConnectorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteVpcConnectorResponse#vpc_connector #vpc_connector} => Types::VpcConnector
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_vpc_connector({
+    #     vpc_connector_arn: "AppRunnerResourceArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.vpc_connector.vpc_connector_name #=> String
+    #   resp.vpc_connector.vpc_connector_arn #=> String
+    #   resp.vpc_connector.vpc_connector_revision #=> Integer
+    #   resp.vpc_connector.subnets #=> Array
+    #   resp.vpc_connector.subnets[0] #=> String
+    #   resp.vpc_connector.security_groups #=> Array
+    #   resp.vpc_connector.security_groups[0] #=> String
+    #   resp.vpc_connector.status #=> String, one of "ACTIVE", "INACTIVE"
+    #   resp.vpc_connector.created_at #=> Time
+    #   resp.vpc_connector.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DeleteVpcConnector AWS API Documentation
+    #
+    # @overload delete_vpc_connector(params = {})
+    # @param [Hash] params ({})
+    def delete_vpc_connector(params = {}, options = {})
+      req = build_request(:delete_vpc_connector, params)
+      req.send_request(options)
+    end
+
+    # Delete an App Runner VPC Ingress Connection resource that's
+    # associated with an App Runner service. The VPC Ingress Connection must
+    # be in one of the following states to be deleted:
+    #
+    # * `AVAILABLE`
+    #
+    # * `FAILED_CREATION`
+    #
+    # * `FAILED_UPDATE`
+    #
+    # * `FAILED_DELETION`
+    #
+    # @option params [required, String] :vpc_ingress_connection_arn
+    #   The Amazon Resource Name (ARN) of the App Runner VPC Ingress
+    #   Connection that you want to delete.
+    #
+    # @return [Types::DeleteVpcIngressConnectionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteVpcIngressConnectionResponse#vpc_ingress_connection #vpc_ingress_connection} => Types::VpcIngressConnection
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_vpc_ingress_connection({
+    #     vpc_ingress_connection_arn: "AppRunnerResourceArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.vpc_ingress_connection.vpc_ingress_connection_arn #=> String
+    #   resp.vpc_ingress_connection.vpc_ingress_connection_name #=> String
+    #   resp.vpc_ingress_connection.service_arn #=> String
+    #   resp.vpc_ingress_connection.status #=> String, one of "AVAILABLE", "PENDING_CREATION", "PENDING_UPDATE", "PENDING_DELETION", "FAILED_CREATION", "FAILED_UPDATE", "FAILED_DELETION", "DELETED"
+    #   resp.vpc_ingress_connection.account_id #=> String
+    #   resp.vpc_ingress_connection.domain_name #=> String
+    #   resp.vpc_ingress_connection.ingress_vpc_configuration.vpc_id #=> String
+    #   resp.vpc_ingress_connection.ingress_vpc_configuration.vpc_endpoint_id #=> String
+    #   resp.vpc_ingress_connection.created_at #=> Time
+    #   resp.vpc_ingress_connection.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DeleteVpcIngressConnection AWS API Documentation
+    #
+    # @overload delete_vpc_ingress_connection(params = {})
+    # @param [Hash] params ({})
+    def delete_vpc_ingress_connection(params = {}, options = {})
+      req = build_request(:delete_vpc_ingress_connection, params)
+      req.send_request(options)
+    end
+
+    # Return a full description of an App Runner automatic scaling
     # configuration resource.
     #
     # @option params [required, String] :auto_scaling_configuration_arn
@@ -920,7 +1402,7 @@ module Aws::AppRunner
     end
 
     # Return a description of custom domain names that are associated with
-    # an AWS App Runner service.
+    # an App Runner service.
     #
     # @option params [required, String] :service_arn
     #   The Amazon Resource Name (ARN) of the App Runner service that you want
@@ -947,6 +1429,7 @@ module Aws::AppRunner
     #   * {Types::DescribeCustomDomainsResponse#dns_target #dns_target} => String
     #   * {Types::DescribeCustomDomainsResponse#service_arn #service_arn} => String
     #   * {Types::DescribeCustomDomainsResponse#custom_domains #custom_domains} => Array&lt;Types::CustomDomain&gt;
+    #   * {Types::DescribeCustomDomainsResponse#vpc_dns_targets #vpc_dns_targets} => Array&lt;Types::VpcDNSTarget&gt;
     #   * {Types::DescribeCustomDomainsResponse#next_token #next_token} => String
     #
     # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
@@ -972,6 +1455,10 @@ module Aws::AppRunner
     #   resp.custom_domains[0].certificate_validation_records[0].value #=> String
     #   resp.custom_domains[0].certificate_validation_records[0].status #=> String, one of "PENDING_VALIDATION", "SUCCESS", "FAILED"
     #   resp.custom_domains[0].status #=> String, one of "CREATING", "CREATE_FAILED", "ACTIVE", "DELETING", "DELETE_FAILED", "PENDING_CERTIFICATE_DNS_VALIDATION", "BINDING_CERTIFICATE"
+    #   resp.vpc_dns_targets #=> Array
+    #   resp.vpc_dns_targets[0].vpc_ingress_connection_arn #=> String
+    #   resp.vpc_dns_targets[0].vpc_id #=> String
+    #   resp.vpc_dns_targets[0].domain_name #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DescribeCustomDomains AWS API Documentation
@@ -983,7 +1470,48 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Return a full description of an AWS App Runner service.
+    # Return a full description of an App Runner observability configuration
+    # resource.
+    #
+    # @option params [required, String] :observability_configuration_arn
+    #   The Amazon Resource Name (ARN) of the App Runner observability
+    #   configuration that you want a description for.
+    #
+    #   The ARN can be a full observability configuration ARN, or a partial
+    #   ARN ending with either `.../name ` or `.../name/revision `. If a
+    #   revision isn't specified, the latest active revision is described.
+    #
+    # @return [Types::DescribeObservabilityConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeObservabilityConfigurationResponse#observability_configuration #observability_configuration} => Types::ObservabilityConfiguration
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_observability_configuration({
+    #     observability_configuration_arn: "AppRunnerResourceArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.observability_configuration.observability_configuration_arn #=> String
+    #   resp.observability_configuration.observability_configuration_name #=> String
+    #   resp.observability_configuration.trace_configuration.vendor #=> String, one of "AWSXRAY"
+    #   resp.observability_configuration.observability_configuration_revision #=> Integer
+    #   resp.observability_configuration.latest #=> Boolean
+    #   resp.observability_configuration.status #=> String, one of "ACTIVE", "INACTIVE"
+    #   resp.observability_configuration.created_at #=> Time
+    #   resp.observability_configuration.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DescribeObservabilityConfiguration AWS API Documentation
+    #
+    # @overload describe_observability_configuration(params = {})
+    # @param [Hash] params ({})
+    def describe_observability_configuration(params = {}, options = {})
+      req = build_request(:describe_observability_configuration, params)
+      req.send_request(options)
+    end
+
+    # Return a full description of an App Runner service.
     #
     # @option params [required, String] :service_arn
     #   The Amazon Resource Name (ARN) of the App Runner service that you want
@@ -1013,17 +1541,21 @@ module Aws::AppRunner
     #   resp.service.source_configuration.code_repository.source_code_version.type #=> String, one of "BRANCH"
     #   resp.service.source_configuration.code_repository.source_code_version.value #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.configuration_source #=> String, one of "REPOSITORY", "API"
-    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12"
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12", "NODEJS_14", "CORRETTO_8", "CORRETTO_11", "NODEJS_16", "GO_1", "DOTNET_6", "PHP_81", "RUBY_31"
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.build_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.start_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.port #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_identifier #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.start_command #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.port #=> String
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_repository_type #=> String, one of "ECR", "ECR_PUBLIC"
     #   resp.service.source_configuration.auto_deployments_enabled #=> Boolean
     #   resp.service.source_configuration.authentication_configuration.connection_arn #=> String
@@ -1041,6 +1573,11 @@ module Aws::AppRunner
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_arn #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_name #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_revision #=> Integer
+    #   resp.service.network_configuration.egress_configuration.egress_type #=> String, one of "DEFAULT", "VPC"
+    #   resp.service.network_configuration.egress_configuration.vpc_connector_arn #=> String
+    #   resp.service.network_configuration.ingress_configuration.is_publicly_accessible #=> Boolean
+    #   resp.service.observability_configuration.observability_enabled #=> Boolean
+    #   resp.service.observability_configuration.observability_configuration_arn #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DescribeService AWS API Documentation
     #
@@ -1051,7 +1588,86 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Disassociate a custom domain name from an AWS App Runner service.
+    # Return a description of an App Runner VPC connector resource.
+    #
+    # @option params [required, String] :vpc_connector_arn
+    #   The Amazon Resource Name (ARN) of the App Runner VPC connector that
+    #   you want a description for.
+    #
+    #   The ARN must be a full VPC connector ARN.
+    #
+    # @return [Types::DescribeVpcConnectorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeVpcConnectorResponse#vpc_connector #vpc_connector} => Types::VpcConnector
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_vpc_connector({
+    #     vpc_connector_arn: "AppRunnerResourceArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.vpc_connector.vpc_connector_name #=> String
+    #   resp.vpc_connector.vpc_connector_arn #=> String
+    #   resp.vpc_connector.vpc_connector_revision #=> Integer
+    #   resp.vpc_connector.subnets #=> Array
+    #   resp.vpc_connector.subnets[0] #=> String
+    #   resp.vpc_connector.security_groups #=> Array
+    #   resp.vpc_connector.security_groups[0] #=> String
+    #   resp.vpc_connector.status #=> String, one of "ACTIVE", "INACTIVE"
+    #   resp.vpc_connector.created_at #=> Time
+    #   resp.vpc_connector.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DescribeVpcConnector AWS API Documentation
+    #
+    # @overload describe_vpc_connector(params = {})
+    # @param [Hash] params ({})
+    def describe_vpc_connector(params = {}, options = {})
+      req = build_request(:describe_vpc_connector, params)
+      req.send_request(options)
+    end
+
+    # Return a full description of an App Runner VPC Ingress Connection
+    # resource.
+    #
+    # @option params [required, String] :vpc_ingress_connection_arn
+    #   The Amazon Resource Name (ARN) of the App Runner VPC Ingress
+    #   Connection that you want a description for.
+    #
+    # @return [Types::DescribeVpcIngressConnectionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeVpcIngressConnectionResponse#vpc_ingress_connection #vpc_ingress_connection} => Types::VpcIngressConnection
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_vpc_ingress_connection({
+    #     vpc_ingress_connection_arn: "AppRunnerResourceArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.vpc_ingress_connection.vpc_ingress_connection_arn #=> String
+    #   resp.vpc_ingress_connection.vpc_ingress_connection_name #=> String
+    #   resp.vpc_ingress_connection.service_arn #=> String
+    #   resp.vpc_ingress_connection.status #=> String, one of "AVAILABLE", "PENDING_CREATION", "PENDING_UPDATE", "PENDING_DELETION", "FAILED_CREATION", "FAILED_UPDATE", "FAILED_DELETION", "DELETED"
+    #   resp.vpc_ingress_connection.account_id #=> String
+    #   resp.vpc_ingress_connection.domain_name #=> String
+    #   resp.vpc_ingress_connection.ingress_vpc_configuration.vpc_id #=> String
+    #   resp.vpc_ingress_connection.ingress_vpc_configuration.vpc_endpoint_id #=> String
+    #   resp.vpc_ingress_connection.created_at #=> Time
+    #   resp.vpc_ingress_connection.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DescribeVpcIngressConnection AWS API Documentation
+    #
+    # @overload describe_vpc_ingress_connection(params = {})
+    # @param [Hash] params ({})
+    def describe_vpc_ingress_connection(params = {}, options = {})
+      req = build_request(:describe_vpc_ingress_connection, params)
+      req.send_request(options)
+    end
+
+    # Disassociate a custom domain name from an App Runner service.
     #
     # Certificates tracking domain validity are associated with a custom
     # domain and are stored in [AWS Certificate Manager (ACM)][1]. These
@@ -1076,6 +1692,7 @@ module Aws::AppRunner
     #   * {Types::DisassociateCustomDomainResponse#dns_target #dns_target} => String
     #   * {Types::DisassociateCustomDomainResponse#service_arn #service_arn} => String
     #   * {Types::DisassociateCustomDomainResponse#custom_domain #custom_domain} => Types::CustomDomain
+    #   * {Types::DisassociateCustomDomainResponse#vpc_dns_targets #vpc_dns_targets} => Array&lt;Types::VpcDNSTarget&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -1096,6 +1713,10 @@ module Aws::AppRunner
     #   resp.custom_domain.certificate_validation_records[0].value #=> String
     #   resp.custom_domain.certificate_validation_records[0].status #=> String, one of "PENDING_VALIDATION", "SUCCESS", "FAILED"
     #   resp.custom_domain.status #=> String, one of "CREATING", "CREATE_FAILED", "ACTIVE", "DELETING", "DELETE_FAILED", "PENDING_CERTIFICATE_DNS_VALIDATION", "BINDING_CERTIFICATE"
+    #   resp.vpc_dns_targets #=> Array
+    #   resp.vpc_dns_targets[0].vpc_ingress_connection_arn #=> String
+    #   resp.vpc_dns_targets[0].vpc_id #=> String
+    #   resp.vpc_dns_targets[0].domain_name #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/DisassociateCustomDomain AWS API Documentation
     #
@@ -1106,25 +1727,30 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Returns a list of AWS App Runner automatic scaling configurations in
-    # your AWS account. You can query the revisions for a specific
-    # configuration name or the revisions for all configurations in your
-    # account. You can optionally query only the latest revision of each
-    # requested name.
+    # Returns a list of active App Runner automatic scaling configurations
+    # in your Amazon Web Services account. You can query the revisions for a
+    # specific configuration name or the revisions for all active
+    # configurations in your account. You can optionally query only the
+    # latest revision of each requested name.
+    #
+    # To retrieve a full description of a particular configuration revision,
+    # call and provide one of the ARNs returned by
+    # `ListAutoScalingConfigurations`.
     #
     # @option params [String] :auto_scaling_configuration_name
     #   The name of the App Runner auto scaling configuration that you want to
     #   list. If specified, App Runner lists revisions that share this name.
-    #   If not specified, App Runner returns revisions of all configurations.
+    #   If not specified, App Runner returns revisions of all active
+    #   configurations.
     #
     # @option params [Boolean] :latest_only
     #   Set to `true` to list only the latest revision for each requested
     #   configuration name.
     #
-    #   Keep as `false` to list all revisions for each requested configuration
+    #   Set to `false` to list all revisions for each requested configuration
     #   name.
     #
-    #   Default: `false`
+    #   Default: `true`
     #
     # @option params [Integer] :max_results
     #   The maximum number of results to include in each response (result
@@ -1175,8 +1801,8 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Returns a list of AWS App Runner connections that are associated with
-    # your AWS account.
+    # Returns a list of App Runner connections that are associated with your
+    # Amazon Web Services account.
     #
     # @option params [String] :connection_name
     #   If specified, only this connection is returned. If not specified, the
@@ -1231,8 +1857,81 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Return a list of operations that occurred on an AWS App Runner
-    # service.
+    # Returns a list of active App Runner observability configurations in
+    # your Amazon Web Services account. You can query the revisions for a
+    # specific configuration name or the revisions for all active
+    # configurations in your account. You can optionally query only the
+    # latest revision of each requested name.
+    #
+    # To retrieve a full description of a particular configuration revision,
+    # call and provide one of the ARNs returned by
+    # `ListObservabilityConfigurations`.
+    #
+    # @option params [String] :observability_configuration_name
+    #   The name of the App Runner observability configuration that you want
+    #   to list. If specified, App Runner lists revisions that share this
+    #   name. If not specified, App Runner returns revisions of all active
+    #   configurations.
+    #
+    # @option params [Boolean] :latest_only
+    #   Set to `true` to list only the latest revision for each requested
+    #   configuration name.
+    #
+    #   Set to `false` to list all revisions for each requested configuration
+    #   name.
+    #
+    #   Default: `true`
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to include in each response (result
+    #   page). It's used for a paginated request.
+    #
+    #   If you don't specify `MaxResults`, the request retrieves all
+    #   available results in a single response.
+    #
+    # @option params [String] :next_token
+    #   A token from a previous result page. It's used for a paginated
+    #   request. The request retrieves the next result page. All other
+    #   parameter values must be identical to the ones that are specified in
+    #   the initial request.
+    #
+    #   If you don't specify `NextToken`, the request retrieves the first
+    #   result page.
+    #
+    # @return [Types::ListObservabilityConfigurationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListObservabilityConfigurationsResponse#observability_configuration_summary_list #observability_configuration_summary_list} => Array&lt;Types::ObservabilityConfigurationSummary&gt;
+    #   * {Types::ListObservabilityConfigurationsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_observability_configurations({
+    #     observability_configuration_name: "ObservabilityConfigurationName",
+    #     latest_only: false,
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.observability_configuration_summary_list #=> Array
+    #   resp.observability_configuration_summary_list[0].observability_configuration_arn #=> String
+    #   resp.observability_configuration_summary_list[0].observability_configuration_name #=> String
+    #   resp.observability_configuration_summary_list[0].observability_configuration_revision #=> Integer
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/ListObservabilityConfigurations AWS API Documentation
+    #
+    # @overload list_observability_configurations(params = {})
+    # @param [Hash] params ({})
+    def list_observability_configurations(params = {}, options = {})
+      req = build_request(:list_observability_configurations, params)
+      req.send_request(options)
+    end
+
+    # Return a list of operations that occurred on an App Runner service.
     #
     # The resulting list of OperationSummary objects is sorted in reverse
     # chronological order. The first object on the list represents the last
@@ -1277,7 +1976,7 @@ module Aws::AppRunner
     #
     #   resp.operation_summary_list #=> Array
     #   resp.operation_summary_list[0].id #=> String
-    #   resp.operation_summary_list[0].type #=> String, one of "START_DEPLOYMENT", "CREATE_SERVICE", "PAUSE_SERVICE", "RESUME_SERVICE", "DELETE_SERVICE"
+    #   resp.operation_summary_list[0].type #=> String, one of "START_DEPLOYMENT", "CREATE_SERVICE", "PAUSE_SERVICE", "RESUME_SERVICE", "DELETE_SERVICE", "UPDATE_SERVICE"
     #   resp.operation_summary_list[0].status #=> String, one of "PENDING", "IN_PROGRESS", "FAILED", "SUCCEEDED", "ROLLBACK_IN_PROGRESS", "ROLLBACK_FAILED", "ROLLBACK_SUCCEEDED"
     #   resp.operation_summary_list[0].target_arn #=> String
     #   resp.operation_summary_list[0].started_at #=> Time
@@ -1294,7 +1993,8 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Returns a list of running AWS App Runner services in your AWS account.
+    # Returns a list of running App Runner services in your Amazon Web
+    # Services account.
     #
     # @option params [String] :next_token
     #   A token from a previous result page. Used for a paginated request. The
@@ -1346,7 +2046,7 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # List tags that are associated with for an AWS App Runner resource. The
+    # List tags that are associated with for an App Runner resource. The
     # response contains a list of tag key-value pairs.
     #
     # @option params [required, String] :resource_arn
@@ -1380,7 +2080,121 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Pause an active AWS App Runner service. App Runner reduces compute
+    # Returns a list of App Runner VPC connectors in your Amazon Web
+    # Services account.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to include in each response (result
+    #   page). It's used for a paginated request.
+    #
+    #   If you don't specify `MaxResults`, the request retrieves all
+    #   available results in a single response.
+    #
+    # @option params [String] :next_token
+    #   A token from a previous result page. It's used for a paginated
+    #   request. The request retrieves the next result page. All other
+    #   parameter values must be identical to the ones that are specified in
+    #   the initial request.
+    #
+    #   If you don't specify `NextToken`, the request retrieves the first
+    #   result page.
+    #
+    # @return [Types::ListVpcConnectorsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListVpcConnectorsResponse#vpc_connectors #vpc_connectors} => Array&lt;Types::VpcConnector&gt;
+    #   * {Types::ListVpcConnectorsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_vpc_connectors({
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.vpc_connectors #=> Array
+    #   resp.vpc_connectors[0].vpc_connector_name #=> String
+    #   resp.vpc_connectors[0].vpc_connector_arn #=> String
+    #   resp.vpc_connectors[0].vpc_connector_revision #=> Integer
+    #   resp.vpc_connectors[0].subnets #=> Array
+    #   resp.vpc_connectors[0].subnets[0] #=> String
+    #   resp.vpc_connectors[0].security_groups #=> Array
+    #   resp.vpc_connectors[0].security_groups[0] #=> String
+    #   resp.vpc_connectors[0].status #=> String, one of "ACTIVE", "INACTIVE"
+    #   resp.vpc_connectors[0].created_at #=> Time
+    #   resp.vpc_connectors[0].deleted_at #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/ListVpcConnectors AWS API Documentation
+    #
+    # @overload list_vpc_connectors(params = {})
+    # @param [Hash] params ({})
+    def list_vpc_connectors(params = {}, options = {})
+      req = build_request(:list_vpc_connectors, params)
+      req.send_request(options)
+    end
+
+    # Return a list of App Runner VPC Ingress Connections in your Amazon Web
+    # Services account.
+    #
+    # @option params [Types::ListVpcIngressConnectionsFilter] :filter
+    #   The VPC Ingress Connections to be listed based on either the Service
+    #   Arn or Vpc Endpoint Id, or both.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to include in each response (result
+    #   page). It's used for a paginated request.
+    #
+    #   If you don't specify `MaxResults`, the request retrieves all
+    #   available results in a single response.
+    #
+    # @option params [String] :next_token
+    #   A token from a previous result page. It's used for a paginated
+    #   request. The request retrieves the next result page. All other
+    #   parameter values must be identical to the ones that are specified in
+    #   the initial request.
+    #
+    #   If you don't specify `NextToken`, the request retrieves the first
+    #   result page.
+    #
+    # @return [Types::ListVpcIngressConnectionsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListVpcIngressConnectionsResponse#vpc_ingress_connection_summary_list #vpc_ingress_connection_summary_list} => Array&lt;Types::VpcIngressConnectionSummary&gt;
+    #   * {Types::ListVpcIngressConnectionsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_vpc_ingress_connections({
+    #     filter: {
+    #       service_arn: "AppRunnerResourceArn",
+    #       vpc_endpoint_id: "String",
+    #     },
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.vpc_ingress_connection_summary_list #=> Array
+    #   resp.vpc_ingress_connection_summary_list[0].vpc_ingress_connection_arn #=> String
+    #   resp.vpc_ingress_connection_summary_list[0].service_arn #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/ListVpcIngressConnections AWS API Documentation
+    #
+    # @overload list_vpc_ingress_connections(params = {})
+    # @param [Hash] params ({})
+    def list_vpc_ingress_connections(params = {}, options = {})
+      req = build_request(:list_vpc_ingress_connections, params)
+      req.send_request(options)
+    end
+
+    # Pause an active App Runner service. App Runner reduces compute
     # capacity for the service to zero and loses state (for example,
     # ephemeral storage is removed).
     #
@@ -1417,17 +2231,21 @@ module Aws::AppRunner
     #   resp.service.source_configuration.code_repository.source_code_version.type #=> String, one of "BRANCH"
     #   resp.service.source_configuration.code_repository.source_code_version.value #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.configuration_source #=> String, one of "REPOSITORY", "API"
-    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12"
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12", "NODEJS_14", "CORRETTO_8", "CORRETTO_11", "NODEJS_16", "GO_1", "DOTNET_6", "PHP_81", "RUBY_31"
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.build_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.start_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.port #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_identifier #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.start_command #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.port #=> String
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_repository_type #=> String, one of "ECR", "ECR_PUBLIC"
     #   resp.service.source_configuration.auto_deployments_enabled #=> Boolean
     #   resp.service.source_configuration.authentication_configuration.connection_arn #=> String
@@ -1445,6 +2263,11 @@ module Aws::AppRunner
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_arn #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_name #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_revision #=> Integer
+    #   resp.service.network_configuration.egress_configuration.egress_type #=> String, one of "DEFAULT", "VPC"
+    #   resp.service.network_configuration.egress_configuration.vpc_connector_arn #=> String
+    #   resp.service.network_configuration.ingress_configuration.is_publicly_accessible #=> Boolean
+    #   resp.service.observability_configuration.observability_enabled #=> Boolean
+    #   resp.service.observability_configuration.observability_configuration_arn #=> String
     #   resp.operation_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/PauseService AWS API Documentation
@@ -1456,7 +2279,7 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Resume an active AWS App Runner service. App Runner provisions compute
+    # Resume an active App Runner service. App Runner provisions compute
     # capacity for the service.
     #
     # This is an asynchronous operation. On a successful call, you can use
@@ -1492,17 +2315,21 @@ module Aws::AppRunner
     #   resp.service.source_configuration.code_repository.source_code_version.type #=> String, one of "BRANCH"
     #   resp.service.source_configuration.code_repository.source_code_version.value #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.configuration_source #=> String, one of "REPOSITORY", "API"
-    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12"
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12", "NODEJS_14", "CORRETTO_8", "CORRETTO_11", "NODEJS_16", "GO_1", "DOTNET_6", "PHP_81", "RUBY_31"
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.build_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.start_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.port #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_identifier #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.start_command #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.port #=> String
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_repository_type #=> String, one of "ECR", "ECR_PUBLIC"
     #   resp.service.source_configuration.auto_deployments_enabled #=> Boolean
     #   resp.service.source_configuration.authentication_configuration.connection_arn #=> String
@@ -1520,6 +2347,11 @@ module Aws::AppRunner
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_arn #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_name #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_revision #=> Integer
+    #   resp.service.network_configuration.egress_configuration.egress_type #=> String, one of "DEFAULT", "VPC"
+    #   resp.service.network_configuration.egress_configuration.vpc_connector_arn #=> String
+    #   resp.service.network_configuration.ingress_configuration.is_publicly_accessible #=> Boolean
+    #   resp.service.observability_configuration.observability_enabled #=> Boolean
+    #   resp.service.observability_configuration.observability_configuration_arn #=> String
     #   resp.operation_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/ResumeService AWS API Documentation
@@ -1532,8 +2364,8 @@ module Aws::AppRunner
     end
 
     # Initiate a manual deployment of the latest commit in a source code
-    # repository or the latest image in a source image repository to an AWS
-    # App Runner service.
+    # repository or the latest image in a source image repository to an App
+    # Runner service.
     #
     # For a source code repository, App Runner retrieves the commit and
     # builds a Docker image. For a source image repository, App Runner
@@ -1638,12 +2470,12 @@ module Aws::AppRunner
       req.send_request(options)
     end
 
-    # Update an AWS App Runner service. You can update the source
-    # configuration and instance configuration of the service. You can also
-    # update the ARN of the auto scaling configuration resource that's
-    # associated with the service. However, you can't change the name or
-    # the encryption configuration of the service. These can be set only
-    # when you create the service.
+    # Update an App Runner service. You can update the source configuration
+    # and instance configuration of the service. You can also update the ARN
+    # of the auto scaling configuration resource that's associated with the
+    # service. However, you can't change the name or the encryption
+    # configuration of the service. These can be set only when you create
+    # the service.
     #
     # To update the tags applied to your service, use the separate actions
     # TagResource and UntagResource.
@@ -1669,16 +2501,24 @@ module Aws::AppRunner
     #   include.
     #
     # @option params [Types::InstanceConfiguration] :instance_configuration
-    #   The runtime configuration to apply to instances (scaling units) of the
-    #   App Runner service.
+    #   The runtime configuration to apply to instances (scaling units) of
+    #   your service.
     #
     # @option params [String] :auto_scaling_configuration_arn
     #   The Amazon Resource Name (ARN) of an App Runner automatic scaling
-    #   configuration resource that you want to associate with your service.
+    #   configuration resource that you want to associate with the App Runner
+    #   service.
     #
     # @option params [Types::HealthCheckConfiguration] :health_check_configuration
-    #   The settings for the health check that AWS App Runner performs to
-    #   monitor the health of your service.
+    #   The settings for the health check that App Runner performs to monitor
+    #   the health of the App Runner service.
+    #
+    # @option params [Types::NetworkConfiguration] :network_configuration
+    #   Configuration settings related to network traffic of the web
+    #   application that the App Runner service runs.
+    #
+    # @option params [Types::ServiceObservabilityConfiguration] :observability_configuration
+    #   The observability configuration of your service.
     #
     # @return [Types::UpdateServiceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1699,12 +2539,15 @@ module Aws::AppRunner
     #         code_configuration: {
     #           configuration_source: "REPOSITORY", # required, accepts REPOSITORY, API
     #           code_configuration_values: {
-    #             runtime: "PYTHON_3", # required, accepts PYTHON_3, NODEJS_12
+    #             runtime: "PYTHON_3", # required, accepts PYTHON_3, NODEJS_12, NODEJS_14, CORRETTO_8, CORRETTO_11, NODEJS_16, GO_1, DOTNET_6, PHP_81, RUBY_31
     #             build_command: "BuildCommand",
     #             start_command: "StartCommand",
     #             port: "String",
     #             runtime_environment_variables: {
     #               "RuntimeEnvironmentVariablesKey" => "RuntimeEnvironmentVariablesValue",
+    #             },
+    #             runtime_environment_secrets: {
+    #               "RuntimeEnvironmentSecretsName" => "RuntimeEnvironmentSecretsValue",
     #             },
     #           },
     #         },
@@ -1715,8 +2558,11 @@ module Aws::AppRunner
     #           runtime_environment_variables: {
     #             "RuntimeEnvironmentVariablesKey" => "RuntimeEnvironmentVariablesValue",
     #           },
-    #           start_command: "String",
+    #           start_command: "StartCommand",
     #           port: "String",
+    #           runtime_environment_secrets: {
+    #             "RuntimeEnvironmentSecretsName" => "RuntimeEnvironmentSecretsValue",
+    #           },
     #         },
     #         image_repository_type: "ECR", # required, accepts ECR, ECR_PUBLIC
     #       },
@@ -1734,11 +2580,24 @@ module Aws::AppRunner
     #     auto_scaling_configuration_arn: "AppRunnerResourceArn",
     #     health_check_configuration: {
     #       protocol: "TCP", # accepts TCP, HTTP
-    #       path: "String",
+    #       path: "HealthCheckPath",
     #       interval: 1,
     #       timeout: 1,
     #       healthy_threshold: 1,
     #       unhealthy_threshold: 1,
+    #     },
+    #     network_configuration: {
+    #       egress_configuration: {
+    #         egress_type: "DEFAULT", # accepts DEFAULT, VPC
+    #         vpc_connector_arn: "AppRunnerResourceArn",
+    #       },
+    #       ingress_configuration: {
+    #         is_publicly_accessible: false,
+    #       },
+    #     },
+    #     observability_configuration: {
+    #       observability_enabled: false, # required
+    #       observability_configuration_arn: "AppRunnerResourceArn",
     #     },
     #   })
     #
@@ -1756,17 +2615,21 @@ module Aws::AppRunner
     #   resp.service.source_configuration.code_repository.source_code_version.type #=> String, one of "BRANCH"
     #   resp.service.source_configuration.code_repository.source_code_version.value #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.configuration_source #=> String, one of "REPOSITORY", "API"
-    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12"
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime #=> String, one of "PYTHON_3", "NODEJS_12", "NODEJS_14", "CORRETTO_8", "CORRETTO_11", "NODEJS_16", "GO_1", "DOTNET_6", "PHP_81", "RUBY_31"
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.build_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.start_command #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.port #=> String
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.code_repository.code_configuration.code_configuration_values.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_identifier #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables #=> Hash
     #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_variables["RuntimeEnvironmentVariablesKey"] #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.start_command #=> String
     #   resp.service.source_configuration.image_repository.image_configuration.port #=> String
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets #=> Hash
+    #   resp.service.source_configuration.image_repository.image_configuration.runtime_environment_secrets["RuntimeEnvironmentSecretsName"] #=> String
     #   resp.service.source_configuration.image_repository.image_repository_type #=> String, one of "ECR", "ECR_PUBLIC"
     #   resp.service.source_configuration.auto_deployments_enabled #=> Boolean
     #   resp.service.source_configuration.authentication_configuration.connection_arn #=> String
@@ -1784,6 +2647,11 @@ module Aws::AppRunner
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_arn #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_name #=> String
     #   resp.service.auto_scaling_configuration_summary.auto_scaling_configuration_revision #=> Integer
+    #   resp.service.network_configuration.egress_configuration.egress_type #=> String, one of "DEFAULT", "VPC"
+    #   resp.service.network_configuration.egress_configuration.vpc_connector_arn #=> String
+    #   resp.service.network_configuration.ingress_configuration.is_publicly_accessible #=> Boolean
+    #   resp.service.observability_configuration.observability_enabled #=> Boolean
+    #   resp.service.observability_configuration.observability_configuration_arn #=> String
     #   resp.operation_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/UpdateService AWS API Documentation
@@ -1792,6 +2660,61 @@ module Aws::AppRunner
     # @param [Hash] params ({})
     def update_service(params = {}, options = {})
       req = build_request(:update_service, params)
+      req.send_request(options)
+    end
+
+    # Update an existing App Runner VPC Ingress Connection resource. The VPC
+    # Ingress Connection must be in one of the following states to be
+    # updated:
+    #
+    # * AVAILABLE
+    #
+    # * FAILED\_CREATION
+    #
+    # * FAILED\_UPDATE
+    #
+    # @option params [required, String] :vpc_ingress_connection_arn
+    #   The Amazon Resource Name (Arn) for the App Runner VPC Ingress
+    #   Connection resource that you want to update.
+    #
+    # @option params [required, Types::IngressVpcConfiguration] :ingress_vpc_configuration
+    #   Specifications for the customer’s Amazon VPC and the related Amazon
+    #   Web Services PrivateLink VPC endpoint that are used to update the VPC
+    #   Ingress Connection resource.
+    #
+    # @return [Types::UpdateVpcIngressConnectionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateVpcIngressConnectionResponse#vpc_ingress_connection #vpc_ingress_connection} => Types::VpcIngressConnection
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_vpc_ingress_connection({
+    #     vpc_ingress_connection_arn: "AppRunnerResourceArn", # required
+    #     ingress_vpc_configuration: { # required
+    #       vpc_id: "String",
+    #       vpc_endpoint_id: "String",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.vpc_ingress_connection.vpc_ingress_connection_arn #=> String
+    #   resp.vpc_ingress_connection.vpc_ingress_connection_name #=> String
+    #   resp.vpc_ingress_connection.service_arn #=> String
+    #   resp.vpc_ingress_connection.status #=> String, one of "AVAILABLE", "PENDING_CREATION", "PENDING_UPDATE", "PENDING_DELETION", "FAILED_CREATION", "FAILED_UPDATE", "FAILED_DELETION", "DELETED"
+    #   resp.vpc_ingress_connection.account_id #=> String
+    #   resp.vpc_ingress_connection.domain_name #=> String
+    #   resp.vpc_ingress_connection.ingress_vpc_configuration.vpc_id #=> String
+    #   resp.vpc_ingress_connection.ingress_vpc_configuration.vpc_endpoint_id #=> String
+    #   resp.vpc_ingress_connection.created_at #=> Time
+    #   resp.vpc_ingress_connection.deleted_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/apprunner-2020-05-15/UpdateVpcIngressConnection AWS API Documentation
+    #
+    # @overload update_vpc_ingress_connection(params = {})
+    # @param [Hash] params ({})
+    def update_vpc_ingress_connection(params = {}, options = {})
+      req = build_request(:update_vpc_ingress_connection, params)
       req.send_request(options)
     end
 
@@ -1808,7 +2731,7 @@ module Aws::AppRunner
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-apprunner'
-      context[:gem_version] = '1.0.0'
+      context[:gem_version] = '1.26.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

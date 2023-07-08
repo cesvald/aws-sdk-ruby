@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:redshiftdataapiservice)
@@ -73,8 +77,13 @@ module Aws::RedshiftDataAPIService
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::RedshiftDataAPIService::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::RedshiftDataAPIService
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::RedshiftDataAPIService
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::RedshiftDataAPIService
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::RedshiftDataAPIService
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::RedshiftDataAPIService
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::RedshiftDataAPIService::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::RedshiftDataAPIService::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::RedshiftDataAPIService
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::RedshiftDataAPIService
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -337,13 +394,152 @@ module Aws::RedshiftDataAPIService
 
     # @!group API Operations
 
+    # Runs one or more SQL statements, which can be data manipulation
+    # language (DML) or data definition language (DDL). Depending on the
+    # authorization method, use one of the following combinations of request
+    # parameters:
+    #
+    # * Secrets Manager - when connecting to a cluster, provide the
+    #   `secret-arn` of a secret stored in Secrets Manager which has
+    #   `username` and `password`. The specified secret contains credentials
+    #   to connect to the `database` you specify. When you are connecting to
+    #   a cluster, you also supply the database name, If you provide a
+    #   cluster identifier (`dbClusterIdentifier`), it must match the
+    #   cluster identifier stored in the secret. When you are connecting to
+    #   a serverless workgroup, you also supply the database name.
+    #
+    # * Temporary credentials - when connecting to your data warehouse,
+    #   choose one of the following options:
+    #
+    #   * When connecting to a serverless workgroup, specify the workgroup
+    #     name and database name. The database user name is derived from the
+    #     IAM identity. For example, `arn:iam::123456789012:user:foo` has
+    #     the database user name `IAM:foo`. Also, permission to call the
+    #     `redshift-serverless:GetCredentials` operation is required.
+    #
+    #   * When connecting to a cluster as an IAM identity, specify the
+    #     cluster identifier and the database name. The database user name
+    #     is derived from the IAM identity. For example,
+    #     `arn:iam::123456789012:user:foo` has the database user name
+    #     `IAM:foo`. Also, permission to call the
+    #     `redshift:GetClusterCredentialsWithIAM` operation is required.
+    #
+    #   * When connecting to a cluster as a database user, specify the
+    #     cluster identifier, the database name, and the database user name.
+    #     Also, permission to call the `redshift:GetClusterCredentials`
+    #     operation is required.
+    #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
+    #
+    # @option params [String] :client_token
+    #   A unique, case-sensitive identifier that you provide to ensure the
+    #   idempotency of the request.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @option params [String] :cluster_identifier
+    #   The cluster identifier. This parameter is required when connecting to
+    #   a cluster and authenticating using either Secrets Manager or temporary
+    #   credentials.
+    #
+    # @option params [required, String] :database
+    #   The name of the database. This parameter is required when
+    #   authenticating using either Secrets Manager or temporary credentials.
+    #
+    # @option params [String] :db_user
+    #   The database user name. This parameter is required when connecting to
+    #   a cluster as a database user and authenticating using temporary
+    #   credentials.
+    #
+    # @option params [String] :secret_arn
+    #   The name or ARN of the secret that enables access to the database.
+    #   This parameter is required when authenticating using Secrets Manager.
+    #
+    # @option params [required, Array<String>] :sqls
+    #   One or more SQL statements to run.      The SQL statements are run as
+    #   a single transaction. They run serially in the order of the array.
+    #   Subsequent SQL statements don't start until the previous statement in
+    #   the array completes. If any SQL statement fails, then because they are
+    #   run as one transaction, all work is rolled back.</p>
+    #
+    # @option params [String] :statement_name
+    #   The name of the SQL statements. You can name the SQL statements when
+    #   you create them to identify the query.
+    #
+    # @option params [Boolean] :with_event
+    #   A value that indicates whether to send an event to the Amazon
+    #   EventBridge event bus after the SQL statements run.
+    #
+    # @option params [String] :workgroup_name
+    #   The serverless workgroup name or Amazon Resource Name (ARN). This
+    #   parameter is required when connecting to a serverless workgroup and
+    #   authenticating using either Secrets Manager or temporary credentials.
+    #
+    # @return [Types::BatchExecuteStatementOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchExecuteStatementOutput#cluster_identifier #cluster_identifier} => String
+    #   * {Types::BatchExecuteStatementOutput#created_at #created_at} => Time
+    #   * {Types::BatchExecuteStatementOutput#database #database} => String
+    #   * {Types::BatchExecuteStatementOutput#db_user #db_user} => String
+    #   * {Types::BatchExecuteStatementOutput#id #id} => String
+    #   * {Types::BatchExecuteStatementOutput#secret_arn #secret_arn} => String
+    #   * {Types::BatchExecuteStatementOutput#workgroup_name #workgroup_name} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_execute_statement({
+    #     client_token: "ClientToken",
+    #     cluster_identifier: "Location",
+    #     database: "String", # required
+    #     db_user: "String",
+    #     secret_arn: "SecretArn",
+    #     sqls: ["StatementString"], # required
+    #     statement_name: "StatementNameString",
+    #     with_event: false,
+    #     workgroup_name: "WorkgroupNameString",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.cluster_identifier #=> String
+    #   resp.created_at #=> Time
+    #   resp.database #=> String
+    #   resp.db_user #=> String
+    #   resp.id #=> String
+    #   resp.secret_arn #=> String
+    #   resp.workgroup_name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/redshift-data-2019-12-20/BatchExecuteStatement AWS API Documentation
+    #
+    # @overload batch_execute_statement(params = {})
+    # @param [Hash] params ({})
+    def batch_execute_statement(params = {}, options = {})
+      req = build_request(:batch_execute_statement, params)
+      req.send_request(options)
+    end
+
     # Cancels a running query. To be canceled, a query must be running.
+    #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
     #
     # @option params [required, String] :id
     #   The identifier of the SQL statement to cancel. This value is a
     #   universally unique identifier (UUID) generated by Amazon Redshift Data
-    #   API. This identifier is returned by `ExecuteStatment` and
-    #   `ListStatements`.
+    #   API. This identifier is returned by `BatchExecuteStatment`,
+    #   `ExecuteStatment`, and `ListStatements`.
     #
     # @return [Types::CancelStatementResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -352,7 +548,7 @@ module Aws::RedshiftDataAPIService
     # @example Request syntax with placeholder values
     #
     #   resp = client.cancel_statement({
-    #     id: "UUID", # required
+    #     id: "StatementId", # required
     #   })
     #
     # @example Response structure
@@ -373,10 +569,21 @@ module Aws::RedshiftDataAPIService
     # query started, when it finished, the query status, the number of rows
     # returned, and the SQL statement.
     #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
+    #
     # @option params [required, String] :id
     #   The identifier of the SQL statement to describe. This value is a
     #   universally unique identifier (UUID) generated by Amazon Redshift Data
-    #   API. This identifier is returned by `ExecuteStatment` and
+    #   API. A suffix indicates the number of the SQL statement. For example,
+    #   `d9b6c0c9-0747-4bf4-b142-e8883122f766:2` has a suffix of `:2` that
+    #   indicates the second SQL statement of a batch query. This identifier
+    #   is returned by `BatchExecuteStatment`, `ExecuteStatement`, and
     #   `ListStatements`.
     #
     # @return [Types::DescribeStatementResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -389,6 +596,7 @@ module Aws::RedshiftDataAPIService
     #   * {Types::DescribeStatementResponse#error #error} => String
     #   * {Types::DescribeStatementResponse#has_result_set #has_result_set} => Boolean
     #   * {Types::DescribeStatementResponse#id #id} => String
+    #   * {Types::DescribeStatementResponse#query_parameters #query_parameters} => Array&lt;Types::SqlParameter&gt;
     #   * {Types::DescribeStatementResponse#query_string #query_string} => String
     #   * {Types::DescribeStatementResponse#redshift_pid #redshift_pid} => Integer
     #   * {Types::DescribeStatementResponse#redshift_query_id #redshift_query_id} => Integer
@@ -396,12 +604,14 @@ module Aws::RedshiftDataAPIService
     #   * {Types::DescribeStatementResponse#result_size #result_size} => Integer
     #   * {Types::DescribeStatementResponse#secret_arn #secret_arn} => String
     #   * {Types::DescribeStatementResponse#status #status} => String
+    #   * {Types::DescribeStatementResponse#sub_statements #sub_statements} => Array&lt;Types::SubStatementData&gt;
     #   * {Types::DescribeStatementResponse#updated_at #updated_at} => Time
+    #   * {Types::DescribeStatementResponse#workgroup_name #workgroup_name} => String
     #
     # @example Request syntax with placeholder values
     #
     #   resp = client.describe_statement({
-    #     id: "UUID", # required
+    #     id: "StatementId", # required
     #   })
     #
     # @example Response structure
@@ -414,6 +624,9 @@ module Aws::RedshiftDataAPIService
     #   resp.error #=> String
     #   resp.has_result_set #=> Boolean
     #   resp.id #=> String
+    #   resp.query_parameters #=> Array
+    #   resp.query_parameters[0].name #=> String
+    #   resp.query_parameters[0].value #=> String
     #   resp.query_string #=> String
     #   resp.redshift_pid #=> Integer
     #   resp.redshift_query_id #=> Integer
@@ -421,7 +634,20 @@ module Aws::RedshiftDataAPIService
     #   resp.result_size #=> Integer
     #   resp.secret_arn #=> String
     #   resp.status #=> String, one of "SUBMITTED", "PICKED", "STARTED", "FINISHED", "ABORTED", "FAILED", "ALL"
+    #   resp.sub_statements #=> Array
+    #   resp.sub_statements[0].created_at #=> Time
+    #   resp.sub_statements[0].duration #=> Integer
+    #   resp.sub_statements[0].error #=> String
+    #   resp.sub_statements[0].has_result_set #=> Boolean
+    #   resp.sub_statements[0].id #=> String
+    #   resp.sub_statements[0].query_string #=> String
+    #   resp.sub_statements[0].redshift_query_id #=> Integer
+    #   resp.sub_statements[0].result_rows #=> Integer
+    #   resp.sub_statements[0].result_size #=> Integer
+    #   resp.sub_statements[0].status #=> String, one of "SUBMITTED", "PICKED", "STARTED", "FINISHED", "ABORTED", "FAILED"
+    #   resp.sub_statements[0].updated_at #=> Time
     #   resp.updated_at #=> Time
+    #   resp.workgroup_name #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/redshift-data-2019-12-20/DescribeStatement AWS API Documentation
     #
@@ -437,18 +663,48 @@ module Aws::RedshiftDataAPIService
     # page through the column list. Depending on the authorization method,
     # use one of the following combinations of request parameters:
     #
-    # * AWS Secrets Manager - specify the Amazon Resource Name (ARN) of the
-    #   secret and the cluster identifier that matches the cluster in the
-    #   secret.
+    # * Secrets Manager - when connecting to a cluster, provide the
+    #   `secret-arn` of a secret stored in Secrets Manager which has
+    #   `username` and `password`. The specified secret contains credentials
+    #   to connect to the `database` you specify. When you are connecting to
+    #   a cluster, you also supply the database name, If you provide a
+    #   cluster identifier (`dbClusterIdentifier`), it must match the
+    #   cluster identifier stored in the secret. When you are connecting to
+    #   a serverless workgroup, you also supply the database name.
     #
-    # * Temporary credentials - specify the cluster identifier, the database
-    #   name, and the database user name. Permission to call the
-    #   `redshift:GetClusterCredentials` operation is required to use this
-    #   method.
+    # * Temporary credentials - when connecting to your data warehouse,
+    #   choose one of the following options:
     #
-    # @option params [required, String] :cluster_identifier
-    #   The cluster identifier. This parameter is required when authenticating
-    #   using either AWS Secrets Manager or temporary credentials.
+    #   * When connecting to a serverless workgroup, specify the workgroup
+    #     name and database name. The database user name is derived from the
+    #     IAM identity. For example, `arn:iam::123456789012:user:foo` has
+    #     the database user name `IAM:foo`. Also, permission to call the
+    #     `redshift-serverless:GetCredentials` operation is required.
+    #
+    #   * When connecting to a cluster as an IAM identity, specify the
+    #     cluster identifier and the database name. The database user name
+    #     is derived from the IAM identity. For example,
+    #     `arn:iam::123456789012:user:foo` has the database user name
+    #     `IAM:foo`. Also, permission to call the
+    #     `redshift:GetClusterCredentialsWithIAM` operation is required.
+    #
+    #   * When connecting to a cluster as a database user, specify the
+    #     cluster identifier, the database name, and the database user name.
+    #     Also, permission to call the `redshift:GetClusterCredentials`
+    #     operation is required.
+    #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
+    #
+    # @option params [String] :cluster_identifier
+    #   The cluster identifier. This parameter is required when connecting to
+    #   a cluster and authenticating using either Secrets Manager or temporary
+    #   credentials.
     #
     # @option params [String] :connected_database
     #   A database name. The connected database is specified when you connect
@@ -460,8 +716,9 @@ module Aws::RedshiftDataAPIService
     #   connect to with your authentication credentials.
     #
     # @option params [String] :db_user
-    #   The database user name. This parameter is required when authenticating
-    #   using temporary credentials.
+    #   The database user name. This parameter is required when connecting to
+    #   a cluster as a database user and authenticating using temporary
+    #   credentials.
     #
     # @option params [Integer] :max_results
     #   The maximum number of tables to return in the response. If more tables
@@ -482,13 +739,17 @@ module Aws::RedshiftDataAPIService
     #
     # @option params [String] :secret_arn
     #   The name or ARN of the secret that enables access to the database.
-    #   This parameter is required when authenticating using AWS Secrets
-    #   Manager.
+    #   This parameter is required when authenticating using Secrets Manager.
     #
     # @option params [String] :table
     #   The table name. If no table is specified, then all tables for all
     #   matching schemas are returned. If no table and no schema is specified,
     #   then all tables for all schemas in the database are returned
+    #
+    # @option params [String] :workgroup_name
+    #   The serverless workgroup name or Amazon Resource Name (ARN). This
+    #   parameter is required when connecting to a serverless workgroup and
+    #   authenticating using either Secrets Manager or temporary credentials.
     #
     # @return [Types::DescribeTableResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -501,7 +762,7 @@ module Aws::RedshiftDataAPIService
     # @example Request syntax with placeholder values
     #
     #   resp = client.describe_table({
-    #     cluster_identifier: "Location", # required
+    #     cluster_identifier: "Location",
     #     connected_database: "String",
     #     database: "String", # required
     #     db_user: "String",
@@ -510,6 +771,7 @@ module Aws::RedshiftDataAPIService
     #     schema: "String",
     #     secret_arn: "SecretArn",
     #     table: "String",
+    #     workgroup_name: "WorkgroupNameString",
     #   })
     #
     # @example Response structure
@@ -545,31 +807,71 @@ module Aws::RedshiftDataAPIService
     # statement. Depending on the authorization method, use one of the
     # following combinations of request parameters:
     #
-    # * AWS Secrets Manager - specify the Amazon Resource Name (ARN) of the
-    #   secret and the cluster identifier that matches the cluster in the
-    #   secret.
+    # * Secrets Manager - when connecting to a cluster, provide the
+    #   `secret-arn` of a secret stored in Secrets Manager which has
+    #   `username` and `password`. The specified secret contains credentials
+    #   to connect to the `database` you specify. When you are connecting to
+    #   a cluster, you also supply the database name, If you provide a
+    #   cluster identifier (`dbClusterIdentifier`), it must match the
+    #   cluster identifier stored in the secret. When you are connecting to
+    #   a serverless workgroup, you also supply the database name.
     #
-    # * Temporary credentials - specify the cluster identifier, the database
-    #   name, and the database user name. Permission to call the
-    #   `redshift:GetClusterCredentials` operation is required to use this
-    #   method.
+    # * Temporary credentials - when connecting to your data warehouse,
+    #   choose one of the following options:
     #
-    # @option params [required, String] :cluster_identifier
-    #   The cluster identifier. This parameter is required when authenticating
-    #   using either AWS Secrets Manager or temporary credentials.
+    #   * When connecting to a serverless workgroup, specify the workgroup
+    #     name and database name. The database user name is derived from the
+    #     IAM identity. For example, `arn:iam::123456789012:user:foo` has
+    #     the database user name `IAM:foo`. Also, permission to call the
+    #     `redshift-serverless:GetCredentials` operation is required.
     #
-    # @option params [String] :database
+    #   * When connecting to a cluster as an IAM identity, specify the
+    #     cluster identifier and the database name. The database user name
+    #     is derived from the IAM identity. For example,
+    #     `arn:iam::123456789012:user:foo` has the database user name
+    #     `IAM:foo`. Also, permission to call the
+    #     `redshift:GetClusterCredentialsWithIAM` operation is required.
+    #
+    #   * When connecting to a cluster as a database user, specify the
+    #     cluster identifier, the database name, and the database user name.
+    #     Also, permission to call the `redshift:GetClusterCredentials`
+    #     operation is required.
+    #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
+    #
+    # @option params [String] :client_token
+    #   A unique, case-sensitive identifier that you provide to ensure the
+    #   idempotency of the request.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @option params [String] :cluster_identifier
+    #   The cluster identifier. This parameter is required when connecting to
+    #   a cluster and authenticating using either Secrets Manager or temporary
+    #   credentials.
+    #
+    # @option params [required, String] :database
     #   The name of the database. This parameter is required when
-    #   authenticating using temporary credentials.
+    #   authenticating using either Secrets Manager or temporary credentials.
     #
     # @option params [String] :db_user
-    #   The database user name. This parameter is required when authenticating
-    #   using temporary credentials.
+    #   The database user name. This parameter is required when connecting to
+    #   a cluster as a database user and authenticating using temporary
+    #   credentials.
+    #
+    # @option params [Array<Types::SqlParameter>] :parameters
+    #   The parameters for the SQL statement.
     #
     # @option params [String] :secret_arn
     #   The name or ARN of the secret that enables access to the database.
-    #   This parameter is required when authenticating using AWS Secrets
-    #   Manager.
+    #   This parameter is required when authenticating using Secrets Manager.
     #
     # @option params [required, String] :sql
     #   The SQL statement text to run.
@@ -582,6 +884,11 @@ module Aws::RedshiftDataAPIService
     #   A value that indicates whether to send an event to the Amazon
     #   EventBridge event bus after the SQL statement runs.
     #
+    # @option params [String] :workgroup_name
+    #   The serverless workgroup name or Amazon Resource Name (ARN). This
+    #   parameter is required when connecting to a serverless workgroup and
+    #   authenticating using either Secrets Manager or temporary credentials.
+    #
     # @return [Types::ExecuteStatementOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::ExecuteStatementOutput#cluster_identifier #cluster_identifier} => String
@@ -590,17 +897,26 @@ module Aws::RedshiftDataAPIService
     #   * {Types::ExecuteStatementOutput#db_user #db_user} => String
     #   * {Types::ExecuteStatementOutput#id #id} => String
     #   * {Types::ExecuteStatementOutput#secret_arn #secret_arn} => String
+    #   * {Types::ExecuteStatementOutput#workgroup_name #workgroup_name} => String
     #
     # @example Request syntax with placeholder values
     #
     #   resp = client.execute_statement({
-    #     cluster_identifier: "Location", # required
-    #     database: "String",
+    #     client_token: "ClientToken",
+    #     cluster_identifier: "Location",
+    #     database: "String", # required
     #     db_user: "String",
+    #     parameters: [
+    #       {
+    #         name: "ParameterName", # required
+    #         value: "ParameterValue", # required
+    #       },
+    #     ],
     #     secret_arn: "SecretArn",
     #     sql: "StatementString", # required
     #     statement_name: "StatementNameString",
     #     with_event: false,
+    #     workgroup_name: "WorkgroupNameString",
     #   })
     #
     # @example Response structure
@@ -611,6 +927,7 @@ module Aws::RedshiftDataAPIService
     #   resp.db_user #=> String
     #   resp.id #=> String
     #   resp.secret_arn #=> String
+    #   resp.workgroup_name #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/redshift-data-2019-12-20/ExecuteStatement AWS API Documentation
     #
@@ -624,11 +941,22 @@ module Aws::RedshiftDataAPIService
     # Fetches the temporarily cached result of an SQL statement. A token is
     # returned to page through the statement results.
     #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
+    #
     # @option params [required, String] :id
     #   The identifier of the SQL statement whose results are to be fetched.
     #   This value is a universally unique identifier (UUID) generated by
-    #   Amazon Redshift Data API. This identifier is returned by
-    #   `ExecuteStatment` and `ListStatements`.
+    #   Amazon Redshift Data API. A suffix indicates then number of the SQL
+    #   statement. For example, `d9b6c0c9-0747-4bf4-b142-e8883122f766:2` has a
+    #   suffix of `:2` that indicates the second SQL statement of a batch
+    #   query. This identifier is returned by `BatchExecuteStatment`,
+    #   `ExecuteStatment`, and `ListStatements`.
     #
     # @option params [String] :next_token
     #   A value that indicates the starting point for the next set of response
@@ -650,7 +978,7 @@ module Aws::RedshiftDataAPIService
     # @example Request syntax with placeholder values
     #
     #   resp = client.get_statement_result({
-    #     id: "UUID", # required
+    #     id: "StatementId", # required
     #     next_token: "String",
     #   })
     #
@@ -694,26 +1022,57 @@ module Aws::RedshiftDataAPIService
     # the database list. Depending on the authorization method, use one of
     # the following combinations of request parameters:
     #
-    # * AWS Secrets Manager - specify the Amazon Resource Name (ARN) of the
-    #   secret and the cluster identifier that matches the cluster in the
-    #   secret.
+    # * Secrets Manager - when connecting to a cluster, provide the
+    #   `secret-arn` of a secret stored in Secrets Manager which has
+    #   `username` and `password`. The specified secret contains credentials
+    #   to connect to the `database` you specify. When you are connecting to
+    #   a cluster, you also supply the database name, If you provide a
+    #   cluster identifier (`dbClusterIdentifier`), it must match the
+    #   cluster identifier stored in the secret. When you are connecting to
+    #   a serverless workgroup, you also supply the database name.
     #
-    # * Temporary credentials - specify the cluster identifier, the database
-    #   name, and the database user name. Permission to call the
-    #   `redshift:GetClusterCredentials` operation is required to use this
-    #   method.
+    # * Temporary credentials - when connecting to your data warehouse,
+    #   choose one of the following options:
     #
-    # @option params [required, String] :cluster_identifier
-    #   The cluster identifier. This parameter is required when authenticating
-    #   using either AWS Secrets Manager or temporary credentials.
+    #   * When connecting to a serverless workgroup, specify the workgroup
+    #     name and database name. The database user name is derived from the
+    #     IAM identity. For example, `arn:iam::123456789012:user:foo` has
+    #     the database user name `IAM:foo`. Also, permission to call the
+    #     `redshift-serverless:GetCredentials` operation is required.
     #
-    # @option params [String] :database
+    #   * When connecting to a cluster as an IAM identity, specify the
+    #     cluster identifier and the database name. The database user name
+    #     is derived from the IAM identity. For example,
+    #     `arn:iam::123456789012:user:foo` has the database user name
+    #     `IAM:foo`. Also, permission to call the
+    #     `redshift:GetClusterCredentialsWithIAM` operation is required.
+    #
+    #   * When connecting to a cluster as a database user, specify the
+    #     cluster identifier, the database name, and the database user name.
+    #     Also, permission to call the `redshift:GetClusterCredentials`
+    #     operation is required.
+    #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
+    #
+    # @option params [String] :cluster_identifier
+    #   The cluster identifier. This parameter is required when connecting to
+    #   a cluster and authenticating using either Secrets Manager or temporary
+    #   credentials.
+    #
+    # @option params [required, String] :database
     #   The name of the database. This parameter is required when
-    #   authenticating using temporary credentials.
+    #   authenticating using either Secrets Manager or temporary credentials.
     #
     # @option params [String] :db_user
-    #   The database user name. This parameter is required when authenticating
-    #   using temporary credentials.
+    #   The database user name. This parameter is required when connecting to
+    #   a cluster as a database user and authenticating using temporary
+    #   credentials.
     #
     # @option params [Integer] :max_results
     #   The maximum number of databases to return in the response. If more
@@ -730,8 +1089,12 @@ module Aws::RedshiftDataAPIService
     #
     # @option params [String] :secret_arn
     #   The name or ARN of the secret that enables access to the database.
-    #   This parameter is required when authenticating using AWS Secrets
-    #   Manager.
+    #   This parameter is required when authenticating using Secrets Manager.
+    #
+    # @option params [String] :workgroup_name
+    #   The serverless workgroup name or Amazon Resource Name (ARN). This
+    #   parameter is required when connecting to a serverless workgroup and
+    #   authenticating using either Secrets Manager or temporary credentials.
     #
     # @return [Types::ListDatabasesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -743,12 +1106,13 @@ module Aws::RedshiftDataAPIService
     # @example Request syntax with placeholder values
     #
     #   resp = client.list_databases({
-    #     cluster_identifier: "Location", # required
-    #     database: "String",
+    #     cluster_identifier: "Location",
+    #     database: "String", # required
     #     db_user: "String",
     #     max_results: 1,
     #     next_token: "String",
     #     secret_arn: "SecretArn",
+    #     workgroup_name: "WorkgroupNameString",
     #   })
     #
     # @example Response structure
@@ -770,18 +1134,48 @@ module Aws::RedshiftDataAPIService
     # the schema list. Depending on the authorization method, use one of the
     # following combinations of request parameters:
     #
-    # * AWS Secrets Manager - specify the Amazon Resource Name (ARN) of the
-    #   secret and the cluster identifier that matches the cluster in the
-    #   secret.
+    # * Secrets Manager - when connecting to a cluster, provide the
+    #   `secret-arn` of a secret stored in Secrets Manager which has
+    #   `username` and `password`. The specified secret contains credentials
+    #   to connect to the `database` you specify. When you are connecting to
+    #   a cluster, you also supply the database name, If you provide a
+    #   cluster identifier (`dbClusterIdentifier`), it must match the
+    #   cluster identifier stored in the secret. When you are connecting to
+    #   a serverless workgroup, you also supply the database name.
     #
-    # * Temporary credentials - specify the cluster identifier, the database
-    #   name, and the database user name. Permission to call the
-    #   `redshift:GetClusterCredentials` operation is required to use this
-    #   method.
+    # * Temporary credentials - when connecting to your data warehouse,
+    #   choose one of the following options:
     #
-    # @option params [required, String] :cluster_identifier
-    #   The cluster identifier. This parameter is required when authenticating
-    #   using either AWS Secrets Manager or temporary credentials.
+    #   * When connecting to a serverless workgroup, specify the workgroup
+    #     name and database name. The database user name is derived from the
+    #     IAM identity. For example, `arn:iam::123456789012:user:foo` has
+    #     the database user name `IAM:foo`. Also, permission to call the
+    #     `redshift-serverless:GetCredentials` operation is required.
+    #
+    #   * When connecting to a cluster as an IAM identity, specify the
+    #     cluster identifier and the database name. The database user name
+    #     is derived from the IAM identity. For example,
+    #     `arn:iam::123456789012:user:foo` has the database user name
+    #     `IAM:foo`. Also, permission to call the
+    #     `redshift:GetClusterCredentialsWithIAM` operation is required.
+    #
+    #   * When connecting to a cluster as a database user, specify the
+    #     cluster identifier, the database name, and the database user name.
+    #     Also, permission to call the `redshift:GetClusterCredentials`
+    #     operation is required.
+    #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
+    #
+    # @option params [String] :cluster_identifier
+    #   The cluster identifier. This parameter is required when connecting to
+    #   a cluster and authenticating using either Secrets Manager or temporary
+    #   credentials.
     #
     # @option params [String] :connected_database
     #   A database name. The connected database is specified when you connect
@@ -793,8 +1187,9 @@ module Aws::RedshiftDataAPIService
     #   connect to with your authentication credentials.
     #
     # @option params [String] :db_user
-    #   The database user name. This parameter is required when authenticating
-    #   using temporary credentials.
+    #   The database user name. This parameter is required when connecting to
+    #   a cluster as a database user and authenticating using temporary
+    #   credentials.
     #
     # @option params [Integer] :max_results
     #   The maximum number of schemas to return in the response. If more
@@ -817,8 +1212,12 @@ module Aws::RedshiftDataAPIService
     #
     # @option params [String] :secret_arn
     #   The name or ARN of the secret that enables access to the database.
-    #   This parameter is required when authenticating using AWS Secrets
-    #   Manager.
+    #   This parameter is required when authenticating using Secrets Manager.
+    #
+    # @option params [String] :workgroup_name
+    #   The serverless workgroup name or Amazon Resource Name (ARN). This
+    #   parameter is required when connecting to a serverless workgroup and
+    #   authenticating using either Secrets Manager or temporary credentials.
     #
     # @return [Types::ListSchemasResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -830,7 +1229,7 @@ module Aws::RedshiftDataAPIService
     # @example Request syntax with placeholder values
     #
     #   resp = client.list_schemas({
-    #     cluster_identifier: "Location", # required
+    #     cluster_identifier: "Location",
     #     connected_database: "String",
     #     database: "String", # required
     #     db_user: "String",
@@ -838,6 +1237,7 @@ module Aws::RedshiftDataAPIService
     #     next_token: "String",
     #     schema_pattern: "String",
     #     secret_arn: "SecretArn",
+    #     workgroup_name: "WorkgroupNameString",
     #   })
     #
     # @example Response structure
@@ -857,6 +1257,14 @@ module Aws::RedshiftDataAPIService
 
     # List of SQL statements. By default, only finished statements are
     # shown. A token is returned to page through the statement list.
+    #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
     #
     # @option params [Integer] :max_results
     #   The maximum number of SQL statements to return in the response. If
@@ -878,12 +1286,13 @@ module Aws::RedshiftDataAPIService
     #   IAM session are returned. The default is true.
     #
     # @option params [String] :statement_name
-    #   The name of the SQL statement specified as input to `ExecuteStatement`
-    #   to identify the query. You can list multiple statements by providing a
-    #   prefix that matches the beginning of the statement name. For example,
-    #   to list myStatement1, myStatement2, myStatement3, and so on, then
-    #   provide the a value of `myStatement`. Data API does a case-sensitive
-    #   match of SQL statement names to the prefix value you provide.
+    #   The name of the SQL statement specified as input to
+    #   `BatchExecuteStatement` or `ExecuteStatement` to identify the query.
+    #   You can list multiple statements by providing a prefix that matches
+    #   the beginning of the statement name. For example, to list
+    #   myStatement1, myStatement2, myStatement3, and so on, then provide the
+    #   a value of `myStatement`. Data API does a case-sensitive match of SQL
+    #   statement names to the prefix value you provide.
     #
     # @option params [String] :status
     #   The status of the SQL statement to list. Status values are defined as
@@ -927,7 +1336,13 @@ module Aws::RedshiftDataAPIService
     #   resp.statements #=> Array
     #   resp.statements[0].created_at #=> Time
     #   resp.statements[0].id #=> String
+    #   resp.statements[0].is_batch_statement #=> Boolean
+    #   resp.statements[0].query_parameters #=> Array
+    #   resp.statements[0].query_parameters[0].name #=> String
+    #   resp.statements[0].query_parameters[0].value #=> String
     #   resp.statements[0].query_string #=> String
+    #   resp.statements[0].query_strings #=> Array
+    #   resp.statements[0].query_strings[0] #=> String
     #   resp.statements[0].secret_arn #=> String
     #   resp.statements[0].statement_name #=> String
     #   resp.statements[0].status #=> String, one of "SUBMITTED", "PICKED", "STARTED", "FINISHED", "ABORTED", "FAILED", "ALL"
@@ -948,18 +1363,48 @@ module Aws::RedshiftDataAPIService
     # Depending on the authorization method, use one of the following
     # combinations of request parameters:
     #
-    # * AWS Secrets Manager - specify the Amazon Resource Name (ARN) of the
-    #   secret and the cluster identifier that matches the cluster in the
-    #   secret.
+    # * Secrets Manager - when connecting to a cluster, provide the
+    #   `secret-arn` of a secret stored in Secrets Manager which has
+    #   `username` and `password`. The specified secret contains credentials
+    #   to connect to the `database` you specify. When you are connecting to
+    #   a cluster, you also supply the database name, If you provide a
+    #   cluster identifier (`dbClusterIdentifier`), it must match the
+    #   cluster identifier stored in the secret. When you are connecting to
+    #   a serverless workgroup, you also supply the database name.
     #
-    # * Temporary credentials - specify the cluster identifier, the database
-    #   name, and the database user name. Permission to call the
-    #   `redshift:GetClusterCredentials` operation is required to use this
-    #   method.
+    # * Temporary credentials - when connecting to your data warehouse,
+    #   choose one of the following options:
     #
-    # @option params [required, String] :cluster_identifier
-    #   The cluster identifier. This parameter is required when authenticating
-    #   using either AWS Secrets Manager or temporary credentials.
+    #   * When connecting to a serverless workgroup, specify the workgroup
+    #     name and database name. The database user name is derived from the
+    #     IAM identity. For example, `arn:iam::123456789012:user:foo` has
+    #     the database user name `IAM:foo`. Also, permission to call the
+    #     `redshift-serverless:GetCredentials` operation is required.
+    #
+    #   * When connecting to a cluster as an IAM identity, specify the
+    #     cluster identifier and the database name. The database user name
+    #     is derived from the IAM identity. For example,
+    #     `arn:iam::123456789012:user:foo` has the database user name
+    #     `IAM:foo`. Also, permission to call the
+    #     `redshift:GetClusterCredentialsWithIAM` operation is required.
+    #
+    #   * When connecting to a cluster as a database user, specify the
+    #     cluster identifier, the database name, and the database user name.
+    #     Also, permission to call the `redshift:GetClusterCredentials`
+    #     operation is required.
+    #
+    # For more information about the Amazon Redshift Data API and CLI usage
+    # examples, see [Using the Amazon Redshift Data API][1] in the *Amazon
+    # Redshift Management Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html
+    #
+    # @option params [String] :cluster_identifier
+    #   The cluster identifier. This parameter is required when connecting to
+    #   a cluster and authenticating using either Secrets Manager or temporary
+    #   credentials.
     #
     # @option params [String] :connected_database
     #   A database name. The connected database is specified when you connect
@@ -971,8 +1416,9 @@ module Aws::RedshiftDataAPIService
     #   connect to with your authentication credentials.
     #
     # @option params [String] :db_user
-    #   The database user name. This parameter is required when authenticating
-    #   using temporary credentials.
+    #   The database user name. This parameter is required when connecting to
+    #   a cluster as a database user and authenticating using temporary
+    #   credentials.
     #
     # @option params [Integer] :max_results
     #   The maximum number of tables to return in the response. If more tables
@@ -998,8 +1444,7 @@ module Aws::RedshiftDataAPIService
     #
     # @option params [String] :secret_arn
     #   The name or ARN of the secret that enables access to the database.
-    #   This parameter is required when authenticating using AWS Secrets
-    #   Manager.
+    #   This parameter is required when authenticating using Secrets Manager.
     #
     # @option params [String] :table_pattern
     #   A pattern to filter results by table name. Within a table pattern,
@@ -1009,6 +1454,11 @@ module Aws::RedshiftDataAPIService
     #   all tables that match `SchemaPattern`are returned. If neither
     #   `SchemaPattern` or `TablePattern` are specified, then all tables are
     #   returned.
+    #
+    # @option params [String] :workgroup_name
+    #   The serverless workgroup name or Amazon Resource Name (ARN). This
+    #   parameter is required when connecting to a serverless workgroup and
+    #   authenticating using either Secrets Manager or temporary credentials.
     #
     # @return [Types::ListTablesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1020,7 +1470,7 @@ module Aws::RedshiftDataAPIService
     # @example Request syntax with placeholder values
     #
     #   resp = client.list_tables({
-    #     cluster_identifier: "Location", # required
+    #     cluster_identifier: "Location",
     #     connected_database: "String",
     #     database: "String", # required
     #     db_user: "String",
@@ -1029,6 +1479,7 @@ module Aws::RedshiftDataAPIService
     #     schema_pattern: "String",
     #     secret_arn: "SecretArn",
     #     table_pattern: "String",
+    #     workgroup_name: "WorkgroupNameString",
     #   })
     #
     # @example Response structure
@@ -1061,7 +1512,7 @@ module Aws::RedshiftDataAPIService
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-redshiftdataapiservice'
-      context[:gem_version] = '1.6.0'
+      context[:gem_version] = '1.30.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

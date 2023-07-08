@@ -67,8 +67,11 @@ module ApiHelper
             'Integer' => { 'shape' => 'IntegerShape' },
             'Long' => { 'shape' => 'LongShape' },
             'String' => { 'shape' => 'StringShape' },
+            'StringWithConsecutiveSpaces' => { 'shape' => 'StringShape' },
+            'StringWithLF' => { 'shape' => 'StringShape' },
             'Timestamp' => { 'shape' => 'TimestampShape' },
-            'EventStream' => { 'shape' => 'EventStream' }
+            'EventStream' => { 'shape' => 'EventStream' },
+            'DocumentType' => { 'shape' => 'DocumentShape' }
           }
         },
         'PayloadStructureShape' => {
@@ -123,6 +126,7 @@ module ApiHelper
         'StringShape' => { 'type' => 'string' },
         'SensitiveStringShape' => { 'type' => 'string', 'sensitive' => true },
         'TimestampShape' => { 'type' => 'timestamp' },
+        'DocumentShape' => { 'type' => 'structure', 'document' => true }
       }
     end
 
@@ -139,8 +143,10 @@ module ApiHelper
           paginators: options[:paginators],
           waiters: options[:waiters],
           resources: options[:resources],
+          endpoint_rules: options[:endpoint_rules],
+          endpoint_tests: options[:endpoint_tests],
           gem_dependencies: { 'aws-sdk-core' => '3' },
-          gem_version: '1.0.0',
+          gem_version: '1.0.0'
         )
       )
       begin

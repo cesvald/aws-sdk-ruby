@@ -1,6 +1,158 @@
 Unreleased Changes
 ------------------
 
+1.75.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.74.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.73.0 (2023-06-26)
+------------------
+
+* Feature - Add support for user.extra.sessionName in Kubernetes Audit Logs Findings.
+
+1.72.0 (2023-06-15)
+------------------
+
+* Feature - Updated descriptions for some APIs.
+
+1.71.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.70.0 (2023-05-08)
+------------------
+
+* Feature - Add AccessDeniedException 403 Error message code to support 3 Tagging related APIs
+
+1.69.0 (2023-04-27)
+------------------
+
+* Feature - Added API support to initiate on-demand malware scan on specific resources.
+
+1.68.0 (2023-04-20)
+------------------
+
+* Feature - This release adds support for the new Lambda Protection feature.
+
+1.67.0 (2023-03-30)
+------------------
+
+* Feature - Added EKS Runtime Monitoring feature support to existing detector, finding APIs and introducing new Coverage APIs
+
+1.66.0 (2023-03-23)
+------------------
+
+* Feature - Adds AutoEnableOrganizationMembers attribute to DescribeOrganizationConfiguration and UpdateOrganizationConfiguration APIs.
+
+1.65.0 (2023-03-16)
+------------------
+
+* Feature - Updated 9 APIs for feature enablement to reflect expansion of GuardDuty to features. Added new APIs and updated existing APIs to support RDS Protection GA.
+
+1.64.0 (2023-02-23)
+------------------
+
+* Feature - Updated API and data types descriptions for CreateFilter, UpdateFilter, and TriggerDetails.
+
+1.63.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.62.0 (2022-12-16)
+------------------
+
+* Feature - This release provides the valid characters for the Description and Name field.
+
+1.61.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.60.0 (2022-10-13)
+------------------
+
+* Feature - Add UnprocessedDataSources to CreateDetectorResponse which specifies the data sources that couldn't be enabled during the CreateDetector request. In addition, update documentations.
+
+1.59.0 (2022-07-26)
+------------------
+
+* Feature - Amazon GuardDuty introduces a new Malware Protection feature that triggers malware scan on selected EC2 instance resources, after the service detects a potentially malicious activity.
+
+1.58.0 (2022-06-15)
+------------------
+
+* Feature - Adds finding fields available from GuardDuty Console. Adds FreeTrial related operations. Deprecates the use of various APIs related to Master Accounts and Replace them with Administrator Accounts.
+
+1.57.0 (2022-04-28)
+------------------
+
+* Feature - Documentation update for API description.
+
+1.56.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.55.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.54.0 (2022-01-25)
+------------------
+
+* Feature - Amazon GuardDuty expands threat detection coverage to protect Amazon Elastic Kubernetes Service (EKS) workloads.
+
+1.53.0 (2022-01-20)
+------------------
+
+* Feature - Amazon GuardDuty findings now include remoteAccountDetails under AwsApiCallAction section if instance credential is exfiltrated.
+
+1.52.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.51.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.50.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.49.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.48.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.47.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.46.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
 1.45.0 (2021-03-10)
 ------------------
 

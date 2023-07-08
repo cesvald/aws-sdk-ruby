@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:kinesisvideo)
@@ -73,8 +77,13 @@ module Aws::KinesisVideo
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::KinesisVideo::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::KinesisVideo
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::KinesisVideo
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::KinesisVideo
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::KinesisVideo
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::KinesisVideo
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::KinesisVideo::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::KinesisVideo::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::KinesisVideo
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::KinesisVideo
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -333,7 +390,8 @@ module Aws::KinesisVideo
     #
     # @option params [required, String] :channel_name
     #   A name for the signaling channel that you are creating. It must be
-    #   unique for each AWS account and AWS Region.
+    #   unique for each Amazon Web Services account and Amazon Web Services
+    #   Region.
     #
     # @option params [String] :channel_type
     #   A type of the signaling channel that you are creating. Currently,
@@ -355,7 +413,7 @@ module Aws::KinesisVideo
     #
     #   resp = client.create_signaling_channel({
     #     channel_name: "ChannelName", # required
-    #     channel_type: "SINGLE_MASTER", # accepts SINGLE_MASTER
+    #     channel_type: "SINGLE_MASTER", # accepts SINGLE_MASTER, FULL_MESH
     #     single_master_configuration: {
     #       message_ttl_seconds: 1,
     #     },
@@ -428,11 +486,11 @@ module Aws::KinesisVideo
     #   [2]: https://tools.ietf.org/html/rfc6838#section-4.2
     #
     # @option params [String] :kms_key_id
-    #   The ID of the AWS Key Management Service (AWS KMS) key that you want
-    #   Kinesis Video Streams to use to encrypt stream data.
+    #   The ID of the Key Management Service (KMS) key that you want Kinesis
+    #   Video Streams to use to encrypt stream data.
     #
     #   If no key ID is specified, the default, Kinesis Video-managed key
-    #   (`aws/kinesisvideo`) is used.
+    #   (`Amazon Web Services/kinesisvideo`) is used.
     #
     #   For more information, see [DescribeKey][1].
     #
@@ -485,6 +543,45 @@ module Aws::KinesisVideo
     # @param [Hash] params ({})
     def create_stream(params = {}, options = {})
       req = build_request(:create_stream, params)
+      req.send_request(options)
+    end
+
+    # An asynchronous API that deletes a stream’s existing edge
+    # configuration, as well as the corresponding media from the Edge Agent.
+    #
+    # When you invoke this API, the sync status is set to `DELETING`. A
+    # deletion process starts, in which active edge jobs are stopped and all
+    # media is deleted from the edge device. The time to delete varies,
+    # depending on the total amount of stored media. If the deletion process
+    # fails, the sync status changes to `DELETE_FAILED`. You will need to
+    # re-try the deletion.
+    #
+    # When the deletion process has completed successfully, the edge
+    # configuration is no longer accessible.
+    #
+    # @option params [String] :stream_name
+    #   The name of the stream from which to delete the edge configuration.
+    #   Specify either the `StreamName` or the `StreamARN`.
+    #
+    # @option params [String] :stream_arn
+    #   The Amazon Resource Name (ARN) of the stream. Specify either the
+    #   `StreamName` or the `StreamARN`.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_edge_configuration({
+    #     stream_name: "StreamName",
+    #     stream_arn: "ResourceARN",
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DeleteEdgeConfiguration AWS API Documentation
+    #
+    # @overload delete_edge_configuration(params = {})
+    # @param [Hash] params ({})
+    def delete_edge_configuration(params = {}, options = {})
+      req = build_request(:delete_edge_configuration, params)
       req.send_request(options)
     end
 
@@ -566,6 +663,240 @@ module Aws::KinesisVideo
       req.send_request(options)
     end
 
+    # Describes a stream’s edge configuration that was set using the
+    # `StartEdgeConfigurationUpdate` API and the latest status of the edge
+    # agent's recorder and uploader jobs. Use this API to get the status of
+    # the configuration to determine if the configuration is in sync with
+    # the Edge Agent. Use this API to evaluate the health of the Edge Agent.
+    #
+    # @option params [String] :stream_name
+    #   The name of the stream whose edge configuration you want to update.
+    #   Specify either the `StreamName` or the `StreamARN`.
+    #
+    # @option params [String] :stream_arn
+    #   The Amazon Resource Name (ARN) of the stream. Specify either the
+    #   `StreamName`or the `StreamARN`.
+    #
+    # @return [Types::DescribeEdgeConfigurationOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeEdgeConfigurationOutput#stream_name #stream_name} => String
+    #   * {Types::DescribeEdgeConfigurationOutput#stream_arn #stream_arn} => String
+    #   * {Types::DescribeEdgeConfigurationOutput#creation_time #creation_time} => Time
+    #   * {Types::DescribeEdgeConfigurationOutput#last_updated_time #last_updated_time} => Time
+    #   * {Types::DescribeEdgeConfigurationOutput#sync_status #sync_status} => String
+    #   * {Types::DescribeEdgeConfigurationOutput#failed_status_details #failed_status_details} => String
+    #   * {Types::DescribeEdgeConfigurationOutput#edge_config #edge_config} => Types::EdgeConfig
+    #   * {Types::DescribeEdgeConfigurationOutput#edge_agent_status #edge_agent_status} => Types::EdgeAgentStatus
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_edge_configuration({
+    #     stream_name: "StreamName",
+    #     stream_arn: "ResourceARN",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.stream_name #=> String
+    #   resp.stream_arn #=> String
+    #   resp.creation_time #=> Time
+    #   resp.last_updated_time #=> Time
+    #   resp.sync_status #=> String, one of "SYNCING", "ACKNOWLEDGED", "IN_SYNC", "SYNC_FAILED", "DELETING", "DELETE_FAILED", "DELETING_ACKNOWLEDGED"
+    #   resp.failed_status_details #=> String
+    #   resp.edge_config.hub_device_arn #=> String
+    #   resp.edge_config.recorder_config.media_source_config.media_uri_secret_arn #=> String
+    #   resp.edge_config.recorder_config.media_source_config.media_uri_type #=> String, one of "RTSP_URI", "FILE_URI"
+    #   resp.edge_config.recorder_config.schedule_config.schedule_expression #=> String
+    #   resp.edge_config.recorder_config.schedule_config.duration_in_seconds #=> Integer
+    #   resp.edge_config.uploader_config.schedule_config.schedule_expression #=> String
+    #   resp.edge_config.uploader_config.schedule_config.duration_in_seconds #=> Integer
+    #   resp.edge_config.deletion_config.edge_retention_in_hours #=> Integer
+    #   resp.edge_config.deletion_config.local_size_config.max_local_media_size_in_mb #=> Integer
+    #   resp.edge_config.deletion_config.local_size_config.strategy_on_full_size #=> String, one of "DELETE_OLDEST_MEDIA", "DENY_NEW_MEDIA"
+    #   resp.edge_config.deletion_config.delete_after_upload #=> Boolean
+    #   resp.edge_agent_status.last_recorder_status.job_status_details #=> String
+    #   resp.edge_agent_status.last_recorder_status.last_collected_time #=> Time
+    #   resp.edge_agent_status.last_recorder_status.last_updated_time #=> Time
+    #   resp.edge_agent_status.last_recorder_status.recorder_status #=> String, one of "SUCCESS", "USER_ERROR", "SYSTEM_ERROR"
+    #   resp.edge_agent_status.last_uploader_status.job_status_details #=> String
+    #   resp.edge_agent_status.last_uploader_status.last_collected_time #=> Time
+    #   resp.edge_agent_status.last_uploader_status.last_updated_time #=> Time
+    #   resp.edge_agent_status.last_uploader_status.uploader_status #=> String, one of "SUCCESS", "USER_ERROR", "SYSTEM_ERROR"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DescribeEdgeConfiguration AWS API Documentation
+    #
+    # @overload describe_edge_configuration(params = {})
+    # @param [Hash] params ({})
+    def describe_edge_configuration(params = {}, options = {})
+      req = build_request(:describe_edge_configuration, params)
+      req.send_request(options)
+    end
+
+    # Gets the `ImageGenerationConfiguration` for a given Kinesis video
+    # stream.
+    #
+    # @option params [String] :stream_name
+    #   The name of the stream from which to retrieve the image generation
+    #   configuration. You must specify either the `StreamName` or the
+    #   `StreamARN`.
+    #
+    # @option params [String] :stream_arn
+    #   The Amazon Resource Name (ARN) of the Kinesis video stream from which
+    #   to retrieve the image generation configuration. You must specify
+    #   either the `StreamName` or the `StreamARN`.
+    #
+    # @return [Types::DescribeImageGenerationConfigurationOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeImageGenerationConfigurationOutput#image_generation_configuration #image_generation_configuration} => Types::ImageGenerationConfiguration
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_image_generation_configuration({
+    #     stream_name: "StreamName",
+    #     stream_arn: "ResourceARN",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.image_generation_configuration.status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.image_generation_configuration.image_selector_type #=> String, one of "SERVER_TIMESTAMP", "PRODUCER_TIMESTAMP"
+    #   resp.image_generation_configuration.destination_config.uri #=> String
+    #   resp.image_generation_configuration.destination_config.destination_region #=> String
+    #   resp.image_generation_configuration.sampling_interval #=> Integer
+    #   resp.image_generation_configuration.format #=> String, one of "JPEG", "PNG"
+    #   resp.image_generation_configuration.format_config #=> Hash
+    #   resp.image_generation_configuration.format_config["FormatConfigKey"] #=> String
+    #   resp.image_generation_configuration.width_pixels #=> Integer
+    #   resp.image_generation_configuration.height_pixels #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DescribeImageGenerationConfiguration AWS API Documentation
+    #
+    # @overload describe_image_generation_configuration(params = {})
+    # @param [Hash] params ({})
+    def describe_image_generation_configuration(params = {}, options = {})
+      req = build_request(:describe_image_generation_configuration, params)
+      req.send_request(options)
+    end
+
+    # Returns the most current information about the stream. The
+    # `streamName` or `streamARN` should be provided in the input.
+    #
+    # @option params [String] :stream_name
+    #   The name of the stream.
+    #
+    # @option params [String] :stream_arn
+    #   The Amazon Resource Name (ARN) of the stream.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return in the response.
+    #
+    # @option params [String] :next_token
+    #   The token to provide in your next request, to get another batch of
+    #   results.
+    #
+    # @return [Types::DescribeMappedResourceConfigurationOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeMappedResourceConfigurationOutput#mapped_resource_configuration_list #mapped_resource_configuration_list} => Array&lt;Types::MappedResourceConfigurationListItem&gt;
+    #   * {Types::DescribeMappedResourceConfigurationOutput#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_mapped_resource_configuration({
+    #     stream_name: "StreamName",
+    #     stream_arn: "ResourceARN",
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.mapped_resource_configuration_list #=> Array
+    #   resp.mapped_resource_configuration_list[0].type #=> String
+    #   resp.mapped_resource_configuration_list[0].arn #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DescribeMappedResourceConfiguration AWS API Documentation
+    #
+    # @overload describe_mapped_resource_configuration(params = {})
+    # @param [Hash] params ({})
+    def describe_mapped_resource_configuration(params = {}, options = {})
+      req = build_request(:describe_mapped_resource_configuration, params)
+      req.send_request(options)
+    end
+
+    # Returns the most current information about the channel. Specify the
+    # `ChannelName` or `ChannelARN` in the input.
+    #
+    # @option params [String] :channel_name
+    #   The name of the channel.
+    #
+    # @option params [String] :channel_arn
+    #   The Amazon Resource Name (ARN) of the channel.
+    #
+    # @return [Types::DescribeMediaStorageConfigurationOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeMediaStorageConfigurationOutput#media_storage_configuration #media_storage_configuration} => Types::MediaStorageConfiguration
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_media_storage_configuration({
+    #     channel_name: "ChannelName",
+    #     channel_arn: "ResourceARN",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.media_storage_configuration.stream_arn #=> String
+    #   resp.media_storage_configuration.status #=> String, one of "ENABLED", "DISABLED"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DescribeMediaStorageConfiguration AWS API Documentation
+    #
+    # @overload describe_media_storage_configuration(params = {})
+    # @param [Hash] params ({})
+    def describe_media_storage_configuration(params = {}, options = {})
+      req = build_request(:describe_media_storage_configuration, params)
+      req.send_request(options)
+    end
+
+    # Gets the `NotificationConfiguration` for a given Kinesis video stream.
+    #
+    # @option params [String] :stream_name
+    #   The name of the stream from which to retrieve the notification
+    #   configuration. You must specify either the `StreamName` or the
+    #   `StreamARN`.
+    #
+    # @option params [String] :stream_arn
+    #   The Amazon Resource Name (ARN) of the Kinesis video stream from where
+    #   you want to retrieve the notification configuration. You must specify
+    #   either the `StreamName` or the StreamARN.
+    #
+    # @return [Types::DescribeNotificationConfigurationOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeNotificationConfigurationOutput#notification_configuration #notification_configuration} => Types::NotificationConfiguration
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_notification_configuration({
+    #     stream_name: "StreamName",
+    #     stream_arn: "ResourceARN",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.notification_configuration.status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.notification_configuration.destination_config.uri #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DescribeNotificationConfiguration AWS API Documentation
+    #
+    # @overload describe_notification_configuration(params = {})
+    # @param [Hash] params ({})
+    def describe_notification_configuration(params = {}, options = {})
+      req = build_request(:describe_notification_configuration, params)
+      req.send_request(options)
+    end
+
     # Returns the most current information about the signaling channel. You
     # must specify either the name or the Amazon Resource Name (ARN) of the
     # channel that you want to describe.
@@ -591,7 +922,7 @@ module Aws::KinesisVideo
     #
     #   resp.channel_info.channel_name #=> String
     #   resp.channel_info.channel_arn #=> String
-    #   resp.channel_info.channel_type #=> String, one of "SINGLE_MASTER"
+    #   resp.channel_info.channel_type #=> String, one of "SINGLE_MASTER", "FULL_MESH"
     #   resp.channel_info.channel_status #=> String, one of "CREATING", "ACTIVE", "UPDATING", "DELETING"
     #   resp.channel_info.creation_time #=> Time
     #   resp.channel_info.single_master_configuration.message_ttl_seconds #=> Integer
@@ -681,7 +1012,7 @@ module Aws::KinesisVideo
     #   resp = client.get_data_endpoint({
     #     stream_name: "StreamName",
     #     stream_arn: "ResourceARN",
-    #     api_name: "PUT_MEDIA", # required, accepts PUT_MEDIA, GET_MEDIA, LIST_FRAGMENTS, GET_MEDIA_FOR_FRAGMENT_LIST, GET_HLS_STREAMING_SESSION_URL, GET_DASH_STREAMING_SESSION_URL, GET_CLIP
+    #     api_name: "PUT_MEDIA", # required, accepts PUT_MEDIA, GET_MEDIA, LIST_FRAGMENTS, GET_MEDIA_FOR_FRAGMENT_LIST, GET_HLS_STREAMING_SESSION_URL, GET_DASH_STREAMING_SESSION_URL, GET_CLIP, GET_IMAGES
     #   })
     #
     # @example Response structure
@@ -730,7 +1061,7 @@ module Aws::KinesisVideo
     #   resp = client.get_signaling_channel_endpoint({
     #     channel_arn: "ResourceARN", # required
     #     single_master_channel_endpoint_configuration: {
-    #       protocols: ["WSS"], # accepts WSS, HTTPS
+    #       protocols: ["WSS"], # accepts WSS, HTTPS, WEBRTC
     #       role: "MASTER", # accepts MASTER, VIEWER
     #     },
     #   })
@@ -738,7 +1069,7 @@ module Aws::KinesisVideo
     # @example Response structure
     #
     #   resp.resource_endpoint_list #=> Array
-    #   resp.resource_endpoint_list[0].protocol #=> String, one of "WSS", "HTTPS"
+    #   resp.resource_endpoint_list[0].protocol #=> String, one of "WSS", "HTTPS", "WEBRTC"
     #   resp.resource_endpoint_list[0].resource_endpoint #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/GetSignalingChannelEndpoint AWS API Documentation
@@ -747,6 +1078,70 @@ module Aws::KinesisVideo
     # @param [Hash] params ({})
     def get_signaling_channel_endpoint(params = {}, options = {})
       req = build_request(:get_signaling_channel_endpoint, params)
+      req.send_request(options)
+    end
+
+    # Returns an array of edge configurations associated with the specified
+    # Edge Agent.
+    #
+    # In the request, you must specify the Edge Agent `HubDeviceArn`.
+    #
+    # @option params [required, String] :hub_device_arn
+    #   The "Internet of Things (IoT) Thing" Arn of the edge agent.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of edge configurations to return in the response.
+    #   The default is 5.
+    #
+    # @option params [String] :next_token
+    #   If you specify this parameter, when the result of a
+    #   `ListEdgeAgentConfigurations` operation is truncated, the call returns
+    #   the `NextToken` in the response. To get another batch of edge
+    #   configurations, provide this token in your next request.
+    #
+    # @return [Types::ListEdgeAgentConfigurationsOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListEdgeAgentConfigurationsOutput#edge_configs #edge_configs} => Array&lt;Types::ListEdgeAgentConfigurationsEdgeConfig&gt;
+    #   * {Types::ListEdgeAgentConfigurationsOutput#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_edge_agent_configurations({
+    #     hub_device_arn: "HubDeviceArn", # required
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.edge_configs #=> Array
+    #   resp.edge_configs[0].stream_name #=> String
+    #   resp.edge_configs[0].stream_arn #=> String
+    #   resp.edge_configs[0].creation_time #=> Time
+    #   resp.edge_configs[0].last_updated_time #=> Time
+    #   resp.edge_configs[0].sync_status #=> String, one of "SYNCING", "ACKNOWLEDGED", "IN_SYNC", "SYNC_FAILED", "DELETING", "DELETE_FAILED", "DELETING_ACKNOWLEDGED"
+    #   resp.edge_configs[0].failed_status_details #=> String
+    #   resp.edge_configs[0].edge_config.hub_device_arn #=> String
+    #   resp.edge_configs[0].edge_config.recorder_config.media_source_config.media_uri_secret_arn #=> String
+    #   resp.edge_configs[0].edge_config.recorder_config.media_source_config.media_uri_type #=> String, one of "RTSP_URI", "FILE_URI"
+    #   resp.edge_configs[0].edge_config.recorder_config.schedule_config.schedule_expression #=> String
+    #   resp.edge_configs[0].edge_config.recorder_config.schedule_config.duration_in_seconds #=> Integer
+    #   resp.edge_configs[0].edge_config.uploader_config.schedule_config.schedule_expression #=> String
+    #   resp.edge_configs[0].edge_config.uploader_config.schedule_config.duration_in_seconds #=> Integer
+    #   resp.edge_configs[0].edge_config.deletion_config.edge_retention_in_hours #=> Integer
+    #   resp.edge_configs[0].edge_config.deletion_config.local_size_config.max_local_media_size_in_mb #=> Integer
+    #   resp.edge_configs[0].edge_config.deletion_config.local_size_config.strategy_on_full_size #=> String, one of "DELETE_OLDEST_MEDIA", "DENY_NEW_MEDIA"
+    #   resp.edge_configs[0].edge_config.deletion_config.delete_after_upload #=> Boolean
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/ListEdgeAgentConfigurations AWS API Documentation
+    #
+    # @overload list_edge_agent_configurations(params = {})
+    # @param [Hash] params ({})
+    def list_edge_agent_configurations(params = {}, options = {})
+      req = build_request(:list_edge_agent_configurations, params)
       req.send_request(options)
     end
 
@@ -790,7 +1185,7 @@ module Aws::KinesisVideo
     #   resp.channel_info_list #=> Array
     #   resp.channel_info_list[0].channel_name #=> String
     #   resp.channel_info_list[0].channel_arn #=> String
-    #   resp.channel_info_list[0].channel_type #=> String, one of "SINGLE_MASTER"
+    #   resp.channel_info_list[0].channel_type #=> String, one of "SINGLE_MASTER", "FULL_MESH"
     #   resp.channel_info_list[0].channel_status #=> String, one of "CREATING", "ACTIVE", "UPDATING", "DELETING"
     #   resp.channel_info_list[0].creation_time #=> Time
     #   resp.channel_info_list[0].single_master_configuration.message_ttl_seconds #=> Integer
@@ -950,12 +1345,114 @@ module Aws::KinesisVideo
       req.send_request(options)
     end
 
+    # An asynchronous API that updates a stream’s existing edge
+    # configuration. The Kinesis Video Stream will sync the stream’s edge
+    # configuration with the Edge Agent IoT Greengrass component that runs
+    # on an IoT Hub Device, setup at your premise. The time to sync can vary
+    # and depends on the connectivity of the Hub Device. The `SyncStatus`
+    # will be updated as the edge configuration is acknowledged, and synced
+    # with the Edge Agent.
+    #
+    # If this API is invoked for the first time, a new edge configuration
+    # will be created for the stream, and the sync status will be set to
+    # `SYNCING`. You will have to wait for the sync status to reach a
+    # terminal state such as: `IN_SYNC`, or `SYNC_FAILED`, before using this
+    # API again. If you invoke this API during the syncing process, a
+    # `ResourceInUseException` will be thrown. The connectivity of the
+    # stream’s edge configuration and the Edge Agent will be retried for 15
+    # minutes. After 15 minutes, the status will transition into the
+    # `SYNC_FAILED` state.
+    #
+    # @option params [String] :stream_name
+    #   The name of the stream whose edge configuration you want to update.
+    #   Specify either the `StreamName` or the `StreamARN`.
+    #
+    # @option params [String] :stream_arn
+    #   The Amazon Resource Name (ARN) of the stream. Specify either the
+    #   `StreamName` or the `StreamARN`.
+    #
+    # @option params [required, Types::EdgeConfig] :edge_config
+    #   The edge configuration details required to invoke the update process.
+    #
+    # @return [Types::StartEdgeConfigurationUpdateOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StartEdgeConfigurationUpdateOutput#stream_name #stream_name} => String
+    #   * {Types::StartEdgeConfigurationUpdateOutput#stream_arn #stream_arn} => String
+    #   * {Types::StartEdgeConfigurationUpdateOutput#creation_time #creation_time} => Time
+    #   * {Types::StartEdgeConfigurationUpdateOutput#last_updated_time #last_updated_time} => Time
+    #   * {Types::StartEdgeConfigurationUpdateOutput#sync_status #sync_status} => String
+    #   * {Types::StartEdgeConfigurationUpdateOutput#failed_status_details #failed_status_details} => String
+    #   * {Types::StartEdgeConfigurationUpdateOutput#edge_config #edge_config} => Types::EdgeConfig
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.start_edge_configuration_update({
+    #     stream_name: "StreamName",
+    #     stream_arn: "ResourceARN",
+    #     edge_config: { # required
+    #       hub_device_arn: "HubDeviceArn", # required
+    #       recorder_config: { # required
+    #         media_source_config: { # required
+    #           media_uri_secret_arn: "MediaUriSecretArn", # required
+    #           media_uri_type: "RTSP_URI", # required, accepts RTSP_URI, FILE_URI
+    #         },
+    #         schedule_config: {
+    #           schedule_expression: "ScheduleExpression", # required
+    #           duration_in_seconds: 1, # required
+    #         },
+    #       },
+    #       uploader_config: {
+    #         schedule_config: { # required
+    #           schedule_expression: "ScheduleExpression", # required
+    #           duration_in_seconds: 1, # required
+    #         },
+    #       },
+    #       deletion_config: {
+    #         edge_retention_in_hours: 1,
+    #         local_size_config: {
+    #           max_local_media_size_in_mb: 1,
+    #           strategy_on_full_size: "DELETE_OLDEST_MEDIA", # accepts DELETE_OLDEST_MEDIA, DENY_NEW_MEDIA
+    #         },
+    #         delete_after_upload: false,
+    #       },
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.stream_name #=> String
+    #   resp.stream_arn #=> String
+    #   resp.creation_time #=> Time
+    #   resp.last_updated_time #=> Time
+    #   resp.sync_status #=> String, one of "SYNCING", "ACKNOWLEDGED", "IN_SYNC", "SYNC_FAILED", "DELETING", "DELETE_FAILED", "DELETING_ACKNOWLEDGED"
+    #   resp.failed_status_details #=> String
+    #   resp.edge_config.hub_device_arn #=> String
+    #   resp.edge_config.recorder_config.media_source_config.media_uri_secret_arn #=> String
+    #   resp.edge_config.recorder_config.media_source_config.media_uri_type #=> String, one of "RTSP_URI", "FILE_URI"
+    #   resp.edge_config.recorder_config.schedule_config.schedule_expression #=> String
+    #   resp.edge_config.recorder_config.schedule_config.duration_in_seconds #=> Integer
+    #   resp.edge_config.uploader_config.schedule_config.schedule_expression #=> String
+    #   resp.edge_config.uploader_config.schedule_config.duration_in_seconds #=> Integer
+    #   resp.edge_config.deletion_config.edge_retention_in_hours #=> Integer
+    #   resp.edge_config.deletion_config.local_size_config.max_local_media_size_in_mb #=> Integer
+    #   resp.edge_config.deletion_config.local_size_config.strategy_on_full_size #=> String, one of "DELETE_OLDEST_MEDIA", "DENY_NEW_MEDIA"
+    #   resp.edge_config.deletion_config.delete_after_upload #=> Boolean
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/StartEdgeConfigurationUpdate AWS API Documentation
+    #
+    # @overload start_edge_configuration_update(params = {})
+    # @param [Hash] params ({})
+    def start_edge_configuration_update(params = {}, options = {})
+      req = build_request(:start_edge_configuration_update, params)
+      req.send_request(options)
+    end
+
     # Adds one or more tags to a signaling channel. A *tag* is a key-value
-    # pair (the value is optional) that you can define and assign to AWS
-    # resources. If you specify a tag that already exists, the tag value is
-    # replaced with the value that you specify in the request. For more
-    # information, see [Using Cost Allocation Tags][1] in the *AWS Billing
-    # and Cost Management User Guide*.
+    # pair (the value is optional) that you can define and assign to Amazon
+    # Web Services resources. If you specify a tag that already exists, the
+    # tag value is replaced with the value that you specify in the request.
+    # For more information, see [Using Cost Allocation Tags][1] in the
+    # *Billing and Cost Management and Cost Management User Guide*.
     #
     #
     #
@@ -993,18 +1490,18 @@ module Aws::KinesisVideo
     end
 
     # Adds one or more tags to a stream. A *tag* is a key-value pair (the
-    # value is optional) that you can define and assign to AWS resources. If
-    # you specify a tag that already exists, the tag value is replaced with
-    # the value that you specify in the request. For more information, see
-    # [Using Cost Allocation Tags][1] in the *AWS Billing and Cost
-    # Management User Guide*.
+    # value is optional) that you can define and assign to Amazon Web
+    # Services resources. If you specify a tag that already exists, the tag
+    # value is replaced with the value that you specify in the request. For
+    # more information, see [Using Cost Allocation Tags][1] in the *Billing
+    # and Cost Management and Cost Management User Guide*.
     #
     # You must provide either the `StreamName` or the `StreamARN`.
     #
     # This operation requires permission for the `KinesisVideo:TagStream`
     # action.
     #
-    # Kinesis video streams support up to 50 tags.
+    # A Kinesis video stream can support up to 50 tags.
     #
     #
     #
@@ -1175,6 +1672,134 @@ module Aws::KinesisVideo
       req.send_request(options)
     end
 
+    # Updates the `StreamInfo` and `ImageProcessingConfiguration` fields.
+    #
+    # @option params [String] :stream_name
+    #   The name of the stream from which to update the image generation
+    #   configuration. You must specify either the `StreamName` or the
+    #   `StreamARN`.
+    #
+    # @option params [String] :stream_arn
+    #   The Amazon Resource Name (ARN) of the Kinesis video stream from where
+    #   you want to update the image generation configuration. You must
+    #   specify either the `StreamName` or the `StreamARN`.
+    #
+    # @option params [Types::ImageGenerationConfiguration] :image_generation_configuration
+    #   The structure that contains the information required for the KVS
+    #   images delivery. If the structure is null, the configuration will be
+    #   deleted from the stream.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_image_generation_configuration({
+    #     stream_name: "StreamName",
+    #     stream_arn: "ResourceARN",
+    #     image_generation_configuration: {
+    #       status: "ENABLED", # required, accepts ENABLED, DISABLED
+    #       image_selector_type: "SERVER_TIMESTAMP", # required, accepts SERVER_TIMESTAMP, PRODUCER_TIMESTAMP
+    #       destination_config: { # required
+    #         uri: "DestinationUri", # required
+    #         destination_region: "DestinationRegion", # required
+    #       },
+    #       sampling_interval: 1, # required
+    #       format: "JPEG", # required, accepts JPEG, PNG
+    #       format_config: {
+    #         "JPEGQuality" => "FormatConfigValue",
+    #       },
+    #       width_pixels: 1,
+    #       height_pixels: 1,
+    #     },
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/UpdateImageGenerationConfiguration AWS API Documentation
+    #
+    # @overload update_image_generation_configuration(params = {})
+    # @param [Hash] params ({})
+    def update_image_generation_configuration(params = {}, options = {})
+      req = build_request(:update_image_generation_configuration, params)
+      req.send_request(options)
+    end
+
+    # Associates a `SignalingChannel` to a stream to store the media. There
+    # are two signaling modes that can specified :
+    #
+    # * If the `StorageStatus` is disabled, no data will be stored, and the
+    #   `StreamARN` parameter will not be needed.
+    #
+    # * If the `StorageStatus` is enabled, the data will be stored in the
+    #   `StreamARN` provided.
+    #
+    # @option params [required, String] :channel_arn
+    #   The Amazon Resource Name (ARN) of the channel.
+    #
+    # @option params [required, Types::MediaStorageConfiguration] :media_storage_configuration
+    #   A structure that encapsulates, or contains, the media storage
+    #   configuration properties.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_media_storage_configuration({
+    #     channel_arn: "ResourceARN", # required
+    #     media_storage_configuration: { # required
+    #       stream_arn: "ResourceARN",
+    #       status: "ENABLED", # required, accepts ENABLED, DISABLED
+    #     },
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/UpdateMediaStorageConfiguration AWS API Documentation
+    #
+    # @overload update_media_storage_configuration(params = {})
+    # @param [Hash] params ({})
+    def update_media_storage_configuration(params = {}, options = {})
+      req = build_request(:update_media_storage_configuration, params)
+      req.send_request(options)
+    end
+
+    # Updates the notification information for a stream.
+    #
+    # @option params [String] :stream_name
+    #   The name of the stream from which to update the notification
+    #   configuration. You must specify either the `StreamName` or the
+    #   `StreamARN`.
+    #
+    # @option params [String] :stream_arn
+    #   The Amazon Resource Name (ARN) of the Kinesis video stream from where
+    #   you want to update the notification configuration. You must specify
+    #   either the `StreamName` or the `StreamARN`.
+    #
+    # @option params [Types::NotificationConfiguration] :notification_configuration
+    #   The structure containing the information required for notifications.
+    #   If the structure is null, the configuration will be deleted from the
+    #   stream.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_notification_configuration({
+    #     stream_name: "StreamName",
+    #     stream_arn: "ResourceARN",
+    #     notification_configuration: {
+    #       status: "ENABLED", # required, accepts ENABLED, DISABLED
+    #       destination_config: { # required
+    #         uri: "DestinationUri", # required
+    #       },
+    #     },
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/UpdateNotificationConfiguration AWS API Documentation
+    #
+    # @overload update_notification_configuration(params = {})
+    # @param [Hash] params ({})
+    def update_notification_configuration(params = {}, options = {})
+      req = build_request(:update_notification_configuration, params)
+      req.send_request(options)
+    end
+
     # Updates the existing signaling channel. This is an asynchronous
     # operation and takes time to complete.
     #
@@ -1298,7 +1923,7 @@ module Aws::KinesisVideo
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-kinesisvideo'
-      context[:gem_version] = '1.32.0'
+      context[:gem_version] = '1.51.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

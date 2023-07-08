@@ -27,6 +27,7 @@ module Aws::RDSDataService
   # See {Seahorse::Client::RequestContext} for more information.
   #
   # ## Error Classes
+  # * {AccessDeniedException}
   # * {BadRequestException}
   # * {ForbiddenException}
   # * {InternalServerErrorException}
@@ -39,6 +40,21 @@ module Aws::RDSDataService
   module Errors
 
     extend Aws::Errors::DynamicErrors
+
+    class AccessDeniedException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDSDataService::Types::AccessDeniedException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
 
     class BadRequestException < ServiceError
 
@@ -115,13 +131,13 @@ module Aws::RDSDataService
       end
 
       # @return [String]
-      def db_connection_id
-        @data[:db_connection_id]
+      def message
+        @message || @data[:message]
       end
 
       # @return [String]
-      def message
-        @message || @data[:message]
+      def db_connection_id
+        @data[:db_connection_id]
       end
     end
 

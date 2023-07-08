@@ -98,7 +98,7 @@ module Aws
     # or call the associated method.
     #
     # ```ruby
-    # post = Aws::S3::PresignedPost.new(creds, region, bucket).
+    # post = Aws::S3::PresignedPost.new(creds, region, bucket)
     # post.content_type('text/plain')
     # ```
     #
@@ -176,11 +176,17 @@ module Aws
     # ```
     #
     class PresignedPost
+      @@allowed_fields = []
 
       # @param [Credentials] credentials Security credentials for signing
       #   the post policy.
       # @param [String] bucket_region Region of the target bucket.
       # @param [String] bucket_name Name of the target bucket.
+      # @option options [Boolean] :use_accelerate_endpoint (false) When `true`,
+      #   PresignedPost will attempt to use accelerated endpoint.
+      # @option options [String] :url See {PresignedPost#url}.
+      # @option options [Sting, Array<String>] :allow_any
+      #   See {PresignedPost#allow_any}.
       # @option options [Time] :signature_expiration Specify when the signature on
       #   the post will expire. Defaults to one hour from creation of the
       #   presigned post. May not exceed one week from creation time.
@@ -205,7 +211,7 @@ module Aws
       #   See {PresignedPost#content_encoding}.
       # @option options [String] :content_encoding_starts_with
       #   See {PresignedPost#content_encoding_starts_with}.
-      # @option options [String] :expires See {PresignedPost#expires}.
+      # @option options [Time] :expires See {PresignedPost#expires}.
       # @option options [String] :expires_starts_with
       #   See {PresignedPost#expires_starts_with}.
       # @option options [Range<Integer>] :content_length_range
@@ -232,6 +238,8 @@ module Aws
       #   See {PresignedPost#server_side_encryption_customer_algorithm}.
       # @option options [String] :server_side_encryption_customer_key
       #   See {PresignedPost#server_side_encryption_customer_key}.
+      # @option options [String] :server_side_encryption_customer_key_starts_with
+      #   See {PresignedPost#server_side_encryption_customer_key_starts_with}.
       def initialize(credentials, bucket_region, bucket_name, options = {})
         @credentials = credentials.credentials
         @bucket_region = bucket_region
@@ -247,7 +255,12 @@ module Aws
           case option_name
           when :allow_any then allow_any(option_value)
           when :signature_expiration then @signature_expiration = option_value
-          else send("#{option_name}", option_value)
+          else
+            if @@allowed_fields.include?(option_name)
+              send("#{option_name}", option_value)
+            else
+              raise ArgumentError, "Unsupported option: #{option_name}"
+            end
           end
         end
       end
@@ -279,44 +292,52 @@ module Aws
       end
 
       # @api private
-      def self.define_field(field, *args)
+      def self.define_field(field, *args, &block)
+        @@allowed_fields << field
         options = args.last.is_a?(Hash) ? args.pop : {}
         field_name = args.last || field.to_s
 
-        define_method("#{field}") do |value|
-          with(field_name, value)
-        end
+        if block_given?
+          define_method("#{field}", block)
+        else
+          define_method("#{field}") do |value|
+            with(field_name, value)
+          end
 
-        if options[:starts_with]
-          define_method("#{field}_starts_with") do |value|
-            starts_with(field_name, value)
+          if options[:starts_with]
+            @@allowed_fields << "#{field}_starts_with".to_sym
+            define_method("#{field}_starts_with") do |value|
+              starts_with(field_name, value)
+            end
           end
         end
       end
 
       # @!group Fields
 
-      # The key to use for the uploaded object. You can use `${filename}`
-      # as a variable in the key. This will be replaced with the name
-      # of the file as provided by the user.
+      # @!method key(key)
+      #   The key to use for the uploaded object. You can use `${filename}`
+      #   as a variable in the key. This will be replaced with the name
+      #   of the file as provided by the user.
       #
-      # For example, if the key is given as `/user/betty/${filename}` and
-      # the file uploaded is named `lolcatz.jpg`, the resultant key will
-      # be `/user/betty/lolcatz.jpg`.
+      #   For example, if the key is given as `/user/betty/${filename}` and
+      #   the file uploaded is named `lolcatz.jpg`, the resultant key will
+      #   be `/user/betty/lolcatz.jpg`.
       #
-      # @param [String] key
-      # @see http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html)
-      # @return [self]
-      def key(key)
+      #   @param [String] key
+      #   @see http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html)
+      #   @return [self]
+      define_field(:key) do |key|
         @key_set = true
         with('key', key)
       end
 
-      # Specify a prefix the uploaded
-      # @param [String] prefix
-      # @see #key
-      # @return [self]
-      def key_starts_with(prefix)
+      # @!method key_starts_with(prefix)
+      #   Specify a prefix the uploaded
+      #   @param [String] prefix
+      #   @see #key
+      #   @return [self]
+      define_field(:key_starts_with) do |prefix|
         @key_set = true
         starts_with('key', prefix)
       end
@@ -393,27 +414,30 @@ module Aws
       #   @return [self]
       define_field(:content_encoding, 'Content-Encoding', starts_with: true)
 
-      # The date and time at which the object is no longer cacheable.
-      # @note This does not affect the expiration of the presigned post
-      #   signature.
-      # @param [Time] time
-      # @see http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.21
-      # @return [self]
-      def expires(time)
+      # @!method expires(time)
+      #   The date and time at which the object is no longer cacheable.
+      #   @note This does not affect the expiration of the presigned post
+      #     signature.
+      #   @param [Time] time
+      #   @see http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.21
+      #   @return [self]
+      define_field(:expires) do |time|
         with('Expires', time.httpdate)
       end
 
-      # @param [String] prefix
-      # @see #expires
-      # @return [self]
-      def expires_starts_with(prefix)
+      # @!method expires_starts_with(prefix)
+      #   @param [String] prefix
+      #   @see #expires
+      #   @return [self]
+      define_field(:expires_starts_with) do |prefix|
         starts_with('Expires', prefix)
       end
 
-      # The minimum and maximum allowable size for the uploaded content.
-      # @param [Range<Integer>] byte_range
-      # @return [self]
-      def content_length_range(byte_range)
+      # @!method content_length_range(byte_range)
+      #   The minimum and maximum allowable size for the uploaded content.
+      #   @param [Range<Integer>] byte_range
+      #   @return [self]
+      define_field(:content_length_range) do |byte_range|
         min = byte_range.begin
         max = byte_range.end
         max -= 1 if byte_range.exclude_end?
@@ -488,22 +512,24 @@ module Aws
       #   @return [self]
       define_field(:website_redirect_location, 'x-amz-website-redirect-location')
 
-      # Metadata hash to store with the uploaded object. Hash keys will be
-      # prefixed with "x-amz-meta-".
-      # @param [Hash<String,String>] hash
-      # @return [self]
-      def metadata(hash)
+      # @!method metadata(hash)
+      #   Metadata hash to store with the uploaded object. Hash keys will be
+      #   prefixed with "x-amz-meta-".
+      #   @param [Hash<String,String>] hash
+      #   @return [self]
+      define_field(:metadata) do |hash|
         hash.each do |key, value|
           with("x-amz-meta-#{key}", value)
         end
         self
       end
 
-      # Specify allowable prefix for each key in the metadata hash.
-      # @param [Hash<String,String>] hash
-      # @see #metadata
-      # @return [self]
-      def metadata_starts_with(hash)
+      # @!method metadata_starts_with(hash)
+      #   Specify allowable prefix for each key in the metadata hash.
+      #   @param [Hash<String,String>] hash
+      #   @see #metadata
+      #   @return [self]
+      define_field(:metadata_starts_with) do |hash|
         hash.each do |key, value|
           starts_with("x-amz-meta-#{key}", value)
         end
@@ -552,25 +578,27 @@ module Aws
         'x-amz-server-side-encryption-customer-algorithm'
       )
 
-      # Specifies the customer-provided encryption key for Amazon S3 to use
-      # in encrypting data. This value is used to store the object and then
-      # it is discarded; Amazon does not store the encryption key.
+      # @!method server_side_encryption_customer_key(value)
+      #   Specifies the customer-provided encryption key for Amazon S3 to use
+      #   in encrypting data. This value is used to store the object and then
+      #   it is discarded; Amazon does not store the encryption key.
       #
-      # You must also call {#server_side_encryption_customer_algorithm}.
+      #   You must also call {#server_side_encryption_customer_algorithm}.
       #
-      # @param [String] value
-      # @see #server_side_encryption_customer_algorithm
-      # @return [self]
-      def server_side_encryption_customer_key(value)
+      #   @param [String] value
+      #   @see #server_side_encryption_customer_algorithm
+      #   @return [self]
+      define_field(:server_side_encryption_customer_key) do |value|
         field_name = 'x-amz-server-side-encryption-customer-key'
         with(field_name, base64(value))
         with(field_name + '-MD5', base64(OpenSSL::Digest::MD5.digest(value)))
       end
 
-      # @param [String] prefix
-      # @see #server_side_encryption_customer_key
-      # @return [self]
-      def server_side_encryption_customer_key_starts_with(prefix)
+      # @!method server_side_encryption_customer_key_starts_with(prefix)
+      #   @param [String] prefix
+      #   @see #server_side_encryption_customer_key
+      #   @return [self]
+      define_field(:server_side_encryption_customer_key_starts_with) do |prefix|
         field_name = 'x-amz-server-side-encryption-customer-key'
         starts_with(field_name, prefix)
       end
@@ -610,22 +638,15 @@ module Aws
       end
 
       def bucket_url
-        url = Aws::Partitions::EndpointProvider.resolve(@bucket_region, 's3')
-        url = URI.parse(url)
-        if Plugins::BucketDns.dns_compatible?(@bucket_name, _ssl = true)
-          if @accelerate
-            url.host = "#{@bucket_name}.s3-accelerate.amazonaws.com"
-          else
-            url.host = "#{@bucket_name}.#{url.host}"
-          end
-        else
-          url.path = "/#{@bucket_name}"
-        end
-        if @bucket_region == 'us-east-1'
-          # keep legacy behavior by default
-          url.host = Plugins::IADRegionalEndpoint.legacy_host(url.host)
-        end
-        url.to_s
+        # Taken from Aws::S3::Endpoints module
+        params = Aws::S3::EndpointParameters.new(
+          bucket: @bucket_name,
+          region: @bucket_region,
+          accelerate: @accelerate,
+          use_global_endpoint: true
+        )
+        endpoint = Aws::S3::EndpointProvider.new.resolve_endpoint(params)
+        endpoint.url
       end
 
       # @return [Hash]

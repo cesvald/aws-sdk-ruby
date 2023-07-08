@@ -100,13 +100,16 @@ module Aws::SSM
   # * {InvalidResultAttributeException}
   # * {InvalidRole}
   # * {InvalidSchedule}
+  # * {InvalidTag}
   # * {InvalidTarget}
+  # * {InvalidTargetMaps}
   # * {InvalidTypeNameException}
   # * {InvalidUpdate}
   # * {InvocationDoesNotExist}
   # * {ItemContentMismatchException}
   # * {ItemSizeLimitExceededException}
   # * {MaxDocumentSizeExceeded}
+  # * {OpsItemAccessDeniedException}
   # * {OpsItemAlreadyExistsException}
   # * {OpsItemInvalidParameterException}
   # * {OpsItemLimitExceededException}
@@ -134,6 +137,9 @@ module Aws::SSM
   # * {ResourceDataSyncNotFoundException}
   # * {ResourceInUseException}
   # * {ResourceLimitExceededException}
+  # * {ResourcePolicyConflictException}
+  # * {ResourcePolicyInvalidParameterException}
+  # * {ResourcePolicyLimitExceededException}
   # * {ServiceSettingNotFound}
   # * {StatusUnchanged}
   # * {SubTypeCountLimitExceededException}
@@ -1201,11 +1207,41 @@ module Aws::SSM
       end
     end
 
+    class InvalidTag < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::SSM::Types::InvalidTag] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class InvalidTarget < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::SSM::Types::InvalidTarget] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class InvalidTargetMaps < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::SSM::Types::InvalidTargetMaps] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -1301,6 +1337,21 @@ module Aws::SSM
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::SSM::Types::MaxDocumentSizeExceeded] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class OpsItemAccessDeniedException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::SSM::Types::OpsItemAccessDeniedException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -1753,6 +1804,66 @@ module Aws::SSM
       # @param [Aws::SSM::Types::ResourceLimitExceededException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class ResourcePolicyConflictException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::SSM::Types::ResourcePolicyConflictException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class ResourcePolicyInvalidParameterException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::SSM::Types::ResourcePolicyInvalidParameterException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def parameter_names
+        @data[:parameter_names]
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class ResourcePolicyLimitExceededException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::SSM::Types::ResourcePolicyLimitExceededException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def limit
+        @data[:limit]
+      end
+
+      # @return [String]
+      def limit_type
+        @data[:limit_type]
       end
 
       # @return [String]

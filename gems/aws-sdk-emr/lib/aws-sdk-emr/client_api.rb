@@ -33,6 +33,7 @@ module Aws::EMR
     AutoScalingPolicyStateChangeReason = Shapes::StructureShape.new(name: 'AutoScalingPolicyStateChangeReason')
     AutoScalingPolicyStateChangeReasonCode = Shapes::StringShape.new(name: 'AutoScalingPolicyStateChangeReasonCode')
     AutoScalingPolicyStatus = Shapes::StructureShape.new(name: 'AutoScalingPolicyStatus')
+    AutoTerminationPolicy = Shapes::StructureShape.new(name: 'AutoTerminationPolicy')
     BlockPublicAccessConfiguration = Shapes::StructureShape.new(name: 'BlockPublicAccessConfiguration')
     BlockPublicAccessConfigurationMetadata = Shapes::StructureShape.new(name: 'BlockPublicAccessConfigurationMetadata')
     Boolean = Shapes::BooleanShape.new(name: 'Boolean')
@@ -69,6 +70,7 @@ module Aws::EMR
     CreateStudioInput = Shapes::StructureShape.new(name: 'CreateStudioInput')
     CreateStudioOutput = Shapes::StructureShape.new(name: 'CreateStudioOutput')
     CreateStudioSessionMappingInput = Shapes::StructureShape.new(name: 'CreateStudioSessionMappingInput')
+    Credentials = Shapes::UnionShape.new(name: 'Credentials')
     Date = Shapes::TimestampShape.new(name: 'Date')
     DeleteSecurityConfigurationInput = Shapes::StructureShape.new(name: 'DeleteSecurityConfigurationInput')
     DeleteSecurityConfigurationOutput = Shapes::StructureShape.new(name: 'DeleteSecurityConfigurationOutput')
@@ -80,6 +82,8 @@ module Aws::EMR
     DescribeJobFlowsOutput = Shapes::StructureShape.new(name: 'DescribeJobFlowsOutput')
     DescribeNotebookExecutionInput = Shapes::StructureShape.new(name: 'DescribeNotebookExecutionInput')
     DescribeNotebookExecutionOutput = Shapes::StructureShape.new(name: 'DescribeNotebookExecutionOutput')
+    DescribeReleaseLabelInput = Shapes::StructureShape.new(name: 'DescribeReleaseLabelInput')
+    DescribeReleaseLabelOutput = Shapes::StructureShape.new(name: 'DescribeReleaseLabelOutput')
     DescribeSecurityConfigurationInput = Shapes::StructureShape.new(name: 'DescribeSecurityConfigurationInput')
     DescribeSecurityConfigurationOutput = Shapes::StructureShape.new(name: 'DescribeSecurityConfigurationOutput')
     DescribeStepInput = Shapes::StructureShape.new(name: 'DescribeStepInput')
@@ -96,19 +100,29 @@ module Aws::EMR
     EbsVolume = Shapes::StructureShape.new(name: 'EbsVolume')
     EbsVolumeList = Shapes::ListShape.new(name: 'EbsVolumeList')
     Ec2InstanceAttributes = Shapes::StructureShape.new(name: 'Ec2InstanceAttributes')
+    EnvironmentVariablesMap = Shapes::MapShape.new(name: 'EnvironmentVariablesMap')
     ErrorCode = Shapes::StringShape.new(name: 'ErrorCode')
+    ErrorData = Shapes::ListShape.new(name: 'ErrorData')
+    ErrorDetail = Shapes::StructureShape.new(name: 'ErrorDetail')
+    ErrorDetailList = Shapes::ListShape.new(name: 'ErrorDetailList')
     ErrorMessage = Shapes::StringShape.new(name: 'ErrorMessage')
     ExecutionEngineConfig = Shapes::StructureShape.new(name: 'ExecutionEngineConfig')
     ExecutionEngineType = Shapes::StringShape.new(name: 'ExecutionEngineType')
     FailureDetails = Shapes::StructureShape.new(name: 'FailureDetails')
+    Float = Shapes::FloatShape.new(name: 'Float')
+    GetAutoTerminationPolicyInput = Shapes::StructureShape.new(name: 'GetAutoTerminationPolicyInput')
+    GetAutoTerminationPolicyOutput = Shapes::StructureShape.new(name: 'GetAutoTerminationPolicyOutput')
     GetBlockPublicAccessConfigurationInput = Shapes::StructureShape.new(name: 'GetBlockPublicAccessConfigurationInput')
     GetBlockPublicAccessConfigurationOutput = Shapes::StructureShape.new(name: 'GetBlockPublicAccessConfigurationOutput')
+    GetClusterSessionCredentialsInput = Shapes::StructureShape.new(name: 'GetClusterSessionCredentialsInput')
+    GetClusterSessionCredentialsOutput = Shapes::StructureShape.new(name: 'GetClusterSessionCredentialsOutput')
     GetManagedScalingPolicyInput = Shapes::StructureShape.new(name: 'GetManagedScalingPolicyInput')
     GetManagedScalingPolicyOutput = Shapes::StructureShape.new(name: 'GetManagedScalingPolicyOutput')
     GetStudioSessionMappingInput = Shapes::StructureShape.new(name: 'GetStudioSessionMappingInput')
     GetStudioSessionMappingOutput = Shapes::StructureShape.new(name: 'GetStudioSessionMappingOutput')
     HadoopJarStepConfig = Shapes::StructureShape.new(name: 'HadoopJarStepConfig')
     HadoopStepConfig = Shapes::StructureShape.new(name: 'HadoopStepConfig')
+    IAMRoleArn = Shapes::StringShape.new(name: 'IAMRoleArn')
     IdentityType = Shapes::StringShape.new(name: 'IdentityType')
     Instance = Shapes::StructureShape.new(name: 'Instance')
     InstanceCollectionType = Shapes::StringShape.new(name: 'InstanceCollectionType')
@@ -119,6 +133,7 @@ module Aws::EMR
     InstanceFleetList = Shapes::ListShape.new(name: 'InstanceFleetList')
     InstanceFleetModifyConfig = Shapes::StructureShape.new(name: 'InstanceFleetModifyConfig')
     InstanceFleetProvisioningSpecifications = Shapes::StructureShape.new(name: 'InstanceFleetProvisioningSpecifications')
+    InstanceFleetResizingSpecifications = Shapes::StructureShape.new(name: 'InstanceFleetResizingSpecifications')
     InstanceFleetState = Shapes::StringShape.new(name: 'InstanceFleetState')
     InstanceFleetStateChangeReason = Shapes::StructureShape.new(name: 'InstanceFleetStateChangeReason')
     InstanceFleetStateChangeReasonCode = Shapes::StringShape.new(name: 'InstanceFleetStateChangeReasonCode')
@@ -183,6 +198,8 @@ module Aws::EMR
     ListInstancesOutput = Shapes::StructureShape.new(name: 'ListInstancesOutput')
     ListNotebookExecutionsInput = Shapes::StructureShape.new(name: 'ListNotebookExecutionsInput')
     ListNotebookExecutionsOutput = Shapes::StructureShape.new(name: 'ListNotebookExecutionsOutput')
+    ListReleaseLabelsInput = Shapes::StructureShape.new(name: 'ListReleaseLabelsInput')
+    ListReleaseLabelsOutput = Shapes::StructureShape.new(name: 'ListReleaseLabelsOutput')
     ListSecurityConfigurationsInput = Shapes::StructureShape.new(name: 'ListSecurityConfigurationsInput')
     ListSecurityConfigurationsOutput = Shapes::StructureShape.new(name: 'ListSecurityConfigurationsOutput')
     ListStepsInput = Shapes::StructureShape.new(name: 'ListStepsInput')
@@ -191,10 +208,13 @@ module Aws::EMR
     ListStudioSessionMappingsOutput = Shapes::StructureShape.new(name: 'ListStudioSessionMappingsOutput')
     ListStudiosInput = Shapes::StructureShape.new(name: 'ListStudiosInput')
     ListStudiosOutput = Shapes::StructureShape.new(name: 'ListStudiosOutput')
+    ListSupportedInstanceTypesInput = Shapes::StructureShape.new(name: 'ListSupportedInstanceTypesInput')
+    ListSupportedInstanceTypesOutput = Shapes::StructureShape.new(name: 'ListSupportedInstanceTypesOutput')
     Long = Shapes::IntegerShape.new(name: 'Long')
     ManagedScalingPolicy = Shapes::StructureShape.new(name: 'ManagedScalingPolicy')
     Marker = Shapes::StringShape.new(name: 'Marker')
     MarketType = Shapes::StringShape.new(name: 'MarketType')
+    MaxResultsNumber = Shapes::IntegerShape.new(name: 'MaxResultsNumber')
     MetricDimension = Shapes::StructureShape.new(name: 'MetricDimension')
     MetricDimensionList = Shapes::ListShape.new(name: 'MetricDimensionList')
     ModifyClusterInput = Shapes::StructureShape.new(name: 'ModifyClusterInput')
@@ -207,12 +227,20 @@ module Aws::EMR
     NotebookExecutionStatus = Shapes::StringShape.new(name: 'NotebookExecutionStatus')
     NotebookExecutionSummary = Shapes::StructureShape.new(name: 'NotebookExecutionSummary')
     NotebookExecutionSummaryList = Shapes::ListShape.new(name: 'NotebookExecutionSummaryList')
+    NotebookS3LocationForOutput = Shapes::StructureShape.new(name: 'NotebookS3LocationForOutput')
+    NotebookS3LocationFromInput = Shapes::StructureShape.new(name: 'NotebookS3LocationFromInput')
+    OSRelease = Shapes::StructureShape.new(name: 'OSRelease')
+    OSReleaseList = Shapes::ListShape.new(name: 'OSReleaseList')
     OnDemandCapacityReservationOptions = Shapes::StructureShape.new(name: 'OnDemandCapacityReservationOptions')
     OnDemandCapacityReservationPreference = Shapes::StringShape.new(name: 'OnDemandCapacityReservationPreference')
     OnDemandCapacityReservationUsageStrategy = Shapes::StringShape.new(name: 'OnDemandCapacityReservationUsageStrategy')
     OnDemandProvisioningAllocationStrategy = Shapes::StringShape.new(name: 'OnDemandProvisioningAllocationStrategy')
     OnDemandProvisioningSpecification = Shapes::StructureShape.new(name: 'OnDemandProvisioningSpecification')
+    OnDemandResizingSpecification = Shapes::StructureShape.new(name: 'OnDemandResizingSpecification')
     OptionalArnType = Shapes::StringShape.new(name: 'OptionalArnType')
+    OutputNotebookFormat = Shapes::StringShape.new(name: 'OutputNotebookFormat')
+    OutputNotebookS3LocationForOutput = Shapes::StructureShape.new(name: 'OutputNotebookS3LocationForOutput')
+    OutputNotebookS3LocationFromInput = Shapes::StructureShape.new(name: 'OutputNotebookS3LocationFromInput')
     PlacementGroupConfig = Shapes::StructureShape.new(name: 'PlacementGroupConfig')
     PlacementGroupConfigList = Shapes::ListShape.new(name: 'PlacementGroupConfigList')
     PlacementGroupStrategy = Shapes::StringShape.new(name: 'PlacementGroupStrategy')
@@ -222,12 +250,18 @@ module Aws::EMR
     PortRanges = Shapes::ListShape.new(name: 'PortRanges')
     PutAutoScalingPolicyInput = Shapes::StructureShape.new(name: 'PutAutoScalingPolicyInput')
     PutAutoScalingPolicyOutput = Shapes::StructureShape.new(name: 'PutAutoScalingPolicyOutput')
+    PutAutoTerminationPolicyInput = Shapes::StructureShape.new(name: 'PutAutoTerminationPolicyInput')
+    PutAutoTerminationPolicyOutput = Shapes::StructureShape.new(name: 'PutAutoTerminationPolicyOutput')
     PutBlockPublicAccessConfigurationInput = Shapes::StructureShape.new(name: 'PutBlockPublicAccessConfigurationInput')
     PutBlockPublicAccessConfigurationOutput = Shapes::StructureShape.new(name: 'PutBlockPublicAccessConfigurationOutput')
     PutManagedScalingPolicyInput = Shapes::StructureShape.new(name: 'PutManagedScalingPolicyInput')
     PutManagedScalingPolicyOutput = Shapes::StructureShape.new(name: 'PutManagedScalingPolicyOutput')
+    ReconfigurationType = Shapes::StringShape.new(name: 'ReconfigurationType')
+    ReleaseLabelFilter = Shapes::StructureShape.new(name: 'ReleaseLabelFilter')
     RemoveAutoScalingPolicyInput = Shapes::StructureShape.new(name: 'RemoveAutoScalingPolicyInput')
     RemoveAutoScalingPolicyOutput = Shapes::StructureShape.new(name: 'RemoveAutoScalingPolicyOutput')
+    RemoveAutoTerminationPolicyInput = Shapes::StructureShape.new(name: 'RemoveAutoTerminationPolicyInput')
+    RemoveAutoTerminationPolicyOutput = Shapes::StructureShape.new(name: 'RemoveAutoTerminationPolicyOutput')
     RemoveManagedScalingPolicyInput = Shapes::StructureShape.new(name: 'RemoveManagedScalingPolicyInput')
     RemoveManagedScalingPolicyOutput = Shapes::StructureShape.new(name: 'RemoveManagedScalingPolicyOutput')
     RemoveTagsInput = Shapes::StructureShape.new(name: 'RemoveTagsInput')
@@ -253,9 +287,12 @@ module Aws::EMR
     SetVisibleToAllUsersInput = Shapes::StructureShape.new(name: 'SetVisibleToAllUsersInput')
     ShrinkPolicy = Shapes::StructureShape.new(name: 'ShrinkPolicy')
     SimpleScalingPolicyConfiguration = Shapes::StructureShape.new(name: 'SimpleScalingPolicyConfiguration')
+    SimplifiedApplication = Shapes::StructureShape.new(name: 'SimplifiedApplication')
+    SimplifiedApplicationList = Shapes::ListShape.new(name: 'SimplifiedApplicationList')
     SpotProvisioningAllocationStrategy = Shapes::StringShape.new(name: 'SpotProvisioningAllocationStrategy')
     SpotProvisioningSpecification = Shapes::StructureShape.new(name: 'SpotProvisioningSpecification')
     SpotProvisioningTimeoutAction = Shapes::StringShape.new(name: 'SpotProvisioningTimeoutAction')
+    SpotResizingSpecification = Shapes::StructureShape.new(name: 'SpotResizingSpecification')
     StartNotebookExecutionInput = Shapes::StructureShape.new(name: 'StartNotebookExecutionInput')
     StartNotebookExecutionOutput = Shapes::StructureShape.new(name: 'StartNotebookExecutionOutput')
     Statistic = Shapes::StringShape.new(name: 'Statistic')
@@ -285,14 +322,19 @@ module Aws::EMR
     StudioSummary = Shapes::StructureShape.new(name: 'StudioSummary')
     StudioSummaryList = Shapes::ListShape.new(name: 'StudioSummaryList')
     SubnetIdList = Shapes::ListShape.new(name: 'SubnetIdList')
+    SupportedInstanceType = Shapes::StructureShape.new(name: 'SupportedInstanceType')
+    SupportedInstanceTypesList = Shapes::ListShape.new(name: 'SupportedInstanceTypesList')
     SupportedProductConfig = Shapes::StructureShape.new(name: 'SupportedProductConfig')
     SupportedProductsList = Shapes::ListShape.new(name: 'SupportedProductsList')
     Tag = Shapes::StructureShape.new(name: 'Tag')
     TagList = Shapes::ListShape.new(name: 'TagList')
     TerminateJobFlowsInput = Shapes::StructureShape.new(name: 'TerminateJobFlowsInput')
+    ThroughputVal = Shapes::IntegerShape.new(name: 'ThroughputVal')
     Unit = Shapes::StringShape.new(name: 'Unit')
     UpdateStudioInput = Shapes::StructureShape.new(name: 'UpdateStudioInput')
     UpdateStudioSessionMappingInput = Shapes::StructureShape.new(name: 'UpdateStudioSessionMappingInput')
+    UriString = Shapes::StringShape.new(name: 'UriString')
+    UsernamePassword = Shapes::StructureShape.new(name: 'UsernamePassword')
     VolumeSpecification = Shapes::StructureShape.new(name: 'VolumeSpecification')
     WholeNumber = Shapes::IntegerShape.new(name: 'WholeNumber')
     XmlString = Shapes::StringShape.new(name: 'XmlString')
@@ -320,6 +362,7 @@ module Aws::EMR
 
     AddJobFlowStepsInput.add_member(:job_flow_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "JobFlowId"))
     AddJobFlowStepsInput.add_member(:steps, Shapes::ShapeRef.new(shape: StepConfigList, required: true, location_name: "Steps"))
+    AddJobFlowStepsInput.add_member(:execution_role_arn, Shapes::ShapeRef.new(shape: ArnType, location_name: "ExecutionRoleArn"))
     AddJobFlowStepsInput.struct_class = Types::AddJobFlowStepsInput
 
     AddJobFlowStepsOutput.add_member(:step_ids, Shapes::ShapeRef.new(shape: StepIdsList, location_name: "StepIds"))
@@ -355,6 +398,9 @@ module Aws::EMR
     AutoScalingPolicyStatus.add_member(:state, Shapes::ShapeRef.new(shape: AutoScalingPolicyState, location_name: "State"))
     AutoScalingPolicyStatus.add_member(:state_change_reason, Shapes::ShapeRef.new(shape: AutoScalingPolicyStateChangeReason, location_name: "StateChangeReason"))
     AutoScalingPolicyStatus.struct_class = Types::AutoScalingPolicyStatus
+
+    AutoTerminationPolicy.add_member(:idle_timeout, Shapes::ShapeRef.new(shape: Long, location_name: "IdleTimeout"))
+    AutoTerminationPolicy.struct_class = Types::AutoTerminationPolicy
 
     BlockPublicAccessConfiguration.add_member(:block_public_security_group_rules, Shapes::ShapeRef.new(shape: Boolean, required: true, location_name: "BlockPublicSecurityGroupRules"))
     BlockPublicAccessConfiguration.add_member(:permitted_public_security_group_rule_ranges, Shapes::ShapeRef.new(shape: PortRanges, location_name: "PermittedPublicSecurityGroupRuleRanges"))
@@ -431,6 +477,7 @@ module Aws::EMR
     Cluster.add_member(:outpost_arn, Shapes::ShapeRef.new(shape: OptionalArnType, location_name: "OutpostArn"))
     Cluster.add_member(:step_concurrency_level, Shapes::ShapeRef.new(shape: Integer, location_name: "StepConcurrencyLevel"))
     Cluster.add_member(:placement_groups, Shapes::ShapeRef.new(shape: PlacementGroupConfigList, location_name: "PlacementGroups"))
+    Cluster.add_member(:os_release_label, Shapes::ShapeRef.new(shape: String, location_name: "OSReleaseLabel"))
     Cluster.struct_class = Types::Cluster
 
     ClusterStateChangeReason.add_member(:code, Shapes::ShapeRef.new(shape: ClusterStateChangeReasonCode, location_name: "Code"))
@@ -442,6 +489,7 @@ module Aws::EMR
     ClusterStatus.add_member(:state, Shapes::ShapeRef.new(shape: ClusterState, location_name: "State"))
     ClusterStatus.add_member(:state_change_reason, Shapes::ShapeRef.new(shape: ClusterStateChangeReason, location_name: "StateChangeReason"))
     ClusterStatus.add_member(:timeline, Shapes::ShapeRef.new(shape: ClusterTimeline, location_name: "Timeline"))
+    ClusterStatus.add_member(:error_details, Shapes::ShapeRef.new(shape: ErrorDetailList, location_name: "ErrorDetails"))
     ClusterStatus.struct_class = Types::ClusterStatus
 
     ClusterSummary.add_member(:id, Shapes::ShapeRef.new(shape: ClusterId, location_name: "Id"))
@@ -494,10 +542,12 @@ module Aws::EMR
     CreateStudioInput.add_member(:vpc_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "VpcId"))
     CreateStudioInput.add_member(:subnet_ids, Shapes::ShapeRef.new(shape: SubnetIdList, required: true, location_name: "SubnetIds"))
     CreateStudioInput.add_member(:service_role, Shapes::ShapeRef.new(shape: XmlString, required: true, location_name: "ServiceRole"))
-    CreateStudioInput.add_member(:user_role, Shapes::ShapeRef.new(shape: XmlString, required: true, location_name: "UserRole"))
+    CreateStudioInput.add_member(:user_role, Shapes::ShapeRef.new(shape: XmlString, location_name: "UserRole"))
     CreateStudioInput.add_member(:workspace_security_group_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "WorkspaceSecurityGroupId"))
     CreateStudioInput.add_member(:engine_security_group_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "EngineSecurityGroupId"))
     CreateStudioInput.add_member(:default_s3_location, Shapes::ShapeRef.new(shape: XmlString, required: true, location_name: "DefaultS3Location"))
+    CreateStudioInput.add_member(:idp_auth_url, Shapes::ShapeRef.new(shape: XmlString, location_name: "IdpAuthUrl"))
+    CreateStudioInput.add_member(:idp_relay_state_parameter_name, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "IdpRelayStateParameterName"))
     CreateStudioInput.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, location_name: "Tags"))
     CreateStudioInput.struct_class = Types::CreateStudioInput
 
@@ -511,6 +561,12 @@ module Aws::EMR
     CreateStudioSessionMappingInput.add_member(:identity_type, Shapes::ShapeRef.new(shape: IdentityType, required: true, location_name: "IdentityType"))
     CreateStudioSessionMappingInput.add_member(:session_policy_arn, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "SessionPolicyArn"))
     CreateStudioSessionMappingInput.struct_class = Types::CreateStudioSessionMappingInput
+
+    Credentials.add_member(:username_password, Shapes::ShapeRef.new(shape: UsernamePassword, location_name: "UsernamePassword"))
+    Credentials.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    Credentials.add_member_subclass(:username_password, Types::Credentials::UsernamePassword)
+    Credentials.add_member_subclass(:unknown, Types::Credentials::Unknown)
+    Credentials.struct_class = Types::Credentials
 
     DeleteSecurityConfigurationInput.add_member(:name, Shapes::ShapeRef.new(shape: XmlString, required: true, location_name: "Name"))
     DeleteSecurityConfigurationInput.struct_class = Types::DeleteSecurityConfigurationInput
@@ -546,6 +602,17 @@ module Aws::EMR
 
     DescribeNotebookExecutionOutput.add_member(:notebook_execution, Shapes::ShapeRef.new(shape: NotebookExecution, location_name: "NotebookExecution"))
     DescribeNotebookExecutionOutput.struct_class = Types::DescribeNotebookExecutionOutput
+
+    DescribeReleaseLabelInput.add_member(:release_label, Shapes::ShapeRef.new(shape: String, location_name: "ReleaseLabel"))
+    DescribeReleaseLabelInput.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeReleaseLabelInput.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResultsNumber, location_name: "MaxResults"))
+    DescribeReleaseLabelInput.struct_class = Types::DescribeReleaseLabelInput
+
+    DescribeReleaseLabelOutput.add_member(:release_label, Shapes::ShapeRef.new(shape: String, location_name: "ReleaseLabel"))
+    DescribeReleaseLabelOutput.add_member(:applications, Shapes::ShapeRef.new(shape: SimplifiedApplicationList, location_name: "Applications"))
+    DescribeReleaseLabelOutput.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeReleaseLabelOutput.add_member(:available_os_releases, Shapes::ShapeRef.new(shape: OSReleaseList, location_name: "AvailableOSReleases"))
+    DescribeReleaseLabelOutput.struct_class = Types::DescribeReleaseLabelOutput
 
     DescribeSecurityConfigurationInput.add_member(:name, Shapes::ShapeRef.new(shape: XmlString, required: true, location_name: "Name"))
     DescribeSecurityConfigurationInput.struct_class = Types::DescribeSecurityConfigurationInput
@@ -607,9 +674,22 @@ module Aws::EMR
     Ec2InstanceAttributes.add_member(:additional_slave_security_groups, Shapes::ShapeRef.new(shape: StringList, location_name: "AdditionalSlaveSecurityGroups"))
     Ec2InstanceAttributes.struct_class = Types::Ec2InstanceAttributes
 
+    EnvironmentVariablesMap.key = Shapes::ShapeRef.new(shape: XmlStringMaxLen256)
+    EnvironmentVariablesMap.value = Shapes::ShapeRef.new(shape: XmlString)
+
+    ErrorData.member = Shapes::ShapeRef.new(shape: StringMap)
+
+    ErrorDetail.add_member(:error_code, Shapes::ShapeRef.new(shape: String, location_name: "ErrorCode"))
+    ErrorDetail.add_member(:error_data, Shapes::ShapeRef.new(shape: ErrorData, location_name: "ErrorData"))
+    ErrorDetail.add_member(:error_message, Shapes::ShapeRef.new(shape: String, location_name: "ErrorMessage"))
+    ErrorDetail.struct_class = Types::ErrorDetail
+
+    ErrorDetailList.member = Shapes::ShapeRef.new(shape: ErrorDetail)
+
     ExecutionEngineConfig.add_member(:id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "Id"))
     ExecutionEngineConfig.add_member(:type, Shapes::ShapeRef.new(shape: ExecutionEngineType, location_name: "Type"))
     ExecutionEngineConfig.add_member(:master_instance_security_group_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "MasterInstanceSecurityGroupId"))
+    ExecutionEngineConfig.add_member(:execution_role_arn, Shapes::ShapeRef.new(shape: IAMRoleArn, location_name: "ExecutionRoleArn"))
     ExecutionEngineConfig.struct_class = Types::ExecutionEngineConfig
 
     FailureDetails.add_member(:reason, Shapes::ShapeRef.new(shape: String, location_name: "Reason"))
@@ -617,11 +697,25 @@ module Aws::EMR
     FailureDetails.add_member(:log_file, Shapes::ShapeRef.new(shape: String, location_name: "LogFile"))
     FailureDetails.struct_class = Types::FailureDetails
 
+    GetAutoTerminationPolicyInput.add_member(:cluster_id, Shapes::ShapeRef.new(shape: ClusterId, required: true, location_name: "ClusterId"))
+    GetAutoTerminationPolicyInput.struct_class = Types::GetAutoTerminationPolicyInput
+
+    GetAutoTerminationPolicyOutput.add_member(:auto_termination_policy, Shapes::ShapeRef.new(shape: AutoTerminationPolicy, location_name: "AutoTerminationPolicy"))
+    GetAutoTerminationPolicyOutput.struct_class = Types::GetAutoTerminationPolicyOutput
+
     GetBlockPublicAccessConfigurationInput.struct_class = Types::GetBlockPublicAccessConfigurationInput
 
     GetBlockPublicAccessConfigurationOutput.add_member(:block_public_access_configuration, Shapes::ShapeRef.new(shape: BlockPublicAccessConfiguration, required: true, location_name: "BlockPublicAccessConfiguration"))
     GetBlockPublicAccessConfigurationOutput.add_member(:block_public_access_configuration_metadata, Shapes::ShapeRef.new(shape: BlockPublicAccessConfigurationMetadata, required: true, location_name: "BlockPublicAccessConfigurationMetadata"))
     GetBlockPublicAccessConfigurationOutput.struct_class = Types::GetBlockPublicAccessConfigurationOutput
+
+    GetClusterSessionCredentialsInput.add_member(:cluster_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "ClusterId"))
+    GetClusterSessionCredentialsInput.add_member(:execution_role_arn, Shapes::ShapeRef.new(shape: ArnType, required: true, location_name: "ExecutionRoleArn"))
+    GetClusterSessionCredentialsInput.struct_class = Types::GetClusterSessionCredentialsInput
+
+    GetClusterSessionCredentialsOutput.add_member(:credentials, Shapes::ShapeRef.new(shape: Credentials, location_name: "Credentials"))
+    GetClusterSessionCredentialsOutput.add_member(:expires_at, Shapes::ShapeRef.new(shape: Date, location_name: "ExpiresAt"))
+    GetClusterSessionCredentialsOutput.struct_class = Types::GetClusterSessionCredentialsOutput
 
     GetManagedScalingPolicyInput.add_member(:cluster_id, Shapes::ShapeRef.new(shape: ClusterId, required: true, location_name: "ClusterId"))
     GetManagedScalingPolicyInput.struct_class = Types::GetManagedScalingPolicyInput
@@ -674,6 +768,7 @@ module Aws::EMR
     InstanceFleet.add_member(:provisioned_spot_capacity, Shapes::ShapeRef.new(shape: WholeNumber, location_name: "ProvisionedSpotCapacity"))
     InstanceFleet.add_member(:instance_type_specifications, Shapes::ShapeRef.new(shape: InstanceTypeSpecificationList, location_name: "InstanceTypeSpecifications"))
     InstanceFleet.add_member(:launch_specifications, Shapes::ShapeRef.new(shape: InstanceFleetProvisioningSpecifications, location_name: "LaunchSpecifications"))
+    InstanceFleet.add_member(:resize_specifications, Shapes::ShapeRef.new(shape: InstanceFleetResizingSpecifications, location_name: "ResizeSpecifications"))
     InstanceFleet.struct_class = Types::InstanceFleet
 
     InstanceFleetConfig.add_member(:name, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Name"))
@@ -682,6 +777,7 @@ module Aws::EMR
     InstanceFleetConfig.add_member(:target_spot_capacity, Shapes::ShapeRef.new(shape: WholeNumber, location_name: "TargetSpotCapacity"))
     InstanceFleetConfig.add_member(:instance_type_configs, Shapes::ShapeRef.new(shape: InstanceTypeConfigList, location_name: "InstanceTypeConfigs"))
     InstanceFleetConfig.add_member(:launch_specifications, Shapes::ShapeRef.new(shape: InstanceFleetProvisioningSpecifications, location_name: "LaunchSpecifications"))
+    InstanceFleetConfig.add_member(:resize_specifications, Shapes::ShapeRef.new(shape: InstanceFleetResizingSpecifications, location_name: "ResizeSpecifications"))
     InstanceFleetConfig.struct_class = Types::InstanceFleetConfig
 
     InstanceFleetConfigList.member = Shapes::ShapeRef.new(shape: InstanceFleetConfig)
@@ -691,11 +787,16 @@ module Aws::EMR
     InstanceFleetModifyConfig.add_member(:instance_fleet_id, Shapes::ShapeRef.new(shape: InstanceFleetId, required: true, location_name: "InstanceFleetId"))
     InstanceFleetModifyConfig.add_member(:target_on_demand_capacity, Shapes::ShapeRef.new(shape: WholeNumber, location_name: "TargetOnDemandCapacity"))
     InstanceFleetModifyConfig.add_member(:target_spot_capacity, Shapes::ShapeRef.new(shape: WholeNumber, location_name: "TargetSpotCapacity"))
+    InstanceFleetModifyConfig.add_member(:resize_specifications, Shapes::ShapeRef.new(shape: InstanceFleetResizingSpecifications, location_name: "ResizeSpecifications"))
     InstanceFleetModifyConfig.struct_class = Types::InstanceFleetModifyConfig
 
     InstanceFleetProvisioningSpecifications.add_member(:spot_specification, Shapes::ShapeRef.new(shape: SpotProvisioningSpecification, location_name: "SpotSpecification"))
     InstanceFleetProvisioningSpecifications.add_member(:on_demand_specification, Shapes::ShapeRef.new(shape: OnDemandProvisioningSpecification, location_name: "OnDemandSpecification"))
     InstanceFleetProvisioningSpecifications.struct_class = Types::InstanceFleetProvisioningSpecifications
+
+    InstanceFleetResizingSpecifications.add_member(:spot_resize_specification, Shapes::ShapeRef.new(shape: SpotResizingSpecification, location_name: "SpotResizeSpecification"))
+    InstanceFleetResizingSpecifications.add_member(:on_demand_resize_specification, Shapes::ShapeRef.new(shape: OnDemandResizingSpecification, location_name: "OnDemandResizeSpecification"))
+    InstanceFleetResizingSpecifications.struct_class = Types::InstanceFleetResizingSpecifications
 
     InstanceFleetStateChangeReason.add_member(:code, Shapes::ShapeRef.new(shape: InstanceFleetStateChangeReasonCode, location_name: "Code"))
     InstanceFleetStateChangeReason.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
@@ -728,6 +829,7 @@ module Aws::EMR
     InstanceGroup.add_member(:ebs_optimized, Shapes::ShapeRef.new(shape: BooleanObject, location_name: "EbsOptimized"))
     InstanceGroup.add_member(:shrink_policy, Shapes::ShapeRef.new(shape: ShrinkPolicy, location_name: "ShrinkPolicy"))
     InstanceGroup.add_member(:auto_scaling_policy, Shapes::ShapeRef.new(shape: AutoScalingPolicyDescription, location_name: "AutoScalingPolicy"))
+    InstanceGroup.add_member(:custom_ami_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "CustomAmiId"))
     InstanceGroup.struct_class = Types::InstanceGroup
 
     InstanceGroupConfig.add_member(:name, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Name"))
@@ -739,6 +841,7 @@ module Aws::EMR
     InstanceGroupConfig.add_member(:configurations, Shapes::ShapeRef.new(shape: ConfigurationList, location_name: "Configurations"))
     InstanceGroupConfig.add_member(:ebs_configuration, Shapes::ShapeRef.new(shape: EbsConfiguration, location_name: "EbsConfiguration"))
     InstanceGroupConfig.add_member(:auto_scaling_policy, Shapes::ShapeRef.new(shape: AutoScalingPolicy, location_name: "AutoScalingPolicy"))
+    InstanceGroupConfig.add_member(:custom_ami_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "CustomAmiId"))
     InstanceGroupConfig.struct_class = Types::InstanceGroupConfig
 
     InstanceGroupConfigList.member = Shapes::ShapeRef.new(shape: InstanceGroupConfig)
@@ -757,6 +860,7 @@ module Aws::EMR
     InstanceGroupDetail.add_member(:start_date_time, Shapes::ShapeRef.new(shape: Date, location_name: "StartDateTime"))
     InstanceGroupDetail.add_member(:ready_date_time, Shapes::ShapeRef.new(shape: Date, location_name: "ReadyDateTime"))
     InstanceGroupDetail.add_member(:end_date_time, Shapes::ShapeRef.new(shape: Date, location_name: "EndDateTime"))
+    InstanceGroupDetail.add_member(:custom_ami_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "CustomAmiId"))
     InstanceGroupDetail.struct_class = Types::InstanceGroupDetail
 
     InstanceGroupDetailList.member = Shapes::ShapeRef.new(shape: InstanceGroupDetail)
@@ -769,6 +873,7 @@ module Aws::EMR
     InstanceGroupModifyConfig.add_member(:instance_count, Shapes::ShapeRef.new(shape: Integer, location_name: "InstanceCount"))
     InstanceGroupModifyConfig.add_member(:ec2_instance_ids_to_terminate, Shapes::ShapeRef.new(shape: EC2InstanceIdsToTerminateList, location_name: "EC2InstanceIdsToTerminate"))
     InstanceGroupModifyConfig.add_member(:shrink_policy, Shapes::ShapeRef.new(shape: ShrinkPolicy, location_name: "ShrinkPolicy"))
+    InstanceGroupModifyConfig.add_member(:reconfiguration_type, Shapes::ShapeRef.new(shape: ReconfigurationType, location_name: "ReconfigurationType"))
     InstanceGroupModifyConfig.add_member(:configurations, Shapes::ShapeRef.new(shape: ConfigurationList, location_name: "Configurations"))
     InstanceGroupModifyConfig.struct_class = Types::InstanceGroupModifyConfig
 
@@ -819,6 +924,7 @@ module Aws::EMR
     InstanceTypeConfig.add_member(:bid_price_as_percentage_of_on_demand_price, Shapes::ShapeRef.new(shape: NonNegativeDouble, location_name: "BidPriceAsPercentageOfOnDemandPrice"))
     InstanceTypeConfig.add_member(:ebs_configuration, Shapes::ShapeRef.new(shape: EbsConfiguration, location_name: "EbsConfiguration"))
     InstanceTypeConfig.add_member(:configurations, Shapes::ShapeRef.new(shape: ConfigurationList, location_name: "Configurations"))
+    InstanceTypeConfig.add_member(:custom_ami_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "CustomAmiId"))
     InstanceTypeConfig.struct_class = Types::InstanceTypeConfig
 
     InstanceTypeConfigList.member = Shapes::ShapeRef.new(shape: InstanceTypeConfig)
@@ -830,6 +936,7 @@ module Aws::EMR
     InstanceTypeSpecification.add_member(:configurations, Shapes::ShapeRef.new(shape: ConfigurationList, location_name: "Configurations"))
     InstanceTypeSpecification.add_member(:ebs_block_devices, Shapes::ShapeRef.new(shape: EbsBlockDeviceList, location_name: "EbsBlockDevices"))
     InstanceTypeSpecification.add_member(:ebs_optimized, Shapes::ShapeRef.new(shape: BooleanObject, location_name: "EbsOptimized"))
+    InstanceTypeSpecification.add_member(:custom_ami_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "CustomAmiId"))
     InstanceTypeSpecification.struct_class = Types::InstanceTypeSpecification
 
     InstanceTypeSpecificationList.member = Shapes::ShapeRef.new(shape: InstanceTypeSpecification)
@@ -971,11 +1078,21 @@ module Aws::EMR
     ListNotebookExecutionsInput.add_member(:from, Shapes::ShapeRef.new(shape: Date, location_name: "From"))
     ListNotebookExecutionsInput.add_member(:to, Shapes::ShapeRef.new(shape: Date, location_name: "To"))
     ListNotebookExecutionsInput.add_member(:marker, Shapes::ShapeRef.new(shape: Marker, location_name: "Marker"))
+    ListNotebookExecutionsInput.add_member(:execution_engine_id, Shapes::ShapeRef.new(shape: XmlString, location_name: "ExecutionEngineId"))
     ListNotebookExecutionsInput.struct_class = Types::ListNotebookExecutionsInput
 
     ListNotebookExecutionsOutput.add_member(:notebook_executions, Shapes::ShapeRef.new(shape: NotebookExecutionSummaryList, location_name: "NotebookExecutions"))
     ListNotebookExecutionsOutput.add_member(:marker, Shapes::ShapeRef.new(shape: Marker, location_name: "Marker"))
     ListNotebookExecutionsOutput.struct_class = Types::ListNotebookExecutionsOutput
+
+    ListReleaseLabelsInput.add_member(:filters, Shapes::ShapeRef.new(shape: ReleaseLabelFilter, location_name: "Filters"))
+    ListReleaseLabelsInput.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    ListReleaseLabelsInput.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResultsNumber, location_name: "MaxResults"))
+    ListReleaseLabelsInput.struct_class = Types::ListReleaseLabelsInput
+
+    ListReleaseLabelsOutput.add_member(:release_labels, Shapes::ShapeRef.new(shape: StringList, location_name: "ReleaseLabels"))
+    ListReleaseLabelsOutput.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    ListReleaseLabelsOutput.struct_class = Types::ListReleaseLabelsOutput
 
     ListSecurityConfigurationsInput.add_member(:marker, Shapes::ShapeRef.new(shape: Marker, location_name: "Marker"))
     ListSecurityConfigurationsInput.struct_class = Types::ListSecurityConfigurationsInput
@@ -1009,6 +1126,14 @@ module Aws::EMR
     ListStudiosOutput.add_member(:studios, Shapes::ShapeRef.new(shape: StudioSummaryList, location_name: "Studios"))
     ListStudiosOutput.add_member(:marker, Shapes::ShapeRef.new(shape: Marker, location_name: "Marker"))
     ListStudiosOutput.struct_class = Types::ListStudiosOutput
+
+    ListSupportedInstanceTypesInput.add_member(:release_label, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReleaseLabel"))
+    ListSupportedInstanceTypesInput.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
+    ListSupportedInstanceTypesInput.struct_class = Types::ListSupportedInstanceTypesInput
+
+    ListSupportedInstanceTypesOutput.add_member(:supported_instance_types, Shapes::ShapeRef.new(shape: SupportedInstanceTypesList, location_name: "SupportedInstanceTypes"))
+    ListSupportedInstanceTypesOutput.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
+    ListSupportedInstanceTypesOutput.struct_class = Types::ListSupportedInstanceTypesOutput
 
     ManagedScalingPolicy.add_member(:compute_limits, Shapes::ShapeRef.new(shape: ComputeLimits, location_name: "ComputeLimits"))
     ManagedScalingPolicy.struct_class = Types::ManagedScalingPolicy
@@ -1049,6 +1174,10 @@ module Aws::EMR
     NotebookExecution.add_member(:last_state_change_reason, Shapes::ShapeRef.new(shape: XmlString, location_name: "LastStateChangeReason"))
     NotebookExecution.add_member(:notebook_instance_security_group_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "NotebookInstanceSecurityGroupId"))
     NotebookExecution.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, location_name: "Tags"))
+    NotebookExecution.add_member(:notebook_s3_location, Shapes::ShapeRef.new(shape: NotebookS3LocationForOutput, location_name: "NotebookS3Location"))
+    NotebookExecution.add_member(:output_notebook_s3_location, Shapes::ShapeRef.new(shape: OutputNotebookS3LocationForOutput, location_name: "OutputNotebookS3Location"))
+    NotebookExecution.add_member(:output_notebook_format, Shapes::ShapeRef.new(shape: OutputNotebookFormat, location_name: "OutputNotebookFormat"))
+    NotebookExecution.add_member(:environment_variables, Shapes::ShapeRef.new(shape: EnvironmentVariablesMap, location_name: "EnvironmentVariables"))
     NotebookExecution.struct_class = Types::NotebookExecution
 
     NotebookExecutionSummary.add_member(:notebook_execution_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "NotebookExecutionId"))
@@ -1057,9 +1186,24 @@ module Aws::EMR
     NotebookExecutionSummary.add_member(:status, Shapes::ShapeRef.new(shape: NotebookExecutionStatus, location_name: "Status"))
     NotebookExecutionSummary.add_member(:start_time, Shapes::ShapeRef.new(shape: Date, location_name: "StartTime"))
     NotebookExecutionSummary.add_member(:end_time, Shapes::ShapeRef.new(shape: Date, location_name: "EndTime"))
+    NotebookExecutionSummary.add_member(:notebook_s3_location, Shapes::ShapeRef.new(shape: NotebookS3LocationForOutput, location_name: "NotebookS3Location"))
+    NotebookExecutionSummary.add_member(:execution_engine_id, Shapes::ShapeRef.new(shape: XmlString, location_name: "ExecutionEngineId"))
     NotebookExecutionSummary.struct_class = Types::NotebookExecutionSummary
 
     NotebookExecutionSummaryList.member = Shapes::ShapeRef.new(shape: NotebookExecutionSummary)
+
+    NotebookS3LocationForOutput.add_member(:bucket, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Bucket"))
+    NotebookS3LocationForOutput.add_member(:key, Shapes::ShapeRef.new(shape: UriString, location_name: "Key"))
+    NotebookS3LocationForOutput.struct_class = Types::NotebookS3LocationForOutput
+
+    NotebookS3LocationFromInput.add_member(:bucket, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Bucket"))
+    NotebookS3LocationFromInput.add_member(:key, Shapes::ShapeRef.new(shape: UriString, location_name: "Key"))
+    NotebookS3LocationFromInput.struct_class = Types::NotebookS3LocationFromInput
+
+    OSRelease.add_member(:label, Shapes::ShapeRef.new(shape: String, location_name: "Label"))
+    OSRelease.struct_class = Types::OSRelease
+
+    OSReleaseList.member = Shapes::ShapeRef.new(shape: OSRelease)
 
     OnDemandCapacityReservationOptions.add_member(:usage_strategy, Shapes::ShapeRef.new(shape: OnDemandCapacityReservationUsageStrategy, location_name: "UsageStrategy"))
     OnDemandCapacityReservationOptions.add_member(:capacity_reservation_preference, Shapes::ShapeRef.new(shape: OnDemandCapacityReservationPreference, location_name: "CapacityReservationPreference"))
@@ -1069,6 +1213,17 @@ module Aws::EMR
     OnDemandProvisioningSpecification.add_member(:allocation_strategy, Shapes::ShapeRef.new(shape: OnDemandProvisioningAllocationStrategy, required: true, location_name: "AllocationStrategy"))
     OnDemandProvisioningSpecification.add_member(:capacity_reservation_options, Shapes::ShapeRef.new(shape: OnDemandCapacityReservationOptions, location_name: "CapacityReservationOptions"))
     OnDemandProvisioningSpecification.struct_class = Types::OnDemandProvisioningSpecification
+
+    OnDemandResizingSpecification.add_member(:timeout_duration_minutes, Shapes::ShapeRef.new(shape: WholeNumber, required: true, location_name: "TimeoutDurationMinutes"))
+    OnDemandResizingSpecification.struct_class = Types::OnDemandResizingSpecification
+
+    OutputNotebookS3LocationForOutput.add_member(:bucket, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Bucket"))
+    OutputNotebookS3LocationForOutput.add_member(:key, Shapes::ShapeRef.new(shape: UriString, location_name: "Key"))
+    OutputNotebookS3LocationForOutput.struct_class = Types::OutputNotebookS3LocationForOutput
+
+    OutputNotebookS3LocationFromInput.add_member(:bucket, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Bucket"))
+    OutputNotebookS3LocationFromInput.add_member(:key, Shapes::ShapeRef.new(shape: UriString, location_name: "Key"))
+    OutputNotebookS3LocationFromInput.struct_class = Types::OutputNotebookS3LocationFromInput
 
     PlacementGroupConfig.add_member(:instance_role, Shapes::ShapeRef.new(shape: InstanceRoleType, required: true, location_name: "InstanceRole"))
     PlacementGroupConfig.add_member(:placement_strategy, Shapes::ShapeRef.new(shape: PlacementGroupStrategy, location_name: "PlacementStrategy"))
@@ -1097,6 +1252,12 @@ module Aws::EMR
     PutAutoScalingPolicyOutput.add_member(:cluster_arn, Shapes::ShapeRef.new(shape: ArnType, location_name: "ClusterArn"))
     PutAutoScalingPolicyOutput.struct_class = Types::PutAutoScalingPolicyOutput
 
+    PutAutoTerminationPolicyInput.add_member(:cluster_id, Shapes::ShapeRef.new(shape: ClusterId, required: true, location_name: "ClusterId"))
+    PutAutoTerminationPolicyInput.add_member(:auto_termination_policy, Shapes::ShapeRef.new(shape: AutoTerminationPolicy, location_name: "AutoTerminationPolicy"))
+    PutAutoTerminationPolicyInput.struct_class = Types::PutAutoTerminationPolicyInput
+
+    PutAutoTerminationPolicyOutput.struct_class = Types::PutAutoTerminationPolicyOutput
+
     PutBlockPublicAccessConfigurationInput.add_member(:block_public_access_configuration, Shapes::ShapeRef.new(shape: BlockPublicAccessConfiguration, required: true, location_name: "BlockPublicAccessConfiguration"))
     PutBlockPublicAccessConfigurationInput.struct_class = Types::PutBlockPublicAccessConfigurationInput
 
@@ -1108,11 +1269,20 @@ module Aws::EMR
 
     PutManagedScalingPolicyOutput.struct_class = Types::PutManagedScalingPolicyOutput
 
+    ReleaseLabelFilter.add_member(:prefix, Shapes::ShapeRef.new(shape: String, location_name: "Prefix"))
+    ReleaseLabelFilter.add_member(:application, Shapes::ShapeRef.new(shape: String, location_name: "Application"))
+    ReleaseLabelFilter.struct_class = Types::ReleaseLabelFilter
+
     RemoveAutoScalingPolicyInput.add_member(:cluster_id, Shapes::ShapeRef.new(shape: ClusterId, required: true, location_name: "ClusterId"))
     RemoveAutoScalingPolicyInput.add_member(:instance_group_id, Shapes::ShapeRef.new(shape: InstanceGroupId, required: true, location_name: "InstanceGroupId"))
     RemoveAutoScalingPolicyInput.struct_class = Types::RemoveAutoScalingPolicyInput
 
     RemoveAutoScalingPolicyOutput.struct_class = Types::RemoveAutoScalingPolicyOutput
+
+    RemoveAutoTerminationPolicyInput.add_member(:cluster_id, Shapes::ShapeRef.new(shape: ClusterId, required: true, location_name: "ClusterId"))
+    RemoveAutoTerminationPolicyInput.struct_class = Types::RemoveAutoTerminationPolicyInput
+
+    RemoveAutoTerminationPolicyOutput.struct_class = Types::RemoveAutoTerminationPolicyOutput
 
     RemoveManagedScalingPolicyInput.add_member(:cluster_id, Shapes::ShapeRef.new(shape: ClusterId, required: true, location_name: "ClusterId"))
     RemoveManagedScalingPolicyInput.struct_class = Types::RemoveManagedScalingPolicyInput
@@ -1152,6 +1322,8 @@ module Aws::EMR
     RunJobFlowInput.add_member(:step_concurrency_level, Shapes::ShapeRef.new(shape: Integer, location_name: "StepConcurrencyLevel"))
     RunJobFlowInput.add_member(:managed_scaling_policy, Shapes::ShapeRef.new(shape: ManagedScalingPolicy, location_name: "ManagedScalingPolicy"))
     RunJobFlowInput.add_member(:placement_group_configs, Shapes::ShapeRef.new(shape: PlacementGroupConfigList, location_name: "PlacementGroupConfigs"))
+    RunJobFlowInput.add_member(:auto_termination_policy, Shapes::ShapeRef.new(shape: AutoTerminationPolicy, location_name: "AutoTerminationPolicy"))
+    RunJobFlowInput.add_member(:os_release_label, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "OSReleaseLabel"))
     RunJobFlowInput.struct_class = Types::RunJobFlowInput
 
     RunJobFlowOutput.add_member(:job_flow_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "JobFlowId"))
@@ -1225,20 +1397,33 @@ module Aws::EMR
     SimpleScalingPolicyConfiguration.add_member(:cool_down, Shapes::ShapeRef.new(shape: Integer, location_name: "CoolDown"))
     SimpleScalingPolicyConfiguration.struct_class = Types::SimpleScalingPolicyConfiguration
 
+    SimplifiedApplication.add_member(:name, Shapes::ShapeRef.new(shape: String, location_name: "Name"))
+    SimplifiedApplication.add_member(:version, Shapes::ShapeRef.new(shape: String, location_name: "Version"))
+    SimplifiedApplication.struct_class = Types::SimplifiedApplication
+
+    SimplifiedApplicationList.member = Shapes::ShapeRef.new(shape: SimplifiedApplication)
+
     SpotProvisioningSpecification.add_member(:timeout_duration_minutes, Shapes::ShapeRef.new(shape: WholeNumber, required: true, location_name: "TimeoutDurationMinutes"))
     SpotProvisioningSpecification.add_member(:timeout_action, Shapes::ShapeRef.new(shape: SpotProvisioningTimeoutAction, required: true, location_name: "TimeoutAction"))
     SpotProvisioningSpecification.add_member(:block_duration_minutes, Shapes::ShapeRef.new(shape: WholeNumber, location_name: "BlockDurationMinutes"))
     SpotProvisioningSpecification.add_member(:allocation_strategy, Shapes::ShapeRef.new(shape: SpotProvisioningAllocationStrategy, location_name: "AllocationStrategy"))
     SpotProvisioningSpecification.struct_class = Types::SpotProvisioningSpecification
 
-    StartNotebookExecutionInput.add_member(:editor_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "EditorId"))
-    StartNotebookExecutionInput.add_member(:relative_path, Shapes::ShapeRef.new(shape: XmlString, required: true, location_name: "RelativePath"))
+    SpotResizingSpecification.add_member(:timeout_duration_minutes, Shapes::ShapeRef.new(shape: WholeNumber, required: true, location_name: "TimeoutDurationMinutes"))
+    SpotResizingSpecification.struct_class = Types::SpotResizingSpecification
+
+    StartNotebookExecutionInput.add_member(:editor_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "EditorId"))
+    StartNotebookExecutionInput.add_member(:relative_path, Shapes::ShapeRef.new(shape: XmlString, location_name: "RelativePath"))
     StartNotebookExecutionInput.add_member(:notebook_execution_name, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "NotebookExecutionName"))
     StartNotebookExecutionInput.add_member(:notebook_params, Shapes::ShapeRef.new(shape: XmlString, location_name: "NotebookParams"))
     StartNotebookExecutionInput.add_member(:execution_engine, Shapes::ShapeRef.new(shape: ExecutionEngineConfig, required: true, location_name: "ExecutionEngine"))
     StartNotebookExecutionInput.add_member(:service_role, Shapes::ShapeRef.new(shape: XmlString, required: true, location_name: "ServiceRole"))
     StartNotebookExecutionInput.add_member(:notebook_instance_security_group_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "NotebookInstanceSecurityGroupId"))
     StartNotebookExecutionInput.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, location_name: "Tags"))
+    StartNotebookExecutionInput.add_member(:notebook_s3_location, Shapes::ShapeRef.new(shape: NotebookS3LocationFromInput, location_name: "NotebookS3Location"))
+    StartNotebookExecutionInput.add_member(:output_notebook_s3_location, Shapes::ShapeRef.new(shape: OutputNotebookS3LocationFromInput, location_name: "OutputNotebookS3Location"))
+    StartNotebookExecutionInput.add_member(:output_notebook_format, Shapes::ShapeRef.new(shape: OutputNotebookFormat, location_name: "OutputNotebookFormat"))
+    StartNotebookExecutionInput.add_member(:environment_variables, Shapes::ShapeRef.new(shape: EnvironmentVariablesMap, location_name: "EnvironmentVariables"))
     StartNotebookExecutionInput.struct_class = Types::StartNotebookExecutionInput
 
     StartNotebookExecutionOutput.add_member(:notebook_execution_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "NotebookExecutionId"))
@@ -1249,6 +1434,7 @@ module Aws::EMR
     Step.add_member(:config, Shapes::ShapeRef.new(shape: HadoopStepConfig, location_name: "Config"))
     Step.add_member(:action_on_failure, Shapes::ShapeRef.new(shape: ActionOnFailure, location_name: "ActionOnFailure"))
     Step.add_member(:status, Shapes::ShapeRef.new(shape: StepStatus, location_name: "Status"))
+    Step.add_member(:execution_role_arn, Shapes::ShapeRef.new(shape: OptionalArnType, location_name: "ExecutionRoleArn"))
     Step.struct_class = Types::Step
 
     StepConfig.add_member(:name, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "Name"))
@@ -1321,6 +1507,8 @@ module Aws::EMR
     Studio.add_member(:url, Shapes::ShapeRef.new(shape: XmlString, location_name: "Url"))
     Studio.add_member(:creation_time, Shapes::ShapeRef.new(shape: Date, location_name: "CreationTime"))
     Studio.add_member(:default_s3_location, Shapes::ShapeRef.new(shape: XmlString, location_name: "DefaultS3Location"))
+    Studio.add_member(:idp_auth_url, Shapes::ShapeRef.new(shape: XmlString, location_name: "IdpAuthUrl"))
+    Studio.add_member(:idp_relay_state_parameter_name, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "IdpRelayStateParameterName"))
     Studio.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, location_name: "Tags"))
     Studio.struct_class = Types::Studio
 
@@ -1329,12 +1517,28 @@ module Aws::EMR
     StudioSummary.add_member(:vpc_id, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "VpcId"))
     StudioSummary.add_member(:description, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Description"))
     StudioSummary.add_member(:url, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Url"))
+    StudioSummary.add_member(:auth_mode, Shapes::ShapeRef.new(shape: AuthMode, location_name: "AuthMode"))
     StudioSummary.add_member(:creation_time, Shapes::ShapeRef.new(shape: Date, location_name: "CreationTime"))
     StudioSummary.struct_class = Types::StudioSummary
 
     StudioSummaryList.member = Shapes::ShapeRef.new(shape: StudioSummary)
 
     SubnetIdList.member = Shapes::ShapeRef.new(shape: String)
+
+    SupportedInstanceType.add_member(:type, Shapes::ShapeRef.new(shape: String, location_name: "Type"))
+    SupportedInstanceType.add_member(:memory_gb, Shapes::ShapeRef.new(shape: Float, location_name: "MemoryGB"))
+    SupportedInstanceType.add_member(:storage_gb, Shapes::ShapeRef.new(shape: Integer, location_name: "StorageGB"))
+    SupportedInstanceType.add_member(:vcpu, Shapes::ShapeRef.new(shape: Integer, location_name: "VCPU"))
+    SupportedInstanceType.add_member(:is_64_bits_only, Shapes::ShapeRef.new(shape: Boolean, location_name: "Is64BitsOnly"))
+    SupportedInstanceType.add_member(:instance_family_id, Shapes::ShapeRef.new(shape: String, location_name: "InstanceFamilyId"))
+    SupportedInstanceType.add_member(:ebs_optimized_available, Shapes::ShapeRef.new(shape: Boolean, location_name: "EbsOptimizedAvailable"))
+    SupportedInstanceType.add_member(:ebs_optimized_by_default, Shapes::ShapeRef.new(shape: Boolean, location_name: "EbsOptimizedByDefault"))
+    SupportedInstanceType.add_member(:number_of_disks, Shapes::ShapeRef.new(shape: Integer, location_name: "NumberOfDisks"))
+    SupportedInstanceType.add_member(:ebs_storage_only, Shapes::ShapeRef.new(shape: Boolean, location_name: "EbsStorageOnly"))
+    SupportedInstanceType.add_member(:architecture, Shapes::ShapeRef.new(shape: String, location_name: "Architecture"))
+    SupportedInstanceType.struct_class = Types::SupportedInstanceType
+
+    SupportedInstanceTypesList.member = Shapes::ShapeRef.new(shape: SupportedInstanceType)
 
     SupportedProductConfig.add_member(:name, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Name"))
     SupportedProductConfig.add_member(:args, Shapes::ShapeRef.new(shape: XmlStringList, location_name: "Args"))
@@ -1365,9 +1569,14 @@ module Aws::EMR
     UpdateStudioSessionMappingInput.add_member(:session_policy_arn, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, required: true, location_name: "SessionPolicyArn"))
     UpdateStudioSessionMappingInput.struct_class = Types::UpdateStudioSessionMappingInput
 
+    UsernamePassword.add_member(:username, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Username"))
+    UsernamePassword.add_member(:password, Shapes::ShapeRef.new(shape: XmlStringMaxLen256, location_name: "Password"))
+    UsernamePassword.struct_class = Types::UsernamePassword
+
     VolumeSpecification.add_member(:volume_type, Shapes::ShapeRef.new(shape: String, required: true, location_name: "VolumeType"))
     VolumeSpecification.add_member(:iops, Shapes::ShapeRef.new(shape: Integer, location_name: "Iops"))
     VolumeSpecification.add_member(:size_in_gb, Shapes::ShapeRef.new(shape: Integer, required: true, location_name: "SizeInGB"))
+    VolumeSpecification.add_member(:throughput, Shapes::ShapeRef.new(shape: ThroughputVal, location_name: "Throughput"))
     VolumeSpecification.struct_class = Types::VolumeSpecification
 
     XmlStringList.member = Shapes::ShapeRef.new(shape: XmlString)
@@ -1386,7 +1595,7 @@ module Aws::EMR
         "jsonVersion" => "1.1",
         "protocol" => "json",
         "serviceAbbreviation" => "Amazon EMR",
-        "serviceFullName" => "Amazon Elastic MapReduce",
+        "serviceFullName" => "Amazon EMR",
         "serviceId" => "EMR",
         "signatureVersion" => "v4",
         "targetPrefix" => "ElasticMapReduce",
@@ -1531,6 +1740,16 @@ module Aws::EMR
         o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
       end)
 
+      api.add_operation(:describe_release_label, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeReleaseLabel"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeReleaseLabelInput)
+        o.output = Shapes::ShapeRef.new(shape: DescribeReleaseLabelOutput)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+      end)
+
       api.add_operation(:describe_security_configuration, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DescribeSecurityConfiguration"
         o.http_method = "POST"
@@ -1561,6 +1780,14 @@ module Aws::EMR
         o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
       end)
 
+      api.add_operation(:get_auto_termination_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetAutoTerminationPolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: GetAutoTerminationPolicyInput)
+        o.output = Shapes::ShapeRef.new(shape: GetAutoTerminationPolicyOutput)
+      end)
+
       api.add_operation(:get_block_public_access_configuration, Seahorse::Model::Operation.new.tap do |o|
         o.name = "GetBlockPublicAccessConfiguration"
         o.http_method = "POST"
@@ -1568,6 +1795,16 @@ module Aws::EMR
         o.input = Shapes::ShapeRef.new(shape: GetBlockPublicAccessConfigurationInput)
         o.output = Shapes::ShapeRef.new(shape: GetBlockPublicAccessConfigurationOutput)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+      end)
+
+      api.add_operation(:get_cluster_session_credentials, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetClusterSessionCredentials"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: GetClusterSessionCredentialsInput)
+        o.output = Shapes::ShapeRef.new(shape: GetClusterSessionCredentialsOutput)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerError)
         o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
       end)
 
@@ -1679,6 +1916,22 @@ module Aws::EMR
         )
       end)
 
+      api.add_operation(:list_release_labels, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListReleaseLabels"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListReleaseLabelsInput)
+        o.output = Shapes::ShapeRef.new(shape: ListReleaseLabelsOutput)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
       api.add_operation(:list_security_configurations, Seahorse::Model::Operation.new.tap do |o|
         o.name = "ListSecurityConfigurations"
         o.http_method = "POST"
@@ -1739,6 +1992,21 @@ module Aws::EMR
         )
       end)
 
+      api.add_operation(:list_supported_instance_types, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListSupportedInstanceTypes"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListSupportedInstanceTypesInput)
+        o.output = Shapes::ShapeRef.new(shape: ListSupportedInstanceTypesOutput)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o[:pager] = Aws::Pager.new(
+          tokens: {
+            "marker" => "marker"
+          }
+        )
+      end)
+
       api.add_operation(:modify_cluster, Seahorse::Model::Operation.new.tap do |o|
         o.name = "ModifyCluster"
         o.http_method = "POST"
@@ -1776,6 +2044,14 @@ module Aws::EMR
         o.output = Shapes::ShapeRef.new(shape: PutAutoScalingPolicyOutput)
       end)
 
+      api.add_operation(:put_auto_termination_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "PutAutoTerminationPolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: PutAutoTerminationPolicyInput)
+        o.output = Shapes::ShapeRef.new(shape: PutAutoTerminationPolicyOutput)
+      end)
+
       api.add_operation(:put_block_public_access_configuration, Seahorse::Model::Operation.new.tap do |o|
         o.name = "PutBlockPublicAccessConfiguration"
         o.http_method = "POST"
@@ -1800,6 +2076,14 @@ module Aws::EMR
         o.http_request_uri = "/"
         o.input = Shapes::ShapeRef.new(shape: RemoveAutoScalingPolicyInput)
         o.output = Shapes::ShapeRef.new(shape: RemoveAutoScalingPolicyOutput)
+      end)
+
+      api.add_operation(:remove_auto_termination_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "RemoveAutoTerminationPolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: RemoveAutoTerminationPolicyInput)
+        o.output = Shapes::ShapeRef.new(shape: RemoveAutoTerminationPolicyOutput)
       end)
 
       api.add_operation(:remove_managed_scaling_policy, Seahorse::Model::Operation.new.tap do |o|

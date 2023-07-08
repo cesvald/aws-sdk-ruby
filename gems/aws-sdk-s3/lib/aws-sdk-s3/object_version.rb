@@ -56,6 +56,12 @@ module Aws::S3
       data[:etag]
     end
 
+    # The algorithm that was used to create a checksum of the object.
+    # @return [Array<String>]
+    def checksum_algorithm
+      data[:checksum_algorithm]
+    end
+
     # Size in bytes of the object.
     # @return [Integer]
     def size
@@ -97,6 +103,20 @@ module Aws::S3
     # @return [Types::Owner]
     def owner
       data[:owner]
+    end
+
+    # Specifies the restoration status of an object. Objects in certain
+    # storage classes must be restored before they can be retrieved. For
+    # more information about these storage classes and how to work with
+    # archived objects, see [ Working with archived objects][1] in the
+    # *Amazon S3 User Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/archived-objects.html
+    # @return [Types::RestoreStatus]
+    def restore_status
+      data[:restore_status]
     end
 
     # @!endgroup
@@ -223,7 +243,9 @@ module Aws::S3
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -245,20 +267,21 @@ module Aws::S3
     # @option options [String] :request_payer
     #   Confirms that the requester knows that they will be charged for the
     #   request. Bucket owners need not specify this parameter in their
-    #   requests. For information about downloading objects from requester
-    #   pays buckets, see [Downloading Objects in Requestor Pays Buckets][1]
-    #   in the *Amazon S3 Developer Guide*.
+    #   requests. For information about downloading objects from Requester
+    #   Pays buckets, see [Downloading Objects in Requester Pays Buckets][1]
+    #   in the *Amazon S3 User Guide*.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html
     # @option options [Boolean] :bypass_governance_retention
     #   Indicates whether S3 Object Lock should bypass Governance-mode
-    #   restrictions to process this operation.
+    #   restrictions to process this operation. To use this header, you must
+    #   have the `s3:BypassGovernanceRetention` permission.
     # @option options [String] :expected_bucket_owner
     #   The account ID of the expected bucket owner. If the bucket is owned by
-    #   a different account, the request will fail with an HTTP `403 (Access
-    #   Denied)` error.
+    #   a different account, the request fails with the HTTP status code `403
+    #   Forbidden` (access denied).
     # @return [Types::DeleteObjectOutput]
     def delete(options = {})
       options = options.merge(
@@ -266,7 +289,9 @@ module Aws::S3
         key: @object_key,
         version_id: @id
       )
-      resp = @client.delete_object(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_object(options)
+      end
       resp.data
     end
 
@@ -290,24 +315,25 @@ module Aws::S3
     #     request_payer: "requester", # accepts requester
     #     part_number: 1,
     #     expected_bucket_owner: "AccountId",
+    #     checksum_mode: "ENABLED", # accepts ENABLED
     #   })
     # @param [Hash] options ({})
     # @option options [String] :if_match
     #   Return the object only if its entity tag (ETag) is the same as the one
-    #   specified, otherwise return a 412 (precondition failed).
+    #   specified; otherwise, return a 412 (precondition failed) error.
     # @option options [Time,DateTime,Date,Integer,String] :if_modified_since
     #   Return the object only if it has been modified since the specified
-    #   time, otherwise return a 304 (not modified).
+    #   time; otherwise, return a 304 (not modified) error.
     # @option options [String] :if_none_match
     #   Return the object only if its entity tag (ETag) is different from the
-    #   one specified, otherwise return a 304 (not modified).
+    #   one specified; otherwise, return a 304 (not modified) error.
     # @option options [Time,DateTime,Date,Integer,String] :if_unmodified_since
     #   Return the object only if it has not been modified since the specified
-    #   time, otherwise return a 412 (precondition failed).
+    #   time; otherwise, return a 412 (precondition failed) error.
     # @option options [String] :range
     #   Downloads the specified range bytes of an object. For more information
     #   about the HTTP Range header, see
-    #   [https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35][1].
+    #   [https://www.rfc-editor.org/rfc/rfc9110.html#name-range][1].
     #
     #   <note markdown="1"> Amazon S3 doesn't support retrieving multiple ranges of data per
     #   `GET` request.
@@ -316,7 +342,7 @@ module Aws::S3
     #
     #
     #
-    #   [1]: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35
+    #   [1]: https://www.rfc-editor.org/rfc/rfc9110.html#name-range
     # @option options [String] :response_cache_control
     #   Sets the `Cache-Control` header of the response.
     # @option options [String] :response_content_disposition
@@ -345,9 +371,9 @@ module Aws::S3
     # @option options [String] :request_payer
     #   Confirms that the requester knows that they will be charged for the
     #   request. Bucket owners need not specify this parameter in their
-    #   requests. For information about downloading objects from requester
-    #   pays buckets, see [Downloading Objects in Requestor Pays Buckets][1]
-    #   in the *Amazon S3 Developer Guide*.
+    #   requests. For information about downloading objects from Requester
+    #   Pays buckets, see [Downloading Objects in Requester Pays Buckets][1]
+    #   in the *Amazon S3 User Guide*.
     #
     #
     #
@@ -359,8 +385,10 @@ module Aws::S3
     #   object.
     # @option options [String] :expected_bucket_owner
     #   The account ID of the expected bucket owner. If the bucket is owned by
-    #   a different account, the request will fail with an HTTP `403 (Access
-    #   Denied)` error.
+    #   a different account, the request fails with the HTTP status code `403
+    #   Forbidden` (access denied).
+    # @option options [String] :checksum_mode
+    #   To retrieve the checksum, this mode must be enabled.
     # @return [Types::GetObjectOutput]
     def get(options = {}, &block)
       options = options.merge(
@@ -368,7 +396,9 @@ module Aws::S3
         key: @object_key,
         version_id: @id
       )
-      resp = @client.get_object(options, &block)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_object(options, &block)
+      end
       resp.data
     end
 
@@ -386,33 +416,26 @@ module Aws::S3
     #     request_payer: "requester", # accepts requester
     #     part_number: 1,
     #     expected_bucket_owner: "AccountId",
+    #     checksum_mode: "ENABLED", # accepts ENABLED
     #   })
     # @param [Hash] options ({})
     # @option options [String] :if_match
     #   Return the object only if its entity tag (ETag) is the same as the one
-    #   specified, otherwise return a 412 (precondition failed).
+    #   specified; otherwise, return a 412 (precondition failed) error.
     # @option options [Time,DateTime,Date,Integer,String] :if_modified_since
     #   Return the object only if it has been modified since the specified
-    #   time, otherwise return a 304 (not modified).
+    #   time; otherwise, return a 304 (not modified) error.
     # @option options [String] :if_none_match
     #   Return the object only if its entity tag (ETag) is different from the
-    #   one specified, otherwise return a 304 (not modified).
+    #   one specified; otherwise, return a 304 (not modified) error.
     # @option options [Time,DateTime,Date,Integer,String] :if_unmodified_since
     #   Return the object only if it has not been modified since the specified
-    #   time, otherwise return a 412 (precondition failed).
+    #   time; otherwise, return a 412 (precondition failed) error.
     # @option options [String] :range
-    #   Downloads the specified range bytes of an object. For more information
-    #   about the HTTP Range header, see
-    #   [http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35][1].
-    #
-    #   <note markdown="1"> Amazon S3 doesn't support retrieving multiple ranges of data per
-    #   `GET` request.
-    #
-    #    </note>
-    #
-    #
-    #
-    #   [1]: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35
+    #   HeadObject returns only the metadata for an object. If the Range is
+    #   satisfiable, only the `ContentLength` is affected in the response. If
+    #   the Range is not satisfiable, S3 returns a `416 - Requested Range Not
+    #   Satisfiable` error.
     # @option options [String] :sse_customer_algorithm
     #   Specifies the algorithm to use to when encrypting the object (for
     #   example, AES256).
@@ -429,9 +452,9 @@ module Aws::S3
     # @option options [String] :request_payer
     #   Confirms that the requester knows that they will be charged for the
     #   request. Bucket owners need not specify this parameter in their
-    #   requests. For information about downloading objects from requester
-    #   pays buckets, see [Downloading Objects in Requestor Pays Buckets][1]
-    #   in the *Amazon S3 Developer Guide*.
+    #   requests. For information about downloading objects from Requester
+    #   Pays buckets, see [Downloading Objects in Requester Pays Buckets][1]
+    #   in the *Amazon S3 User Guide*.
     #
     #
     #
@@ -443,8 +466,15 @@ module Aws::S3
     #   the number of parts in this object.
     # @option options [String] :expected_bucket_owner
     #   The account ID of the expected bucket owner. If the bucket is owned by
-    #   a different account, the request will fail with an HTTP `403 (Access
-    #   Denied)` error.
+    #   a different account, the request fails with the HTTP status code `403
+    #   Forbidden` (access denied).
+    # @option options [String] :checksum_mode
+    #   To retrieve the checksum, this parameter must be enabled.
+    #
+    #   In addition, if you enable `ChecksumMode` and the object is encrypted
+    #   with Amazon Web Services Key Management Service (Amazon Web Services
+    #   KMS), you must have permission to use the `kms:Decrypt` action for the
+    #   request to succeed.
     # @return [Types::HeadObjectOutput]
     def head(options = {})
       options = options.merge(
@@ -452,7 +482,9 @@ module Aws::S3
         key: @object_key,
         version_id: @id
       )
-      resp = @client.head_object(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.head_object(options)
+      end
       resp.data
     end
 
@@ -524,6 +556,7 @@ module Aws::S3
       #     request_payer: "requester", # accepts requester
       #     bypass_governance_retention: false,
       #     expected_bucket_owner: "AccountId",
+      #     checksum_algorithm: "CRC32", # accepts CRC32, CRC32C, SHA1, SHA256
       #   })
       # @param options ({})
       # @option options [String] :mfa
@@ -534,21 +567,39 @@ module Aws::S3
       # @option options [String] :request_payer
       #   Confirms that the requester knows that they will be charged for the
       #   request. Bucket owners need not specify this parameter in their
-      #   requests. For information about downloading objects from requester
-      #   pays buckets, see [Downloading Objects in Requestor Pays Buckets][1]
-      #   in the *Amazon S3 Developer Guide*.
+      #   requests. For information about downloading objects from Requester
+      #   Pays buckets, see [Downloading Objects in Requester Pays Buckets][1]
+      #   in the *Amazon S3 User Guide*.
       #
       #
       #
       #   [1]: https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html
       # @option options [Boolean] :bypass_governance_retention
       #   Specifies whether you want to delete this object even if it has a
-      #   Governance-type Object Lock in place. You must have sufficient
-      #   permissions to perform this operation.
+      #   Governance-type Object Lock in place. To use this header, you must
+      #   have the `s3:BypassGovernanceRetention` permission.
       # @option options [String] :expected_bucket_owner
       #   The account ID of the expected bucket owner. If the bucket is owned by
-      #   a different account, the request will fail with an HTTP `403 (Access
-      #   Denied)` error.
+      #   a different account, the request fails with the HTTP status code `403
+      #   Forbidden` (access denied).
+      # @option options [String] :checksum_algorithm
+      #   Indicates the algorithm used to create the checksum for the object
+      #   when using the SDK. This header will not provide any additional
+      #   functionality if not using the SDK. When sending this header, there
+      #   must be a corresponding `x-amz-checksum` or `x-amz-trailer` header
+      #   sent. Otherwise, Amazon S3 fails the request with the HTTP status code
+      #   `400 Bad Request`. For more information, see [Checking object
+      #   integrity][1] in the *Amazon S3 User Guide*.
+      #
+      #   If you provide an individual checksum, Amazon S3 ignores any provided
+      #   `ChecksumAlgorithm` parameter.
+      #
+      #   This checksum algorithm must be the same for all parts and it match
+      #   the checksum value supplied in the `CreateMultipartUpload` request.
+      #
+      #
+      #
+      #   [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html
       # @return [void]
       def batch_delete!(options = {})
         batch_enum.each do |batch|
@@ -562,7 +613,9 @@ module Aws::S3
               version_id: item.id
             }
           end
-          batch[0].client.delete_objects(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.delete_objects(params)
+          end
         end
         nil
       end

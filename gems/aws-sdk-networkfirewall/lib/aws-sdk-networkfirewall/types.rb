@@ -13,19 +13,6 @@ module Aws::NetworkFirewall
     # A custom action to use in stateless rule actions settings. This is
     # used in CustomAction.
     #
-    # @note When making an API call, you may pass ActionDefinition
-    #   data as a hash:
-    #
-    #       {
-    #         publish_metric_action: {
-    #           dimensions: [ # required
-    #             {
-    #               value: "DimensionValue", # required
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] publish_metric_action
     #   Stateless inspection criteria that publishes the specified metrics
     #   to Amazon CloudWatch for the matching packet. This setting defines a
@@ -49,17 +36,10 @@ module Aws::NetworkFirewall
     # A single IP address specification. This is used in the MatchAttributes
     # source and destination specifications.
     #
-    # @note When making an API call, you may pass Address
-    #   data as a hash:
-    #
-    #       {
-    #         address_definition: "AddressDefinition", # required
-    #       }
-    #
     # @!attribute [rw] address_definition
     #   Specify an IP address or a block of IP addresses in Classless
     #   Inter-Domain Routing (CIDR) notation. Network Firewall supports all
-    #   address ranges for IPv4.
+    #   address ranges for IPv4 and IPv6.
     #
     #   Examples:
     #
@@ -68,6 +48,15 @@ module Aws::NetworkFirewall
     #
     #   * To configure Network Firewall to inspect for IP addresses from
     #     192.0.2.0 to 192.0.2.255, specify `192.0.2.0/24`.
+    #
+    #   * To configure Network Firewall to inspect for the IP address
+    #     1111:0000:0000:0000:0000:0000:0000:0111, specify
+    #     `1111:0000:0000:0000:0000:0000:0000:0111/128`.
+    #
+    #   * To configure Network Firewall to inspect for IP addresses from
+    #     1111:0000:0000:0000:0000:0000:0000:0000 to
+    #     1111:0000:0000:0000:ffff:ffff:ffff:ffff, specify
+    #     `1111:0000:0000:0000:0000:0000:0000:0000/64`.
     #
     #   For more information about CIDR notation, see the Wikipedia entry
     #   [Classless Inter-Domain Routing][1].
@@ -85,16 +74,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateFirewallPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         update_token: "UpdateToken",
-    #         firewall_arn: "ResourceArn",
-    #         firewall_name: "ResourceName",
-    #         firewall_policy_arn: "ResourceArn", # required
-    #       }
-    #
     # @!attribute [rw] update_token
     #   An optional token that you can use for optimistic locking. Network
     #   Firewall returns a token to your requests that access the firewall.
@@ -187,20 +166,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateSubnetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         update_token: "UpdateToken",
-    #         firewall_arn: "ResourceArn",
-    #         firewall_name: "ResourceName",
-    #         subnet_mappings: [ # required
-    #           {
-    #             subnet_id: "CollectionMember_String", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] update_token
     #   An optional token that you can use for optimistic locking. Network
     #   Firewall returns a token to your requests that access the firewall.
@@ -294,8 +259,8 @@ module Aws::NetworkFirewall
     end
 
     # The configuration and status for a single subnet that you've
-    # specified for use by the AWS Network Firewall firewall. This is part
-    # of the FirewallStatus.
+    # specified for use by the Network Firewall firewall. This is part of
+    # the FirewallStatus.
     #
     # @!attribute [rw] subnet_id
     #   The unique identifier of the subnet that you've specified to be
@@ -316,7 +281,23 @@ module Aws::NetworkFirewall
     #   settings. When this value is `READY`, the endpoint is available and
     #   configured properly to handle network traffic. When the endpoint
     #   isn't available for traffic, this value will reflect its state, for
-    #   example `CREATING`, `DELETING`, or `FAILED`.
+    #   example `CREATING` or `DELETING`.
+    #   @return [String]
+    #
+    # @!attribute [rw] status_message
+    #   If Network Firewall fails to create or delete the firewall endpoint
+    #   in the subnet, it populates this with the reason for the error or
+    #   failure and how to resolve it. A `FAILED` status indicates a
+    #   non-recoverable state, and a `ERROR` status indicates an issue that
+    #   you can fix. Depending on the error, it can take as many as 15
+    #   minutes to populate this field. For more information about the
+    #   causes for failiure or errors and solutions available for this
+    #   field, see [Troubleshooting firewall endpoint failures][1] in the
+    #   *Network Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/firewall-troubleshooting-endpoint-failures.html
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/Attachment AWS API Documentation
@@ -324,55 +305,56 @@ module Aws::NetworkFirewall
     class Attachment < Struct.new(
       :subnet_id,
       :endpoint_id,
-      :status)
+      :status,
+      :status_message)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateFirewallPolicyRequest
-    #   data as a hash:
+    # Summarizes the CIDR blocks used by the IP set references in a
+    # firewall. Network Firewall calculates the number of CIDRs by taking an
+    # aggregated count of all CIDRs used by the IP sets you are referencing.
     #
-    #       {
-    #         firewall_policy_name: "ResourceName", # required
-    #         firewall_policy: { # required
-    #           stateless_rule_group_references: [
-    #             {
-    #               resource_arn: "ResourceArn", # required
-    #               priority: 1, # required
-    #             },
-    #           ],
-    #           stateless_default_actions: ["CollectionMember_String"], # required
-    #           stateless_fragment_default_actions: ["CollectionMember_String"], # required
-    #           stateless_custom_actions: [
-    #             {
-    #               action_name: "ActionName", # required
-    #               action_definition: { # required
-    #                 publish_metric_action: {
-    #                   dimensions: [ # required
-    #                     {
-    #                       value: "DimensionValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #           stateful_rule_group_references: [
-    #             {
-    #               resource_arn: "ResourceArn", # required
-    #             },
-    #           ],
-    #         },
-    #         description: "Description",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         dry_run: false,
-    #       }
+    # @!attribute [rw] available_cidr_count
+    #   The number of CIDR blocks available for use by the IP set references
+    #   in a firewall.
+    #   @return [Integer]
     #
+    # @!attribute [rw] utilized_cidr_count
+    #   The number of CIDR blocks used by the IP set references in a
+    #   firewall.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] ip_set_references
+    #   The list of the IP set references used by a firewall.
+    #   @return [Hash<String,Types::IPSetMetadata>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CIDRSummary AWS API Documentation
+    #
+    class CIDRSummary < Struct.new(
+      :available_cidr_count,
+      :utilized_cidr_count,
+      :ip_set_references)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The capacity usage summary of the resources used by the ReferenceSets
+    # in a firewall.
+    #
+    # @!attribute [rw] cid_rs
+    #   Describes the capacity usage of the CIDR blocks used by the IP set
+    #   references in a firewall.
+    #   @return [Types::CIDRSummary]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CapacityUsageSummary AWS API Documentation
+    #
+    class CapacityUsageSummary < Struct.new(
+      :cid_rs)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] firewall_policy_name
     #   The descriptive name of the firewall policy. You can't change the
     #   name of a firewall policy after you create it.
@@ -406,6 +388,11 @@ module Aws::NetworkFirewall
     #   your resources.
     #   @return [Boolean]
     #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains settings for encryption of your
+    #   firewall policy resources.
+    #   @return [Types::EncryptionConfiguration]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CreateFirewallPolicyRequest AWS API Documentation
     #
     class CreateFirewallPolicyRequest < Struct.new(
@@ -413,7 +400,8 @@ module Aws::NetworkFirewall
       :firewall_policy,
       :description,
       :tags,
-      :dry_run)
+      :dry_run,
+      :encryption_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -447,30 +435,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateFirewallRequest
-    #   data as a hash:
-    #
-    #       {
-    #         firewall_name: "ResourceName", # required
-    #         firewall_policy_arn: "ResourceArn", # required
-    #         vpc_id: "VpcId", # required
-    #         subnet_mappings: [ # required
-    #           {
-    #             subnet_id: "CollectionMember_String", # required
-    #           },
-    #         ],
-    #         delete_protection: false,
-    #         subnet_change_protection: false,
-    #         firewall_policy_change_protection: false,
-    #         description: "Description",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] firewall_name
     #   The descriptive name of the firewall. You can't change the name of
     #   a firewall after you create it.
@@ -526,6 +490,11 @@ module Aws::NetworkFirewall
     #   The key:value pairs to associate with the resource.
     #   @return [Array<Types::Tag>]
     #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains settings for encryption of your
+    #   firewall resources.
+    #   @return [Types::EncryptionConfiguration]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CreateFirewallRequest AWS API Documentation
     #
     class CreateFirewallRequest < Struct.new(
@@ -537,7 +506,8 @@ module Aws::NetworkFirewall
       :subnet_change_protection,
       :firewall_policy_change_protection,
       :description,
-      :tags)
+      :tags,
+      :encryption_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -563,120 +533,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateRuleGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         rule_group_name: "ResourceName", # required
-    #         rule_group: {
-    #           rule_variables: {
-    #             ip_sets: {
-    #               "RuleVariableName" => {
-    #                 definition: ["VariableDefinition"], # required
-    #               },
-    #             },
-    #             port_sets: {
-    #               "RuleVariableName" => {
-    #                 definition: ["VariableDefinition"],
-    #               },
-    #             },
-    #           },
-    #           rules_source: { # required
-    #             rules_string: "RulesString",
-    #             rules_source_list: {
-    #               targets: ["CollectionMember_String"], # required
-    #               target_types: ["TLS_SNI"], # required, accepts TLS_SNI, HTTP_HOST
-    #               generated_rules_type: "ALLOWLIST", # required, accepts ALLOWLIST, DENYLIST
-    #             },
-    #             stateful_rules: [
-    #               {
-    #                 action: "PASS", # required, accepts PASS, DROP, ALERT
-    #                 header: { # required
-    #                   protocol: "IP", # required, accepts IP, TCP, UDP, ICMP, HTTP, FTP, TLS, SMB, DNS, DCERPC, SSH, SMTP, IMAP, MSN, KRB5, IKEV2, TFTP, NTP, DHCP
-    #                   source: "Source", # required
-    #                   source_port: "Port", # required
-    #                   direction: "FORWARD", # required, accepts FORWARD, ANY
-    #                   destination: "Destination", # required
-    #                   destination_port: "Port", # required
-    #                 },
-    #                 rule_options: [ # required
-    #                   {
-    #                     keyword: "Keyword", # required
-    #                     settings: ["Setting"],
-    #                   },
-    #                 ],
-    #               },
-    #             ],
-    #             stateless_rules_and_custom_actions: {
-    #               stateless_rules: [ # required
-    #                 {
-    #                   rule_definition: { # required
-    #                     match_attributes: { # required
-    #                       sources: [
-    #                         {
-    #                           address_definition: "AddressDefinition", # required
-    #                         },
-    #                       ],
-    #                       destinations: [
-    #                         {
-    #                           address_definition: "AddressDefinition", # required
-    #                         },
-    #                       ],
-    #                       source_ports: [
-    #                         {
-    #                           from_port: 1, # required
-    #                           to_port: 1, # required
-    #                         },
-    #                       ],
-    #                       destination_ports: [
-    #                         {
-    #                           from_port: 1, # required
-    #                           to_port: 1, # required
-    #                         },
-    #                       ],
-    #                       protocols: [1],
-    #                       tcp_flags: [
-    #                         {
-    #                           flags: ["FIN"], # required, accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                           masks: ["FIN"], # accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                         },
-    #                       ],
-    #                     },
-    #                     actions: ["CollectionMember_String"], # required
-    #                   },
-    #                   priority: 1, # required
-    #                 },
-    #               ],
-    #               custom_actions: [
-    #                 {
-    #                   action_name: "ActionName", # required
-    #                   action_definition: { # required
-    #                     publish_metric_action: {
-    #                       dimensions: [ # required
-    #                         {
-    #                           value: "DimensionValue", # required
-    #                         },
-    #                       ],
-    #                     },
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         },
-    #         rules: "RulesString",
-    #         type: "STATELESS", # required, accepts STATELESS, STATEFUL
-    #         description: "Description",
-    #         capacity: 1, # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         dry_run: false,
-    #       }
-    #
     # @!attribute [rw] rule_group_name
     #   The descriptive name of the rule group. You can't change the name
     #   of a rule group after you create it.
@@ -788,6 +644,17 @@ module Aws::NetworkFirewall
     #   your resources.
     #   @return [Boolean]
     #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains settings for encryption of your rule
+    #   group resources.
+    #   @return [Types::EncryptionConfiguration]
+    #
+    # @!attribute [rw] source_metadata
+    #   A complex type that contains metadata about the rule group that your
+    #   own rule group is copied from. You can use the metadata to keep
+    #   track of updates made to the originating rule group.
+    #   @return [Types::SourceMetadata]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CreateRuleGroupRequest AWS API Documentation
     #
     class CreateRuleGroupRequest < Struct.new(
@@ -798,7 +665,9 @@ module Aws::NetworkFirewall
       :description,
       :capacity,
       :tags,
-      :dry_run)
+      :dry_run,
+      :encryption_configuration,
+      :source_metadata)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -832,6 +701,105 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
+    # @!attribute [rw] tls_inspection_configuration_name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create
+    #   it.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration
+    #   The object that defines a TLS inspection configuration. This, along
+    #   with TLSInspectionConfigurationResponse, define the TLS inspection
+    #   configuration. You can retrieve all objects for a TLS inspection
+    #   configuration by calling DescribeTLSInspectionConfiguration.
+    #
+    #   Network Firewall uses a TLS inspection configuration to decrypt
+    #   traffic. Network Firewall re-encrypts the traffic before sending it
+    #   to its destination.
+    #
+    #   To use a TLS inspection configuration, you add it to a Network
+    #   Firewall firewall policy, then you apply the firewall policy to a
+    #   firewall. Network Firewall acts as a proxy service to decrypt and
+    #   inspect inbound traffic. You can reference a TLS inspection
+    #   configuration from more than one firewall policy, and you can use a
+    #   firewall policy in more than one firewall. For more information
+    #   about using TLS inspection configurations, see [Decrypting SSL/TLS
+    #   traffic with TLS inspection configurations][1] in the *Network
+    #   Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection.html
+    #   @return [Types::TLSInspectionConfiguration]
+    #
+    # @!attribute [rw] description
+    #   A description of the TLS inspection configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The key:value pairs to associate with the resource.
+    #   @return [Array<Types::Tag>]
+    #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains optional Amazon Web Services Key
+    #   Management Service (KMS) encryption settings for your Network
+    #   Firewall resources. Your data is encrypted by default with an Amazon
+    #   Web Services owned key that Amazon Web Services owns and manages for
+    #   you. You can use either the Amazon Web Services owned key, or
+    #   provide your own customer managed key. To learn more about KMS
+    #   encryption of your Network Firewall resources, see [Encryption at
+    #   rest with Amazon Web Services Key Managment Service][1] in the
+    #   *Network Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/kms/latest/developerguide/kms-encryption-at-rest.html
+    #   @return [Types::EncryptionConfiguration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CreateTLSInspectionConfigurationRequest AWS API Documentation
+    #
+    class CreateTLSInspectionConfigurationRequest < Struct.new(
+      :tls_inspection_configuration_name,
+      :tls_inspection_configuration,
+      :description,
+      :tags,
+      :encryption_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] update_token
+    #   A token used for optimistic locking. Network Firewall returns a
+    #   token to your requests that access the TLS inspection configuration.
+    #   The token marks the state of the TLS inspection configuration
+    #   resource at the time of the request.
+    #
+    #   To make changes to the TLS inspection configuration, you provide the
+    #   token in your request. Network Firewall uses the token to ensure
+    #   that the TLS inspection configuration hasn't changed since you last
+    #   retrieved it. If it has changed, the operation fails with an
+    #   `InvalidTokenException`. If this happens, retrieve the TLS
+    #   inspection configuration again to get a current copy of it with a
+    #   current token. Reapply your changes as needed, then try the
+    #   operation again using the new token.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration_response
+    #   The high-level properties of a TLS inspection configuration. This,
+    #   along with the TLSInspectionConfiguration, define the TLS inspection
+    #   configuration. You can retrieve all objects for a TLS inspection
+    #   configuration by calling DescribeTLSInspectionConfiguration.
+    #   @return [Types::TLSInspectionConfigurationResponse]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CreateTLSInspectionConfigurationResponse AWS API Documentation
+    #
+    class CreateTLSInspectionConfigurationResponse < Struct.new(
+      :update_token,
+      :tls_inspection_configuration_response)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # An optional, non-standard action to use for stateless packet handling.
     # You can define this in addition to the standard action that you must
     # specify.
@@ -853,22 +821,6 @@ module Aws::NetworkFirewall
     #   actions settings to specify what to do with packets that don't
     #   match any of the policy's stateless rules.
     #
-    # @note When making an API call, you may pass CustomAction
-    #   data as a hash:
-    #
-    #       {
-    #         action_name: "ActionName", # required
-    #         action_definition: { # required
-    #           publish_metric_action: {
-    #             dimensions: [ # required
-    #               {
-    #                 value: "DimensionValue", # required
-    #               },
-    #             ],
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] action_name
     #   The descriptive name of the custom action. You can't change the
     #   name of a custom action after you create it.
@@ -887,14 +839,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFirewallPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         firewall_policy_name: "ResourceName",
-    #         firewall_policy_arn: "ResourceArn",
-    #       }
-    #
     # @!attribute [rw] firewall_policy_name
     #   The descriptive name of the firewall policy. You can't change the
     #   name of a firewall policy after you create it.
@@ -930,14 +874,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFirewallRequest
-    #   data as a hash:
-    #
-    #       {
-    #         firewall_name: "ResourceName",
-    #         firewall_arn: "ResourceArn",
-    #       }
-    #
     # @!attribute [rw] firewall_name
     #   The descriptive name of the firewall. You can't change the name of
     #   a firewall after you create it.
@@ -961,10 +897,10 @@ module Aws::NetworkFirewall
     end
 
     # @!attribute [rw] firewall
-    #   The firewall defines the configuration settings for an AWS Network
+    #   The firewall defines the configuration settings for an Network
     #   Firewall firewall. These settings include the firewall policy, the
     #   subnets in your VPC to use for the firewall endpoints, and any tags
-    #   that are attached to the firewall AWS resource.
+    #   that are attached to the firewall Amazon Web Services resource.
     #
     #   The status of the firewall, for example whether it's ready to
     #   filter network traffic, is provided in the corresponding
@@ -987,13 +923,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteResourcePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the rule group or firewall policy
     #   whose resource policy you want to delete.
@@ -1011,15 +940,6 @@ module Aws::NetworkFirewall
     #
     class DeleteResourcePolicyResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteRuleGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         rule_group_name: "ResourceName",
-    #         rule_group_arn: "ResourceArn",
-    #         type: "STATELESS", # accepts STATELESS, STATEFUL
-    #       }
-    #
     # @!attribute [rw] rule_group_name
     #   The descriptive name of the rule group. You can't change the name
     #   of a rule group after you create it.
@@ -1068,14 +988,44 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeFirewallPolicyRequest
-    #   data as a hash:
+    # @!attribute [rw] tls_inspection_configuration_arn
+    #   The Amazon Resource Name (ARN) of the TLS inspection configuration.
     #
-    #       {
-    #         firewall_policy_name: "ResourceName",
-    #         firewall_policy_arn: "ResourceArn",
-    #       }
+    #   You must specify the ARN or the name, and you can specify both.
+    #   @return [String]
     #
+    # @!attribute [rw] tls_inspection_configuration_name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create
+    #   it.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DeleteTLSInspectionConfigurationRequest AWS API Documentation
+    #
+    class DeleteTLSInspectionConfigurationRequest < Struct.new(
+      :tls_inspection_configuration_arn,
+      :tls_inspection_configuration_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] tls_inspection_configuration_response
+    #   The high-level properties of a TLS inspection configuration. This,
+    #   along with the TLSInspectionConfiguration, define the TLS inspection
+    #   configuration. You can retrieve all objects for a TLS inspection
+    #   configuration by calling DescribeTLSInspectionConfiguration.
+    #   @return [Types::TLSInspectionConfigurationResponse]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DeleteTLSInspectionConfigurationResponse AWS API Documentation
+    #
+    class DeleteTLSInspectionConfigurationResponse < Struct.new(
+      :tls_inspection_configuration_response)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] firewall_policy_name
     #   The descriptive name of the firewall policy. You can't change the
     #   name of a firewall policy after you create it.
@@ -1132,14 +1082,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeFirewallRequest
-    #   data as a hash:
-    #
-    #       {
-    #         firewall_name: "ResourceName",
-    #         firewall_arn: "ResourceArn",
-    #       }
-    #
     # @!attribute [rw] firewall_name
     #   The descriptive name of the firewall. You can't change the name of
     #   a firewall after you create it.
@@ -1204,14 +1146,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeLoggingConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         firewall_arn: "ResourceArn",
-    #         firewall_name: "ResourceName",
-    #       }
-    #
     # @!attribute [rw] firewall_arn
     #   The Amazon Resource Name (ARN) of the firewall.
     #
@@ -1239,7 +1173,7 @@ module Aws::NetworkFirewall
     #   @return [String]
     #
     # @!attribute [rw] logging_configuration
-    #   Defines how AWS Network Firewall performs logging for a Firewall.
+    #   Defines how Network Firewall performs logging for a Firewall.
     #   @return [Types::LoggingConfiguration]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeLoggingConfigurationResponse AWS API Documentation
@@ -1251,13 +1185,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeResourcePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the rule group or firewall policy
     #   whose resource policy you want to retrieve.
@@ -1272,7 +1199,7 @@ module Aws::NetworkFirewall
     end
 
     # @!attribute [rw] policy
-    #   The AWS Identity and Access Management policy for the resource.
+    #   The IAM policy for the resource.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeResourcePolicyResponse AWS API Documentation
@@ -1283,15 +1210,105 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRuleGroupRequest
-    #   data as a hash:
+    # @!attribute [rw] rule_group_name
+    #   The descriptive name of the rule group. You can't change the name
+    #   of a rule group after you create it.
     #
-    #       {
-    #         rule_group_name: "ResourceName",
-    #         rule_group_arn: "ResourceArn",
-    #         type: "STATELESS", # accepts STATELESS, STATEFUL
-    #       }
+    #   You must specify the ARN or the name, and you can specify both.
+    #   @return [String]
     #
+    # @!attribute [rw] rule_group_arn
+    #   The descriptive name of the rule group. You can't change the name
+    #   of a rule group after you create it.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   Indicates whether the rule group is stateless or stateful. If the
+    #   rule group is stateless, it contains stateless rules. If it is
+    #   stateful, it contains stateful rules.
+    #
+    #   <note markdown="1"> This setting is required for requests that do not include the
+    #   `RuleGroupARN`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeRuleGroupMetadataRequest AWS API Documentation
+    #
+    class DescribeRuleGroupMetadataRequest < Struct.new(
+      :rule_group_name,
+      :rule_group_arn,
+      :type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rule_group_arn
+    #   The descriptive name of the rule group. You can't change the name
+    #   of a rule group after you create it.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #   @return [String]
+    #
+    # @!attribute [rw] rule_group_name
+    #   The descriptive name of the rule group. You can't change the name
+    #   of a rule group after you create it.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Returns the metadata objects for the specified rule group.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   Indicates whether the rule group is stateless or stateful. If the
+    #   rule group is stateless, it contains stateless rules. If it is
+    #   stateful, it contains stateful rules.
+    #
+    #   <note markdown="1"> This setting is required for requests that do not include the
+    #   `RuleGroupARN`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] capacity
+    #   The maximum operating resources that this rule group can use. Rule
+    #   group capacity is fixed at creation. When you update a rule group,
+    #   you are limited to this capacity. When you reference a rule group
+    #   from a firewall policy, Network Firewall reserves this capacity for
+    #   the rule group.
+    #
+    #   You can retrieve the capacity that would be required for a rule
+    #   group before you create the rule group by calling CreateRuleGroup
+    #   with `DryRun` set to `TRUE`.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] stateful_rule_options
+    #   Additional options governing how Network Firewall handles the rule
+    #   group. You can only use these for stateful rule groups.
+    #   @return [Types::StatefulRuleOptions]
+    #
+    # @!attribute [rw] last_modified_time
+    #   The last time that the rule group was changed.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeRuleGroupMetadataResponse AWS API Documentation
+    #
+    class DescribeRuleGroupMetadataResponse < Struct.new(
+      :rule_group_arn,
+      :rule_group_name,
+      :description,
+      :type,
+      :capacity,
+      :stateful_rule_options,
+      :last_modified_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] rule_group_name
     #   The descriptive name of the rule group. You can't change the name
     #   of a rule group after you create it.
@@ -1345,10 +1362,10 @@ module Aws::NetworkFirewall
     #   RuleGroupResponse, define the rule group. You can retrieve all
     #   objects for a rule group by calling DescribeRuleGroup.
     #
-    #   AWS Network Firewall uses a rule group to inspect and control
-    #   network traffic. You define stateless rule groups to inspect
-    #   individual packets and you define stateful rule groups to inspect
-    #   packets in the context of their traffic flow.
+    #   Network Firewall uses a rule group to inspect and control network
+    #   traffic. You define stateless rule groups to inspect individual
+    #   packets and you define stateful rule groups to inspect packets in
+    #   the context of their traffic flow.
     #
     #   To use a rule group, you include it by reference in an Network
     #   Firewall firewall policy, then you use the policy in a firewall. You
@@ -1372,12 +1389,93 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
+    # @!attribute [rw] tls_inspection_configuration_arn
+    #   The Amazon Resource Name (ARN) of the TLS inspection configuration.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration_name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create
+    #   it.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeTLSInspectionConfigurationRequest AWS API Documentation
+    #
+    class DescribeTLSInspectionConfigurationRequest < Struct.new(
+      :tls_inspection_configuration_arn,
+      :tls_inspection_configuration_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] update_token
+    #   A token used for optimistic locking. Network Firewall returns a
+    #   token to your requests that access the TLS inspection configuration.
+    #   The token marks the state of the TLS inspection configuration
+    #   resource at the time of the request.
+    #
+    #   To make changes to the TLS inspection configuration, you provide the
+    #   token in your request. Network Firewall uses the token to ensure
+    #   that the TLS inspection configuration hasn't changed since you last
+    #   retrieved it. If it has changed, the operation fails with an
+    #   `InvalidTokenException`. If this happens, retrieve the TLS
+    #   inspection configuration again to get a current copy of it with a
+    #   current token. Reapply your changes as needed, then try the
+    #   operation again using the new token.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration
+    #   The object that defines a TLS inspection configuration. This, along
+    #   with TLSInspectionConfigurationResponse, define the TLS inspection
+    #   configuration. You can retrieve all objects for a TLS inspection
+    #   configuration by calling DescribeTLSInspectionConfiguration.
+    #
+    #   Network Firewall uses a TLS inspection configuration to decrypt
+    #   traffic. Network Firewall re-encrypts the traffic before sending it
+    #   to its destination.
+    #
+    #   To use a TLS inspection configuration, you add it to a Network
+    #   Firewall firewall policy, then you apply the firewall policy to a
+    #   firewall. Network Firewall acts as a proxy service to decrypt and
+    #   inspect inbound traffic. You can reference a TLS inspection
+    #   configuration from more than one firewall policy, and you can use a
+    #   firewall policy in more than one firewall. For more information
+    #   about using TLS inspection configurations, see [Decrypting SSL/TLS
+    #   traffic with TLS inspection configurations][1] in the *Network
+    #   Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection.html
+    #   @return [Types::TLSInspectionConfiguration]
+    #
+    # @!attribute [rw] tls_inspection_configuration_response
+    #   The high-level properties of a TLS inspection configuration. This,
+    #   along with the TLSInspectionConfiguration, define the TLS inspection
+    #   configuration. You can retrieve all objects for a TLS inspection
+    #   configuration by calling DescribeTLSInspectionConfiguration.
+    #   @return [Types::TLSInspectionConfigurationResponse]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeTLSInspectionConfigurationResponse AWS API Documentation
+    #
+    class DescribeTLSInspectionConfigurationResponse < Struct.new(
+      :update_token,
+      :tls_inspection_configuration,
+      :tls_inspection_configuration_response)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The value to use in an Amazon CloudWatch custom metric dimension. This
     # is used in the `PublishMetrics` CustomAction. A CloudWatch custom
     # metric dimension is a name/value pair that's part of the identity of
     # a metric.
     #
-    # AWS Network Firewall sets the dimension name to `CustomAction` and you
+    # Network Firewall sets the dimension name to `CustomAction` and you
     # provide the dimension value.
     #
     # For more information about CloudWatch custom metric dimensions, see
@@ -1388,13 +1486,6 @@ module Aws::NetworkFirewall
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html#usingDimensions
     # [2]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html
-    #
-    # @note When making an API call, you may pass Dimension
-    #   data as a hash:
-    #
-    #       {
-    #         value: "DimensionValue", # required
-    #       }
     #
     # @!attribute [rw] value
     #   The value to use in the custom metric dimension.
@@ -1408,16 +1499,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateSubnetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         update_token: "UpdateToken",
-    #         firewall_arn: "ResourceArn",
-    #         firewall_name: "ResourceName",
-    #         subnet_ids: ["AzSubnet"], # required
-    #       }
-    #
     # @!attribute [rw] update_token
     #   An optional token that you can use for optimistic locking. Network
     #   Firewall returns a token to your requests that access the firewall.
@@ -1511,10 +1592,51 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # The firewall defines the configuration settings for an AWS Network
+    # A complex type that contains optional Amazon Web Services Key
+    # Management Service (KMS) encryption settings for your Network Firewall
+    # resources. Your data is encrypted by default with an Amazon Web
+    # Services owned key that Amazon Web Services owns and manages for you.
+    # You can use either the Amazon Web Services owned key, or provide your
+    # own customer managed key. To learn more about KMS encryption of your
+    # Network Firewall resources, see [Encryption at rest with Amazon Web
+    # Services Key Managment Service][1] in the *Network Firewall Developer
+    # Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/kms/latest/developerguide/kms-encryption-at-rest.html
+    #
+    # @!attribute [rw] key_id
+    #   The ID of the Amazon Web Services Key Management Service (KMS)
+    #   customer managed key. You can use any of the key identifiers that
+    #   KMS supports, unless you're using a key that's managed by another
+    #   account. If you're using a key managed by another account, then
+    #   specify the key ARN. For more information, see [Key ID][1] in the
+    #   *Amazon Web Services KMS Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   The type of Amazon Web Services KMS key to use for encryption of
+    #   your Network Firewall resources.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/EncryptionConfiguration AWS API Documentation
+    #
+    class EncryptionConfiguration < Struct.new(
+      :key_id,
+      :type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The firewall defines the configuration settings for an Network
     # Firewall firewall. These settings include the firewall policy, the
     # subnets in your VPC to use for the firewall endpoints, and any tags
-    # that are attached to the firewall AWS resource.
+    # that are attached to the firewall Amazon Web Services resource.
     #
     # The status of the firewall, for example whether it's ready to filter
     # network traffic, is provided in the corresponding FirewallStatus. You
@@ -1581,6 +1703,11 @@ module Aws::NetworkFirewall
     # @!attribute [rw] tags
     #   @return [Array<Types::Tag>]
     #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains the Amazon Web Services KMS encryption
+    #   configuration settings for your firewall.
+    #   @return [Types::EncryptionConfiguration]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/Firewall AWS API Documentation
     #
     class Firewall < Struct.new(
@@ -1594,7 +1721,8 @@ module Aws::NetworkFirewall
       :firewall_policy_change_protection,
       :description,
       :firewall_id,
-      :tags)
+      :tags,
+      :encryption_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1628,39 +1756,6 @@ module Aws::NetworkFirewall
     # This, along with FirewallPolicyResponse, define the policy. You can
     # retrieve all objects for a firewall policy by calling
     # DescribeFirewallPolicy.
-    #
-    # @note When making an API call, you may pass FirewallPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         stateless_rule_group_references: [
-    #           {
-    #             resource_arn: "ResourceArn", # required
-    #             priority: 1, # required
-    #           },
-    #         ],
-    #         stateless_default_actions: ["CollectionMember_String"], # required
-    #         stateless_fragment_default_actions: ["CollectionMember_String"], # required
-    #         stateless_custom_actions: [
-    #           {
-    #             action_name: "ActionName", # required
-    #             action_definition: { # required
-    #               publish_metric_action: {
-    #                 dimensions: [ # required
-    #                   {
-    #                     value: "DimensionValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         stateful_rule_group_references: [
-    #           {
-    #             resource_arn: "ResourceArn", # required
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] stateless_rule_group_references
     #   References to the stateless rule groups that are used in the policy.
@@ -1709,9 +1804,48 @@ module Aws::NetworkFirewall
     #   @return [Array<Types::CustomAction>]
     #
     # @!attribute [rw] stateful_rule_group_references
-    #   References to the stateless rule groups that are used in the policy.
+    #   References to the stateful rule groups that are used in the policy.
     #   These define the inspection criteria in stateful rules.
     #   @return [Array<Types::StatefulRuleGroupReference>]
+    #
+    # @!attribute [rw] stateful_default_actions
+    #   The default actions to take on a packet that doesn't match any
+    #   stateful rules. The stateful default action is optional, and is only
+    #   valid when using the strict rule order.
+    #
+    #   Valid values of the stateful default action:
+    #
+    #   * aws:drop\_strict
+    #
+    #   * aws:drop\_established
+    #
+    #   * aws:alert\_strict
+    #
+    #   * aws:alert\_established
+    #
+    #   For more information, see [Strict evaluation order][1] in the
+    #   *Network Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/suricata-rule-evaluation-order.html#suricata-strict-rule-evaluation-order.html
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] stateful_engine_options
+    #   Additional options governing how Network Firewall handles stateful
+    #   rules. The stateful rule groups that you use in your policy must
+    #   have stateful rule options settings that are compatible with these
+    #   settings.
+    #   @return [Types::StatefulEngineOptions]
+    #
+    # @!attribute [rw] tls_inspection_configuration_arn
+    #   The Amazon Resource Name (ARN) of the TLS inspection configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] policy_variables
+    #   Contains variables that you can use to override default Suricata
+    #   settings in your firewall policy.
+    #   @return [Types::PolicyVariables]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/FirewallPolicy AWS API Documentation
     #
@@ -1720,7 +1854,11 @@ module Aws::NetworkFirewall
       :stateless_default_actions,
       :stateless_fragment_default_actions,
       :stateless_custom_actions,
-      :stateful_rule_group_references)
+      :stateful_rule_group_references,
+      :stateful_default_actions,
+      :stateful_engine_options,
+      :tls_inspection_configuration_arn,
+      :policy_variables)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1785,6 +1923,30 @@ module Aws::NetworkFirewall
     #   The key:value pairs to associate with the resource.
     #   @return [Array<Types::Tag>]
     #
+    # @!attribute [rw] consumed_stateless_rule_capacity
+    #   The number of capacity units currently consumed by the policy's
+    #   stateless rules.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] consumed_stateful_rule_capacity
+    #   The number of capacity units currently consumed by the policy's
+    #   stateful rules.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] number_of_associations
+    #   The number of firewalls that are associated with this firewall
+    #   policy.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains the Amazon Web Services KMS encryption
+    #   configuration settings for your firewall policy.
+    #   @return [Types::EncryptionConfiguration]
+    #
+    # @!attribute [rw] last_modified_time
+    #   The last time that the firewall policy was changed.
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/FirewallPolicyResponse AWS API Documentation
     #
     class FirewallPolicyResponse < Struct.new(
@@ -1793,7 +1955,12 @@ module Aws::NetworkFirewall
       :firewall_policy_id,
       :description,
       :firewall_policy_status,
-      :tags)
+      :tags,
+      :consumed_stateless_rule_capacity,
+      :consumed_stateful_rule_capacity,
+      :number_of_associations,
+      :encryption_configuration,
+      :last_modified_time)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1836,35 +2003,32 @@ module Aws::NetworkFirewall
     #   and configuration object.
     #   @return [Hash<String,Types::SyncState>]
     #
+    # @!attribute [rw] capacity_usage_summary
+    #   Describes the capacity usage of the resources contained in a
+    #   firewall's reference sets. Network Firewall calclulates the
+    #   capacity usage by taking an aggregated count of all of the resources
+    #   used by all of the reference sets in a firewall.
+    #   @return [Types::CapacityUsageSummary]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/FirewallStatus AWS API Documentation
     #
     class FirewallStatus < Struct.new(
       :status,
       :configuration_sync_state_summary,
-      :sync_states)
+      :sync_states,
+      :capacity_usage_summary)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # The 5-tuple criteria for AWS Network Firewall to use to inspect packet
+    # The basic rule criteria for Network Firewall to use to inspect packet
     # headers in stateful traffic flow inspection. Traffic flows that match
     # the criteria are a match for the corresponding StatefulRule.
     #
-    # @note When making an API call, you may pass Header
-    #   data as a hash:
-    #
-    #       {
-    #         protocol: "IP", # required, accepts IP, TCP, UDP, ICMP, HTTP, FTP, TLS, SMB, DNS, DCERPC, SSH, SMTP, IMAP, MSN, KRB5, IKEV2, TFTP, NTP, DHCP
-    #         source: "Source", # required
-    #         source_port: "Port", # required
-    #         direction: "FORWARD", # required, accepts FORWARD, ANY
-    #         destination: "Destination", # required
-    #         destination_port: "Port", # required
-    #       }
-    #
     # @!attribute [rw] protocol
     #   The protocol to inspect for. To specify all, you can use `IP`,
-    #   because all traffic on AWS and on the internet is IP.
+    #   because all traffic on Amazon Web Services and on the internet is
+    #   IP.
     #   @return [String]
     #
     # @!attribute [rw] source
@@ -1873,7 +2037,7 @@ module Aws::NetworkFirewall
     #
     #   Specify an IP address or a block of IP addresses in Classless
     #   Inter-Domain Routing (CIDR) notation. Network Firewall supports all
-    #   address ranges for IPv4.
+    #   address ranges for IPv4 and IPv6.
     #
     #   Examples:
     #
@@ -1882,6 +2046,15 @@ module Aws::NetworkFirewall
     #
     #   * To configure Network Firewall to inspect for IP addresses from
     #     192.0.2.0 to 192.0.2.255, specify `192.0.2.0/24`.
+    #
+    #   * To configure Network Firewall to inspect for the IP address
+    #     1111:0000:0000:0000:0000:0000:0000:0111, specify
+    #     `1111:0000:0000:0000:0000:0000:0000:0111/128`.
+    #
+    #   * To configure Network Firewall to inspect for IP addresses from
+    #     1111:0000:0000:0000:0000:0000:0000:0000 to
+    #     1111:0000:0000:0000:ffff:ffff:ffff:ffff, specify
+    #     `1111:0000:0000:0000:0000:0000:0000:0000/64`.
     #
     #   For more information about CIDR notation, see the Wikipedia entry
     #   [Classless Inter-Domain Routing][1].
@@ -1894,7 +2067,7 @@ module Aws::NetworkFirewall
     # @!attribute [rw] source_port
     #   The source port to inspect for. You can specify an individual port,
     #   for example `1994` and you can specify a port range, for example
-    #   `1990-1994`. To match with any port, specify `ANY`.
+    #   `1990:1994`. To match with any port, specify `ANY`.
     #   @return [String]
     #
     # @!attribute [rw] direction
@@ -1911,7 +2084,7 @@ module Aws::NetworkFirewall
     #
     #   Specify an IP address or a block of IP addresses in Classless
     #   Inter-Domain Routing (CIDR) notation. Network Firewall supports all
-    #   address ranges for IPv4.
+    #   address ranges for IPv4 and IPv6.
     #
     #   Examples:
     #
@@ -1920,6 +2093,15 @@ module Aws::NetworkFirewall
     #
     #   * To configure Network Firewall to inspect for IP addresses from
     #     192.0.2.0 to 192.0.2.255, specify `192.0.2.0/24`.
+    #
+    #   * To configure Network Firewall to inspect for the IP address
+    #     1111:0000:0000:0000:0000:0000:0000:0111, specify
+    #     `1111:0000:0000:0000:0000:0000:0000:0111/128`.
+    #
+    #   * To configure Network Firewall to inspect for IP addresses from
+    #     1111:0000:0000:0000:0000:0000:0000:0000 to
+    #     1111:0000:0000:0000:ffff:ffff:ffff:ffff, specify
+    #     `1111:0000:0000:0000:0000:0000:0000:0000/64`.
     #
     #   For more information about CIDR notation, see the Wikipedia entry
     #   [Classless Inter-Domain Routing][1].
@@ -1932,7 +2114,7 @@ module Aws::NetworkFirewall
     # @!attribute [rw] destination_port
     #   The destination port to inspect for. You can specify an individual
     #   port, for example `1994` and you can specify a port range, for
-    #   example `1990-1994`. To match with any port, specify `ANY`.
+    #   example `1990:1994`. To match with any port, specify `ANY`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/Header AWS API Documentation
@@ -1951,13 +2133,6 @@ module Aws::NetworkFirewall
     # A list of IP addresses and address ranges, in CIDR notation. This is
     # part of a RuleVariables.
     #
-    # @note When making an API call, you may pass IPSet
-    #   data as a hash:
-    #
-    #       {
-    #         definition: ["VariableDefinition"], # required
-    #       }
-    #
     # @!attribute [rw] definition
     #   The list of IP addresses and address ranges, in CIDR notation.
     #   @return [Array<String>]
@@ -1970,8 +2145,59 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # AWS doesn't currently have enough available capacity to fulfill your
-    # request. Try your request later.
+    # General information about the IP set.
+    #
+    # @!attribute [rw] resolved_cidr_count
+    #   Describes the total number of CIDR blocks currently in use by the IP
+    #   set references in a firewall. To determine how many CIDR blocks are
+    #   available for you to use in a firewall, you can call
+    #   `AvailableCIDRCount`.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/IPSetMetadata AWS API Documentation
+    #
+    class IPSetMetadata < Struct.new(
+      :resolved_cidr_count)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Configures one or more IP set references for a Suricata-compatible
+    # rule group. This is used in CreateRuleGroup or UpdateRuleGroup. An IP
+    # set reference is a rule variable that references resources that you
+    # create and manage in another Amazon Web Services service, such as an
+    # Amazon VPC prefix list. Network Firewall IP set references enable you
+    # to dynamically update the contents of your rules. When you create,
+    # update, or delete the resource you are referencing in your rule,
+    # Network Firewall automatically updates the rule's content with the
+    # changes. For more information about IP set references in Network
+    # Firewall, see [Using IP set references][1] in the *Network Firewall
+    # Developer Guide*.
+    #
+    # Network Firewall currently supports [Amazon VPC prefix lists][2] and
+    # [resource groups][3] in IP set references.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/rule-groups-ip-set-references
+    # [2]: https://docs.aws.amazon.com/vpc/latest/userguide/managed-prefix-lists.html
+    # [3]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/rule-groups-ip-set-references.html#rule-groups-referencing-resource-groups
+    #
+    # @!attribute [rw] reference_arn
+    #   The Amazon Resource Name (ARN) of the resource that you are
+    #   referencing in your rule group.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/IPSetReference AWS API Documentation
+    #
+    class IPSetReference < Struct.new(
+      :reference_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Amazon Web Services doesn't currently have enough available capacity
+    # to fulfill your request. Try your request later.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -2034,6 +2260,8 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
+    # The policy statement failed validation.
+    #
     # @!attribute [rw] message
     #   @return [String]
     #
@@ -2072,14 +2300,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFirewallPoliciesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   When you request a list of objects with a `MaxResults` setting, if
     #   the number of objects that are still available for retrieval exceeds
@@ -2127,15 +2347,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFirewallsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #         vpc_ids: ["VpcId"],
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   When you request a list of objects with a `MaxResults` setting, if
     #   the number of objects that are still available for retrieval exceeds
@@ -2190,14 +2401,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRuleGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   When you request a list of objects with a `MaxResults` setting, if
     #   the number of objects that are still available for retrieval exceeds
@@ -2213,11 +2416,31 @@ module Aws::NetworkFirewall
     #   use in a subsequent call to get the next batch of objects.
     #   @return [Integer]
     #
+    # @!attribute [rw] scope
+    #   The scope of the request. The default setting of `ACCOUNT` or a
+    #   setting of `NULL` returns all of the rule groups in your account. A
+    #   setting of `MANAGED` returns all available managed rule groups.
+    #   @return [String]
+    #
+    # @!attribute [rw] managed_type
+    #   Indicates the general category of the Amazon Web Services managed
+    #   rule group.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   Indicates whether the rule group is stateless or stateful. If the
+    #   rule group is stateless, it contains stateless rules. If it is
+    #   stateful, it contains stateful rules.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/ListRuleGroupsRequest AWS API Documentation
     #
     class ListRuleGroupsRequest < Struct.new(
       :next_token,
-      :max_results)
+      :max_results,
+      :scope,
+      :managed_type,
+      :type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2245,15 +2468,53 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
+    # @!attribute [rw] next_token
+    #   When you request a list of objects with a `MaxResults` setting, if
+    #   the number of objects that are still available for retrieval exceeds
+    #   the maximum you requested, Network Firewall returns a `NextToken`
+    #   value in the response. To retrieve the next batch of objects, use
+    #   the token returned from the prior request in your next request.
+    #   @return [String]
     #
-    #       {
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #         resource_arn: "ResourceArn", # required
-    #       }
+    # @!attribute [rw] max_results
+    #   The maximum number of objects that you want Network Firewall to
+    #   return for this request. If more objects are available, in the
+    #   response, Network Firewall provides a `NextToken` value that you can
+    #   use in a subsequent call to get the next batch of objects.
+    #   @return [Integer]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/ListTLSInspectionConfigurationsRequest AWS API Documentation
+    #
+    class ListTLSInspectionConfigurationsRequest < Struct.new(
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   When you request a list of objects with a `MaxResults` setting, if
+    #   the number of objects that are still available for retrieval exceeds
+    #   the maximum you requested, Network Firewall returns a `NextToken`
+    #   value in the response. To retrieve the next batch of objects, use
+    #   the token returned from the prior request in your next request.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configurations
+    #   The TLS inspection configuration metadata objects that you've
+    #   defined. Depending on your setting for max results and the number of
+    #   TLS inspection configurations, this might not be the full list.
+    #   @return [Array<Types::TLSInspectionConfigurationMetadata>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/ListTLSInspectionConfigurationsResponse AWS API Documentation
+    #
+    class ListTLSInspectionConfigurationsResponse < Struct.new(
+      :next_token,
+      :tls_inspection_configurations)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   When you request a list of objects with a `MaxResults` setting, if
     #   the number of objects that are still available for retrieval exceeds
@@ -2304,27 +2565,16 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # Defines where AWS Network Firewall sends logs for the firewall for one
-    # log type. This is used in LoggingConfiguration. You can send each type
-    # of log to an Amazon S3 bucket, a CloudWatch log group, or a Kinesis
-    # Data Firehose delivery stream.
+    # Defines where Network Firewall sends logs for the firewall for one log
+    # type. This is used in LoggingConfiguration. You can send each type of
+    # log to an Amazon S3 bucket, a CloudWatch log group, or a Kinesis Data
+    # Firehose delivery stream.
     #
     # Network Firewall generates logs for stateful rule groups. You can save
     # alert and flow log types. The stateful rules engine records flow logs
     # for all network traffic that it receives. It records alert logs for
     # traffic that matches stateful rules that have the rule action set to
     # `DROP` or `ALERT`.
-    #
-    # @note When making an API call, you may pass LogDestinationConfig
-    #   data as a hash:
-    #
-    #       {
-    #         log_type: "ALERT", # required, accepts ALERT, FLOW
-    #         log_destination_type: "S3", # required, accepts S3, CloudWatchLogs, KinesisDataFirehose
-    #         log_destination: { # required
-    #           "HashMapKey" => "HashMapValue",
-    #         },
-    #       }
     #
     # @!attribute [rw] log_type
     #   The type of log to send. Alert logs report traffic that matches a
@@ -2345,21 +2595,20 @@ module Aws::NetworkFirewall
     #   * For an Amazon S3 bucket, provide the name of the bucket, with key
     #     `bucketName`, and optionally provide a prefix, with key `prefix`.
     #     The following example specifies an Amazon S3 bucket named
-    #     `DOC-EXAMPLE-BUCKET` and the prefix `alerts`\:
+    #     `DOC-EXAMPLE-BUCKET` and the prefix `alerts`:
     #
     #     `"LogDestination": \{ "bucketName": "DOC-EXAMPLE-BUCKET",
     #     "prefix": "alerts" \}`
     #
     #   * For a CloudWatch log group, provide the name of the CloudWatch log
     #     group, with key `logGroup`. The following example specifies a log
-    #     group named `alert-log-group`\:
+    #     group named `alert-log-group`:
     #
     #     `"LogDestination": \{ "logGroup": "alert-log-group" \}`
     #
     #   * For a Kinesis Data Firehose delivery stream, provide the name of
     #     the delivery stream, with key `deliveryStream`. The following
-    #     example specifies a delivery stream named
-    #     `alert-delivery-stream`\:
+    #     example specifies a delivery stream named `alert-delivery-stream`:
     #
     #     `"LogDestination": \{ "deliveryStream": "alert-delivery-stream"
     #     \}`
@@ -2388,22 +2637,7 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # Defines how AWS Network Firewall performs logging for a Firewall.
-    #
-    # @note When making an API call, you may pass LoggingConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         log_destination_configs: [ # required
-    #           {
-    #             log_type: "ALERT", # required, accepts ALERT, FLOW
-    #             log_destination_type: "S3", # required, accepts S3, CloudWatchLogs, KinesisDataFirehose
-    #             log_destination: { # required
-    #               "HashMapKey" => "HashMapValue",
-    #             },
-    #           },
-    #         ],
-    #       }
+    # Defines how Network Firewall performs logging for a Firewall.
     #
     # @!attribute [rw] log_destination_configs
     #   Defines the logging destinations for the logs for a firewall.
@@ -2423,41 +2657,6 @@ module Aws::NetworkFirewall
     # one or more items such as IP address, CIDR range, port number,
     # protocol, and TCP flags.
     #
-    # @note When making an API call, you may pass MatchAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         sources: [
-    #           {
-    #             address_definition: "AddressDefinition", # required
-    #           },
-    #         ],
-    #         destinations: [
-    #           {
-    #             address_definition: "AddressDefinition", # required
-    #           },
-    #         ],
-    #         source_ports: [
-    #           {
-    #             from_port: 1, # required
-    #             to_port: 1, # required
-    #           },
-    #         ],
-    #         destination_ports: [
-    #           {
-    #             from_port: 1, # required
-    #             to_port: 1, # required
-    #           },
-    #         ],
-    #         protocols: [1],
-    #         tcp_flags: [
-    #           {
-    #             flags: ["FIN"], # required, accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #             masks: ["FIN"], # accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] sources
     #   The source IP addresses and address ranges to inspect for, in CIDR
     #   notation. If not specified, this matches with any source address.
@@ -2475,7 +2674,7 @@ module Aws::NetworkFirewall
     #   17 (UDP).
     #
     #   You can specify individual ports, for example `1994` and you can
-    #   specify port ranges, for example `1990-1994`.
+    #   specify port ranges, for example `1990:1994`.
     #   @return [Array<Types::PortRange>]
     #
     # @!attribute [rw] destination_ports
@@ -2484,7 +2683,7 @@ module Aws::NetworkFirewall
     #   (TCP) and 17 (UDP).
     #
     #   You can specify individual ports, for example `1994` and you can
-    #   specify port ranges, for example `1990-1994`.
+    #   specify port ranges, for example `1990:1994`.
     #   @return [Array<Types::PortRange>]
     #
     # @!attribute [rw] protocols
@@ -2539,17 +2738,29 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
+    # Contains variables that you can use to override default Suricata
+    # settings in your firewall policy.
+    #
+    # @!attribute [rw] rule_variables
+    #   The IPv4 or IPv6 addresses in CIDR notation to use for the Suricata
+    #   `HOME_NET` variable. If your firewall uses an inspection VPC, you
+    #   might want to override the `HOME_NET` variable with the CIDRs of
+    #   your home networks. If you don't override `HOME_NET` with your own
+    #   CIDRs, Network Firewall by default uses the CIDR of your inspection
+    #   VPC.
+    #   @return [Hash<String,Types::IPSet>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/PolicyVariables AWS API Documentation
+    #
+    class PolicyVariables < Struct.new(
+      :rule_variables)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A single port range specification. This is used for source and
     # destination port ranges in the stateless rule MatchAttributes,
     # `SourcePorts`, and `DestinationPorts` settings.
-    #
-    # @note When making an API call, you may pass PortRange
-    #   data as a hash:
-    #
-    #       {
-    #         from_port: 1, # required
-    #         to_port: 1, # required
-    #       }
     #
     # @!attribute [rw] from_port
     #   The lower limit of the port range. This must be less than or equal
@@ -2572,13 +2783,6 @@ module Aws::NetworkFirewall
 
     # A set of port ranges for use in the rules in a rule group.
     #
-    # @note When making an API call, you may pass PortSet
-    #   data as a hash:
-    #
-    #       {
-    #         definition: ["VariableDefinition"],
-    #       }
-    #
     # @!attribute [rw] definition
     #   The set of port ranges.
     #   @return [Array<String>]
@@ -2595,17 +2799,6 @@ module Aws::NetworkFirewall
     # Amazon CloudWatch for the matching packet. This setting defines a
     # CloudWatch dimension value to be published.
     #
-    # @note When making an API call, you may pass PublishMetricAction
-    #   data as a hash:
-    #
-    #       {
-    #         dimensions: [ # required
-    #           {
-    #             value: "DimensionValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] dimensions
     #   @return [Array<Types::Dimension>]
     #
@@ -2617,24 +2810,15 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutResourcePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         policy: "PolicyString", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the account that you want to share
     #   rule groups and firewall policies with.
     #   @return [String]
     #
     # @!attribute [rw] policy
-    #   The AWS Identity and Access Management policy statement that lists
-    #   the accounts that you want to share your rule group or firewall
-    #   policy with and the operations that you want the accounts to be able
-    #   to perform.
+    #   The IAM policy statement that lists the accounts that you want to
+    #   share your rule group or firewall policy with and the operations
+    #   that you want the accounts to be able to perform.
     #
     #   For a rule group resource, you can specify the following operations
     #   in the Actions section of the statement:
@@ -2647,10 +2831,6 @@ module Aws::NetworkFirewall
     #
     #   For a firewall policy resource, you can specify the following
     #   operations in the Actions section of the statement:
-    #
-    #   * network-firewall:CreateFirewall
-    #
-    #   * network-firewall:UpdateFirewall
     #
     #   * network-firewall:AssociateFirewallPolicy
     #
@@ -2674,6 +2854,20 @@ module Aws::NetworkFirewall
     #
     class PutResourcePolicyResponse < Aws::EmptyStructure; end
 
+    # Contains a set of IP set references.
+    #
+    # @!attribute [rw] ip_set_references
+    #   The list of IP set references.
+    #   @return [Hash<String,Types::IPSetReference>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/ReferenceSets AWS API Documentation
+    #
+    class ReferenceSets < Struct.new(
+      :ip_set_references)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Unable to locate a resource using the parameters that you provided.
     #
     # @!attribute [rw] message
@@ -2687,6 +2881,8 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
+    # Unable to change the resource because your account doesn't own it.
+    #
     # @!attribute [rw] message
     #   @return [String]
     #
@@ -2698,48 +2894,10 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # The inspection criteria and action for a single stateless rule. AWS
+    # The inspection criteria and action for a single stateless rule.
     # Network Firewall inspects each packet for the specified matching
     # criteria. When a packet matches the criteria, Network Firewall
     # performs the rule's actions on the packet.
-    #
-    # @note When making an API call, you may pass RuleDefinition
-    #   data as a hash:
-    #
-    #       {
-    #         match_attributes: { # required
-    #           sources: [
-    #             {
-    #               address_definition: "AddressDefinition", # required
-    #             },
-    #           ],
-    #           destinations: [
-    #             {
-    #               address_definition: "AddressDefinition", # required
-    #             },
-    #           ],
-    #           source_ports: [
-    #             {
-    #               from_port: 1, # required
-    #               to_port: 1, # required
-    #             },
-    #           ],
-    #           destination_ports: [
-    #             {
-    #               from_port: 1, # required
-    #               to_port: 1, # required
-    #             },
-    #           ],
-    #           protocols: [1],
-    #           tcp_flags: [
-    #             {
-    #               flags: ["FIN"], # required, accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #               masks: ["FIN"], # accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #             },
-    #           ],
-    #         },
-    #         actions: ["CollectionMember_String"], # required
-    #       }
     #
     # @!attribute [rw] match_attributes
     #   Criteria for Network Firewall to use to inspect an individual packet
@@ -2799,7 +2957,7 @@ module Aws::NetworkFirewall
     # RuleGroupResponse, define the rule group. You can retrieve all objects
     # for a rule group by calling DescribeRuleGroup.
     #
-    # AWS Network Firewall uses a rule group to inspect and control network
+    # Network Firewall uses a rule group to inspect and control network
     # traffic. You define stateless rule groups to inspect individual
     # packets and you define stateful rule groups to inspect packets in the
     # context of their traffic flow.
@@ -2809,120 +2967,33 @@ module Aws::NetworkFirewall
     # can reference a rule group from more than one firewall policy, and you
     # can use a firewall policy in more than one firewall.
     #
-    # @note When making an API call, you may pass RuleGroup
-    #   data as a hash:
-    #
-    #       {
-    #         rule_variables: {
-    #           ip_sets: {
-    #             "RuleVariableName" => {
-    #               definition: ["VariableDefinition"], # required
-    #             },
-    #           },
-    #           port_sets: {
-    #             "RuleVariableName" => {
-    #               definition: ["VariableDefinition"],
-    #             },
-    #           },
-    #         },
-    #         rules_source: { # required
-    #           rules_string: "RulesString",
-    #           rules_source_list: {
-    #             targets: ["CollectionMember_String"], # required
-    #             target_types: ["TLS_SNI"], # required, accepts TLS_SNI, HTTP_HOST
-    #             generated_rules_type: "ALLOWLIST", # required, accepts ALLOWLIST, DENYLIST
-    #           },
-    #           stateful_rules: [
-    #             {
-    #               action: "PASS", # required, accepts PASS, DROP, ALERT
-    #               header: { # required
-    #                 protocol: "IP", # required, accepts IP, TCP, UDP, ICMP, HTTP, FTP, TLS, SMB, DNS, DCERPC, SSH, SMTP, IMAP, MSN, KRB5, IKEV2, TFTP, NTP, DHCP
-    #                 source: "Source", # required
-    #                 source_port: "Port", # required
-    #                 direction: "FORWARD", # required, accepts FORWARD, ANY
-    #                 destination: "Destination", # required
-    #                 destination_port: "Port", # required
-    #               },
-    #               rule_options: [ # required
-    #                 {
-    #                   keyword: "Keyword", # required
-    #                   settings: ["Setting"],
-    #                 },
-    #               ],
-    #             },
-    #           ],
-    #           stateless_rules_and_custom_actions: {
-    #             stateless_rules: [ # required
-    #               {
-    #                 rule_definition: { # required
-    #                   match_attributes: { # required
-    #                     sources: [
-    #                       {
-    #                         address_definition: "AddressDefinition", # required
-    #                       },
-    #                     ],
-    #                     destinations: [
-    #                       {
-    #                         address_definition: "AddressDefinition", # required
-    #                       },
-    #                     ],
-    #                     source_ports: [
-    #                       {
-    #                         from_port: 1, # required
-    #                         to_port: 1, # required
-    #                       },
-    #                     ],
-    #                     destination_ports: [
-    #                       {
-    #                         from_port: 1, # required
-    #                         to_port: 1, # required
-    #                       },
-    #                     ],
-    #                     protocols: [1],
-    #                     tcp_flags: [
-    #                       {
-    #                         flags: ["FIN"], # required, accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                         masks: ["FIN"], # accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                       },
-    #                     ],
-    #                   },
-    #                   actions: ["CollectionMember_String"], # required
-    #                 },
-    #                 priority: 1, # required
-    #               },
-    #             ],
-    #             custom_actions: [
-    #               {
-    #                 action_name: "ActionName", # required
-    #                 action_definition: { # required
-    #                   publish_metric_action: {
-    #                     dimensions: [ # required
-    #                       {
-    #                         value: "DimensionValue", # required
-    #                       },
-    #                     ],
-    #                   },
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] rule_variables
     #   Settings that are available for use in the rules in the rule group.
     #   You can only use these for stateful rule groups.
     #   @return [Types::RuleVariables]
     #
+    # @!attribute [rw] reference_sets
+    #   The list of a rule group's reference sets.
+    #   @return [Types::ReferenceSets]
+    #
     # @!attribute [rw] rules_source
     #   The stateful rules or stateless rules for the rule group.
     #   @return [Types::RulesSource]
+    #
+    # @!attribute [rw] stateful_rule_options
+    #   Additional options governing how Network Firewall handles stateful
+    #   rules. The policies where you use your stateful rule group must have
+    #   stateful rule options settings that are compatible with these
+    #   settings.
+    #   @return [Types::StatefulRuleOptions]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/RuleGroup AWS API Documentation
     #
     class RuleGroup < Struct.new(
       :rule_variables,
-      :rules_source)
+      :reference_sets,
+      :rules_source,
+      :stateful_rule_options)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3002,6 +3073,43 @@ module Aws::NetworkFirewall
     #   The key:value pairs to associate with the resource.
     #   @return [Array<Types::Tag>]
     #
+    # @!attribute [rw] consumed_capacity
+    #   The number of capacity units currently consumed by the rule group
+    #   rules.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] number_of_associations
+    #   The number of firewall policies that use this rule group.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains the Amazon Web Services KMS encryption
+    #   configuration settings for your rule group.
+    #   @return [Types::EncryptionConfiguration]
+    #
+    # @!attribute [rw] source_metadata
+    #   A complex type that contains metadata about the rule group that your
+    #   own rule group is copied from. You can use the metadata to track the
+    #   version updates made to the originating rule group.
+    #   @return [Types::SourceMetadata]
+    #
+    # @!attribute [rw] sns_topic
+    #   The Amazon resource name (ARN) of the Amazon Simple Notification
+    #   Service SNS topic that's used to record changes to the managed rule
+    #   group. You can subscribe to the SNS topic to receive notifications
+    #   when the managed rule group is modified, such as for new versions
+    #   and for version expiration. For more information, see the [Amazon
+    #   Simple Notification Service Developer Guide.][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/sns/latest/dg/welcome.html
+    #   @return [String]
+    #
+    # @!attribute [rw] last_modified_time
+    #   The last time that the rule group was changed.
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/RuleGroupResponse AWS API Documentation
     #
     class RuleGroupResponse < Struct.new(
@@ -3012,21 +3120,19 @@ module Aws::NetworkFirewall
       :type,
       :capacity,
       :rule_group_status,
-      :tags)
+      :tags,
+      :consumed_capacity,
+      :number_of_associations,
+      :encryption_configuration,
+      :source_metadata,
+      :sns_topic,
+      :last_modified_time)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Additional settings for a stateful rule. This is part of the
     # StatefulRule configuration.
-    #
-    # @note When making an API call, you may pass RuleOption
-    #   data as a hash:
-    #
-    #       {
-    #         keyword: "Keyword", # required
-    #         settings: ["Setting"],
-    #       }
     #
     # @!attribute [rw] keyword
     #   @return [String]
@@ -3045,22 +3151,6 @@ module Aws::NetworkFirewall
 
     # Settings that are available for use in the rules in the RuleGroup
     # where this is defined.
-    #
-    # @note When making an API call, you may pass RuleVariables
-    #   data as a hash:
-    #
-    #       {
-    #         ip_sets: {
-    #           "RuleVariableName" => {
-    #             definition: ["VariableDefinition"], # required
-    #           },
-    #         },
-    #         port_sets: {
-    #           "RuleVariableName" => {
-    #             definition: ["VariableDefinition"],
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] ip_sets
     #   A list of IP addresses and address ranges, in CIDR notation.
@@ -3083,92 +3173,6 @@ module Aws::NetworkFirewall
     # group. Each rule group requires a single `RulesSource`. You can use an
     # instance of this for either stateless rules or stateful rules.
     #
-    # @note When making an API call, you may pass RulesSource
-    #   data as a hash:
-    #
-    #       {
-    #         rules_string: "RulesString",
-    #         rules_source_list: {
-    #           targets: ["CollectionMember_String"], # required
-    #           target_types: ["TLS_SNI"], # required, accepts TLS_SNI, HTTP_HOST
-    #           generated_rules_type: "ALLOWLIST", # required, accepts ALLOWLIST, DENYLIST
-    #         },
-    #         stateful_rules: [
-    #           {
-    #             action: "PASS", # required, accepts PASS, DROP, ALERT
-    #             header: { # required
-    #               protocol: "IP", # required, accepts IP, TCP, UDP, ICMP, HTTP, FTP, TLS, SMB, DNS, DCERPC, SSH, SMTP, IMAP, MSN, KRB5, IKEV2, TFTP, NTP, DHCP
-    #               source: "Source", # required
-    #               source_port: "Port", # required
-    #               direction: "FORWARD", # required, accepts FORWARD, ANY
-    #               destination: "Destination", # required
-    #               destination_port: "Port", # required
-    #             },
-    #             rule_options: [ # required
-    #               {
-    #                 keyword: "Keyword", # required
-    #                 settings: ["Setting"],
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         stateless_rules_and_custom_actions: {
-    #           stateless_rules: [ # required
-    #             {
-    #               rule_definition: { # required
-    #                 match_attributes: { # required
-    #                   sources: [
-    #                     {
-    #                       address_definition: "AddressDefinition", # required
-    #                     },
-    #                   ],
-    #                   destinations: [
-    #                     {
-    #                       address_definition: "AddressDefinition", # required
-    #                     },
-    #                   ],
-    #                   source_ports: [
-    #                     {
-    #                       from_port: 1, # required
-    #                       to_port: 1, # required
-    #                     },
-    #                   ],
-    #                   destination_ports: [
-    #                     {
-    #                       from_port: 1, # required
-    #                       to_port: 1, # required
-    #                     },
-    #                   ],
-    #                   protocols: [1],
-    #                   tcp_flags: [
-    #                     {
-    #                       flags: ["FIN"], # required, accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                       masks: ["FIN"], # accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                     },
-    #                   ],
-    #                 },
-    #                 actions: ["CollectionMember_String"], # required
-    #               },
-    #               priority: 1, # required
-    #             },
-    #           ],
-    #           custom_actions: [
-    #             {
-    #               action_name: "ActionName", # required
-    #               action_definition: { # required
-    #                 publish_metric_action: {
-    #                   dimensions: [ # required
-    #                     {
-    #                       value: "DimensionValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] rules_string
     #   Stateful inspection criteria, provided in Suricata compatible
     #   intrusion prevention system (IPS) rules. Suricata is an open-source
@@ -3185,9 +3189,15 @@ module Aws::NetworkFirewall
     #   @return [Types::RulesSourceList]
     #
     # @!attribute [rw] stateful_rules
-    #   The 5-tuple stateful inspection criteria. This contains an array of
-    #   individual 5-tuple stateful rules to be used together in a stateful
-    #   rule group.
+    #   An array of individual stateful rules inspection criteria to be used
+    #   together in a stateful rule group. Use this option to specify simple
+    #   Suricata rules with protocol, source and destination, ports,
+    #   direction, and rule options. For information about the Suricata
+    #   `Rules` format, see [Rules Format][1].
+    #
+    #
+    #
+    #   [1]: https://suricata.readthedocs.iorules/intro.html#
     #   @return [Array<Types::StatefulRule>]
     #
     # @!attribute [rw] stateless_rules_and_custom_actions
@@ -3216,25 +3226,15 @@ module Aws::NetworkFirewall
     # `HOME_NET` rule variable to include the CIDR range of the deployment
     # VPC plus the other CIDR ranges. For more information, see
     # RuleVariables in this guide and [Stateful domain list rule groups in
-    # AWS Network Firewall][1] in the *Network Firewall Developer Guide*
+    # Network Firewall][1] in the *Network Firewall Developer Guide*.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/stateful-rule-groups-domain-names.html
     #
-    # @note When making an API call, you may pass RulesSourceList
-    #   data as a hash:
-    #
-    #       {
-    #         targets: ["CollectionMember_String"], # required
-    #         target_types: ["TLS_SNI"], # required, accepts TLS_SNI, HTTP_HOST
-    #         generated_rules_type: "ALLOWLIST", # required, accepts ALLOWLIST, DENYLIST
-    #       }
-    #
     # @!attribute [rw] targets
-    #   The domains that you want to inspect for in your traffic flows. To
-    #   provide multiple domains, separate them with commas. Valid domain
-    #   specifications are the following:
+    #   The domains that you want to inspect for in your traffic flows.
+    #   Valid domain specifications are the following:
     #
     #   * Explicit names. For example, `abc.example.com` matches only the
     #     domain `abc.example.com`.
@@ -3247,7 +3247,7 @@ module Aws::NetworkFirewall
     #
     # @!attribute [rw] target_types
     #   The protocols you want to inspect. Specify `TLS_SNI` for `HTTPS`.
-    #   Specity `HTTP_HOST` for `HTTP`. You can specify either or both.
+    #   Specify `HTTP_HOST` for `HTTP`. You can specify either or both.
     #   @return [Array<String>]
     #
     # @!attribute [rw] generated_rules_type
@@ -3265,28 +3265,217 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # A single 5-tuple stateful rule, for use in a stateful rule group.
+    # Any Certificate Manager Secure Sockets Layer/Transport Layer Security
+    # (SSL/TLS) server certificate that's associated with a
+    # ServerCertificateConfiguration used in a TLSInspectionConfiguration.
+    # You must request or import a SSL/TLS certificate into ACM for each
+    # domain Network Firewall needs to decrypt and inspect. Network Firewall
+    # uses the SSL/TLS certificates to decrypt specified inbound SSL/TLS
+    # traffic going to your firewall. For information about working with
+    # certificates in Certificate Manager, see [Request a public certificate
+    # ][1] or [Importing certificates][2] in the *Certificate Manager User
+    # Guide*.
     #
-    # @note When making an API call, you may pass StatefulRule
-    #   data as a hash:
     #
-    #       {
-    #         action: "PASS", # required, accepts PASS, DROP, ALERT
-    #         header: { # required
-    #           protocol: "IP", # required, accepts IP, TCP, UDP, ICMP, HTTP, FTP, TLS, SMB, DNS, DCERPC, SSH, SMTP, IMAP, MSN, KRB5, IKEV2, TFTP, NTP, DHCP
-    #           source: "Source", # required
-    #           source_port: "Port", # required
-    #           direction: "FORWARD", # required, accepts FORWARD, ANY
-    #           destination: "Destination", # required
-    #           destination_port: "Port", # required
-    #         },
-    #         rule_options: [ # required
-    #           {
-    #             keyword: "Keyword", # required
-    #             settings: ["Setting"],
-    #           },
-    #         ],
-    #       }
+    #
+    # [1]: https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html
+    # [2]: https://docs.aws.amazon.com/acm/latest/userguide/import-certificate.html
+    #
+    # @!attribute [rw] resource_arn
+    #   The Amazon Resource Name (ARN) of the Certificate Manager SSL/TLS
+    #   server certificate.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/ServerCertificate AWS API Documentation
+    #
+    class ServerCertificate < Struct.new(
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Configures the associated Certificate Manager Secure Sockets
+    # Layer/Transport Layer Security (SSL/TLS) server certificates and scope
+    # settings Network Firewall uses to decrypt traffic in a
+    # TLSInspectionConfiguration. For information about working with SSL/TLS
+    # certificates for TLS inspection, see [ Requirements for using SSL/TLS
+    # server certficiates with TLS inspection configurations][1] in the
+    # *Network Firewall Developer Guide*.
+    #
+    # <note markdown="1"> If a server certificate that's associated with your
+    # TLSInspectionConfiguration is revoked, deleted, or expired it can
+    # result in client-side TLS errors.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection-certificate-requirements.html
+    #
+    # @!attribute [rw] server_certificates
+    #   The list of a server certificate configuration's Certificate
+    #   Manager SSL/TLS certificates.
+    #   @return [Array<Types::ServerCertificate>]
+    #
+    # @!attribute [rw] scopes
+    #   A list of a server certificate configuration's scopes.
+    #   @return [Array<Types::ServerCertificateScope>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/ServerCertificateConfiguration AWS API Documentation
+    #
+    class ServerCertificateConfiguration < Struct.new(
+      :server_certificates,
+      :scopes)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Settings that define the Secure Sockets Layer/Transport Layer Security
+    # (SSL/TLS) traffic that Network Firewall should decrypt for inspection
+    # by the stateful rule engine.
+    #
+    # @!attribute [rw] sources
+    #   The source IP addresses and address ranges to decrypt for
+    #   inspection, in CIDR notation. If not specified, this matches with
+    #   any source address.
+    #   @return [Array<Types::Address>]
+    #
+    # @!attribute [rw] destinations
+    #   The destination IP addresses and address ranges to decrypt for
+    #   inspection, in CIDR notation. If not specified, this matches with
+    #   any destination address.
+    #   @return [Array<Types::Address>]
+    #
+    # @!attribute [rw] source_ports
+    #   The source ports to decrypt for inspection, in Transmission Control
+    #   Protocol (TCP) format. If not specified, this matches with any
+    #   source port.
+    #
+    #   You can specify individual ports, for example `1994`, and you can
+    #   specify port ranges, such as `1990:1994`.
+    #   @return [Array<Types::PortRange>]
+    #
+    # @!attribute [rw] destination_ports
+    #   The destination ports to decrypt for inspection, in Transmission
+    #   Control Protocol (TCP) format. If not specified, this matches with
+    #   any destination port.
+    #
+    #   You can specify individual ports, for example `1994`, and you can
+    #   specify port ranges, such as `1990:1994`.
+    #   @return [Array<Types::PortRange>]
+    #
+    # @!attribute [rw] protocols
+    #   The protocols to decrypt for inspection, specified using each
+    #   protocol's assigned internet protocol number (IANA). Network
+    #   Firewall currently supports only TCP.
+    #   @return [Array<Integer>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/ServerCertificateScope AWS API Documentation
+    #
+    class ServerCertificateScope < Struct.new(
+      :sources,
+      :destinations,
+      :source_ports,
+      :destination_ports,
+      :protocols)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # High-level information about the managed rule group that your own rule
+    # group is copied from. You can use the the metadata to track version
+    # updates made to the originating rule group. You can retrieve all
+    # objects for a rule group by calling [DescribeRuleGroup][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_DescribeRuleGroup.html
+    #
+    # @!attribute [rw] source_arn
+    #   The Amazon Resource Name (ARN) of the rule group that your own rule
+    #   group is copied from.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_update_token
+    #   The update token of the Amazon Web Services managed rule group that
+    #   your own rule group is copied from. To determine the update token
+    #   for the managed rule group, call [DescribeRuleGroup][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_DescribeRuleGroup.html#networkfirewall-DescribeRuleGroup-response-UpdateToken
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/SourceMetadata AWS API Documentation
+    #
+    class SourceMetadata < Struct.new(
+      :source_arn,
+      :source_update_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Configuration settings for the handling of the stateful rule groups in
+    # a firewall policy.
+    #
+    # @!attribute [rw] rule_order
+    #   Indicates how to manage the order of stateful rule evaluation for
+    #   the policy. `DEFAULT_ACTION_ORDER` is the default behavior. Stateful
+    #   rules are provided to the rule engine as Suricata compatible
+    #   strings, and Suricata evaluates them based on certain settings. For
+    #   more information, see [Evaluation order for stateful rules][1] in
+    #   the *Network Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/suricata-rule-evaluation-order.html
+    #   @return [String]
+    #
+    # @!attribute [rw] stream_exception_policy
+    #   Configures how Network Firewall processes traffic when a network
+    #   connection breaks midstream. Network connections can break due to
+    #   disruptions in external networks or within the firewall itself.
+    #
+    #   * `DROP` - Network Firewall fails closed and drops all subsequent
+    #     traffic going to the firewall. This is the default behavior.
+    #
+    #   * `CONTINUE` - Network Firewall continues to apply rules to the
+    #     subsequent traffic without context from traffic before the break.
+    #     This impacts the behavior of rules that depend on this context.
+    #     For example, if you have a stateful rule to `drop http` traffic,
+    #     Network Firewall won't match the traffic for this rule because
+    #     the service won't have the context from session initialization
+    #     defining the application layer protocol as HTTP. However, this
+    #     behavior is rule dependent—a TCP-layer rule using a
+    #     `flow:stateless` rule would still match, as would the
+    #     `aws:drop_strict` default action.
+    #
+    #   * `REJECT` - Network Firewall fails closed and drops all subsequent
+    #     traffic going to the firewall. Network Firewall also sends a TCP
+    #     reject packet back to your client so that the client can
+    #     immediately establish a new session. Network Firewall will have
+    #     context about the new session and will apply rules to the
+    #     subsequent traffic.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/StatefulEngineOptions AWS API Documentation
+    #
+    class StatefulEngineOptions < Struct.new(
+      :rule_order,
+      :stream_exception_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A single Suricata rules specification, for use in a stateful rule
+    # group. Use this option to specify a simple Suricata rule with
+    # protocol, source and destination, ports, direction, and rule options.
+    # For information about the Suricata `Rules` format, see [Rules
+    # Format][1].
+    #
+    #
+    #
+    # [1]: https://suricata.readthedocs.iorules/intro.html#
     #
     # @!attribute [rw] action
     #   Defines what Network Firewall should do with the packets in a
@@ -3310,14 +3499,26 @@ module Aws::NetworkFirewall
     #     drop traffic. You can enable the rule with `ALERT` action, verify
     #     in the logs that the rule is filtering as you want, then change
     #     the action to `DROP`.
+    #
+    #   * **REJECT** - Drops TCP traffic that matches the conditions of the
+    #     stateful rule, and sends a TCP reset packet back to sender of the
+    #     packet. A TCP reset packet is a packet with no payload and a `RST`
+    #     bit contained in the TCP header flags. Also sends an alert log
+    #     mesage if alert logging is configured in the Firewall
+    #     LoggingConfiguration.
+    #
+    #     `REJECT` isn't currently available for use with IMAP and FTP
+    #     protocols.
     #   @return [String]
     #
     # @!attribute [rw] header
-    #   The stateful 5-tuple inspection criteria for this rule, used to
-    #   inspect traffic flows.
+    #   The stateful inspection criteria for this rule, used to inspect
+    #   traffic flows.
     #   @return [Types::Header]
     #
     # @!attribute [rw] rule_options
+    #   Additional options for the rule. These are the Suricata
+    #   `RuleOptions` settings.
     #   @return [Array<Types::RuleOption>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/StatefulRule AWS API Documentation
@@ -3330,24 +3531,81 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
+    # The setting that allows the policy owner to change the behavior of the
+    # rule group within a policy.
+    #
+    # @!attribute [rw] action
+    #   The action that changes the rule group from `DROP` to `ALERT`. This
+    #   only applies to managed rule groups.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/StatefulRuleGroupOverride AWS API Documentation
+    #
+    class StatefulRuleGroupOverride < Struct.new(
+      :action)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Identifier for a single stateful rule group, used in a firewall policy
     # to refer to a rule group.
-    #
-    # @note When making an API call, you may pass StatefulRuleGroupReference
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #       }
     #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the stateful rule group.
     #   @return [String]
     #
+    # @!attribute [rw] priority
+    #   An integer setting that indicates the order in which to run the
+    #   stateful rule groups in a single FirewallPolicy. This setting only
+    #   applies to firewall policies that specify the `STRICT_ORDER` rule
+    #   order in the stateful engine options settings.
+    #
+    #   Network Firewall evalutes each stateful rule group against a packet
+    #   starting with the group that has the lowest priority setting. You
+    #   must ensure that the priority settings are unique within each
+    #   policy.
+    #
+    #   You can change the priority settings of your rule groups at any
+    #   time. To make it easier to insert rule groups later, number them so
+    #   there's a wide range in between, for example use 100, 200, and so
+    #   on.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] override
+    #   The action that allows the policy owner to override the behavior of
+    #   the rule group within a policy.
+    #   @return [Types::StatefulRuleGroupOverride]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/StatefulRuleGroupReference AWS API Documentation
     #
     class StatefulRuleGroupReference < Struct.new(
-      :resource_arn)
+      :resource_arn,
+      :priority,
+      :override)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Additional options governing how Network Firewall handles the rule
+    # group. You can only use these for stateful rule groups.
+    #
+    # @!attribute [rw] rule_order
+    #   Indicates how to manage the order of the rule evaluation for the
+    #   rule group. `DEFAULT_ACTION_ORDER` is the default behavior. Stateful
+    #   rules are provided to the rule engine as Suricata compatible
+    #   strings, and Suricata evaluates them based on certain settings. For
+    #   more information, see [Evaluation order for stateful rules][1] in
+    #   the *Network Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/suricata-rule-evaluation-order.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/StatefulRuleOptions AWS API Documentation
+    #
+    class StatefulRuleOptions < Struct.new(
+      :rule_order)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3355,58 +3613,17 @@ module Aws::NetworkFirewall
     # A single stateless rule. This is used in
     # StatelessRulesAndCustomActions.
     #
-    # @note When making an API call, you may pass StatelessRule
-    #   data as a hash:
-    #
-    #       {
-    #         rule_definition: { # required
-    #           match_attributes: { # required
-    #             sources: [
-    #               {
-    #                 address_definition: "AddressDefinition", # required
-    #               },
-    #             ],
-    #             destinations: [
-    #               {
-    #                 address_definition: "AddressDefinition", # required
-    #               },
-    #             ],
-    #             source_ports: [
-    #               {
-    #                 from_port: 1, # required
-    #                 to_port: 1, # required
-    #               },
-    #             ],
-    #             destination_ports: [
-    #               {
-    #                 from_port: 1, # required
-    #                 to_port: 1, # required
-    #               },
-    #             ],
-    #             protocols: [1],
-    #             tcp_flags: [
-    #               {
-    #                 flags: ["FIN"], # required, accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                 masks: ["FIN"], # accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #               },
-    #             ],
-    #           },
-    #           actions: ["CollectionMember_String"], # required
-    #         },
-    #         priority: 1, # required
-    #       }
-    #
     # @!attribute [rw] rule_definition
     #   Defines the stateless 5-tuple packet inspection criteria and the
     #   action to take on a packet that matches the criteria.
     #   @return [Types::RuleDefinition]
     #
     # @!attribute [rw] priority
-    #   A setting that indicates the order in which to run this rule
-    #   relative to all of the rules that are defined for a stateless rule
-    #   group. Network Firewall evaluates the rules in a rule group starting
-    #   with the lowest priority setting. You must ensure that the priority
-    #   settings are unique for the rule group.
+    #   Indicates the order in which to run this rule relative to all of the
+    #   rules that are defined for a stateless rule group. Network Firewall
+    #   evaluates the rules in a rule group starting with the lowest
+    #   priority setting. You must ensure that the priority settings are
+    #   unique for the rule group.
     #
     #   Each stateless rule group uses exactly one
     #   `StatelessRulesAndCustomActions` object, and each
@@ -3432,14 +3649,6 @@ module Aws::NetworkFirewall
     # Identifier for a single stateless rule group, used in a firewall
     # policy to refer to the rule group.
     #
-    # @note When making an API call, you may pass StatelessRuleGroupReference
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         priority: 1, # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the stateless rule group.
     #   @return [String]
@@ -3464,65 +3673,6 @@ module Aws::NetworkFirewall
     # Stateless inspection criteria. Each stateless rule group uses exactly
     # one of these data types to define its stateless rules.
     #
-    # @note When making an API call, you may pass StatelessRulesAndCustomActions
-    #   data as a hash:
-    #
-    #       {
-    #         stateless_rules: [ # required
-    #           {
-    #             rule_definition: { # required
-    #               match_attributes: { # required
-    #                 sources: [
-    #                   {
-    #                     address_definition: "AddressDefinition", # required
-    #                   },
-    #                 ],
-    #                 destinations: [
-    #                   {
-    #                     address_definition: "AddressDefinition", # required
-    #                   },
-    #                 ],
-    #                 source_ports: [
-    #                   {
-    #                     from_port: 1, # required
-    #                     to_port: 1, # required
-    #                   },
-    #                 ],
-    #                 destination_ports: [
-    #                   {
-    #                     from_port: 1, # required
-    #                     to_port: 1, # required
-    #                   },
-    #                 ],
-    #                 protocols: [1],
-    #                 tcp_flags: [
-    #                   {
-    #                     flags: ["FIN"], # required, accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                     masks: ["FIN"], # accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                   },
-    #                 ],
-    #               },
-    #               actions: ["CollectionMember_String"], # required
-    #             },
-    #             priority: 1, # required
-    #           },
-    #         ],
-    #         custom_actions: [
-    #           {
-    #             action_name: "ActionName", # required
-    #             action_definition: { # required
-    #               publish_metric_action: {
-    #                 dimensions: [ # required
-    #                   {
-    #                     value: "DimensionValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] stateless_rules
     #   Defines the set of stateless rules for use in a stateless rule
     #   group.
@@ -3546,25 +3696,24 @@ module Aws::NetworkFirewall
     end
 
     # The ID for a subnet that you want to associate with the firewall. This
-    # is used with CreateFirewall and AssociateSubnets. AWS Network Firewall
+    # is used with CreateFirewall and AssociateSubnets. Network Firewall
     # creates an instance of the associated firewall in each subnet that you
     # specify, to filter traffic in the subnet's Availability Zone.
-    #
-    # @note When making an API call, you may pass SubnetMapping
-    #   data as a hash:
-    #
-    #       {
-    #         subnet_id: "CollectionMember_String", # required
-    #       }
     #
     # @!attribute [rw] subnet_id
     #   The unique identifier for the subnet.
     #   @return [String]
     #
+    # @!attribute [rw] ip_address_type
+    #   The subnet's IP address type. You can't change the IP address type
+    #   after you create the subnet.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/SubnetMapping AWS API Documentation
     #
     class SubnetMapping < Struct.new(
-      :subnet_id)
+      :subnet_id,
+      :ip_address_type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3572,7 +3721,7 @@ module Aws::NetworkFirewall
     # The status of the firewall endpoint and firewall policy configuration
     # for a single VPC subnet.
     #
-    # For each VPC subnet that you associate with a firewall, AWS Network
+    # For each VPC subnet that you associate with a firewall, Network
     # Firewall does the following:
     #
     # * Instantiates a firewall endpoint in the subnet, ready to take
@@ -3615,14 +3764,6 @@ module Aws::NetworkFirewall
     # TCP flags and masks to inspect packets for, used in stateless rules
     # MatchAttributes settings.
     #
-    # @note When making an API call, you may pass TCPFlagField
-    #   data as a hash:
-    #
-    #       {
-    #         flags: ["FIN"], # required, accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #         masks: ["FIN"], # accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #       }
-    #
     # @!attribute [rw] flags
     #   Used in conjunction with the `Masks` setting to define the flags
     #   that must be set and flags that must not be set in order for the
@@ -3653,20 +3794,144 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # A key:value pair associated with an AWS resource. The key:value pair
-    # can be anything you define. Typically, the tag key represents a
-    # category (such as "environment") and the tag value represents a
-    # specific value within that category (such as "test,"
+    # The object that defines a TLS inspection configuration. This, along
+    # with TLSInspectionConfigurationResponse, define the TLS inspection
+    # configuration. You can retrieve all objects for a TLS inspection
+    # configuration by calling DescribeTLSInspectionConfiguration.
+    #
+    # Network Firewall uses a TLS inspection configuration to decrypt
+    # traffic. Network Firewall re-encrypts the traffic before sending it to
+    # its destination.
+    #
+    # To use a TLS inspection configuration, you add it to a Network
+    # Firewall firewall policy, then you apply the firewall policy to a
+    # firewall. Network Firewall acts as a proxy service to decrypt and
+    # inspect inbound traffic. You can reference a TLS inspection
+    # configuration from more than one firewall policy, and you can use a
+    # firewall policy in more than one firewall. For more information about
+    # using TLS inspection configurations, see [Decrypting SSL/TLS traffic
+    # with TLS inspection configurations][1] in the *Network Firewall
+    # Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection.html
+    #
+    # @!attribute [rw] server_certificate_configurations
+    #   Lists the server certificate configurations that are associated with
+    #   the TLS configuration.
+    #   @return [Array<Types::ServerCertificateConfiguration>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/TLSInspectionConfiguration AWS API Documentation
+    #
+    class TLSInspectionConfiguration < Struct.new(
+      :server_certificate_configurations)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # High-level information about a TLS inspection configuration, returned
+    # by `ListTLSInspectionConfigurations`. You can use the information
+    # provided in the metadata to retrieve and manage a TLS configuration.
+    #
+    # @!attribute [rw] name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create
+    #   it.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   The Amazon Resource Name (ARN) of the TLS inspection configuration.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/TLSInspectionConfigurationMetadata AWS API Documentation
+    #
+    class TLSInspectionConfigurationMetadata < Struct.new(
+      :name,
+      :arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The high-level properties of a TLS inspection configuration. This,
+    # along with the `TLSInspectionConfiguration`, define the TLS inspection
+    # configuration. You can retrieve all objects for a TLS inspection
+    # configuration by calling `DescribeTLSInspectionConfiguration`.
+    #
+    # @!attribute [rw] tls_inspection_configuration_arn
+    #   The Amazon Resource Name (ARN) of the TLS inspection configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration_name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create
+    #   it.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration_id
+    #   A unique identifier for the TLS inspection configuration. This ID is
+    #   returned in the responses to create and list commands. You provide
+    #   it to operations such as update and delete.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration_status
+    #   Detailed information about the current status of a
+    #   TLSInspectionConfiguration. You can retrieve this for a TLS
+    #   inspection configuration by calling
+    #   DescribeTLSInspectionConfiguration and providing the TLS inspection
+    #   configuration name and ARN.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   A description of the TLS inspection configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The key:value pairs to associate with the resource.
+    #   @return [Array<Types::Tag>]
+    #
+    # @!attribute [rw] last_modified_time
+    #   The last time that the TLS inspection configuration was changed.
+    #   @return [Time]
+    #
+    # @!attribute [rw] number_of_associations
+    #   The number of firewall policies that use this TLS inspection
+    #   configuration.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains the Amazon Web Services KMS encryption
+    #   configuration settings for your TLS inspection configuration.
+    #   @return [Types::EncryptionConfiguration]
+    #
+    # @!attribute [rw] certificates
+    #   A list of the certificates associated with the TLS inspection
+    #   configuration.
+    #   @return [Array<Types::TlsCertificateData>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/TLSInspectionConfigurationResponse AWS API Documentation
+    #
+    class TLSInspectionConfigurationResponse < Struct.new(
+      :tls_inspection_configuration_arn,
+      :tls_inspection_configuration_name,
+      :tls_inspection_configuration_id,
+      :tls_inspection_configuration_status,
+      :description,
+      :tags,
+      :last_modified_time,
+      :number_of_associations,
+      :encryption_configuration,
+      :certificates)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A key:value pair associated with an Amazon Web Services resource. The
+    # key:value pair can be anything you define. Typically, the tag key
+    # represents a category (such as "environment") and the tag value
+    # represents a specific value within that category (such as "test,"
     # "development," or "production"). You can add up to 50 tags to each
-    # AWS resource.
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
+    # Amazon Web Services resource.
     #
     # @!attribute [rw] key
     #   The part of the key:value pair that defines a tag. You can use a tag
@@ -3689,19 +3954,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -3735,6 +3987,36 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
+    # Contains metadata about an Certificate Manager certificate.
+    #
+    # @!attribute [rw] certificate_arn
+    #   The Amazon Resource Name (ARN) of the certificate.
+    #   @return [String]
+    #
+    # @!attribute [rw] certificate_serial
+    #   The serial number of the certificate.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   The status of the certificate.
+    #   @return [String]
+    #
+    # @!attribute [rw] status_message
+    #   Contains details about the certificate status, including information
+    #   about certificate errors.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/TlsCertificateData AWS API Documentation
+    #
+    class TlsCertificateData < Struct.new(
+      :certificate_arn,
+      :certificate_serial,
+      :status,
+      :status_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The operation you requested isn't supported by Network Firewall.
     #
     # @!attribute [rw] message
@@ -3748,14 +4030,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -3776,16 +4050,6 @@ module Aws::NetworkFirewall
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateFirewallDeleteProtectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         update_token: "UpdateToken",
-    #         firewall_arn: "ResourceArn",
-    #         firewall_name: "ResourceName",
-    #         delete_protection: false, # required
-    #       }
-    #
     # @!attribute [rw] update_token
     #   An optional token that you can use for optimistic locking. Network
     #   Firewall returns a token to your requests that access the firewall.
@@ -3848,6 +4112,11 @@ module Aws::NetworkFirewall
     #   @return [String]
     #
     # @!attribute [rw] delete_protection
+    #   A flag indicating whether it is possible to delete the firewall. A
+    #   setting of `TRUE` indicates that the firewall is protected against
+    #   deletion. Use this setting to protect against accidentally deleting
+    #   a firewall that is in use. When you create a firewall, the operation
+    #   initializes this flag to `TRUE`.
     #   @return [Boolean]
     #
     # @!attribute [rw] update_token
@@ -3881,16 +4150,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFirewallDescriptionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         update_token: "UpdateToken",
-    #         firewall_arn: "ResourceArn",
-    #         firewall_name: "ResourceName",
-    #         description: "Description",
-    #       }
-    #
     # @!attribute [rw] update_token
     #   An optional token that you can use for optimistic locking. Network
     #   Firewall returns a token to your requests that access the firewall.
@@ -3984,16 +4243,118 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFirewallPolicyChangeProtectionRequest
-    #   data as a hash:
+    # @!attribute [rw] update_token
+    #   An optional token that you can use for optimistic locking. Network
+    #   Firewall returns a token to your requests that access the firewall.
+    #   The token marks the state of the firewall resource at the time of
+    #   the request.
     #
-    #       {
-    #         update_token: "UpdateToken",
-    #         firewall_arn: "ResourceArn",
-    #         firewall_name: "ResourceName",
-    #         firewall_policy_change_protection: false, # required
-    #       }
+    #   To make an unconditional change to the firewall, omit the token in
+    #   your update request. Without the token, Network Firewall performs
+    #   your updates regardless of whether the firewall has changed since
+    #   you last retrieved it.
     #
+    #   To make a conditional change to the firewall, provide the token in
+    #   your update request. Network Firewall uses the token to ensure that
+    #   the firewall hasn't changed since you last retrieved it. If it has
+    #   changed, the operation fails with an `InvalidTokenException`. If
+    #   this happens, retrieve the firewall again to get a current copy of
+    #   it with a new token. Reapply your changes as needed, then try the
+    #   operation again using the new token.
+    #   @return [String]
+    #
+    # @!attribute [rw] firewall_arn
+    #   The Amazon Resource Name (ARN) of the firewall.
+    #   @return [String]
+    #
+    # @!attribute [rw] firewall_name
+    #   The descriptive name of the firewall. You can't change the name of
+    #   a firewall after you create it.
+    #   @return [String]
+    #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains optional Amazon Web Services Key
+    #   Management Service (KMS) encryption settings for your Network
+    #   Firewall resources. Your data is encrypted by default with an Amazon
+    #   Web Services owned key that Amazon Web Services owns and manages for
+    #   you. You can use either the Amazon Web Services owned key, or
+    #   provide your own customer managed key. To learn more about KMS
+    #   encryption of your Network Firewall resources, see [Encryption at
+    #   rest with Amazon Web Services Key Managment Service][1] in the
+    #   *Network Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/kms/latest/developerguide/kms-encryption-at-rest.html
+    #   @return [Types::EncryptionConfiguration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateFirewallEncryptionConfigurationRequest AWS API Documentation
+    #
+    class UpdateFirewallEncryptionConfigurationRequest < Struct.new(
+      :update_token,
+      :firewall_arn,
+      :firewall_name,
+      :encryption_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] firewall_arn
+    #   The Amazon Resource Name (ARN) of the firewall.
+    #   @return [String]
+    #
+    # @!attribute [rw] firewall_name
+    #   The descriptive name of the firewall. You can't change the name of
+    #   a firewall after you create it.
+    #   @return [String]
+    #
+    # @!attribute [rw] update_token
+    #   An optional token that you can use for optimistic locking. Network
+    #   Firewall returns a token to your requests that access the firewall.
+    #   The token marks the state of the firewall resource at the time of
+    #   the request.
+    #
+    #   To make an unconditional change to the firewall, omit the token in
+    #   your update request. Without the token, Network Firewall performs
+    #   your updates regardless of whether the firewall has changed since
+    #   you last retrieved it.
+    #
+    #   To make a conditional change to the firewall, provide the token in
+    #   your update request. Network Firewall uses the token to ensure that
+    #   the firewall hasn't changed since you last retrieved it. If it has
+    #   changed, the operation fails with an `InvalidTokenException`. If
+    #   this happens, retrieve the firewall again to get a current copy of
+    #   it with a new token. Reapply your changes as needed, then try the
+    #   operation again using the new token.
+    #   @return [String]
+    #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains optional Amazon Web Services Key
+    #   Management Service (KMS) encryption settings for your Network
+    #   Firewall resources. Your data is encrypted by default with an Amazon
+    #   Web Services owned key that Amazon Web Services owns and manages for
+    #   you. You can use either the Amazon Web Services owned key, or
+    #   provide your own customer managed key. To learn more about KMS
+    #   encryption of your Network Firewall resources, see [Encryption at
+    #   rest with Amazon Web Services Key Managment Service][1] in the
+    #   *Network Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/kms/latest/developerguide/kms-encryption-at-rest.html
+    #   @return [Types::EncryptionConfiguration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateFirewallEncryptionConfigurationResponse AWS API Documentation
+    #
+    class UpdateFirewallEncryptionConfigurationResponse < Struct.new(
+      :firewall_arn,
+      :firewall_name,
+      :update_token,
+      :encryption_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] update_token
     #   An optional token that you can use for optimistic locking. Network
     #   Firewall returns a token to your requests that access the firewall.
@@ -4094,46 +4455,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFirewallPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         update_token: "UpdateToken", # required
-    #         firewall_policy_arn: "ResourceArn",
-    #         firewall_policy_name: "ResourceName",
-    #         firewall_policy: { # required
-    #           stateless_rule_group_references: [
-    #             {
-    #               resource_arn: "ResourceArn", # required
-    #               priority: 1, # required
-    #             },
-    #           ],
-    #           stateless_default_actions: ["CollectionMember_String"], # required
-    #           stateless_fragment_default_actions: ["CollectionMember_String"], # required
-    #           stateless_custom_actions: [
-    #             {
-    #               action_name: "ActionName", # required
-    #               action_definition: { # required
-    #                 publish_metric_action: {
-    #                   dimensions: [ # required
-    #                     {
-    #                       value: "DimensionValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #           stateful_rule_group_references: [
-    #             {
-    #               resource_arn: "ResourceArn", # required
-    #             },
-    #           ],
-    #         },
-    #         description: "Description",
-    #         dry_run: false,
-    #       }
-    #
     # @!attribute [rw] update_token
     #   A token used for optimistic locking. Network Firewall returns a
     #   token to your requests that access the firewall policy. The token
@@ -4185,6 +4506,11 @@ module Aws::NetworkFirewall
     #   your resources.
     #   @return [Boolean]
     #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains settings for encryption of your
+    #   firewall policy resources.
+    #   @return [Types::EncryptionConfiguration]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateFirewallPolicyRequest AWS API Documentation
     #
     class UpdateFirewallPolicyRequest < Struct.new(
@@ -4193,7 +4519,8 @@ module Aws::NetworkFirewall
       :firewall_policy_name,
       :firewall_policy,
       :description,
-      :dry_run)
+      :dry_run,
+      :encryption_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -4227,25 +4554,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateLoggingConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         firewall_arn: "ResourceArn",
-    #         firewall_name: "ResourceName",
-    #         logging_configuration: {
-    #           log_destination_configs: [ # required
-    #             {
-    #               log_type: "ALERT", # required, accepts ALERT, FLOW
-    #               log_destination_type: "S3", # required, accepts S3, CloudWatchLogs, KinesisDataFirehose
-    #               log_destination: { # required
-    #                 "HashMapKey" => "HashMapValue",
-    #               },
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] firewall_arn
     #   The Amazon Resource Name (ARN) of the firewall.
     #
@@ -4285,7 +4593,7 @@ module Aws::NetworkFirewall
     #   @return [String]
     #
     # @!attribute [rw] logging_configuration
-    #   Defines how AWS Network Firewall performs logging for a Firewall.
+    #   Defines how Network Firewall performs logging for a Firewall.
     #   @return [Types::LoggingConfiguration]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateLoggingConfigurationResponse AWS API Documentation
@@ -4298,115 +4606,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateRuleGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         update_token: "UpdateToken", # required
-    #         rule_group_arn: "ResourceArn",
-    #         rule_group_name: "ResourceName",
-    #         rule_group: {
-    #           rule_variables: {
-    #             ip_sets: {
-    #               "RuleVariableName" => {
-    #                 definition: ["VariableDefinition"], # required
-    #               },
-    #             },
-    #             port_sets: {
-    #               "RuleVariableName" => {
-    #                 definition: ["VariableDefinition"],
-    #               },
-    #             },
-    #           },
-    #           rules_source: { # required
-    #             rules_string: "RulesString",
-    #             rules_source_list: {
-    #               targets: ["CollectionMember_String"], # required
-    #               target_types: ["TLS_SNI"], # required, accepts TLS_SNI, HTTP_HOST
-    #               generated_rules_type: "ALLOWLIST", # required, accepts ALLOWLIST, DENYLIST
-    #             },
-    #             stateful_rules: [
-    #               {
-    #                 action: "PASS", # required, accepts PASS, DROP, ALERT
-    #                 header: { # required
-    #                   protocol: "IP", # required, accepts IP, TCP, UDP, ICMP, HTTP, FTP, TLS, SMB, DNS, DCERPC, SSH, SMTP, IMAP, MSN, KRB5, IKEV2, TFTP, NTP, DHCP
-    #                   source: "Source", # required
-    #                   source_port: "Port", # required
-    #                   direction: "FORWARD", # required, accepts FORWARD, ANY
-    #                   destination: "Destination", # required
-    #                   destination_port: "Port", # required
-    #                 },
-    #                 rule_options: [ # required
-    #                   {
-    #                     keyword: "Keyword", # required
-    #                     settings: ["Setting"],
-    #                   },
-    #                 ],
-    #               },
-    #             ],
-    #             stateless_rules_and_custom_actions: {
-    #               stateless_rules: [ # required
-    #                 {
-    #                   rule_definition: { # required
-    #                     match_attributes: { # required
-    #                       sources: [
-    #                         {
-    #                           address_definition: "AddressDefinition", # required
-    #                         },
-    #                       ],
-    #                       destinations: [
-    #                         {
-    #                           address_definition: "AddressDefinition", # required
-    #                         },
-    #                       ],
-    #                       source_ports: [
-    #                         {
-    #                           from_port: 1, # required
-    #                           to_port: 1, # required
-    #                         },
-    #                       ],
-    #                       destination_ports: [
-    #                         {
-    #                           from_port: 1, # required
-    #                           to_port: 1, # required
-    #                         },
-    #                       ],
-    #                       protocols: [1],
-    #                       tcp_flags: [
-    #                         {
-    #                           flags: ["FIN"], # required, accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                           masks: ["FIN"], # accepts FIN, SYN, RST, PSH, ACK, URG, ECE, CWR
-    #                         },
-    #                       ],
-    #                     },
-    #                     actions: ["CollectionMember_String"], # required
-    #                   },
-    #                   priority: 1, # required
-    #                 },
-    #               ],
-    #               custom_actions: [
-    #                 {
-    #                   action_name: "ActionName", # required
-    #                   action_definition: { # required
-    #                     publish_metric_action: {
-    #                       dimensions: [ # required
-    #                         {
-    #                           value: "DimensionValue", # required
-    #                         },
-    #                       ],
-    #                     },
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         },
-    #         rules: "RulesString",
-    #         type: "STATELESS", # accepts STATELESS, STATEFUL
-    #         description: "Description",
-    #         dry_run: false,
-    #       }
-    #
     # @!attribute [rw] update_token
     #   A token used for optimistic locking. Network Firewall returns a
     #   token to your requests that access the rule group. The token marks
@@ -4490,6 +4689,17 @@ module Aws::NetworkFirewall
     #   your resources.
     #   @return [Boolean]
     #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains settings for encryption of your rule
+    #   group resources.
+    #   @return [Types::EncryptionConfiguration]
+    #
+    # @!attribute [rw] source_metadata
+    #   A complex type that contains metadata about the rule group that your
+    #   own rule group is copied from. You can use the metadata to keep
+    #   track of updates made to the originating rule group.
+    #   @return [Types::SourceMetadata]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateRuleGroupRequest AWS API Documentation
     #
     class UpdateRuleGroupRequest < Struct.new(
@@ -4500,7 +4710,9 @@ module Aws::NetworkFirewall
       :rules,
       :type,
       :description,
-      :dry_run)
+      :dry_run,
+      :encryption_configuration,
+      :source_metadata)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -4534,16 +4746,6 @@ module Aws::NetworkFirewall
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateSubnetChangeProtectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         update_token: "UpdateToken",
-    #         firewall_arn: "ResourceArn",
-    #         firewall_name: "ResourceName",
-    #         subnet_change_protection: false, # required
-    #       }
-    #
     # @!attribute [rw] update_token
     #   An optional token that you can use for optimistic locking. Network
     #   Firewall returns a token to your requests that access the firewall.
@@ -4640,6 +4842,111 @@ module Aws::NetworkFirewall
       :firewall_arn,
       :firewall_name,
       :subnet_change_protection)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] tls_inspection_configuration_arn
+    #   The Amazon Resource Name (ARN) of the TLS inspection configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration_name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create
+    #   it.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration
+    #   The object that defines a TLS inspection configuration. This, along
+    #   with TLSInspectionConfigurationResponse, define the TLS inspection
+    #   configuration. You can retrieve all objects for a TLS inspection
+    #   configuration by calling DescribeTLSInspectionConfiguration.
+    #
+    #   Network Firewall uses a TLS inspection configuration to decrypt
+    #   traffic. Network Firewall re-encrypts the traffic before sending it
+    #   to its destination.
+    #
+    #   To use a TLS inspection configuration, you add it to a Network
+    #   Firewall firewall policy, then you apply the firewall policy to a
+    #   firewall. Network Firewall acts as a proxy service to decrypt and
+    #   inspect inbound traffic. You can reference a TLS inspection
+    #   configuration from more than one firewall policy, and you can use a
+    #   firewall policy in more than one firewall. For more information
+    #   about using TLS inspection configurations, see [Decrypting SSL/TLS
+    #   traffic with TLS inspection configurations][1] in the *Network
+    #   Firewall Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection.html
+    #   @return [Types::TLSInspectionConfiguration]
+    #
+    # @!attribute [rw] description
+    #   A description of the TLS inspection configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] encryption_configuration
+    #   A complex type that contains the Amazon Web Services KMS encryption
+    #   configuration settings for your TLS inspection configuration.
+    #   @return [Types::EncryptionConfiguration]
+    #
+    # @!attribute [rw] update_token
+    #   A token used for optimistic locking. Network Firewall returns a
+    #   token to your requests that access the TLS inspection configuration.
+    #   The token marks the state of the TLS inspection configuration
+    #   resource at the time of the request.
+    #
+    #   To make changes to the TLS inspection configuration, you provide the
+    #   token in your request. Network Firewall uses the token to ensure
+    #   that the TLS inspection configuration hasn't changed since you last
+    #   retrieved it. If it has changed, the operation fails with an
+    #   `InvalidTokenException`. If this happens, retrieve the TLS
+    #   inspection configuration again to get a current copy of it with a
+    #   current token. Reapply your changes as needed, then try the
+    #   operation again using the new token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateTLSInspectionConfigurationRequest AWS API Documentation
+    #
+    class UpdateTLSInspectionConfigurationRequest < Struct.new(
+      :tls_inspection_configuration_arn,
+      :tls_inspection_configuration_name,
+      :tls_inspection_configuration,
+      :description,
+      :encryption_configuration,
+      :update_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] update_token
+    #   A token used for optimistic locking. Network Firewall returns a
+    #   token to your requests that access the TLS inspection configuration.
+    #   The token marks the state of the TLS inspection configuration
+    #   resource at the time of the request.
+    #
+    #   To make changes to the TLS inspection configuration, you provide the
+    #   token in your request. Network Firewall uses the token to ensure
+    #   that the TLS inspection configuration hasn't changed since you last
+    #   retrieved it. If it has changed, the operation fails with an
+    #   `InvalidTokenException`. If this happens, retrieve the TLS
+    #   inspection configuration again to get a current copy of it with a
+    #   current token. Reapply your changes as needed, then try the
+    #   operation again using the new token.
+    #   @return [String]
+    #
+    # @!attribute [rw] tls_inspection_configuration_response
+    #   The high-level properties of a TLS inspection configuration. This,
+    #   along with the TLSInspectionConfiguration, define the TLS inspection
+    #   configuration. You can retrieve all objects for a TLS inspection
+    #   configuration by calling DescribeTLSInspectionConfiguration.
+    #   @return [Types::TLSInspectionConfigurationResponse]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateTLSInspectionConfigurationResponse AWS API Documentation
+    #
+    class UpdateTLSInspectionConfigurationResponse < Struct.new(
+      :update_token,
+      :tls_inspection_configuration_response)
       SENSITIVE = []
       include Aws::Structure
     end

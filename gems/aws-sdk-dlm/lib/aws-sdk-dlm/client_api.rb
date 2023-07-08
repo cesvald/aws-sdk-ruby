@@ -16,6 +16,8 @@ module Aws::DLM
     Action = Shapes::StructureShape.new(name: 'Action')
     ActionList = Shapes::ListShape.new(name: 'ActionList')
     ActionName = Shapes::StringShape.new(name: 'ActionName')
+    ArchiveRetainRule = Shapes::StructureShape.new(name: 'ArchiveRetainRule')
+    ArchiveRule = Shapes::StructureShape.new(name: 'ArchiveRule')
     AvailabilityZone = Shapes::StringShape.new(name: 'AvailabilityZone')
     AvailabilityZoneList = Shapes::ListShape.new(name: 'AvailabilityZoneList')
     AwsAccountId = Shapes::StringShape.new(name: 'AwsAccountId')
@@ -29,11 +31,13 @@ module Aws::DLM
     CronExpression = Shapes::StringShape.new(name: 'CronExpression')
     CrossRegionCopyAction = Shapes::StructureShape.new(name: 'CrossRegionCopyAction')
     CrossRegionCopyActionList = Shapes::ListShape.new(name: 'CrossRegionCopyActionList')
+    CrossRegionCopyDeprecateRule = Shapes::StructureShape.new(name: 'CrossRegionCopyDeprecateRule')
     CrossRegionCopyRetainRule = Shapes::StructureShape.new(name: 'CrossRegionCopyRetainRule')
     CrossRegionCopyRule = Shapes::StructureShape.new(name: 'CrossRegionCopyRule')
     CrossRegionCopyRules = Shapes::ListShape.new(name: 'CrossRegionCopyRules')
     DeleteLifecyclePolicyRequest = Shapes::StructureShape.new(name: 'DeleteLifecyclePolicyRequest')
     DeleteLifecyclePolicyResponse = Shapes::StructureShape.new(name: 'DeleteLifecyclePolicyResponse')
+    DeprecateRule = Shapes::StructureShape.new(name: 'DeprecateRule')
     DescriptionRegex = Shapes::StringShape.new(name: 'DescriptionRegex')
     Encrypted = Shapes::BooleanShape.new(name: 'Encrypted')
     EncryptionConfiguration = Shapes::StructureShape.new(name: 'EncryptionConfiguration')
@@ -44,6 +48,7 @@ module Aws::DLM
     EventSourceValues = Shapes::StringShape.new(name: 'EventSourceValues')
     EventTypeValues = Shapes::StringShape.new(name: 'EventTypeValues')
     ExcludeBootVolume = Shapes::BooleanShape.new(name: 'ExcludeBootVolume')
+    ExcludeDataVolumeTagList = Shapes::ListShape.new(name: 'ExcludeDataVolumeTagList')
     ExecutionRoleArn = Shapes::StringShape.new(name: 'ExecutionRoleArn')
     FastRestoreRule = Shapes::StructureShape.new(name: 'FastRestoreRule')
     GetLifecyclePoliciesRequest = Shapes::StructureShape.new(name: 'GetLifecyclePoliciesRequest')
@@ -78,6 +83,7 @@ module Aws::DLM
     ResourceTypeValues = Shapes::StringShape.new(name: 'ResourceTypeValues')
     ResourceTypeValuesList = Shapes::ListShape.new(name: 'ResourceTypeValuesList')
     RetainRule = Shapes::StructureShape.new(name: 'RetainRule')
+    RetentionArchiveTier = Shapes::StructureShape.new(name: 'RetentionArchiveTier')
     RetentionIntervalUnitValues = Shapes::StringShape.new(name: 'RetentionIntervalUnitValues')
     Schedule = Shapes::StructureShape.new(name: 'Schedule')
     ScheduleList = Shapes::ListShape.new(name: 'ScheduleList')
@@ -87,6 +93,8 @@ module Aws::DLM
     ShareRules = Shapes::ListShape.new(name: 'ShareRules')
     ShareTargetAccountList = Shapes::ListShape.new(name: 'ShareTargetAccountList')
     SnapshotOwnerList = Shapes::ListShape.new(name: 'SnapshotOwnerList')
+    StandardTierRetainRuleCount = Shapes::IntegerShape.new(name: 'StandardTierRetainRuleCount')
+    StandardTierRetainRuleInterval = Shapes::IntegerShape.new(name: 'StandardTierRetainRuleInterval')
     StatusMessage = Shapes::StringShape.new(name: 'StatusMessage')
     String = Shapes::StringShape.new(name: 'String')
     Tag = Shapes::StructureShape.new(name: 'Tag')
@@ -118,6 +126,12 @@ module Aws::DLM
 
     ActionList.member = Shapes::ShapeRef.new(shape: Action)
 
+    ArchiveRetainRule.add_member(:retention_archive_tier, Shapes::ShapeRef.new(shape: RetentionArchiveTier, required: true, location_name: "RetentionArchiveTier"))
+    ArchiveRetainRule.struct_class = Types::ArchiveRetainRule
+
+    ArchiveRule.add_member(:retain_rule, Shapes::ShapeRef.new(shape: ArchiveRetainRule, required: true, location_name: "RetainRule"))
+    ArchiveRule.struct_class = Types::ArchiveRule
+
     AvailabilityZoneList.member = Shapes::ShapeRef.new(shape: AvailabilityZone)
 
     CreateLifecyclePolicyRequest.add_member(:execution_role_arn, Shapes::ShapeRef.new(shape: ExecutionRoleArn, required: true, location_name: "ExecutionRoleArn"))
@@ -144,6 +158,10 @@ module Aws::DLM
 
     CrossRegionCopyActionList.member = Shapes::ShapeRef.new(shape: CrossRegionCopyAction)
 
+    CrossRegionCopyDeprecateRule.add_member(:interval, Shapes::ShapeRef.new(shape: Interval, location_name: "Interval"))
+    CrossRegionCopyDeprecateRule.add_member(:interval_unit, Shapes::ShapeRef.new(shape: RetentionIntervalUnitValues, location_name: "IntervalUnit"))
+    CrossRegionCopyDeprecateRule.struct_class = Types::CrossRegionCopyDeprecateRule
+
     CrossRegionCopyRetainRule.add_member(:interval, Shapes::ShapeRef.new(shape: Interval, location_name: "Interval"))
     CrossRegionCopyRetainRule.add_member(:interval_unit, Shapes::ShapeRef.new(shape: RetentionIntervalUnitValues, location_name: "IntervalUnit"))
     CrossRegionCopyRetainRule.struct_class = Types::CrossRegionCopyRetainRule
@@ -154,6 +172,7 @@ module Aws::DLM
     CrossRegionCopyRule.add_member(:cmk_arn, Shapes::ShapeRef.new(shape: CmkArn, location_name: "CmkArn"))
     CrossRegionCopyRule.add_member(:copy_tags, Shapes::ShapeRef.new(shape: CopyTagsNullable, location_name: "CopyTags"))
     CrossRegionCopyRule.add_member(:retain_rule, Shapes::ShapeRef.new(shape: CrossRegionCopyRetainRule, location_name: "RetainRule"))
+    CrossRegionCopyRule.add_member(:deprecate_rule, Shapes::ShapeRef.new(shape: CrossRegionCopyDeprecateRule, location_name: "DeprecateRule"))
     CrossRegionCopyRule.struct_class = Types::CrossRegionCopyRule
 
     CrossRegionCopyRules.member = Shapes::ShapeRef.new(shape: CrossRegionCopyRule)
@@ -162,6 +181,11 @@ module Aws::DLM
     DeleteLifecyclePolicyRequest.struct_class = Types::DeleteLifecyclePolicyRequest
 
     DeleteLifecyclePolicyResponse.struct_class = Types::DeleteLifecyclePolicyResponse
+
+    DeprecateRule.add_member(:count, Shapes::ShapeRef.new(shape: Count, location_name: "Count"))
+    DeprecateRule.add_member(:interval, Shapes::ShapeRef.new(shape: Interval, location_name: "Interval"))
+    DeprecateRule.add_member(:interval_unit, Shapes::ShapeRef.new(shape: RetentionIntervalUnitValues, location_name: "IntervalUnit"))
+    DeprecateRule.struct_class = Types::DeprecateRule
 
     EncryptionConfiguration.add_member(:encrypted, Shapes::ShapeRef.new(shape: Encrypted, required: true, location_name: "Encrypted"))
     EncryptionConfiguration.add_member(:cmk_arn, Shapes::ShapeRef.new(shape: CmkArn, location_name: "CmkArn"))
@@ -175,6 +199,8 @@ module Aws::DLM
     EventSource.add_member(:type, Shapes::ShapeRef.new(shape: EventSourceValues, required: true, location_name: "Type"))
     EventSource.add_member(:parameters, Shapes::ShapeRef.new(shape: EventParameters, location_name: "Parameters"))
     EventSource.struct_class = Types::EventSource
+
+    ExcludeDataVolumeTagList.member = Shapes::ShapeRef.new(shape: Tag)
 
     FastRestoreRule.add_member(:count, Shapes::ShapeRef.new(shape: Count, location_name: "Count"))
     FastRestoreRule.add_member(:interval, Shapes::ShapeRef.new(shape: Interval, location_name: "Interval"))
@@ -244,6 +270,7 @@ module Aws::DLM
 
     Parameters.add_member(:exclude_boot_volume, Shapes::ShapeRef.new(shape: ExcludeBootVolume, location_name: "ExcludeBootVolume"))
     Parameters.add_member(:no_reboot, Shapes::ShapeRef.new(shape: NoReboot, location_name: "NoReboot"))
+    Parameters.add_member(:exclude_data_volume_tags, Shapes::ShapeRef.new(shape: ExcludeDataVolumeTagList, location_name: "ExcludeDataVolumeTags"))
     Parameters.struct_class = Types::Parameters
 
     PolicyDetails.add_member(:policy_type, Shapes::ShapeRef.new(shape: PolicyTypeValues, location_name: "PolicyType"))
@@ -268,10 +295,15 @@ module Aws::DLM
 
     ResourceTypeValuesList.member = Shapes::ShapeRef.new(shape: ResourceTypeValues)
 
-    RetainRule.add_member(:count, Shapes::ShapeRef.new(shape: Count, location_name: "Count"))
-    RetainRule.add_member(:interval, Shapes::ShapeRef.new(shape: Interval, location_name: "Interval"))
+    RetainRule.add_member(:count, Shapes::ShapeRef.new(shape: StandardTierRetainRuleCount, location_name: "Count"))
+    RetainRule.add_member(:interval, Shapes::ShapeRef.new(shape: StandardTierRetainRuleInterval, location_name: "Interval"))
     RetainRule.add_member(:interval_unit, Shapes::ShapeRef.new(shape: RetentionIntervalUnitValues, location_name: "IntervalUnit"))
     RetainRule.struct_class = Types::RetainRule
+
+    RetentionArchiveTier.add_member(:count, Shapes::ShapeRef.new(shape: Count, location_name: "Count"))
+    RetentionArchiveTier.add_member(:interval, Shapes::ShapeRef.new(shape: Interval, location_name: "Interval"))
+    RetentionArchiveTier.add_member(:interval_unit, Shapes::ShapeRef.new(shape: RetentionIntervalUnitValues, location_name: "IntervalUnit"))
+    RetentionArchiveTier.struct_class = Types::RetentionArchiveTier
 
     Schedule.add_member(:name, Shapes::ShapeRef.new(shape: ScheduleName, location_name: "Name"))
     Schedule.add_member(:copy_tags, Shapes::ShapeRef.new(shape: CopyTags, location_name: "CopyTags"))
@@ -282,6 +314,8 @@ module Aws::DLM
     Schedule.add_member(:fast_restore_rule, Shapes::ShapeRef.new(shape: FastRestoreRule, location_name: "FastRestoreRule"))
     Schedule.add_member(:cross_region_copy_rules, Shapes::ShapeRef.new(shape: CrossRegionCopyRules, location_name: "CrossRegionCopyRules"))
     Schedule.add_member(:share_rules, Shapes::ShapeRef.new(shape: ShareRules, location_name: "ShareRules"))
+    Schedule.add_member(:deprecate_rule, Shapes::ShapeRef.new(shape: DeprecateRule, location_name: "DeprecateRule"))
+    Schedule.add_member(:archive_rule, Shapes::ShapeRef.new(shape: ArchiveRule, location_name: "ArchiveRule"))
     Schedule.struct_class = Types::Schedule
 
     ScheduleList.member = Shapes::ShapeRef.new(shape: Schedule)

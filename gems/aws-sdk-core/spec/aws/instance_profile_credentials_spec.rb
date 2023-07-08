@@ -8,6 +8,136 @@ module Aws
 
     let(:token_path) { '/latest/api/token' }
 
+    let(:ipv4_endpoint) { 'http://169.254.169.254' }
+    let(:ipv6_endpoint) { 'http://[fd00:ec2::254]' }
+
+    describe 'endpoint mode resolution' do
+      before do
+        allow_any_instance_of(InstanceProfileCredentials).to receive(:refresh)
+      end
+
+      it 'mode is ipv4 by default' do
+        subject = InstanceProfileCredentials.new
+        expect(subject.instance_variable_get(:@endpoint)).to eq ipv4_endpoint
+      end
+
+      it 'can be configured with shared config' do
+        allow_any_instance_of(Aws::SharedConfig)
+          .to receive(:ec2_metadata_service_endpoint_mode).and_return('IPv6')
+        subject = InstanceProfileCredentials.new
+        expect(subject.instance_variable_get(:@endpoint)).to eq ipv6_endpoint
+      end
+
+      it 'can be configured using env variable with precedence' do
+        ENV['AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE'] = 'IPv4'
+        allow_any_instance_of(Aws::SharedConfig)
+          .to receive(:ec2_metadata_service_endpoint_mode).and_return('IPv6')
+        subject = InstanceProfileCredentials.new
+        expect(subject.instance_variable_get(:@endpoint)).to eq ipv4_endpoint
+      end
+
+      it 'can be configure through code with precedence' do
+        ENV['AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE'] = 'IPv4'
+        allow_any_instance_of(Aws::SharedConfig)
+          .to receive(:ec2_metadata_service_endpoint_mode).and_return('IPv4')
+        subject = InstanceProfileCredentials.new(endpoint_mode: 'IPv6')
+        expect(subject.instance_variable_get(:@endpoint)).to eq ipv6_endpoint
+      end
+
+      it 'raises ArgumentError when endpoint mode is unexpected' do
+        expect { InstanceProfileCredentials.new(endpoint_mode: 'IPv69') }
+          .to raise_error(ArgumentError)
+      end
+    end
+
+    describe 'endpoint configuration' do
+      before do
+        allow_any_instance_of(InstanceProfileCredentials).to receive(:refresh)
+      end
+
+      it 'can be configured without a scheme' do
+        subject = InstanceProfileCredentials.new(
+          endpoint: '123.123.123.123'
+        )
+        expect(subject.instance_variable_get(:@endpoint))
+          .to eq '123.123.123.123'
+      end
+
+      it 'can be configured with a scheme' do
+        subject = InstanceProfileCredentials.new(
+          endpoint: 'http://123.123.123.123'
+        )
+        expect(subject.instance_variable_get(:@endpoint))
+          .to eq 'http://123.123.123.123'
+      end
+
+      it 'still supports ip_address' do
+        subject = InstanceProfileCredentials.new(
+          ip_address: '123.123.123.123'
+        )
+        expect(subject.instance_variable_get(:@endpoint))
+          .to eq '123.123.123.123'
+      end
+    end
+
+    describe 'endpoint resolution' do
+      let(:endpoint) { 'http://123.123.123.123' }
+
+      before do
+        allow_any_instance_of(InstanceProfileCredentials).to receive(:refresh)
+      end
+
+      it 'can be configured with shared config' do
+        allow_any_instance_of(Aws::SharedConfig)
+          .to receive(:ec2_metadata_service_endpoint).and_return(endpoint)
+        expect(subject.instance_variable_get(:@endpoint)).to eq endpoint
+      end
+
+      it 'can be configured using env variable with precedence' do
+        ENV['AWS_EC2_METADATA_SERVICE_ENDPOINT'] = endpoint
+        subject = InstanceProfileCredentials.new
+        expect(subject.instance_variable_get(:@endpoint)).to eq endpoint
+      end
+
+      it 'can be configured through code with precedence' do
+        allow_any_instance_of(Aws::SharedConfig)
+          .to receive(:ec2_metadata_service_endpoint)
+          .and_return('bar-example.com')
+        ENV['AWS_EC2_METADATA_SERVICE_ENDPOINT'] = 'foo-example.com'
+        subject = InstanceProfileCredentials.new(ip_address: endpoint)
+        expect(subject.instance_variable_get(:@endpoint)).to eq endpoint
+      end
+
+      it 'overrides endpoint mode configuration with ENV' do
+        ENV['AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE'] = 'IPv4'
+        allow_any_instance_of(Aws::SharedConfig)
+          .to receive(:ec2_metadata_service_endpoint_mode).and_return('IPv4')
+        ENV['AWS_EC2_METADATA_SERVICE_ENDPOINT'] = endpoint
+        subject = InstanceProfileCredentials.new(endpoint_mode: 'IPv4')
+        expect(subject.instance_variable_get(:@endpoint)).to eq endpoint
+      end
+
+      it 'overrides endpoint mode configuration with shared config' do
+        ENV['AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE'] = 'IPv4'
+        allow_any_instance_of(Aws::SharedConfig)
+          .to receive(:ec2_metadata_service_endpoint_mode).and_return('IPv4')
+        allow_any_instance_of(Aws::SharedConfig)
+          .to receive(:ec2_metadata_service_endpoint).and_return(endpoint)
+        subject = InstanceProfileCredentials.new(endpoint_mode: 'IPv4')
+        expect(subject.instance_variable_get(:@endpoint)).to eq endpoint
+      end
+
+      it 'overrides endpoint mode configuration with code' do
+        ENV['AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE'] = 'IPv4'
+        allow_any_instance_of(Aws::SharedConfig)
+          .to receive(:ec2_metadata_service_endpoint_mode).and_return('IPv4')
+        subject = InstanceProfileCredentials.new(
+          endpoint_mode: 'IPv4', endpoint: endpoint
+        )
+        expect(subject.instance_variable_get(:@endpoint)).to eq endpoint
+      end
+    end
+
     describe 'without instance metadata service present' do
       [
         Errno::EHOSTUNREACH,
@@ -359,6 +489,82 @@ module Aws
           retries: 3
         )
         assert_requested(expected_request, times: 4)
+      end
+    end
+
+    describe 'static stability' do
+      let(:expired) { Time.now.utc - 3600 }
+      let(:near_expiration) { Time.now.utc + 10 }
+
+      let(:expired_resp) { <<-JSON.strip }
+        {
+          "Code" : "Success",
+          "LastUpdated" : "2013-11-22T20:03:48Z",
+          "Type" : "AWS-HMAC",
+          "AccessKeyId" : "akid",
+          "SecretAccessKey" : "secret",
+          "Token" : "session-token",
+          "Expiration" : "#{expired.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+        }
+      JSON
+
+      let(:near_expiration_resp) { <<-JSON.strip }
+        {
+          "Code" : "Success",
+          "LastUpdated" : "2013-11-22T20:03:48Z",
+          "Type" : "AWS-HMAC",
+          "AccessKeyId" : "akid-2",
+          "SecretAccessKey" : "secret-2",
+          "Token" : "session-token-2",
+          "Expiration" : "#{near_expiration.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+        }
+      JSON
+
+      before(:each) do
+        stub_request(:put, "http://169.254.169.254#{token_path}")
+          .to_return(
+            status: 200,
+            body: "my-token\n",
+            headers: { 'x-aws-ec2-metadata-token-ttl-seconds' => '21600' }
+          )
+        stub_request(:get, "http://169.254.169.254#{path}")
+          .with(headers: { 'x-aws-ec2-metadata-token' => 'my-token' })
+          .to_return(status: 200, body: "profile-name\n")
+      end
+
+      it 'provides credentials when the first call returns expired credentials' do
+        expect_any_instance_of(InstanceProfileCredentials).to receive(:warn).at_least(:once)
+
+        expected_request = stub_request(:get, "http://169.254.169.254#{path}profile-name")
+          .with(headers: { 'x-aws-ec2-metadata-token' => 'my-token' })
+          .to_return(status: 200, body: expired_resp)
+
+        provider = InstanceProfileCredentials.new(backoff: 0)
+        creds = provider.credentials
+        expect(creds.access_key_id).to eq('akid')
+        assert_requested(expected_request, times: 1)
+
+        # successive requests/credential gets don't result in more calls to imds
+        provider.credentials
+        provider.credentials
+        provider.credentials
+
+        assert_requested(expected_request, times: 1)
+      end
+
+      it 'provides credentials after a read timeout during a refresh' do
+        expect_any_instance_of(InstanceProfileCredentials).to receive(:warn)
+        expected_request = stub_request(:get, "http://169.254.169.254#{path}profile-name")
+                             .with(headers: { 'x-aws-ec2-metadata-token' => 'my-token' })
+                             .to_return(status: 200, body: near_expiration_resp)
+                             .to_raise(Timeout::Error)
+
+        provider = InstanceProfileCredentials.new(backoff: 0, retries: 0)
+
+        creds = provider.credentials
+
+        expect(creds.access_key_id).to eq('akid-2')
+        assert_requested(expected_request, times: 2)
       end
     end
   end

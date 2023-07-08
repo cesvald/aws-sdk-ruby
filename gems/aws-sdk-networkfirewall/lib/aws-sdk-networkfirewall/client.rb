@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:networkfirewall)
@@ -73,8 +77,13 @@ module Aws::NetworkFirewall
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::NetworkFirewall::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::NetworkFirewall
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::NetworkFirewall
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::NetworkFirewall
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::NetworkFirewall
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::NetworkFirewall
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::NetworkFirewall::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::NetworkFirewall::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::NetworkFirewall
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::NetworkFirewall
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -413,8 +470,8 @@ module Aws::NetworkFirewall
     # You can specify one subnet for each of the Availability Zones that the
     # VPC spans.
     #
-    # This request creates an AWS Network Firewall firewall endpoint in each
-    # of the subnets. To enable the firewall's protections, you must also
+    # This request creates an Network Firewall firewall endpoint in each of
+    # the subnets. To enable the firewall's protections, you must also
     # modify the VPC's route tables for each subnet's Availability Zone,
     # to redirect the traffic that's coming into and going out of the zone
     # through the firewall endpoint.
@@ -468,6 +525,7 @@ module Aws::NetworkFirewall
     #     subnet_mappings: [ # required
     #       {
     #         subnet_id: "CollectionMember_String", # required
+    #         ip_address_type: "DUALSTACK", # accepts DUALSTACK, IPV4, IPV6
     #       },
     #     ],
     #   })
@@ -478,6 +536,7 @@ module Aws::NetworkFirewall
     #   resp.firewall_name #=> String
     #   resp.subnet_mappings #=> Array
     #   resp.subnet_mappings[0].subnet_id #=> String
+    #   resp.subnet_mappings[0].ip_address_type #=> String, one of "DUALSTACK", "IPV4", "IPV6"
     #   resp.update_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/AssociateSubnets AWS API Documentation
@@ -489,14 +548,14 @@ module Aws::NetworkFirewall
       req.send_request(options)
     end
 
-    # Creates an AWS Network Firewall Firewall and accompanying
-    # FirewallStatus for a VPC.
+    # Creates an Network Firewall Firewall and accompanying FirewallStatus
+    # for a VPC.
     #
-    # The firewall defines the configuration settings for an AWS Network
+    # The firewall defines the configuration settings for an Network
     # Firewall firewall. The settings that you can define at creation
     # include the firewall policy, the subnets in your VPC to use for the
-    # firewall endpoints, and any tags that are attached to the firewall AWS
-    # resource.
+    # firewall endpoints, and any tags that are attached to the firewall
+    # Amazon Web Services resource.
     #
     # After you create a firewall, you can provide additional settings, like
     # the logging configuration.
@@ -506,8 +565,9 @@ module Aws::NetworkFirewall
     # UpdateLoggingConfiguration, AssociateSubnets, and
     # UpdateFirewallDeleteProtection.
     #
-    # To manage a firewall's tags, use the standard AWS resource tagging
-    # operations, ListTagsForResource, TagResource, and UntagResource.
+    # To manage a firewall's tags, use the standard Amazon Web Services
+    # resource tagging operations, ListTagsForResource, TagResource, and
+    # UntagResource.
     #
     # To retrieve information about firewalls, use ListFirewalls and
     # DescribeFirewall.
@@ -558,6 +618,10 @@ module Aws::NetworkFirewall
     # @option params [Array<Types::Tag>] :tags
     #   The key:value pairs to associate with the resource.
     #
+    # @option params [Types::EncryptionConfiguration] :encryption_configuration
+    #   A complex type that contains settings for encryption of your firewall
+    #   resources.
+    #
     # @return [Types::CreateFirewallResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateFirewallResponse#firewall #firewall} => Types::Firewall
@@ -572,6 +636,7 @@ module Aws::NetworkFirewall
     #     subnet_mappings: [ # required
     #       {
     #         subnet_id: "CollectionMember_String", # required
+    #         ip_address_type: "DUALSTACK", # accepts DUALSTACK, IPV4, IPV6
     #       },
     #     ],
     #     delete_protection: false,
@@ -584,6 +649,10 @@ module Aws::NetworkFirewall
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     encryption_configuration: {
+    #       key_id: "KeyId",
+    #       type: "CUSTOMER_KMS", # required, accepts CUSTOMER_KMS, AWS_OWNED_KMS_KEY
+    #     },
     #   })
     #
     # @example Response structure
@@ -594,6 +663,7 @@ module Aws::NetworkFirewall
     #   resp.firewall.vpc_id #=> String
     #   resp.firewall.subnet_mappings #=> Array
     #   resp.firewall.subnet_mappings[0].subnet_id #=> String
+    #   resp.firewall.subnet_mappings[0].ip_address_type #=> String, one of "DUALSTACK", "IPV4", "IPV6"
     #   resp.firewall.delete_protection #=> Boolean
     #   resp.firewall.subnet_change_protection #=> Boolean
     #   resp.firewall.firewall_policy_change_protection #=> Boolean
@@ -602,15 +672,22 @@ module Aws::NetworkFirewall
     #   resp.firewall.tags #=> Array
     #   resp.firewall.tags[0].key #=> String
     #   resp.firewall.tags[0].value #=> String
+    #   resp.firewall.encryption_configuration.key_id #=> String
+    #   resp.firewall.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
     #   resp.firewall_status.status #=> String, one of "PROVISIONING", "DELETING", "READY"
-    #   resp.firewall_status.configuration_sync_state_summary #=> String, one of "PENDING", "IN_SYNC"
+    #   resp.firewall_status.configuration_sync_state_summary #=> String, one of "PENDING", "IN_SYNC", "CAPACITY_CONSTRAINED"
     #   resp.firewall_status.sync_states #=> Hash
     #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.subnet_id #=> String
     #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.endpoint_id #=> String
-    #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.status #=> String, one of "CREATING", "DELETING", "SCALING", "READY"
+    #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.status #=> String, one of "CREATING", "DELETING", "FAILED", "ERROR", "SCALING", "READY"
+    #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.status_message #=> String
     #   resp.firewall_status.sync_states["AvailabilityZone"].config #=> Hash
-    #   resp.firewall_status.sync_states["AvailabilityZone"].config["ResourceName"].sync_status #=> String, one of "PENDING", "IN_SYNC"
+    #   resp.firewall_status.sync_states["AvailabilityZone"].config["ResourceName"].sync_status #=> String, one of "PENDING", "IN_SYNC", "CAPACITY_CONSTRAINED"
     #   resp.firewall_status.sync_states["AvailabilityZone"].config["ResourceName"].update_token #=> String
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.available_cidr_count #=> Integer
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.utilized_cidr_count #=> Integer
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.ip_set_references #=> Hash
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.ip_set_references["IPSetArn"].resolved_cidr_count #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CreateFirewall AWS API Documentation
     #
@@ -624,7 +701,7 @@ module Aws::NetworkFirewall
     # Creates the firewall policy for the firewall according to the
     # specifications.
     #
-    # An AWS Network Firewall firewall policy defines the behavior of a
+    # An Network Firewall firewall policy defines the behavior of a
     # firewall, in a collection of stateless and stateful rule groups and
     # other settings. You can use one firewall policy for multiple
     # firewalls.
@@ -656,6 +733,10 @@ module Aws::NetworkFirewall
     #
     #   If set to `FALSE`, Network Firewall makes the requested changes to
     #   your resources.
+    #
+    # @option params [Types::EncryptionConfiguration] :encryption_configuration
+    #   A complex type that contains settings for encryption of your firewall
+    #   policy resources.
     #
     # @return [Types::CreateFirewallPolicyResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -692,8 +773,25 @@ module Aws::NetworkFirewall
     #       stateful_rule_group_references: [
     #         {
     #           resource_arn: "ResourceArn", # required
+    #           priority: 1,
+    #           override: {
+    #             action: "DROP_TO_ALERT", # accepts DROP_TO_ALERT
+    #           },
     #         },
     #       ],
+    #       stateful_default_actions: ["CollectionMember_String"],
+    #       stateful_engine_options: {
+    #         rule_order: "DEFAULT_ACTION_ORDER", # accepts DEFAULT_ACTION_ORDER, STRICT_ORDER
+    #         stream_exception_policy: "DROP", # accepts DROP, CONTINUE, REJECT
+    #       },
+    #       tls_inspection_configuration_arn: "ResourceArn",
+    #       policy_variables: {
+    #         rule_variables: {
+    #           "RuleVariableName" => {
+    #             definition: ["VariableDefinition"], # required
+    #           },
+    #         },
+    #       },
     #     },
     #     description: "Description",
     #     tags: [
@@ -703,6 +801,10 @@ module Aws::NetworkFirewall
     #       },
     #     ],
     #     dry_run: false,
+    #     encryption_configuration: {
+    #       key_id: "KeyId",
+    #       type: "CUSTOMER_KMS", # required, accepts CUSTOMER_KMS, AWS_OWNED_KMS_KEY
+    #     },
     #   })
     #
     # @example Response structure
@@ -716,6 +818,12 @@ module Aws::NetworkFirewall
     #   resp.firewall_policy_response.tags #=> Array
     #   resp.firewall_policy_response.tags[0].key #=> String
     #   resp.firewall_policy_response.tags[0].value #=> String
+    #   resp.firewall_policy_response.consumed_stateless_rule_capacity #=> Integer
+    #   resp.firewall_policy_response.consumed_stateful_rule_capacity #=> Integer
+    #   resp.firewall_policy_response.number_of_associations #=> Integer
+    #   resp.firewall_policy_response.encryption_configuration.key_id #=> String
+    #   resp.firewall_policy_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.firewall_policy_response.last_modified_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CreateFirewallPolicy AWS API Documentation
     #
@@ -834,6 +942,15 @@ module Aws::NetworkFirewall
     #   If set to `FALSE`, Network Firewall makes the requested changes to
     #   your resources.
     #
+    # @option params [Types::EncryptionConfiguration] :encryption_configuration
+    #   A complex type that contains settings for encryption of your rule
+    #   group resources.
+    #
+    # @option params [Types::SourceMetadata] :source_metadata
+    #   A complex type that contains metadata about the rule group that your
+    #   own rule group is copied from. You can use the metadata to keep track
+    #   of updates made to the originating rule group.
+    #
     # @return [Types::CreateRuleGroupResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateRuleGroupResponse#update_token #update_token} => String
@@ -856,6 +973,13 @@ module Aws::NetworkFirewall
     #           },
     #         },
     #       },
+    #       reference_sets: {
+    #         ip_set_references: {
+    #           "IPSetReferenceName" => {
+    #             reference_arn: "ResourceArn",
+    #           },
+    #         },
+    #       },
     #       rules_source: { # required
     #         rules_string: "RulesString",
     #         rules_source_list: {
@@ -865,7 +989,7 @@ module Aws::NetworkFirewall
     #         },
     #         stateful_rules: [
     #           {
-    #             action: "PASS", # required, accepts PASS, DROP, ALERT
+    #             action: "PASS", # required, accepts PASS, DROP, ALERT, REJECT
     #             header: { # required
     #               protocol: "IP", # required, accepts IP, TCP, UDP, ICMP, HTTP, FTP, TLS, SMB, DNS, DCERPC, SSH, SMTP, IMAP, MSN, KRB5, IKEV2, TFTP, NTP, DHCP
     #               source: "Source", # required
@@ -938,6 +1062,9 @@ module Aws::NetworkFirewall
     #           ],
     #         },
     #       },
+    #       stateful_rule_options: {
+    #         rule_order: "DEFAULT_ACTION_ORDER", # accepts DEFAULT_ACTION_ORDER, STRICT_ORDER
+    #       },
     #     },
     #     rules: "RulesString",
     #     type: "STATELESS", # required, accepts STATELESS, STATEFUL
@@ -950,6 +1077,14 @@ module Aws::NetworkFirewall
     #       },
     #     ],
     #     dry_run: false,
+    #     encryption_configuration: {
+    #       key_id: "KeyId",
+    #       type: "CUSTOMER_KMS", # required, accepts CUSTOMER_KMS, AWS_OWNED_KMS_KEY
+    #     },
+    #     source_metadata: {
+    #       source_arn: "ResourceArn",
+    #       source_update_token: "UpdateToken",
+    #     },
     #   })
     #
     # @example Response structure
@@ -965,6 +1100,14 @@ module Aws::NetworkFirewall
     #   resp.rule_group_response.tags #=> Array
     #   resp.rule_group_response.tags[0].key #=> String
     #   resp.rule_group_response.tags[0].value #=> String
+    #   resp.rule_group_response.consumed_capacity #=> Integer
+    #   resp.rule_group_response.number_of_associations #=> Integer
+    #   resp.rule_group_response.encryption_configuration.key_id #=> String
+    #   resp.rule_group_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.rule_group_response.source_metadata.source_arn #=> String
+    #   resp.rule_group_response.source_metadata.source_update_token #=> String
+    #   resp.rule_group_response.sns_topic #=> String
+    #   resp.rule_group_response.last_modified_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CreateRuleGroup AWS API Documentation
     #
@@ -972,6 +1115,172 @@ module Aws::NetworkFirewall
     # @param [Hash] params ({})
     def create_rule_group(params = {}, options = {})
       req = build_request(:create_rule_group, params)
+      req.send_request(options)
+    end
+
+    # Creates an Network Firewall TLS inspection configuration. A TLS
+    # inspection configuration contains the Certificate Manager certificate
+    # references that Network Firewall uses to decrypt and re-encrypt
+    # inbound traffic.
+    #
+    # After you create a TLS inspection configuration, you associate it with
+    # a firewall policy.
+    #
+    # To update the settings for a TLS inspection configuration, use
+    # UpdateTLSInspectionConfiguration.
+    #
+    # To manage a TLS inspection configuration's tags, use the standard
+    # Amazon Web Services resource tagging operations, ListTagsForResource,
+    # TagResource, and UntagResource.
+    #
+    # To retrieve information about TLS inspection configurations, use
+    # ListTLSInspectionConfigurations and
+    # DescribeTLSInspectionConfiguration.
+    #
+    # For more information about TLS inspection configurations, see
+    # [Decrypting SSL/TLS traffic with TLS inspection configurations][1] in
+    # the *Network Firewall Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection.html
+    #
+    # @option params [required, String] :tls_inspection_configuration_name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create it.
+    #
+    # @option params [required, Types::TLSInspectionConfiguration] :tls_inspection_configuration
+    #   The object that defines a TLS inspection configuration. This, along
+    #   with TLSInspectionConfigurationResponse, define the TLS inspection
+    #   configuration. You can retrieve all objects for a TLS inspection
+    #   configuration by calling DescribeTLSInspectionConfiguration.
+    #
+    #   Network Firewall uses a TLS inspection configuration to decrypt
+    #   traffic. Network Firewall re-encrypts the traffic before sending it to
+    #   its destination.
+    #
+    #   To use a TLS inspection configuration, you add it to a Network
+    #   Firewall firewall policy, then you apply the firewall policy to a
+    #   firewall. Network Firewall acts as a proxy service to decrypt and
+    #   inspect inbound traffic. You can reference a TLS inspection
+    #   configuration from more than one firewall policy, and you can use a
+    #   firewall policy in more than one firewall. For more information about
+    #   using TLS inspection configurations, see [Decrypting SSL/TLS traffic
+    #   with TLS inspection configurations][1] in the *Network Firewall
+    #   Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection.html
+    #
+    # @option params [String] :description
+    #   A description of the TLS inspection configuration.
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   The key:value pairs to associate with the resource.
+    #
+    # @option params [Types::EncryptionConfiguration] :encryption_configuration
+    #   A complex type that contains optional Amazon Web Services Key
+    #   Management Service (KMS) encryption settings for your Network Firewall
+    #   resources. Your data is encrypted by default with an Amazon Web
+    #   Services owned key that Amazon Web Services owns and manages for you.
+    #   You can use either the Amazon Web Services owned key, or provide your
+    #   own customer managed key. To learn more about KMS encryption of your
+    #   Network Firewall resources, see [Encryption at rest with Amazon Web
+    #   Services Key Managment Service][1] in the *Network Firewall Developer
+    #   Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/kms/latest/developerguide/kms-encryption-at-rest.html
+    #
+    # @return [Types::CreateTLSInspectionConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateTLSInspectionConfigurationResponse#update_token #update_token} => String
+    #   * {Types::CreateTLSInspectionConfigurationResponse#tls_inspection_configuration_response #tls_inspection_configuration_response} => Types::TLSInspectionConfigurationResponse
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_tls_inspection_configuration({
+    #     tls_inspection_configuration_name: "ResourceName", # required
+    #     tls_inspection_configuration: { # required
+    #       server_certificate_configurations: [
+    #         {
+    #           server_certificates: [
+    #             {
+    #               resource_arn: "ResourceArn",
+    #             },
+    #           ],
+    #           scopes: [
+    #             {
+    #               sources: [
+    #                 {
+    #                   address_definition: "AddressDefinition", # required
+    #                 },
+    #               ],
+    #               destinations: [
+    #                 {
+    #                   address_definition: "AddressDefinition", # required
+    #                 },
+    #               ],
+    #               source_ports: [
+    #                 {
+    #                   from_port: 1, # required
+    #                   to_port: 1, # required
+    #                 },
+    #               ],
+    #               destination_ports: [
+    #                 {
+    #                   from_port: 1, # required
+    #                   to_port: 1, # required
+    #                 },
+    #               ],
+    #               protocols: [1],
+    #             },
+    #           ],
+    #         },
+    #       ],
+    #     },
+    #     description: "Description",
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #     encryption_configuration: {
+    #       key_id: "KeyId",
+    #       type: "CUSTOMER_KMS", # required, accepts CUSTOMER_KMS, AWS_OWNED_KMS_KEY
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.update_token #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_arn #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_name #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_id #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_status #=> String, one of "ACTIVE", "DELETING"
+    #   resp.tls_inspection_configuration_response.description #=> String
+    #   resp.tls_inspection_configuration_response.tags #=> Array
+    #   resp.tls_inspection_configuration_response.tags[0].key #=> String
+    #   resp.tls_inspection_configuration_response.tags[0].value #=> String
+    #   resp.tls_inspection_configuration_response.last_modified_time #=> Time
+    #   resp.tls_inspection_configuration_response.number_of_associations #=> Integer
+    #   resp.tls_inspection_configuration_response.encryption_configuration.key_id #=> String
+    #   resp.tls_inspection_configuration_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.tls_inspection_configuration_response.certificates #=> Array
+    #   resp.tls_inspection_configuration_response.certificates[0].certificate_arn #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].certificate_serial #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].status #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].status_message #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/CreateTLSInspectionConfiguration AWS API Documentation
+    #
+    # @overload create_tls_inspection_configuration(params = {})
+    # @param [Hash] params ({})
+    def create_tls_inspection_configuration(params = {}, options = {})
+      req = build_request(:create_tls_inspection_configuration, params)
       req.send_request(options)
     end
 
@@ -1022,6 +1331,7 @@ module Aws::NetworkFirewall
     #   resp.firewall.vpc_id #=> String
     #   resp.firewall.subnet_mappings #=> Array
     #   resp.firewall.subnet_mappings[0].subnet_id #=> String
+    #   resp.firewall.subnet_mappings[0].ip_address_type #=> String, one of "DUALSTACK", "IPV4", "IPV6"
     #   resp.firewall.delete_protection #=> Boolean
     #   resp.firewall.subnet_change_protection #=> Boolean
     #   resp.firewall.firewall_policy_change_protection #=> Boolean
@@ -1030,15 +1340,22 @@ module Aws::NetworkFirewall
     #   resp.firewall.tags #=> Array
     #   resp.firewall.tags[0].key #=> String
     #   resp.firewall.tags[0].value #=> String
+    #   resp.firewall.encryption_configuration.key_id #=> String
+    #   resp.firewall.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
     #   resp.firewall_status.status #=> String, one of "PROVISIONING", "DELETING", "READY"
-    #   resp.firewall_status.configuration_sync_state_summary #=> String, one of "PENDING", "IN_SYNC"
+    #   resp.firewall_status.configuration_sync_state_summary #=> String, one of "PENDING", "IN_SYNC", "CAPACITY_CONSTRAINED"
     #   resp.firewall_status.sync_states #=> Hash
     #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.subnet_id #=> String
     #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.endpoint_id #=> String
-    #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.status #=> String, one of "CREATING", "DELETING", "SCALING", "READY"
+    #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.status #=> String, one of "CREATING", "DELETING", "FAILED", "ERROR", "SCALING", "READY"
+    #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.status_message #=> String
     #   resp.firewall_status.sync_states["AvailabilityZone"].config #=> Hash
-    #   resp.firewall_status.sync_states["AvailabilityZone"].config["ResourceName"].sync_status #=> String, one of "PENDING", "IN_SYNC"
+    #   resp.firewall_status.sync_states["AvailabilityZone"].config["ResourceName"].sync_status #=> String, one of "PENDING", "IN_SYNC", "CAPACITY_CONSTRAINED"
     #   resp.firewall_status.sync_states["AvailabilityZone"].config["ResourceName"].update_token #=> String
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.available_cidr_count #=> Integer
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.utilized_cidr_count #=> Integer
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.ip_set_references #=> Hash
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.ip_set_references["IPSetArn"].resolved_cidr_count #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DeleteFirewall AWS API Documentation
     #
@@ -1083,6 +1400,12 @@ module Aws::NetworkFirewall
     #   resp.firewall_policy_response.tags #=> Array
     #   resp.firewall_policy_response.tags[0].key #=> String
     #   resp.firewall_policy_response.tags[0].value #=> String
+    #   resp.firewall_policy_response.consumed_stateless_rule_capacity #=> Integer
+    #   resp.firewall_policy_response.consumed_stateful_rule_capacity #=> Integer
+    #   resp.firewall_policy_response.number_of_associations #=> Integer
+    #   resp.firewall_policy_response.encryption_configuration.key_id #=> String
+    #   resp.firewall_policy_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.firewall_policy_response.last_modified_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DeleteFirewallPolicy AWS API Documentation
     #
@@ -1164,6 +1487,14 @@ module Aws::NetworkFirewall
     #   resp.rule_group_response.tags #=> Array
     #   resp.rule_group_response.tags[0].key #=> String
     #   resp.rule_group_response.tags[0].value #=> String
+    #   resp.rule_group_response.consumed_capacity #=> Integer
+    #   resp.rule_group_response.number_of_associations #=> Integer
+    #   resp.rule_group_response.encryption_configuration.key_id #=> String
+    #   resp.rule_group_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.rule_group_response.source_metadata.source_arn #=> String
+    #   resp.rule_group_response.source_metadata.source_update_token #=> String
+    #   resp.rule_group_response.sns_topic #=> String
+    #   resp.rule_group_response.last_modified_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DeleteRuleGroup AWS API Documentation
     #
@@ -1171,6 +1502,59 @@ module Aws::NetworkFirewall
     # @param [Hash] params ({})
     def delete_rule_group(params = {}, options = {})
       req = build_request(:delete_rule_group, params)
+      req.send_request(options)
+    end
+
+    # Deletes the specified TLSInspectionConfiguration.
+    #
+    # @option params [String] :tls_inspection_configuration_arn
+    #   The Amazon Resource Name (ARN) of the TLS inspection configuration.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #
+    # @option params [String] :tls_inspection_configuration_name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create it.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #
+    # @return [Types::DeleteTLSInspectionConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteTLSInspectionConfigurationResponse#tls_inspection_configuration_response #tls_inspection_configuration_response} => Types::TLSInspectionConfigurationResponse
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_tls_inspection_configuration({
+    #     tls_inspection_configuration_arn: "ResourceArn",
+    #     tls_inspection_configuration_name: "ResourceName",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_arn #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_name #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_id #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_status #=> String, one of "ACTIVE", "DELETING"
+    #   resp.tls_inspection_configuration_response.description #=> String
+    #   resp.tls_inspection_configuration_response.tags #=> Array
+    #   resp.tls_inspection_configuration_response.tags[0].key #=> String
+    #   resp.tls_inspection_configuration_response.tags[0].value #=> String
+    #   resp.tls_inspection_configuration_response.last_modified_time #=> Time
+    #   resp.tls_inspection_configuration_response.number_of_associations #=> Integer
+    #   resp.tls_inspection_configuration_response.encryption_configuration.key_id #=> String
+    #   resp.tls_inspection_configuration_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.tls_inspection_configuration_response.certificates #=> Array
+    #   resp.tls_inspection_configuration_response.certificates[0].certificate_arn #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].certificate_serial #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].status #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].status_message #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DeleteTLSInspectionConfiguration AWS API Documentation
+    #
+    # @overload delete_tls_inspection_configuration(params = {})
+    # @param [Hash] params ({})
+    def delete_tls_inspection_configuration(params = {}, options = {})
+      req = build_request(:delete_tls_inspection_configuration, params)
       req.send_request(options)
     end
 
@@ -1209,6 +1593,7 @@ module Aws::NetworkFirewall
     #   resp.firewall.vpc_id #=> String
     #   resp.firewall.subnet_mappings #=> Array
     #   resp.firewall.subnet_mappings[0].subnet_id #=> String
+    #   resp.firewall.subnet_mappings[0].ip_address_type #=> String, one of "DUALSTACK", "IPV4", "IPV6"
     #   resp.firewall.delete_protection #=> Boolean
     #   resp.firewall.subnet_change_protection #=> Boolean
     #   resp.firewall.firewall_policy_change_protection #=> Boolean
@@ -1217,15 +1602,22 @@ module Aws::NetworkFirewall
     #   resp.firewall.tags #=> Array
     #   resp.firewall.tags[0].key #=> String
     #   resp.firewall.tags[0].value #=> String
+    #   resp.firewall.encryption_configuration.key_id #=> String
+    #   resp.firewall.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
     #   resp.firewall_status.status #=> String, one of "PROVISIONING", "DELETING", "READY"
-    #   resp.firewall_status.configuration_sync_state_summary #=> String, one of "PENDING", "IN_SYNC"
+    #   resp.firewall_status.configuration_sync_state_summary #=> String, one of "PENDING", "IN_SYNC", "CAPACITY_CONSTRAINED"
     #   resp.firewall_status.sync_states #=> Hash
     #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.subnet_id #=> String
     #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.endpoint_id #=> String
-    #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.status #=> String, one of "CREATING", "DELETING", "SCALING", "READY"
+    #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.status #=> String, one of "CREATING", "DELETING", "FAILED", "ERROR", "SCALING", "READY"
+    #   resp.firewall_status.sync_states["AvailabilityZone"].attachment.status_message #=> String
     #   resp.firewall_status.sync_states["AvailabilityZone"].config #=> Hash
-    #   resp.firewall_status.sync_states["AvailabilityZone"].config["ResourceName"].sync_status #=> String, one of "PENDING", "IN_SYNC"
+    #   resp.firewall_status.sync_states["AvailabilityZone"].config["ResourceName"].sync_status #=> String, one of "PENDING", "IN_SYNC", "CAPACITY_CONSTRAINED"
     #   resp.firewall_status.sync_states["AvailabilityZone"].config["ResourceName"].update_token #=> String
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.available_cidr_count #=> Integer
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.utilized_cidr_count #=> Integer
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.ip_set_references #=> Hash
+    #   resp.firewall_status.capacity_usage_summary.cid_rs.ip_set_references["IPSetArn"].resolved_cidr_count #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeFirewall AWS API Documentation
     #
@@ -1273,6 +1665,12 @@ module Aws::NetworkFirewall
     #   resp.firewall_policy_response.tags #=> Array
     #   resp.firewall_policy_response.tags[0].key #=> String
     #   resp.firewall_policy_response.tags[0].value #=> String
+    #   resp.firewall_policy_response.consumed_stateless_rule_capacity #=> Integer
+    #   resp.firewall_policy_response.consumed_stateful_rule_capacity #=> Integer
+    #   resp.firewall_policy_response.number_of_associations #=> Integer
+    #   resp.firewall_policy_response.encryption_configuration.key_id #=> String
+    #   resp.firewall_policy_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.firewall_policy_response.last_modified_time #=> Time
     #   resp.firewall_policy.stateless_rule_group_references #=> Array
     #   resp.firewall_policy.stateless_rule_group_references[0].resource_arn #=> String
     #   resp.firewall_policy.stateless_rule_group_references[0].priority #=> Integer
@@ -1286,6 +1684,16 @@ module Aws::NetworkFirewall
     #   resp.firewall_policy.stateless_custom_actions[0].action_definition.publish_metric_action.dimensions[0].value #=> String
     #   resp.firewall_policy.stateful_rule_group_references #=> Array
     #   resp.firewall_policy.stateful_rule_group_references[0].resource_arn #=> String
+    #   resp.firewall_policy.stateful_rule_group_references[0].priority #=> Integer
+    #   resp.firewall_policy.stateful_rule_group_references[0].override.action #=> String, one of "DROP_TO_ALERT"
+    #   resp.firewall_policy.stateful_default_actions #=> Array
+    #   resp.firewall_policy.stateful_default_actions[0] #=> String
+    #   resp.firewall_policy.stateful_engine_options.rule_order #=> String, one of "DEFAULT_ACTION_ORDER", "STRICT_ORDER"
+    #   resp.firewall_policy.stateful_engine_options.stream_exception_policy #=> String, one of "DROP", "CONTINUE", "REJECT"
+    #   resp.firewall_policy.tls_inspection_configuration_arn #=> String
+    #   resp.firewall_policy.policy_variables.rule_variables #=> Hash
+    #   resp.firewall_policy.policy_variables.rule_variables["RuleVariableName"].definition #=> Array
+    #   resp.firewall_policy.policy_variables.rule_variables["RuleVariableName"].definition[0] #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeFirewallPolicy AWS API Documentation
     #
@@ -1415,6 +1823,8 @@ module Aws::NetworkFirewall
     #   resp.rule_group.rule_variables.port_sets #=> Hash
     #   resp.rule_group.rule_variables.port_sets["RuleVariableName"].definition #=> Array
     #   resp.rule_group.rule_variables.port_sets["RuleVariableName"].definition[0] #=> String
+    #   resp.rule_group.reference_sets.ip_set_references #=> Hash
+    #   resp.rule_group.reference_sets.ip_set_references["IPSetReferenceName"].reference_arn #=> String
     #   resp.rule_group.rules_source.rules_string #=> String
     #   resp.rule_group.rules_source.rules_source_list.targets #=> Array
     #   resp.rule_group.rules_source.rules_source_list.targets[0] #=> String
@@ -1422,7 +1832,7 @@ module Aws::NetworkFirewall
     #   resp.rule_group.rules_source.rules_source_list.target_types[0] #=> String, one of "TLS_SNI", "HTTP_HOST"
     #   resp.rule_group.rules_source.rules_source_list.generated_rules_type #=> String, one of "ALLOWLIST", "DENYLIST"
     #   resp.rule_group.rules_source.stateful_rules #=> Array
-    #   resp.rule_group.rules_source.stateful_rules[0].action #=> String, one of "PASS", "DROP", "ALERT"
+    #   resp.rule_group.rules_source.stateful_rules[0].action #=> String, one of "PASS", "DROP", "ALERT", "REJECT"
     #   resp.rule_group.rules_source.stateful_rules[0].header.protocol #=> String, one of "IP", "TCP", "UDP", "ICMP", "HTTP", "FTP", "TLS", "SMB", "DNS", "DCERPC", "SSH", "SMTP", "IMAP", "MSN", "KRB5", "IKEV2", "TFTP", "NTP", "DHCP"
     #   resp.rule_group.rules_source.stateful_rules[0].header.source #=> String
     #   resp.rule_group.rules_source.stateful_rules[0].header.source_port #=> String
@@ -1458,6 +1868,7 @@ module Aws::NetworkFirewall
     #   resp.rule_group.rules_source.stateless_rules_and_custom_actions.custom_actions[0].action_name #=> String
     #   resp.rule_group.rules_source.stateless_rules_and_custom_actions.custom_actions[0].action_definition.publish_metric_action.dimensions #=> Array
     #   resp.rule_group.rules_source.stateless_rules_and_custom_actions.custom_actions[0].action_definition.publish_metric_action.dimensions[0].value #=> String
+    #   resp.rule_group.stateful_rule_options.rule_order #=> String, one of "DEFAULT_ACTION_ORDER", "STRICT_ORDER"
     #   resp.rule_group_response.rule_group_arn #=> String
     #   resp.rule_group_response.rule_group_name #=> String
     #   resp.rule_group_response.rule_group_id #=> String
@@ -1468,6 +1879,14 @@ module Aws::NetworkFirewall
     #   resp.rule_group_response.tags #=> Array
     #   resp.rule_group_response.tags[0].key #=> String
     #   resp.rule_group_response.tags[0].value #=> String
+    #   resp.rule_group_response.consumed_capacity #=> Integer
+    #   resp.rule_group_response.number_of_associations #=> Integer
+    #   resp.rule_group_response.encryption_configuration.key_id #=> String
+    #   resp.rule_group_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.rule_group_response.source_metadata.source_arn #=> String
+    #   resp.rule_group_response.source_metadata.source_update_token #=> String
+    #   resp.rule_group_response.sns_topic #=> String
+    #   resp.rule_group_response.last_modified_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeRuleGroup AWS API Documentation
     #
@@ -1475,6 +1894,143 @@ module Aws::NetworkFirewall
     # @param [Hash] params ({})
     def describe_rule_group(params = {}, options = {})
       req = build_request(:describe_rule_group, params)
+      req.send_request(options)
+    end
+
+    # High-level information about a rule group, returned by operations like
+    # create and describe. You can use the information provided in the
+    # metadata to retrieve and manage a rule group. You can retrieve all
+    # objects for a rule group by calling DescribeRuleGroup.
+    #
+    # @option params [String] :rule_group_name
+    #   The descriptive name of the rule group. You can't change the name of
+    #   a rule group after you create it.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #
+    # @option params [String] :rule_group_arn
+    #   The descriptive name of the rule group. You can't change the name of
+    #   a rule group after you create it.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #
+    # @option params [String] :type
+    #   Indicates whether the rule group is stateless or stateful. If the rule
+    #   group is stateless, it contains stateless rules. If it is stateful, it
+    #   contains stateful rules.
+    #
+    #   <note markdown="1"> This setting is required for requests that do not include the
+    #   `RuleGroupARN`.
+    #
+    #    </note>
+    #
+    # @return [Types::DescribeRuleGroupMetadataResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeRuleGroupMetadataResponse#rule_group_arn #rule_group_arn} => String
+    #   * {Types::DescribeRuleGroupMetadataResponse#rule_group_name #rule_group_name} => String
+    #   * {Types::DescribeRuleGroupMetadataResponse#description #description} => String
+    #   * {Types::DescribeRuleGroupMetadataResponse#type #type} => String
+    #   * {Types::DescribeRuleGroupMetadataResponse#capacity #capacity} => Integer
+    #   * {Types::DescribeRuleGroupMetadataResponse#stateful_rule_options #stateful_rule_options} => Types::StatefulRuleOptions
+    #   * {Types::DescribeRuleGroupMetadataResponse#last_modified_time #last_modified_time} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_rule_group_metadata({
+    #     rule_group_name: "ResourceName",
+    #     rule_group_arn: "ResourceArn",
+    #     type: "STATELESS", # accepts STATELESS, STATEFUL
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.rule_group_arn #=> String
+    #   resp.rule_group_name #=> String
+    #   resp.description #=> String
+    #   resp.type #=> String, one of "STATELESS", "STATEFUL"
+    #   resp.capacity #=> Integer
+    #   resp.stateful_rule_options.rule_order #=> String, one of "DEFAULT_ACTION_ORDER", "STRICT_ORDER"
+    #   resp.last_modified_time #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeRuleGroupMetadata AWS API Documentation
+    #
+    # @overload describe_rule_group_metadata(params = {})
+    # @param [Hash] params ({})
+    def describe_rule_group_metadata(params = {}, options = {})
+      req = build_request(:describe_rule_group_metadata, params)
+      req.send_request(options)
+    end
+
+    # Returns the data objects for the specified TLS inspection
+    # configuration.
+    #
+    # @option params [String] :tls_inspection_configuration_arn
+    #   The Amazon Resource Name (ARN) of the TLS inspection configuration.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #
+    # @option params [String] :tls_inspection_configuration_name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create it.
+    #
+    #   You must specify the ARN or the name, and you can specify both.
+    #
+    # @return [Types::DescribeTLSInspectionConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeTLSInspectionConfigurationResponse#update_token #update_token} => String
+    #   * {Types::DescribeTLSInspectionConfigurationResponse#tls_inspection_configuration #tls_inspection_configuration} => Types::TLSInspectionConfiguration
+    #   * {Types::DescribeTLSInspectionConfigurationResponse#tls_inspection_configuration_response #tls_inspection_configuration_response} => Types::TLSInspectionConfigurationResponse
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_tls_inspection_configuration({
+    #     tls_inspection_configuration_arn: "ResourceArn",
+    #     tls_inspection_configuration_name: "ResourceName",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.update_token #=> String
+    #   resp.tls_inspection_configuration.server_certificate_configurations #=> Array
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].server_certificates #=> Array
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].server_certificates[0].resource_arn #=> String
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes #=> Array
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].sources #=> Array
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].sources[0].address_definition #=> String
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].destinations #=> Array
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].destinations[0].address_definition #=> String
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].source_ports #=> Array
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].source_ports[0].from_port #=> Integer
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].source_ports[0].to_port #=> Integer
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].destination_ports #=> Array
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].destination_ports[0].from_port #=> Integer
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].destination_ports[0].to_port #=> Integer
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].protocols #=> Array
+    #   resp.tls_inspection_configuration.server_certificate_configurations[0].scopes[0].protocols[0] #=> Integer
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_arn #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_name #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_id #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_status #=> String, one of "ACTIVE", "DELETING"
+    #   resp.tls_inspection_configuration_response.description #=> String
+    #   resp.tls_inspection_configuration_response.tags #=> Array
+    #   resp.tls_inspection_configuration_response.tags[0].key #=> String
+    #   resp.tls_inspection_configuration_response.tags[0].value #=> String
+    #   resp.tls_inspection_configuration_response.last_modified_time #=> Time
+    #   resp.tls_inspection_configuration_response.number_of_associations #=> Integer
+    #   resp.tls_inspection_configuration_response.encryption_configuration.key_id #=> String
+    #   resp.tls_inspection_configuration_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.tls_inspection_configuration_response.certificates #=> Array
+    #   resp.tls_inspection_configuration_response.certificates[0].certificate_arn #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].certificate_serial #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].status #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].status_message #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DescribeTLSInspectionConfiguration AWS API Documentation
+    #
+    # @overload describe_tls_inspection_configuration(params = {})
+    # @param [Hash] params ({})
+    def describe_tls_inspection_configuration(params = {}, options = {})
+      req = build_request(:describe_tls_inspection_configuration, params)
       req.send_request(options)
     end
 
@@ -1537,6 +2093,7 @@ module Aws::NetworkFirewall
     #   resp.firewall_name #=> String
     #   resp.subnet_mappings #=> Array
     #   resp.subnet_mappings[0].subnet_id #=> String
+    #   resp.subnet_mappings[0].ip_address_type #=> String, one of "DUALSTACK", "IPV4", "IPV6"
     #   resp.update_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/DisassociateSubnets AWS API Documentation
@@ -1668,6 +2225,20 @@ module Aws::NetworkFirewall
     #   Network Firewall provides a `NextToken` value that you can use in a
     #   subsequent call to get the next batch of objects.
     #
+    # @option params [String] :scope
+    #   The scope of the request. The default setting of `ACCOUNT` or a
+    #   setting of `NULL` returns all of the rule groups in your account. A
+    #   setting of `MANAGED` returns all available managed rule groups.
+    #
+    # @option params [String] :managed_type
+    #   Indicates the general category of the Amazon Web Services managed rule
+    #   group.
+    #
+    # @option params [String] :type
+    #   Indicates whether the rule group is stateless or stateful. If the rule
+    #   group is stateless, it contains stateless rules. If it is stateful, it
+    #   contains stateful rules.
+    #
     # @return [Types::ListRuleGroupsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::ListRuleGroupsResponse#next_token #next_token} => String
@@ -1680,6 +2251,9 @@ module Aws::NetworkFirewall
     #   resp = client.list_rule_groups({
     #     next_token: "PaginationToken",
     #     max_results: 1,
+    #     scope: "MANAGED", # accepts MANAGED, ACCOUNT
+    #     managed_type: "AWS_MANAGED_THREAT_SIGNATURES", # accepts AWS_MANAGED_THREAT_SIGNATURES, AWS_MANAGED_DOMAIN_LISTS
+    #     type: "STATELESS", # accepts STATELESS, STATEFUL
     #   })
     #
     # @example Response structure
@@ -1698,15 +2272,63 @@ module Aws::NetworkFirewall
       req.send_request(options)
     end
 
+    # Retrieves the metadata for the TLS inspection configurations that you
+    # have defined. Depending on your setting for max results and the number
+    # of TLS inspection configurations, a single call might not return the
+    # full list.
+    #
+    # @option params [String] :next_token
+    #   When you request a list of objects with a `MaxResults` setting, if the
+    #   number of objects that are still available for retrieval exceeds the
+    #   maximum you requested, Network Firewall returns a `NextToken` value in
+    #   the response. To retrieve the next batch of objects, use the token
+    #   returned from the prior request in your next request.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of objects that you want Network Firewall to return
+    #   for this request. If more objects are available, in the response,
+    #   Network Firewall provides a `NextToken` value that you can use in a
+    #   subsequent call to get the next batch of objects.
+    #
+    # @return [Types::ListTLSInspectionConfigurationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListTLSInspectionConfigurationsResponse#next_token #next_token} => String
+    #   * {Types::ListTLSInspectionConfigurationsResponse#tls_inspection_configurations #tls_inspection_configurations} => Array&lt;Types::TLSInspectionConfigurationMetadata&gt;
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_tls_inspection_configurations({
+    #     next_token: "PaginationToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.next_token #=> String
+    #   resp.tls_inspection_configurations #=> Array
+    #   resp.tls_inspection_configurations[0].name #=> String
+    #   resp.tls_inspection_configurations[0].arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/ListTLSInspectionConfigurations AWS API Documentation
+    #
+    # @overload list_tls_inspection_configurations(params = {})
+    # @param [Hash] params ({})
+    def list_tls_inspection_configurations(params = {}, options = {})
+      req = build_request(:list_tls_inspection_configurations, params)
+      req.send_request(options)
+    end
+
     # Retrieves the tags associated with the specified resource. Tags are
     # key:value pairs that you can use to categorize and manage your
     # resources, for purposes like billing. For example, you might set the
     # tag key to "customer" and the value to the customer name or ID. You
-    # can specify one or more tags to add to each AWS resource, up to 50
-    # tags for a resource.
+    # can specify one or more tags to add to each Amazon Web Services
+    # resource, up to 50 tags for a resource.
     #
-    # You can tag the AWS resources that you manage through AWS Network
-    # Firewall: firewalls, firewall policies, and rule groups.
+    # You can tag the Amazon Web Services resources that you manage through
+    # Network Firewall: firewalls, firewall policies, and rule groups.
     #
     # @option params [String] :next_token
     #   When you request a list of objects with a `MaxResults` setting, if the
@@ -1755,11 +2377,11 @@ module Aws::NetworkFirewall
       req.send_request(options)
     end
 
-    # Creates or updates an AWS Identity and Access Management policy for
-    # your rule group or firewall policy. Use this to share rule groups and
-    # firewall policies between accounts. This operation works in
-    # conjunction with the AWS Resource Access Manager (RAM) service to
-    # manage resource sharing for Network Firewall.
+    # Creates or updates an IAM policy for your rule group or firewall
+    # policy. Use this to share rule groups and firewall policies between
+    # accounts. This operation works in conjunction with the Amazon Web
+    # Services Resource Access Manager (RAM) service to manage resource
+    # sharing for Network Firewall.
     #
     # Use this operation to create or update a resource policy for your rule
     # group or firewall policy. In the policy, you specify the accounts that
@@ -1776,8 +2398,8 @@ module Aws::NetworkFirewall
     # * [AcceptResourceShareInvitation][2] - Accepts the share invitation
     #   for a specified resource share.
     #
-    # For additional information about resource sharing using RAM, see [AWS
-    # Resource Access Manager User Guide][3].
+    # For additional information about resource sharing using RAM, see
+    # [Resource Access Manager User Guide][3].
     #
     #
     #
@@ -1790,10 +2412,9 @@ module Aws::NetworkFirewall
     #   rule groups and firewall policies with.
     #
     # @option params [required, String] :policy
-    #   The AWS Identity and Access Management policy statement that lists the
-    #   accounts that you want to share your rule group or firewall policy
-    #   with and the operations that you want the accounts to be able to
-    #   perform.
+    #   The IAM policy statement that lists the accounts that you want to
+    #   share your rule group or firewall policy with and the operations that
+    #   you want the accounts to be able to perform.
     #
     #   For a rule group resource, you can specify the following operations in
     #   the Actions section of the statement:
@@ -1806,10 +2427,6 @@ module Aws::NetworkFirewall
     #
     #   For a firewall policy resource, you can specify the following
     #   operations in the Actions section of the statement:
-    #
-    #   * network-firewall:CreateFirewall
-    #
-    #   * network-firewall:UpdateFirewall
     #
     #   * network-firewall:AssociateFirewallPolicy
     #
@@ -1841,11 +2458,11 @@ module Aws::NetworkFirewall
     # pairs that you can use to categorize and manage your resources, for
     # purposes like billing. For example, you might set the tag key to
     # "customer" and the value to the customer name or ID. You can specify
-    # one or more tags to add to each AWS resource, up to 50 tags for a
-    # resource.
+    # one or more tags to add to each Amazon Web Services resource, up to 50
+    # tags for a resource.
     #
-    # You can tag the AWS resources that you manage through AWS Network
-    # Firewall: firewalls, firewall policies, and rule groups.
+    # You can tag the Amazon Web Services resources that you manage through
+    # Network Firewall: firewalls, firewall policies, and rule groups.
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
@@ -1879,11 +2496,12 @@ module Aws::NetworkFirewall
     # Tags are key:value pairs that you can use to categorize and manage
     # your resources, for purposes like billing. For example, you might set
     # the tag key to "customer" and the value to the customer name or ID.
-    # You can specify one or more tags to add to each AWS resource, up to 50
-    # tags for a resource.
+    # You can specify one or more tags to add to each Amazon Web Services
+    # resource, up to 50 tags for a resource.
     #
-    # You can manage tags for the AWS resources that you manage through AWS
-    # Network Firewall: firewalls, firewall policies, and rule groups.
+    # You can manage tags for the Amazon Web Services resources that you
+    # manage through Network Firewall: firewalls, firewall policies, and
+    # rule groups.
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
@@ -2052,6 +2670,86 @@ module Aws::NetworkFirewall
       req.send_request(options)
     end
 
+    # A complex type that contains settings for encryption of your firewall
+    # resources.
+    #
+    # @option params [String] :update_token
+    #   An optional token that you can use for optimistic locking. Network
+    #   Firewall returns a token to your requests that access the firewall.
+    #   The token marks the state of the firewall resource at the time of the
+    #   request.
+    #
+    #   To make an unconditional change to the firewall, omit the token in
+    #   your update request. Without the token, Network Firewall performs your
+    #   updates regardless of whether the firewall has changed since you last
+    #   retrieved it.
+    #
+    #   To make a conditional change to the firewall, provide the token in
+    #   your update request. Network Firewall uses the token to ensure that
+    #   the firewall hasn't changed since you last retrieved it. If it has
+    #   changed, the operation fails with an `InvalidTokenException`. If this
+    #   happens, retrieve the firewall again to get a current copy of it with
+    #   a new token. Reapply your changes as needed, then try the operation
+    #   again using the new token.
+    #
+    # @option params [String] :firewall_arn
+    #   The Amazon Resource Name (ARN) of the firewall.
+    #
+    # @option params [String] :firewall_name
+    #   The descriptive name of the firewall. You can't change the name of a
+    #   firewall after you create it.
+    #
+    # @option params [Types::EncryptionConfiguration] :encryption_configuration
+    #   A complex type that contains optional Amazon Web Services Key
+    #   Management Service (KMS) encryption settings for your Network Firewall
+    #   resources. Your data is encrypted by default with an Amazon Web
+    #   Services owned key that Amazon Web Services owns and manages for you.
+    #   You can use either the Amazon Web Services owned key, or provide your
+    #   own customer managed key. To learn more about KMS encryption of your
+    #   Network Firewall resources, see [Encryption at rest with Amazon Web
+    #   Services Key Managment Service][1] in the *Network Firewall Developer
+    #   Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/kms/latest/developerguide/kms-encryption-at-rest.html
+    #
+    # @return [Types::UpdateFirewallEncryptionConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateFirewallEncryptionConfigurationResponse#firewall_arn #firewall_arn} => String
+    #   * {Types::UpdateFirewallEncryptionConfigurationResponse#firewall_name #firewall_name} => String
+    #   * {Types::UpdateFirewallEncryptionConfigurationResponse#update_token #update_token} => String
+    #   * {Types::UpdateFirewallEncryptionConfigurationResponse#encryption_configuration #encryption_configuration} => Types::EncryptionConfiguration
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_firewall_encryption_configuration({
+    #     update_token: "UpdateToken",
+    #     firewall_arn: "ResourceArn",
+    #     firewall_name: "ResourceName",
+    #     encryption_configuration: {
+    #       key_id: "KeyId",
+    #       type: "CUSTOMER_KMS", # required, accepts CUSTOMER_KMS, AWS_OWNED_KMS_KEY
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.firewall_arn #=> String
+    #   resp.firewall_name #=> String
+    #   resp.update_token #=> String
+    #   resp.encryption_configuration.key_id #=> String
+    #   resp.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateFirewallEncryptionConfiguration AWS API Documentation
+    #
+    # @overload update_firewall_encryption_configuration(params = {})
+    # @param [Hash] params ({})
+    def update_firewall_encryption_configuration(params = {}, options = {})
+      req = build_request(:update_firewall_encryption_configuration, params)
+      req.send_request(options)
+    end
+
     # Updates the properties of the specified firewall policy.
     #
     # @option params [required, String] :update_token
@@ -2099,6 +2797,10 @@ module Aws::NetworkFirewall
     #   If set to `FALSE`, Network Firewall makes the requested changes to
     #   your resources.
     #
+    # @option params [Types::EncryptionConfiguration] :encryption_configuration
+    #   A complex type that contains settings for encryption of your firewall
+    #   policy resources.
+    #
     # @return [Types::UpdateFirewallPolicyResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateFirewallPolicyResponse#update_token #update_token} => String
@@ -2136,11 +2838,32 @@ module Aws::NetworkFirewall
     #       stateful_rule_group_references: [
     #         {
     #           resource_arn: "ResourceArn", # required
+    #           priority: 1,
+    #           override: {
+    #             action: "DROP_TO_ALERT", # accepts DROP_TO_ALERT
+    #           },
     #         },
     #       ],
+    #       stateful_default_actions: ["CollectionMember_String"],
+    #       stateful_engine_options: {
+    #         rule_order: "DEFAULT_ACTION_ORDER", # accepts DEFAULT_ACTION_ORDER, STRICT_ORDER
+    #         stream_exception_policy: "DROP", # accepts DROP, CONTINUE, REJECT
+    #       },
+    #       tls_inspection_configuration_arn: "ResourceArn",
+    #       policy_variables: {
+    #         rule_variables: {
+    #           "RuleVariableName" => {
+    #             definition: ["VariableDefinition"], # required
+    #           },
+    #         },
+    #       },
     #     },
     #     description: "Description",
     #     dry_run: false,
+    #     encryption_configuration: {
+    #       key_id: "KeyId",
+    #       type: "CUSTOMER_KMS", # required, accepts CUSTOMER_KMS, AWS_OWNED_KMS_KEY
+    #     },
     #   })
     #
     # @example Response structure
@@ -2154,6 +2877,12 @@ module Aws::NetworkFirewall
     #   resp.firewall_policy_response.tags #=> Array
     #   resp.firewall_policy_response.tags[0].key #=> String
     #   resp.firewall_policy_response.tags[0].value #=> String
+    #   resp.firewall_policy_response.consumed_stateless_rule_capacity #=> Integer
+    #   resp.firewall_policy_response.consumed_stateful_rule_capacity #=> Integer
+    #   resp.firewall_policy_response.number_of_associations #=> Integer
+    #   resp.firewall_policy_response.encryption_configuration.key_id #=> String
+    #   resp.firewall_policy_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.firewall_policy_response.last_modified_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateFirewallPolicy AWS API Documentation
     #
@@ -2164,6 +2893,11 @@ module Aws::NetworkFirewall
       req.send_request(options)
     end
 
+    # Modifies the flag, `ChangeProtection`, which indicates whether it is
+    # possible to change the firewall. If the flag is set to `TRUE`, the
+    # firewall is protected from changes. This setting helps protect against
+    # accidentally changing a firewall that's in use.
+    #
     # @option params [String] :update_token
     #   An optional token that you can use for optimistic locking. Network
     #   Firewall returns a token to your requests that access the firewall.
@@ -2242,7 +2976,7 @@ module Aws::NetworkFirewall
     # LoggingConfiguration object.
     #
     # You can perform only one of the following actions in any call to
-    # `UpdateLoggingConfiguration`\:
+    # `UpdateLoggingConfiguration`:
     #
     # * Create a new log destination object by adding a single
     #   `LogDestinationConfig` array element to `LogDestinationConfigs`.
@@ -2399,6 +3133,15 @@ module Aws::NetworkFirewall
     #   If set to `FALSE`, Network Firewall makes the requested changes to
     #   your resources.
     #
+    # @option params [Types::EncryptionConfiguration] :encryption_configuration
+    #   A complex type that contains settings for encryption of your rule
+    #   group resources.
+    #
+    # @option params [Types::SourceMetadata] :source_metadata
+    #   A complex type that contains metadata about the rule group that your
+    #   own rule group is copied from. You can use the metadata to keep track
+    #   of updates made to the originating rule group.
+    #
     # @return [Types::UpdateRuleGroupResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateRuleGroupResponse#update_token #update_token} => String
@@ -2423,6 +3166,13 @@ module Aws::NetworkFirewall
     #           },
     #         },
     #       },
+    #       reference_sets: {
+    #         ip_set_references: {
+    #           "IPSetReferenceName" => {
+    #             reference_arn: "ResourceArn",
+    #           },
+    #         },
+    #       },
     #       rules_source: { # required
     #         rules_string: "RulesString",
     #         rules_source_list: {
@@ -2432,7 +3182,7 @@ module Aws::NetworkFirewall
     #         },
     #         stateful_rules: [
     #           {
-    #             action: "PASS", # required, accepts PASS, DROP, ALERT
+    #             action: "PASS", # required, accepts PASS, DROP, ALERT, REJECT
     #             header: { # required
     #               protocol: "IP", # required, accepts IP, TCP, UDP, ICMP, HTTP, FTP, TLS, SMB, DNS, DCERPC, SSH, SMTP, IMAP, MSN, KRB5, IKEV2, TFTP, NTP, DHCP
     #               source: "Source", # required
@@ -2505,11 +3255,22 @@ module Aws::NetworkFirewall
     #           ],
     #         },
     #       },
+    #       stateful_rule_options: {
+    #         rule_order: "DEFAULT_ACTION_ORDER", # accepts DEFAULT_ACTION_ORDER, STRICT_ORDER
+    #       },
     #     },
     #     rules: "RulesString",
     #     type: "STATELESS", # accepts STATELESS, STATEFUL
     #     description: "Description",
     #     dry_run: false,
+    #     encryption_configuration: {
+    #       key_id: "KeyId",
+    #       type: "CUSTOMER_KMS", # required, accepts CUSTOMER_KMS, AWS_OWNED_KMS_KEY
+    #     },
+    #     source_metadata: {
+    #       source_arn: "ResourceArn",
+    #       source_update_token: "UpdateToken",
+    #     },
     #   })
     #
     # @example Response structure
@@ -2525,6 +3286,14 @@ module Aws::NetworkFirewall
     #   resp.rule_group_response.tags #=> Array
     #   resp.rule_group_response.tags[0].key #=> String
     #   resp.rule_group_response.tags[0].value #=> String
+    #   resp.rule_group_response.consumed_capacity #=> Integer
+    #   resp.rule_group_response.number_of_associations #=> Integer
+    #   resp.rule_group_response.encryption_configuration.key_id #=> String
+    #   resp.rule_group_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.rule_group_response.source_metadata.source_arn #=> String
+    #   resp.rule_group_response.source_metadata.source_update_token #=> String
+    #   resp.rule_group_response.sns_topic #=> String
+    #   resp.rule_group_response.last_modified_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateRuleGroup AWS API Documentation
     #
@@ -2604,6 +3373,156 @@ module Aws::NetworkFirewall
       req.send_request(options)
     end
 
+    # Updates the TLS inspection configuration settings for the specified
+    # TLS inspection configuration. You use a TLS inspection configuration
+    # by reference in one or more firewall policies. When you modify a TLS
+    # inspection configuration, you modify all firewall policies that use
+    # the TLS inspection configuration.
+    #
+    # To update a TLS inspection configuration, first call
+    # DescribeTLSInspectionConfiguration to retrieve the current
+    # TLSInspectionConfiguration object, update the object as needed, and
+    # then provide the updated object to this call.
+    #
+    # @option params [String] :tls_inspection_configuration_arn
+    #   The Amazon Resource Name (ARN) of the TLS inspection configuration.
+    #
+    # @option params [String] :tls_inspection_configuration_name
+    #   The descriptive name of the TLS inspection configuration. You can't
+    #   change the name of a TLS inspection configuration after you create it.
+    #
+    # @option params [required, Types::TLSInspectionConfiguration] :tls_inspection_configuration
+    #   The object that defines a TLS inspection configuration. This, along
+    #   with TLSInspectionConfigurationResponse, define the TLS inspection
+    #   configuration. You can retrieve all objects for a TLS inspection
+    #   configuration by calling DescribeTLSInspectionConfiguration.
+    #
+    #   Network Firewall uses a TLS inspection configuration to decrypt
+    #   traffic. Network Firewall re-encrypts the traffic before sending it to
+    #   its destination.
+    #
+    #   To use a TLS inspection configuration, you add it to a Network
+    #   Firewall firewall policy, then you apply the firewall policy to a
+    #   firewall. Network Firewall acts as a proxy service to decrypt and
+    #   inspect inbound traffic. You can reference a TLS inspection
+    #   configuration from more than one firewall policy, and you can use a
+    #   firewall policy in more than one firewall. For more information about
+    #   using TLS inspection configurations, see [Decrypting SSL/TLS traffic
+    #   with TLS inspection configurations][1] in the *Network Firewall
+    #   Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection.html
+    #
+    # @option params [String] :description
+    #   A description of the TLS inspection configuration.
+    #
+    # @option params [Types::EncryptionConfiguration] :encryption_configuration
+    #   A complex type that contains the Amazon Web Services KMS encryption
+    #   configuration settings for your TLS inspection configuration.
+    #
+    # @option params [required, String] :update_token
+    #   A token used for optimistic locking. Network Firewall returns a token
+    #   to your requests that access the TLS inspection configuration. The
+    #   token marks the state of the TLS inspection configuration resource at
+    #   the time of the request.
+    #
+    #   To make changes to the TLS inspection configuration, you provide the
+    #   token in your request. Network Firewall uses the token to ensure that
+    #   the TLS inspection configuration hasn't changed since you last
+    #   retrieved it. If it has changed, the operation fails with an
+    #   `InvalidTokenException`. If this happens, retrieve the TLS inspection
+    #   configuration again to get a current copy of it with a current token.
+    #   Reapply your changes as needed, then try the operation again using the
+    #   new token.
+    #
+    # @return [Types::UpdateTLSInspectionConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateTLSInspectionConfigurationResponse#update_token #update_token} => String
+    #   * {Types::UpdateTLSInspectionConfigurationResponse#tls_inspection_configuration_response #tls_inspection_configuration_response} => Types::TLSInspectionConfigurationResponse
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_tls_inspection_configuration({
+    #     tls_inspection_configuration_arn: "ResourceArn",
+    #     tls_inspection_configuration_name: "ResourceName",
+    #     tls_inspection_configuration: { # required
+    #       server_certificate_configurations: [
+    #         {
+    #           server_certificates: [
+    #             {
+    #               resource_arn: "ResourceArn",
+    #             },
+    #           ],
+    #           scopes: [
+    #             {
+    #               sources: [
+    #                 {
+    #                   address_definition: "AddressDefinition", # required
+    #                 },
+    #               ],
+    #               destinations: [
+    #                 {
+    #                   address_definition: "AddressDefinition", # required
+    #                 },
+    #               ],
+    #               source_ports: [
+    #                 {
+    #                   from_port: 1, # required
+    #                   to_port: 1, # required
+    #                 },
+    #               ],
+    #               destination_ports: [
+    #                 {
+    #                   from_port: 1, # required
+    #                   to_port: 1, # required
+    #                 },
+    #               ],
+    #               protocols: [1],
+    #             },
+    #           ],
+    #         },
+    #       ],
+    #     },
+    #     description: "Description",
+    #     encryption_configuration: {
+    #       key_id: "KeyId",
+    #       type: "CUSTOMER_KMS", # required, accepts CUSTOMER_KMS, AWS_OWNED_KMS_KEY
+    #     },
+    #     update_token: "UpdateToken", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.update_token #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_arn #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_name #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_id #=> String
+    #   resp.tls_inspection_configuration_response.tls_inspection_configuration_status #=> String, one of "ACTIVE", "DELETING"
+    #   resp.tls_inspection_configuration_response.description #=> String
+    #   resp.tls_inspection_configuration_response.tags #=> Array
+    #   resp.tls_inspection_configuration_response.tags[0].key #=> String
+    #   resp.tls_inspection_configuration_response.tags[0].value #=> String
+    #   resp.tls_inspection_configuration_response.last_modified_time #=> Time
+    #   resp.tls_inspection_configuration_response.number_of_associations #=> Integer
+    #   resp.tls_inspection_configuration_response.encryption_configuration.key_id #=> String
+    #   resp.tls_inspection_configuration_response.encryption_configuration.type #=> String, one of "CUSTOMER_KMS", "AWS_OWNED_KMS_KEY"
+    #   resp.tls_inspection_configuration_response.certificates #=> Array
+    #   resp.tls_inspection_configuration_response.certificates[0].certificate_arn #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].certificate_serial #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].status #=> String
+    #   resp.tls_inspection_configuration_response.certificates[0].status_message #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/network-firewall-2020-11-12/UpdateTLSInspectionConfiguration AWS API Documentation
+    #
+    # @overload update_tls_inspection_configuration(params = {})
+    # @param [Hash] params ({})
+    def update_tls_inspection_configuration(params = {}, options = {})
+      req = build_request(:update_tls_inspection_configuration, params)
+      req.send_request(options)
+    end
+
     # @!endgroup
 
     # @param params ({})
@@ -2617,7 +3536,7 @@ module Aws::NetworkFirewall
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-networkfirewall'
-      context[:gem_version] = '1.4.0'
+      context[:gem_version] = '1.32.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

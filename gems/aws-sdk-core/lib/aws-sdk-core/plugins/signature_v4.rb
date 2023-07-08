@@ -5,50 +5,46 @@ require 'aws-sigv4'
 module Aws
   module Plugins
     # @api private
+    # Necessary to exist after endpoints 2.0
     class SignatureV4 < Seahorse::Client::Plugin
+
+      V4_AUTH = %w[v4 v4-unsigned-payload v4-unsigned-body]
 
       option(:sigv4_signer) do |cfg|
         SignatureV4.build_signer(cfg)
       end
 
       option(:sigv4_name) do |cfg|
-        cfg.api.metadata['signingName'] || cfg.api.metadata['endpointPrefix']
+        signingName = if cfg.region
+          Aws::Partitions::EndpointProvider.signing_service(
+            cfg.region, cfg.api.metadata['endpointPrefix']
+          )
+        end
+        signingName || cfg.api.metadata['signingName'] || cfg.api.metadata['endpointPrefix']
       end
 
       option(:sigv4_region) do |cfg|
-
-        # The signature version 4 signing region is most
-        # commonly the configured region. There are a few
-        # notable exceptions:
-        #
-        # * Some services have a global endpoint to the entire
-        #   partition. For example, when constructing a route53
-        #   client for a region like "us-west-2", we will
-        #   always use "route53.amazonaws.com". This endpoint
-        #   is actually global to the entire partition,
-        #   and must be signed as "us-east-1".
-        #
-        # * When the region is configured, but it is configured
-        #   to a non region, such as "aws-global". This is similar
-        #   to the previous case. We use the Aws::Partitions::EndpointProvider
-        #   to resolve to the actual signing region.
-        #
-        prefix = cfg.api.metadata['endpointPrefix']
-        if prefix && cfg.endpoint.to_s.match(/#{prefix}\.amazonaws\.com/)
-          'us-east-1'
-        elsif cfg.region
-          Aws::Partitions::EndpointProvider.signing_region(cfg.region, cfg.sigv4_name)
+        if cfg.region
+          if cfg.respond_to?(:sts_regional_endpoints)
+            sts_regional = cfg.sts_regional_endpoints
+          end
+          Aws::Partitions::EndpointProvider.signing_region(
+            cfg.region, cfg.api.metadata['endpointPrefix'], sts_regional
+          )
         end
       end
 
       option(:unsigned_operations) do |cfg|
-        cfg.api.operation_names.inject([]) do |unsigned, operation_name|
-          if cfg.api.operation(operation_name)['authtype'] == 'none' ||
-             cfg.api.operation(operation_name)['authtype'] == 'custom'
-            # Unsign requests that has custom apigateway authorizer as well
-            unsigned << operation_name
-          else
-            unsigned
+        if cfg.api.metadata['signatureVersion'] == 'v4'
+          # select operations where authtype is set and is not v4
+          cfg.api.operation_names.select do |o|
+            cfg.api.operation(o)['authtype'] && !V4_AUTH.include?(cfg.api.operation(o)['authtype'])
+          end
+        else # service is not v4 auth
+          # select all operations where authtype is not v4
+          # (includes operations with no explicit authtype)
+          cfg.api.operation_names.select do |o|
+            !V4_AUTH.include?(cfg.api.operation(o)['authtype'])
           end
         end
       end
@@ -108,6 +104,7 @@ module Aws
           req.headers.delete('Authorization')
           req.headers.delete('X-Amz-Security-Token')
           req.headers.delete('X-Amz-Date')
+          req.headers.delete('x-Amz-Region-Set')
 
           if context.config.respond_to?(:clock_skew) &&
              context.config.clock_skew &&
@@ -144,7 +141,7 @@ module Aws
         def apply_authtype(context)
           if context.operation['authtype'].eql?('v4-unsigned-body') &&
              context.http_request.endpoint.scheme.eql?('https')
-            context.http_request.headers['X-Amz-Content-Sha256'] = 'UNSIGNED-PAYLOAD'
+            context.http_request.headers['X-Amz-Content-Sha256'] ||= 'UNSIGNED-PAYLOAD'
           end
           context
         end

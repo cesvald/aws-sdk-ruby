@@ -41,7 +41,8 @@ module Aws::EC2
       data[:attachments]
     end
 
-    # The ID of the AWS account that owns the internet gateway.
+    # The ID of the Amazon Web Services account that owns the internet
+    # gateway.
     # @return [String]
     def owner_id
       data[:owner_id]
@@ -67,7 +68,9 @@ module Aws::EC2
     #
     # @return [self]
     def load
-      resp = @client.describe_internet_gateways(internet_gateway_ids: [@id])
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_internet_gateways(internet_gateway_ids: [@id])
+      end
       @data = resp.internet_gateways[0]
       self
     end
@@ -182,7 +185,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -204,7 +209,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def attach_to_vpc(options = {})
       options = options.merge(internet_gateway_id: @id)
-      resp = @client.attach_internet_gateway(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.attach_internet_gateway(options)
+      end
       resp.data
     end
 
@@ -233,7 +240,9 @@ module Aws::EC2
     def create_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.create_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -270,13 +279,17 @@ module Aws::EC2
     #   if its value is an empty string.
     #
     #   If you omit this parameter, we delete all user-defined tags for the
-    #   specified resources. We do not delete AWS-generated tags (tags that
-    #   have the `aws:` prefix).
+    #   specified resources. We do not delete Amazon Web Services-generated
+    #   tags (tags that have the `aws:` prefix).
+    #
+    #   Constraints: Up to 1000 tags.
     # @return [Tag::Collection]
     def delete_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.delete_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -302,7 +315,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(internet_gateway_id: @id)
-      resp = @client.delete_internet_gateway(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_internet_gateway(options)
+      end
       resp.data
     end
 
@@ -323,7 +338,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def detach_from_vpc(options = {})
       options = options.merge(internet_gateway_id: @id)
-      resp = @client.detach_internet_gateway(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.detach_internet_gateway(options)
+      end
       resp.data
     end
 

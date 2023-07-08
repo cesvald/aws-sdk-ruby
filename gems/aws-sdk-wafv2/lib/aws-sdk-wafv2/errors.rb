@@ -28,13 +28,16 @@ module Aws::WAFV2
   #
   # ## Error Classes
   # * {WAFAssociatedItemException}
+  # * {WAFConfigurationWarningException}
   # * {WAFDuplicateItemException}
+  # * {WAFExpiredManagedRuleGroupVersionException}
   # * {WAFInternalErrorException}
   # * {WAFInvalidOperationException}
   # * {WAFInvalidParameterException}
   # * {WAFInvalidPermissionPolicyException}
   # * {WAFInvalidResourceException}
   # * {WAFLimitsExceededException}
+  # * {WAFLogDestinationPermissionIssueException}
   # * {WAFNonexistentItemException}
   # * {WAFOptimisticLockException}
   # * {WAFServiceLinkedRoleErrorException}
@@ -42,6 +45,7 @@ module Aws::WAFV2
   # * {WAFTagOperationException}
   # * {WAFTagOperationInternalErrorException}
   # * {WAFUnavailableEntityException}
+  # * {WAFUnsupportedAggregateKeyTypeException}
   #
   # Additionally, error classes are dynamically generated for service errors based on the error code
   # if they are not defined above.
@@ -64,11 +68,41 @@ module Aws::WAFV2
       end
     end
 
+    class WAFConfigurationWarningException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::WAFV2::Types::WAFConfigurationWarningException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class WAFDuplicateItemException < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::WAFV2::Types::WAFDuplicateItemException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class WAFExpiredManagedRuleGroupVersionException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::WAFV2::Types::WAFExpiredManagedRuleGroupVersionException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -184,6 +218,21 @@ module Aws::WAFV2
       end
     end
 
+    class WAFLogDestinationPermissionIssueException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::WAFV2::Types::WAFLogDestinationPermissionIssueException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class WAFNonexistentItemException < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -279,6 +328,21 @@ module Aws::WAFV2
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::WAFV2::Types::WAFUnavailableEntityException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class WAFUnsupportedAggregateKeyTypeException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::WAFV2::Types::WAFUnsupportedAggregateKeyTypeException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end

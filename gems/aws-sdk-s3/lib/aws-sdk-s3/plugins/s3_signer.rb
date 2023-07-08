@@ -5,25 +5,12 @@ require 'aws-sigv4'
 module Aws
   module S3
     module Plugins
-      # This plugin is an implementation detail and may be modified.
+      # This plugin used to have a V4 signer but it was removed in favor of
+      # generic Sign plugin that uses endpoint auth scheme.
+      #
       # @api private
       class S3Signer < Seahorse::Client::Plugin
         option(:signature_version, 'v4')
-
-        option(:sigv4_signer) do |cfg|
-          S3Signer.build_v4_signer(
-            service: 's3',
-            region: cfg.sigv4_region,
-            credentials: cfg.credentials
-          )
-        end
-
-        option(:sigv4_region) do |cfg|
-          # S3 removes core's signature_v4 plugin that checks for this
-          raise Aws::Errors::MissingRegionError if cfg.region.nil?
-
-          Aws::Partitions::EndpointProvider.signing_region(cfg.region, 's3')
-        end
 
         def add_handlers(handlers, cfg)
           case cfg.signature_version
@@ -37,11 +24,11 @@ module Aws
 
         def add_v4_handlers(handlers)
           handlers.add(CachedBucketRegionHandler, step: :sign, priority: 60)
-          handlers.add(V4Handler, step: :sign)
           handlers.add(BucketRegionErrorHandler, step: :sign, priority: 40)
         end
 
         def add_legacy_handler(handlers)
+          # generic Sign plugin will be skipped if it sees sigv2
           handlers.add(LegacyHandler, step: :sign)
         end
 
@@ -49,45 +36,6 @@ module Aws
           def call(context)
             LegacySigner.sign(context)
             @handler.call(context)
-          end
-        end
-
-        class V4Handler < Seahorse::Client::Handler
-          def call(context)
-            Aws::Plugins::SignatureV4.apply_signature(
-              context: context,
-              signer: sigv4_signer(context)
-            )
-            @handler.call(context)
-          end
-
-          private
-
-          def sigv4_signer(context)
-            # If the client was configured with the wrong region,
-            # we have to build a new signer.
-            if context[:cached_sigv4_region] &&
-               context[:cached_sigv4_region] != context.config.sigv4_signer.region
-              S3Signer.build_v4_signer(
-                service: 's3',
-                region: context[:cached_sigv4_region],
-                credentials: context.config.credentials
-              )
-            elsif (arn = context.metadata[:s3_arn])
-              S3Signer.build_v4_signer(
-                service: arn[:arn].service,
-                region: arn[:resolved_region],
-                credentials: context.config.credentials
-              )
-            elsif context.operation.name == 'WriteGetObjectResponse'
-              S3Signer.build_v4_signer(
-                service: 's3-object-lambda',
-                region: context.config.sigv4_region,
-                credentials: context.config.credentials
-              )
-            else
-              context.config.sigv4_signer
-            end
           end
         end
 
@@ -104,11 +52,13 @@ module Aws
 
           def check_for_cached_region(context, bucket)
             cached_region = S3::BUCKET_REGIONS[bucket]
-            if cached_region && cached_region != context.config.region
+            if cached_region &&
+               cached_region != context.config.region &&
+               !S3Signer.custom_endpoint?(context)
               context.http_request.endpoint.host = S3Signer.new_hostname(
                 context, cached_region
               )
-              context[:cached_sigv4_region] = cached_region
+              context[:sigv4_region] = cached_region # Sign plugin will use this
             end
           end
         end
@@ -116,7 +66,8 @@ module Aws
         # This handler detects when a request fails because of a mismatched bucket
         # region. It follows up by making a request to determine the correct
         # region, then finally a version 4 signed request against the correct
-        # regional endpoint.
+        # regional endpoint. This is intended for s3's global endpoint which
+        # will return 400 if the bucket is not in region.
         class BucketRegionErrorHandler < Seahorse::Client::Handler
           def call(context)
             response = @handler.call(context)
@@ -128,7 +79,8 @@ module Aws
           def handle_region_errors(response)
             if wrong_sigv4_region?(response) &&
                !fips_region?(response) &&
-               !custom_endpoint?(response)
+               !S3Signer.custom_endpoint?(response.context) &&
+               !expired_credentials?(response)
               get_region_and_retry(response.context)
             else
               response
@@ -149,14 +101,11 @@ module Aws
           end
 
           def fips_region?(resp)
-            resp.context.http_request.endpoint.host.include?('fips')
+            resp.context.http_request.endpoint.host.include?('s3-fips.')
           end
 
-          def custom_endpoint?(resp)
-            resolved_suffix = Aws::Partitions::EndpointProvider.dns_suffix_for(
-              resp.context.config.region
-            )
-            !resp.context.http_request.endpoint.hostname.include?(resolved_suffix)
+          def expired_credentials?(resp)
+            resp.context.http_response.body_contents.match(/<Code>ExpiredToken<\/Code>/)
           end
 
           def wrong_sigv4_region?(resp)
@@ -171,18 +120,14 @@ module Aws
               context, actual_region
             )
             context.metadata[:redirect_region] = actual_region
-            # if it's an ARN, use the service in the ARN
-            if (arn = context.metadata[:s3_arn])
-              service = arn[:arn].service
-            end
-            Aws::Plugins::SignatureV4.apply_signature(
-              context: context,
-              signer: S3Signer.build_v4_signer(
-                service: service || 's3',
-                region: actual_region,
-                credentials: context.config.credentials
-              )
+
+            signer = Aws::Plugins::Sign.signer_for(
+              context[:auth_scheme],
+              context.config,
+              actual_region
             )
+
+            signer.sign(context)
           end
 
           def region_from_body(body)
@@ -208,32 +153,22 @@ module Aws
         end
 
         class << self
-          # @option options [required, String] :region
-          # @option options [required, #credentials] :credentials
-          # @api private
-          def build_v4_signer(options = {})
-            Aws::Sigv4::Signer.new(
-              service: options[:service],
-              region: options[:region],
-              credentials_provider: options[:credentials],
-              uri_escape_path: false,
-              unsigned_headers: ['content-length', 'x-amzn-trace-id']
-            )
+          def new_hostname(context, region)
+            endpoint_params = context[:endpoint_params].dup
+            endpoint_params.region = region
+            endpoint_params.endpoint = nil
+            endpoint =
+              context.config.endpoint_provider.resolve_endpoint(endpoint_params)
+            URI(endpoint.url).host
           end
 
-          # Check to see if the bucket is actually an ARN
-          # Otherwise it will retry with the ARN as the bucket name.
-          def new_hostname(context, region)
-            uri = URI.parse(
-              Aws::Partitions::EndpointProvider.resolve(region, 's3')
-            )
+          def custom_endpoint?(context)
+            region = context.config.region
+            partition = Aws::Endpoints::Matchers.aws_partition(region)
+            endpoint = context.http_request.endpoint
 
-            if (arn = context.metadata[:s3_arn])
-              # Retry with the response region and not the ARN resolved one
-              ARN.resolve_url!(uri, arn[:arn], region).host
-            else
-              "#{context.params[:bucket]}.#{uri.host}"
-            end
+            !endpoint.hostname.include?(partition['dnsSuffix']) &&
+              !endpoint.hostname.include?(partition['dualStackDnsSuffix'])
           end
         end
       end

@@ -79,10 +79,30 @@ module Aws::RDS
       data[:vpc_id]
     end
 
-    # The Amazon Resource Name (ARN) for the option group.
+    # Specifies the Amazon Resource Name (ARN) for the option group.
     # @return [String]
     def option_group_arn
       data[:option_group_arn]
+    end
+
+    # Specifies the name of the option group from which this option group is
+    # copied.
+    # @return [String]
+    def source_option_group
+      data[:source_option_group]
+    end
+
+    # Specifies the Amazon Web Services account ID for the option group from
+    # which this option group is copied.
+    # @return [String]
+    def source_account_id
+      data[:source_account_id]
+    end
+
+    # Indicates when the option group was copied.
+    # @return [Time]
+    def copy_timestamp
+      data[:copy_timestamp]
     end
 
     # @!endgroup
@@ -99,7 +119,9 @@ module Aws::RDS
     #
     # @return [self]
     def load
-      resp = @client.describe_option_groups(option_group_name: @name)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_option_groups(option_group_name: @name)
+      end
       @data = resp.option_groups_list[0]
       self
     end
@@ -214,7 +236,9 @@ module Aws::RDS
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -245,11 +269,11 @@ module Aws::RDS
     #
     #   * `oracle-ee`
     #
+    #   * `oracle-ee-cdb`
+    #
     #   * `oracle-se2`
     #
-    #   * `oracle-se1`
-    #
-    #   * `oracle-se`
+    #   * `oracle-se2-cdb`
     #
     #   * `postgres`
     #
@@ -270,7 +294,9 @@ module Aws::RDS
     # @return [OptionGroup]
     def create(options = {})
       options = options.merge(option_group_name: @name)
-      resp = @client.create_option_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_option_group(options)
+      end
       OptionGroup.new(
         name: resp.data.option_group.option_group_name,
         data: resp.data.option_group,
@@ -317,7 +343,9 @@ module Aws::RDS
     # @return [OptionGroup]
     def copy(options = {})
       options = options.merge(source_option_group_identifier: @name)
-      resp = @client.copy_option_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.copy_option_group(options)
+      end
       OptionGroup.new(
         name: resp.data.option_group.option_group_name,
         data: resp.data.option_group,
@@ -332,7 +360,9 @@ module Aws::RDS
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(option_group_name: @name)
-      resp = @client.delete_option_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_option_group(options)
+      end
       resp.data
     end
 
@@ -378,7 +408,9 @@ module Aws::RDS
     # @return [OptionGroup]
     def modify(options = {})
       options = options.merge(option_group_name: @name)
-      resp = @client.modify_option_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.modify_option_group(options)
+      end
       OptionGroup.new(
         name: resp.data.option_group.option_group_name,
         data: resp.data.option_group,

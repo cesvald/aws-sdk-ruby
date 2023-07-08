@@ -12,6 +12,8 @@ module Aws::MarketplaceCatalog
 
     # Access is denied.
     #
+    # HTTP status code: 403
+    #
     # @!attribute [rw] message
     #   @return [String]
     #
@@ -23,14 +25,6 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CancelChangeSetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         catalog: "Catalog", # required
-    #         change_set_id: "ResourceId", # required
-    #       }
-    #
     # @!attribute [rw] catalog
     #   Required. The catalog related to the request. Fixed value:
     #   `AWSMarketplace`.
@@ -69,32 +63,40 @@ module Aws::MarketplaceCatalog
 
     # An object that contains the `ChangeType`, `Details`, and `Entity`.
     #
-    # @note When making an API call, you may pass Change
-    #   data as a hash:
-    #
-    #       {
-    #         change_type: "ChangeType", # required
-    #         entity: { # required
-    #           type: "EntityType", # required
-    #           identifier: "Identifier",
-    #         },
-    #         details: "Json", # required
-    #         change_name: "ChangeName",
-    #       }
-    #
     # @!attribute [rw] change_type
     #   Change types are single string values that describe your intention
     #   for the change. Each change type is unique for each `EntityType`
-    #   provided in the change's scope.
+    #   provided in the change's scope. For more information on change
+    #   types available for single-AMI products, see [Working with
+    #   single-AMI products][1]. Also, for more information on change types
+    #   available for container-based products, see [Working with container
+    #   products][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/marketplace-catalog/latest/api-reference/ami-products.html#working-with-single-AMI-products
+    #   [2]: https://docs.aws.amazon.com/marketplace-catalog/latest/api-reference/container-products.html#working-with-container-products
     #   @return [String]
     #
     # @!attribute [rw] entity
     #   The entity to be changed.
     #   @return [Types::Entity]
     #
+    # @!attribute [rw] entity_tags
+    #   The tags associated with the change.
+    #   @return [Array<Types::Tag>]
+    #
     # @!attribute [rw] details
     #   This object contains details specific to the change type of the
-    #   requested change.
+    #   requested change. For more information on change types available for
+    #   single-AMI products, see [Working with single-AMI products][1].
+    #   Also, for more information on change types available for
+    #   container-based products, see [Working with container products][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/marketplace-catalog/latest/api-reference/ami-products.html#working-with-single-AMI-products
+    #   [2]: https://docs.aws.amazon.com/marketplace-catalog/latest/api-reference/container-products.html#working-with-container-products
     #   @return [String]
     #
     # @!attribute [rw] change_name
@@ -106,6 +108,7 @@ module Aws::MarketplaceCatalog
     class Change < Struct.new(
       :change_type,
       :entity,
+      :entity_tags,
       :details,
       :change_name)
       SENSITIVE = []
@@ -207,14 +210,23 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeChangeSetRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_arn
+    #   The Amazon Resource Name (ARN) of the Entity resource that is
+    #   associated with the resource policy.
+    #   @return [String]
     #
-    #       {
-    #         catalog: "Catalog", # required
-    #         change_set_id: "ResourceId", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/DeleteResourcePolicyRequest AWS API Documentation
     #
+    class DeleteResourcePolicyRequest < Struct.new(
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/DeleteResourcePolicyResponse AWS API Documentation
+    #
+    class DeleteResourcePolicyResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] catalog
     #   Required. The catalog related to the request. Fixed value:
     #   `AWSMarketplace`
@@ -297,14 +309,6 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEntityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         catalog: "Catalog", # required
-    #         entity_id: "ResourceId", # required
-    #       }
-    #
     # @!attribute [rw] catalog
     #   Required. The catalog related to the request. Fixed value:
     #   `AWSMarketplace`
@@ -333,7 +337,7 @@ module Aws::MarketplaceCatalog
     #   @return [String]
     #
     # @!attribute [rw] entity_arn
-    #   The ARN associated to the unique identifier for the change set
+    #   The ARN associated to the unique identifier for the entity
     #   referenced in this request.
     #   @return [String]
     #
@@ -360,14 +364,6 @@ module Aws::MarketplaceCatalog
 
     # An entity contains data that describes your product, its supported
     # features, and how it can be used or launched by your customer.
-    #
-    # @note When making an API call, you may pass Entity
-    #   data as a hash:
-    #
-    #       {
-    #         type: "EntityType", # required
-    #         identifier: "Identifier",
-    #       }
     #
     # @!attribute [rw] type
     #   The type of entity.
@@ -455,14 +451,6 @@ module Aws::MarketplaceCatalog
     # A filter object, used to optionally filter results from calls to the
     # `ListEntities` and `ListChangeSets` actions.
     #
-    # @note When making an API call, you may pass Filter
-    #   data as a hash:
-    #
-    #       {
-    #         name: "FilterName",
-    #         value_list: ["FilterValueContent"],
-    #       }
-    #
     # @!attribute [rw] name
     #   For `ListEntities`, the supported value for this is an `EntityId`.
     #
@@ -507,7 +495,34 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
+    # @!attribute [rw] resource_arn
+    #   The Amazon Resource Name (ARN) of the Entity resource that is
+    #   associated with the resource policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/GetResourcePolicyRequest AWS API Documentation
+    #
+    class GetResourcePolicyRequest < Struct.new(
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] policy
+    #   The policy document to set; formatted in JSON.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/GetResourcePolicyResponse AWS API Documentation
+    #
+    class GetResourcePolicyResponse < Struct.new(
+      :policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # There was an internal service exception.
+    #
+    # HTTP status code: 500
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -520,25 +535,6 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListChangeSetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         catalog: "Catalog", # required
-    #         filter_list: [
-    #           {
-    #             name: "FilterName",
-    #             value_list: ["FilterValueContent"],
-    #           },
-    #         ],
-    #         sort: {
-    #           sort_by: "SortBy",
-    #           sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         },
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] catalog
     #   The catalog related to the request. Fixed value: `AWSMarketplace`
     #   @return [String]
@@ -592,26 +588,6 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListEntitiesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         catalog: "Catalog", # required
-    #         entity_type: "EntityType", # required
-    #         filter_list: [
-    #           {
-    #             name: "FilterName",
-    #             value_list: ["FilterValueContent"],
-    #           },
-    #         ],
-    #         sort: {
-    #           sort_by: "SortBy",
-    #           sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] catalog
     #   The catalog related to the request. Fixed value: `AWSMarketplace`
     #   @return [String]
@@ -639,6 +615,9 @@ module Aws::MarketplaceCatalog
     #   value isn't provided, the default value is 20.
     #   @return [Integer]
     #
+    # @!attribute [rw] ownership_type
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/ListEntitiesRequest AWS API Documentation
     #
     class ListEntitiesRequest < Struct.new(
@@ -647,7 +626,8 @@ module Aws::MarketplaceCatalog
       :filter_list,
       :sort,
       :next_token,
-      :max_results)
+      :max_results,
+      :ownership_type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -670,6 +650,60 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
+    # @!attribute [rw] resource_arn
+    #   Required. The Amazon Resource Name (ARN) associated with the
+    #   resource you want to list tags on.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/ListTagsForResourceRequest AWS API Documentation
+    #
+    class ListTagsForResourceRequest < Struct.new(
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_arn
+    #   Required. The ARN associated with the resource you want to list tags
+    #   on.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   Required. A list of objects specifying each key name and value.
+    #   Number of objects allowed: 1-50.
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/ListTagsForResourceResponse AWS API Documentation
+    #
+    class ListTagsForResourceResponse < Struct.new(
+      :resource_arn,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_arn
+    #   The Amazon Resource Name (ARN) of the Entity resource you want to
+    #   associate with a resource policy.
+    #   @return [String]
+    #
+    # @!attribute [rw] policy
+    #   The policy document to set; formatted in JSON.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/PutResourcePolicyRequest AWS API Documentation
+    #
+    class PutResourcePolicyRequest < Struct.new(
+      :resource_arn,
+      :policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/PutResourcePolicyResponse AWS API Documentation
+    #
+    class PutResourcePolicyResponse < Aws::EmptyStructure; end
+
     # The resource is currently in use.
     #
     # @!attribute [rw] message
@@ -684,6 +718,8 @@ module Aws::MarketplaceCatalog
     end
 
     # The specified resource wasn't found.
+    #
+    # HTTP status code: 404
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -724,14 +760,6 @@ module Aws::MarketplaceCatalog
 
     # An object that contains two attributes, `SortBy` and `SortOrder`.
     #
-    # @note When making an API call, you may pass Sort
-    #   data as a hash:
-    #
-    #       {
-    #         sort_by: "SortBy",
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #       }
-    #
     # @!attribute [rw] sort_by
     #   For `ListEntities`, supported attributes include `LastModifiedDate`
     #   (default), `Visibility`, `EntityId`, and `Name`.
@@ -754,26 +782,6 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartChangeSetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         catalog: "Catalog", # required
-    #         change_set: [ # required
-    #           {
-    #             change_type: "ChangeType", # required
-    #             entity: { # required
-    #               type: "EntityType", # required
-    #               identifier: "Identifier",
-    #             },
-    #             details: "Json", # required
-    #             change_name: "ChangeName",
-    #           },
-    #         ],
-    #         change_set_name: "ChangeSetName",
-    #         client_request_token: "ClientRequestToken",
-    #       }
-    #
     # @!attribute [rw] catalog
     #   The catalog related to the request. Fixed value: `AWSMarketplace`
     #   @return [String]
@@ -789,7 +797,15 @@ module Aws::MarketplaceCatalog
     #
     # @!attribute [rw] client_request_token
     #   A unique token to identify the request to ensure idempotency.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
     #   @return [String]
+    #
+    # @!attribute [rw] change_set_tags
+    #   A list of objects specifying each key name and value for the
+    #   `ChangeSetTags` property.
+    #   @return [Array<Types::Tag>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/StartChangeSetRequest AWS API Documentation
     #
@@ -797,7 +813,8 @@ module Aws::MarketplaceCatalog
       :catalog,
       :change_set,
       :change_set_name,
-      :client_request_token)
+      :client_request_token,
+      :change_set_tags)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -820,7 +837,51 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
+    # A list of objects specifying each key name and value.
+    #
+    # @!attribute [rw] key
+    #   The key associated with the tag.
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   The value associated with the tag.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/Tag AWS API Documentation
+    #
+    class Tag < Struct.new(
+      :key,
+      :value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_arn
+    #   Required. The Amazon Resource Name (ARN) associated with the
+    #   resource you want to tag.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   Required. A list of objects specifying each key name and value.
+    #   Number of objects allowed: 1-50.
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/TagResourceRequest AWS API Documentation
+    #
+    class TagResourceRequest < Struct.new(
+      :resource_arn,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/TagResourceResponse AWS API Documentation
+    #
+    class TagResourceResponse < Aws::EmptyStructure; end
+
     # Too many requests.
+    #
+    # HTTP status code: 429
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -833,7 +894,32 @@ module Aws::MarketplaceCatalog
       include Aws::Structure
     end
 
+    # @!attribute [rw] resource_arn
+    #   Required. The Amazon Resource Name (ARN) associated with the
+    #   resource you want to remove the tag from.
+    #   @return [String]
+    #
+    # @!attribute [rw] tag_keys
+    #   Required. A list of key names of tags to be removed. Number of
+    #   strings allowed: 0-256.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/UntagResourceRequest AWS API Documentation
+    #
+    class UntagResourceRequest < Struct.new(
+      :resource_arn,
+      :tag_keys)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/UntagResourceResponse AWS API Documentation
+    #
+    class UntagResourceResponse < Aws::EmptyStructure; end
+
     # An error occurred during validation.
+    #
+    # HTTP status code: 422
     #
     # @!attribute [rw] message
     #   @return [String]

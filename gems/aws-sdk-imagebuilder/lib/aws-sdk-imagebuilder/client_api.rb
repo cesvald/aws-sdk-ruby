@@ -13,14 +13,17 @@ module Aws::Imagebuilder
 
     include Seahorse::Model
 
+    AccountAggregation = Shapes::StructureShape.new(name: 'AccountAggregation')
     AccountId = Shapes::StringShape.new(name: 'AccountId')
     AccountList = Shapes::ListShape.new(name: 'AccountList')
+    AdditionalInstanceConfiguration = Shapes::StructureShape.new(name: 'AdditionalInstanceConfiguration')
     Ami = Shapes::StructureShape.new(name: 'Ami')
     AmiDistributionConfiguration = Shapes::StructureShape.new(name: 'AmiDistributionConfiguration')
     AmiList = Shapes::ListShape.new(name: 'AmiList')
     AmiNameString = Shapes::StringShape.new(name: 'AmiNameString')
     Arn = Shapes::StringShape.new(name: 'Arn')
     Boolean = Shapes::BooleanShape.new(name: 'Boolean')
+    BuildType = Shapes::StringShape.new(name: 'BuildType')
     CallRateLimitExceededException = Shapes::StructureShape.new(name: 'CallRateLimitExceededException')
     CancelImageCreationRequest = Shapes::StructureShape.new(name: 'CancelImageCreationRequest')
     CancelImageCreationResponse = Shapes::StructureShape.new(name: 'CancelImageCreationResponse')
@@ -32,6 +35,17 @@ module Aws::Imagebuilder
     ComponentConfigurationList = Shapes::ListShape.new(name: 'ComponentConfigurationList')
     ComponentData = Shapes::StringShape.new(name: 'ComponentData')
     ComponentFormat = Shapes::StringShape.new(name: 'ComponentFormat')
+    ComponentParameter = Shapes::StructureShape.new(name: 'ComponentParameter')
+    ComponentParameterDescription = Shapes::StringShape.new(name: 'ComponentParameterDescription')
+    ComponentParameterDetail = Shapes::StructureShape.new(name: 'ComponentParameterDetail')
+    ComponentParameterDetailList = Shapes::ListShape.new(name: 'ComponentParameterDetailList')
+    ComponentParameterList = Shapes::ListShape.new(name: 'ComponentParameterList')
+    ComponentParameterName = Shapes::StringShape.new(name: 'ComponentParameterName')
+    ComponentParameterType = Shapes::StringShape.new(name: 'ComponentParameterType')
+    ComponentParameterValue = Shapes::StringShape.new(name: 'ComponentParameterValue')
+    ComponentParameterValueList = Shapes::ListShape.new(name: 'ComponentParameterValueList')
+    ComponentState = Shapes::StructureShape.new(name: 'ComponentState')
+    ComponentStatus = Shapes::StringShape.new(name: 'ComponentStatus')
     ComponentSummary = Shapes::StructureShape.new(name: 'ComponentSummary')
     ComponentSummaryList = Shapes::ListShape.new(name: 'ComponentSummaryList')
     ComponentType = Shapes::StringShape.new(name: 'ComponentType')
@@ -62,7 +76,13 @@ module Aws::Imagebuilder
     CreateImageResponse = Shapes::StructureShape.new(name: 'CreateImageResponse')
     CreateInfrastructureConfigurationRequest = Shapes::StructureShape.new(name: 'CreateInfrastructureConfigurationRequest')
     CreateInfrastructureConfigurationResponse = Shapes::StructureShape.new(name: 'CreateInfrastructureConfigurationResponse')
+    CvssScore = Shapes::StructureShape.new(name: 'CvssScore')
+    CvssScoreAdjustment = Shapes::StructureShape.new(name: 'CvssScoreAdjustment')
+    CvssScoreAdjustmentList = Shapes::ListShape.new(name: 'CvssScoreAdjustmentList')
+    CvssScoreDetails = Shapes::StructureShape.new(name: 'CvssScoreDetails')
+    CvssScoreList = Shapes::ListShape.new(name: 'CvssScoreList')
     DateTime = Shapes::StringShape.new(name: 'DateTime')
+    DateTimeTimestamp = Shapes::TimestampShape.new(name: 'DateTimeTimestamp')
     DeleteComponentRequest = Shapes::StructureShape.new(name: 'DeleteComponentRequest')
     DeleteComponentResponse = Shapes::StructureShape.new(name: 'DeleteComponentResponse')
     DeleteContainerRecipeRequest = Shapes::StructureShape.new(name: 'DeleteContainerRecipeRequest')
@@ -77,6 +97,7 @@ module Aws::Imagebuilder
     DeleteImageResponse = Shapes::StructureShape.new(name: 'DeleteImageResponse')
     DeleteInfrastructureConfigurationRequest = Shapes::StructureShape.new(name: 'DeleteInfrastructureConfigurationRequest')
     DeleteInfrastructureConfigurationResponse = Shapes::StructureShape.new(name: 'DeleteInfrastructureConfigurationResponse')
+    DiskImageFormat = Shapes::StringShape.new(name: 'DiskImageFormat')
     Distribution = Shapes::StructureShape.new(name: 'Distribution')
     DistributionConfiguration = Shapes::StructureShape.new(name: 'DistributionConfiguration')
     DistributionConfigurationArn = Shapes::StringShape.new(name: 'DistributionConfigurationArn')
@@ -88,9 +109,15 @@ module Aws::Imagebuilder
     EbsInstanceBlockDeviceSpecification = Shapes::StructureShape.new(name: 'EbsInstanceBlockDeviceSpecification')
     EbsIopsInteger = Shapes::IntegerShape.new(name: 'EbsIopsInteger')
     EbsVolumeSizeInteger = Shapes::IntegerShape.new(name: 'EbsVolumeSizeInteger')
+    EbsVolumeThroughput = Shapes::IntegerShape.new(name: 'EbsVolumeThroughput')
     EbsVolumeType = Shapes::StringShape.new(name: 'EbsVolumeType')
+    EcrConfiguration = Shapes::StructureShape.new(name: 'EcrConfiguration')
     EmptyString = Shapes::StringShape.new(name: 'EmptyString')
     ErrorMessage = Shapes::StringShape.new(name: 'ErrorMessage')
+    FastLaunchConfiguration = Shapes::StructureShape.new(name: 'FastLaunchConfiguration')
+    FastLaunchConfigurationList = Shapes::ListShape.new(name: 'FastLaunchConfigurationList')
+    FastLaunchLaunchTemplateSpecification = Shapes::StructureShape.new(name: 'FastLaunchLaunchTemplateSpecification')
+    FastLaunchSnapshotConfiguration = Shapes::StructureShape.new(name: 'FastLaunchSnapshotConfiguration')
     Filter = Shapes::StructureShape.new(name: 'Filter')
     FilterList = Shapes::ListShape.new(name: 'FilterList')
     FilterName = Shapes::StringShape.new(name: 'FilterName')
@@ -119,19 +146,39 @@ module Aws::Imagebuilder
     GetImageResponse = Shapes::StructureShape.new(name: 'GetImageResponse')
     GetInfrastructureConfigurationRequest = Shapes::StructureShape.new(name: 'GetInfrastructureConfigurationRequest')
     GetInfrastructureConfigurationResponse = Shapes::StructureShape.new(name: 'GetInfrastructureConfigurationResponse')
+    GetWorkflowExecutionRequest = Shapes::StructureShape.new(name: 'GetWorkflowExecutionRequest')
+    GetWorkflowExecutionResponse = Shapes::StructureShape.new(name: 'GetWorkflowExecutionResponse')
+    GetWorkflowStepExecutionRequest = Shapes::StructureShape.new(name: 'GetWorkflowStepExecutionRequest')
+    GetWorkflowStepExecutionResponse = Shapes::StructureShape.new(name: 'GetWorkflowStepExecutionResponse')
+    HttpPutResponseHopLimit = Shapes::IntegerShape.new(name: 'HttpPutResponseHopLimit')
+    HttpTokens = Shapes::StringShape.new(name: 'HttpTokens')
     IdempotentParameterMismatchException = Shapes::StructureShape.new(name: 'IdempotentParameterMismatchException')
     Image = Shapes::StructureShape.new(name: 'Image')
+    ImageAggregation = Shapes::StructureShape.new(name: 'ImageAggregation')
+    ImageBuildMessage = Shapes::StringShape.new(name: 'ImageBuildMessage')
     ImageBuildVersionArn = Shapes::StringShape.new(name: 'ImageBuildVersionArn')
     ImageBuilderArn = Shapes::StringShape.new(name: 'ImageBuilderArn')
     ImagePackage = Shapes::StructureShape.new(name: 'ImagePackage')
     ImagePackageList = Shapes::ListShape.new(name: 'ImagePackageList')
     ImagePipeline = Shapes::StructureShape.new(name: 'ImagePipeline')
+    ImagePipelineAggregation = Shapes::StructureShape.new(name: 'ImagePipelineAggregation')
     ImagePipelineArn = Shapes::StringShape.new(name: 'ImagePipelineArn')
     ImagePipelineList = Shapes::ListShape.new(name: 'ImagePipelineList')
     ImageRecipe = Shapes::StructureShape.new(name: 'ImageRecipe')
     ImageRecipeArn = Shapes::StringShape.new(name: 'ImageRecipeArn')
     ImageRecipeSummary = Shapes::StructureShape.new(name: 'ImageRecipeSummary')
     ImageRecipeSummaryList = Shapes::ListShape.new(name: 'ImageRecipeSummaryList')
+    ImageScanFinding = Shapes::StructureShape.new(name: 'ImageScanFinding')
+    ImageScanFindingAggregation = Shapes::StructureShape.new(name: 'ImageScanFindingAggregation')
+    ImageScanFindingAggregationsList = Shapes::ListShape.new(name: 'ImageScanFindingAggregationsList')
+    ImageScanFindingsFilter = Shapes::StructureShape.new(name: 'ImageScanFindingsFilter')
+    ImageScanFindingsFilterList = Shapes::ListShape.new(name: 'ImageScanFindingsFilterList')
+    ImageScanFindingsFilterValues = Shapes::ListShape.new(name: 'ImageScanFindingsFilterValues')
+    ImageScanFindingsList = Shapes::ListShape.new(name: 'ImageScanFindingsList')
+    ImageScanState = Shapes::StructureShape.new(name: 'ImageScanState')
+    ImageScanStatus = Shapes::StringShape.new(name: 'ImageScanStatus')
+    ImageScanningConfiguration = Shapes::StructureShape.new(name: 'ImageScanningConfiguration')
+    ImageSource = Shapes::StringShape.new(name: 'ImageSource')
     ImageState = Shapes::StructureShape.new(name: 'ImageState')
     ImageStatus = Shapes::StringShape.new(name: 'ImageStatus')
     ImageSummary = Shapes::StructureShape.new(name: 'ImageSummary')
@@ -145,15 +192,19 @@ module Aws::Imagebuilder
     ImageVersionList = Shapes::ListShape.new(name: 'ImageVersionList')
     ImportComponentRequest = Shapes::StructureShape.new(name: 'ImportComponentRequest')
     ImportComponentResponse = Shapes::StructureShape.new(name: 'ImportComponentResponse')
+    ImportVmImageRequest = Shapes::StructureShape.new(name: 'ImportVmImageRequest')
+    ImportVmImageResponse = Shapes::StructureShape.new(name: 'ImportVmImageResponse')
     InfrastructureConfiguration = Shapes::StructureShape.new(name: 'InfrastructureConfiguration')
     InfrastructureConfigurationArn = Shapes::StringShape.new(name: 'InfrastructureConfigurationArn')
     InfrastructureConfigurationSummary = Shapes::StructureShape.new(name: 'InfrastructureConfigurationSummary')
     InfrastructureConfigurationSummaryList = Shapes::ListShape.new(name: 'InfrastructureConfigurationSummaryList')
     InlineComponentData = Shapes::StringShape.new(name: 'InlineComponentData')
     InlineDockerFileTemplate = Shapes::StringShape.new(name: 'InlineDockerFileTemplate')
+    InspectorScoreDetails = Shapes::StructureShape.new(name: 'InspectorScoreDetails')
     InstanceBlockDeviceMapping = Shapes::StructureShape.new(name: 'InstanceBlockDeviceMapping')
     InstanceBlockDeviceMappings = Shapes::ListShape.new(name: 'InstanceBlockDeviceMappings')
     InstanceConfiguration = Shapes::StructureShape.new(name: 'InstanceConfiguration')
+    InstanceMetadataOptions = Shapes::StructureShape.new(name: 'InstanceMetadataOptions')
     InstanceProfileNameType = Shapes::StringShape.new(name: 'InstanceProfileNameType')
     InstanceType = Shapes::StringShape.new(name: 'InstanceType')
     InstanceTypeList = Shapes::ListShape.new(name: 'InstanceTypeList')
@@ -187,19 +238,37 @@ module Aws::Imagebuilder
     ListImagePipelinesResponse = Shapes::StructureShape.new(name: 'ListImagePipelinesResponse')
     ListImageRecipesRequest = Shapes::StructureShape.new(name: 'ListImageRecipesRequest')
     ListImageRecipesResponse = Shapes::StructureShape.new(name: 'ListImageRecipesResponse')
+    ListImageScanFindingAggregationsRequest = Shapes::StructureShape.new(name: 'ListImageScanFindingAggregationsRequest')
+    ListImageScanFindingAggregationsResponse = Shapes::StructureShape.new(name: 'ListImageScanFindingAggregationsResponse')
+    ListImageScanFindingsRequest = Shapes::StructureShape.new(name: 'ListImageScanFindingsRequest')
+    ListImageScanFindingsResponse = Shapes::StructureShape.new(name: 'ListImageScanFindingsResponse')
     ListImagesRequest = Shapes::StructureShape.new(name: 'ListImagesRequest')
     ListImagesResponse = Shapes::StructureShape.new(name: 'ListImagesResponse')
     ListInfrastructureConfigurationsRequest = Shapes::StructureShape.new(name: 'ListInfrastructureConfigurationsRequest')
     ListInfrastructureConfigurationsResponse = Shapes::StructureShape.new(name: 'ListInfrastructureConfigurationsResponse')
     ListTagsForResourceRequest = Shapes::StructureShape.new(name: 'ListTagsForResourceRequest')
     ListTagsForResourceResponse = Shapes::StructureShape.new(name: 'ListTagsForResourceResponse')
+    ListWorkflowExecutionsRequest = Shapes::StructureShape.new(name: 'ListWorkflowExecutionsRequest')
+    ListWorkflowExecutionsResponse = Shapes::StructureShape.new(name: 'ListWorkflowExecutionsResponse')
+    ListWorkflowStepExecutionsRequest = Shapes::StructureShape.new(name: 'ListWorkflowStepExecutionsRequest')
+    ListWorkflowStepExecutionsResponse = Shapes::StructureShape.new(name: 'ListWorkflowStepExecutionsResponse')
     Logging = Shapes::StructureShape.new(name: 'Logging')
+    MaxParallelLaunches = Shapes::IntegerShape.new(name: 'MaxParallelLaunches')
     NonEmptyString = Shapes::StringShape.new(name: 'NonEmptyString')
+    NonEmptyStringList = Shapes::ListShape.new(name: 'NonEmptyStringList')
+    NonNegativeDouble = Shapes::FloatShape.new(name: 'NonNegativeDouble')
     NullableBoolean = Shapes::BooleanShape.new(name: 'NullableBoolean')
+    OrganizationArn = Shapes::StringShape.new(name: 'OrganizationArn')
+    OrganizationArnList = Shapes::ListShape.new(name: 'OrganizationArnList')
+    OrganizationalUnitArn = Shapes::StringShape.new(name: 'OrganizationalUnitArn')
+    OrganizationalUnitArnList = Shapes::ListShape.new(name: 'OrganizationalUnitArnList')
     OsVersion = Shapes::StringShape.new(name: 'OsVersion')
     OsVersionList = Shapes::ListShape.new(name: 'OsVersionList')
     OutputResources = Shapes::StructureShape.new(name: 'OutputResources')
     Ownership = Shapes::StringShape.new(name: 'Ownership')
+    PackageArchitecture = Shapes::StringShape.new(name: 'PackageArchitecture')
+    PackageEpoch = Shapes::IntegerShape.new(name: 'PackageEpoch')
+    PackageVulnerabilityDetails = Shapes::StructureShape.new(name: 'PackageVulnerabilityDetails')
     PaginationToken = Shapes::StringShape.new(name: 'PaginationToken')
     PipelineExecutionStartCondition = Shapes::StringShape.new(name: 'PipelineExecutionStartCondition')
     PipelineStatus = Shapes::StringShape.new(name: 'PipelineStatus')
@@ -213,6 +282,8 @@ module Aws::Imagebuilder
     PutImageRecipePolicyRequest = Shapes::StructureShape.new(name: 'PutImageRecipePolicyRequest')
     PutImageRecipePolicyResponse = Shapes::StructureShape.new(name: 'PutImageRecipePolicyResponse')
     RegionList = Shapes::ListShape.new(name: 'RegionList')
+    Remediation = Shapes::StructureShape.new(name: 'Remediation')
+    RemediationRecommendation = Shapes::StructureShape.new(name: 'RemediationRecommendation')
     ResourceAlreadyExistsException = Shapes::StructureShape.new(name: 'ResourceAlreadyExistsException')
     ResourceDependencyException = Shapes::StructureShape.new(name: 'ResourceDependencyException')
     ResourceInUseException = Shapes::StructureShape.new(name: 'ResourceInUseException')
@@ -221,16 +292,21 @@ module Aws::Imagebuilder
     ResourcePolicyDocument = Shapes::StringShape.new(name: 'ResourcePolicyDocument')
     ResourceTagMap = Shapes::MapShape.new(name: 'ResourceTagMap')
     RestrictedInteger = Shapes::IntegerShape.new(name: 'RestrictedInteger')
+    S3ExportConfiguration = Shapes::StructureShape.new(name: 'S3ExportConfiguration')
     S3Logs = Shapes::StructureShape.new(name: 'S3Logs')
     Schedule = Shapes::StructureShape.new(name: 'Schedule')
     SecurityGroupIds = Shapes::ListShape.new(name: 'SecurityGroupIds')
     ServiceException = Shapes::StructureShape.new(name: 'ServiceException')
     ServiceQuotaExceededException = Shapes::StructureShape.new(name: 'ServiceQuotaExceededException')
     ServiceUnavailableException = Shapes::StructureShape.new(name: 'ServiceUnavailableException')
+    SeverityCountNumber = Shapes::IntegerShape.new(name: 'SeverityCountNumber')
+    SeverityCounts = Shapes::StructureShape.new(name: 'SeverityCounts')
     SnsTopicArn = Shapes::StringShape.new(name: 'SnsTopicArn')
+    SourceLayerHash = Shapes::StringShape.new(name: 'SourceLayerHash')
     StartImagePipelineExecutionRequest = Shapes::StructureShape.new(name: 'StartImagePipelineExecutionRequest')
     StartImagePipelineExecutionResponse = Shapes::StructureShape.new(name: 'StartImagePipelineExecutionResponse')
     StringList = Shapes::ListShape.new(name: 'StringList')
+    SystemsManagerAgent = Shapes::StructureShape.new(name: 'SystemsManagerAgent')
     TagKey = Shapes::StringShape.new(name: 'TagKey')
     TagKeyList = Shapes::ListShape.new(name: 'TagKeyList')
     TagMap = Shapes::MapShape.new(name: 'TagMap')
@@ -238,6 +314,7 @@ module Aws::Imagebuilder
     TagResourceResponse = Shapes::StructureShape.new(name: 'TagResourceResponse')
     TagValue = Shapes::StringShape.new(name: 'TagValue')
     TargetContainerRepository = Shapes::StructureShape.new(name: 'TargetContainerRepository')
+    TargetResourceCount = Shapes::IntegerShape.new(name: 'TargetResourceCount')
     Timezone = Shapes::StringShape.new(name: 'Timezone')
     UntagResourceRequest = Shapes::StructureShape.new(name: 'UntagResourceRequest')
     UntagResourceResponse = Shapes::StructureShape.new(name: 'UntagResourceResponse')
@@ -248,9 +325,43 @@ module Aws::Imagebuilder
     UpdateInfrastructureConfigurationRequest = Shapes::StructureShape.new(name: 'UpdateInfrastructureConfigurationRequest')
     UpdateInfrastructureConfigurationResponse = Shapes::StructureShape.new(name: 'UpdateInfrastructureConfigurationResponse')
     Uri = Shapes::StringShape.new(name: 'Uri')
+    UserDataOverride = Shapes::StringShape.new(name: 'UserDataOverride')
     VersionNumber = Shapes::StringShape.new(name: 'VersionNumber')
+    VulnerabilityId = Shapes::StringShape.new(name: 'VulnerabilityId')
+    VulnerabilityIdAggregation = Shapes::StructureShape.new(name: 'VulnerabilityIdAggregation')
+    VulnerabilityIdList = Shapes::ListShape.new(name: 'VulnerabilityIdList')
+    VulnerablePackage = Shapes::StructureShape.new(name: 'VulnerablePackage')
+    VulnerablePackageList = Shapes::ListShape.new(name: 'VulnerablePackageList')
+    WorkflowBuildVersionArn = Shapes::StringShape.new(name: 'WorkflowBuildVersionArn')
+    WorkflowExecutionId = Shapes::StringShape.new(name: 'WorkflowExecutionId')
+    WorkflowExecutionMessage = Shapes::StringShape.new(name: 'WorkflowExecutionMessage')
+    WorkflowExecutionMetadata = Shapes::StructureShape.new(name: 'WorkflowExecutionMetadata')
+    WorkflowExecutionStatus = Shapes::StringShape.new(name: 'WorkflowExecutionStatus')
+    WorkflowExecutionsList = Shapes::ListShape.new(name: 'WorkflowExecutionsList')
+    WorkflowStepAction = Shapes::StringShape.new(name: 'WorkflowStepAction')
+    WorkflowStepCount = Shapes::IntegerShape.new(name: 'WorkflowStepCount')
+    WorkflowStepDescription = Shapes::StringShape.new(name: 'WorkflowStepDescription')
+    WorkflowStepExecutionId = Shapes::StringShape.new(name: 'WorkflowStepExecutionId')
+    WorkflowStepExecutionRollbackStatus = Shapes::StringShape.new(name: 'WorkflowStepExecutionRollbackStatus')
+    WorkflowStepExecutionStatus = Shapes::StringShape.new(name: 'WorkflowStepExecutionStatus')
+    WorkflowStepExecutionsList = Shapes::ListShape.new(name: 'WorkflowStepExecutionsList')
+    WorkflowStepInputs = Shapes::StringShape.new(name: 'WorkflowStepInputs')
+    WorkflowStepMessage = Shapes::StringShape.new(name: 'WorkflowStepMessage')
+    WorkflowStepMetadata = Shapes::StructureShape.new(name: 'WorkflowStepMetadata')
+    WorkflowStepName = Shapes::StringShape.new(name: 'WorkflowStepName')
+    WorkflowStepOutputs = Shapes::StringShape.new(name: 'WorkflowStepOutputs')
+    WorkflowStepTimeoutSecondsInteger = Shapes::IntegerShape.new(name: 'WorkflowStepTimeoutSecondsInteger')
+    WorkflowType = Shapes::StringShape.new(name: 'WorkflowType')
+
+    AccountAggregation.add_member(:account_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "accountId"))
+    AccountAggregation.add_member(:severity_counts, Shapes::ShapeRef.new(shape: SeverityCounts, location_name: "severityCounts"))
+    AccountAggregation.struct_class = Types::AccountAggregation
 
     AccountList.member = Shapes::ShapeRef.new(shape: AccountId)
+
+    AdditionalInstanceConfiguration.add_member(:systems_manager_agent, Shapes::ShapeRef.new(shape: SystemsManagerAgent, location_name: "systemsManagerAgent"))
+    AdditionalInstanceConfiguration.add_member(:user_data_override, Shapes::ShapeRef.new(shape: UserDataOverride, location_name: "userDataOverride"))
+    AdditionalInstanceConfiguration.struct_class = Types::AdditionalInstanceConfiguration
 
     Ami.add_member(:region, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "region"))
     Ami.add_member(:image, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "image"))
@@ -293,30 +404,58 @@ module Aws::Imagebuilder
     Component.add_member(:type, Shapes::ShapeRef.new(shape: ComponentType, location_name: "type"))
     Component.add_member(:platform, Shapes::ShapeRef.new(shape: Platform, location_name: "platform"))
     Component.add_member(:supported_os_versions, Shapes::ShapeRef.new(shape: OsVersionList, location_name: "supportedOsVersions"))
+    Component.add_member(:state, Shapes::ShapeRef.new(shape: ComponentState, location_name: "state"))
+    Component.add_member(:parameters, Shapes::ShapeRef.new(shape: ComponentParameterDetailList, location_name: "parameters"))
     Component.add_member(:owner, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "owner"))
     Component.add_member(:data, Shapes::ShapeRef.new(shape: ComponentData, location_name: "data"))
     Component.add_member(:kms_key_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "kmsKeyId"))
     Component.add_member(:encrypted, Shapes::ShapeRef.new(shape: NullableBoolean, location_name: "encrypted"))
     Component.add_member(:date_created, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateCreated"))
     Component.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    Component.add_member(:publisher, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "publisher"))
+    Component.add_member(:obfuscate, Shapes::ShapeRef.new(shape: Boolean, location_name: "obfuscate"))
     Component.struct_class = Types::Component
 
     ComponentConfiguration.add_member(:component_arn, Shapes::ShapeRef.new(shape: ComponentVersionArnOrBuildVersionArn, required: true, location_name: "componentArn"))
+    ComponentConfiguration.add_member(:parameters, Shapes::ShapeRef.new(shape: ComponentParameterList, location_name: "parameters"))
     ComponentConfiguration.struct_class = Types::ComponentConfiguration
 
     ComponentConfigurationList.member = Shapes::ShapeRef.new(shape: ComponentConfiguration)
+
+    ComponentParameter.add_member(:name, Shapes::ShapeRef.new(shape: ComponentParameterName, required: true, location_name: "name"))
+    ComponentParameter.add_member(:value, Shapes::ShapeRef.new(shape: ComponentParameterValueList, required: true, location_name: "value"))
+    ComponentParameter.struct_class = Types::ComponentParameter
+
+    ComponentParameterDetail.add_member(:name, Shapes::ShapeRef.new(shape: ComponentParameterName, required: true, location_name: "name"))
+    ComponentParameterDetail.add_member(:type, Shapes::ShapeRef.new(shape: ComponentParameterType, required: true, location_name: "type"))
+    ComponentParameterDetail.add_member(:default_value, Shapes::ShapeRef.new(shape: ComponentParameterValueList, location_name: "defaultValue"))
+    ComponentParameterDetail.add_member(:description, Shapes::ShapeRef.new(shape: ComponentParameterDescription, location_name: "description"))
+    ComponentParameterDetail.struct_class = Types::ComponentParameterDetail
+
+    ComponentParameterDetailList.member = Shapes::ShapeRef.new(shape: ComponentParameterDetail)
+
+    ComponentParameterList.member = Shapes::ShapeRef.new(shape: ComponentParameter)
+
+    ComponentParameterValueList.member = Shapes::ShapeRef.new(shape: ComponentParameterValue)
+
+    ComponentState.add_member(:status, Shapes::ShapeRef.new(shape: ComponentStatus, location_name: "status"))
+    ComponentState.add_member(:reason, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "reason"))
+    ComponentState.struct_class = Types::ComponentState
 
     ComponentSummary.add_member(:arn, Shapes::ShapeRef.new(shape: ImageBuilderArn, location_name: "arn"))
     ComponentSummary.add_member(:name, Shapes::ShapeRef.new(shape: ResourceName, location_name: "name"))
     ComponentSummary.add_member(:version, Shapes::ShapeRef.new(shape: VersionNumber, location_name: "version"))
     ComponentSummary.add_member(:platform, Shapes::ShapeRef.new(shape: Platform, location_name: "platform"))
     ComponentSummary.add_member(:supported_os_versions, Shapes::ShapeRef.new(shape: OsVersionList, location_name: "supportedOsVersions"))
+    ComponentSummary.add_member(:state, Shapes::ShapeRef.new(shape: ComponentState, location_name: "state"))
     ComponentSummary.add_member(:type, Shapes::ShapeRef.new(shape: ComponentType, location_name: "type"))
     ComponentSummary.add_member(:owner, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "owner"))
     ComponentSummary.add_member(:description, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "description"))
     ComponentSummary.add_member(:change_description, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "changeDescription"))
     ComponentSummary.add_member(:date_created, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateCreated"))
     ComponentSummary.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    ComponentSummary.add_member(:publisher, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "publisher"))
+    ComponentSummary.add_member(:obfuscate, Shapes::ShapeRef.new(shape: Boolean, location_name: "obfuscate"))
     ComponentSummary.struct_class = Types::ComponentSummary
 
     ComponentSummaryList.member = Shapes::ShapeRef.new(shape: ComponentSummary)
@@ -441,6 +580,7 @@ module Aws::Imagebuilder
     CreateImagePipelineRequest.add_member(:status, Shapes::ShapeRef.new(shape: PipelineStatus, location_name: "status"))
     CreateImagePipelineRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     CreateImagePipelineRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
+    CreateImagePipelineRequest.add_member(:image_scanning_configuration, Shapes::ShapeRef.new(shape: ImageScanningConfiguration, location_name: "imageScanningConfiguration"))
     CreateImagePipelineRequest.struct_class = Types::CreateImagePipelineRequest
 
     CreateImagePipelineResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
@@ -456,6 +596,7 @@ module Aws::Imagebuilder
     CreateImageRecipeRequest.add_member(:block_device_mappings, Shapes::ShapeRef.new(shape: InstanceBlockDeviceMappings, location_name: "blockDeviceMappings"))
     CreateImageRecipeRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     CreateImageRecipeRequest.add_member(:working_directory, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "workingDirectory"))
+    CreateImageRecipeRequest.add_member(:additional_instance_configuration, Shapes::ShapeRef.new(shape: AdditionalInstanceConfiguration, location_name: "additionalInstanceConfiguration"))
     CreateImageRecipeRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
     CreateImageRecipeRequest.struct_class = Types::CreateImageRecipeRequest
 
@@ -472,6 +613,7 @@ module Aws::Imagebuilder
     CreateImageRequest.add_member(:enhanced_image_metadata_enabled, Shapes::ShapeRef.new(shape: NullableBoolean, location_name: "enhancedImageMetadataEnabled"))
     CreateImageRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     CreateImageRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
+    CreateImageRequest.add_member(:image_scanning_configuration, Shapes::ShapeRef.new(shape: ImageScanningConfiguration, location_name: "imageScanningConfiguration"))
     CreateImageRequest.struct_class = Types::CreateImageRequest
 
     CreateImageResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
@@ -490,6 +632,7 @@ module Aws::Imagebuilder
     CreateInfrastructureConfigurationRequest.add_member(:terminate_instance_on_failure, Shapes::ShapeRef.new(shape: NullableBoolean, location_name: "terminateInstanceOnFailure"))
     CreateInfrastructureConfigurationRequest.add_member(:sns_topic_arn, Shapes::ShapeRef.new(shape: SnsTopicArn, location_name: "snsTopicArn"))
     CreateInfrastructureConfigurationRequest.add_member(:resource_tags, Shapes::ShapeRef.new(shape: ResourceTagMap, location_name: "resourceTags"))
+    CreateInfrastructureConfigurationRequest.add_member(:instance_metadata_options, Shapes::ShapeRef.new(shape: InstanceMetadataOptions, location_name: "instanceMetadataOptions"))
     CreateInfrastructureConfigurationRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     CreateInfrastructureConfigurationRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
     CreateInfrastructureConfigurationRequest.struct_class = Types::CreateInfrastructureConfigurationRequest
@@ -498,6 +641,28 @@ module Aws::Imagebuilder
     CreateInfrastructureConfigurationResponse.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, location_name: "clientToken"))
     CreateInfrastructureConfigurationResponse.add_member(:infrastructure_configuration_arn, Shapes::ShapeRef.new(shape: InfrastructureConfigurationArn, location_name: "infrastructureConfigurationArn"))
     CreateInfrastructureConfigurationResponse.struct_class = Types::CreateInfrastructureConfigurationResponse
+
+    CvssScore.add_member(:base_score, Shapes::ShapeRef.new(shape: NonNegativeDouble, location_name: "baseScore"))
+    CvssScore.add_member(:scoring_vector, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "scoringVector"))
+    CvssScore.add_member(:version, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "version"))
+    CvssScore.add_member(:source, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "source"))
+    CvssScore.struct_class = Types::CvssScore
+
+    CvssScoreAdjustment.add_member(:metric, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "metric"))
+    CvssScoreAdjustment.add_member(:reason, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "reason"))
+    CvssScoreAdjustment.struct_class = Types::CvssScoreAdjustment
+
+    CvssScoreAdjustmentList.member = Shapes::ShapeRef.new(shape: CvssScoreAdjustment)
+
+    CvssScoreDetails.add_member(:score_source, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "scoreSource"))
+    CvssScoreDetails.add_member(:cvss_source, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "cvssSource"))
+    CvssScoreDetails.add_member(:version, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "version"))
+    CvssScoreDetails.add_member(:score, Shapes::ShapeRef.new(shape: NonNegativeDouble, location_name: "score"))
+    CvssScoreDetails.add_member(:scoring_vector, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "scoringVector"))
+    CvssScoreDetails.add_member(:adjustments, Shapes::ShapeRef.new(shape: CvssScoreAdjustmentList, location_name: "adjustments"))
+    CvssScoreDetails.struct_class = Types::CvssScoreDetails
+
+    CvssScoreList.member = Shapes::ShapeRef.new(shape: CvssScore)
 
     DeleteComponentRequest.add_member(:component_build_version_arn, Shapes::ShapeRef.new(shape: ComponentBuildVersionArn, required: true, location: "querystring", location_name: "componentBuildVersionArn"))
     DeleteComponentRequest.struct_class = Types::DeleteComponentRequest
@@ -553,6 +718,8 @@ module Aws::Imagebuilder
     Distribution.add_member(:container_distribution_configuration, Shapes::ShapeRef.new(shape: ContainerDistributionConfiguration, location_name: "containerDistributionConfiguration"))
     Distribution.add_member(:license_configuration_arns, Shapes::ShapeRef.new(shape: LicenseConfigurationArnList, location_name: "licenseConfigurationArns"))
     Distribution.add_member(:launch_template_configurations, Shapes::ShapeRef.new(shape: LaunchTemplateConfigurationList, location_name: "launchTemplateConfigurations"))
+    Distribution.add_member(:s3_export_configuration, Shapes::ShapeRef.new(shape: S3ExportConfiguration, location_name: "s3ExportConfiguration"))
+    Distribution.add_member(:fast_launch_configurations, Shapes::ShapeRef.new(shape: FastLaunchConfigurationList, location_name: "fastLaunchConfigurations"))
     Distribution.struct_class = Types::Distribution
 
     DistributionConfiguration.add_member(:arn, Shapes::ShapeRef.new(shape: ImageBuilderArn, location_name: "arn"))
@@ -585,7 +752,29 @@ module Aws::Imagebuilder
     EbsInstanceBlockDeviceSpecification.add_member(:snapshot_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "snapshotId"))
     EbsInstanceBlockDeviceSpecification.add_member(:volume_size, Shapes::ShapeRef.new(shape: EbsVolumeSizeInteger, location_name: "volumeSize"))
     EbsInstanceBlockDeviceSpecification.add_member(:volume_type, Shapes::ShapeRef.new(shape: EbsVolumeType, location_name: "volumeType"))
+    EbsInstanceBlockDeviceSpecification.add_member(:throughput, Shapes::ShapeRef.new(shape: EbsVolumeThroughput, location_name: "throughput"))
     EbsInstanceBlockDeviceSpecification.struct_class = Types::EbsInstanceBlockDeviceSpecification
+
+    EcrConfiguration.add_member(:repository_name, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "repositoryName"))
+    EcrConfiguration.add_member(:container_tags, Shapes::ShapeRef.new(shape: StringList, location_name: "containerTags"))
+    EcrConfiguration.struct_class = Types::EcrConfiguration
+
+    FastLaunchConfiguration.add_member(:enabled, Shapes::ShapeRef.new(shape: Boolean, required: true, location_name: "enabled"))
+    FastLaunchConfiguration.add_member(:snapshot_configuration, Shapes::ShapeRef.new(shape: FastLaunchSnapshotConfiguration, location_name: "snapshotConfiguration"))
+    FastLaunchConfiguration.add_member(:max_parallel_launches, Shapes::ShapeRef.new(shape: MaxParallelLaunches, location_name: "maxParallelLaunches"))
+    FastLaunchConfiguration.add_member(:launch_template, Shapes::ShapeRef.new(shape: FastLaunchLaunchTemplateSpecification, location_name: "launchTemplate"))
+    FastLaunchConfiguration.add_member(:account_id, Shapes::ShapeRef.new(shape: AccountId, location_name: "accountId"))
+    FastLaunchConfiguration.struct_class = Types::FastLaunchConfiguration
+
+    FastLaunchConfigurationList.member = Shapes::ShapeRef.new(shape: FastLaunchConfiguration)
+
+    FastLaunchLaunchTemplateSpecification.add_member(:launch_template_id, Shapes::ShapeRef.new(shape: LaunchTemplateId, location_name: "launchTemplateId"))
+    FastLaunchLaunchTemplateSpecification.add_member(:launch_template_name, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "launchTemplateName"))
+    FastLaunchLaunchTemplateSpecification.add_member(:launch_template_version, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "launchTemplateVersion"))
+    FastLaunchLaunchTemplateSpecification.struct_class = Types::FastLaunchLaunchTemplateSpecification
+
+    FastLaunchSnapshotConfiguration.add_member(:target_resource_count, Shapes::ShapeRef.new(shape: TargetResourceCount, location_name: "targetResourceCount"))
+    FastLaunchSnapshotConfiguration.struct_class = Types::FastLaunchSnapshotConfiguration
 
     Filter.add_member(:name, Shapes::ShapeRef.new(shape: FilterName, location_name: "name"))
     Filter.add_member(:values, Shapes::ShapeRef.new(shape: FilterValues, location_name: "values"))
@@ -675,6 +864,46 @@ module Aws::Imagebuilder
     GetInfrastructureConfigurationResponse.add_member(:infrastructure_configuration, Shapes::ShapeRef.new(shape: InfrastructureConfiguration, location_name: "infrastructureConfiguration"))
     GetInfrastructureConfigurationResponse.struct_class = Types::GetInfrastructureConfigurationResponse
 
+    GetWorkflowExecutionRequest.add_member(:workflow_execution_id, Shapes::ShapeRef.new(shape: WorkflowExecutionId, required: true, location: "querystring", location_name: "workflowExecutionId"))
+    GetWorkflowExecutionRequest.struct_class = Types::GetWorkflowExecutionRequest
+
+    GetWorkflowExecutionResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
+    GetWorkflowExecutionResponse.add_member(:workflow_build_version_arn, Shapes::ShapeRef.new(shape: WorkflowBuildVersionArn, location_name: "workflowBuildVersionArn"))
+    GetWorkflowExecutionResponse.add_member(:workflow_execution_id, Shapes::ShapeRef.new(shape: WorkflowExecutionId, location_name: "workflowExecutionId"))
+    GetWorkflowExecutionResponse.add_member(:image_build_version_arn, Shapes::ShapeRef.new(shape: ImageBuildVersionArn, location_name: "imageBuildVersionArn"))
+    GetWorkflowExecutionResponse.add_member(:type, Shapes::ShapeRef.new(shape: WorkflowType, location_name: "type"))
+    GetWorkflowExecutionResponse.add_member(:status, Shapes::ShapeRef.new(shape: WorkflowExecutionStatus, location_name: "status"))
+    GetWorkflowExecutionResponse.add_member(:message, Shapes::ShapeRef.new(shape: WorkflowExecutionMessage, location_name: "message"))
+    GetWorkflowExecutionResponse.add_member(:total_step_count, Shapes::ShapeRef.new(shape: WorkflowStepCount, location_name: "totalStepCount"))
+    GetWorkflowExecutionResponse.add_member(:total_steps_succeeded, Shapes::ShapeRef.new(shape: WorkflowStepCount, location_name: "totalStepsSucceeded"))
+    GetWorkflowExecutionResponse.add_member(:total_steps_failed, Shapes::ShapeRef.new(shape: WorkflowStepCount, location_name: "totalStepsFailed"))
+    GetWorkflowExecutionResponse.add_member(:total_steps_skipped, Shapes::ShapeRef.new(shape: WorkflowStepCount, location_name: "totalStepsSkipped"))
+    GetWorkflowExecutionResponse.add_member(:start_time, Shapes::ShapeRef.new(shape: DateTime, location_name: "startTime"))
+    GetWorkflowExecutionResponse.add_member(:end_time, Shapes::ShapeRef.new(shape: DateTime, location_name: "endTime"))
+    GetWorkflowExecutionResponse.struct_class = Types::GetWorkflowExecutionResponse
+
+    GetWorkflowStepExecutionRequest.add_member(:step_execution_id, Shapes::ShapeRef.new(shape: WorkflowStepExecutionId, required: true, location: "querystring", location_name: "stepExecutionId"))
+    GetWorkflowStepExecutionRequest.struct_class = Types::GetWorkflowStepExecutionRequest
+
+    GetWorkflowStepExecutionResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
+    GetWorkflowStepExecutionResponse.add_member(:step_execution_id, Shapes::ShapeRef.new(shape: WorkflowStepExecutionId, location_name: "stepExecutionId"))
+    GetWorkflowStepExecutionResponse.add_member(:workflow_build_version_arn, Shapes::ShapeRef.new(shape: WorkflowBuildVersionArn, location_name: "workflowBuildVersionArn"))
+    GetWorkflowStepExecutionResponse.add_member(:workflow_execution_id, Shapes::ShapeRef.new(shape: WorkflowExecutionId, location_name: "workflowExecutionId"))
+    GetWorkflowStepExecutionResponse.add_member(:image_build_version_arn, Shapes::ShapeRef.new(shape: ImageBuildVersionArn, location_name: "imageBuildVersionArn"))
+    GetWorkflowStepExecutionResponse.add_member(:name, Shapes::ShapeRef.new(shape: WorkflowStepName, location_name: "name"))
+    GetWorkflowStepExecutionResponse.add_member(:description, Shapes::ShapeRef.new(shape: WorkflowStepDescription, location_name: "description"))
+    GetWorkflowStepExecutionResponse.add_member(:action, Shapes::ShapeRef.new(shape: WorkflowStepAction, location_name: "action"))
+    GetWorkflowStepExecutionResponse.add_member(:status, Shapes::ShapeRef.new(shape: WorkflowStepExecutionStatus, location_name: "status"))
+    GetWorkflowStepExecutionResponse.add_member(:rollback_status, Shapes::ShapeRef.new(shape: WorkflowStepExecutionRollbackStatus, location_name: "rollbackStatus"))
+    GetWorkflowStepExecutionResponse.add_member(:message, Shapes::ShapeRef.new(shape: WorkflowStepMessage, location_name: "message"))
+    GetWorkflowStepExecutionResponse.add_member(:inputs, Shapes::ShapeRef.new(shape: WorkflowStepInputs, location_name: "inputs"))
+    GetWorkflowStepExecutionResponse.add_member(:outputs, Shapes::ShapeRef.new(shape: WorkflowStepOutputs, location_name: "outputs"))
+    GetWorkflowStepExecutionResponse.add_member(:start_time, Shapes::ShapeRef.new(shape: DateTime, location_name: "startTime"))
+    GetWorkflowStepExecutionResponse.add_member(:end_time, Shapes::ShapeRef.new(shape: DateTime, location_name: "endTime"))
+    GetWorkflowStepExecutionResponse.add_member(:on_failure, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "onFailure"))
+    GetWorkflowStepExecutionResponse.add_member(:timeout_seconds, Shapes::ShapeRef.new(shape: WorkflowStepTimeoutSecondsInteger, location_name: "timeoutSeconds"))
+    GetWorkflowStepExecutionResponse.struct_class = Types::GetWorkflowStepExecutionResponse
+
     IdempotentParameterMismatchException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "message"))
     IdempotentParameterMismatchException.struct_class = Types::IdempotentParameterMismatchException
 
@@ -696,7 +925,15 @@ module Aws::Imagebuilder
     Image.add_member(:date_created, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateCreated"))
     Image.add_member(:output_resources, Shapes::ShapeRef.new(shape: OutputResources, location_name: "outputResources"))
     Image.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    Image.add_member(:build_type, Shapes::ShapeRef.new(shape: BuildType, location_name: "buildType"))
+    Image.add_member(:image_source, Shapes::ShapeRef.new(shape: ImageSource, location_name: "imageSource"))
+    Image.add_member(:scan_state, Shapes::ShapeRef.new(shape: ImageScanState, location_name: "scanState"))
+    Image.add_member(:image_scanning_configuration, Shapes::ShapeRef.new(shape: ImageScanningConfiguration, location_name: "imageScanningConfiguration"))
     Image.struct_class = Types::Image
+
+    ImageAggregation.add_member(:image_build_version_arn, Shapes::ShapeRef.new(shape: ImageBuildVersionArn, location_name: "imageBuildVersionArn"))
+    ImageAggregation.add_member(:severity_counts, Shapes::ShapeRef.new(shape: SeverityCounts, location_name: "severityCounts"))
+    ImageAggregation.struct_class = Types::ImageAggregation
 
     ImagePackage.add_member(:package_name, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "packageName"))
     ImagePackage.add_member(:package_version, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "packageVersion"))
@@ -721,7 +958,12 @@ module Aws::Imagebuilder
     ImagePipeline.add_member(:date_last_run, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateLastRun"))
     ImagePipeline.add_member(:date_next_run, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateNextRun"))
     ImagePipeline.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    ImagePipeline.add_member(:image_scanning_configuration, Shapes::ShapeRef.new(shape: ImageScanningConfiguration, location_name: "imageScanningConfiguration"))
     ImagePipeline.struct_class = Types::ImagePipeline
+
+    ImagePipelineAggregation.add_member(:image_pipeline_arn, Shapes::ShapeRef.new(shape: ImagePipelineArn, location_name: "imagePipelineArn"))
+    ImagePipelineAggregation.add_member(:severity_counts, Shapes::ShapeRef.new(shape: SeverityCounts, location_name: "severityCounts"))
+    ImagePipelineAggregation.struct_class = Types::ImagePipelineAggregation
 
     ImagePipelineList.member = Shapes::ShapeRef.new(shape: ImagePipeline)
 
@@ -738,6 +980,7 @@ module Aws::Imagebuilder
     ImageRecipe.add_member(:date_created, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateCreated"))
     ImageRecipe.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     ImageRecipe.add_member(:working_directory, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "workingDirectory"))
+    ImageRecipe.add_member(:additional_instance_configuration, Shapes::ShapeRef.new(shape: AdditionalInstanceConfiguration, location_name: "additionalInstanceConfiguration"))
     ImageRecipe.struct_class = Types::ImageRecipe
 
     ImageRecipeSummary.add_member(:arn, Shapes::ShapeRef.new(shape: ImageBuilderArn, location_name: "arn"))
@@ -750,6 +993,48 @@ module Aws::Imagebuilder
     ImageRecipeSummary.struct_class = Types::ImageRecipeSummary
 
     ImageRecipeSummaryList.member = Shapes::ShapeRef.new(shape: ImageRecipeSummary)
+
+    ImageScanFinding.add_member(:aws_account_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "awsAccountId"))
+    ImageScanFinding.add_member(:image_build_version_arn, Shapes::ShapeRef.new(shape: ImageBuildVersionArn, location_name: "imageBuildVersionArn"))
+    ImageScanFinding.add_member(:image_pipeline_arn, Shapes::ShapeRef.new(shape: ImagePipelineArn, location_name: "imagePipelineArn"))
+    ImageScanFinding.add_member(:type, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "type"))
+    ImageScanFinding.add_member(:description, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "description"))
+    ImageScanFinding.add_member(:title, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "title"))
+    ImageScanFinding.add_member(:remediation, Shapes::ShapeRef.new(shape: Remediation, location_name: "remediation"))
+    ImageScanFinding.add_member(:severity, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "severity"))
+    ImageScanFinding.add_member(:first_observed_at, Shapes::ShapeRef.new(shape: DateTimeTimestamp, location_name: "firstObservedAt"))
+    ImageScanFinding.add_member(:updated_at, Shapes::ShapeRef.new(shape: DateTimeTimestamp, location_name: "updatedAt"))
+    ImageScanFinding.add_member(:inspector_score, Shapes::ShapeRef.new(shape: NonNegativeDouble, location_name: "inspectorScore"))
+    ImageScanFinding.add_member(:inspector_score_details, Shapes::ShapeRef.new(shape: InspectorScoreDetails, location_name: "inspectorScoreDetails"))
+    ImageScanFinding.add_member(:package_vulnerability_details, Shapes::ShapeRef.new(shape: PackageVulnerabilityDetails, location_name: "packageVulnerabilityDetails"))
+    ImageScanFinding.add_member(:fix_available, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "fixAvailable"))
+    ImageScanFinding.struct_class = Types::ImageScanFinding
+
+    ImageScanFindingAggregation.add_member(:account_aggregation, Shapes::ShapeRef.new(shape: AccountAggregation, location_name: "accountAggregation"))
+    ImageScanFindingAggregation.add_member(:image_aggregation, Shapes::ShapeRef.new(shape: ImageAggregation, location_name: "imageAggregation"))
+    ImageScanFindingAggregation.add_member(:image_pipeline_aggregation, Shapes::ShapeRef.new(shape: ImagePipelineAggregation, location_name: "imagePipelineAggregation"))
+    ImageScanFindingAggregation.add_member(:vulnerability_id_aggregation, Shapes::ShapeRef.new(shape: VulnerabilityIdAggregation, location_name: "vulnerabilityIdAggregation"))
+    ImageScanFindingAggregation.struct_class = Types::ImageScanFindingAggregation
+
+    ImageScanFindingAggregationsList.member = Shapes::ShapeRef.new(shape: ImageScanFindingAggregation)
+
+    ImageScanFindingsFilter.add_member(:name, Shapes::ShapeRef.new(shape: FilterName, location_name: "name"))
+    ImageScanFindingsFilter.add_member(:values, Shapes::ShapeRef.new(shape: ImageScanFindingsFilterValues, location_name: "values"))
+    ImageScanFindingsFilter.struct_class = Types::ImageScanFindingsFilter
+
+    ImageScanFindingsFilterList.member = Shapes::ShapeRef.new(shape: ImageScanFindingsFilter)
+
+    ImageScanFindingsFilterValues.member = Shapes::ShapeRef.new(shape: FilterValue)
+
+    ImageScanFindingsList.member = Shapes::ShapeRef.new(shape: ImageScanFinding)
+
+    ImageScanState.add_member(:status, Shapes::ShapeRef.new(shape: ImageScanStatus, location_name: "status"))
+    ImageScanState.add_member(:reason, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "reason"))
+    ImageScanState.struct_class = Types::ImageScanState
+
+    ImageScanningConfiguration.add_member(:image_scanning_enabled, Shapes::ShapeRef.new(shape: NullableBoolean, location_name: "imageScanningEnabled"))
+    ImageScanningConfiguration.add_member(:ecr_configuration, Shapes::ShapeRef.new(shape: EcrConfiguration, location_name: "ecrConfiguration"))
+    ImageScanningConfiguration.struct_class = Types::ImageScanningConfiguration
 
     ImageState.add_member(:status, Shapes::ShapeRef.new(shape: ImageStatus, location_name: "status"))
     ImageState.add_member(:reason, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "reason"))
@@ -766,6 +1051,8 @@ module Aws::Imagebuilder
     ImageSummary.add_member(:date_created, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateCreated"))
     ImageSummary.add_member(:output_resources, Shapes::ShapeRef.new(shape: OutputResources, location_name: "outputResources"))
     ImageSummary.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    ImageSummary.add_member(:build_type, Shapes::ShapeRef.new(shape: BuildType, location_name: "buildType"))
+    ImageSummary.add_member(:image_source, Shapes::ShapeRef.new(shape: ImageSource, location_name: "imageSource"))
     ImageSummary.struct_class = Types::ImageSummary
 
     ImageSummaryList.member = Shapes::ShapeRef.new(shape: ImageSummary)
@@ -782,6 +1069,8 @@ module Aws::Imagebuilder
     ImageVersion.add_member(:os_version, Shapes::ShapeRef.new(shape: OsVersion, location_name: "osVersion"))
     ImageVersion.add_member(:owner, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "owner"))
     ImageVersion.add_member(:date_created, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateCreated"))
+    ImageVersion.add_member(:build_type, Shapes::ShapeRef.new(shape: BuildType, location_name: "buildType"))
+    ImageVersion.add_member(:image_source, Shapes::ShapeRef.new(shape: ImageSource, location_name: "imageSource"))
     ImageVersion.struct_class = Types::ImageVersion
 
     ImageVersionList.member = Shapes::ShapeRef.new(shape: ImageVersion)
@@ -805,6 +1094,21 @@ module Aws::Imagebuilder
     ImportComponentResponse.add_member(:component_build_version_arn, Shapes::ShapeRef.new(shape: ComponentBuildVersionArn, location_name: "componentBuildVersionArn"))
     ImportComponentResponse.struct_class = Types::ImportComponentResponse
 
+    ImportVmImageRequest.add_member(:name, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location_name: "name"))
+    ImportVmImageRequest.add_member(:semantic_version, Shapes::ShapeRef.new(shape: VersionNumber, required: true, location_name: "semanticVersion"))
+    ImportVmImageRequest.add_member(:description, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "description"))
+    ImportVmImageRequest.add_member(:platform, Shapes::ShapeRef.new(shape: Platform, required: true, location_name: "platform"))
+    ImportVmImageRequest.add_member(:os_version, Shapes::ShapeRef.new(shape: OsVersion, location_name: "osVersion"))
+    ImportVmImageRequest.add_member(:vm_import_task_id, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location_name: "vmImportTaskId"))
+    ImportVmImageRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    ImportVmImageRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
+    ImportVmImageRequest.struct_class = Types::ImportVmImageRequest
+
+    ImportVmImageResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
+    ImportVmImageResponse.add_member(:image_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "imageArn"))
+    ImportVmImageResponse.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, location_name: "clientToken"))
+    ImportVmImageResponse.struct_class = Types::ImportVmImageResponse
+
     InfrastructureConfiguration.add_member(:arn, Shapes::ShapeRef.new(shape: ImageBuilderArn, location_name: "arn"))
     InfrastructureConfiguration.add_member(:name, Shapes::ShapeRef.new(shape: ResourceName, location_name: "name"))
     InfrastructureConfiguration.add_member(:description, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "description"))
@@ -819,6 +1123,7 @@ module Aws::Imagebuilder
     InfrastructureConfiguration.add_member(:date_created, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateCreated"))
     InfrastructureConfiguration.add_member(:date_updated, Shapes::ShapeRef.new(shape: DateTime, location_name: "dateUpdated"))
     InfrastructureConfiguration.add_member(:resource_tags, Shapes::ShapeRef.new(shape: ResourceTagMap, location_name: "resourceTags"))
+    InfrastructureConfiguration.add_member(:instance_metadata_options, Shapes::ShapeRef.new(shape: InstanceMetadataOptions, location_name: "instanceMetadataOptions"))
     InfrastructureConfiguration.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     InfrastructureConfiguration.struct_class = Types::InfrastructureConfiguration
 
@@ -835,6 +1140,9 @@ module Aws::Imagebuilder
 
     InfrastructureConfigurationSummaryList.member = Shapes::ShapeRef.new(shape: InfrastructureConfigurationSummary)
 
+    InspectorScoreDetails.add_member(:adjusted_cvss, Shapes::ShapeRef.new(shape: CvssScoreDetails, location_name: "adjustedCvss"))
+    InspectorScoreDetails.struct_class = Types::InspectorScoreDetails
+
     InstanceBlockDeviceMapping.add_member(:device_name, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "deviceName"))
     InstanceBlockDeviceMapping.add_member(:ebs, Shapes::ShapeRef.new(shape: EbsInstanceBlockDeviceSpecification, location_name: "ebs"))
     InstanceBlockDeviceMapping.add_member(:virtual_name, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "virtualName"))
@@ -846,6 +1154,10 @@ module Aws::Imagebuilder
     InstanceConfiguration.add_member(:image, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "image"))
     InstanceConfiguration.add_member(:block_device_mappings, Shapes::ShapeRef.new(shape: InstanceBlockDeviceMappings, location_name: "blockDeviceMappings"))
     InstanceConfiguration.struct_class = Types::InstanceConfiguration
+
+    InstanceMetadataOptions.add_member(:http_tokens, Shapes::ShapeRef.new(shape: HttpTokens, location_name: "httpTokens"))
+    InstanceMetadataOptions.add_member(:http_put_response_hop_limit, Shapes::ShapeRef.new(shape: HttpPutResponseHopLimit, location_name: "httpPutResponseHopLimit"))
+    InstanceMetadataOptions.struct_class = Types::InstanceMetadataOptions
 
     InstanceTypeList.member = Shapes::ShapeRef.new(shape: InstanceType)
 
@@ -869,6 +1181,8 @@ module Aws::Imagebuilder
 
     LaunchPermissionConfiguration.add_member(:user_ids, Shapes::ShapeRef.new(shape: AccountList, location_name: "userIds"))
     LaunchPermissionConfiguration.add_member(:user_groups, Shapes::ShapeRef.new(shape: StringList, location_name: "userGroups"))
+    LaunchPermissionConfiguration.add_member(:organization_arns, Shapes::ShapeRef.new(shape: OrganizationArnList, location_name: "organizationArns"))
+    LaunchPermissionConfiguration.add_member(:organizational_unit_arns, Shapes::ShapeRef.new(shape: OrganizationalUnitArnList, location_name: "organizationalUnitArns"))
     LaunchPermissionConfiguration.struct_class = Types::LaunchPermissionConfiguration
 
     LaunchTemplateConfiguration.add_member(:launch_template_id, Shapes::ShapeRef.new(shape: LaunchTemplateId, required: true, location_name: "launchTemplateId"))
@@ -976,6 +1290,26 @@ module Aws::Imagebuilder
     ListImageRecipesResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
     ListImageRecipesResponse.struct_class = Types::ListImageRecipesResponse
 
+    ListImageScanFindingAggregationsRequest.add_member(:filter, Shapes::ShapeRef.new(shape: Filter, location_name: "filter"))
+    ListImageScanFindingAggregationsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
+    ListImageScanFindingAggregationsRequest.struct_class = Types::ListImageScanFindingAggregationsRequest
+
+    ListImageScanFindingAggregationsResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
+    ListImageScanFindingAggregationsResponse.add_member(:aggregation_type, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "aggregationType"))
+    ListImageScanFindingAggregationsResponse.add_member(:responses, Shapes::ShapeRef.new(shape: ImageScanFindingAggregationsList, location_name: "responses"))
+    ListImageScanFindingAggregationsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
+    ListImageScanFindingAggregationsResponse.struct_class = Types::ListImageScanFindingAggregationsResponse
+
+    ListImageScanFindingsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: ImageScanFindingsFilterList, location_name: "filters"))
+    ListImageScanFindingsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: RestrictedInteger, location_name: "maxResults", metadata: {"box"=>true}))
+    ListImageScanFindingsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
+    ListImageScanFindingsRequest.struct_class = Types::ListImageScanFindingsRequest
+
+    ListImageScanFindingsResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
+    ListImageScanFindingsResponse.add_member(:findings, Shapes::ShapeRef.new(shape: ImageScanFindingsList, location_name: "findings"))
+    ListImageScanFindingsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
+    ListImageScanFindingsResponse.struct_class = Types::ListImageScanFindingsResponse
+
     ListImagesRequest.add_member(:owner, Shapes::ShapeRef.new(shape: Ownership, location_name: "owner"))
     ListImagesRequest.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "filters"))
     ListImagesRequest.add_member(:by_name, Shapes::ShapeRef.new(shape: Boolean, location_name: "byName"))
@@ -1005,14 +1339,58 @@ module Aws::Imagebuilder
     ListTagsForResourceResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     ListTagsForResourceResponse.struct_class = Types::ListTagsForResourceResponse
 
+    ListWorkflowExecutionsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: RestrictedInteger, location_name: "maxResults", metadata: {"box"=>true}))
+    ListWorkflowExecutionsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
+    ListWorkflowExecutionsRequest.add_member(:image_build_version_arn, Shapes::ShapeRef.new(shape: ImageBuildVersionArn, required: true, location_name: "imageBuildVersionArn"))
+    ListWorkflowExecutionsRequest.struct_class = Types::ListWorkflowExecutionsRequest
+
+    ListWorkflowExecutionsResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
+    ListWorkflowExecutionsResponse.add_member(:workflow_executions, Shapes::ShapeRef.new(shape: WorkflowExecutionsList, location_name: "workflowExecutions"))
+    ListWorkflowExecutionsResponse.add_member(:image_build_version_arn, Shapes::ShapeRef.new(shape: ImageBuildVersionArn, location_name: "imageBuildVersionArn"))
+    ListWorkflowExecutionsResponse.add_member(:message, Shapes::ShapeRef.new(shape: ImageBuildMessage, location_name: "message"))
+    ListWorkflowExecutionsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
+    ListWorkflowExecutionsResponse.struct_class = Types::ListWorkflowExecutionsResponse
+
+    ListWorkflowStepExecutionsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: RestrictedInteger, location_name: "maxResults", metadata: {"box"=>true}))
+    ListWorkflowStepExecutionsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
+    ListWorkflowStepExecutionsRequest.add_member(:workflow_execution_id, Shapes::ShapeRef.new(shape: WorkflowExecutionId, required: true, location_name: "workflowExecutionId"))
+    ListWorkflowStepExecutionsRequest.struct_class = Types::ListWorkflowStepExecutionsRequest
+
+    ListWorkflowStepExecutionsResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
+    ListWorkflowStepExecutionsResponse.add_member(:steps, Shapes::ShapeRef.new(shape: WorkflowStepExecutionsList, location_name: "steps"))
+    ListWorkflowStepExecutionsResponse.add_member(:workflow_build_version_arn, Shapes::ShapeRef.new(shape: WorkflowBuildVersionArn, location_name: "workflowBuildVersionArn"))
+    ListWorkflowStepExecutionsResponse.add_member(:workflow_execution_id, Shapes::ShapeRef.new(shape: WorkflowExecutionId, location_name: "workflowExecutionId"))
+    ListWorkflowStepExecutionsResponse.add_member(:image_build_version_arn, Shapes::ShapeRef.new(shape: ImageBuildVersionArn, location_name: "imageBuildVersionArn"))
+    ListWorkflowStepExecutionsResponse.add_member(:message, Shapes::ShapeRef.new(shape: ImageBuildMessage, location_name: "message"))
+    ListWorkflowStepExecutionsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
+    ListWorkflowStepExecutionsResponse.struct_class = Types::ListWorkflowStepExecutionsResponse
+
     Logging.add_member(:s3_logs, Shapes::ShapeRef.new(shape: S3Logs, location_name: "s3Logs"))
     Logging.struct_class = Types::Logging
+
+    NonEmptyStringList.member = Shapes::ShapeRef.new(shape: NonEmptyString)
+
+    OrganizationArnList.member = Shapes::ShapeRef.new(shape: OrganizationArn)
+
+    OrganizationalUnitArnList.member = Shapes::ShapeRef.new(shape: OrganizationalUnitArn)
 
     OsVersionList.member = Shapes::ShapeRef.new(shape: OsVersion)
 
     OutputResources.add_member(:amis, Shapes::ShapeRef.new(shape: AmiList, location_name: "amis"))
     OutputResources.add_member(:containers, Shapes::ShapeRef.new(shape: ContainerList, location_name: "containers"))
     OutputResources.struct_class = Types::OutputResources
+
+    PackageVulnerabilityDetails.add_member(:vulnerability_id, Shapes::ShapeRef.new(shape: VulnerabilityId, required: true, location_name: "vulnerabilityId"))
+    PackageVulnerabilityDetails.add_member(:vulnerable_packages, Shapes::ShapeRef.new(shape: VulnerablePackageList, location_name: "vulnerablePackages"))
+    PackageVulnerabilityDetails.add_member(:source, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "source"))
+    PackageVulnerabilityDetails.add_member(:cvss, Shapes::ShapeRef.new(shape: CvssScoreList, location_name: "cvss"))
+    PackageVulnerabilityDetails.add_member(:related_vulnerabilities, Shapes::ShapeRef.new(shape: VulnerabilityIdList, location_name: "relatedVulnerabilities"))
+    PackageVulnerabilityDetails.add_member(:source_url, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "sourceUrl"))
+    PackageVulnerabilityDetails.add_member(:vendor_severity, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "vendorSeverity"))
+    PackageVulnerabilityDetails.add_member(:vendor_created_at, Shapes::ShapeRef.new(shape: DateTimeTimestamp, location_name: "vendorCreatedAt"))
+    PackageVulnerabilityDetails.add_member(:vendor_updated_at, Shapes::ShapeRef.new(shape: DateTimeTimestamp, location_name: "vendorUpdatedAt"))
+    PackageVulnerabilityDetails.add_member(:reference_urls, Shapes::ShapeRef.new(shape: NonEmptyStringList, location_name: "referenceUrls"))
+    PackageVulnerabilityDetails.struct_class = Types::PackageVulnerabilityDetails
 
     PutComponentPolicyRequest.add_member(:component_arn, Shapes::ShapeRef.new(shape: ComponentBuildVersionArn, required: true, location_name: "componentArn"))
     PutComponentPolicyRequest.add_member(:policy, Shapes::ShapeRef.new(shape: ResourcePolicyDocument, required: true, location_name: "policy"))
@@ -1048,6 +1426,13 @@ module Aws::Imagebuilder
 
     RegionList.member = Shapes::ShapeRef.new(shape: NonEmptyString)
 
+    Remediation.add_member(:recommendation, Shapes::ShapeRef.new(shape: RemediationRecommendation, location_name: "recommendation"))
+    Remediation.struct_class = Types::Remediation
+
+    RemediationRecommendation.add_member(:text, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "text"))
+    RemediationRecommendation.add_member(:url, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "url"))
+    RemediationRecommendation.struct_class = Types::RemediationRecommendation
+
     ResourceAlreadyExistsException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "message"))
     ResourceAlreadyExistsException.struct_class = Types::ResourceAlreadyExistsException
 
@@ -1062,6 +1447,12 @@ module Aws::Imagebuilder
 
     ResourceTagMap.key = Shapes::ShapeRef.new(shape: TagKey)
     ResourceTagMap.value = Shapes::ShapeRef.new(shape: TagValue)
+
+    S3ExportConfiguration.add_member(:role_name, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location_name: "roleName"))
+    S3ExportConfiguration.add_member(:disk_image_format, Shapes::ShapeRef.new(shape: DiskImageFormat, required: true, location_name: "diskImageFormat"))
+    S3ExportConfiguration.add_member(:s3_bucket, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location_name: "s3Bucket"))
+    S3ExportConfiguration.add_member(:s3_prefix, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "s3Prefix"))
+    S3ExportConfiguration.struct_class = Types::S3ExportConfiguration
 
     S3Logs.add_member(:s3_bucket_name, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "s3BucketName"))
     S3Logs.add_member(:s3_key_prefix, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "s3KeyPrefix"))
@@ -1083,6 +1474,12 @@ module Aws::Imagebuilder
     ServiceUnavailableException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "message"))
     ServiceUnavailableException.struct_class = Types::ServiceUnavailableException
 
+    SeverityCounts.add_member(:all, Shapes::ShapeRef.new(shape: SeverityCountNumber, location_name: "all"))
+    SeverityCounts.add_member(:critical, Shapes::ShapeRef.new(shape: SeverityCountNumber, location_name: "critical"))
+    SeverityCounts.add_member(:high, Shapes::ShapeRef.new(shape: SeverityCountNumber, location_name: "high"))
+    SeverityCounts.add_member(:medium, Shapes::ShapeRef.new(shape: SeverityCountNumber, location_name: "medium"))
+    SeverityCounts.struct_class = Types::SeverityCounts
+
     StartImagePipelineExecutionRequest.add_member(:image_pipeline_arn, Shapes::ShapeRef.new(shape: ImagePipelineArn, required: true, location_name: "imagePipelineArn"))
     StartImagePipelineExecutionRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
     StartImagePipelineExecutionRequest.struct_class = Types::StartImagePipelineExecutionRequest
@@ -1093,6 +1490,9 @@ module Aws::Imagebuilder
     StartImagePipelineExecutionResponse.struct_class = Types::StartImagePipelineExecutionResponse
 
     StringList.member = Shapes::ShapeRef.new(shape: NonEmptyString)
+
+    SystemsManagerAgent.add_member(:uninstall_after_build, Shapes::ShapeRef.new(shape: NullableBoolean, location_name: "uninstallAfterBuild"))
+    SystemsManagerAgent.struct_class = Types::SystemsManagerAgent
 
     TagKeyList.member = Shapes::ShapeRef.new(shape: TagKey)
 
@@ -1137,6 +1537,7 @@ module Aws::Imagebuilder
     UpdateImagePipelineRequest.add_member(:schedule, Shapes::ShapeRef.new(shape: Schedule, location_name: "schedule"))
     UpdateImagePipelineRequest.add_member(:status, Shapes::ShapeRef.new(shape: PipelineStatus, location_name: "status"))
     UpdateImagePipelineRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
+    UpdateImagePipelineRequest.add_member(:image_scanning_configuration, Shapes::ShapeRef.new(shape: ImageScanningConfiguration, location_name: "imageScanningConfiguration"))
     UpdateImagePipelineRequest.struct_class = Types::UpdateImagePipelineRequest
 
     UpdateImagePipelineResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
@@ -1156,12 +1557,63 @@ module Aws::Imagebuilder
     UpdateInfrastructureConfigurationRequest.add_member(:sns_topic_arn, Shapes::ShapeRef.new(shape: SnsTopicArn, location_name: "snsTopicArn"))
     UpdateInfrastructureConfigurationRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
     UpdateInfrastructureConfigurationRequest.add_member(:resource_tags, Shapes::ShapeRef.new(shape: ResourceTagMap, location_name: "resourceTags"))
+    UpdateInfrastructureConfigurationRequest.add_member(:instance_metadata_options, Shapes::ShapeRef.new(shape: InstanceMetadataOptions, location_name: "instanceMetadataOptions"))
     UpdateInfrastructureConfigurationRequest.struct_class = Types::UpdateInfrastructureConfigurationRequest
 
     UpdateInfrastructureConfigurationResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "requestId"))
     UpdateInfrastructureConfigurationResponse.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, location_name: "clientToken"))
     UpdateInfrastructureConfigurationResponse.add_member(:infrastructure_configuration_arn, Shapes::ShapeRef.new(shape: InfrastructureConfigurationArn, location_name: "infrastructureConfigurationArn"))
     UpdateInfrastructureConfigurationResponse.struct_class = Types::UpdateInfrastructureConfigurationResponse
+
+    VulnerabilityIdAggregation.add_member(:vulnerability_id, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "vulnerabilityId"))
+    VulnerabilityIdAggregation.add_member(:severity_counts, Shapes::ShapeRef.new(shape: SeverityCounts, location_name: "severityCounts"))
+    VulnerabilityIdAggregation.struct_class = Types::VulnerabilityIdAggregation
+
+    VulnerabilityIdList.member = Shapes::ShapeRef.new(shape: VulnerabilityId)
+
+    VulnerablePackage.add_member(:name, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "name"))
+    VulnerablePackage.add_member(:version, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "version"))
+    VulnerablePackage.add_member(:source_layer_hash, Shapes::ShapeRef.new(shape: SourceLayerHash, location_name: "sourceLayerHash"))
+    VulnerablePackage.add_member(:epoch, Shapes::ShapeRef.new(shape: PackageEpoch, location_name: "epoch"))
+    VulnerablePackage.add_member(:release, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "release"))
+    VulnerablePackage.add_member(:arch, Shapes::ShapeRef.new(shape: PackageArchitecture, location_name: "arch"))
+    VulnerablePackage.add_member(:package_manager, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "packageManager"))
+    VulnerablePackage.add_member(:file_path, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "filePath"))
+    VulnerablePackage.add_member(:fixed_in_version, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "fixedInVersion"))
+    VulnerablePackage.add_member(:remediation, Shapes::ShapeRef.new(shape: NonEmptyString, location_name: "remediation"))
+    VulnerablePackage.struct_class = Types::VulnerablePackage
+
+    VulnerablePackageList.member = Shapes::ShapeRef.new(shape: VulnerablePackage)
+
+    WorkflowExecutionMetadata.add_member(:workflow_build_version_arn, Shapes::ShapeRef.new(shape: WorkflowBuildVersionArn, location_name: "workflowBuildVersionArn"))
+    WorkflowExecutionMetadata.add_member(:workflow_execution_id, Shapes::ShapeRef.new(shape: WorkflowExecutionId, location_name: "workflowExecutionId"))
+    WorkflowExecutionMetadata.add_member(:type, Shapes::ShapeRef.new(shape: WorkflowType, location_name: "type"))
+    WorkflowExecutionMetadata.add_member(:status, Shapes::ShapeRef.new(shape: WorkflowExecutionStatus, location_name: "status"))
+    WorkflowExecutionMetadata.add_member(:message, Shapes::ShapeRef.new(shape: WorkflowExecutionMessage, location_name: "message"))
+    WorkflowExecutionMetadata.add_member(:total_step_count, Shapes::ShapeRef.new(shape: WorkflowStepCount, location_name: "totalStepCount"))
+    WorkflowExecutionMetadata.add_member(:total_steps_succeeded, Shapes::ShapeRef.new(shape: WorkflowStepCount, location_name: "totalStepsSucceeded"))
+    WorkflowExecutionMetadata.add_member(:total_steps_failed, Shapes::ShapeRef.new(shape: WorkflowStepCount, location_name: "totalStepsFailed"))
+    WorkflowExecutionMetadata.add_member(:total_steps_skipped, Shapes::ShapeRef.new(shape: WorkflowStepCount, location_name: "totalStepsSkipped"))
+    WorkflowExecutionMetadata.add_member(:start_time, Shapes::ShapeRef.new(shape: DateTime, location_name: "startTime"))
+    WorkflowExecutionMetadata.add_member(:end_time, Shapes::ShapeRef.new(shape: DateTime, location_name: "endTime"))
+    WorkflowExecutionMetadata.struct_class = Types::WorkflowExecutionMetadata
+
+    WorkflowExecutionsList.member = Shapes::ShapeRef.new(shape: WorkflowExecutionMetadata)
+
+    WorkflowStepExecutionsList.member = Shapes::ShapeRef.new(shape: WorkflowStepMetadata)
+
+    WorkflowStepMetadata.add_member(:step_execution_id, Shapes::ShapeRef.new(shape: WorkflowStepExecutionId, location_name: "stepExecutionId"))
+    WorkflowStepMetadata.add_member(:name, Shapes::ShapeRef.new(shape: WorkflowStepName, location_name: "name"))
+    WorkflowStepMetadata.add_member(:description, Shapes::ShapeRef.new(shape: WorkflowStepDescription, location_name: "description"))
+    WorkflowStepMetadata.add_member(:action, Shapes::ShapeRef.new(shape: WorkflowStepAction, location_name: "action"))
+    WorkflowStepMetadata.add_member(:status, Shapes::ShapeRef.new(shape: WorkflowStepExecutionStatus, location_name: "status"))
+    WorkflowStepMetadata.add_member(:rollback_status, Shapes::ShapeRef.new(shape: WorkflowStepExecutionRollbackStatus, location_name: "rollbackStatus"))
+    WorkflowStepMetadata.add_member(:message, Shapes::ShapeRef.new(shape: WorkflowStepMessage, location_name: "message"))
+    WorkflowStepMetadata.add_member(:inputs, Shapes::ShapeRef.new(shape: WorkflowStepInputs, location_name: "inputs"))
+    WorkflowStepMetadata.add_member(:outputs, Shapes::ShapeRef.new(shape: WorkflowStepOutputs, location_name: "outputs"))
+    WorkflowStepMetadata.add_member(:start_time, Shapes::ShapeRef.new(shape: DateTime, location_name: "startTime"))
+    WorkflowStepMetadata.add_member(:end_time, Shapes::ShapeRef.new(shape: DateTime, location_name: "endTime"))
+    WorkflowStepMetadata.struct_class = Types::WorkflowStepMetadata
 
 
     # @api private
@@ -1586,6 +2038,34 @@ module Aws::Imagebuilder
         o.errors << Shapes::ShapeRef.new(shape: CallRateLimitExceededException)
       end)
 
+      api.add_operation(:get_workflow_execution, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetWorkflowExecution"
+        o.http_method = "GET"
+        o.http_request_uri = "/GetWorkflowExecution"
+        o.input = Shapes::ShapeRef.new(shape: GetWorkflowExecutionRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetWorkflowExecutionResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: ForbiddenException)
+        o.errors << Shapes::ShapeRef.new(shape: CallRateLimitExceededException)
+      end)
+
+      api.add_operation(:get_workflow_step_execution, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetWorkflowStepExecution"
+        o.http_method = "GET"
+        o.http_request_uri = "/GetWorkflowStepExecution"
+        o.input = Shapes::ShapeRef.new(shape: GetWorkflowStepExecutionRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetWorkflowStepExecutionResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: ForbiddenException)
+        o.errors << Shapes::ShapeRef.new(shape: CallRateLimitExceededException)
+      end)
+
       api.add_operation(:import_component, Seahorse::Model::Operation.new.tap do |o|
         o.name = "ImportComponent"
         o.http_method = "PUT"
@@ -1602,6 +2082,17 @@ module Aws::Imagebuilder
         o.errors << Shapes::ShapeRef.new(shape: InvalidVersionNumberException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterCombinationException)
+      end)
+
+      api.add_operation(:import_vm_image, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ImportVmImage"
+        o.http_method = "PUT"
+        o.http_request_uri = "/ImportVmImage"
+        o.input = Shapes::ShapeRef.new(shape: ImportVmImageRequest)
+        o.output = Shapes::ShapeRef.new(shape: ImportVmImageResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
       end)
 
       api.add_operation(:list_component_build_versions, Seahorse::Model::Operation.new.tap do |o|
@@ -1795,6 +2286,47 @@ module Aws::Imagebuilder
         )
       end)
 
+      api.add_operation(:list_image_scan_finding_aggregations, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListImageScanFindingAggregations"
+        o.http_method = "POST"
+        o.http_request_uri = "/ListImageScanFindingAggregations"
+        o.input = Shapes::ShapeRef.new(shape: ListImageScanFindingAggregationsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListImageScanFindingAggregationsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidPaginationTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: ForbiddenException)
+        o.errors << Shapes::ShapeRef.new(shape: CallRateLimitExceededException)
+        o[:pager] = Aws::Pager.new(
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_image_scan_findings, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListImageScanFindings"
+        o.http_method = "POST"
+        o.http_request_uri = "/ListImageScanFindings"
+        o.input = Shapes::ShapeRef.new(shape: ListImageScanFindingsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListImageScanFindingsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidPaginationTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: ForbiddenException)
+        o.errors << Shapes::ShapeRef.new(shape: CallRateLimitExceededException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
       api.add_operation(:list_images, Seahorse::Model::Operation.new.tap do |o|
         o.name = "ListImages"
         o.http_method = "POST"
@@ -1846,6 +2378,48 @@ module Aws::Imagebuilder
         o.errors << Shapes::ShapeRef.new(shape: ServiceException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
+      api.add_operation(:list_workflow_executions, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListWorkflowExecutions"
+        o.http_method = "POST"
+        o.http_request_uri = "/ListWorkflowExecutions"
+        o.input = Shapes::ShapeRef.new(shape: ListWorkflowExecutionsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListWorkflowExecutionsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidPaginationTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: ForbiddenException)
+        o.errors << Shapes::ShapeRef.new(shape: CallRateLimitExceededException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_workflow_step_executions, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListWorkflowStepExecutions"
+        o.http_method = "POST"
+        o.http_request_uri = "/ListWorkflowStepExecutions"
+        o.input = Shapes::ShapeRef.new(shape: ListWorkflowStepExecutionsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListWorkflowStepExecutionsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidPaginationTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: ForbiddenException)
+        o.errors << Shapes::ShapeRef.new(shape: CallRateLimitExceededException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
       end)
 
       api.add_operation(:put_component_policy, Seahorse::Model::Operation.new.tap do |o|

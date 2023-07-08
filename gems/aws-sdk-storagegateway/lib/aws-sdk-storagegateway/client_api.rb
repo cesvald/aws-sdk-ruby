@@ -77,6 +77,7 @@ module Aws::StorageGateway
     CreateTapesInput = Shapes::StructureShape.new(name: 'CreateTapesInput')
     CreateTapesOutput = Shapes::StructureShape.new(name: 'CreateTapesOutput')
     CreatedDate = Shapes::TimestampShape.new(name: 'CreatedDate')
+    DNSHostName = Shapes::StringShape.new(name: 'DNSHostName')
     DayOfMonth = Shapes::IntegerShape.new(name: 'DayOfMonth')
     DayOfWeek = Shapes::IntegerShape.new(name: 'DayOfWeek')
     DaysOfWeek = Shapes::ListShape.new(name: 'DaysOfWeek')
@@ -163,6 +164,7 @@ module Aws::StorageGateway
     DoubleObject = Shapes::FloatShape.new(name: 'DoubleObject')
     Ec2InstanceId = Shapes::StringShape.new(name: 'Ec2InstanceId')
     Ec2InstanceRegion = Shapes::StringShape.new(name: 'Ec2InstanceRegion')
+    EndpointNetworkConfiguration = Shapes::StructureShape.new(name: 'EndpointNetworkConfiguration')
     EndpointType = Shapes::StringShape.new(name: 'EndpointType')
     ErrorCode = Shapes::StringShape.new(name: 'ErrorCode')
     FileShareARN = Shapes::StringShape.new(name: 'FileShareARN')
@@ -180,12 +182,16 @@ module Aws::StorageGateway
     FileSystemAssociationInfo = Shapes::StructureShape.new(name: 'FileSystemAssociationInfo')
     FileSystemAssociationInfoList = Shapes::ListShape.new(name: 'FileSystemAssociationInfoList')
     FileSystemAssociationStatus = Shapes::StringShape.new(name: 'FileSystemAssociationStatus')
+    FileSystemAssociationStatusDetail = Shapes::StructureShape.new(name: 'FileSystemAssociationStatusDetail')
+    FileSystemAssociationStatusDetails = Shapes::ListShape.new(name: 'FileSystemAssociationStatusDetails')
     FileSystemAssociationSummary = Shapes::StructureShape.new(name: 'FileSystemAssociationSummary')
     FileSystemAssociationSummaryList = Shapes::ListShape.new(name: 'FileSystemAssociationSummaryList')
+    FileSystemAssociationSyncErrorCode = Shapes::StringShape.new(name: 'FileSystemAssociationSyncErrorCode')
     FileSystemLocationARN = Shapes::StringShape.new(name: 'FileSystemLocationARN')
     Folder = Shapes::StringShape.new(name: 'Folder')
     FolderList = Shapes::ListShape.new(name: 'FolderList')
     GatewayARN = Shapes::StringShape.new(name: 'GatewayARN')
+    GatewayCapacity = Shapes::StringShape.new(name: 'GatewayCapacity')
     GatewayId = Shapes::StringShape.new(name: 'GatewayId')
     GatewayInfo = Shapes::StructureShape.new(name: 'GatewayInfo')
     GatewayName = Shapes::StringShape.new(name: 'GatewayName')
@@ -197,13 +203,16 @@ module Aws::StorageGateway
     Gateways = Shapes::ListShape.new(name: 'Gateways')
     Host = Shapes::StringShape.new(name: 'Host')
     HostEnvironment = Shapes::StringShape.new(name: 'HostEnvironment')
+    HostEnvironmentId = Shapes::StringShape.new(name: 'HostEnvironmentId')
     Hosts = Shapes::ListShape.new(name: 'Hosts')
     HourOfDay = Shapes::IntegerShape.new(name: 'HourOfDay')
+    IPV4Address = Shapes::StringShape.new(name: 'IPV4Address')
     IPV4AddressCIDR = Shapes::StringShape.new(name: 'IPV4AddressCIDR')
     Initiator = Shapes::StringShape.new(name: 'Initiator')
     Initiators = Shapes::ListShape.new(name: 'Initiators')
     InternalServerError = Shapes::StructureShape.new(name: 'InternalServerError')
     InvalidGatewayRequestException = Shapes::StructureShape.new(name: 'InvalidGatewayRequestException')
+    IpAddressList = Shapes::ListShape.new(name: 'IpAddressList')
     IqnName = Shapes::StringShape.new(name: 'IqnName')
     JoinDomainInput = Shapes::StructureShape.new(name: 'JoinDomainInput')
     JoinDomainOutput = Shapes::StructureShape.new(name: 'JoinDomainOutput')
@@ -280,6 +289,7 @@ module Aws::StorageGateway
     SMBFileShareInfo = Shapes::StructureShape.new(name: 'SMBFileShareInfo')
     SMBFileShareInfoList = Shapes::ListShape.new(name: 'SMBFileShareInfoList')
     SMBGuestPassword = Shapes::StringShape.new(name: 'SMBGuestPassword')
+    SMBLocalGroups = Shapes::StructureShape.new(name: 'SMBLocalGroups')
     SMBSecurityStrategy = Shapes::StringShape.new(name: 'SMBSecurityStrategy')
     ServiceUnavailableError = Shapes::StructureShape.new(name: 'ServiceUnavailableError')
     SetLocalConsolePasswordInput = Shapes::StructureShape.new(name: 'SetLocalConsolePasswordInput')
@@ -300,6 +310,7 @@ module Aws::StorageGateway
     StorageGatewayError = Shapes::StructureShape.new(name: 'StorageGatewayError')
     StorediSCSIVolume = Shapes::StructureShape.new(name: 'StorediSCSIVolume')
     StorediSCSIVolumes = Shapes::ListShape.new(name: 'StorediSCSIVolumes')
+    SupportedGatewayCapacities = Shapes::ListShape.new(name: 'SupportedGatewayCapacities')
     Tag = Shapes::StructureShape.new(name: 'Tag')
     TagKey = Shapes::StringShape.new(name: 'TagKey')
     TagKeys = Shapes::ListShape.new(name: 'TagKeys')
@@ -350,6 +361,8 @@ module Aws::StorageGateway
     UpdateSMBFileShareOutput = Shapes::StructureShape.new(name: 'UpdateSMBFileShareOutput')
     UpdateSMBFileShareVisibilityInput = Shapes::StructureShape.new(name: 'UpdateSMBFileShareVisibilityInput')
     UpdateSMBFileShareVisibilityOutput = Shapes::StructureShape.new(name: 'UpdateSMBFileShareVisibilityOutput')
+    UpdateSMBLocalGroupsInput = Shapes::StructureShape.new(name: 'UpdateSMBLocalGroupsInput')
+    UpdateSMBLocalGroupsOutput = Shapes::StructureShape.new(name: 'UpdateSMBLocalGroupsOutput')
     UpdateSMBSecurityStrategyInput = Shapes::StructureShape.new(name: 'UpdateSMBSecurityStrategyInput')
     UpdateSMBSecurityStrategyOutput = Shapes::StructureShape.new(name: 'UpdateSMBSecurityStrategyOutput')
     UpdateSnapshotScheduleInput = Shapes::StructureShape.new(name: 'UpdateSnapshotScheduleInput')
@@ -441,6 +454,7 @@ module Aws::StorageGateway
     AssociateFileSystemInput.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
     AssociateFileSystemInput.add_member(:audit_destination_arn, Shapes::ShapeRef.new(shape: AuditDestinationARN, location_name: "AuditDestinationARN"))
     AssociateFileSystemInput.add_member(:cache_attributes, Shapes::ShapeRef.new(shape: CacheAttributes, location_name: "CacheAttributes"))
+    AssociateFileSystemInput.add_member(:endpoint_network_configuration, Shapes::ShapeRef.new(shape: EndpointNetworkConfiguration, location_name: "EndpointNetworkConfiguration"))
     AssociateFileSystemInput.struct_class = Types::AssociateFileSystemInput
 
     AssociateFileSystemOutput.add_member(:file_system_association_arn, Shapes::ShapeRef.new(shape: FileSystemAssociationARN, location_name: "FileSystemAssociationARN"))
@@ -559,6 +573,9 @@ module Aws::StorageGateway
     CreateNFSFileShareInput.add_member(:file_share_name, Shapes::ShapeRef.new(shape: FileShareName, location_name: "FileShareName"))
     CreateNFSFileShareInput.add_member(:cache_attributes, Shapes::ShapeRef.new(shape: CacheAttributes, location_name: "CacheAttributes"))
     CreateNFSFileShareInput.add_member(:notification_policy, Shapes::ShapeRef.new(shape: NotificationPolicy, location_name: "NotificationPolicy"))
+    CreateNFSFileShareInput.add_member(:vpc_endpoint_dns_name, Shapes::ShapeRef.new(shape: DNSHostName, location_name: "VPCEndpointDNSName"))
+    CreateNFSFileShareInput.add_member(:bucket_region, Shapes::ShapeRef.new(shape: RegionId, location_name: "BucketRegion"))
+    CreateNFSFileShareInput.add_member(:audit_destination_arn, Shapes::ShapeRef.new(shape: AuditDestinationARN, location_name: "AuditDestinationARN"))
     CreateNFSFileShareInput.struct_class = Types::CreateNFSFileShareInput
 
     CreateNFSFileShareOutput.add_member(:file_share_arn, Shapes::ShapeRef.new(shape: FileShareARN, location_name: "FileShareARN"))
@@ -587,6 +604,9 @@ module Aws::StorageGateway
     CreateSMBFileShareInput.add_member(:file_share_name, Shapes::ShapeRef.new(shape: FileShareName, location_name: "FileShareName"))
     CreateSMBFileShareInput.add_member(:cache_attributes, Shapes::ShapeRef.new(shape: CacheAttributes, location_name: "CacheAttributes"))
     CreateSMBFileShareInput.add_member(:notification_policy, Shapes::ShapeRef.new(shape: NotificationPolicy, location_name: "NotificationPolicy"))
+    CreateSMBFileShareInput.add_member(:vpc_endpoint_dns_name, Shapes::ShapeRef.new(shape: DNSHostName, location_name: "VPCEndpointDNSName"))
+    CreateSMBFileShareInput.add_member(:bucket_region, Shapes::ShapeRef.new(shape: RegionId, location_name: "BucketRegion"))
+    CreateSMBFileShareInput.add_member(:oplocks_enabled, Shapes::ShapeRef.new(shape: Boolean, location_name: "OplocksEnabled"))
     CreateSMBFileShareInput.struct_class = Types::CreateSMBFileShareInput
 
     CreateSMBFileShareOutput.add_member(:file_share_arn, Shapes::ShapeRef.new(shape: FileShareARN, location_name: "FileShareARN"))
@@ -808,6 +828,9 @@ module Aws::StorageGateway
     DescribeGatewayInformationOutput.add_member(:endpoint_type, Shapes::ShapeRef.new(shape: EndpointType, location_name: "EndpointType"))
     DescribeGatewayInformationOutput.add_member(:software_updates_end_date, Shapes::ShapeRef.new(shape: SoftwareUpdatesEndDate, location_name: "SoftwareUpdatesEndDate"))
     DescribeGatewayInformationOutput.add_member(:deprecation_date, Shapes::ShapeRef.new(shape: DeprecationDate, location_name: "DeprecationDate"))
+    DescribeGatewayInformationOutput.add_member(:gateway_capacity, Shapes::ShapeRef.new(shape: GatewayCapacity, location_name: "GatewayCapacity"))
+    DescribeGatewayInformationOutput.add_member(:supported_gateway_capacities, Shapes::ShapeRef.new(shape: SupportedGatewayCapacities, location_name: "SupportedGatewayCapacities"))
+    DescribeGatewayInformationOutput.add_member(:host_environment_id, Shapes::ShapeRef.new(shape: HostEnvironmentId, location_name: "HostEnvironmentId"))
     DescribeGatewayInformationOutput.struct_class = Types::DescribeGatewayInformationOutput
 
     DescribeMaintenanceStartTimeInput.add_member(:gateway_arn, Shapes::ShapeRef.new(shape: GatewayARN, required: true, location_name: "GatewayARN"))
@@ -842,6 +865,7 @@ module Aws::StorageGateway
     DescribeSMBSettingsOutput.add_member(:smb_guest_password_set, Shapes::ShapeRef.new(shape: Boolean, location_name: "SMBGuestPasswordSet"))
     DescribeSMBSettingsOutput.add_member(:smb_security_strategy, Shapes::ShapeRef.new(shape: SMBSecurityStrategy, location_name: "SMBSecurityStrategy"))
     DescribeSMBSettingsOutput.add_member(:file_shares_visible, Shapes::ShapeRef.new(shape: Boolean, location_name: "FileSharesVisible"))
+    DescribeSMBSettingsOutput.add_member(:smb_local_groups, Shapes::ShapeRef.new(shape: SMBLocalGroups, location_name: "SMBLocalGroups"))
     DescribeSMBSettingsOutput.struct_class = Types::DescribeSMBSettingsOutput
 
     DescribeSnapshotScheduleInput.add_member(:volume_arn, Shapes::ShapeRef.new(shape: VolumeARN, required: true, location_name: "VolumeARN"))
@@ -961,6 +985,9 @@ module Aws::StorageGateway
 
     Disks.member = Shapes::ShapeRef.new(shape: Disk)
 
+    EndpointNetworkConfiguration.add_member(:ip_addresses, Shapes::ShapeRef.new(shape: IpAddressList, location_name: "IpAddresses"))
+    EndpointNetworkConfiguration.struct_class = Types::EndpointNetworkConfiguration
+
     FileShareARNList.member = Shapes::ShapeRef.new(shape: FileShareARN)
 
     FileShareClientList.member = Shapes::ShapeRef.new(shape: IPV4AddressCIDR)
@@ -983,9 +1010,16 @@ module Aws::StorageGateway
     FileSystemAssociationInfo.add_member(:gateway_arn, Shapes::ShapeRef.new(shape: GatewayARN, location_name: "GatewayARN"))
     FileSystemAssociationInfo.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
     FileSystemAssociationInfo.add_member(:cache_attributes, Shapes::ShapeRef.new(shape: CacheAttributes, location_name: "CacheAttributes"))
+    FileSystemAssociationInfo.add_member(:endpoint_network_configuration, Shapes::ShapeRef.new(shape: EndpointNetworkConfiguration, location_name: "EndpointNetworkConfiguration"))
+    FileSystemAssociationInfo.add_member(:file_system_association_status_details, Shapes::ShapeRef.new(shape: FileSystemAssociationStatusDetails, location_name: "FileSystemAssociationStatusDetails"))
     FileSystemAssociationInfo.struct_class = Types::FileSystemAssociationInfo
 
     FileSystemAssociationInfoList.member = Shapes::ShapeRef.new(shape: FileSystemAssociationInfo)
+
+    FileSystemAssociationStatusDetail.add_member(:error_code, Shapes::ShapeRef.new(shape: FileSystemAssociationSyncErrorCode, location_name: "ErrorCode"))
+    FileSystemAssociationStatusDetail.struct_class = Types::FileSystemAssociationStatusDetail
+
+    FileSystemAssociationStatusDetails.member = Shapes::ShapeRef.new(shape: FileSystemAssociationStatusDetail)
 
     FileSystemAssociationSummary.add_member(:file_system_association_id, Shapes::ShapeRef.new(shape: FileSystemAssociationId, location_name: "FileSystemAssociationId"))
     FileSystemAssociationSummary.add_member(:file_system_association_arn, Shapes::ShapeRef.new(shape: FileSystemAssociationARN, location_name: "FileSystemAssociationARN"))
@@ -1004,6 +1038,8 @@ module Aws::StorageGateway
     GatewayInfo.add_member(:gateway_name, Shapes::ShapeRef.new(shape: string, location_name: "GatewayName"))
     GatewayInfo.add_member(:ec2_instance_id, Shapes::ShapeRef.new(shape: Ec2InstanceId, location_name: "Ec2InstanceId"))
     GatewayInfo.add_member(:ec2_instance_region, Shapes::ShapeRef.new(shape: Ec2InstanceRegion, location_name: "Ec2InstanceRegion"))
+    GatewayInfo.add_member(:host_environment, Shapes::ShapeRef.new(shape: HostEnvironment, location_name: "HostEnvironment"))
+    GatewayInfo.add_member(:host_environment_id, Shapes::ShapeRef.new(shape: HostEnvironmentId, location_name: "HostEnvironmentId"))
     GatewayInfo.struct_class = Types::GatewayInfo
 
     GatewayNetworkInterfaces.member = Shapes::ShapeRef.new(shape: NetworkInterface)
@@ -1021,6 +1057,8 @@ module Aws::StorageGateway
     InvalidGatewayRequestException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     InvalidGatewayRequestException.add_member(:error, Shapes::ShapeRef.new(shape: StorageGatewayError, location_name: "error"))
     InvalidGatewayRequestException.struct_class = Types::InvalidGatewayRequestException
+
+    IpAddressList.member = Shapes::ShapeRef.new(shape: IPV4Address)
 
     JoinDomainInput.add_member(:gateway_arn, Shapes::ShapeRef.new(shape: GatewayARN, required: true, location_name: "GatewayARN"))
     JoinDomainInput.add_member(:domain_name, Shapes::ShapeRef.new(shape: DomainName, required: true, location_name: "DomainName"))
@@ -1154,6 +1192,9 @@ module Aws::StorageGateway
     NFSFileShareInfo.add_member(:file_share_name, Shapes::ShapeRef.new(shape: FileShareName, location_name: "FileShareName"))
     NFSFileShareInfo.add_member(:cache_attributes, Shapes::ShapeRef.new(shape: CacheAttributes, location_name: "CacheAttributes"))
     NFSFileShareInfo.add_member(:notification_policy, Shapes::ShapeRef.new(shape: NotificationPolicy, location_name: "NotificationPolicy"))
+    NFSFileShareInfo.add_member(:vpc_endpoint_dns_name, Shapes::ShapeRef.new(shape: DNSHostName, location_name: "VPCEndpointDNSName"))
+    NFSFileShareInfo.add_member(:bucket_region, Shapes::ShapeRef.new(shape: RegionId, location_name: "BucketRegion"))
+    NFSFileShareInfo.add_member(:audit_destination_arn, Shapes::ShapeRef.new(shape: AuditDestinationARN, location_name: "AuditDestinationARN"))
     NFSFileShareInfo.struct_class = Types::NFSFileShareInfo
 
     NFSFileShareInfoList.member = Shapes::ShapeRef.new(shape: NFSFileShareInfo)
@@ -1244,9 +1285,15 @@ module Aws::StorageGateway
     SMBFileShareInfo.add_member(:file_share_name, Shapes::ShapeRef.new(shape: FileShareName, location_name: "FileShareName"))
     SMBFileShareInfo.add_member(:cache_attributes, Shapes::ShapeRef.new(shape: CacheAttributes, location_name: "CacheAttributes"))
     SMBFileShareInfo.add_member(:notification_policy, Shapes::ShapeRef.new(shape: NotificationPolicy, location_name: "NotificationPolicy"))
+    SMBFileShareInfo.add_member(:vpc_endpoint_dns_name, Shapes::ShapeRef.new(shape: DNSHostName, location_name: "VPCEndpointDNSName"))
+    SMBFileShareInfo.add_member(:bucket_region, Shapes::ShapeRef.new(shape: RegionId, location_name: "BucketRegion"))
+    SMBFileShareInfo.add_member(:oplocks_enabled, Shapes::ShapeRef.new(shape: Boolean, location_name: "OplocksEnabled"))
     SMBFileShareInfo.struct_class = Types::SMBFileShareInfo
 
     SMBFileShareInfoList.member = Shapes::ShapeRef.new(shape: SMBFileShareInfo)
+
+    SMBLocalGroups.add_member(:gateway_admins, Shapes::ShapeRef.new(shape: UserList, location_name: "GatewayAdmins"))
+    SMBLocalGroups.struct_class = Types::SMBLocalGroups
 
     ServiceUnavailableError.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     ServiceUnavailableError.add_member(:error, Shapes::ShapeRef.new(shape: StorageGatewayError, location_name: "error"))
@@ -1306,6 +1353,8 @@ module Aws::StorageGateway
     StorediSCSIVolume.struct_class = Types::StorediSCSIVolume
 
     StorediSCSIVolumes.member = Shapes::ShapeRef.new(shape: StorediSCSIVolume)
+
+    SupportedGatewayCapacities.member = Shapes::ShapeRef.new(shape: GatewayCapacity)
 
     Tag.add_member(:key, Shapes::ShapeRef.new(shape: TagKey, required: true, location_name: "Key"))
     Tag.add_member(:value, Shapes::ShapeRef.new(shape: TagValue, required: true, location_name: "Value"))
@@ -1417,6 +1466,7 @@ module Aws::StorageGateway
     UpdateGatewayInformationInput.add_member(:gateway_name, Shapes::ShapeRef.new(shape: GatewayName, location_name: "GatewayName"))
     UpdateGatewayInformationInput.add_member(:gateway_timezone, Shapes::ShapeRef.new(shape: GatewayTimezone, location_name: "GatewayTimezone"))
     UpdateGatewayInformationInput.add_member(:cloud_watch_log_group_arn, Shapes::ShapeRef.new(shape: CloudWatchLogGroupARN, location_name: "CloudWatchLogGroupARN"))
+    UpdateGatewayInformationInput.add_member(:gateway_capacity, Shapes::ShapeRef.new(shape: GatewayCapacity, location_name: "GatewayCapacity"))
     UpdateGatewayInformationInput.struct_class = Types::UpdateGatewayInformationInput
 
     UpdateGatewayInformationOutput.add_member(:gateway_arn, Shapes::ShapeRef.new(shape: GatewayARN, location_name: "GatewayARN"))
@@ -1453,6 +1503,7 @@ module Aws::StorageGateway
     UpdateNFSFileShareInput.add_member(:file_share_name, Shapes::ShapeRef.new(shape: FileShareName, location_name: "FileShareName"))
     UpdateNFSFileShareInput.add_member(:cache_attributes, Shapes::ShapeRef.new(shape: CacheAttributes, location_name: "CacheAttributes"))
     UpdateNFSFileShareInput.add_member(:notification_policy, Shapes::ShapeRef.new(shape: NotificationPolicy, location_name: "NotificationPolicy"))
+    UpdateNFSFileShareInput.add_member(:audit_destination_arn, Shapes::ShapeRef.new(shape: AuditDestinationARN, location_name: "AuditDestinationARN"))
     UpdateNFSFileShareInput.struct_class = Types::UpdateNFSFileShareInput
 
     UpdateNFSFileShareOutput.add_member(:file_share_arn, Shapes::ShapeRef.new(shape: FileShareARN, location_name: "FileShareARN"))
@@ -1476,6 +1527,7 @@ module Aws::StorageGateway
     UpdateSMBFileShareInput.add_member(:file_share_name, Shapes::ShapeRef.new(shape: FileShareName, location_name: "FileShareName"))
     UpdateSMBFileShareInput.add_member(:cache_attributes, Shapes::ShapeRef.new(shape: CacheAttributes, location_name: "CacheAttributes"))
     UpdateSMBFileShareInput.add_member(:notification_policy, Shapes::ShapeRef.new(shape: NotificationPolicy, location_name: "NotificationPolicy"))
+    UpdateSMBFileShareInput.add_member(:oplocks_enabled, Shapes::ShapeRef.new(shape: Boolean, location_name: "OplocksEnabled"))
     UpdateSMBFileShareInput.struct_class = Types::UpdateSMBFileShareInput
 
     UpdateSMBFileShareOutput.add_member(:file_share_arn, Shapes::ShapeRef.new(shape: FileShareARN, location_name: "FileShareARN"))
@@ -1487,6 +1539,13 @@ module Aws::StorageGateway
 
     UpdateSMBFileShareVisibilityOutput.add_member(:gateway_arn, Shapes::ShapeRef.new(shape: GatewayARN, location_name: "GatewayARN"))
     UpdateSMBFileShareVisibilityOutput.struct_class = Types::UpdateSMBFileShareVisibilityOutput
+
+    UpdateSMBLocalGroupsInput.add_member(:gateway_arn, Shapes::ShapeRef.new(shape: GatewayARN, required: true, location_name: "GatewayARN"))
+    UpdateSMBLocalGroupsInput.add_member(:smb_local_groups, Shapes::ShapeRef.new(shape: SMBLocalGroups, required: true, location_name: "SMBLocalGroups"))
+    UpdateSMBLocalGroupsInput.struct_class = Types::UpdateSMBLocalGroupsInput
+
+    UpdateSMBLocalGroupsOutput.add_member(:gateway_arn, Shapes::ShapeRef.new(shape: GatewayARN, location_name: "GatewayARN"))
+    UpdateSMBLocalGroupsOutput.struct_class = Types::UpdateSMBLocalGroupsOutput
 
     UpdateSMBSecurityStrategyInput.add_member(:gateway_arn, Shapes::ShapeRef.new(shape: GatewayARN, required: true, location_name: "GatewayARN"))
     UpdateSMBSecurityStrategyInput.add_member(:smb_security_strategy, Shapes::ShapeRef.new(shape: SMBSecurityStrategy, required: true, location_name: "SMBSecurityStrategy"))
@@ -2498,6 +2557,16 @@ module Aws::StorageGateway
         o.http_request_uri = "/"
         o.input = Shapes::ShapeRef.new(shape: UpdateSMBFileShareVisibilityInput)
         o.output = Shapes::ShapeRef.new(shape: UpdateSMBFileShareVisibilityOutput)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidGatewayRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerError)
+      end)
+
+      api.add_operation(:update_smb_local_groups, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UpdateSMBLocalGroups"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: UpdateSMBLocalGroupsInput)
+        o.output = Shapes::ShapeRef.new(shape: UpdateSMBLocalGroupsOutput)
         o.errors << Shapes::ShapeRef.new(shape: InvalidGatewayRequestException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerError)
       end)

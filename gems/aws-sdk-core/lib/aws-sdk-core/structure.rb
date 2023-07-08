@@ -28,18 +28,20 @@ module Aws
     # in stdlib Struct.
     #
     # @return [Hash]
-    def to_h(obj = self)
+    def to_h(obj = self, options = {})
       case obj
       when Struct
         obj.each_pair.with_object({}) do |(member, value), hash|
-          hash[member] = to_hash(value) unless value.nil?
+          member = member.to_s if options[:as_json]
+          hash[member] = to_hash(value, options) unless value.nil?
         end
       when Hash
         obj.each.with_object({}) do |(key, value), hash|
-          hash[key] = to_hash(value)
+          key = key.to_s if options[:as_json]
+          hash[key] = to_hash(value, options)
         end
       when Array
-        obj.collect { |value| to_hash(value) }
+        obj.collect { |value| to_hash(value, options) }
       else
         obj
       end
@@ -70,11 +72,20 @@ module Aws
       end
 
     end
+
+    module Union
+      def member
+        self.members.select { |k| self[k] != nil }.first
+      end
+
+      def value
+        self[member] if member
+      end
+    end
   end
 
   # @api private
   class EmptyStructure < Struct.new('AwsEmptyStructure')
     include(Aws::Structure)
   end
-
 end

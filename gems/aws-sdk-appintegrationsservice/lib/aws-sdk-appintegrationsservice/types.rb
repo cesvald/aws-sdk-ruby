@@ -23,22 +23,143 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateEventIntegrationRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the DataIntegration.
+    #   @return [String]
     #
-    #       {
-    #         name: "Name", # required
-    #         description: "Description",
-    #         event_filter: { # required
-    #           source: "Source", # required
-    #         },
-    #         event_bridge_bus: "EventBridgeBus", # required
-    #         client_token: "IdempotencyToken",
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
+    # @!attribute [rw] description
+    #   A description of the DataIntegration.
+    #   @return [String]
     #
+    # @!attribute [rw] kms_key
+    #   The KMS key for the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_uri
+    #   The URI of the data source.
+    #   @return [String]
+    #
+    # @!attribute [rw] schedule_config
+    #   The name of the data and how often it should be pulled from the
+    #   source.
+    #   @return [Types::ScheduleConfiguration]
+    #
+    # @!attribute [rw] tags
+    #   The tags used to organize, track, or control access for this
+    #   resource. For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] client_token
+    #   A unique, case-sensitive identifier that you provide to ensure the
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency,
+    #   see [Making retries safe with idempotent APIs][1].
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
+    #   @return [String]
+    #
+    # @!attribute [rw] file_configuration
+    #   The configuration for what files should be pulled from the source.
+    #   @return [Types::FileConfiguration]
+    #
+    # @!attribute [rw] object_configuration
+    #   The configuration for what data should be pulled from the source.
+    #   @return [Hash<String,Hash<String,Array<String>>>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/CreateDataIntegrationRequest AWS API Documentation
+    #
+    class CreateDataIntegrationRequest < Struct.new(
+      :name,
+      :description,
+      :kms_key,
+      :source_uri,
+      :schedule_config,
+      :tags,
+      :client_token,
+      :file_configuration,
+      :object_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] arn
+    #   The Amazon Resource Name (ARN)
+    #   @return [String]
+    #
+    # @!attribute [rw] id
+    #   A unique identifier.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The name of the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   A description of the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] kms_key
+    #   The KMS key for the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_uri
+    #   The URI of the data source.
+    #   @return [String]
+    #
+    # @!attribute [rw] schedule_configuration
+    #   The name of the data and how often it should be pulled from the
+    #   source.
+    #   @return [Types::ScheduleConfiguration]
+    #
+    # @!attribute [rw] tags
+    #   The tags used to organize, track, or control access for this
+    #   resource. For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] client_token
+    #   A unique, case-sensitive identifier that you provide to ensure the
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency,
+    #   see [Making retries safe with idempotent APIs][1].
+    #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
+    #   @return [String]
+    #
+    # @!attribute [rw] file_configuration
+    #   The configuration for what files should be pulled from the source.
+    #   @return [Types::FileConfiguration]
+    #
+    # @!attribute [rw] object_configuration
+    #   The configuration for what data should be pulled from the source.
+    #   @return [Hash<String,Hash<String,Array<String>>>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/CreateDataIntegrationResponse AWS API Documentation
+    #
+    class CreateDataIntegrationResponse < Struct.new(
+      :arn,
+      :id,
+      :name,
+      :description,
+      :kms_key,
+      :source_uri,
+      :schedule_configuration,
+      :tags,
+      :client_token,
+      :file_configuration,
+      :object_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] name
     #   The name of the event integration.
     #   @return [String]
@@ -52,19 +173,27 @@ module Aws::AppIntegrationsService
     #   @return [Types::EventFilter]
     #
     # @!attribute [rw] event_bridge_bus
-    #   The Eventbridge bus.
+    #   The EventBridge bus.
     #   @return [String]
     #
     # @!attribute [rw] client_token
     #   A unique, case-sensitive identifier that you provide to ensure the
-    #   idempotency of the request.
+    #   idempotency of the request. If not provided, the Amazon Web Services
+    #   SDK populates this field. For more information about idempotency,
+    #   see [Making retries safe with idempotent APIs][1].
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
+    #
+    #
+    #
+    #   [1]: https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/
     #   @return [String]
     #
     # @!attribute [rw] tags
-    #   One or more tags.
+    #   The tags used to organize, track, or control access for this
+    #   resource. For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/CreateEventIntegrationRequest AWS API Documentation
@@ -92,13 +221,71 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteEventIntegrationRequest
-    #   data as a hash:
+    # Summary information about the DataIntegration association.
     #
-    #       {
-    #         name: "Name", # required
-    #       }
+    # @!attribute [rw] data_integration_association_arn
+    #   The Amazon Resource Name (ARN) of the DataIntegration association.
+    #   @return [String]
     #
+    # @!attribute [rw] data_integration_arn
+    #   The Amazon Resource Name (ARN) of the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] client_id
+    #   The identifier for the client that is associated with the
+    #   DataIntegration association.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/DataIntegrationAssociationSummary AWS API Documentation
+    #
+    class DataIntegrationAssociationSummary < Struct.new(
+      :data_integration_association_arn,
+      :data_integration_arn,
+      :client_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Summary information about the DataIntegration.
+    #
+    # @!attribute [rw] arn
+    #   The Amazon Resource Name (ARN) of the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The name of the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_uri
+    #   The URI of the data source.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/DataIntegrationSummary AWS API Documentation
+    #
+    class DataIntegrationSummary < Struct.new(
+      :arn,
+      :name,
+      :source_uri)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] data_integration_identifier
+    #   A unique identifier for the DataIntegration.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/DeleteDataIntegrationRequest AWS API Documentation
+    #
+    class DeleteDataIntegrationRequest < Struct.new(
+      :data_integration_identifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/DeleteDataIntegrationResponse AWS API Documentation
+    #
+    class DeleteDataIntegrationResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] name
     #   The name of the event integration.
     #   @return [String]
@@ -128,17 +315,7 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
-    #
     # The event filter.
-    #
-    # @note When making an API call, you may pass EventFilter
-    #   data as a hash:
-    #
-    #       {
-    #         source: "Source", # required
-    #       }
     #
     # @!attribute [rw] source
     #   The source of the events.
@@ -152,9 +329,6 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
-    #
     # The event integration.
     #
     # @!attribute [rw] event_integration_arn
@@ -174,11 +348,13 @@ module Aws::AppIntegrationsService
     #   @return [Types::EventFilter]
     #
     # @!attribute [rw] event_bridge_bus
-    #   The Amazon Eventbridge bus for the event integration.
+    #   The Amazon EventBridge bus for the event integration.
     #   @return [String]
     #
     # @!attribute [rw] tags
-    #   The tags.
+    #   The tags used to organize, track, or control access for this
+    #   resource. For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/EventIntegration AWS API Documentation
@@ -194,9 +370,6 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # The Amazon AppIntegrations APIs are in preview release and are subject
-    # to change.
-    #
     # The event integration association.
     #
     # @!attribute [rw] event_integration_association_arn
@@ -218,7 +391,7 @@ module Aws::AppIntegrationsService
     #   @return [String]
     #
     # @!attribute [rw] event_bridge_rule_name
-    #   The name of the Eventbridge rule.
+    #   The name of the EventBridge rule.
     #   @return [String]
     #
     # @!attribute [rw] client_association_metadata
@@ -238,13 +411,98 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetEventIntegrationRequest
-    #   data as a hash:
+    # The configuration for what files should be pulled from the source.
     #
-    #       {
-    #         name: "Name", # required
-    #       }
+    # @!attribute [rw] folders
+    #   Identifiers for the source folders to pull all files from
+    #   recursively.
+    #   @return [Array<String>]
     #
+    # @!attribute [rw] filters
+    #   Restrictions for what files should be pulled from the source.
+    #   @return [Hash<String,Array<String>>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/FileConfiguration AWS API Documentation
+    #
+    class FileConfiguration < Struct.new(
+      :folders,
+      :filters)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] identifier
+    #   A unique identifier.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/GetDataIntegrationRequest AWS API Documentation
+    #
+    class GetDataIntegrationRequest < Struct.new(
+      :identifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] arn
+    #   The Amazon Resource Name (ARN) for the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] id
+    #   A unique identifier.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The name of the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The KMS key for the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] kms_key
+    #   The KMS key for the DataIntegration.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_uri
+    #   The URI of the data source.
+    #   @return [String]
+    #
+    # @!attribute [rw] schedule_configuration
+    #   The name of the data and how often it should be pulled from the
+    #   source.
+    #   @return [Types::ScheduleConfiguration]
+    #
+    # @!attribute [rw] tags
+    #   The tags used to organize, track, or control access for this
+    #   resource. For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] file_configuration
+    #   The configuration for what files should be pulled from the source.
+    #   @return [Types::FileConfiguration]
+    #
+    # @!attribute [rw] object_configuration
+    #   The configuration for what data should be pulled from the source.
+    #   @return [Hash<String,Hash<String,Array<String>>>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/GetDataIntegrationResponse AWS API Documentation
+    #
+    class GetDataIntegrationResponse < Struct.new(
+      :arn,
+      :id,
+      :name,
+      :description,
+      :kms_key,
+      :source_uri,
+      :schedule_configuration,
+      :tags,
+      :file_configuration,
+      :object_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] name
     #   The name of the event integration.
     #   @return [String]
@@ -270,7 +528,7 @@ module Aws::AppIntegrationsService
     #   @return [String]
     #
     # @!attribute [rw] event_bridge_bus
-    #   The Eventbridge bus.
+    #   The EventBridge bus.
     #   @return [String]
     #
     # @!attribute [rw] event_filter
@@ -278,7 +536,9 @@ module Aws::AppIntegrationsService
     #   @return [Types::EventFilter]
     #
     # @!attribute [rw] tags
-    #   One or more tags.
+    #   The tags used to organize, track, or control access for this
+    #   resource. For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/GetEventIntegrationResponse AWS API Documentation
@@ -320,15 +580,86 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListEventIntegrationAssociationsRequest
-    #   data as a hash:
+    # @!attribute [rw] data_integration_identifier
+    #   A unique identifier for the DataIntegration.
+    #   @return [String]
     #
-    #       {
-    #         event_integration_name: "Name", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] next_token
+    #   The token for the next set of results. Use the value returned in the
+    #   previous response in the next request to retrieve the next set of
+    #   results.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   The maximum number of results to return per page.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/ListDataIntegrationAssociationsRequest AWS API Documentation
+    #
+    class ListDataIntegrationAssociationsRequest < Struct.new(
+      :data_integration_identifier,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] data_integration_associations
+    #   The Amazon Resource Name (ARN) and unique ID of the DataIntegration
+    #   association.
+    #   @return [Array<Types::DataIntegrationAssociationSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   If there are additional results, this is the token for the next set
+    #   of results.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/ListDataIntegrationAssociationsResponse AWS API Documentation
+    #
+    class ListDataIntegrationAssociationsResponse < Struct.new(
+      :data_integration_associations,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   The token for the next set of results. Use the value returned in the
+    #   previous response in the next request to retrieve the next set of
+    #   results.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of results to return per page.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/ListDataIntegrationsRequest AWS API Documentation
+    #
+    class ListDataIntegrationsRequest < Struct.new(
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] data_integrations
+    #   The DataIntegrations associated with this account.
+    #   @return [Array<Types::DataIntegrationSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   If there are additional results, this is the token for the next set
+    #   of results.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/ListDataIntegrationsResponse AWS API Documentation
+    #
+    class ListDataIntegrationsResponse < Struct.new(
+      :data_integrations,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] event_integration_name
     #   The name of the event integration.
     #   @return [String]
@@ -371,14 +702,6 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListEventIntegrationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The token for the next set of results. Use the value returned in the
     #   previous response in the next request to retrieve the next set of
@@ -416,13 +739,6 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -473,22 +789,40 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
+    # The name of the data and how often it should be pulled from the
+    # source.
     #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
+    # @!attribute [rw] first_execution_from
+    #   The start date for objects to import in the first flow run as an
+    #   Unix/epoch timestamp in milliseconds or in ISO-8601 format.
+    #   @return [String]
     #
+    # @!attribute [rw] object
+    #   The name of the object to pull from the data source.
+    #   @return [String]
+    #
+    # @!attribute [rw] schedule_expression
+    #   How often the data should be pulled from data source.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/ScheduleConfiguration AWS API Documentation
+    #
+    class ScheduleConfiguration < Struct.new(
+      :first_execution_from,
+      :object,
+      :schedule_expression)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
     #
     # @!attribute [rw] tags
-    #   One or more tags.
+    #   The tags used to organize, track, or control access for this
+    #   resource. For example, \\\{ "tags": \\\{"key1":"value1",
+    #   "key2":"value2"\\} \\}.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/TagResourceRequest AWS API Documentation
@@ -517,14 +851,6 @@ module Aws::AppIntegrationsService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -546,14 +872,32 @@ module Aws::AppIntegrationsService
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateEventIntegrationRequest
-    #   data as a hash:
+    # @!attribute [rw] identifier
+    #   A unique identifier for the DataIntegration.
+    #   @return [String]
     #
-    #       {
-    #         name: "Name", # required
-    #         description: "Description",
-    #       }
+    # @!attribute [rw] name
+    #   The name of the DataIntegration.
+    #   @return [String]
     #
+    # @!attribute [rw] description
+    #   A description of the DataIntegration.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/UpdateDataIntegrationRequest AWS API Documentation
+    #
+    class UpdateDataIntegrationRequest < Struct.new(
+      :identifier,
+      :name,
+      :description)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appintegrations-2020-07-29/UpdateDataIntegrationResponse AWS API Documentation
+    #
+    class UpdateDataIntegrationResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] name
     #   The name of the event integration.
     #   @return [String]

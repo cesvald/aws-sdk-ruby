@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:iotdeviceadvisor)
@@ -73,8 +77,13 @@ module Aws::IoTDeviceAdvisor
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::IoTDeviceAdvisor::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::IoTDeviceAdvisor
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::IoTDeviceAdvisor
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::IoTDeviceAdvisor
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::IoTDeviceAdvisor
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::IoTDeviceAdvisor
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::IoTDeviceAdvisor::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::IoTDeviceAdvisor::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::IoTDeviceAdvisor
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::IoTDeviceAdvisor
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -329,7 +386,13 @@ module Aws::IoTDeviceAdvisor
 
     # Creates a Device Advisor test suite.
     #
-    # @option params [Types::SuiteDefinitionConfiguration] :suite_definition_configuration
+    # Requires permission to access the [CreateSuiteDefinition][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
+    # @option params [required, Types::SuiteDefinitionConfiguration] :suite_definition_configuration
     #   Creates a Device Advisor test suite with suite definition
     #   configuration.
     #
@@ -346,17 +409,20 @@ module Aws::IoTDeviceAdvisor
     # @example Request syntax with placeholder values
     #
     #   resp = client.create_suite_definition({
-    #     suite_definition_configuration: {
-    #       suite_definition_name: "SuiteDefinitionName",
+    #     suite_definition_configuration: { # required
+    #       suite_definition_name: "SuiteDefinitionName", # required
     #       devices: [
     #         {
     #           thing_arn: "AmazonResourceName",
     #           certificate_arn: "AmazonResourceName",
+    #           device_role_arn: "AmazonResourceName",
     #         },
     #       ],
     #       intended_for_qualification: false,
-    #       root_group: "RootGroup",
-    #       device_permission_role_arn: "AmazonResourceName",
+    #       is_long_duration_test: false,
+    #       root_group: "RootGroup", # required
+    #       device_permission_role_arn: "AmazonResourceName", # required
+    #       protocol: "MqttV3_1_1", # accepts MqttV3_1_1, MqttV5, MqttV3_1_1_OverWebSocket, MqttV5_OverWebSocket
     #     },
     #     tags: {
     #       "String128" => "String256",
@@ -379,8 +445,14 @@ module Aws::IoTDeviceAdvisor
 
     # Deletes a Device Advisor test suite.
     #
+    # Requires permission to access the [DeleteSuiteDefinition][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :suite_definition_id
-    #   Suite definition Id of the test suite to be deleted.
+    #   Suite definition ID of the test suite to be deleted.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -397,10 +469,54 @@ module Aws::IoTDeviceAdvisor
       req.send_request(options)
     end
 
+    # Gets information about an Device Advisor endpoint.
+    #
+    # @option params [String] :thing_arn
+    #   The thing ARN of the device. This is an optional parameter.
+    #
+    # @option params [String] :certificate_arn
+    #   The certificate ARN of the device. This is an optional parameter.
+    #
+    # @option params [String] :device_role_arn
+    #   The device role ARN of the device. This is an optional parameter.
+    #
+    # @option params [String] :authentication_method
+    #   The authentication method used during the device connection.
+    #
+    # @return [Types::GetEndpointResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetEndpointResponse#endpoint #endpoint} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_endpoint({
+    #     thing_arn: "AmazonResourceName",
+    #     certificate_arn: "AmazonResourceName",
+    #     device_role_arn: "AmazonResourceName",
+    #     authentication_method: "X509ClientCertificate", # accepts X509ClientCertificate, SignatureVersion4
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.endpoint #=> String
+    #
+    # @overload get_endpoint(params = {})
+    # @param [Hash] params ({})
+    def get_endpoint(params = {}, options = {})
+      req = build_request(:get_endpoint, params)
+      req.send_request(options)
+    end
+
     # Gets information about a Device Advisor test suite.
     #
+    # Requires permission to access the [GetSuiteDefinition][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :suite_definition_id
-    #   Suite definition Id of the test suite to get.
+    #   Suite definition ID of the test suite to get.
     #
     # @option params [String] :suite_definition_version
     #   Suite definition version of the test suite to get.
@@ -433,9 +549,12 @@ module Aws::IoTDeviceAdvisor
     #   resp.suite_definition_configuration.devices #=> Array
     #   resp.suite_definition_configuration.devices[0].thing_arn #=> String
     #   resp.suite_definition_configuration.devices[0].certificate_arn #=> String
+    #   resp.suite_definition_configuration.devices[0].device_role_arn #=> String
     #   resp.suite_definition_configuration.intended_for_qualification #=> Boolean
+    #   resp.suite_definition_configuration.is_long_duration_test #=> Boolean
     #   resp.suite_definition_configuration.root_group #=> String
     #   resp.suite_definition_configuration.device_permission_role_arn #=> String
+    #   resp.suite_definition_configuration.protocol #=> String, one of "MqttV3_1_1", "MqttV5", "MqttV3_1_1_OverWebSocket", "MqttV5_OverWebSocket"
     #   resp.created_at #=> Time
     #   resp.last_modified_at #=> Time
     #   resp.tags #=> Hash
@@ -450,11 +569,17 @@ module Aws::IoTDeviceAdvisor
 
     # Gets information about a Device Advisor test suite run.
     #
+    # Requires permission to access the [GetSuiteRun][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :suite_definition_id
-    #   Suite definition Id for the test suite run.
+    #   Suite definition ID for the test suite run.
     #
     # @option params [required, String] :suite_run_id
-    #   Suite run Id for the test suite run.
+    #   Suite run ID for the test suite run.
     #
     # @return [Types::GetSuiteRunResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -485,8 +610,10 @@ module Aws::IoTDeviceAdvisor
     #   resp.suite_run_arn #=> String
     #   resp.suite_run_configuration.primary_device.thing_arn #=> String
     #   resp.suite_run_configuration.primary_device.certificate_arn #=> String
+    #   resp.suite_run_configuration.primary_device.device_role_arn #=> String
     #   resp.suite_run_configuration.selected_test_list #=> Array
     #   resp.suite_run_configuration.selected_test_list[0] #=> String
+    #   resp.suite_run_configuration.parallel_run #=> Boolean
     #   resp.test_result.groups #=> Array
     #   resp.test_result.groups[0].group_id #=> String
     #   resp.test_result.groups[0].group_name #=> String
@@ -500,6 +627,12 @@ module Aws::IoTDeviceAdvisor
     #   resp.test_result.groups[0].tests[0].log_url #=> String
     #   resp.test_result.groups[0].tests[0].warnings #=> String
     #   resp.test_result.groups[0].tests[0].failure #=> String
+    #   resp.test_result.groups[0].tests[0].test_scenarios #=> Array
+    #   resp.test_result.groups[0].tests[0].test_scenarios[0].test_case_scenario_id #=> String
+    #   resp.test_result.groups[0].tests[0].test_scenarios[0].test_case_scenario_type #=> String, one of "Advanced", "Basic"
+    #   resp.test_result.groups[0].tests[0].test_scenarios[0].status #=> String, one of "PASS", "FAIL", "CANCELED", "PENDING", "RUNNING", "STOPPING", "STOPPED", "PASS_WITH_WARNINGS", "ERROR"
+    #   resp.test_result.groups[0].tests[0].test_scenarios[0].failure #=> String
+    #   resp.test_result.groups[0].tests[0].test_scenarios[0].system_message #=> String
     #   resp.start_time #=> Time
     #   resp.end_time #=> Time
     #   resp.status #=> String, one of "PASS", "FAIL", "CANCELED", "PENDING", "RUNNING", "STOPPING", "STOPPED", "PASS_WITH_WARNINGS", "ERROR"
@@ -517,11 +650,17 @@ module Aws::IoTDeviceAdvisor
     # Gets a report download link for a successful Device Advisor qualifying
     # test suite run.
     #
+    # Requires permission to access the [GetSuiteRunReport][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :suite_definition_id
-    #   Suite definition Id of the test suite.
+    #   Suite definition ID of the test suite.
     #
     # @option params [required, String] :suite_run_id
-    #   Suite run Id of the test suite run.
+    #   Suite run ID of the test suite run.
     #
     # @return [Types::GetSuiteRunReportResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -546,6 +685,12 @@ module Aws::IoTDeviceAdvisor
     end
 
     # Lists the Device Advisor test suites you have created.
+    #
+    # Requires permission to access the [ListSuiteDefinitions][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
     #
     # @option params [Integer] :max_results
     #   The maximum number of results to return at once.
@@ -575,7 +720,10 @@ module Aws::IoTDeviceAdvisor
     #   resp.suite_definition_information_list[0].default_devices #=> Array
     #   resp.suite_definition_information_list[0].default_devices[0].thing_arn #=> String
     #   resp.suite_definition_information_list[0].default_devices[0].certificate_arn #=> String
+    #   resp.suite_definition_information_list[0].default_devices[0].device_role_arn #=> String
     #   resp.suite_definition_information_list[0].intended_for_qualification #=> Boolean
+    #   resp.suite_definition_information_list[0].is_long_duration_test #=> Boolean
+    #   resp.suite_definition_information_list[0].protocol #=> String, one of "MqttV3_1_1", "MqttV5", "MqttV3_1_1_OverWebSocket", "MqttV5_OverWebSocket"
     #   resp.suite_definition_information_list[0].created_at #=> Time
     #   resp.next_token #=> String
     #
@@ -586,17 +734,23 @@ module Aws::IoTDeviceAdvisor
       req.send_request(options)
     end
 
-    # Lists the runs of the specified Device Advisor test suite. You can
-    # list all runs of the test suite, or the runs of a specific version of
-    # the test suite.
+    # Lists runs of the specified Device Advisor test suite. You can list
+    # all runs of the test suite, or the runs of a specific version of the
+    # test suite.
+    #
+    # Requires permission to access the [ListSuiteRuns][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
     #
     # @option params [String] :suite_definition_id
     #   Lists the test suite runs of the specified test suite based on suite
-    #   definition Id.
+    #   definition ID.
     #
     # @option params [String] :suite_definition_version
-    #   Must be passed along with suiteDefinitionId. Lists the test suite runs
-    #   of the specified test suite based on suite definition version.
+    #   Must be passed along with `suiteDefinitionId`. Lists the test suite
+    #   runs of the specified test suite based on suite definition version.
     #
     # @option params [Integer] :max_results
     #   The maximum number of results to return at once.
@@ -644,8 +798,15 @@ module Aws::IoTDeviceAdvisor
 
     # Lists the tags attached to an IoT Device Advisor resource.
     #
+    # Requires permission to access the [ListTagsForResource][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :resource_arn
-    #   The ARN of the IoT Device Advisor resource.
+    #   The resource ARN of the IoT Device Advisor resource. This can be
+    #   SuiteDefinition ARN or SuiteRun ARN.
     #
     # @return [Types::ListTagsForResourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -671,13 +832,19 @@ module Aws::IoTDeviceAdvisor
 
     # Starts a Device Advisor test suite run.
     #
+    # Requires permission to access the [StartSuiteRun][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :suite_definition_id
-    #   Suite definition Id of the test suite.
+    #   Suite definition ID of the test suite.
     #
     # @option params [String] :suite_definition_version
     #   Suite definition version of the test suite.
     #
-    # @option params [Types::SuiteRunConfiguration] :suite_run_configuration
+    # @option params [required, Types::SuiteRunConfiguration] :suite_run_configuration
     #   Suite run configuration.
     #
     # @option params [Hash<String,String>] :tags
@@ -688,18 +855,21 @@ module Aws::IoTDeviceAdvisor
     #   * {Types::StartSuiteRunResponse#suite_run_id #suite_run_id} => String
     #   * {Types::StartSuiteRunResponse#suite_run_arn #suite_run_arn} => String
     #   * {Types::StartSuiteRunResponse#created_at #created_at} => Time
+    #   * {Types::StartSuiteRunResponse#endpoint #endpoint} => String
     #
     # @example Request syntax with placeholder values
     #
     #   resp = client.start_suite_run({
     #     suite_definition_id: "UUID", # required
     #     suite_definition_version: "SuiteDefinitionVersion",
-    #     suite_run_configuration: {
-    #       primary_device: {
+    #     suite_run_configuration: { # required
+    #       primary_device: { # required
     #         thing_arn: "AmazonResourceName",
     #         certificate_arn: "AmazonResourceName",
+    #         device_role_arn: "AmazonResourceName",
     #       },
     #       selected_test_list: ["UUID"],
+    #       parallel_run: false,
     #     },
     #     tags: {
     #       "String128" => "String256",
@@ -711,6 +881,7 @@ module Aws::IoTDeviceAdvisor
     #   resp.suite_run_id #=> String
     #   resp.suite_run_arn #=> String
     #   resp.created_at #=> Time
+    #   resp.endpoint #=> String
     #
     # @overload start_suite_run(params = {})
     # @param [Hash] params ({})
@@ -721,11 +892,17 @@ module Aws::IoTDeviceAdvisor
 
     # Stops a Device Advisor test suite run that is currently running.
     #
+    # Requires permission to access the [StopSuiteRun][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :suite_definition_id
-    #   Suite definition Id of the test suite run to be stopped.
+    #   Suite definition ID of the test suite run to be stopped.
     #
     # @option params [required, String] :suite_run_id
-    #   Suite run Id of the test suite run to be stopped.
+    #   Suite run ID of the test suite run to be stopped.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -745,8 +922,15 @@ module Aws::IoTDeviceAdvisor
 
     # Adds to and modifies existing tags of an IoT Device Advisor resource.
     #
+    # Requires permission to access the [TagResource][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :resource_arn
-    #   The resource ARN of an IoT Device Advisor resource.
+    #   The resource ARN of an IoT Device Advisor resource. This can be
+    #   SuiteDefinition ARN or SuiteRun ARN.
     #
     # @option params [required, Hash<String,String>] :tags
     #   The tags to be attached to the IoT Device Advisor resource.
@@ -771,8 +955,15 @@ module Aws::IoTDeviceAdvisor
 
     # Removes tags from an IoT Device Advisor resource.
     #
+    # Requires permission to access the [UntagResource][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :resource_arn
-    #   The resource ARN of an IoT Device Advisor resource.
+    #   The resource ARN of an IoT Device Advisor resource. This can be
+    #   SuiteDefinition ARN or SuiteRun ARN.
     #
     # @option params [required, Array<String>] :tag_keys
     #   List of tag keys to remove from the IoT Device Advisor resource.
@@ -795,10 +986,16 @@ module Aws::IoTDeviceAdvisor
 
     # Updates a Device Advisor test suite.
     #
-    # @option params [required, String] :suite_definition_id
-    #   Suite definition Id of the test suite to be updated.
+    # Requires permission to access the [UpdateSuiteDefinition][1] action.
     #
-    # @option params [Types::SuiteDefinitionConfiguration] :suite_definition_configuration
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
+    # @option params [required, String] :suite_definition_id
+    #   Suite definition ID of the test suite to be updated.
+    #
+    # @option params [required, Types::SuiteDefinitionConfiguration] :suite_definition_configuration
     #   Updates a Device Advisor test suite with suite definition
     #   configuration.
     #
@@ -815,17 +1012,20 @@ module Aws::IoTDeviceAdvisor
     #
     #   resp = client.update_suite_definition({
     #     suite_definition_id: "UUID", # required
-    #     suite_definition_configuration: {
-    #       suite_definition_name: "SuiteDefinitionName",
+    #     suite_definition_configuration: { # required
+    #       suite_definition_name: "SuiteDefinitionName", # required
     #       devices: [
     #         {
     #           thing_arn: "AmazonResourceName",
     #           certificate_arn: "AmazonResourceName",
+    #           device_role_arn: "AmazonResourceName",
     #         },
     #       ],
     #       intended_for_qualification: false,
-    #       root_group: "RootGroup",
-    #       device_permission_role_arn: "AmazonResourceName",
+    #       is_long_duration_test: false,
+    #       root_group: "RootGroup", # required
+    #       device_permission_role_arn: "AmazonResourceName", # required
+    #       protocol: "MqttV3_1_1", # accepts MqttV3_1_1, MqttV5, MqttV3_1_1_OverWebSocket, MqttV5_OverWebSocket
     #     },
     #   })
     #
@@ -858,7 +1058,7 @@ module Aws::IoTDeviceAdvisor
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-iotdeviceadvisor'
-      context[:gem_version] = '1.3.0'
+      context[:gem_version] = '1.24.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

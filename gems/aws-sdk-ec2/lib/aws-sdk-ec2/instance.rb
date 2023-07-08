@@ -91,15 +91,15 @@ module Aws::EC2
       data[:platform]
     end
 
-    # (IPv4 only) The private DNS hostname name assigned to the instance.
+    # \[IPv4 only\] The private DNS hostname name assigned to the instance.
     # This DNS hostname can only be used inside the Amazon EC2 network. This
     # name is not available until the instance enters the `running` state.
     #
-    # \[EC2-VPC\] The Amazon-provided DNS server resolves Amazon-provided
-    # private DNS hostnames if you've enabled DNS resolution and DNS
-    # hostnames in your VPC. If you are not using the Amazon-provided DNS
-    # server in your VPC, your custom domain name servers must resolve the
-    # hostname as appropriate.
+    # The Amazon-provided DNS server resolves Amazon-provided private DNS
+    # hostnames if you've enabled DNS resolution and DNS hostnames in your
+    # VPC. If you are not using the Amazon-provided DNS server in your VPC,
+    # your custom domain name servers must resolve the hostname as
+    # appropriate.
     # @return [String]
     def private_dns_name
       data[:private_dns_name]
@@ -117,10 +117,9 @@ module Aws::EC2
       data[:product_codes]
     end
 
-    # (IPv4 only) The public DNS name assigned to the instance. This name is
-    # not available until the instance enters the `running` state. For
-    # EC2-VPC, this name is only available if you've enabled DNS hostnames
-    # for your VPC.
+    # \[IPv4 only\] The public DNS name assigned to the instance. This name
+    # is not available until the instance enters the `running` state. This
+    # name is only available if you've enabled DNS hostnames for your VPC.
     # @return [String]
     def public_dns_name
       data[:public_dns_name]
@@ -155,13 +154,13 @@ module Aws::EC2
       data[:state_transition_reason]
     end
 
-    # \[EC2-VPC\] The ID of the subnet in which the instance is running.
+    # The ID of the subnet in which the instance is running.
     # @return [String]
     def subnet_id
       data[:subnet_id]
     end
 
-    # \[EC2-VPC\] The ID of the VPC in which the instance is running.
+    # The ID of the VPC in which the instance is running.
     # @return [String]
     def vpc_id
       data[:vpc_id]
@@ -319,7 +318,7 @@ module Aws::EC2
       data[:hibernation_options]
     end
 
-    # The license configurations.
+    # The license configurations for the instance.
     # @return [Array<Types::LicenseConfiguration>]
     def licenses
       data[:licenses]
@@ -331,14 +330,25 @@ module Aws::EC2
       data[:metadata_options]
     end
 
-    # Indicates whether the instance is enabled for AWS Nitro Enclaves.
+    # Indicates whether the instance is enabled for Amazon Web Services
+    # Nitro Enclaves.
     # @return [Types::EnclaveOptions]
     def enclave_options
       data[:enclave_options]
     end
 
-    # The boot mode of the instance. For more information, see [Boot
-    # modes][1] in the *Amazon EC2 User Guide*.
+    # The boot mode that was specified by the AMI. If the value is
+    # `uefi-preferred`, the AMI supports both UEFI and Legacy BIOS. The
+    # `currentInstanceBootMode` parameter is the boot mode that is used to
+    # boot the instance at launch or start.
+    #
+    # <note markdown="1"> The operating system contained in the AMI must be configured to
+    # support the specified boot mode.
+    #
+    #  </note>
+    #
+    # For more information, see [Boot modes][1] in the *Amazon EC2 User
+    # Guide*.
     #
     #
     #
@@ -346,6 +356,77 @@ module Aws::EC2
     # @return [String]
     def boot_mode
       data[:boot_mode]
+    end
+
+    # The platform details value for the instance. For more information, see
+    # [AMI billing information fields][1] in the *Amazon EC2 User Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/billing-info-fields.html
+    # @return [String]
+    def platform_details
+      data[:platform_details]
+    end
+
+    # The usage operation value for the instance. For more information, see
+    # [AMI billing information fields][1] in the *Amazon EC2 User Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/billing-info-fields.html
+    # @return [String]
+    def usage_operation
+      data[:usage_operation]
+    end
+
+    # The time that the usage operation was last updated.
+    # @return [Time]
+    def usage_operation_update_time
+      data[:usage_operation_update_time]
+    end
+
+    # The options for the instance hostname.
+    # @return [Types::PrivateDnsNameOptionsResponse]
+    def private_dns_name_options
+      data[:private_dns_name_options]
+    end
+
+    # The IPv6 address assigned to the instance.
+    # @return [String]
+    def ipv_6_address
+      data[:ipv_6_address]
+    end
+
+    # If the instance is configured for NitroTPM support, the value is
+    # `v2.0`. For more information, see [NitroTPM][1] in the *Amazon EC2
+    # User Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nitrotpm.html
+    # @return [String]
+    def tpm_support
+      data[:tpm_support]
+    end
+
+    # Provides information on the recovery and maintenance options of your
+    # instance.
+    # @return [Types::InstanceMaintenanceOptions]
+    def maintenance_options
+      data[:maintenance_options]
+    end
+
+    # The boot mode that is used to boot the instance at launch or start.
+    # For more information, see [Boot modes][1] in the *Amazon EC2 User
+    # Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-boot.html
+    # @return [String]
+    def current_instance_boot_mode
+      data[:current_instance_boot_mode]
     end
 
     # @!endgroup
@@ -362,7 +443,9 @@ module Aws::EC2
     #
     # @return [self]
     def load
-      resp = @client.describe_instances(instance_ids: [@id])
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_instances(instance_ids: [@id])
+      end
       @data = resp.reservations[0].instances[0]
       self
     end
@@ -407,7 +490,9 @@ module Aws::EC2
       options, params = separate_params_and_options(options)
       waiter = Waiters::InstanceExists.new(options)
       yield_waiter_and_warn(waiter, &block) if block_given?
-      resp = waiter.wait(params.merge(instance_ids: [@id]))
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        waiter.wait(params.merge(instance_ids: [@id]))
+      end
       Instance.new({
         id: @id,
         data: resp.data.reservations[0].instances[0],
@@ -425,7 +510,9 @@ module Aws::EC2
       options, params = separate_params_and_options(options)
       waiter = Waiters::InstanceRunning.new(options)
       yield_waiter_and_warn(waiter, &block) if block_given?
-      resp = waiter.wait(params.merge(instance_ids: [@id]))
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        waiter.wait(params.merge(instance_ids: [@id]))
+      end
       Instance.new({
         id: @id,
         data: resp.data.reservations[0].instances[0],
@@ -443,7 +530,9 @@ module Aws::EC2
       options, params = separate_params_and_options(options)
       waiter = Waiters::InstanceStopped.new(options)
       yield_waiter_and_warn(waiter, &block) if block_given?
-      resp = waiter.wait(params.merge(instance_ids: [@id]))
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        waiter.wait(params.merge(instance_ids: [@id]))
+      end
       Instance.new({
         id: @id,
         data: resp.data.reservations[0].instances[0],
@@ -461,7 +550,9 @@ module Aws::EC2
       options, params = separate_params_and_options(options)
       waiter = Waiters::InstanceTerminated.new(options)
       yield_waiter_and_warn(waiter, &block) if block_given?
-      resp = waiter.wait(params.merge(instance_ids: [@id]))
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        waiter.wait(params.merge(instance_ids: [@id]))
+      end
       Instance.new({
         id: @id,
         data: resp.data.reservations[0].instances[0],
@@ -563,7 +654,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -572,7 +665,7 @@ module Aws::EC2
     #
     #   instance.attach_classic_link_vpc({
     #     dry_run: false,
-    #     groups: ["String"], # required
+    #     groups: ["SecurityGroupId"], # required
     #     vpc_id: "VpcId", # required
     #   })
     # @param [Hash] options ({})
@@ -589,7 +682,9 @@ module Aws::EC2
     # @return [Types::AttachClassicLinkVpcResult]
     def attach_classic_link_vpc(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.attach_classic_link_vpc(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.attach_classic_link_vpc(options)
+      end
       resp.data
     end
 
@@ -614,7 +709,9 @@ module Aws::EC2
     # @return [Types::VolumeAttachment]
     def attach_volume(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.attach_volume(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.attach_volume(options)
+      end
       resp.data
     end
 
@@ -637,7 +734,9 @@ module Aws::EC2
     # @return [Types::GetConsoleOutputResult]
     def console_output(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.get_console_output(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_console_output(options)
+      end
       resp.data
     end
 
@@ -651,7 +750,7 @@ module Aws::EC2
     #         ebs: {
     #           delete_on_termination: false,
     #           iops: 1,
-    #           snapshot_id: "String",
+    #           snapshot_id: "SnapshotId",
     #           volume_size: 1,
     #           volume_type: "standard", # accepts standard, io1, io2, gp2, sc1, st1, gp3
     #           kms_key_id: "String",
@@ -668,7 +767,7 @@ module Aws::EC2
     #     no_reboot: false,
     #     tag_specifications: [
     #       {
-    #         resource_type: "client-vpn-endpoint", # accepts client-vpn-endpoint, customer-gateway, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, internet-gateway, key-pair, launch-template, local-gateway-route-table-vpc-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, placement-group, reserved-instances, route-table, security-group, snapshot, spot-fleet-request, spot-instances-request, subnet, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-route-table, volume, vpc, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log
+    #         resource_type: "capacity-reservation", # accepts capacity-reservation, client-vpn-endpoint, customer-gateway, carrier-gateway, coip-pool, dedicated-host, dhcp-options, egress-only-internet-gateway, elastic-ip, elastic-gpu, export-image-task, export-instance-task, fleet, fpga-image, host-reservation, image, import-image-task, import-snapshot-task, instance, instance-event-window, internet-gateway, ipam, ipam-pool, ipam-scope, ipv4pool-ec2, ipv6pool-ec2, key-pair, launch-template, local-gateway, local-gateway-route-table, local-gateway-virtual-interface, local-gateway-virtual-interface-group, local-gateway-route-table-vpc-association, local-gateway-route-table-virtual-interface-group-association, natgateway, network-acl, network-interface, network-insights-analysis, network-insights-path, network-insights-access-scope, network-insights-access-scope-analysis, placement-group, prefix-list, replace-root-volume-task, reserved-instances, route-table, security-group, security-group-rule, snapshot, spot-fleet-request, spot-instances-request, subnet, subnet-cidr-reservation, traffic-mirror-filter, traffic-mirror-session, traffic-mirror-target, transit-gateway, transit-gateway-attachment, transit-gateway-connect-peer, transit-gateway-multicast-domain, transit-gateway-policy-table, transit-gateway-route-table, transit-gateway-route-table-announcement, volume, vpc, vpc-endpoint, vpc-endpoint-connection, vpc-endpoint-service, vpc-endpoint-service-permission, vpc-peering-connection, vpn-connection, vpn-gateway, vpc-flow-log, capacity-reservation-fleet, traffic-mirror-filter-rule, vpc-endpoint-connection-device-type, verified-access-instance, verified-access-group, verified-access-endpoint, verified-access-policy, verified-access-trust-provider, vpn-connection-device-type, vpc-block-public-access-exclusion, ipam-resource-discovery, ipam-resource-discovery-association, instance-connect-endpoint
     #         tags: [
     #           {
     #             key: "String",
@@ -697,11 +796,19 @@ module Aws::EC2
     #   brackets (\[\]), spaces ( ), periods (.), slashes (/), dashes (-),
     #   single quotes ('), at-signs (@), or underscores(\_)
     # @option options [Boolean] :no_reboot
-    #   By default, Amazon EC2 attempts to shut down and reboot the instance
-    #   before creating the image. If the `No Reboot` option is set, Amazon
-    #   EC2 doesn't shut down the instance before creating the image. When
-    #   this option is used, file system integrity on the created image can't
-    #   be guaranteed.
+    #   By default, when Amazon EC2 creates the new AMI, it reboots the
+    #   instance so that it can take snapshots of the attached volumes while
+    #   data is at rest, in order to ensure a consistent state. You can set
+    #   the `NoReboot` parameter to `true` in the API request, or use the
+    #   `--no-reboot` option in the CLI to prevent Amazon EC2 from shutting
+    #   down and rebooting the instance.
+    #
+    #   If you choose to bypass the shutdown and reboot process by setting the
+    #   `NoReboot` parameter to `true` in the API request, or by using the
+    #   `--no-reboot` option in the CLI, we can't guarantee the file system
+    #   integrity of the created image.
+    #
+    #   Default: `false` (follow standard reboot process)
     # @option options [Array<Types::TagSpecification>] :tag_specifications
     #   The tags to apply to the AMI and snapshots on creation. You can tag
     #   the AMI, the snapshots, or both.
@@ -709,9 +816,9 @@ module Aws::EC2
     #   * To tag the AMI, the value for `ResourceType` must be `image`.
     #
     #   * To tag the snapshots that are created of the root volume and of
-    #     other EBS volumes that are attached to the instance, the value for
-    #     `ResourceType` must be `snapshot`. The same tag is applied to all of
-    #     the snapshots that are created.
+    #     other Amazon EBS volumes that are attached to the instance, the
+    #     value for `ResourceType` must be `snapshot`. The same tag is applied
+    #     to all of the snapshots that are created.
     #
     #   If you specify other values for `ResourceType`, the request fails.
     #
@@ -724,7 +831,9 @@ module Aws::EC2
     # @return [Image]
     def create_image(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.create_image(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_image(options)
+      end
       Image.new(
         id: resp.data.image_id,
         client: @client
@@ -756,7 +865,9 @@ module Aws::EC2
     def create_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.create_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -793,13 +904,17 @@ module Aws::EC2
     #   if its value is an empty string.
     #
     #   If you omit this parameter, we delete all user-defined tags for the
-    #   specified resources. We do not delete AWS-generated tags (tags that
-    #   have the `aws:` prefix).
+    #   specified resources. We do not delete Amazon Web Services-generated
+    #   tags (tags that have the `aws:` prefix).
+    #
+    #   Constraints: Up to 1000 tags.
     # @return [Tag::Collection]
     def delete_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.delete_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -814,7 +929,7 @@ module Aws::EC2
     # @example Request syntax with placeholder values
     #
     #   instance.describe_attribute({
-    #     attribute: "instanceType", # required, accepts instanceType, kernel, ramdisk, userData, disableApiTermination, instanceInitiatedShutdownBehavior, rootDeviceName, blockDeviceMapping, productCodes, sourceDestCheck, groupSet, ebsOptimized, sriovNetSupport, enaSupport, enclaveOptions
+    #     attribute: "instanceType", # required, accepts instanceType, kernel, ramdisk, userData, disableApiTermination, instanceInitiatedShutdownBehavior, rootDeviceName, blockDeviceMapping, productCodes, sourceDestCheck, groupSet, ebsOptimized, sriovNetSupport, enaSupport, enclaveOptions, disableApiStop
     #     dry_run: false,
     #   })
     # @param [Hash] options ({})
@@ -830,7 +945,9 @@ module Aws::EC2
     # @return [Types::InstanceAttribute]
     def describe_attribute(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.describe_instance_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_instance_attribute(options)
+      end
       resp.data
     end
 
@@ -851,7 +968,9 @@ module Aws::EC2
     # @return [Types::DetachClassicLinkVpcResult]
     def detach_classic_link_vpc(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.detach_classic_link_vpc(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.detach_classic_link_vpc(options)
+      end
       resp.data
     end
 
@@ -860,7 +979,7 @@ module Aws::EC2
     #   instance.detach_volume({
     #     device: "String",
     #     force: false,
-    #     volume_id: "VolumeId", # required
+    #     volume_id: "VolumeIdWithResolver", # required
     #     dry_run: false,
     #   })
     # @param [Hash] options ({})
@@ -885,7 +1004,9 @@ module Aws::EC2
     # @return [Types::VolumeAttachment]
     def detach_volume(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.detach_volume(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.detach_volume(options)
+      end
       resp.data
     end
 
@@ -895,7 +1016,7 @@ module Aws::EC2
     #     source_dest_check: {
     #       value: false,
     #     },
-    #     attribute: "instanceType", # accepts instanceType, kernel, ramdisk, userData, disableApiTermination, instanceInitiatedShutdownBehavior, rootDeviceName, blockDeviceMapping, productCodes, sourceDestCheck, groupSet, ebsOptimized, sriovNetSupport, enaSupport, enclaveOptions
+    #     attribute: "instanceType", # accepts instanceType, kernel, ramdisk, userData, disableApiTermination, instanceInitiatedShutdownBehavior, rootDeviceName, blockDeviceMapping, productCodes, sourceDestCheck, groupSet, ebsOptimized, sriovNetSupport, enaSupport, enclaveOptions, disableApiStop
     #     block_device_mappings: [
     #       {
     #         device_name: "String",
@@ -917,7 +1038,7 @@ module Aws::EC2
     #     ena_support: {
     #       value: false,
     #     },
-    #     groups: ["String"],
+    #     groups: ["SecurityGroupId"],
     #     instance_initiated_shutdown_behavior: "value", # value <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
     #     instance_type: "value", # value <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
     #     kernel: "value", # value <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
@@ -927,6 +1048,9 @@ module Aws::EC2
     #       value: "data",
     #     },
     #     value: "String",
+    #     disable_api_stop: {
+    #       value: false,
+    #     },
     #   })
     # @param [Hash] options ({})
     # @option options [Types::AttributeBooleanValue] :source_dest_check
@@ -937,7 +1061,14 @@ module Aws::EC2
     #   You must disable source/destination checks if the instance runs
     #   services such as network address translation, routing, or firewalls.
     # @option options [String] :attribute
-    #   The name of the attribute.
+    #   The name of the attribute to modify.
+    #
+    #   You can modify the following attributes only: `disableApiTermination`
+    #   \| `instanceType` \| `kernel` \| `ramdisk` \|
+    #   `instanceInitiatedShutdownBehavior` \| `blockDeviceMapping` \|
+    #   `userData` \| `sourceDestCheck` \| `groupSet` \| `ebsOptimized` \|
+    #   `sriovNetSupport` \| `enaSupport` \| `nvmeSupport` \| `disableApiStop`
+    #   \| `enclaveOptions`
     # @option options [Array<Types::InstanceBlockDeviceMappingSpecification>] :block_device_mappings
     #   Modifies the `DeleteOnTermination` attribute for volumes that are
     #   currently attached. The volume must be owned by the caller. If no
@@ -946,8 +1077,8 @@ module Aws::EC2
     #
     #   To add instance store volumes to an Amazon EBS-backed instance, you
     #   must add them when you launch the instance. For more information, see
-    #   [Updating the block device mapping when launching an instance][1] in
-    #   the *Amazon EC2 User Guide*.
+    #   [Update the block device mapping when launching an instance][1] in the
+    #   *Amazon EC2 User Guide*.
     #
     #
     #
@@ -973,10 +1104,9 @@ module Aws::EC2
     #   This option is supported only for HVM instances. Specifying this
     #   option with a PV instance can make it unreachable.
     # @option options [Array<String>] :groups
-    #   \[EC2-VPC\] Replaces the security groups of the instance with the
-    #   specified security groups. You must specify at least one security
-    #   group, even if it's just the default security group for the VPC. You
-    #   must specify the security group ID, not the security group name.
+    #   Replaces the security groups of the instance with the specified
+    #   security groups. You must specify the ID of at least one security
+    #   group, even if it's just the default security group for the VPC.
     # @option options [Types::AttributeValue] :instance_initiated_shutdown_behavior
     #   Specifies whether an instance stops or terminates when you initiate
     #   shutdown from the instance (using the operating system command for
@@ -1017,17 +1147,28 @@ module Aws::EC2
     #   option with a PV instance can make it unreachable.
     # @option options [Types::BlobAttributeValue] :user_data
     #   Changes the instance's user data to the specified value. If you are
-    #   using an AWS SDK or command line tool, base64-encoding is performed
-    #   for you, and you can load the text from a file. Otherwise, you must
-    #   provide base64-encoded text.
+    #   using an Amazon Web Services SDK or command line tool, base64-encoding
+    #   is performed for you, and you can load the text from a file.
+    #   Otherwise, you must provide base64-encoded text.
     # @option options [String] :value
     #   A new value for the attribute. Use only with the `kernel`, `ramdisk`,
     #   `userData`, `disableApiTermination`, or
     #   `instanceInitiatedShutdownBehavior` attribute.
+    # @option options [Types::AttributeBooleanValue] :disable_api_stop
+    #   Indicates whether an instance is enabled for stop protection. For more
+    #   information, see [Stop Protection][1].
+    #
+    #
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection
     # @return [EmptyStructure]
     def modify_attribute(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.modify_instance_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.modify_instance_attribute(options)
+      end
       resp.data
     end
 
@@ -1045,7 +1186,9 @@ module Aws::EC2
     # @return [Types::MonitorInstancesResult]
     def monitor(options = {})
       options = Aws::Util.deep_merge(options, instance_ids: [@id])
-      resp = @client.monitor_instances(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.monitor_instances(options)
+      end
       resp.data
     end
 
@@ -1063,7 +1206,9 @@ module Aws::EC2
     # @return [Types::GetPasswordDataResult]
     def password_data(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.get_password_data(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_password_data(options)
+      end
       resp.data
     end
 
@@ -1081,7 +1226,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def reboot(options = {})
       options = Aws::Util.deep_merge(options, instance_ids: [@id])
-      resp = @client.reboot_instances(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.reboot_instances(options)
+      end
       resp.data
     end
 
@@ -1108,30 +1255,30 @@ module Aws::EC2
     # @option options [required, Array<String>] :reason_codes
     #   The reason codes that describe the health state of your instance.
     #
-    #   * `instance-stuck-in-state`\: My instance is stuck in a state.
+    #   * `instance-stuck-in-state`: My instance is stuck in a state.
     #
-    #   * `unresponsive`\: My instance is unresponsive.
+    #   * `unresponsive`: My instance is unresponsive.
     #
-    #   * `not-accepting-credentials`\: My instance is not accepting my
+    #   * `not-accepting-credentials`: My instance is not accepting my
     #     credentials.
     #
-    #   * `password-not-available`\: A password is not available for my
+    #   * `password-not-available`: A password is not available for my
     #     instance.
     #
-    #   * `performance-network`\: My instance is experiencing performance
+    #   * `performance-network`: My instance is experiencing performance
     #     problems that I believe are network related.
     #
-    #   * `performance-instance-store`\: My instance is experiencing
+    #   * `performance-instance-store`: My instance is experiencing
     #     performance problems that I believe are related to the instance
     #     stores.
     #
-    #   * `performance-ebs-volume`\: My instance is experiencing performance
+    #   * `performance-ebs-volume`: My instance is experiencing performance
     #     problems that I believe are related to an EBS volume.
     #
-    #   * `performance-other`\: My instance is experiencing performance
+    #   * `performance-other`: My instance is experiencing performance
     #     problems.
     #
-    #   * `other`\: \[explain using the description parameter\]
+    #   * `other`: \[explain using the description parameter\]
     # @option options [Time,DateTime,Date,Integer,String] :start_time
     #   The time at which the reported instance health state began.
     # @option options [required, String] :status
@@ -1139,14 +1286,16 @@ module Aws::EC2
     # @return [EmptyStructure]
     def report_status(options = {})
       options = Aws::Util.deep_merge(options, instances: [@id])
-      resp = @client.report_instance_status(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.report_instance_status(options)
+      end
       resp.data
     end
 
     # @example Request syntax with placeholder values
     #
     #   instance.reset_attribute({
-    #     attribute: "instanceType", # required, accepts instanceType, kernel, ramdisk, userData, disableApiTermination, instanceInitiatedShutdownBehavior, rootDeviceName, blockDeviceMapping, productCodes, sourceDestCheck, groupSet, ebsOptimized, sriovNetSupport, enaSupport, enclaveOptions
+    #     attribute: "instanceType", # required, accepts instanceType, kernel, ramdisk, userData, disableApiTermination, instanceInitiatedShutdownBehavior, rootDeviceName, blockDeviceMapping, productCodes, sourceDestCheck, groupSet, ebsOptimized, sriovNetSupport, enaSupport, enclaveOptions, disableApiStop
     #     dry_run: false,
     #   })
     # @param [Hash] options ({})
@@ -1154,8 +1303,7 @@ module Aws::EC2
     #   The attribute to reset.
     #
     #   You can only reset the following attributes: `kernel` \| `ramdisk` \|
-    #   `sourceDestCheck`. To change an instance attribute, use
-    #   ModifyInstanceAttribute.
+    #   `sourceDestCheck`.
     # @option options [Boolean] :dry_run
     #   Checks whether you have the required permissions for the action,
     #   without actually making the request, and provides an error response.
@@ -1164,7 +1312,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def reset_attribute(options = {})
       options = options.merge(instance_id: @id)
-      resp = @client.reset_instance_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.reset_instance_attribute(options)
+      end
       resp.data
     end
 
@@ -1185,7 +1335,9 @@ module Aws::EC2
         instance_id: @id,
         attribute: "kernel"
       )
-      resp = @client.reset_instance_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.reset_instance_attribute(options)
+      end
       resp.data
     end
 
@@ -1206,7 +1358,9 @@ module Aws::EC2
         instance_id: @id,
         attribute: "ramdisk"
       )
-      resp = @client.reset_instance_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.reset_instance_attribute(options)
+      end
       resp.data
     end
 
@@ -1227,7 +1381,9 @@ module Aws::EC2
         instance_id: @id,
         attribute: "sourceDestCheck"
       )
-      resp = @client.reset_instance_attribute(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.reset_instance_attribute(options)
+      end
       resp.data
     end
 
@@ -1248,7 +1404,9 @@ module Aws::EC2
     # @return [Types::StartInstancesResult]
     def start(options = {})
       options = Aws::Util.deep_merge(options, instance_ids: [@id])
-      resp = @client.start_instances(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.start_instances(options)
+      end
       resp.data
     end
 
@@ -1286,7 +1444,9 @@ module Aws::EC2
     # @return [Types::StopInstancesResult]
     def stop(options = {})
       options = Aws::Util.deep_merge(options, instance_ids: [@id])
-      resp = @client.stop_instances(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.stop_instances(options)
+      end
       resp.data
     end
 
@@ -1304,7 +1464,9 @@ module Aws::EC2
     # @return [Types::TerminateInstancesResult]
     def terminate(options = {})
       options = Aws::Util.deep_merge(options, instance_ids: [@id])
-      resp = @client.terminate_instances(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.terminate_instances(options)
+      end
       resp.data
     end
 
@@ -1322,7 +1484,9 @@ module Aws::EC2
     # @return [Types::UnmonitorInstancesResult]
     def unmonitor(options = {})
       options = Aws::Util.deep_merge(options, instance_ids: [@id])
-      resp = @client.unmonitor_instances(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.unmonitor_instances(options)
+      end
       resp.data
     end
 
@@ -1454,7 +1618,7 @@ module Aws::EC2
     #   * `status` - The state of the volume (`creating` \| `available` \|
     #     `in-use` \| `deleting` \| `deleted` \| `error`).
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1482,7 +1646,9 @@ module Aws::EC2
           name: "attachment.instance-id",
           values: [@id]
         }])
-        resp = @client.describe_volumes(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_volumes(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.volumes.each do |v|
@@ -1527,30 +1693,29 @@ module Aws::EC2
     # @option options [Array<Types::Filter>] :filters
     #   One or more filters. Filter names and values are case-sensitive.
     #
-    #   * `allocation-id` - \[EC2-VPC\] The allocation ID for the address.
+    #   * `allocation-id` - The allocation ID for the address.
     #
-    #   * `association-id` - \[EC2-VPC\] The association ID for the address.
-    #
-    #   * `domain` - Indicates whether the address is for use in EC2-Classic
-    #     (`standard`) or in a VPC (`vpc`).
+    #   * `association-id` - The association ID for the address.
     #
     #   * `instance-id` - The ID of the instance the address is associated
     #     with, if any.
     #
     #   * `network-border-group` - A unique set of Availability Zones, Local
-    #     Zones, or Wavelength Zones from where AWS advertises IP addresses.
+    #     Zones, or Wavelength Zones from where Amazon Web Services advertises
+    #     IP addresses.
     #
-    #   * `network-interface-id` - \[EC2-VPC\] The ID of the network interface
-    #     that the address is associated with, if any.
+    #   * `network-interface-id` - The ID of the network interface that the
+    #     address is associated with, if any.
     #
-    #   * `network-interface-owner-id` - The AWS account ID of the owner.
+    #   * `network-interface-owner-id` - The Amazon Web Services account ID of
+    #     the owner.
     #
-    #   * `private-ip-address` - \[EC2-VPC\] The private IP address associated
-    #     with the Elastic IP address.
+    #   * `private-ip-address` - The private IP address associated with the
+    #     Elastic IP address.
     #
     #   * `public-ip` - The Elastic IP address, or the carrier IP address.
     #
-    #   * `tag`\:&lt;key&gt; - The key/value combination of a tag assigned to
+    #   * `tag`:&lt;key&gt; - The key/value combination of a tag assigned to
     #     the resource. Use the tag key in the filter name and the tag value
     #     as the filter value. For example, to find all resources that have a
     #     tag with the key `Owner` and the value `TeamA`, specify `tag:Owner`
@@ -1564,7 +1729,7 @@ module Aws::EC2
     #
     #   Default: Describes all your Elastic IP addresses.
     # @option options [Array<String>] :allocation_ids
-    #   \[EC2-VPC\] Information about the allocation IDs.
+    #   Information about the allocation IDs.
     # @option options [Boolean] :dry_run
     #   Checks whether you have the required permissions for the action,
     #   without actually making the request, and provides an error response.
@@ -1578,7 +1743,9 @@ module Aws::EC2
           name: "instance-id",
           values: [@id]
         }])
-        resp = @client.describe_addresses(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_addresses(options)
+        end
         resp.data.addresses.each do |a|
           batch << VpcAddress.new(
             allocation_id: a.allocation_id,
@@ -1671,7 +1838,9 @@ module Aws::EC2
           batch.each do |item|
             params[:resources] << item.id
           end
-          batch[0].client.create_tags(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.create_tags(params)
+          end
         end
         nil
       end
@@ -1701,8 +1870,10 @@ module Aws::EC2
       #   if its value is an empty string.
       #
       #   If you omit this parameter, we delete all user-defined tags for the
-      #   specified resources. We do not delete AWS-generated tags (tags that
-      #   have the `aws:` prefix).
+      #   specified resources. We do not delete Amazon Web Services-generated
+      #   tags (tags that have the `aws:` prefix).
+      #
+      #   Constraints: Up to 1000 tags.
       # @return [void]
       def batch_delete_tags!(options = {})
         batch_enum.each do |batch|
@@ -1711,7 +1882,9 @@ module Aws::EC2
           batch.each do |item|
             params[:resources] << item.id
           end
-          batch[0].client.delete_tags(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.delete_tags(params)
+          end
         end
         nil
       end
@@ -1735,7 +1908,9 @@ module Aws::EC2
           batch.each do |item|
             params[:instance_ids] << item.id
           end
-          batch[0].client.monitor_instances(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.monitor_instances(params)
+          end
         end
         nil
       end
@@ -1759,7 +1934,9 @@ module Aws::EC2
           batch.each do |item|
             params[:instance_ids] << item.id
           end
-          batch[0].client.reboot_instances(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.reboot_instances(params)
+          end
         end
         nil
       end
@@ -1786,7 +1963,9 @@ module Aws::EC2
           batch.each do |item|
             params[:instance_ids] << item.id
           end
-          batch[0].client.start_instances(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.start_instances(params)
+          end
         end
         nil
       end
@@ -1830,7 +2009,9 @@ module Aws::EC2
           batch.each do |item|
             params[:instance_ids] << item.id
           end
-          batch[0].client.stop_instances(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.stop_instances(params)
+          end
         end
         nil
       end
@@ -1854,7 +2035,9 @@ module Aws::EC2
           batch.each do |item|
             params[:instance_ids] << item.id
           end
-          batch[0].client.terminate_instances(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.terminate_instances(params)
+          end
         end
         nil
       end
@@ -1878,7 +2061,9 @@ module Aws::EC2
           batch.each do |item|
             params[:instance_ids] << item.id
           end
-          batch[0].client.unmonitor_instances(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.unmonitor_instances(params)
+          end
         end
         nil
       end

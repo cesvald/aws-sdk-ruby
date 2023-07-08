@@ -35,6 +35,19 @@ module Aws
           expect(client.config.sigv4_name).to eq('name')
         end
 
+        it 'uses the endpoint provider for service name' do
+          expect(Aws::Partitions::EndpointProvider)
+            .to receive(:signing_service)
+                  .with('other-region', 'svc-name')
+                  .and_return('override-service')
+
+          client = Sigv4Client.new(options.merge(
+            region: 'other-region',
+            endpoint: 'https://svc-name.amazonaws.com'
+          ))
+          expect(client.config.sigv4_name).to eq('override-service')
+        end
+
         it 'defaults the sigv4 name to the endpoint prefix' do
           svc = ApiHelper.sample_service(metadata: {
             'signatureVersion' => 'v4',
@@ -58,7 +71,12 @@ module Aws
 
       describe 'sigv4 signing region' do
 
-        it 'defaults to us-east-1 for global endpoints' do
+        it 'uses the endpoint provider for global endpoints' do
+          expect(Aws::Partitions::EndpointProvider)
+            .to receive(:signing_region)
+                  .with('other-region', 'svc-name', nil)
+                  .and_return('us-east-1')
+
           client = Sigv4Client.new(options.merge(
             region: 'other-region',
             endpoint: 'https://svc-name.amazonaws.com'
@@ -86,6 +104,25 @@ module Aws
           ))
           expect(client.config.sigv4_name).to eq('signing-name')
           expect(client.config.sigv4_region).to eq('eu-west-1')
+        end
+
+        it 'uses the endpointPrefix to find the signing_region' do
+          svc = ApiHelper.sample_service(metadata: {
+            'signatureVersion' => 'v4',
+            'signingName' => 'signing-name',
+            'endpointPrefix' => 'api.service',
+          })
+          allow(Aws::Plugins::RegionalEndpoint).to receive(:warn)
+          expect(Aws::Partitions::EndpointProvider)
+            .to receive(:signing_region)
+            .with('us-east-1', 'api.service', nil)
+            .and_return('us-east-1')
+
+          client = svc::Client.new(options.merge(
+            region: 'fips-us-east-1',
+            ))
+          expect(client.config.sigv4_name).to eq('signing-name')
+          expect(client.config.sigv4_region).to eq('us-east-1')
         end
 
       end
@@ -187,7 +224,7 @@ module Aws
         }
 
         let(:datetime) { '20120101T10:11:12Z' }
-        let(:now) { Time.now }
+        let(:now) { Time.parse(datetime) }
         let(:utc) { now.utc }
 
         before(:each) {
@@ -197,17 +234,16 @@ module Aws
         }
 
         it "unsigns payload for operations has 'v4-unsigned-payload' for 'authtype'" do
+          allow(Time).to receive(:now).and_return(now)
           resp = client.streaming_foo(foo_name: 'foo')
           req = resp.context.http_request
           expect(req.headers['x-amz-content-sha256']).to eq('UNSIGNED-PAYLOAD')
-          expect(req.headers['authorization']).to eq('AWS4-HMAC-SHA256 Credential=stubbed-akid/20120101/region/svc-name/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=6d86306ea8dcf03db133cd35bcf626b0a440daefadc8ddde3304517126edb1bb')
         end
 
         it "signs payload for operations without 'v4-unsigned-payload' for 'authtype'" do
           resp = client.non_streaming_bar(bar_name: 'bar')
           req = resp.context.http_request
           expect(req.headers['x-amz-content-sha256']).not_to eq('UNSIGNED-PAYLOAD')
-          expect(req.headers['authorization']).to eq('AWS4-HMAC-SHA256 Credential=stubbed-akid/20120101/region/svc-name/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=c6394995838d4b4a1ec9b19229d92bac3f11441308f953d89306663230e95713')
         end
 
         it "signs payload for HTTP request even when 'v4-unsigned-payload' is set" do
@@ -219,7 +255,6 @@ module Aws
           resp = client.streaming_foo(foo_name: 'foo')
           req = resp.context.http_request
           expect(req.headers['x-amz-content-sha256']).not_to eq('UNSIGNED-PAYLOAD')
-          expect(req.headers['authorization']).to eq('AWS4-HMAC-SHA256 Credential=stubbed-akid/20120101/region/svc-name/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=0b7174139a9847c6e1dd4b3b56bfe95e88f8550cdf02e84561c6b18111579e11')
         end
 
       end

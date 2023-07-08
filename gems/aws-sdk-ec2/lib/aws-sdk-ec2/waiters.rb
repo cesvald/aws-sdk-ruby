@@ -83,12 +83,15 @@ module Aws::EC2
   # | instance_status_ok              | {Client#describe_instance_status}         | 15       | 40            |
   # | instance_stopped                | {Client#describe_instances}               | 15       | 40            |
   # | instance_terminated             | {Client#describe_instances}               | 15       | 40            |
+  # | internet_gateway_exists         | {Client#describe_internet_gateways}       | 5        | 6             |
   # | key_pair_exists                 | {Client#describe_key_pairs}               | 5        | 6             |
   # | nat_gateway_available           | {Client#describe_nat_gateways}            | 15       | 40            |
+  # | nat_gateway_deleted             | {Client#describe_nat_gateways}            | 15       | 40            |
   # | network_interface_available     | {Client#describe_network_interfaces}      | 20       | 10            |
   # | password_data_available         | {Client#get_password_data}                | 15       | 40            |
   # | security_group_exists           | {Client#describe_security_groups}         | 5        | 6             |
   # | snapshot_completed              | {Client#describe_snapshots}               | 15       | 40            |
+  # | snapshot_imported               | {Client#describe_import_snapshot_tasks}   | 15       | 40            |
   # | spot_instance_request_fulfilled | {Client#describe_spot_instance_requests}  | 15       | 40            |
   # | subnet_available                | {Client#describe_subnets}                 | 15       | 40            |
   # | system_status_ok                | {Client#describe_instance_status}         | 15       | 40            |
@@ -726,6 +729,49 @@ module Aws::EC2
 
     end
 
+    class InternetGatewayExists
+
+      # @param [Hash] options
+      # @option options [required, Client] :client
+      # @option options [Integer] :max_attempts (6)
+      # @option options [Integer] :delay (5)
+      # @option options [Proc] :before_attempt
+      # @option options [Proc] :before_wait
+      def initialize(options)
+        @client = options.fetch(:client)
+        @waiter = Aws::Waiters::Waiter.new({
+          max_attempts: 6,
+          delay: 5,
+          poller: Aws::Waiters::Poller.new(
+            operation_name: :describe_internet_gateways,
+            acceptors: [
+              {
+                "expected" => true,
+                "matcher" => "path",
+                "state" => "success",
+                "argument" => "length(internet_gateways[].internet_gateway_id) > `0`"
+              },
+              {
+                "expected" => "InvalidInternetGateway.NotFound",
+                "matcher" => "error",
+                "state" => "retry"
+              }
+            ]
+          )
+        }.merge(options))
+      end
+
+      # @option (see Client#describe_internet_gateways)
+      # @return (see Client#describe_internet_gateways)
+      def wait(params = {})
+        @waiter.wait(client: @client, params: params)
+      end
+
+      # @api private
+      attr_reader :waiter
+
+    end
+
     class KeyPairExists
 
       # @param [Hash] options
@@ -811,6 +857,49 @@ module Aws::EC2
               },
               {
                 "state" => "retry",
+                "matcher" => "error",
+                "expected" => "NatGatewayNotFound"
+              }
+            ]
+          )
+        }.merge(options))
+      end
+
+      # @option (see Client#describe_nat_gateways)
+      # @return (see Client#describe_nat_gateways)
+      def wait(params = {})
+        @waiter.wait(client: @client, params: params)
+      end
+
+      # @api private
+      attr_reader :waiter
+
+    end
+
+    class NatGatewayDeleted
+
+      # @param [Hash] options
+      # @option options [required, Client] :client
+      # @option options [Integer] :max_attempts (40)
+      # @option options [Integer] :delay (15)
+      # @option options [Proc] :before_attempt
+      # @option options [Proc] :before_wait
+      def initialize(options)
+        @client = options.fetch(:client)
+        @waiter = Aws::Waiters::Waiter.new({
+          max_attempts: 40,
+          delay: 15,
+          poller: Aws::Waiters::Poller.new(
+            operation_name: :describe_nat_gateways,
+            acceptors: [
+              {
+                "state" => "success",
+                "matcher" => "pathAll",
+                "argument" => "nat_gateways[].state",
+                "expected" => "deleted"
+              },
+              {
+                "state" => "success",
                 "matcher" => "error",
                 "expected" => "NatGatewayNotFound"
               }
@@ -967,18 +1056,70 @@ module Aws::EC2
           delay: 15,
           poller: Aws::Waiters::Poller.new(
             operation_name: :describe_snapshots,
-            acceptors: [{
-              "expected" => "completed",
-              "matcher" => "pathAll",
-              "state" => "success",
-              "argument" => "snapshots[].state"
-            }]
+            acceptors: [
+              {
+                "expected" => "completed",
+                "matcher" => "pathAll",
+                "state" => "success",
+                "argument" => "snapshots[].state"
+              },
+              {
+                "expected" => "error",
+                "matcher" => "pathAny",
+                "state" => "failure",
+                "argument" => "snapshots[].state"
+              }
+            ]
           )
         }.merge(options))
       end
 
       # @option (see Client#describe_snapshots)
       # @return (see Client#describe_snapshots)
+      def wait(params = {})
+        @waiter.wait(client: @client, params: params)
+      end
+
+      # @api private
+      attr_reader :waiter
+
+    end
+
+    class SnapshotImported
+
+      # @param [Hash] options
+      # @option options [required, Client] :client
+      # @option options [Integer] :max_attempts (40)
+      # @option options [Integer] :delay (15)
+      # @option options [Proc] :before_attempt
+      # @option options [Proc] :before_wait
+      def initialize(options)
+        @client = options.fetch(:client)
+        @waiter = Aws::Waiters::Waiter.new({
+          max_attempts: 40,
+          delay: 15,
+          poller: Aws::Waiters::Poller.new(
+            operation_name: :describe_import_snapshot_tasks,
+            acceptors: [
+              {
+                "expected" => "completed",
+                "matcher" => "pathAll",
+                "state" => "success",
+                "argument" => "import_snapshot_tasks[].snapshot_task_detail.status"
+              },
+              {
+                "expected" => "error",
+                "matcher" => "pathAny",
+                "state" => "failure",
+                "argument" => "import_snapshot_tasks[].snapshot_task_detail.status"
+              }
+            ]
+          )
+        }.merge(options))
+      end
+
+      # @option (see Client#describe_import_snapshot_tasks)
+      # @return (see Client#describe_import_snapshot_tasks)
       def wait(params = {})
         @waiter.wait(client: @client, params: params)
       end

@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:appsync)
@@ -73,8 +77,13 @@ module Aws::AppSync
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::AppSync::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::AppSync
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::AppSync
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::AppSync
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::AppSync
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::AppSync
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::AppSync::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::AppSync::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::AppSync
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::AppSync
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -327,30 +384,187 @@ module Aws::AppSync
 
     # @!group API Operations
 
+    # Maps an endpoint to your custom domain.
+    #
+    # @option params [required, String] :domain_name
+    #   The domain name.
+    #
+    # @option params [required, String] :api_id
+    #   The API ID. Private APIs can not be associated with custom domains.
+    #
+    # @return [Types::AssociateApiResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::AssociateApiResponse#api_association #api_association} => Types::ApiAssociation
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.associate_api({
+    #     domain_name: "DomainName", # required
+    #     api_id: "String", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.api_association.domain_name #=> String
+    #   resp.api_association.api_id #=> String
+    #   resp.api_association.association_status #=> String, one of "PROCESSING", "FAILED", "SUCCESS"
+    #   resp.api_association.deployment_detail #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/AssociateApi AWS API Documentation
+    #
+    # @overload associate_api(params = {})
+    # @param [Hash] params ({})
+    def associate_api(params = {}, options = {})
+      req = build_request(:associate_api, params)
+      req.send_request(options)
+    end
+
+    # Creates an association between a Merged API and source API using the
+    # source API's identifier.
+    #
+    # @option params [required, String] :source_api_identifier
+    #   The identifier of the AppSync Source API. This is generated by the
+    #   AppSync service. In most cases, source APIs (especially in your
+    #   account) only require the API ID value or ARN of the source API.
+    #   However, source APIs from other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the source API.
+    #
+    # @option params [required, String] :merged_api_identifier
+    #   The identifier of the AppSync Merged API. This is generated by the
+    #   AppSync service. In most cases, Merged APIs (especially in your
+    #   account) only require the API ID value or ARN of the merged API.
+    #   However, Merged APIs in other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the merged API.
+    #
+    # @option params [String] :description
+    #   The description field.
+    #
+    # @option params [Types::SourceApiAssociationConfig] :source_api_association_config
+    #   The `SourceApiAssociationConfig` object data.
+    #
+    # @return [Types::AssociateMergedGraphqlApiResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::AssociateMergedGraphqlApiResponse#source_api_association #source_api_association} => Types::SourceApiAssociation
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.associate_merged_graphql_api({
+    #     source_api_identifier: "String", # required
+    #     merged_api_identifier: "String", # required
+    #     description: "String",
+    #     source_api_association_config: {
+    #       merge_type: "MANUAL_MERGE", # accepts MANUAL_MERGE, AUTO_MERGE
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.source_api_association.association_id #=> String
+    #   resp.source_api_association.association_arn #=> String
+    #   resp.source_api_association.source_api_id #=> String
+    #   resp.source_api_association.source_api_arn #=> String
+    #   resp.source_api_association.merged_api_arn #=> String
+    #   resp.source_api_association.merged_api_id #=> String
+    #   resp.source_api_association.description #=> String
+    #   resp.source_api_association.source_api_association_config.merge_type #=> String, one of "MANUAL_MERGE", "AUTO_MERGE"
+    #   resp.source_api_association.source_api_association_status #=> String, one of "MERGE_SCHEDULED", "MERGE_FAILED", "MERGE_SUCCESS", "MERGE_IN_PROGRESS", "AUTO_MERGE_SCHEDULE_FAILED", "DELETION_SCHEDULED", "DELETION_IN_PROGRESS", "DELETION_FAILED"
+    #   resp.source_api_association.source_api_association_status_detail #=> String
+    #   resp.source_api_association.last_successful_merge_date #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/AssociateMergedGraphqlApi AWS API Documentation
+    #
+    # @overload associate_merged_graphql_api(params = {})
+    # @param [Hash] params ({})
+    def associate_merged_graphql_api(params = {}, options = {})
+      req = build_request(:associate_merged_graphql_api, params)
+      req.send_request(options)
+    end
+
+    # Creates an association between a Merged API and source API using the
+    # Merged API's identifier.
+    #
+    # @option params [required, String] :merged_api_identifier
+    #   The identifier of the AppSync Merged API. This is generated by the
+    #   AppSync service. In most cases, Merged APIs (especially in your
+    #   account) only require the API ID value or ARN of the merged API.
+    #   However, Merged APIs in other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the merged API.
+    #
+    # @option params [required, String] :source_api_identifier
+    #   The identifier of the AppSync Source API. This is generated by the
+    #   AppSync service. In most cases, source APIs (especially in your
+    #   account) only require the API ID value or ARN of the source API.
+    #   However, source APIs from other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the source API.
+    #
+    # @option params [String] :description
+    #   The description field.
+    #
+    # @option params [Types::SourceApiAssociationConfig] :source_api_association_config
+    #   The `SourceApiAssociationConfig` object data.
+    #
+    # @return [Types::AssociateSourceGraphqlApiResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::AssociateSourceGraphqlApiResponse#source_api_association #source_api_association} => Types::SourceApiAssociation
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.associate_source_graphql_api({
+    #     merged_api_identifier: "String", # required
+    #     source_api_identifier: "String", # required
+    #     description: "String",
+    #     source_api_association_config: {
+    #       merge_type: "MANUAL_MERGE", # accepts MANUAL_MERGE, AUTO_MERGE
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.source_api_association.association_id #=> String
+    #   resp.source_api_association.association_arn #=> String
+    #   resp.source_api_association.source_api_id #=> String
+    #   resp.source_api_association.source_api_arn #=> String
+    #   resp.source_api_association.merged_api_arn #=> String
+    #   resp.source_api_association.merged_api_id #=> String
+    #   resp.source_api_association.description #=> String
+    #   resp.source_api_association.source_api_association_config.merge_type #=> String, one of "MANUAL_MERGE", "AUTO_MERGE"
+    #   resp.source_api_association.source_api_association_status #=> String, one of "MERGE_SCHEDULED", "MERGE_FAILED", "MERGE_SUCCESS", "MERGE_IN_PROGRESS", "AUTO_MERGE_SCHEDULE_FAILED", "DELETION_SCHEDULED", "DELETION_IN_PROGRESS", "DELETION_FAILED"
+    #   resp.source_api_association.source_api_association_status_detail #=> String
+    #   resp.source_api_association.last_successful_merge_date #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/AssociateSourceGraphqlApi AWS API Documentation
+    #
+    # @overload associate_source_graphql_api(params = {})
+    # @param [Hash] params ({})
+    def associate_source_graphql_api(params = {}, options = {})
+      req = build_request(:associate_source_graphql_api, params)
+      req.send_request(options)
+    end
+
     # Creates a cache for the GraphQL API.
     #
     # @option params [required, String] :api_id
-    #   The GraphQL API Id.
+    #   The GraphQL API ID.
     #
     # @option params [required, Integer] :ttl
     #   TTL in seconds for cache entries.
     #
-    #   Valid values are between 1 and 3600 seconds.
+    #   Valid values are 1–3,600 seconds.
     #
     # @option params [Boolean] :transit_encryption_enabled
-    #   Transit encryption flag when connecting to cache. This setting cannot
-    #   be updated after creation.
+    #   Transit encryption flag when connecting to cache. You cannot update
+    #   this setting after creation.
     #
     # @option params [Boolean] :at_rest_encryption_enabled
-    #   At rest encryption flag for cache. This setting cannot be updated
+    #   At-rest encryption flag for cache. You cannot update this setting
     #   after creation.
     #
     # @option params [required, String] :api_caching_behavior
     #   Caching behavior.
     #
-    #   * **FULL\_REQUEST\_CACHING**\: All requests are fully cached.
+    #   * **FULL\_REQUEST\_CACHING**: All requests are fully cached.
     #
-    #   * **PER\_RESOLVER\_CACHING**\: Individual resolvers that you specify
+    #   * **PER\_RESOLVER\_CACHING**: Individual resolvers that you specify
     #     are cached.
     #
     # @option params [required, String] :type
@@ -379,19 +593,19 @@ module Aws::AppSync
     #   The following legacy instance types are available, but their use is
     #   discouraged:
     #
-    #   * **T2\_SMALL**\: A t2.small instance type.
+    #   * **T2\_SMALL**: A t2.small instance type.
     #
-    #   * **T2\_MEDIUM**\: A t2.medium instance type.
+    #   * **T2\_MEDIUM**: A t2.medium instance type.
     #
-    #   * **R4\_LARGE**\: A r4.large instance type.
+    #   * **R4\_LARGE**: A r4.large instance type.
     #
-    #   * **R4\_XLARGE**\: A r4.xlarge instance type.
+    #   * **R4\_XLARGE**: A r4.xlarge instance type.
     #
-    #   * **R4\_2XLARGE**\: A r4.2xlarge instance type.
+    #   * **R4\_2XLARGE**: A r4.2xlarge instance type.
     #
-    #   * **R4\_4XLARGE**\: A r4.4xlarge instance type.
+    #   * **R4\_4XLARGE**: A r4.4xlarge instance type.
     #
-    #   * **R4\_8XLARGE**\: A r4.8xlarge instance type.
+    #   * **R4\_8XLARGE**: A r4.8xlarge instance type.
     #
     # @return [Types::CreateApiCacheResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -426,8 +640,8 @@ module Aws::AppSync
       req.send_request(options)
     end
 
-    # Creates a unique key that you can distribute to clients who are
-    # executing your API.
+    # Creates a unique key that you can distribute to clients who invoke
+    # your API.
     #
     # @option params [required, String] :api_id
     #   The ID for your GraphQL API.
@@ -436,10 +650,10 @@ module Aws::AppSync
     #   A description of the purpose of the API key.
     #
     # @option params [Integer] :expires
-    #   The time from creation time after which the API key expires. The date
-    #   is represented as seconds since the epoch, rounded down to the nearest
-    #   hour. The default value for this parameter is 7 days from creation
-    #   time. For more information, see .
+    #   From the creation time, the time after which the API key expires. The
+    #   date is represented as seconds since the epoch, rounded down to the
+    #   nearest hour. The default value for this parameter is 7 days from
+    #   creation time. For more information, see .
     #
     # @return [Types::CreateApiKeyResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -484,23 +698,35 @@ module Aws::AppSync
     #   The type of the `DataSource`.
     #
     # @option params [String] :service_role_arn
-    #   The AWS IAM service role ARN for the data source. The system assumes
-    #   this role when accessing the data source.
+    #   The Identity and Access Management (IAM) service role Amazon Resource
+    #   Name (ARN) for the data source. The system assumes this role when
+    #   accessing the data source.
     #
     # @option params [Types::DynamodbDataSourceConfig] :dynamodb_config
     #   Amazon DynamoDB settings.
     #
     # @option params [Types::LambdaDataSourceConfig] :lambda_config
-    #   AWS Lambda settings.
+    #   Lambda settings.
     #
     # @option params [Types::ElasticsearchDataSourceConfig] :elasticsearch_config
-    #   Amazon Elasticsearch Service settings.
+    #   Amazon OpenSearch Service settings.
+    #
+    #   As of September 2021, Amazon Elasticsearch service is Amazon
+    #   OpenSearch Service. This configuration is deprecated. For new data
+    #   sources, use CreateDataSourceRequest$openSearchServiceConfig to create
+    #   an OpenSearch data source.
+    #
+    # @option params [Types::OpenSearchServiceDataSourceConfig] :open_search_service_config
+    #   Amazon OpenSearch Service settings.
     #
     # @option params [Types::HttpDataSourceConfig] :http_config
     #   HTTP endpoint settings.
     #
     # @option params [Types::RelationalDatabaseDataSourceConfig] :relational_database_config
     #   Relational database settings.
+    #
+    # @option params [Types::EventBridgeDataSourceConfig] :event_bridge_config
+    #   Amazon EventBridge settings.
     #
     # @return [Types::CreateDataSourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -512,7 +738,7 @@ module Aws::AppSync
     #     api_id: "String", # required
     #     name: "ResourceName", # required
     #     description: "String",
-    #     type: "AWS_LAMBDA", # required, accepts AWS_LAMBDA, AMAZON_DYNAMODB, AMAZON_ELASTICSEARCH, NONE, HTTP, RELATIONAL_DATABASE
+    #     type: "AWS_LAMBDA", # required, accepts AWS_LAMBDA, AMAZON_DYNAMODB, AMAZON_ELASTICSEARCH, NONE, HTTP, RELATIONAL_DATABASE, AMAZON_OPENSEARCH_SERVICE, AMAZON_EVENTBRIDGE
     #     service_role_arn: "String",
     #     dynamodb_config: {
     #       table_name: "String", # required
@@ -529,6 +755,10 @@ module Aws::AppSync
     #       lambda_function_arn: "String", # required
     #     },
     #     elasticsearch_config: {
+    #       endpoint: "String", # required
+    #       aws_region: "String", # required
+    #     },
+    #     open_search_service_config: {
     #       endpoint: "String", # required
     #       aws_region: "String", # required
     #     },
@@ -552,6 +782,9 @@ module Aws::AppSync
     #         aws_secret_store_arn: "String",
     #       },
     #     },
+    #     event_bridge_config: {
+    #       event_bus_arn: "String", # required
+    #     },
     #   })
     #
     # @example Response structure
@@ -559,7 +792,7 @@ module Aws::AppSync
     #   resp.data_source.data_source_arn #=> String
     #   resp.data_source.name #=> String
     #   resp.data_source.description #=> String
-    #   resp.data_source.type #=> String, one of "AWS_LAMBDA", "AMAZON_DYNAMODB", "AMAZON_ELASTICSEARCH", "NONE", "HTTP", "RELATIONAL_DATABASE"
+    #   resp.data_source.type #=> String, one of "AWS_LAMBDA", "AMAZON_DYNAMODB", "AMAZON_ELASTICSEARCH", "NONE", "HTTP", "RELATIONAL_DATABASE", "AMAZON_OPENSEARCH_SERVICE", "AMAZON_EVENTBRIDGE"
     #   resp.data_source.service_role_arn #=> String
     #   resp.data_source.dynamodb_config.table_name #=> String
     #   resp.data_source.dynamodb_config.aws_region #=> String
@@ -571,6 +804,8 @@ module Aws::AppSync
     #   resp.data_source.lambda_config.lambda_function_arn #=> String
     #   resp.data_source.elasticsearch_config.endpoint #=> String
     #   resp.data_source.elasticsearch_config.aws_region #=> String
+    #   resp.data_source.open_search_service_config.endpoint #=> String
+    #   resp.data_source.open_search_service_config.aws_region #=> String
     #   resp.data_source.http_config.endpoint #=> String
     #   resp.data_source.http_config.authorization_config.authorization_type #=> String, one of "AWS_IAM"
     #   resp.data_source.http_config.authorization_config.aws_iam_config.signing_region #=> String
@@ -581,6 +816,7 @@ module Aws::AppSync
     #   resp.data_source.relational_database_config.rds_http_endpoint_config.database_name #=> String
     #   resp.data_source.relational_database_config.rds_http_endpoint_config.schema #=> String
     #   resp.data_source.relational_database_config.rds_http_endpoint_config.aws_secret_store_arn #=> String
+    #   resp.data_source.event_bridge_config.event_bus_arn #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateDataSource AWS API Documentation
     #
@@ -591,9 +827,51 @@ module Aws::AppSync
       req.send_request(options)
     end
 
+    # Creates a custom `DomainName` object.
+    #
+    # @option params [required, String] :domain_name
+    #   The domain name.
+    #
+    # @option params [required, String] :certificate_arn
+    #   The Amazon Resource Name (ARN) of the certificate. This can be an
+    #   Certificate Manager (ACM) certificate or an Identity and Access
+    #   Management (IAM) server certificate.
+    #
+    # @option params [String] :description
+    #   A description of the `DomainName`.
+    #
+    # @return [Types::CreateDomainNameResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateDomainNameResponse#domain_name_config #domain_name_config} => Types::DomainNameConfig
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_domain_name({
+    #     domain_name: "DomainName", # required
+    #     certificate_arn: "CertificateArn", # required
+    #     description: "Description",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.domain_name_config.domain_name #=> String
+    #   resp.domain_name_config.description #=> String
+    #   resp.domain_name_config.certificate_arn #=> String
+    #   resp.domain_name_config.appsync_domain_name #=> String
+    #   resp.domain_name_config.hosted_zone_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateDomainName AWS API Documentation
+    #
+    # @overload create_domain_name(params = {})
+    # @param [Hash] params ({})
+    def create_domain_name(params = {}, options = {})
+      req = build_request(:create_domain_name, params)
+      req.send_request(options)
+    end
+
     # Creates a `Function` object.
     #
-    # A function is a reusable entity. Multiple functions can be used to
+    # A function is a reusable entity. You can use multiple functions to
     # compose the resolver logic.
     #
     # @option params [required, String] :api_id
@@ -615,15 +893,30 @@ module Aws::AppSync
     # @option params [String] :response_mapping_template
     #   The `Function` response mapping template.
     #
-    # @option params [required, String] :function_version
-    #   The `version` of the request mapping template. Currently the supported
-    #   value is 2018-05-29.
+    # @option params [String] :function_version
+    #   The `version` of the request mapping template. Currently, the
+    #   supported value is 2018-05-29. Note that when using VTL and mapping
+    #   templates, the `functionVersion` is required.
     #
     # @option params [Types::SyncConfig] :sync_config
     #   Describes a Sync configuration for a resolver.
     #
-    #   Contains information on which Conflict Detection as well as Resolution
-    #   strategy should be performed when the resolver is invoked.
+    #   Specifies which Conflict Detection strategy and Resolution strategy to
+    #   use when the resolver is invoked.
+    #
+    # @option params [Integer] :max_batch_size
+    #   The maximum batching size for a resolver.
+    #
+    # @option params [Types::AppSyncRuntime] :runtime
+    #   Describes a runtime used by an Amazon Web Services AppSync pipeline
+    #   resolver or Amazon Web Services AppSync function. Specifies the name
+    #   and version of the runtime to use. Note that if a runtime is
+    #   specified, code must also be specified.
+    #
+    # @option params [String] :code
+    #   The `function` code that contains the request and response functions.
+    #   When code is used, the `runtime` is required. The `runtime` value must
+    #   be `APPSYNC_JS`.
     #
     # @return [Types::CreateFunctionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -638,7 +931,7 @@ module Aws::AppSync
     #     data_source_name: "ResourceName", # required
     #     request_mapping_template: "MappingTemplate",
     #     response_mapping_template: "MappingTemplate",
-    #     function_version: "String", # required
+    #     function_version: "String",
     #     sync_config: {
     #       conflict_handler: "OPTIMISTIC_CONCURRENCY", # accepts OPTIMISTIC_CONCURRENCY, LAMBDA, AUTOMERGE, NONE
     #       conflict_detection: "VERSION", # accepts VERSION, NONE
@@ -646,6 +939,12 @@ module Aws::AppSync
     #         lambda_conflict_handler_arn: "String",
     #       },
     #     },
+    #     max_batch_size: 1,
+    #     runtime: {
+    #       name: "APPSYNC_JS", # required, accepts APPSYNC_JS
+    #       runtime_version: "String", # required
+    #     },
+    #     code: "Code",
     #   })
     #
     # @example Response structure
@@ -661,6 +960,10 @@ module Aws::AppSync
     #   resp.function_configuration.sync_config.conflict_handler #=> String, one of "OPTIMISTIC_CONCURRENCY", "LAMBDA", "AUTOMERGE", "NONE"
     #   resp.function_configuration.sync_config.conflict_detection #=> String, one of "VERSION", "NONE"
     #   resp.function_configuration.sync_config.lambda_conflict_handler_config.lambda_conflict_handler_arn #=> String
+    #   resp.function_configuration.max_batch_size #=> Integer
+    #   resp.function_configuration.runtime.name #=> String, one of "APPSYNC_JS"
+    #   resp.function_configuration.runtime.runtime_version #=> String
+    #   resp.function_configuration.code #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateFunction AWS API Documentation
     #
@@ -680,14 +983,14 @@ module Aws::AppSync
     #   The Amazon CloudWatch Logs configuration.
     #
     # @option params [required, String] :authentication_type
-    #   The authentication type: API key, AWS IAM, OIDC, or Amazon Cognito
-    #   user pools.
+    #   The authentication type: API key, Identity and Access Management
+    #   (IAM), OpenID Connect (OIDC), Amazon Cognito user pools, or Lambda.
     #
     # @option params [Types::UserPoolConfig] :user_pool_config
     #   The Amazon Cognito user pool configuration.
     #
     # @option params [Types::OpenIDConnectConfig] :open_id_connect_config
-    #   The OpenID Connect configuration.
+    #   The OIDC configuration.
     #
     # @option params [Hash<String,String>] :tags
     #   A `TagMap` object.
@@ -697,8 +1000,33 @@ module Aws::AppSync
     #   API.
     #
     # @option params [Boolean] :xray_enabled
-    #   A flag indicating whether to enable X-Ray tracing for the
-    #   `GraphqlApi`.
+    #   A flag indicating whether to use X-Ray tracing for the `GraphqlApi`.
+    #
+    # @option params [Types::LambdaAuthorizerConfig] :lambda_authorizer_config
+    #   Configuration for Lambda function authorization.
+    #
+    # @option params [String] :visibility
+    #   Sets the value of the GraphQL API to public (`GLOBAL`) or private
+    #   (`PRIVATE`). If no value is provided, the visibility will be set to
+    #   `GLOBAL` by default. This value cannot be changed once the API has
+    #   been created.
+    #
+    # @option params [String] :api_type
+    #   The value that indicates whether the GraphQL API is a standard API
+    #   (`GRAPHQL`) or merged API (`MERGED`).
+    #
+    # @option params [String] :merged_api_execution_role_arn
+    #   The Identity and Access Management service role ARN for a merged API.
+    #   The AppSync service assumes this role on behalf of the Merged API to
+    #   validate access to source APIs at runtime and to prompt the
+    #   `AUTO_MERGE` to update the merged API endpoint with the source API
+    #   changes automatically.
+    #
+    # @option params [String] :owner_contact
+    #   The owner contact information for an API resource.
+    #
+    #   This field accepts any string input with a length of 0 - 256
+    #   characters.
     #
     # @return [Types::CreateGraphqlApiResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -713,7 +1041,7 @@ module Aws::AppSync
     #       cloud_watch_logs_role_arn: "String", # required
     #       exclude_verbose_content: false,
     #     },
-    #     authentication_type: "API_KEY", # required, accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
+    #     authentication_type: "API_KEY", # required, accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT, AWS_LAMBDA
     #     user_pool_config: {
     #       user_pool_id: "String", # required
     #       aws_region: "String", # required
@@ -731,7 +1059,7 @@ module Aws::AppSync
     #     },
     #     additional_authentication_providers: [
     #       {
-    #         authentication_type: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
+    #         authentication_type: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT, AWS_LAMBDA
     #         open_id_connect_config: {
     #           issuer: "String", # required
     #           client_id: "String",
@@ -743,16 +1071,30 @@ module Aws::AppSync
     #           aws_region: "String", # required
     #           app_id_client_regex: "String",
     #         },
+    #         lambda_authorizer_config: {
+    #           authorizer_result_ttl_in_seconds: 1,
+    #           authorizer_uri: "String", # required
+    #           identity_validation_expression: "String",
+    #         },
     #       },
     #     ],
     #     xray_enabled: false,
+    #     lambda_authorizer_config: {
+    #       authorizer_result_ttl_in_seconds: 1,
+    #       authorizer_uri: "String", # required
+    #       identity_validation_expression: "String",
+    #     },
+    #     visibility: "GLOBAL", # accepts GLOBAL, PRIVATE
+    #     api_type: "GRAPHQL", # accepts GRAPHQL, MERGED
+    #     merged_api_execution_role_arn: "String",
+    #     owner_contact: "String",
     #   })
     #
     # @example Response structure
     #
     #   resp.graphql_api.name #=> String
     #   resp.graphql_api.api_id #=> String
-    #   resp.graphql_api.authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT"
+    #   resp.graphql_api.authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT", "AWS_LAMBDA"
     #   resp.graphql_api.log_config.field_log_level #=> String, one of "NONE", "ERROR", "ALL"
     #   resp.graphql_api.log_config.cloud_watch_logs_role_arn #=> String
     #   resp.graphql_api.log_config.exclude_verbose_content #=> Boolean
@@ -770,7 +1112,7 @@ module Aws::AppSync
     #   resp.graphql_api.tags #=> Hash
     #   resp.graphql_api.tags["TagKey"] #=> String
     #   resp.graphql_api.additional_authentication_providers #=> Array
-    #   resp.graphql_api.additional_authentication_providers[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT"
+    #   resp.graphql_api.additional_authentication_providers[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT", "AWS_LAMBDA"
     #   resp.graphql_api.additional_authentication_providers[0].open_id_connect_config.issuer #=> String
     #   resp.graphql_api.additional_authentication_providers[0].open_id_connect_config.client_id #=> String
     #   resp.graphql_api.additional_authentication_providers[0].open_id_connect_config.iat_ttl #=> Integer
@@ -778,8 +1120,21 @@ module Aws::AppSync
     #   resp.graphql_api.additional_authentication_providers[0].user_pool_config.user_pool_id #=> String
     #   resp.graphql_api.additional_authentication_providers[0].user_pool_config.aws_region #=> String
     #   resp.graphql_api.additional_authentication_providers[0].user_pool_config.app_id_client_regex #=> String
+    #   resp.graphql_api.additional_authentication_providers[0].lambda_authorizer_config.authorizer_result_ttl_in_seconds #=> Integer
+    #   resp.graphql_api.additional_authentication_providers[0].lambda_authorizer_config.authorizer_uri #=> String
+    #   resp.graphql_api.additional_authentication_providers[0].lambda_authorizer_config.identity_validation_expression #=> String
     #   resp.graphql_api.xray_enabled #=> Boolean
     #   resp.graphql_api.waf_web_acl_arn #=> String
+    #   resp.graphql_api.lambda_authorizer_config.authorizer_result_ttl_in_seconds #=> Integer
+    #   resp.graphql_api.lambda_authorizer_config.authorizer_uri #=> String
+    #   resp.graphql_api.lambda_authorizer_config.identity_validation_expression #=> String
+    #   resp.graphql_api.dns #=> Hash
+    #   resp.graphql_api.dns["String"] #=> String
+    #   resp.graphql_api.visibility #=> String, one of "GLOBAL", "PRIVATE"
+    #   resp.graphql_api.api_type #=> String, one of "GRAPHQL", "MERGED"
+    #   resp.graphql_api.merged_api_execution_role_arn #=> String
+    #   resp.graphql_api.owner #=> String
+    #   resp.graphql_api.owner_contact #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateGraphqlApi AWS API Documentation
     #
@@ -793,7 +1148,8 @@ module Aws::AppSync
     # Creates a `Resolver` object.
     #
     # A resolver converts incoming requests into a format that a data source
-    # can understand and converts the data source's responses into GraphQL.
+    # can understand, and converts the data source's responses into
+    # GraphQL.
     #
     # @option params [required, String] :api_id
     #   The ID for the GraphQL API for which the resolver is being created.
@@ -808,39 +1164,53 @@ module Aws::AppSync
     #   The name of the data source for which the resolver is being created.
     #
     # @option params [String] :request_mapping_template
-    #   The mapping template to be used for requests.
+    #   The mapping template to use for requests.
     #
     #   A resolver uses a request mapping template to convert a GraphQL
     #   expression into a format that a data source can understand. Mapping
     #   templates are written in Apache Velocity Template Language (VTL).
     #
-    #   VTL request mapping templates are optional when using a Lambda data
+    #   VTL request mapping templates are optional when using an Lambda data
     #   source. For all other data sources, VTL request and response mapping
     #   templates are required.
     #
     # @option params [String] :response_mapping_template
-    #   The mapping template to be used for responses from the data source.
+    #   The mapping template to use for responses from the data source.
     #
     # @option params [String] :kind
     #   The resolver type.
     #
-    #   * **UNIT**\: A UNIT resolver type. A UNIT resolver is the default
-    #     resolver type. A UNIT resolver enables you to execute a GraphQL
-    #     query against a single data source.
+    #   * **UNIT**: A UNIT resolver type. A UNIT resolver is the default
+    #     resolver type. You can use a UNIT resolver to run a GraphQL query
+    #     against a single data source.
     #
-    #   * **PIPELINE**\: A PIPELINE resolver type. A PIPELINE resolver enables
-    #     you to execute a series of `Function` in a serial manner. You can
-    #     use a pipeline resolver to execute a GraphQL query against multiple
-    #     data sources.
+    #   * **PIPELINE**: A PIPELINE resolver type. You can use a PIPELINE
+    #     resolver to invoke a series of `Function` objects in a serial
+    #     manner. You can use a pipeline resolver to run a GraphQL query
+    #     against multiple data sources.
     #
     # @option params [Types::PipelineConfig] :pipeline_config
     #   The `PipelineConfig`.
     #
     # @option params [Types::SyncConfig] :sync_config
-    #   The `SyncConfig` for a resolver attached to a versioned datasource.
+    #   The `SyncConfig` for a resolver attached to a versioned data source.
     #
     # @option params [Types::CachingConfig] :caching_config
     #   The caching configuration for the resolver.
+    #
+    # @option params [Integer] :max_batch_size
+    #   The maximum batching size for a resolver.
+    #
+    # @option params [Types::AppSyncRuntime] :runtime
+    #   Describes a runtime used by an Amazon Web Services AppSync pipeline
+    #   resolver or Amazon Web Services AppSync function. Specifies the name
+    #   and version of the runtime to use. Note that if a runtime is
+    #   specified, code must also be specified.
+    #
+    # @option params [String] :code
+    #   The `resolver` code that contains the request and response functions.
+    #   When code is used, the `runtime` is required. The `runtime` value must
+    #   be `APPSYNC_JS`.
     #
     # @return [Types::CreateResolverResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -867,9 +1237,15 @@ module Aws::AppSync
     #       },
     #     },
     #     caching_config: {
-    #       ttl: 1,
+    #       ttl: 1, # required
     #       caching_keys: ["String"],
     #     },
+    #     max_batch_size: 1,
+    #     runtime: {
+    #       name: "APPSYNC_JS", # required, accepts APPSYNC_JS
+    #       runtime_version: "String", # required
+    #     },
+    #     code: "Code",
     #   })
     #
     # @example Response structure
@@ -889,6 +1265,10 @@ module Aws::AppSync
     #   resp.resolver.caching_config.ttl #=> Integer
     #   resp.resolver.caching_config.caching_keys #=> Array
     #   resp.resolver.caching_config.caching_keys[0] #=> String
+    #   resp.resolver.max_batch_size #=> Integer
+    #   resp.resolver.runtime.name #=> String, one of "APPSYNC_JS"
+    #   resp.resolver.runtime.runtime_version #=> String
+    #   resp.resolver.code #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateResolver AWS API Documentation
     #
@@ -1020,6 +1400,28 @@ module Aws::AppSync
       req.send_request(options)
     end
 
+    # Deletes a custom `DomainName` object.
+    #
+    # @option params [required, String] :domain_name
+    #   The domain name.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_domain_name({
+    #     domain_name: "DomainName", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteDomainName AWS API Documentation
+    #
+    # @overload delete_domain_name(params = {})
+    # @param [Hash] params ({})
+    def delete_domain_name(params = {}, options = {})
+      req = build_request(:delete_domain_name, params)
+      req.send_request(options)
+    end
+
     # Deletes a `Function`.
     #
     # @option params [required, String] :api_id
@@ -1124,6 +1526,218 @@ module Aws::AppSync
       req.send_request(options)
     end
 
+    # Removes an `ApiAssociation` object from a custom domain.
+    #
+    # @option params [required, String] :domain_name
+    #   The domain name.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.disassociate_api({
+    #     domain_name: "DomainName", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DisassociateApi AWS API Documentation
+    #
+    # @overload disassociate_api(params = {})
+    # @param [Hash] params ({})
+    def disassociate_api(params = {}, options = {})
+      req = build_request(:disassociate_api, params)
+      req.send_request(options)
+    end
+
+    # Deletes an association between a Merged API and source API using the
+    # source API's identifier and the association ID.
+    #
+    # @option params [required, String] :source_api_identifier
+    #   The identifier of the AppSync Source API. This is generated by the
+    #   AppSync service. In most cases, source APIs (especially in your
+    #   account) only require the API ID value or ARN of the source API.
+    #   However, source APIs from other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the source API.
+    #
+    # @option params [required, String] :association_id
+    #   The ID generated by the AppSync service for the source API
+    #   association.
+    #
+    # @return [Types::DisassociateMergedGraphqlApiResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DisassociateMergedGraphqlApiResponse#source_api_association_status #source_api_association_status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.disassociate_merged_graphql_api({
+    #     source_api_identifier: "String", # required
+    #     association_id: "String", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.source_api_association_status #=> String, one of "MERGE_SCHEDULED", "MERGE_FAILED", "MERGE_SUCCESS", "MERGE_IN_PROGRESS", "AUTO_MERGE_SCHEDULE_FAILED", "DELETION_SCHEDULED", "DELETION_IN_PROGRESS", "DELETION_FAILED"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DisassociateMergedGraphqlApi AWS API Documentation
+    #
+    # @overload disassociate_merged_graphql_api(params = {})
+    # @param [Hash] params ({})
+    def disassociate_merged_graphql_api(params = {}, options = {})
+      req = build_request(:disassociate_merged_graphql_api, params)
+      req.send_request(options)
+    end
+
+    # Deletes an association between a Merged API and source API using the
+    # Merged API's identifier and the association ID.
+    #
+    # @option params [required, String] :merged_api_identifier
+    #   The identifier of the AppSync Merged API. This is generated by the
+    #   AppSync service. In most cases, Merged APIs (especially in your
+    #   account) only require the API ID value or ARN of the merged API.
+    #   However, Merged APIs in other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the merged API.
+    #
+    # @option params [required, String] :association_id
+    #   The ID generated by the AppSync service for the source API
+    #   association.
+    #
+    # @return [Types::DisassociateSourceGraphqlApiResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DisassociateSourceGraphqlApiResponse#source_api_association_status #source_api_association_status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.disassociate_source_graphql_api({
+    #     merged_api_identifier: "String", # required
+    #     association_id: "String", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.source_api_association_status #=> String, one of "MERGE_SCHEDULED", "MERGE_FAILED", "MERGE_SUCCESS", "MERGE_IN_PROGRESS", "AUTO_MERGE_SCHEDULE_FAILED", "DELETION_SCHEDULED", "DELETION_IN_PROGRESS", "DELETION_FAILED"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DisassociateSourceGraphqlApi AWS API Documentation
+    #
+    # @overload disassociate_source_graphql_api(params = {})
+    # @param [Hash] params ({})
+    def disassociate_source_graphql_api(params = {}, options = {})
+      req = build_request(:disassociate_source_graphql_api, params)
+      req.send_request(options)
+    end
+
+    # Evaluates the given code and returns the response. The code definition
+    # requirements depend on the specified runtime. For `APPSYNC_JS`
+    # runtimes, the code defines the request and response functions. The
+    # request function takes the incoming request after a GraphQL operation
+    # is parsed and converts it into a request configuration for the
+    # selected data source operation. The response function interprets
+    # responses from the data source and maps it to the shape of the GraphQL
+    # field output type.
+    #
+    # @option params [required, Types::AppSyncRuntime] :runtime
+    #   The runtime to be used when evaluating the code. Currently, only the
+    #   `APPSYNC_JS` runtime is supported.
+    #
+    # @option params [required, String] :code
+    #   The code definition to be evaluated. Note that `code` and `runtime`
+    #   are both required for this action. The `runtime` value must be
+    #   `APPSYNC_JS`.
+    #
+    # @option params [required, String] :context
+    #   The map that holds all of the contextual information for your resolver
+    #   invocation. A `context` is required for this action.
+    #
+    # @option params [String] :function
+    #   The function within the code to be evaluated. If provided, the valid
+    #   values are `request` and `response`.
+    #
+    # @return [Types::EvaluateCodeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::EvaluateCodeResponse#evaluation_result #evaluation_result} => String
+    #   * {Types::EvaluateCodeResponse#error #error} => Types::EvaluateCodeErrorDetail
+    #   * {Types::EvaluateCodeResponse#logs #logs} => Array&lt;String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.evaluate_code({
+    #     runtime: { # required
+    #       name: "APPSYNC_JS", # required, accepts APPSYNC_JS
+    #       runtime_version: "String", # required
+    #     },
+    #     code: "Code", # required
+    #     context: "Context", # required
+    #     function: "String",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.evaluation_result #=> String
+    #   resp.error.message #=> String
+    #   resp.error.code_errors #=> Array
+    #   resp.error.code_errors[0].error_type #=> String
+    #   resp.error.code_errors[0].value #=> String
+    #   resp.error.code_errors[0].location.line #=> Integer
+    #   resp.error.code_errors[0].location.column #=> Integer
+    #   resp.error.code_errors[0].location.span #=> Integer
+    #   resp.logs #=> Array
+    #   resp.logs[0] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/EvaluateCode AWS API Documentation
+    #
+    # @overload evaluate_code(params = {})
+    # @param [Hash] params ({})
+    def evaluate_code(params = {}, options = {})
+      req = build_request(:evaluate_code, params)
+      req.send_request(options)
+    end
+
+    # Evaluates a given template and returns the response. The mapping
+    # template can be a request or response template.
+    #
+    # Request templates take the incoming request after a GraphQL operation
+    # is parsed and convert it into a request configuration for the selected
+    # data source operation. Response templates interpret responses from the
+    # data source and map it to the shape of the GraphQL field output type.
+    #
+    # Mapping templates are written in the Apache Velocity Template Language
+    # (VTL).
+    #
+    # @option params [required, String] :template
+    #   The mapping template; this can be a request or response template. A
+    #   `template` is required for this action.
+    #
+    # @option params [required, String] :context
+    #   The map that holds all of the contextual information for your resolver
+    #   invocation. A `context` is required for this action.
+    #
+    # @return [Types::EvaluateMappingTemplateResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::EvaluateMappingTemplateResponse#evaluation_result #evaluation_result} => String
+    #   * {Types::EvaluateMappingTemplateResponse#error #error} => Types::ErrorDetail
+    #   * {Types::EvaluateMappingTemplateResponse#logs #logs} => Array&lt;String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.evaluate_mapping_template({
+    #     template: "Template", # required
+    #     context: "Context", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.evaluation_result #=> String
+    #   resp.error.message #=> String
+    #   resp.logs #=> Array
+    #   resp.logs[0] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/EvaluateMappingTemplate AWS API Documentation
+    #
+    # @overload evaluate_mapping_template(params = {})
+    # @param [Hash] params ({})
+    def evaluate_mapping_template(params = {}, options = {})
+      req = build_request(:evaluate_mapping_template, params)
+      req.send_request(options)
+    end
+
     # Flushes an `ApiCache` object.
     #
     # @option params [required, String] :api_id
@@ -1143,6 +1757,37 @@ module Aws::AppSync
     # @param [Hash] params ({})
     def flush_api_cache(params = {}, options = {})
       req = build_request(:flush_api_cache, params)
+      req.send_request(options)
+    end
+
+    # Retrieves an `ApiAssociation` object.
+    #
+    # @option params [required, String] :domain_name
+    #   The domain name.
+    #
+    # @return [Types::GetApiAssociationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetApiAssociationResponse#api_association #api_association} => Types::ApiAssociation
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_api_association({
+    #     domain_name: "DomainName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.api_association.domain_name #=> String
+    #   resp.api_association.api_id #=> String
+    #   resp.api_association.association_status #=> String, one of "PROCESSING", "FAILED", "SUCCESS"
+    #   resp.api_association.deployment_detail #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetApiAssociation AWS API Documentation
+    #
+    # @overload get_api_association(params = {})
+    # @param [Hash] params ({})
+    def get_api_association(params = {}, options = {})
+      req = build_request(:get_api_association, params)
       req.send_request(options)
     end
 
@@ -1203,7 +1848,7 @@ module Aws::AppSync
     #   resp.data_source.data_source_arn #=> String
     #   resp.data_source.name #=> String
     #   resp.data_source.description #=> String
-    #   resp.data_source.type #=> String, one of "AWS_LAMBDA", "AMAZON_DYNAMODB", "AMAZON_ELASTICSEARCH", "NONE", "HTTP", "RELATIONAL_DATABASE"
+    #   resp.data_source.type #=> String, one of "AWS_LAMBDA", "AMAZON_DYNAMODB", "AMAZON_ELASTICSEARCH", "NONE", "HTTP", "RELATIONAL_DATABASE", "AMAZON_OPENSEARCH_SERVICE", "AMAZON_EVENTBRIDGE"
     #   resp.data_source.service_role_arn #=> String
     #   resp.data_source.dynamodb_config.table_name #=> String
     #   resp.data_source.dynamodb_config.aws_region #=> String
@@ -1215,6 +1860,8 @@ module Aws::AppSync
     #   resp.data_source.lambda_config.lambda_function_arn #=> String
     #   resp.data_source.elasticsearch_config.endpoint #=> String
     #   resp.data_source.elasticsearch_config.aws_region #=> String
+    #   resp.data_source.open_search_service_config.endpoint #=> String
+    #   resp.data_source.open_search_service_config.aws_region #=> String
     #   resp.data_source.http_config.endpoint #=> String
     #   resp.data_source.http_config.authorization_config.authorization_type #=> String, one of "AWS_IAM"
     #   resp.data_source.http_config.authorization_config.aws_iam_config.signing_region #=> String
@@ -1225,6 +1872,7 @@ module Aws::AppSync
     #   resp.data_source.relational_database_config.rds_http_endpoint_config.database_name #=> String
     #   resp.data_source.relational_database_config.rds_http_endpoint_config.schema #=> String
     #   resp.data_source.relational_database_config.rds_http_endpoint_config.aws_secret_store_arn #=> String
+    #   resp.data_source.event_bridge_config.event_bus_arn #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetDataSource AWS API Documentation
     #
@@ -1232,6 +1880,38 @@ module Aws::AppSync
     # @param [Hash] params ({})
     def get_data_source(params = {}, options = {})
       req = build_request(:get_data_source, params)
+      req.send_request(options)
+    end
+
+    # Retrieves a custom `DomainName` object.
+    #
+    # @option params [required, String] :domain_name
+    #   The domain name.
+    #
+    # @return [Types::GetDomainNameResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetDomainNameResponse#domain_name_config #domain_name_config} => Types::DomainNameConfig
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_domain_name({
+    #     domain_name: "DomainName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.domain_name_config.domain_name #=> String
+    #   resp.domain_name_config.description #=> String
+    #   resp.domain_name_config.certificate_arn #=> String
+    #   resp.domain_name_config.appsync_domain_name #=> String
+    #   resp.domain_name_config.hosted_zone_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetDomainName AWS API Documentation
+    #
+    # @overload get_domain_name(params = {})
+    # @param [Hash] params ({})
+    def get_domain_name(params = {}, options = {})
+      req = build_request(:get_domain_name, params)
       req.send_request(options)
     end
 
@@ -1267,6 +1947,10 @@ module Aws::AppSync
     #   resp.function_configuration.sync_config.conflict_handler #=> String, one of "OPTIMISTIC_CONCURRENCY", "LAMBDA", "AUTOMERGE", "NONE"
     #   resp.function_configuration.sync_config.conflict_detection #=> String, one of "VERSION", "NONE"
     #   resp.function_configuration.sync_config.lambda_conflict_handler_config.lambda_conflict_handler_arn #=> String
+    #   resp.function_configuration.max_batch_size #=> Integer
+    #   resp.function_configuration.runtime.name #=> String, one of "APPSYNC_JS"
+    #   resp.function_configuration.runtime.runtime_version #=> String
+    #   resp.function_configuration.code #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetFunction AWS API Documentation
     #
@@ -1296,7 +1980,7 @@ module Aws::AppSync
     #
     #   resp.graphql_api.name #=> String
     #   resp.graphql_api.api_id #=> String
-    #   resp.graphql_api.authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT"
+    #   resp.graphql_api.authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT", "AWS_LAMBDA"
     #   resp.graphql_api.log_config.field_log_level #=> String, one of "NONE", "ERROR", "ALL"
     #   resp.graphql_api.log_config.cloud_watch_logs_role_arn #=> String
     #   resp.graphql_api.log_config.exclude_verbose_content #=> Boolean
@@ -1314,7 +1998,7 @@ module Aws::AppSync
     #   resp.graphql_api.tags #=> Hash
     #   resp.graphql_api.tags["TagKey"] #=> String
     #   resp.graphql_api.additional_authentication_providers #=> Array
-    #   resp.graphql_api.additional_authentication_providers[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT"
+    #   resp.graphql_api.additional_authentication_providers[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT", "AWS_LAMBDA"
     #   resp.graphql_api.additional_authentication_providers[0].open_id_connect_config.issuer #=> String
     #   resp.graphql_api.additional_authentication_providers[0].open_id_connect_config.client_id #=> String
     #   resp.graphql_api.additional_authentication_providers[0].open_id_connect_config.iat_ttl #=> Integer
@@ -1322,8 +2006,21 @@ module Aws::AppSync
     #   resp.graphql_api.additional_authentication_providers[0].user_pool_config.user_pool_id #=> String
     #   resp.graphql_api.additional_authentication_providers[0].user_pool_config.aws_region #=> String
     #   resp.graphql_api.additional_authentication_providers[0].user_pool_config.app_id_client_regex #=> String
+    #   resp.graphql_api.additional_authentication_providers[0].lambda_authorizer_config.authorizer_result_ttl_in_seconds #=> Integer
+    #   resp.graphql_api.additional_authentication_providers[0].lambda_authorizer_config.authorizer_uri #=> String
+    #   resp.graphql_api.additional_authentication_providers[0].lambda_authorizer_config.identity_validation_expression #=> String
     #   resp.graphql_api.xray_enabled #=> Boolean
     #   resp.graphql_api.waf_web_acl_arn #=> String
+    #   resp.graphql_api.lambda_authorizer_config.authorizer_result_ttl_in_seconds #=> Integer
+    #   resp.graphql_api.lambda_authorizer_config.authorizer_uri #=> String
+    #   resp.graphql_api.lambda_authorizer_config.identity_validation_expression #=> String
+    #   resp.graphql_api.dns #=> Hash
+    #   resp.graphql_api.dns["String"] #=> String
+    #   resp.graphql_api.visibility #=> String, one of "GLOBAL", "PRIVATE"
+    #   resp.graphql_api.api_type #=> String, one of "GRAPHQL", "MERGED"
+    #   resp.graphql_api.merged_api_execution_role_arn #=> String
+    #   resp.graphql_api.owner #=> String
+    #   resp.graphql_api.owner_contact #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetGraphqlApi AWS API Documentation
     #
@@ -1411,6 +2108,10 @@ module Aws::AppSync
     #   resp.resolver.caching_config.ttl #=> Integer
     #   resp.resolver.caching_config.caching_keys #=> Array
     #   resp.resolver.caching_config.caching_keys[0] #=> String
+    #   resp.resolver.max_batch_size #=> Integer
+    #   resp.resolver.runtime.name #=> String, one of "APPSYNC_JS"
+    #   resp.resolver.runtime.runtime_version #=> String
+    #   resp.resolver.code #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetResolver AWS API Documentation
     #
@@ -1448,6 +2149,53 @@ module Aws::AppSync
     # @param [Hash] params ({})
     def get_schema_creation_status(params = {}, options = {})
       req = build_request(:get_schema_creation_status, params)
+      req.send_request(options)
+    end
+
+    # Retrieves a `SourceApiAssociation` object.
+    #
+    # @option params [required, String] :merged_api_identifier
+    #   The identifier of the AppSync Merged API. This is generated by the
+    #   AppSync service. In most cases, Merged APIs (especially in your
+    #   account) only require the API ID value or ARN of the merged API.
+    #   However, Merged APIs in other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the merged API.
+    #
+    # @option params [required, String] :association_id
+    #   The ID generated by the AppSync service for the source API
+    #   association.
+    #
+    # @return [Types::GetSourceApiAssociationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetSourceApiAssociationResponse#source_api_association #source_api_association} => Types::SourceApiAssociation
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_source_api_association({
+    #     merged_api_identifier: "String", # required
+    #     association_id: "String", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.source_api_association.association_id #=> String
+    #   resp.source_api_association.association_arn #=> String
+    #   resp.source_api_association.source_api_id #=> String
+    #   resp.source_api_association.source_api_arn #=> String
+    #   resp.source_api_association.merged_api_arn #=> String
+    #   resp.source_api_association.merged_api_id #=> String
+    #   resp.source_api_association.description #=> String
+    #   resp.source_api_association.source_api_association_config.merge_type #=> String, one of "MANUAL_MERGE", "AUTO_MERGE"
+    #   resp.source_api_association.source_api_association_status #=> String, one of "MERGE_SCHEDULED", "MERGE_FAILED", "MERGE_SUCCESS", "MERGE_IN_PROGRESS", "AUTO_MERGE_SCHEDULE_FAILED", "DELETION_SCHEDULED", "DELETION_IN_PROGRESS", "DELETION_FAILED"
+    #   resp.source_api_association.source_api_association_status_detail #=> String
+    #   resp.source_api_association.last_successful_merge_date #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetSourceApiAssociation AWS API Documentation
+    #
+    # @overload get_source_api_association(params = {})
+    # @param [Hash] params ({})
+    def get_source_api_association(params = {}, options = {})
+      req = build_request(:get_source_api_association, params)
       req.send_request(options)
     end
 
@@ -1505,11 +2253,11 @@ module Aws::AppSync
     #
     # @option params [String] :next_token
     #   An identifier that was returned from the previous call to this
-    #   operation, which can be used to return the next set of items in the
+    #   operation, which you can use to return the next set of items in the
     #   list.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of results you want the request to return.
+    #   The maximum number of results that you want the request to return.
     #
     # @return [Types::ListApiKeysResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1549,11 +2297,11 @@ module Aws::AppSync
     #
     # @option params [String] :next_token
     #   An identifier that was returned from the previous call to this
-    #   operation, which can be used to return the next set of items in the
+    #   operation, which you can use to return the next set of items in the
     #   list.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of results you want the request to return.
+    #   The maximum number of results that you want the request to return.
     #
     # @return [Types::ListDataSourcesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1574,7 +2322,7 @@ module Aws::AppSync
     #   resp.data_sources[0].data_source_arn #=> String
     #   resp.data_sources[0].name #=> String
     #   resp.data_sources[0].description #=> String
-    #   resp.data_sources[0].type #=> String, one of "AWS_LAMBDA", "AMAZON_DYNAMODB", "AMAZON_ELASTICSEARCH", "NONE", "HTTP", "RELATIONAL_DATABASE"
+    #   resp.data_sources[0].type #=> String, one of "AWS_LAMBDA", "AMAZON_DYNAMODB", "AMAZON_ELASTICSEARCH", "NONE", "HTTP", "RELATIONAL_DATABASE", "AMAZON_OPENSEARCH_SERVICE", "AMAZON_EVENTBRIDGE"
     #   resp.data_sources[0].service_role_arn #=> String
     #   resp.data_sources[0].dynamodb_config.table_name #=> String
     #   resp.data_sources[0].dynamodb_config.aws_region #=> String
@@ -1586,6 +2334,8 @@ module Aws::AppSync
     #   resp.data_sources[0].lambda_config.lambda_function_arn #=> String
     #   resp.data_sources[0].elasticsearch_config.endpoint #=> String
     #   resp.data_sources[0].elasticsearch_config.aws_region #=> String
+    #   resp.data_sources[0].open_search_service_config.endpoint #=> String
+    #   resp.data_sources[0].open_search_service_config.aws_region #=> String
     #   resp.data_sources[0].http_config.endpoint #=> String
     #   resp.data_sources[0].http_config.authorization_config.authorization_type #=> String, one of "AWS_IAM"
     #   resp.data_sources[0].http_config.authorization_config.aws_iam_config.signing_region #=> String
@@ -1596,6 +2346,7 @@ module Aws::AppSync
     #   resp.data_sources[0].relational_database_config.rds_http_endpoint_config.database_name #=> String
     #   resp.data_sources[0].relational_database_config.rds_http_endpoint_config.schema #=> String
     #   resp.data_sources[0].relational_database_config.rds_http_endpoint_config.aws_secret_store_arn #=> String
+    #   resp.data_sources[0].event_bridge_config.event_bus_arn #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListDataSources AWS API Documentation
@@ -1607,6 +2358,47 @@ module Aws::AppSync
       req.send_request(options)
     end
 
+    # Lists multiple custom domain names.
+    #
+    # @option params [String] :next_token
+    #   An identifier that was returned from the previous call to this
+    #   operation, which you can use to return the next set of items in the
+    #   list.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results that you want the request to return.
+    #
+    # @return [Types::ListDomainNamesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListDomainNamesResponse#domain_name_configs #domain_name_configs} => Array&lt;Types::DomainNameConfig&gt;
+    #   * {Types::ListDomainNamesResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_domain_names({
+    #     next_token: "PaginationToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.domain_name_configs #=> Array
+    #   resp.domain_name_configs[0].domain_name #=> String
+    #   resp.domain_name_configs[0].description #=> String
+    #   resp.domain_name_configs[0].certificate_arn #=> String
+    #   resp.domain_name_configs[0].appsync_domain_name #=> String
+    #   resp.domain_name_configs[0].hosted_zone_id #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListDomainNames AWS API Documentation
+    #
+    # @overload list_domain_names(params = {})
+    # @param [Hash] params ({})
+    def list_domain_names(params = {}, options = {})
+      req = build_request(:list_domain_names, params)
+      req.send_request(options)
+    end
+
     # List multiple functions.
     #
     # @option params [required, String] :api_id
@@ -1614,11 +2406,11 @@ module Aws::AppSync
     #
     # @option params [String] :next_token
     #   An identifier that was returned from the previous call to this
-    #   operation, which can be used to return the next set of items in the
+    #   operation, which you can use to return the next set of items in the
     #   list.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of results you want the request to return.
+    #   The maximum number of results that you want the request to return.
     #
     # @return [Types::ListFunctionsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1647,6 +2439,10 @@ module Aws::AppSync
     #   resp.functions[0].sync_config.conflict_handler #=> String, one of "OPTIMISTIC_CONCURRENCY", "LAMBDA", "AUTOMERGE", "NONE"
     #   resp.functions[0].sync_config.conflict_detection #=> String, one of "VERSION", "NONE"
     #   resp.functions[0].sync_config.lambda_conflict_handler_config.lambda_conflict_handler_arn #=> String
+    #   resp.functions[0].max_batch_size #=> Integer
+    #   resp.functions[0].runtime.name #=> String, one of "APPSYNC_JS"
+    #   resp.functions[0].runtime.runtime_version #=> String
+    #   resp.functions[0].code #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListFunctions AWS API Documentation
@@ -1662,11 +2458,18 @@ module Aws::AppSync
     #
     # @option params [String] :next_token
     #   An identifier that was returned from the previous call to this
-    #   operation, which can be used to return the next set of items in the
+    #   operation, which you can use to return the next set of items in the
     #   list.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of results you want the request to return.
+    #   The maximum number of results that you want the request to return.
+    #
+    # @option params [String] :api_type
+    #   The value that indicates whether the GraphQL API is a standard API
+    #   (`GRAPHQL`) or merged API (`MERGED`).
+    #
+    # @option params [String] :owner
+    #   The account owner of the GraphQL API.
     #
     # @return [Types::ListGraphqlApisResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1678,6 +2481,8 @@ module Aws::AppSync
     #   resp = client.list_graphql_apis({
     #     next_token: "PaginationToken",
     #     max_results: 1,
+    #     api_type: "GRAPHQL", # accepts GRAPHQL, MERGED
+    #     owner: "CURRENT_ACCOUNT", # accepts CURRENT_ACCOUNT, OTHER_ACCOUNTS
     #   })
     #
     # @example Response structure
@@ -1685,7 +2490,7 @@ module Aws::AppSync
     #   resp.graphql_apis #=> Array
     #   resp.graphql_apis[0].name #=> String
     #   resp.graphql_apis[0].api_id #=> String
-    #   resp.graphql_apis[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT"
+    #   resp.graphql_apis[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT", "AWS_LAMBDA"
     #   resp.graphql_apis[0].log_config.field_log_level #=> String, one of "NONE", "ERROR", "ALL"
     #   resp.graphql_apis[0].log_config.cloud_watch_logs_role_arn #=> String
     #   resp.graphql_apis[0].log_config.exclude_verbose_content #=> Boolean
@@ -1703,7 +2508,7 @@ module Aws::AppSync
     #   resp.graphql_apis[0].tags #=> Hash
     #   resp.graphql_apis[0].tags["TagKey"] #=> String
     #   resp.graphql_apis[0].additional_authentication_providers #=> Array
-    #   resp.graphql_apis[0].additional_authentication_providers[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT"
+    #   resp.graphql_apis[0].additional_authentication_providers[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT", "AWS_LAMBDA"
     #   resp.graphql_apis[0].additional_authentication_providers[0].open_id_connect_config.issuer #=> String
     #   resp.graphql_apis[0].additional_authentication_providers[0].open_id_connect_config.client_id #=> String
     #   resp.graphql_apis[0].additional_authentication_providers[0].open_id_connect_config.iat_ttl #=> Integer
@@ -1711,8 +2516,21 @@ module Aws::AppSync
     #   resp.graphql_apis[0].additional_authentication_providers[0].user_pool_config.user_pool_id #=> String
     #   resp.graphql_apis[0].additional_authentication_providers[0].user_pool_config.aws_region #=> String
     #   resp.graphql_apis[0].additional_authentication_providers[0].user_pool_config.app_id_client_regex #=> String
+    #   resp.graphql_apis[0].additional_authentication_providers[0].lambda_authorizer_config.authorizer_result_ttl_in_seconds #=> Integer
+    #   resp.graphql_apis[0].additional_authentication_providers[0].lambda_authorizer_config.authorizer_uri #=> String
+    #   resp.graphql_apis[0].additional_authentication_providers[0].lambda_authorizer_config.identity_validation_expression #=> String
     #   resp.graphql_apis[0].xray_enabled #=> Boolean
     #   resp.graphql_apis[0].waf_web_acl_arn #=> String
+    #   resp.graphql_apis[0].lambda_authorizer_config.authorizer_result_ttl_in_seconds #=> Integer
+    #   resp.graphql_apis[0].lambda_authorizer_config.authorizer_uri #=> String
+    #   resp.graphql_apis[0].lambda_authorizer_config.identity_validation_expression #=> String
+    #   resp.graphql_apis[0].dns #=> Hash
+    #   resp.graphql_apis[0].dns["String"] #=> String
+    #   resp.graphql_apis[0].visibility #=> String, one of "GLOBAL", "PRIVATE"
+    #   resp.graphql_apis[0].api_type #=> String, one of "GRAPHQL", "MERGED"
+    #   resp.graphql_apis[0].merged_api_execution_role_arn #=> String
+    #   resp.graphql_apis[0].owner #=> String
+    #   resp.graphql_apis[0].owner_contact #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListGraphqlApis AWS API Documentation
@@ -1734,11 +2552,11 @@ module Aws::AppSync
     #
     # @option params [String] :next_token
     #   An identifier that was returned from the previous call to this
-    #   operation, which can be used to return the next set of items in the
+    #   operation, which you can use to return the next set of items in the
     #   list.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of results you want the request to return.
+    #   The maximum number of results that you want the request to return.
     #
     # @return [Types::ListResolversResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1772,6 +2590,10 @@ module Aws::AppSync
     #   resp.resolvers[0].caching_config.ttl #=> Integer
     #   resp.resolvers[0].caching_config.caching_keys #=> Array
     #   resp.resolvers[0].caching_config.caching_keys[0] #=> String
+    #   resp.resolvers[0].max_batch_size #=> Integer
+    #   resp.resolvers[0].runtime.name #=> String, one of "APPSYNC_JS"
+    #   resp.resolvers[0].runtime.runtime_version #=> String
+    #   resp.resolvers[0].code #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListResolvers AWS API Documentation
@@ -1789,7 +2611,7 @@ module Aws::AppSync
     #   The API ID.
     #
     # @option params [required, String] :function_id
-    #   The Function ID.
+    #   The function ID.
     #
     # @option params [String] :next_token
     #   An identifier that was returned from the previous call to this
@@ -1797,7 +2619,7 @@ module Aws::AppSync
     #   list.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of results you want the request to return.
+    #   The maximum number of results that you want the request to return.
     #
     # @return [Types::ListResolversByFunctionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1831,6 +2653,10 @@ module Aws::AppSync
     #   resp.resolvers[0].caching_config.ttl #=> Integer
     #   resp.resolvers[0].caching_config.caching_keys #=> Array
     #   resp.resolvers[0].caching_config.caching_keys[0] #=> String
+    #   resp.resolvers[0].max_batch_size #=> Integer
+    #   resp.resolvers[0].runtime.name #=> String, one of "APPSYNC_JS"
+    #   resp.resolvers[0].runtime.runtime_version #=> String
+    #   resp.resolvers[0].code #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListResolversByFunction AWS API Documentation
@@ -1842,10 +2668,57 @@ module Aws::AppSync
       req.send_request(options)
     end
 
+    # Lists the `SourceApiAssociationSummary` data.
+    #
+    # @option params [required, String] :api_id
+    #   The API ID.
+    #
+    # @option params [String] :next_token
+    #   An identifier that was returned from the previous call to this
+    #   operation, which you can use to return the next set of items in the
+    #   list.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results that you want the request to return.
+    #
+    # @return [Types::ListSourceApiAssociationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListSourceApiAssociationsResponse#source_api_association_summaries #source_api_association_summaries} => Array&lt;Types::SourceApiAssociationSummary&gt;
+    #   * {Types::ListSourceApiAssociationsResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_source_api_associations({
+    #     api_id: "String", # required
+    #     next_token: "PaginationToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.source_api_association_summaries #=> Array
+    #   resp.source_api_association_summaries[0].association_id #=> String
+    #   resp.source_api_association_summaries[0].association_arn #=> String
+    #   resp.source_api_association_summaries[0].source_api_id #=> String
+    #   resp.source_api_association_summaries[0].source_api_arn #=> String
+    #   resp.source_api_association_summaries[0].merged_api_id #=> String
+    #   resp.source_api_association_summaries[0].merged_api_arn #=> String
+    #   resp.source_api_association_summaries[0].description #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListSourceApiAssociations AWS API Documentation
+    #
+    # @overload list_source_api_associations(params = {})
+    # @param [Hash] params ({})
+    def list_source_api_associations(params = {}, options = {})
+      req = build_request(:list_source_api_associations, params)
+      req.send_request(options)
+    end
+
     # Lists the tags for a resource.
     #
     # @option params [required, String] :resource_arn
-    #   The `GraphqlApi` ARN.
+    #   The `GraphqlApi` Amazon Resource Name (ARN).
     #
     # @return [Types::ListTagsForResourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1881,11 +2754,11 @@ module Aws::AppSync
     #
     # @option params [String] :next_token
     #   An identifier that was returned from the previous call to this
-    #   operation, which can be used to return the next set of items in the
+    #   operation, which you can use to return the next set of items in the
     #   list.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of results you want the request to return.
+    #   The maximum number of results that you want the request to return.
     #
     # @return [Types::ListTypesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1917,6 +2790,64 @@ module Aws::AppSync
     # @param [Hash] params ({})
     def list_types(params = {}, options = {})
       req = build_request(:list_types, params)
+      req.send_request(options)
+    end
+
+    # Lists `Type` objects by the source API association ID.
+    #
+    # @option params [required, String] :merged_api_identifier
+    #   The identifier of the AppSync Merged API. This is generated by the
+    #   AppSync service. In most cases, Merged APIs (especially in your
+    #   account) only require the API ID value or ARN of the merged API.
+    #   However, Merged APIs in other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the merged API.
+    #
+    # @option params [required, String] :association_id
+    #   The ID generated by the AppSync service for the source API
+    #   association.
+    #
+    # @option params [required, String] :format
+    #   The format type.
+    #
+    # @option params [String] :next_token
+    #   An identifier that was returned from the previous call to this
+    #   operation, which you can use to return the next set of items in the
+    #   list.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results that you want the request to return.
+    #
+    # @return [Types::ListTypesByAssociationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListTypesByAssociationResponse#types #types} => Array&lt;Types::Type&gt;
+    #   * {Types::ListTypesByAssociationResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_types_by_association({
+    #     merged_api_identifier: "String", # required
+    #     association_id: "String", # required
+    #     format: "SDL", # required, accepts SDL, JSON
+    #     next_token: "PaginationToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.types #=> Array
+    #   resp.types[0].name #=> String
+    #   resp.types[0].description #=> String
+    #   resp.types[0].arn #=> String
+    #   resp.types[0].definition #=> String
+    #   resp.types[0].format #=> String, one of "SDL", "JSON"
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/ListTypesByAssociation AWS API Documentation
+    #
+    # @overload list_types_by_association(params = {})
+    # @param [Hash] params ({})
+    def list_types_by_association(params = {}, options = {})
+      req = build_request(:list_types_by_association, params)
       req.send_request(options)
     end
 
@@ -1955,10 +2886,48 @@ module Aws::AppSync
       req.send_request(options)
     end
 
+    # Initiates a merge operation. Returns a status that shows the result of
+    # the merge operation.
+    #
+    # @option params [required, String] :association_id
+    #   The ID generated by the AppSync service for the source API
+    #   association.
+    #
+    # @option params [required, String] :merged_api_identifier
+    #   The identifier of the AppSync Merged API. This is generated by the
+    #   AppSync service. In most cases, Merged APIs (especially in your
+    #   account) only require the API ID value or ARN of the merged API.
+    #   However, Merged APIs in other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the merged API.
+    #
+    # @return [Types::StartSchemaMergeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StartSchemaMergeResponse#source_api_association_status #source_api_association_status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.start_schema_merge({
+    #     association_id: "String", # required
+    #     merged_api_identifier: "String", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.source_api_association_status #=> String, one of "MERGE_SCHEDULED", "MERGE_FAILED", "MERGE_SUCCESS", "MERGE_IN_PROGRESS", "AUTO_MERGE_SCHEDULE_FAILED", "DELETION_SCHEDULED", "DELETION_IN_PROGRESS", "DELETION_FAILED"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/StartSchemaMerge AWS API Documentation
+    #
+    # @overload start_schema_merge(params = {})
+    # @param [Hash] params ({})
+    def start_schema_merge(params = {}, options = {})
+      req = build_request(:start_schema_merge, params)
+      req.send_request(options)
+    end
+
     # Tags a resource with user-supplied tags.
     #
     # @option params [required, String] :resource_arn
-    #   The `GraphqlApi` ARN.
+    #   The `GraphqlApi` Amazon Resource Name (ARN).
     #
     # @option params [required, Hash<String,String>] :tags
     #   A `TagMap` object.
@@ -1986,7 +2955,7 @@ module Aws::AppSync
     # Untags a resource.
     #
     # @option params [required, String] :resource_arn
-    #   The `GraphqlApi` ARN.
+    #   The `GraphqlApi` Amazon Resource Name (ARN).
     #
     # @option params [required, Array<String>] :tag_keys
     #   A list of `TagKey` objects.
@@ -2012,19 +2981,19 @@ module Aws::AppSync
     # Updates the cache for the GraphQL API.
     #
     # @option params [required, String] :api_id
-    #   The GraphQL API Id.
+    #   The GraphQL API ID.
     #
     # @option params [required, Integer] :ttl
     #   TTL in seconds for cache entries.
     #
-    #   Valid values are between 1 and 3600 seconds.
+    #   Valid values are 1–3,600 seconds.
     #
     # @option params [required, String] :api_caching_behavior
     #   Caching behavior.
     #
-    #   * **FULL\_REQUEST\_CACHING**\: All requests are fully cached.
+    #   * **FULL\_REQUEST\_CACHING**: All requests are fully cached.
     #
-    #   * **PER\_RESOLVER\_CACHING**\: Individual resolvers that you specify
+    #   * **PER\_RESOLVER\_CACHING**: Individual resolvers that you specify
     #     are cached.
     #
     # @option params [required, String] :type
@@ -2053,19 +3022,19 @@ module Aws::AppSync
     #   The following legacy instance types are available, but their use is
     #   discouraged:
     #
-    #   * **T2\_SMALL**\: A t2.small instance type.
+    #   * **T2\_SMALL**: A t2.small instance type.
     #
-    #   * **T2\_MEDIUM**\: A t2.medium instance type.
+    #   * **T2\_MEDIUM**: A t2.medium instance type.
     #
-    #   * **R4\_LARGE**\: A r4.large instance type.
+    #   * **R4\_LARGE**: A r4.large instance type.
     #
-    #   * **R4\_XLARGE**\: A r4.xlarge instance type.
+    #   * **R4\_XLARGE**: A r4.xlarge instance type.
     #
-    #   * **R4\_2XLARGE**\: A r4.2xlarge instance type.
+    #   * **R4\_2XLARGE**: A r4.2xlarge instance type.
     #
-    #   * **R4\_4XLARGE**\: A r4.4xlarge instance type.
+    #   * **R4\_4XLARGE**: A r4.4xlarge instance type.
     #
-    #   * **R4\_8XLARGE**\: A r4.8xlarge instance type.
+    #   * **R4\_8XLARGE**: A r4.8xlarge instance type.
     #
     # @return [Types::UpdateApiCacheResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2098,7 +3067,8 @@ module Aws::AppSync
       req.send_request(options)
     end
 
-    # Updates an API key. The key can be updated while it is not deleted.
+    # Updates an API key. You can update the key as long as it's not
+    # deleted.
     #
     # @option params [required, String] :api_id
     #   The ID for the GraphQL API.
@@ -2110,8 +3080,9 @@ module Aws::AppSync
     #   A description of the purpose of the API key.
     #
     # @option params [Integer] :expires
-    #   The time from update time after which the API key expires. The date is
-    #   represented as seconds since the epoch. For more information, see .
+    #   From the update time, the time after which the API key expires. The
+    #   date is represented as seconds since the epoch. For more information,
+    #   see .
     #
     # @return [Types::UpdateApiKeyResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2157,22 +3128,33 @@ module Aws::AppSync
     #   The new data source type.
     #
     # @option params [String] :service_role_arn
-    #   The new service role ARN for the data source.
+    #   The new service role Amazon Resource Name (ARN) for the data source.
     #
     # @option params [Types::DynamodbDataSourceConfig] :dynamodb_config
     #   The new Amazon DynamoDB configuration.
     #
     # @option params [Types::LambdaDataSourceConfig] :lambda_config
-    #   The new AWS Lambda configuration.
+    #   The new Lambda configuration.
     #
     # @option params [Types::ElasticsearchDataSourceConfig] :elasticsearch_config
-    #   The new Elasticsearch Service configuration.
+    #   The new OpenSearch configuration.
+    #
+    #   As of September 2021, Amazon Elasticsearch service is Amazon
+    #   OpenSearch Service. This configuration is deprecated. Instead, use
+    #   UpdateDataSourceRequest$openSearchServiceConfig to update an
+    #   OpenSearch data source.
+    #
+    # @option params [Types::OpenSearchServiceDataSourceConfig] :open_search_service_config
+    #   The new OpenSearch configuration.
     #
     # @option params [Types::HttpDataSourceConfig] :http_config
     #   The new HTTP endpoint configuration.
     #
     # @option params [Types::RelationalDatabaseDataSourceConfig] :relational_database_config
     #   The new relational database configuration.
+    #
+    # @option params [Types::EventBridgeDataSourceConfig] :event_bridge_config
+    #   The new Amazon EventBridge settings.
     #
     # @return [Types::UpdateDataSourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2184,7 +3166,7 @@ module Aws::AppSync
     #     api_id: "String", # required
     #     name: "ResourceName", # required
     #     description: "String",
-    #     type: "AWS_LAMBDA", # required, accepts AWS_LAMBDA, AMAZON_DYNAMODB, AMAZON_ELASTICSEARCH, NONE, HTTP, RELATIONAL_DATABASE
+    #     type: "AWS_LAMBDA", # required, accepts AWS_LAMBDA, AMAZON_DYNAMODB, AMAZON_ELASTICSEARCH, NONE, HTTP, RELATIONAL_DATABASE, AMAZON_OPENSEARCH_SERVICE, AMAZON_EVENTBRIDGE
     #     service_role_arn: "String",
     #     dynamodb_config: {
     #       table_name: "String", # required
@@ -2201,6 +3183,10 @@ module Aws::AppSync
     #       lambda_function_arn: "String", # required
     #     },
     #     elasticsearch_config: {
+    #       endpoint: "String", # required
+    #       aws_region: "String", # required
+    #     },
+    #     open_search_service_config: {
     #       endpoint: "String", # required
     #       aws_region: "String", # required
     #     },
@@ -2224,6 +3210,9 @@ module Aws::AppSync
     #         aws_secret_store_arn: "String",
     #       },
     #     },
+    #     event_bridge_config: {
+    #       event_bus_arn: "String", # required
+    #     },
     #   })
     #
     # @example Response structure
@@ -2231,7 +3220,7 @@ module Aws::AppSync
     #   resp.data_source.data_source_arn #=> String
     #   resp.data_source.name #=> String
     #   resp.data_source.description #=> String
-    #   resp.data_source.type #=> String, one of "AWS_LAMBDA", "AMAZON_DYNAMODB", "AMAZON_ELASTICSEARCH", "NONE", "HTTP", "RELATIONAL_DATABASE"
+    #   resp.data_source.type #=> String, one of "AWS_LAMBDA", "AMAZON_DYNAMODB", "AMAZON_ELASTICSEARCH", "NONE", "HTTP", "RELATIONAL_DATABASE", "AMAZON_OPENSEARCH_SERVICE", "AMAZON_EVENTBRIDGE"
     #   resp.data_source.service_role_arn #=> String
     #   resp.data_source.dynamodb_config.table_name #=> String
     #   resp.data_source.dynamodb_config.aws_region #=> String
@@ -2243,6 +3232,8 @@ module Aws::AppSync
     #   resp.data_source.lambda_config.lambda_function_arn #=> String
     #   resp.data_source.elasticsearch_config.endpoint #=> String
     #   resp.data_source.elasticsearch_config.aws_region #=> String
+    #   resp.data_source.open_search_service_config.endpoint #=> String
+    #   resp.data_source.open_search_service_config.aws_region #=> String
     #   resp.data_source.http_config.endpoint #=> String
     #   resp.data_source.http_config.authorization_config.authorization_type #=> String, one of "AWS_IAM"
     #   resp.data_source.http_config.authorization_config.aws_iam_config.signing_region #=> String
@@ -2253,6 +3244,7 @@ module Aws::AppSync
     #   resp.data_source.relational_database_config.rds_http_endpoint_config.database_name #=> String
     #   resp.data_source.relational_database_config.rds_http_endpoint_config.schema #=> String
     #   resp.data_source.relational_database_config.rds_http_endpoint_config.aws_secret_store_arn #=> String
+    #   resp.data_source.event_bridge_config.event_bus_arn #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateDataSource AWS API Documentation
     #
@@ -2260,6 +3252,42 @@ module Aws::AppSync
     # @param [Hash] params ({})
     def update_data_source(params = {}, options = {})
       req = build_request(:update_data_source, params)
+      req.send_request(options)
+    end
+
+    # Updates a custom `DomainName` object.
+    #
+    # @option params [required, String] :domain_name
+    #   The domain name.
+    #
+    # @option params [String] :description
+    #   A description of the `DomainName`.
+    #
+    # @return [Types::UpdateDomainNameResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateDomainNameResponse#domain_name_config #domain_name_config} => Types::DomainNameConfig
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_domain_name({
+    #     domain_name: "DomainName", # required
+    #     description: "Description",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.domain_name_config.domain_name #=> String
+    #   resp.domain_name_config.description #=> String
+    #   resp.domain_name_config.certificate_arn #=> String
+    #   resp.domain_name_config.appsync_domain_name #=> String
+    #   resp.domain_name_config.hosted_zone_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateDomainName AWS API Documentation
+    #
+    # @overload update_domain_name(params = {})
+    # @param [Hash] params ({})
+    def update_domain_name(params = {}, options = {})
+      req = build_request(:update_domain_name, params)
       req.send_request(options)
     end
 
@@ -2287,15 +3315,30 @@ module Aws::AppSync
     # @option params [String] :response_mapping_template
     #   The `Function` request mapping template.
     #
-    # @option params [required, String] :function_version
-    #   The `version` of the request mapping template. Currently the supported
-    #   value is 2018-05-29.
+    # @option params [String] :function_version
+    #   The `version` of the request mapping template. Currently, the
+    #   supported value is 2018-05-29. Note that when using VTL and mapping
+    #   templates, the `functionVersion` is required.
     #
     # @option params [Types::SyncConfig] :sync_config
     #   Describes a Sync configuration for a resolver.
     #
-    #   Contains information on which Conflict Detection as well as Resolution
-    #   strategy should be performed when the resolver is invoked.
+    #   Specifies which Conflict Detection strategy and Resolution strategy to
+    #   use when the resolver is invoked.
+    #
+    # @option params [Integer] :max_batch_size
+    #   The maximum batching size for a resolver.
+    #
+    # @option params [Types::AppSyncRuntime] :runtime
+    #   Describes a runtime used by an Amazon Web Services AppSync pipeline
+    #   resolver or Amazon Web Services AppSync function. Specifies the name
+    #   and version of the runtime to use. Note that if a runtime is
+    #   specified, code must also be specified.
+    #
+    # @option params [String] :code
+    #   The `function` code that contains the request and response functions.
+    #   When code is used, the `runtime` is required. The `runtime` value must
+    #   be `APPSYNC_JS`.
     #
     # @return [Types::UpdateFunctionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2311,7 +3354,7 @@ module Aws::AppSync
     #     data_source_name: "ResourceName", # required
     #     request_mapping_template: "MappingTemplate",
     #     response_mapping_template: "MappingTemplate",
-    #     function_version: "String", # required
+    #     function_version: "String",
     #     sync_config: {
     #       conflict_handler: "OPTIMISTIC_CONCURRENCY", # accepts OPTIMISTIC_CONCURRENCY, LAMBDA, AUTOMERGE, NONE
     #       conflict_detection: "VERSION", # accepts VERSION, NONE
@@ -2319,6 +3362,12 @@ module Aws::AppSync
     #         lambda_conflict_handler_arn: "String",
     #       },
     #     },
+    #     max_batch_size: 1,
+    #     runtime: {
+    #       name: "APPSYNC_JS", # required, accepts APPSYNC_JS
+    #       runtime_version: "String", # required
+    #     },
+    #     code: "Code",
     #   })
     #
     # @example Response structure
@@ -2334,6 +3383,10 @@ module Aws::AppSync
     #   resp.function_configuration.sync_config.conflict_handler #=> String, one of "OPTIMISTIC_CONCURRENCY", "LAMBDA", "AUTOMERGE", "NONE"
     #   resp.function_configuration.sync_config.conflict_detection #=> String, one of "VERSION", "NONE"
     #   resp.function_configuration.sync_config.lambda_conflict_handler_config.lambda_conflict_handler_arn #=> String
+    #   resp.function_configuration.max_batch_size #=> Integer
+    #   resp.function_configuration.runtime.name #=> String, one of "APPSYNC_JS"
+    #   resp.function_configuration.runtime.runtime_version #=> String
+    #   resp.function_configuration.code #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateFunction AWS API Documentation
     #
@@ -2359,7 +3412,7 @@ module Aws::AppSync
     #   The new authentication type for the `GraphqlApi` object.
     #
     # @option params [Types::UserPoolConfig] :user_pool_config
-    #   The new Amazon Cognito user pool configuration for the `GraphqlApi`
+    #   The new Amazon Cognito user pool configuration for the `~GraphqlApi`
     #   object.
     #
     # @option params [Types::OpenIDConnectConfig] :open_id_connect_config
@@ -2370,8 +3423,23 @@ module Aws::AppSync
     #   API.
     #
     # @option params [Boolean] :xray_enabled
-    #   A flag indicating whether to enable X-Ray tracing for the
-    #   `GraphqlApi`.
+    #   A flag indicating whether to use X-Ray tracing for the `GraphqlApi`.
+    #
+    # @option params [Types::LambdaAuthorizerConfig] :lambda_authorizer_config
+    #   Configuration for Lambda function authorization.
+    #
+    # @option params [String] :merged_api_execution_role_arn
+    #   The Identity and Access Management service role ARN for a merged API.
+    #   The AppSync service assumes this role on behalf of the Merged API to
+    #   validate access to source APIs at runtime and to prompt the
+    #   `AUTO_MERGE` to update the merged API endpoint with the source API
+    #   changes automatically.
+    #
+    # @option params [String] :owner_contact
+    #   The owner contact information for an API resource.
+    #
+    #   This field accepts any string input with a length of 0 - 256
+    #   characters.
     #
     # @return [Types::UpdateGraphqlApiResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2387,7 +3455,7 @@ module Aws::AppSync
     #       cloud_watch_logs_role_arn: "String", # required
     #       exclude_verbose_content: false,
     #     },
-    #     authentication_type: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
+    #     authentication_type: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT, AWS_LAMBDA
     #     user_pool_config: {
     #       user_pool_id: "String", # required
     #       aws_region: "String", # required
@@ -2402,7 +3470,7 @@ module Aws::AppSync
     #     },
     #     additional_authentication_providers: [
     #       {
-    #         authentication_type: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
+    #         authentication_type: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT, AWS_LAMBDA
     #         open_id_connect_config: {
     #           issuer: "String", # required
     #           client_id: "String",
@@ -2414,16 +3482,28 @@ module Aws::AppSync
     #           aws_region: "String", # required
     #           app_id_client_regex: "String",
     #         },
+    #         lambda_authorizer_config: {
+    #           authorizer_result_ttl_in_seconds: 1,
+    #           authorizer_uri: "String", # required
+    #           identity_validation_expression: "String",
+    #         },
     #       },
     #     ],
     #     xray_enabled: false,
+    #     lambda_authorizer_config: {
+    #       authorizer_result_ttl_in_seconds: 1,
+    #       authorizer_uri: "String", # required
+    #       identity_validation_expression: "String",
+    #     },
+    #     merged_api_execution_role_arn: "String",
+    #     owner_contact: "String",
     #   })
     #
     # @example Response structure
     #
     #   resp.graphql_api.name #=> String
     #   resp.graphql_api.api_id #=> String
-    #   resp.graphql_api.authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT"
+    #   resp.graphql_api.authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT", "AWS_LAMBDA"
     #   resp.graphql_api.log_config.field_log_level #=> String, one of "NONE", "ERROR", "ALL"
     #   resp.graphql_api.log_config.cloud_watch_logs_role_arn #=> String
     #   resp.graphql_api.log_config.exclude_verbose_content #=> Boolean
@@ -2441,7 +3521,7 @@ module Aws::AppSync
     #   resp.graphql_api.tags #=> Hash
     #   resp.graphql_api.tags["TagKey"] #=> String
     #   resp.graphql_api.additional_authentication_providers #=> Array
-    #   resp.graphql_api.additional_authentication_providers[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT"
+    #   resp.graphql_api.additional_authentication_providers[0].authentication_type #=> String, one of "API_KEY", "AWS_IAM", "AMAZON_COGNITO_USER_POOLS", "OPENID_CONNECT", "AWS_LAMBDA"
     #   resp.graphql_api.additional_authentication_providers[0].open_id_connect_config.issuer #=> String
     #   resp.graphql_api.additional_authentication_providers[0].open_id_connect_config.client_id #=> String
     #   resp.graphql_api.additional_authentication_providers[0].open_id_connect_config.iat_ttl #=> Integer
@@ -2449,8 +3529,21 @@ module Aws::AppSync
     #   resp.graphql_api.additional_authentication_providers[0].user_pool_config.user_pool_id #=> String
     #   resp.graphql_api.additional_authentication_providers[0].user_pool_config.aws_region #=> String
     #   resp.graphql_api.additional_authentication_providers[0].user_pool_config.app_id_client_regex #=> String
+    #   resp.graphql_api.additional_authentication_providers[0].lambda_authorizer_config.authorizer_result_ttl_in_seconds #=> Integer
+    #   resp.graphql_api.additional_authentication_providers[0].lambda_authorizer_config.authorizer_uri #=> String
+    #   resp.graphql_api.additional_authentication_providers[0].lambda_authorizer_config.identity_validation_expression #=> String
     #   resp.graphql_api.xray_enabled #=> Boolean
     #   resp.graphql_api.waf_web_acl_arn #=> String
+    #   resp.graphql_api.lambda_authorizer_config.authorizer_result_ttl_in_seconds #=> Integer
+    #   resp.graphql_api.lambda_authorizer_config.authorizer_uri #=> String
+    #   resp.graphql_api.lambda_authorizer_config.identity_validation_expression #=> String
+    #   resp.graphql_api.dns #=> Hash
+    #   resp.graphql_api.dns["String"] #=> String
+    #   resp.graphql_api.visibility #=> String, one of "GLOBAL", "PRIVATE"
+    #   resp.graphql_api.api_type #=> String, one of "GRAPHQL", "MERGED"
+    #   resp.graphql_api.merged_api_execution_role_arn #=> String
+    #   resp.graphql_api.owner #=> String
+    #   resp.graphql_api.owner_contact #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateGraphqlApi AWS API Documentation
     #
@@ -2482,7 +3575,7 @@ module Aws::AppSync
     #   expression into a format that a data source can understand. Mapping
     #   templates are written in Apache Velocity Template Language (VTL).
     #
-    #   VTL request mapping templates are optional when using a Lambda data
+    #   VTL request mapping templates are optional when using an Lambda data
     #   source. For all other data sources, VTL request and response mapping
     #   templates are required.
     #
@@ -2492,23 +3585,37 @@ module Aws::AppSync
     # @option params [String] :kind
     #   The resolver type.
     #
-    #   * **UNIT**\: A UNIT resolver type. A UNIT resolver is the default
-    #     resolver type. A UNIT resolver enables you to execute a GraphQL
-    #     query against a single data source.
+    #   * **UNIT**: A UNIT resolver type. A UNIT resolver is the default
+    #     resolver type. You can use a UNIT resolver to run a GraphQL query
+    #     against a single data source.
     #
-    #   * **PIPELINE**\: A PIPELINE resolver type. A PIPELINE resolver enables
-    #     you to execute a series of `Function` in a serial manner. You can
-    #     use a pipeline resolver to execute a GraphQL query against multiple
-    #     data sources.
+    #   * **PIPELINE**: A PIPELINE resolver type. You can use a PIPELINE
+    #     resolver to invoke a series of `Function` objects in a serial
+    #     manner. You can use a pipeline resolver to run a GraphQL query
+    #     against multiple data sources.
     #
     # @option params [Types::PipelineConfig] :pipeline_config
     #   The `PipelineConfig`.
     #
     # @option params [Types::SyncConfig] :sync_config
-    #   The `SyncConfig` for a resolver attached to a versioned datasource.
+    #   The `SyncConfig` for a resolver attached to a versioned data source.
     #
     # @option params [Types::CachingConfig] :caching_config
     #   The caching configuration for the resolver.
+    #
+    # @option params [Integer] :max_batch_size
+    #   The maximum batching size for a resolver.
+    #
+    # @option params [Types::AppSyncRuntime] :runtime
+    #   Describes a runtime used by an Amazon Web Services AppSync pipeline
+    #   resolver or Amazon Web Services AppSync function. Specifies the name
+    #   and version of the runtime to use. Note that if a runtime is
+    #   specified, code must also be specified.
+    #
+    # @option params [String] :code
+    #   The `resolver` code that contains the request and response functions.
+    #   When code is used, the `runtime` is required. The `runtime` value must
+    #   be `APPSYNC_JS`.
     #
     # @return [Types::UpdateResolverResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2535,9 +3642,15 @@ module Aws::AppSync
     #       },
     #     },
     #     caching_config: {
-    #       ttl: 1,
+    #       ttl: 1, # required
     #       caching_keys: ["String"],
     #     },
+    #     max_batch_size: 1,
+    #     runtime: {
+    #       name: "APPSYNC_JS", # required, accepts APPSYNC_JS
+    #       runtime_version: "String", # required
+    #     },
+    #     code: "Code",
     #   })
     #
     # @example Response structure
@@ -2557,6 +3670,10 @@ module Aws::AppSync
     #   resp.resolver.caching_config.ttl #=> Integer
     #   resp.resolver.caching_config.caching_keys #=> Array
     #   resp.resolver.caching_config.caching_keys[0] #=> String
+    #   resp.resolver.max_batch_size #=> Integer
+    #   resp.resolver.runtime.name #=> String, one of "APPSYNC_JS"
+    #   resp.resolver.runtime.runtime_version #=> String
+    #   resp.resolver.code #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateResolver AWS API Documentation
     #
@@ -2564,6 +3681,64 @@ module Aws::AppSync
     # @param [Hash] params ({})
     def update_resolver(params = {}, options = {})
       req = build_request(:update_resolver, params)
+      req.send_request(options)
+    end
+
+    # Updates some of the configuration choices of a particular source API
+    # association.
+    #
+    # @option params [required, String] :association_id
+    #   The ID generated by the AppSync service for the source API
+    #   association.
+    #
+    # @option params [required, String] :merged_api_identifier
+    #   The identifier of the AppSync Merged API. This is generated by the
+    #   AppSync service. In most cases, Merged APIs (especially in your
+    #   account) only require the API ID value or ARN of the merged API.
+    #   However, Merged APIs in other accounts (cross-account use cases)
+    #   strictly require the full resource ARN of the merged API.
+    #
+    # @option params [String] :description
+    #   The description field.
+    #
+    # @option params [Types::SourceApiAssociationConfig] :source_api_association_config
+    #   The `SourceApiAssociationConfig` object data.
+    #
+    # @return [Types::UpdateSourceApiAssociationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateSourceApiAssociationResponse#source_api_association #source_api_association} => Types::SourceApiAssociation
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_source_api_association({
+    #     association_id: "String", # required
+    #     merged_api_identifier: "String", # required
+    #     description: "String",
+    #     source_api_association_config: {
+    #       merge_type: "MANUAL_MERGE", # accepts MANUAL_MERGE, AUTO_MERGE
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.source_api_association.association_id #=> String
+    #   resp.source_api_association.association_arn #=> String
+    #   resp.source_api_association.source_api_id #=> String
+    #   resp.source_api_association.source_api_arn #=> String
+    #   resp.source_api_association.merged_api_arn #=> String
+    #   resp.source_api_association.merged_api_id #=> String
+    #   resp.source_api_association.description #=> String
+    #   resp.source_api_association.source_api_association_config.merge_type #=> String, one of "MANUAL_MERGE", "AUTO_MERGE"
+    #   resp.source_api_association.source_api_association_status #=> String, one of "MERGE_SCHEDULED", "MERGE_FAILED", "MERGE_SUCCESS", "MERGE_IN_PROGRESS", "AUTO_MERGE_SCHEDULE_FAILED", "DELETION_SCHEDULED", "DELETION_IN_PROGRESS", "DELETION_FAILED"
+    #   resp.source_api_association.source_api_association_status_detail #=> String
+    #   resp.source_api_association.last_successful_merge_date #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateSourceApiAssociation AWS API Documentation
+    #
+    # @overload update_source_api_association(params = {})
+    # @param [Hash] params ({})
+    def update_source_api_association(params = {}, options = {})
+      req = build_request(:update_source_api_association, params)
       req.send_request(options)
     end
 
@@ -2624,7 +3799,7 @@ module Aws::AppSync
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-appsync'
-      context[:gem_version] = '1.40.0'
+      context[:gem_version] = '1.64.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

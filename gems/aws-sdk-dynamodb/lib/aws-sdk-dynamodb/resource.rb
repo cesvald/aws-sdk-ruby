@@ -69,7 +69,7 @@ module Aws::DynamoDB
     #
     #   * `ExpressionAttributeNames` - One or more substitution tokens for
     #     attribute names in the `ProjectionExpression` parameter. The
-    #     following are some use cases for using `ExpressionAttributeNames`\:
+    #     following are some use cases for using `ExpressionAttributeNames`:
     #
     #     * To access an attribute whose name conflicts with a DynamoDB
     #       reserved word.
@@ -91,7 +91,7 @@ module Aws::DynamoDB
     #     cannot be used directly in an expression. (For the complete list of
     #     reserved words, see [Reserved Words][1] in the *Amazon DynamoDB
     #     Developer Guide*). To work around this, you could specify the
-    #     following for `ExpressionAttributeNames`\:
+    #     following for `ExpressionAttributeNames`:
     #
     #     * `\{"#P":"Percentile"\}`
     #
@@ -143,8 +143,8 @@ module Aws::DynamoDB
     #   [2]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.AccessingItemAttributes.html
     #   [3]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LegacyConditionalParameters.AttributesToGet.html
     # @option options [String] :return_consumed_capacity
-    #   Determines the level of detail about provisioned throughput
-    #   consumption that is returned in the response:
+    #   Determines the level of detail about either provisioned or on-demand
+    #   throughput consumption that is returned in the response:
     #
     #   * `INDEXES` - The response includes the aggregate `ConsumedCapacity`
     #     for the operation, together with `ConsumedCapacity` for each table
@@ -160,7 +160,9 @@ module Aws::DynamoDB
     #   * `NONE` - No `ConsumedCapacity` details are included in the response.
     # @return [Types::BatchGetItemOutput]
     def batch_get_item(options = {})
-      resp = @client.batch_get_item(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.batch_get_item(options)
+      end
       resp.data
     end
 
@@ -219,8 +221,8 @@ module Aws::DynamoDB
     #       the data types for those attributes must match those of the schema
     #       in the table's attribute definition.
     # @option options [String] :return_consumed_capacity
-    #   Determines the level of detail about provisioned throughput
-    #   consumption that is returned in the response:
+    #   Determines the level of detail about either provisioned or on-demand
+    #   throughput consumption that is returned in the response:
     #
     #   * `INDEXES` - The response includes the aggregate `ConsumedCapacity`
     #     for the operation, together with `ConsumedCapacity` for each table
@@ -241,7 +243,9 @@ module Aws::DynamoDB
     #   response. If set to `NONE` (the default), no statistics are returned.
     # @return [Types::BatchWriteItemOutput]
     def batch_write_item(options = {})
-      resp = @client.batch_write_item(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.batch_write_item(options)
+      end
       resp.data
     end
 
@@ -315,6 +319,8 @@ module Aws::DynamoDB
     #         value: "TagValueString", # required
     #       },
     #     ],
+    #     table_class: "STANDARD", # accepts STANDARD, STANDARD_INFREQUENT_ACCESS
+    #     deletion_protection_enabled: false,
     #   })
     # @param [Hash] options ({})
     # @option options [required, Array<Types::AttributeDefinition>] :attribute_definitions
@@ -508,9 +514,17 @@ module Aws::DynamoDB
     #
     #
     #   [1]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tagging.html
+    # @option options [String] :table_class
+    #   The table class of the new table. Valid values are `STANDARD` and
+    #   `STANDARD_INFREQUENT_ACCESS`.
+    # @option options [Boolean] :deletion_protection_enabled
+    #   Indicates whether deletion protection is to be enabled (true) or
+    #   disabled (false) on the table.
     # @return [Table]
     def create_table(options = {})
-      resp = @client.create_table(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_table(options)
+      end
       Table.new(
         name: resp.data.table_description.table_name,
         data: resp.data.table_description,
@@ -536,7 +550,9 @@ module Aws::DynamoDB
     # @return [Table::Collection]
     def tables(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_tables(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_tables(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.table_names.each do |t|

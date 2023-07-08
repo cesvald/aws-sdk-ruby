@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:s3outposts)
@@ -73,8 +77,13 @@ module Aws::S3Outposts
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::S3Outposts::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::S3Outposts
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::S3Outposts
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::S3Outposts
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::S3Outposts
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::S3Outposts
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::S3Outposts::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::S3Outposts::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::S3Outposts
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::S3Outposts
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -327,13 +384,11 @@ module Aws::S3Outposts
 
     # @!group API Operations
 
-    # S3 on Outposts access points simplify managing data access at scale
-    # for shared datasets in Amazon S3 on Outposts. S3 on Outposts uses
-    # endpoints to connect to Outposts buckets so that you can perform
-    # actions within your virtual private cloud (VPC).
+    # Creates an endpoint and associates it with the specified Outpost.
     #
-    # This action creates an endpoint and associates it with the specified
-    # Outpost.
+    # <note markdown="1"> It can take up to 5 minutes for this action to finish.
+    #
+    #  </note>
     #
     #
     #
@@ -349,13 +404,29 @@ module Aws::S3Outposts
     # [2]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_s3outposts_ListEndpoints.html
     #
     # @option params [required, String] :outpost_id
-    #   The ID of the AWS Outpost.
+    #   The ID of the Outposts.
     #
     # @option params [required, String] :subnet_id
-    #   The ID of the subnet in the selected VPC.
+    #   The ID of the subnet in the selected VPC. The endpoint subnet must
+    #   belong to the Outpost that has Amazon S3 on Outposts provisioned.
     #
     # @option params [required, String] :security_group_id
     #   The ID of the security group to use with the endpoint.
+    #
+    # @option params [String] :access_type
+    #   The type of access for the network connectivity for the Amazon S3 on
+    #   Outposts endpoint. To use the Amazon Web Services VPC, choose
+    #   `Private`. To use the endpoint with an on-premises network, choose
+    #   `CustomerOwnedIp`. If you choose `CustomerOwnedIp`, you must also
+    #   provide the customer-owned IP address pool (CoIP pool).
+    #
+    #   <note markdown="1"> `Private` is the default access type value.
+    #
+    #    </note>
+    #
+    # @option params [String] :customer_owned_ipv_4_pool
+    #   The ID of the customer-owned IPv4 address pool (CoIP pool) for the
+    #   endpoint. IP addresses are allocated from this pool for the endpoint.
     #
     # @return [Types::CreateEndpointResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -367,6 +438,8 @@ module Aws::S3Outposts
     #     outpost_id: "OutpostId", # required
     #     subnet_id: "SubnetId", # required
     #     security_group_id: "SecurityGroupId", # required
+    #     access_type: "Private", # accepts Private, CustomerOwnedIp
+    #     customer_owned_ipv_4_pool: "CustomerOwnedIpv4Pool",
     #   })
     #
     # @example Response structure
@@ -382,12 +455,11 @@ module Aws::S3Outposts
       req.send_request(options)
     end
 
-    # S3 on Outposts access points simplify managing data access at scale
-    # for shared datasets in Amazon S3 on Outposts. S3 on Outposts uses
-    # endpoints to connect to Outposts buckets so that you can perform
-    # actions within your virtual private cloud (VPC).
+    # Deletes an endpoint.
     #
-    # This action deletes an endpoint.
+    # <note markdown="1"> It can take up to 5 minutes for this action to finish.
+    #
+    #  </note>
     #
     #
     #
@@ -403,10 +475,10 @@ module Aws::S3Outposts
     # [2]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_s3outposts_ListEndpoints.html
     #
     # @option params [required, String] :endpoint_id
-    #   The ID of the end point.
+    #   The ID of the endpoint.
     #
     # @option params [required, String] :outpost_id
-    #   The ID of the AWS Outpost.
+    #   The ID of the Outposts.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -426,14 +498,7 @@ module Aws::S3Outposts
       req.send_request(options)
     end
 
-    # S3 on Outposts access points simplify managing data access at scale
-    # for shared datasets in Amazon S3 on Outposts. S3 on Outposts uses
-    # endpoints to connect to Outposts buckets so that you can perform
-    # actions within your virtual private cloud (VPC).
-    #
-    # This action lists endpoints associated with the Outpost.
-    #
-    #
+    # Lists endpoints associated with the specified Outpost.
     #
     # Related actions include:
     #
@@ -447,10 +512,11 @@ module Aws::S3Outposts
     # [2]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_s3outposts_DeleteEndpoint.html
     #
     # @option params [String] :next_token
-    #   The next endpoint requested in the list.
+    #   If a previous response from this operation included a `NextToken`
+    #   value, provide that value here to retrieve the next page of results.
     #
     # @option params [Integer] :max_results
-    #   The max number of endpoints that can be returned on the request.
+    #   The maximum number of endpoints that will be returned in the response.
     #
     # @return [Types::ListEndpointsResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -472,10 +538,17 @@ module Aws::S3Outposts
     #   resp.endpoints[0].endpoint_arn #=> String
     #   resp.endpoints[0].outposts_id #=> String
     #   resp.endpoints[0].cidr_block #=> String
-    #   resp.endpoints[0].status #=> String, one of "PENDING", "AVAILABLE"
+    #   resp.endpoints[0].status #=> String, one of "Pending", "Available", "Deleting", "Create_Failed", "Delete_Failed"
     #   resp.endpoints[0].creation_time #=> Time
     #   resp.endpoints[0].network_interfaces #=> Array
     #   resp.endpoints[0].network_interfaces[0].network_interface_id #=> String
+    #   resp.endpoints[0].vpc_id #=> String
+    #   resp.endpoints[0].subnet_id #=> String
+    #   resp.endpoints[0].security_group_id #=> String
+    #   resp.endpoints[0].access_type #=> String, one of "Private", "CustomerOwnedIp"
+    #   resp.endpoints[0].customer_owned_ipv_4_pool #=> String
+    #   resp.endpoints[0].failed_reason.error_code #=> String
+    #   resp.endpoints[0].failed_reason.message #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/s3outposts-2017-07-25/ListEndpoints AWS API Documentation
@@ -484,6 +557,120 @@ module Aws::S3Outposts
     # @param [Hash] params ({})
     def list_endpoints(params = {}, options = {})
       req = build_request(:list_endpoints, params)
+      req.send_request(options)
+    end
+
+    # Lists the Outposts with S3 on Outposts capacity for your Amazon Web
+    # Services account. Includes S3 on Outposts that you have access to as
+    # the Outposts owner, or as a shared user from Resource Access Manager
+    # (RAM).
+    #
+    # @option params [String] :next_token
+    #   When you can get additional results from the `ListOutpostsWithS3`
+    #   call, a `NextToken` parameter is returned in the output. You can then
+    #   pass in a subsequent command to the `NextToken` parameter to continue
+    #   listing additional Outposts.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of Outposts to return. The limit is 100.
+    #
+    # @return [Types::ListOutpostsWithS3Result] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListOutpostsWithS3Result#outposts #outposts} => Array&lt;Types::Outpost&gt;
+    #   * {Types::ListOutpostsWithS3Result#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_outposts_with_s3({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.outposts #=> Array
+    #   resp.outposts[0].outpost_arn #=> String
+    #   resp.outposts[0].outpost_id #=> String
+    #   resp.outposts[0].owner_id #=> String
+    #   resp.outposts[0].capacity_in_bytes #=> Integer
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/s3outposts-2017-07-25/ListOutpostsWithS3 AWS API Documentation
+    #
+    # @overload list_outposts_with_s3(params = {})
+    # @param [Hash] params ({})
+    def list_outposts_with_s3(params = {}, options = {})
+      req = build_request(:list_outposts_with_s3, params)
+      req.send_request(options)
+    end
+
+    # Lists all endpoints associated with an Outpost that has been shared by
+    # Amazon Web Services Resource Access Manager (RAM).
+    #
+    # Related actions include:
+    #
+    # * [CreateEndpoint][1]
+    #
+    # * [DeleteEndpoint][2]
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_s3outposts_CreateEndpoint.html
+    # [2]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_s3outposts_DeleteEndpoint.html
+    #
+    # @option params [String] :next_token
+    #   If a previous response from this operation included a `NextToken`
+    #   value, you can provide that value here to retrieve the next page of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of endpoints that will be returned in the response.
+    #
+    # @option params [required, String] :outpost_id
+    #   The ID of the Amazon Web Services Outpost.
+    #
+    # @return [Types::ListSharedEndpointsResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListSharedEndpointsResult#endpoints #endpoints} => Array&lt;Types::Endpoint&gt;
+    #   * {Types::ListSharedEndpointsResult#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_shared_endpoints({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     outpost_id: "OutpostId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.endpoints #=> Array
+    #   resp.endpoints[0].endpoint_arn #=> String
+    #   resp.endpoints[0].outposts_id #=> String
+    #   resp.endpoints[0].cidr_block #=> String
+    #   resp.endpoints[0].status #=> String, one of "Pending", "Available", "Deleting", "Create_Failed", "Delete_Failed"
+    #   resp.endpoints[0].creation_time #=> Time
+    #   resp.endpoints[0].network_interfaces #=> Array
+    #   resp.endpoints[0].network_interfaces[0].network_interface_id #=> String
+    #   resp.endpoints[0].vpc_id #=> String
+    #   resp.endpoints[0].subnet_id #=> String
+    #   resp.endpoints[0].security_group_id #=> String
+    #   resp.endpoints[0].access_type #=> String, one of "Private", "CustomerOwnedIp"
+    #   resp.endpoints[0].customer_owned_ipv_4_pool #=> String
+    #   resp.endpoints[0].failed_reason.error_code #=> String
+    #   resp.endpoints[0].failed_reason.message #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/s3outposts-2017-07-25/ListSharedEndpoints AWS API Documentation
+    #
+    # @overload list_shared_endpoints(params = {})
+    # @param [Hash] params ({})
+    def list_shared_endpoints(params = {}, options = {})
+      req = build_request(:list_shared_endpoints, params)
       req.send_request(options)
     end
 
@@ -500,7 +687,7 @@ module Aws::S3Outposts
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-s3outposts'
-      context[:gem_version] = '1.2.0'
+      context[:gem_version] = '1.21.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

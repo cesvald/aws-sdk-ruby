@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:honeycode)
@@ -73,8 +77,13 @@ module Aws::Honeycode
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::Honeycode::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::Honeycode
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::Honeycode
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::Honeycode
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::Honeycode
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::Honeycode
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::Honeycode::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::Honeycode::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::Honeycode
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::Honeycode
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -388,6 +445,7 @@ module Aws::Honeycode
     #         cells_to_create: { # required
     #           "ResourceId" => {
     #             fact: "Fact",
+    #             facts: ["Fact"],
     #           },
     #         },
     #       },
@@ -537,6 +595,7 @@ module Aws::Honeycode
     #         cells_to_update: { # required
     #           "ResourceId" => {
     #             fact: "Fact",
+    #             facts: ["Fact"],
     #           },
     #         },
     #       },
@@ -630,6 +689,7 @@ module Aws::Honeycode
     #         cells_to_update: { # required
     #           "ResourceId" => {
     #             fact: "Fact",
+    #             facts: ["Fact"],
     #           },
     #         },
     #       },
@@ -684,6 +744,7 @@ module Aws::Honeycode
     #   * {Types::DescribeTableDataImportJobResult#job_status #job_status} => String
     #   * {Types::DescribeTableDataImportJobResult#message #message} => String
     #   * {Types::DescribeTableDataImportJobResult#job_metadata #job_metadata} => Types::TableDataImportJobMetadata
+    #   * {Types::DescribeTableDataImportJobResult#error_code #error_code} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -707,6 +768,7 @@ module Aws::Honeycode
     #   resp.job_metadata.import_options.delimited_text_options.ignore_empty_rows #=> Boolean
     #   resp.job_metadata.import_options.delimited_text_options.data_character_encoding #=> String, one of "UTF-8", "US-ASCII", "ISO-8859-1", "UTF-16BE", "UTF-16LE", "UTF-16"
     #   resp.job_metadata.data_source.data_source_config.data_source_url #=> String
+    #   resp.error_code #=> String, one of "ACCESS_DENIED", "INVALID_URL_ERROR", "INVALID_IMPORT_OPTIONS_ERROR", "INVALID_TABLE_ID_ERROR", "INVALID_TABLE_COLUMN_ID_ERROR", "TABLE_NOT_FOUND_ERROR", "FILE_EMPTY_ERROR", "INVALID_FILE_TYPE_ERROR", "FILE_PARSING_ERROR", "FILE_SIZE_LIMIT_ERROR", "FILE_NOT_FOUND_ERROR", "UNKNOWN_ERROR", "RESOURCE_NOT_FOUND_ERROR", "SYSTEM_LIMIT_ERROR"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/honeycode-2020-03-01/DescribeTableDataImportJob AWS API Documentation
     #
@@ -725,7 +787,7 @@ module Aws::Honeycode
     #   The ID of the workbook that contains the screen.
     #
     # @option params [required, String] :app_id
-    #   The ID of the app that contains the screem.
+    #   The ID of the app that contains the screen.
     #
     # @option params [required, String] :screen_id
     #   The ID of the screen.
@@ -778,11 +840,11 @@ module Aws::Honeycode
     #   resp.results #=> Hash
     #   resp.results["Name"].headers #=> Array
     #   resp.results["Name"].headers[0].name #=> String
-    #   resp.results["Name"].headers[0].format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK"
+    #   resp.results["Name"].headers[0].format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK", "ROWSET"
     #   resp.results["Name"].rows #=> Array
     #   resp.results["Name"].rows[0].row_id #=> String
     #   resp.results["Name"].rows[0].data_items #=> Array
-    #   resp.results["Name"].rows[0].data_items[0].override_format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK"
+    #   resp.results["Name"].rows[0].data_items[0].override_format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK", "ROWSET"
     #   resp.results["Name"].rows[0].data_items[0].raw_value #=> String
     #   resp.results["Name"].rows[0].data_items[0].formatted_value #=> String
     #   resp.workbook_cursor #=> Integer
@@ -916,7 +978,7 @@ module Aws::Honeycode
     #   resp.table_columns #=> Array
     #   resp.table_columns[0].table_column_id #=> String
     #   resp.table_columns[0].table_column_name #=> String
-    #   resp.table_columns[0].format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK"
+    #   resp.table_columns[0].format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK", "ROWSET"
     #   resp.next_token #=> String
     #   resp.workbook_cursor #=> Integer
     #
@@ -990,9 +1052,11 @@ module Aws::Honeycode
     #   resp.rows[0].row_id #=> String
     #   resp.rows[0].cells #=> Array
     #   resp.rows[0].cells[0].formula #=> String
-    #   resp.rows[0].cells[0].format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK"
+    #   resp.rows[0].cells[0].format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK", "ROWSET"
     #   resp.rows[0].cells[0].raw_value #=> String
     #   resp.rows[0].cells[0].formatted_value #=> String
+    #   resp.rows[0].cells[0].formatted_values #=> Array
+    #   resp.rows[0].cells[0].formatted_values[0] #=> String
     #   resp.row_ids_not_found #=> Array
     #   resp.row_ids_not_found[0] #=> String
     #   resp.next_token #=> String
@@ -1060,6 +1124,35 @@ module Aws::Honeycode
       req.send_request(options)
     end
 
+    # The ListTagsForResource API allows you to return a resource's tags.
+    #
+    # @option params [required, String] :resource_arn
+    #   The resource's Amazon Resource Name (ARN).
+    #
+    # @return [Types::ListTagsForResourceResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListTagsForResourceResult#tags #tags} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_tags_for_resource({
+    #     resource_arn: "ResourceArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.tags #=> Hash
+    #   resp.tags["TagKey"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/honeycode-2020-03-01/ListTagsForResource AWS API Documentation
+    #
+    # @overload list_tags_for_resource(params = {})
+    # @param [Hash] params ({})
+    def list_tags_for_resource(params = {}, options = {})
+      req = build_request(:list_tags_for_resource, params)
+      req.send_request(options)
+    end
+
     # The QueryTableRows API allows you to use a filter formula to query for
     # specific rows in a table.
     #
@@ -1120,9 +1213,11 @@ module Aws::Honeycode
     #   resp.rows[0].row_id #=> String
     #   resp.rows[0].cells #=> Array
     #   resp.rows[0].cells[0].formula #=> String
-    #   resp.rows[0].cells[0].format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK"
+    #   resp.rows[0].cells[0].format #=> String, one of "AUTO", "NUMBER", "CURRENCY", "DATE", "TIME", "DATE_TIME", "PERCENTAGE", "TEXT", "ACCOUNTING", "CONTACT", "ROWLINK", "ROWSET"
     #   resp.rows[0].cells[0].raw_value #=> String
     #   resp.rows[0].cells[0].formatted_value #=> String
+    #   resp.rows[0].cells[0].formatted_values #=> Array
+    #   resp.rows[0].cells[0].formatted_values[0] #=> String
     #   resp.next_token #=> String
     #   resp.workbook_cursor #=> Integer
     #
@@ -1223,6 +1318,63 @@ module Aws::Honeycode
       req.send_request(options)
     end
 
+    # The TagResource API allows you to add tags to an ARN-able resource.
+    # Resource includes workbook, table, screen and screen-automation.
+    #
+    # @option params [required, String] :resource_arn
+    #   The resource's Amazon Resource Name (ARN).
+    #
+    # @option params [required, Hash<String,String>] :tags
+    #   A list of tags to apply to the resource.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.tag_resource({
+    #     resource_arn: "ResourceArn", # required
+    #     tags: { # required
+    #       "TagKey" => "TagValue",
+    #     },
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/honeycode-2020-03-01/TagResource AWS API Documentation
+    #
+    # @overload tag_resource(params = {})
+    # @param [Hash] params ({})
+    def tag_resource(params = {}, options = {})
+      req = build_request(:tag_resource, params)
+      req.send_request(options)
+    end
+
+    # The UntagResource API allows you to removes tags from an ARN-able
+    # resource. Resource includes workbook, table, screen and
+    # screen-automation.
+    #
+    # @option params [required, String] :resource_arn
+    #   The resource's Amazon Resource Name (ARN).
+    #
+    # @option params [required, Array<String>] :tag_keys
+    #   A list of tag keys to remove from the resource.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.untag_resource({
+    #     resource_arn: "ResourceArn", # required
+    #     tag_keys: ["TagKey"], # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/honeycode-2020-03-01/UntagResource AWS API Documentation
+    #
+    # @overload untag_resource(params = {})
+    # @param [Hash] params ({})
+    def untag_resource(params = {}, options = {})
+      req = build_request(:untag_resource, params)
+      req.send_request(options)
+    end
+
     # @!endgroup
 
     # @param params ({})
@@ -1236,7 +1388,7 @@ module Aws::Honeycode
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-honeycode'
-      context[:gem_version] = '1.6.0'
+      context[:gem_version] = '1.23.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

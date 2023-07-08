@@ -18,14 +18,6 @@ module Aws::AppStream
     # an image builder, administrators can connect to the image builder only
     # through that endpoint.
     #
-    # @note When making an API call, you may pass AccessEndpoint
-    #   data as a hash:
-    #
-    #       {
-    #         endpoint_type: "STREAMING", # required, accepts STREAMING
-    #         vpce_id: "String",
-    #       }
-    #
     # @!attribute [rw] endpoint_type
     #   The type of interface endpoint.
     #   @return [String]
@@ -40,6 +32,214 @@ module Aws::AppStream
     class AccessEndpoint < Struct.new(
       :endpoint_type,
       :vpce_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes an app block.
+    #
+    # App blocks are an Amazon AppStream 2.0 resource that stores the
+    # details about the virtual hard disk in an S3 bucket. It also stores
+    # the setup script with details about how to mount the virtual hard
+    # disk. The virtual hard disk includes the application binaries and
+    # other files necessary to launch your applications. Multiple
+    # applications can be assigned to a single app block.
+    #
+    # This is only supported for Elastic fleets.
+    #
+    # @!attribute [rw] name
+    #   The name of the app block.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   The ARN of the app block.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the app block.
+    #   @return [String]
+    #
+    # @!attribute [rw] display_name
+    #   The display name of the app block.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_s3_location
+    #   The source S3 location of the app block.
+    #   @return [Types::S3Location]
+    #
+    # @!attribute [rw] setup_script_details
+    #   The setup script details of the app block.
+    #
+    #   This only applies to app blocks with PackagingType `CUSTOM`.
+    #   @return [Types::ScriptDetails]
+    #
+    # @!attribute [rw] created_time
+    #   The created time of the app block.
+    #   @return [Time]
+    #
+    # @!attribute [rw] post_setup_script_details
+    #   The post setup script details of the app block.
+    #
+    #   This only applies to app blocks with PackagingType `APPSTREAM2`.
+    #   @return [Types::ScriptDetails]
+    #
+    # @!attribute [rw] packaging_type
+    #   The packaging type of the app block.
+    #   @return [String]
+    #
+    # @!attribute [rw] state
+    #   The state of the app block.
+    #
+    #   An app block with AppStream 2.0 packaging will be in the `INACTIVE`
+    #   state if no application package (VHD) is assigned to it. After an
+    #   application package (VHD) is created by an app block builder for an
+    #   app block, it becomes `ACTIVE`.
+    #
+    #   Custom app blocks are always in the `ACTIVE` state and no action is
+    #   required to use them.
+    #   @return [String]
+    #
+    # @!attribute [rw] app_block_errors
+    #   The errors of the app block.
+    #   @return [Array<Types::ErrorDetails>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AppBlock AWS API Documentation
+    #
+    class AppBlock < Struct.new(
+      :name,
+      :arn,
+      :description,
+      :display_name,
+      :source_s3_location,
+      :setup_script_details,
+      :created_time,
+      :post_setup_script_details,
+      :packaging_type,
+      :state,
+      :app_block_errors)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes an app block builder.
+    #
+    # @!attribute [rw] arn
+    #   The ARN of the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The name of the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] display_name
+    #   The display name of the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] platform
+    #   The platform of the app block builder.
+    #
+    #   `WINDOWS_SERVER_2019` is the only valid value.
+    #   @return [String]
+    #
+    # @!attribute [rw] instance_type
+    #   The instance type of the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] enable_default_internet_access
+    #   Indicates whether default internet access is enabled for the app
+    #   block builder.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] iam_role_arn
+    #   The ARN of the IAM role that is applied to the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] vpc_config
+    #   The VPC configuration for the app block builder.
+    #   @return [Types::VpcConfig]
+    #
+    # @!attribute [rw] state
+    #   The state of the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] created_time
+    #   The creation time of the app block builder.
+    #   @return [Time]
+    #
+    # @!attribute [rw] app_block_builder_errors
+    #   The app block builder errors.
+    #   @return [Array<Types::ResourceError>]
+    #
+    # @!attribute [rw] state_change_reason
+    #   The state change reason.
+    #   @return [Types::AppBlockBuilderStateChangeReason]
+    #
+    # @!attribute [rw] access_endpoints
+    #   The list of interface VPC endpoint (interface endpoint) objects.
+    #   Administrators can connect to the app block builder only through the
+    #   specified endpoints.
+    #   @return [Array<Types::AccessEndpoint>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AppBlockBuilder AWS API Documentation
+    #
+    class AppBlockBuilder < Struct.new(
+      :arn,
+      :name,
+      :display_name,
+      :description,
+      :platform,
+      :instance_type,
+      :enable_default_internet_access,
+      :iam_role_arn,
+      :vpc_config,
+      :state,
+      :created_time,
+      :app_block_builder_errors,
+      :state_change_reason,
+      :access_endpoints)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes an association between an app block builder and app block.
+    #
+    # @!attribute [rw] app_block_arn
+    #   The ARN of the app block.
+    #   @return [String]
+    #
+    # @!attribute [rw] app_block_builder_name
+    #   The name of the app block builder.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AppBlockBuilderAppBlockAssociation AWS API Documentation
+    #
+    class AppBlockBuilderAppBlockAssociation < Struct.new(
+      :app_block_arn,
+      :app_block_builder_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the reason why the last app block builder state change
+    # occurred.
+    #
+    # @!attribute [rw] code
+    #   The state change reason code.
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   The state change reason message.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AppBlockBuilderStateChangeReason AWS API Documentation
+    #
+    class AppBlockBuilderStateChangeReason < Struct.new(
+      :code,
+      :message)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -75,6 +275,38 @@ module Aws::AppStream
     #   Additional attributes that describe the application.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] working_directory
+    #   The working directory for the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   The ARN of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] app_block_arn
+    #   The app block ARN of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] icon_s3_location
+    #   The S3 location of the application icon.
+    #   @return [Types::S3Location]
+    #
+    # @!attribute [rw] platforms
+    #   The platforms on which the application can run.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] instance_families
+    #   The instance families for the application.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] created_time
+    #   The time at which the application was created within the app block.
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/Application AWS API Documentation
     #
     class Application < Struct.new(
@@ -84,20 +316,39 @@ module Aws::AppStream
       :launch_path,
       :launch_parameters,
       :enabled,
-      :metadata)
+      :metadata,
+      :working_directory,
+      :description,
+      :arn,
+      :app_block_arn,
+      :icon_s3_location,
+      :platforms,
+      :instance_families,
+      :created_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the application fleet association.
+    #
+    # @!attribute [rw] fleet_name
+    #   The name of the fleet associated with the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_arn
+    #   The ARN of the application associated with the fleet.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/ApplicationFleetAssociation AWS API Documentation
+    #
+    class ApplicationFleetAssociation < Struct.new(
+      :fleet_name,
+      :application_arn)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # The persistent application settings for users of a stack.
-    #
-    # @note When making an API call, you may pass ApplicationSettings
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #         settings_group: "SettingsGroup",
-    #       }
     #
     # @!attribute [rw] enabled
     #   Enables or disables persistent application settings for users during
@@ -149,14 +400,92 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateFleetRequest
-    #   data as a hash:
+    # @!attribute [rw] app_block_arn
+    #   The ARN of the app block.
+    #   @return [String]
     #
-    #       {
-    #         fleet_name: "String", # required
-    #         stack_name: "String", # required
-    #       }
+    # @!attribute [rw] app_block_builder_name
+    #   The name of the app block builder.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AssociateAppBlockBuilderAppBlockRequest AWS API Documentation
+    #
+    class AssociateAppBlockBuilderAppBlockRequest < Struct.new(
+      :app_block_arn,
+      :app_block_builder_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_block_builder_app_block_association
+    #   The list of app block builders associated with app blocks.
+    #   @return [Types::AppBlockBuilderAppBlockAssociation]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AssociateAppBlockBuilderAppBlockResult AWS API Documentation
+    #
+    class AssociateAppBlockBuilderAppBlockResult < Struct.new(
+      :app_block_builder_app_block_association)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] fleet_name
+    #   The name of the fleet.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_arn
+    #   The ARN of the application.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AssociateApplicationFleetRequest AWS API Documentation
+    #
+    class AssociateApplicationFleetRequest < Struct.new(
+      :fleet_name,
+      :application_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] application_fleet_association
+    #   If fleet name is specified, this returns the list of applications
+    #   that are associated to it. If application ARN is specified, this
+    #   returns the list of fleets to which it is associated.
+    #   @return [Types::ApplicationFleetAssociation]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AssociateApplicationFleetResult AWS API Documentation
+    #
+    class AssociateApplicationFleetResult < Struct.new(
+      :application_fleet_association)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] stack_name
+    #   The name of the stack.
+    #   @return [String]
+    #
+    # @!attribute [rw] entitlement_name
+    #   The name of the entitlement.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_identifier
+    #   The identifier of the application.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AssociateApplicationToEntitlementRequest AWS API Documentation
+    #
+    class AssociateApplicationToEntitlementRequest < Struct.new(
+      :stack_name,
+      :entitlement_name,
+      :application_identifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/AssociateApplicationToEntitlementResult AWS API Documentation
+    #
+    class AssociateApplicationToEntitlementResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] fleet_name
     #   The name of the fleet.
     #   @return [String]
@@ -178,20 +507,6 @@ module Aws::AppStream
     #
     class AssociateFleetResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass BatchAssociateUserStackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         user_stack_associations: [ # required
-    #           {
-    #             stack_name: "String", # required
-    #             user_name: "Username", # required
-    #             authentication_type: "API", # required, accepts API, SAML, USERPOOL
-    #             send_email_notification: false,
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] user_stack_associations
     #   The list of UserStackAssociation objects.
     #   @return [Array<Types::UserStackAssociation>]
@@ -216,20 +531,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchDisassociateUserStackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         user_stack_associations: [ # required
-    #           {
-    #             stack_name: "String", # required
-    #             user_name: "Username", # required
-    #             authentication_type: "API", # required, accepts API, SAML, USERPOOL
-    #             send_email_notification: false,
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] user_stack_associations
     #   The list of UserStackAssociation objects.
     #   @return [Array<Types::UserStackAssociation>]
@@ -254,14 +555,35 @@ module Aws::AppStream
       include Aws::Structure
     end
 
+    # The certificate-based authentication properties used to authenticate
+    # SAML 2.0 Identity Provider (IdP) user identities to Active Directory
+    # domain-joined streaming instances. Fallback is turned on by default
+    # when certificate-based authentication is **Enabled** . Fallback allows
+    # users to log in using their AD domain password if certificate-based
+    # authentication is unsuccessful, or to unlock a desktop lock screen.
+    # **Enabled\_no\_directory\_login\_fallback** enables certificate-based
+    # authentication, but does not allow users to log in using their AD
+    # domain password. Users will be disconnected to re-authenticate using
+    # certificates.
+    #
+    # @!attribute [rw] status
+    #   The status of the certificate-based authentication properties.
+    #   @return [String]
+    #
+    # @!attribute [rw] certificate_authority_arn
+    #   The ARN of the AWS Certificate Manager Private CA resource.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CertificateBasedAuthProperties AWS API Documentation
+    #
+    class CertificateBasedAuthProperties < Struct.new(
+      :status,
+      :certificate_authority_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Describes the capacity for a fleet.
-    #
-    # @note When making an API call, you may pass ComputeCapacity
-    #   data as a hash:
-    #
-    #       {
-    #         desired_instances: 1, # required
-    #       }
     #
     # @!attribute [rw] desired_instances
     #   The desired number of streaming instances.
@@ -320,16 +642,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CopyImageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         source_image_name: "Name", # required
-    #         destination_image_name: "Name", # required
-    #         destination_region: "RegionName", # required
-    #         destination_image_description: "Description",
-    #       }
-    #
     # @!attribute [rw] source_image_name
     #   The name of the image to copy.
     #   @return [String]
@@ -373,18 +685,300 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDirectoryConfigRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The unique name for the app block builder.
+    #   @return [String]
     #
-    #       {
-    #         directory_name: "DirectoryName", # required
-    #         organizational_unit_distinguished_names: ["OrganizationalUnitDistinguishedName"], # required
-    #         service_account_credentials: {
-    #           account_name: "AccountName", # required
-    #           account_password: "AccountPassword", # required
-    #         },
-    #       }
+    # @!attribute [rw] description
+    #   The description of the app block builder.
+    #   @return [String]
     #
+    # @!attribute [rw] display_name
+    #   The display name of the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The tags to associate with the app block builder. A tag is a
+    #   key-value pair, and the value is optional. For example,
+    #   Environment=Test. If you do not specify a value, Environment=.
+    #
+    #   If you do not specify a value, the value is set to an empty string.
+    #
+    #   Generally allowed characters are: letters, numbers, and spaces
+    #   representable in UTF-8, and the following special characters:
+    #
+    #   \_ . : / = + \\ - @
+    #
+    #   For more information, see [Tagging Your Resources][1] in the *Amazon
+    #   AppStream 2.0 Administration Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/appstream2/latest/developerguide/tagging-basic.html
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] platform
+    #   The platform of the app block builder.
+    #
+    #   `WINDOWS_SERVER_2019` is the only valid value.
+    #   @return [String]
+    #
+    # @!attribute [rw] instance_type
+    #   The instance type to use when launching the app block builder. The
+    #   following instance types are available:
+    #
+    #   * stream.standard.small
+    #
+    #   * stream.standard.medium
+    #
+    #   * stream.standard.large
+    #
+    #   * stream.standard.xlarge
+    #
+    #   * stream.standard.2xlarge
+    #   @return [String]
+    #
+    # @!attribute [rw] vpc_config
+    #   The VPC configuration for the app block builder.
+    #
+    #   App block builders require that you specify at least two subnets in
+    #   different availability zones.
+    #   @return [Types::VpcConfig]
+    #
+    # @!attribute [rw] enable_default_internet_access
+    #   Enables or disables default internet access for the app block
+    #   builder.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] iam_role_arn
+    #   The Amazon Resource Name (ARN) of the IAM role to apply to the app
+    #   block builder. To assume a role, the app block builder calls the AWS
+    #   Security Token Service (STS) `AssumeRole` API operation and passes
+    #   the ARN of the role to use. The operation creates a new session with
+    #   temporary credentials. AppStream 2.0 retrieves the temporary
+    #   credentials and creates the **appstream\_machine\_role** credential
+    #   profile on the instance.
+    #
+    #   For more information, see [Using an IAM Role to Grant Permissions to
+    #   Applications and Scripts Running on AppStream 2.0 Streaming
+    #   Instances][1] in the *Amazon AppStream 2.0 Administration Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/appstream2/latest/developerguide/using-iam-roles-to-grant-permissions-to-applications-scripts-streaming-instances.html
+    #   @return [String]
+    #
+    # @!attribute [rw] access_endpoints
+    #   The list of interface VPC endpoint (interface endpoint) objects.
+    #   Administrators can connect to the app block builder only through the
+    #   specified endpoints.
+    #   @return [Array<Types::AccessEndpoint>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateAppBlockBuilderRequest AWS API Documentation
+    #
+    class CreateAppBlockBuilderRequest < Struct.new(
+      :name,
+      :description,
+      :display_name,
+      :tags,
+      :platform,
+      :instance_type,
+      :vpc_config,
+      :enable_default_internet_access,
+      :iam_role_arn,
+      :access_endpoints)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_block_builder
+    #   Describes an app block builder.
+    #   @return [Types::AppBlockBuilder]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateAppBlockBuilderResult AWS API Documentation
+    #
+    class CreateAppBlockBuilderResult < Struct.new(
+      :app_block_builder)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_block_builder_name
+    #   The name of the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] validity
+    #   The time that the streaming URL will be valid, in seconds. Specify a
+    #   value between 1 and 604800 seconds. The default is 3600 seconds.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateAppBlockBuilderStreamingURLRequest AWS API Documentation
+    #
+    class CreateAppBlockBuilderStreamingURLRequest < Struct.new(
+      :app_block_builder_name,
+      :validity)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] streaming_url
+    #   The URL to start the streaming session.
+    #   @return [String]
+    #
+    # @!attribute [rw] expires
+    #   The elapsed time, in seconds after the Unix epoch, when this URL
+    #   expires.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateAppBlockBuilderStreamingURLResult AWS API Documentation
+    #
+    class CreateAppBlockBuilderStreamingURLResult < Struct.new(
+      :streaming_url,
+      :expires)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] name
+    #   The name of the app block.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the app block.
+    #   @return [String]
+    #
+    # @!attribute [rw] display_name
+    #   The display name of the app block. This is not displayed to the
+    #   user.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_s3_location
+    #   The source S3 location of the app block.
+    #   @return [Types::S3Location]
+    #
+    # @!attribute [rw] setup_script_details
+    #   The setup script details of the app block. This must be provided for
+    #   the `CUSTOM` PackagingType.
+    #   @return [Types::ScriptDetails]
+    #
+    # @!attribute [rw] tags
+    #   The tags assigned to the app block.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] post_setup_script_details
+    #   The post setup script details of the app block. This can only be
+    #   provided for the `APPSTREAM2` PackagingType.
+    #   @return [Types::ScriptDetails]
+    #
+    # @!attribute [rw] packaging_type
+    #   The packaging type of the app block.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateAppBlockRequest AWS API Documentation
+    #
+    class CreateAppBlockRequest < Struct.new(
+      :name,
+      :description,
+      :display_name,
+      :source_s3_location,
+      :setup_script_details,
+      :tags,
+      :post_setup_script_details,
+      :packaging_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_block
+    #   The app block.
+    #   @return [Types::AppBlock]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateAppBlockResult AWS API Documentation
+    #
+    class CreateAppBlockResult < Struct.new(
+      :app_block)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] name
+    #   The name of the application. This name is visible to users when
+    #   display name is not specified.
+    #   @return [String]
+    #
+    # @!attribute [rw] display_name
+    #   The display name of the application. This name is visible to users
+    #   in the application catalog.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] icon_s3_location
+    #   The location in S3 of the application icon.
+    #   @return [Types::S3Location]
+    #
+    # @!attribute [rw] launch_path
+    #   The launch path of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] working_directory
+    #   The working directory of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] launch_parameters
+    #   The launch parameters of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] platforms
+    #   The platforms the application supports. WINDOWS\_SERVER\_2019 and
+    #   AMAZON\_LINUX2 are supported for Elastic fleets.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] instance_families
+    #   The instance families the application supports. Valid values are
+    #   GENERAL\_PURPOSE and GRAPHICS\_G4.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] app_block_arn
+    #   The app block ARN to which the application should be associated
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The tags assigned to the application.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateApplicationRequest AWS API Documentation
+    #
+    class CreateApplicationRequest < Struct.new(
+      :name,
+      :display_name,
+      :description,
+      :icon_s3_location,
+      :launch_path,
+      :working_directory,
+      :launch_parameters,
+      :platforms,
+      :instance_families,
+      :app_block_arn,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] application
+    #   Describes an application in the application catalog.
+    #   @return [Types::Application]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateApplicationResult AWS API Documentation
+    #
+    class CreateApplicationResult < Struct.new(
+      :application)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] directory_name
     #   The fully qualified name of the directory (for example,
     #   corp.example.com).
@@ -400,12 +994,26 @@ module Aws::AppStream
     #   builder to connect to the directory.
     #   @return [Types::ServiceAccountCredentials]
     #
+    # @!attribute [rw] certificate_based_auth_properties
+    #   The certificate-based authentication properties used to authenticate
+    #   SAML 2.0 Identity Provider (IdP) user identities to Active Directory
+    #   domain-joined streaming instances. Fallback is turned on by default
+    #   when certificate-based authentication is **Enabled** . Fallback
+    #   allows users to log in using their AD domain password if
+    #   certificate-based authentication is unsuccessful, or to unlock a
+    #   desktop lock screen. **Enabled\_no\_directory\_login\_fallback**
+    #   enables certificate-based authentication, but does not allow users
+    #   to log in using their AD domain password. Users will be disconnected
+    #   to re-authenticate using certificates.
+    #   @return [Types::CertificateBasedAuthProperties]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateDirectoryConfigRequest AWS API Documentation
     #
     class CreateDirectoryConfigRequest < Struct.new(
       :directory_name,
       :organizational_unit_distinguished_names,
-      :service_account_credentials)
+      :service_account_credentials,
+      :certificate_based_auth_properties)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -422,39 +1030,50 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateFleetRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the entitlement.
+    #   @return [String]
     #
-    #       {
-    #         name: "Name", # required
-    #         image_name: "String",
-    #         image_arn: "Arn",
-    #         instance_type: "String", # required
-    #         fleet_type: "ALWAYS_ON", # accepts ALWAYS_ON, ON_DEMAND
-    #         compute_capacity: { # required
-    #           desired_instances: 1, # required
-    #         },
-    #         vpc_config: {
-    #           subnet_ids: ["String"],
-    #           security_group_ids: ["String"],
-    #         },
-    #         max_user_duration_in_seconds: 1,
-    #         disconnect_timeout_in_seconds: 1,
-    #         description: "Description",
-    #         display_name: "DisplayName",
-    #         enable_default_internet_access: false,
-    #         domain_join_info: {
-    #           directory_name: "DirectoryName",
-    #           organizational_unit_distinguished_name: "OrganizationalUnitDistinguishedName",
-    #         },
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         idle_disconnect_timeout_in_seconds: 1,
-    #         iam_role_arn: "Arn",
-    #         stream_view: "APP", # accepts APP, DESKTOP
-    #       }
+    # @!attribute [rw] stack_name
+    #   The name of the stack with which the entitlement is associated.
+    #   @return [String]
     #
+    # @!attribute [rw] description
+    #   The description of the entitlement.
+    #   @return [String]
+    #
+    # @!attribute [rw] app_visibility
+    #   Specifies whether all or selected apps are entitled.
+    #   @return [String]
+    #
+    # @!attribute [rw] attributes
+    #   The attributes of the entitlement.
+    #   @return [Array<Types::EntitlementAttribute>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateEntitlementRequest AWS API Documentation
+    #
+    class CreateEntitlementRequest < Struct.new(
+      :name,
+      :stack_name,
+      :description,
+      :app_visibility,
+      :attributes)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] entitlement
+    #   The entitlement.
+    #   @return [Types::Entitlement]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateEntitlementResult AWS API Documentation
+    #
+    class CreateEntitlementResult < Struct.new(
+      :entitlement)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] name
     #   A unique name for the fleet.
     #   @return [String]
@@ -476,6 +1095,10 @@ module Aws::AppStream
     #   * stream.standard.medium
     #
     #   * stream.standard.large
+    #
+    #   * stream.standard.xlarge
+    #
+    #   * stream.standard.2xlarge
     #
     #   * stream.compute.large
     #
@@ -536,6 +1159,18 @@ module Aws::AppStream
     #   * stream.graphics-pro.8xlarge
     #
     #   * stream.graphics-pro.16xlarge
+    #
+    #   The following instance types are available for Elastic fleets:
+    #
+    #   * stream.standard.small
+    #
+    #   * stream.standard.medium
+    #
+    #   * stream.standard.large
+    #
+    #   * stream.standard.xlarge
+    #
+    #   * stream.standard.2xlarge
     #   @return [String]
     #
     # @!attribute [rw] fleet_type
@@ -556,11 +1191,15 @@ module Aws::AppStream
     #   @return [String]
     #
     # @!attribute [rw] compute_capacity
-    #   The desired capacity for the fleet.
+    #   The desired capacity for the fleet. This is not allowed for Elastic
+    #   fleets. For Elastic fleets, specify MaxConcurrentSessions instead.
     #   @return [Types::ComputeCapacity]
     #
     # @!attribute [rw] vpc_config
-    #   The VPC configuration for the fleet.
+    #   The VPC configuration for the fleet. This is required for Elastic
+    #   fleets, but not required for other fleet types. Elastic fleets
+    #   require that you specify at least two subnets in different
+    #   availability zones.
     #   @return [Types::VpcConfig]
     #
     # @!attribute [rw] max_user_duration_in_seconds
@@ -598,7 +1237,8 @@ module Aws::AppStream
     #
     # @!attribute [rw] domain_join_info
     #   The name of the directory and organizational unit (OU) to use to
-    #   join the fleet to a Microsoft Active Directory domain.
+    #   join the fleet to a Microsoft Active Directory domain. This is not
+    #   allowed for Elastic fleets.
     #   @return [Types::DomainJoinInfo]
     #
     # @!attribute [rw] tags
@@ -679,6 +1319,27 @@ module Aws::AppStream
     #   The default value is `APP`.
     #   @return [String]
     #
+    # @!attribute [rw] platform
+    #   The fleet platform. WINDOWS\_SERVER\_2019 and AMAZON\_LINUX2 are
+    #   supported for Elastic fleets.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_concurrent_sessions
+    #   The maximum concurrent sessions of the Elastic fleet. This is
+    #   required for Elastic fleets, and not allowed for other fleet types.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] usb_device_filter_strings
+    #   The USB device filter strings that specify which USB devices a user
+    #   can redirect to the fleet streaming session, when using the Windows
+    #   native client. This is allowed but not required for Elastic fleets.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] session_script_s3_location
+    #   The S3 location of the session scripts configuration zip file. This
+    #   only applies to Elastic fleets.
+    #   @return [Types::S3Location]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateFleetRequest AWS API Documentation
     #
     class CreateFleetRequest < Struct.new(
@@ -698,7 +1359,11 @@ module Aws::AppStream
       :tags,
       :idle_disconnect_timeout_in_seconds,
       :iam_role_arn,
-      :stream_view)
+      :stream_view,
+      :platform,
+      :max_concurrent_sessions,
+      :usb_device_filter_strings,
+      :session_script_s3_location)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -715,38 +1380,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateImageBuilderRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         image_name: "String",
-    #         image_arn: "Arn",
-    #         instance_type: "String", # required
-    #         description: "Description",
-    #         display_name: "DisplayName",
-    #         vpc_config: {
-    #           subnet_ids: ["String"],
-    #           security_group_ids: ["String"],
-    #         },
-    #         iam_role_arn: "Arn",
-    #         enable_default_internet_access: false,
-    #         domain_join_info: {
-    #           directory_name: "DirectoryName",
-    #           organizational_unit_distinguished_name: "OrganizationalUnitDistinguishedName",
-    #         },
-    #         appstream_agent_version: "AppstreamAgentVersion",
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         access_endpoints: [
-    #           {
-    #             endpoint_type: "STREAMING", # required, accepts STREAMING
-    #             vpce_id: "String",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   A unique name for the image builder.
     #   @return [String]
@@ -934,14 +1567,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateImageBuilderStreamingURLRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "String", # required
-    #         validity: 1,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the image builder.
     #   @return [String]
@@ -978,44 +1603,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateStackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         description: "Description",
-    #         display_name: "DisplayName",
-    #         storage_connectors: [
-    #           {
-    #             connector_type: "HOMEFOLDERS", # required, accepts HOMEFOLDERS, GOOGLE_DRIVE, ONE_DRIVE
-    #             resource_identifier: "ResourceIdentifier",
-    #             domains: ["Domain"],
-    #           },
-    #         ],
-    #         redirect_url: "RedirectURL",
-    #         feedback_url: "FeedbackURL",
-    #         user_settings: [
-    #           {
-    #             action: "CLIPBOARD_COPY_FROM_LOCAL_DEVICE", # required, accepts CLIPBOARD_COPY_FROM_LOCAL_DEVICE, CLIPBOARD_COPY_TO_LOCAL_DEVICE, FILE_UPLOAD, FILE_DOWNLOAD, PRINTING_TO_LOCAL_DEVICE, DOMAIN_PASSWORD_SIGNIN, DOMAIN_SMART_CARD_SIGNIN
-    #             permission: "ENABLED", # required, accepts ENABLED, DISABLED
-    #           },
-    #         ],
-    #         application_settings: {
-    #           enabled: false, # required
-    #           settings_group: "SettingsGroup",
-    #         },
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         access_endpoints: [
-    #           {
-    #             endpoint_type: "STREAMING", # required, accepts STREAMING
-    #             vpce_id: "String",
-    #           },
-    #         ],
-    #         embed_host_domains: ["EmbedHostDomain"],
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the stack.
     #   @return [String]
@@ -1087,6 +1674,12 @@ module Aws::AppStream
     #   embedded AppStream 2.0 streaming sessions.
     #   @return [Array<String>]
     #
+    # @!attribute [rw] streaming_experience_settings
+    #   The streaming protocol you want your stack to prefer. This can be
+    #   UDP or TCP. Currently, UDP is only supported in the Windows native
+    #   client.
+    #   @return [Types::StreamingExperienceSettings]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateStackRequest AWS API Documentation
     #
     class CreateStackRequest < Struct.new(
@@ -1100,7 +1693,8 @@ module Aws::AppStream
       :application_settings,
       :tags,
       :access_endpoints,
-      :embed_host_domains)
+      :embed_host_domains,
+      :streaming_experience_settings)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1117,18 +1711,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateStreamingURLRequest
-    #   data as a hash:
-    #
-    #       {
-    #         stack_name: "String", # required
-    #         fleet_name: "String", # required
-    #         user_id: "StreamingUrlUserId", # required
-    #         application_id: "String",
-    #         validity: 1,
-    #         session_context: "String",
-    #       }
-    #
     # @!attribute [rw] stack_name
     #   The name of the stack.
     #   @return [String]
@@ -1194,20 +1776,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateUpdatedImageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         existing_image_name: "Name", # required
-    #         new_image_name: "Name", # required
-    #         new_image_description: "Description",
-    #         new_image_display_name: "DisplayName",
-    #         new_image_tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         dry_run: false,
-    #       }
-    #
     # @!attribute [rw] existing_image_name
     #   The name of the image to update.
     #   @return [String]
@@ -1316,17 +1884,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateUserRequest
-    #   data as a hash:
-    #
-    #       {
-    #         user_name: "Username", # required
-    #         message_action: "SUPPRESS", # accepts SUPPRESS, RESEND
-    #         first_name: "UserAttributeValue",
-    #         last_name: "UserAttributeValue",
-    #         authentication_type: "API", # required, accepts API, SAML, USERPOOL
-    #       }
-    #
     # @!attribute [rw] user_name
     #   The email address of the user.
     #
@@ -1380,13 +1937,54 @@ module Aws::AppStream
     #
     class CreateUserResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteDirectoryConfigRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the app block builder.
+    #   @return [String]
     #
-    #       {
-    #         directory_name: "DirectoryName", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DeleteAppBlockBuilderRequest AWS API Documentation
     #
+    class DeleteAppBlockBuilderRequest < Struct.new(
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DeleteAppBlockBuilderResult AWS API Documentation
+    #
+    class DeleteAppBlockBuilderResult < Aws::EmptyStructure; end
+
+    # @!attribute [rw] name
+    #   The name of the app block.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DeleteAppBlockRequest AWS API Documentation
+    #
+    class DeleteAppBlockRequest < Struct.new(
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DeleteAppBlockResult AWS API Documentation
+    #
+    class DeleteAppBlockResult < Aws::EmptyStructure; end
+
+    # @!attribute [rw] name
+    #   The name of the application.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DeleteApplicationRequest AWS API Documentation
+    #
+    class DeleteApplicationRequest < Struct.new(
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DeleteApplicationResult AWS API Documentation
+    #
+    class DeleteApplicationResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] directory_name
     #   The name of the directory configuration.
     #   @return [String]
@@ -1403,13 +2001,27 @@ module Aws::AppStream
     #
     class DeleteDirectoryConfigResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteFleetRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the entitlement.
+    #   @return [String]
     #
-    #       {
-    #         name: "String", # required
-    #       }
+    # @!attribute [rw] stack_name
+    #   The name of the stack with which the entitlement is associated.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DeleteEntitlementRequest AWS API Documentation
+    #
+    class DeleteEntitlementRequest < Struct.new(
+      :name,
+      :stack_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DeleteEntitlementResult AWS API Documentation
+    #
+    class DeleteEntitlementResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] name
     #   The name of the fleet.
     #   @return [String]
@@ -1426,13 +2038,6 @@ module Aws::AppStream
     #
     class DeleteFleetResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteImageBuilderRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the image builder.
     #   @return [String]
@@ -1457,14 +2062,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteImagePermissionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         shared_account_id: "AwsAccountId", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the private image.
     #   @return [String]
@@ -1487,13 +2084,6 @@ module Aws::AppStream
     #
     class DeleteImagePermissionsResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteImageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the image.
     #   @return [String]
@@ -1518,13 +2108,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteStackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "String", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the stack.
     #   @return [String]
@@ -1551,14 +2134,6 @@ module Aws::AppStream
     #
     class DeleteUsageReportSubscriptionResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteUserRequest
-    #   data as a hash:
-    #
-    #       {
-    #         user_name: "Username", # required
-    #         authentication_type: "API", # required, accepts API, SAML, USERPOOL
-    #       }
-    #
     # @!attribute [rw] user_name
     #   The email address of the user.
     #
@@ -1584,15 +2159,221 @@ module Aws::AppStream
     #
     class DeleteUserResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeDirectoryConfigsRequest
-    #   data as a hash:
+    # @!attribute [rw] app_block_arn
+    #   The ARN of the app block.
+    #   @return [String]
     #
-    #       {
-    #         directory_names: ["DirectoryName"],
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
+    # @!attribute [rw] app_block_builder_name
+    #   The name of the app block builder.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   The maximum size of each page of results.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeAppBlockBuilderAppBlockAssociationsRequest AWS API Documentation
+    #
+    class DescribeAppBlockBuilderAppBlockAssociationsRequest < Struct.new(
+      :app_block_arn,
+      :app_block_builder_name,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_block_builder_app_block_associations
+    #   This list of app block builders associated with app blocks.
+    #   @return [Array<Types::AppBlockBuilderAppBlockAssociation>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeAppBlockBuilderAppBlockAssociationsResult AWS API Documentation
+    #
+    class DescribeAppBlockBuilderAppBlockAssociationsResult < Struct.new(
+      :app_block_builder_app_block_associations,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] names
+    #   The names of the app block builders.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum size of each page of results. The maximum value is 25.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeAppBlockBuildersRequest AWS API Documentation
+    #
+    class DescribeAppBlockBuildersRequest < Struct.new(
+      :names,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_block_builders
+    #   The list that describes one or more app block builders.
+    #   @return [Array<Types::AppBlockBuilder>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeAppBlockBuildersResult AWS API Documentation
+    #
+    class DescribeAppBlockBuildersResult < Struct.new(
+      :app_block_builders,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] arns
+    #   The ARNs of the app blocks.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum size of each page of results.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeAppBlocksRequest AWS API Documentation
+    #
+    class DescribeAppBlocksRequest < Struct.new(
+      :arns,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_blocks
+    #   The app blocks in the list.
+    #   @return [Array<Types::AppBlock>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeAppBlocksResult AWS API Documentation
+    #
+    class DescribeAppBlocksResult < Struct.new(
+      :app_blocks,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] fleet_name
+    #   The name of the fleet.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_arn
+    #   The ARN of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum size of each page of results.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeApplicationFleetAssociationsRequest AWS API Documentation
+    #
+    class DescribeApplicationFleetAssociationsRequest < Struct.new(
+      :fleet_name,
+      :application_arn,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] application_fleet_associations
+    #   The application fleet associations in the list.
+    #   @return [Array<Types::ApplicationFleetAssociation>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeApplicationFleetAssociationsResult AWS API Documentation
+    #
+    class DescribeApplicationFleetAssociationsResult < Struct.new(
+      :application_fleet_associations,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] arns
+    #   The ARNs for the applications.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum size of each page of results.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeApplicationsRequest AWS API Documentation
+    #
+    class DescribeApplicationsRequest < Struct.new(
+      :arns,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] applications
+    #   The applications in the list.
+    #   @return [Array<Types::Application>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeApplicationsResult AWS API Documentation
+    #
+    class DescribeApplicationsResult < Struct.new(
+      :applications,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] directory_names
     #   The directory names.
     #   @return [Array<String>]
@@ -1636,14 +2417,52 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeFleetsRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the entitlement.
+    #   @return [String]
     #
-    #       {
-    #         names: ["String"],
-    #         next_token: "String",
-    #       }
+    # @!attribute [rw] stack_name
+    #   The name of the stack with which the entitlement is associated.
+    #   @return [String]
     #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum size of each page of results.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeEntitlementsRequest AWS API Documentation
+    #
+    class DescribeEntitlementsRequest < Struct.new(
+      :name,
+      :stack_name,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] entitlements
+    #   The entitlements.
+    #   @return [Array<Types::Entitlement>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeEntitlementsResult AWS API Documentation
+    #
+    class DescribeEntitlementsResult < Struct.new(
+      :entitlements,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] names
     #   The names of the fleets to describe.
     #   @return [Array<String>]
@@ -1680,15 +2499,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeImageBuildersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         names: ["String"],
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] names
     #   The names of the image builders to describe.
     #   @return [Array<String>]
@@ -1730,16 +2540,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeImagePermissionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         max_results: 1,
-    #         shared_aws_account_ids: ["AwsAccountId"],
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the private image for which to describe permissions. The
     #   image must be one that you own.
@@ -1793,17 +2593,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeImagesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         names: ["String"],
-    #         arns: ["Arn"],
-    #         type: "PUBLIC", # accepts PUBLIC, PRIVATE, SHARED
-    #         next_token: "String",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] names
     #   The names of the public or private images to describe.
     #   @return [Array<String>]
@@ -1855,18 +2644,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeSessionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         stack_name: "String", # required
-    #         fleet_name: "String", # required
-    #         user_id: "UserId",
-    #         next_token: "String",
-    #         limit: 1,
-    #         authentication_type: "API", # accepts API, SAML, USERPOOL
-    #       }
-    #
     # @!attribute [rw] stack_name
     #   The name of the stack. This value is case-sensitive.
     #   @return [String]
@@ -1927,14 +2704,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeStacksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         names: ["String"],
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] names
     #   The names of the stacks to describe.
     #   @return [Array<String>]
@@ -1971,14 +2740,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeUsageReportSubscriptionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   The maximum size of each page of results.
     #   @return [Integer]
@@ -2015,17 +2776,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeUserStackAssociationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         stack_name: "String",
-    #         user_name: "Username",
-    #         authentication_type: "API", # accepts API, SAML, USERPOOL
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] stack_name
     #   The name of the stack that is associated with the user.
     #   @return [String]
@@ -2082,15 +2832,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeUsersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         authentication_type: "API", # required, accepts API, SAML, USERPOOL
-    #         max_results: 1,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] authentication_type
     #   The authentication type for the users in the user pool to describe.
     #   You must specify USERPOOL.
@@ -2155,25 +2896,31 @@ module Aws::AppStream
     #   The time the directory configuration was created.
     #   @return [Time]
     #
+    # @!attribute [rw] certificate_based_auth_properties
+    #   The certificate-based authentication properties used to authenticate
+    #   SAML 2.0 Identity Provider (IdP) user identities to Active Directory
+    #   domain-joined streaming instances. Fallback is turned on by default
+    #   when certificate-based authentication is **Enabled** . Fallback
+    #   allows users to log in using their AD domain password if
+    #   certificate-based authentication is unsuccessful, or to unlock a
+    #   desktop lock screen. **Enabled\_no\_directory\_login\_fallback**
+    #   enables certificate-based authentication, but does not allow users
+    #   to log in using their AD domain password. Users will be disconnected
+    #   to re-authenticate using certificates.
+    #   @return [Types::CertificateBasedAuthProperties]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DirectoryConfig AWS API Documentation
     #
     class DirectoryConfig < Struct.new(
       :directory_name,
       :organizational_unit_distinguished_names,
       :service_account_credentials,
-      :created_time)
+      :created_time,
+      :certificate_based_auth_properties)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisableUserRequest
-    #   data as a hash:
-    #
-    #       {
-    #         user_name: "Username", # required
-    #         authentication_type: "API", # required, accepts API, SAML, USERPOOL
-    #       }
-    #
     # @!attribute [rw] user_name
     #   The email address of the user.
     #
@@ -2199,14 +2946,74 @@ module Aws::AppStream
     #
     class DisableUserResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DisassociateFleetRequest
-    #   data as a hash:
+    # @!attribute [rw] app_block_arn
+    #   The ARN of the app block.
+    #   @return [String]
     #
-    #       {
-    #         fleet_name: "String", # required
-    #         stack_name: "String", # required
-    #       }
+    # @!attribute [rw] app_block_builder_name
+    #   The name of the app block builder.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DisassociateAppBlockBuilderAppBlockRequest AWS API Documentation
+    #
+    class DisassociateAppBlockBuilderAppBlockRequest < Struct.new(
+      :app_block_arn,
+      :app_block_builder_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DisassociateAppBlockBuilderAppBlockResult AWS API Documentation
+    #
+    class DisassociateAppBlockBuilderAppBlockResult < Aws::EmptyStructure; end
+
+    # @!attribute [rw] fleet_name
+    #   The name of the fleet.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_arn
+    #   The ARN of the application.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DisassociateApplicationFleetRequest AWS API Documentation
+    #
+    class DisassociateApplicationFleetRequest < Struct.new(
+      :fleet_name,
+      :application_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DisassociateApplicationFleetResult AWS API Documentation
+    #
+    class DisassociateApplicationFleetResult < Aws::EmptyStructure; end
+
+    # @!attribute [rw] stack_name
+    #   The name of the stack with which the entitlement is associated.
+    #   @return [String]
+    #
+    # @!attribute [rw] entitlement_name
+    #   The name of the entitlement.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_identifier
+    #   The identifier of the application to remove from the entitlement.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DisassociateApplicationFromEntitlementRequest AWS API Documentation
+    #
+    class DisassociateApplicationFromEntitlementRequest < Struct.new(
+      :stack_name,
+      :entitlement_name,
+      :application_identifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DisassociateApplicationFromEntitlementResult AWS API Documentation
+    #
+    class DisassociateApplicationFromEntitlementResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] fleet_name
     #   The name of the fleet.
     #   @return [String]
@@ -2231,14 +3038,6 @@ module Aws::AppStream
     # Describes the configuration information required to join fleets and
     # image builders to Microsoft Active Directory domains.
     #
-    # @note When making an API call, you may pass DomainJoinInfo
-    #   data as a hash:
-    #
-    #       {
-    #         directory_name: "DirectoryName",
-    #         organizational_unit_distinguished_name: "OrganizationalUnitDistinguishedName",
-    #       }
-    #
     # @!attribute [rw] directory_name
     #   The fully qualified name of the directory (for example,
     #   corp.example.com).
@@ -2258,14 +3057,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass EnableUserRequest
-    #   data as a hash:
-    #
-    #       {
-    #         user_name: "Username", # required
-    #         authentication_type: "API", # required, accepts API, SAML, USERPOOL
-    #       }
-    #
     # @!attribute [rw] user_name
     #   The email address of the user.
     #
@@ -2294,13 +3085,159 @@ module Aws::AppStream
     #
     class EnableUserResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ExpireSessionRequest
-    #   data as a hash:
+    # The application associated to an entitlement. Access is controlled
+    # based on user attributes.
     #
-    #       {
-    #         session_id: "String", # required
-    #       }
+    # @!attribute [rw] application_identifier
+    #   The identifier of the application.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/EntitledApplication AWS API Documentation
+    #
+    class EntitledApplication < Struct.new(
+      :application_identifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Specifies an entitlement. Entitlements control access to specific
+    # applications within a stack, based on user attributes. Entitlements
+    # apply to SAML 2.0 federated user identities. Amazon AppStream 2.0 user
+    # pool and streaming URL users are entitled to all applications in a
+    # stack. Entitlements don't apply to the desktop stream view
+    # application, or to applications managed by a dynamic app provider
+    # using the Dynamic Application Framework.
+    #
+    # @!attribute [rw] name
+    #   The name of the entitlement.
+    #   @return [String]
+    #
+    # @!attribute [rw] stack_name
+    #   The name of the stack with which the entitlement is associated.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the entitlement.
+    #   @return [String]
+    #
+    # @!attribute [rw] app_visibility
+    #   Specifies whether all or selected apps are entitled.
+    #   @return [String]
+    #
+    # @!attribute [rw] attributes
+    #   The attributes of the entitlement.
+    #   @return [Array<Types::EntitlementAttribute>]
+    #
+    # @!attribute [rw] created_time
+    #   The time when the entitlement was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] last_modified_time
+    #   The time when the entitlement was last modified.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/Entitlement AWS API Documentation
+    #
+    class Entitlement < Struct.new(
+      :name,
+      :stack_name,
+      :description,
+      :app_visibility,
+      :attributes,
+      :created_time,
+      :last_modified_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The entitlement already exists.
+    #
+    # @!attribute [rw] message
+    #   The error message in the exception.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/EntitlementAlreadyExistsException AWS API Documentation
+    #
+    class EntitlementAlreadyExistsException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An attribute associated with an entitlement. Application entitlements
+    # work by matching a supported SAML 2.0 attribute name to a value when a
+    # user identity federates to an Amazon AppStream 2.0 SAML application.
+    #
+    # @!attribute [rw] name
+    #   A supported AWS IAM SAML `PrincipalTag` attribute that is matched to
+    #   the associated value when a user identity federates into an Amazon
+    #   AppStream 2.0 SAML application.
+    #
+    #   The following are valid values:
+    #
+    #   * roles
+    #
+    #   * department
+    #
+    #   * organization
+    #
+    #   * groups
+    #
+    #   * title
+    #
+    #   * costCenter
+    #
+    #   * userType
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   A value that is matched to a supported SAML attribute name when a
+    #   user identity federates into an Amazon AppStream 2.0 SAML
+    #   application.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/EntitlementAttribute AWS API Documentation
+    #
+    class EntitlementAttribute < Struct.new(
+      :name,
+      :value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The entitlement can't be found.
+    #
+    # @!attribute [rw] message
+    #   The error message in the exception.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/EntitlementNotFoundException AWS API Documentation
+    #
+    class EntitlementNotFoundException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The error details.
+    #
+    # @!attribute [rw] error_code
+    #   The error code.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_message
+    #   The error message.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/ErrorDetails AWS API Documentation
+    #
+    class ErrorDetails < Struct.new(
+      :error_code,
+      :error_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] session_id
     #   The identifier of the streaming session.
     #   @return [String]
@@ -2538,6 +3475,23 @@ module Aws::AppStream
     #   The default value is `APP`.
     #   @return [String]
     #
+    # @!attribute [rw] platform
+    #   The platform of the fleet.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_concurrent_sessions
+    #   The maximum number of concurrent sessions for the fleet.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] usb_device_filter_strings
+    #   The USB device filter strings associated with the fleet.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] session_script_s3_location
+    #   The S3 location of the session scripts configuration zip file. This
+    #   only applies to Elastic fleets.
+    #   @return [Types::S3Location]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/Fleet AWS API Documentation
     #
     class Fleet < Struct.new(
@@ -2560,7 +3514,11 @@ module Aws::AppStream
       :domain_join_info,
       :idle_disconnect_timeout_in_seconds,
       :iam_role_arn,
-      :stream_view)
+      :stream_view,
+      :platform,
+      :max_concurrent_sessions,
+      :usb_device_filter_strings,
+      :session_script_s3_location)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2892,14 +3850,6 @@ module Aws::AppStream
 
     # Describes the permissions for an image.
     #
-    # @note When making an API call, you may pass ImagePermissions
-    #   data as a hash:
-    #
-    #       {
-    #         allow_fleet: false,
-    #         allow_image_builder: false,
-    #       }
-    #
     # @!attribute [rw] allow_fleet
     #   Indicates whether the image can be used for a fleet.
     #   @return [Boolean]
@@ -3030,14 +3980,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAssociatedFleetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         stack_name: "String", # required
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] stack_name
     #   The name of the stack.
     #   @return [String]
@@ -3074,14 +4016,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAssociatedStacksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         fleet_name: "String", # required
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] fleet_name
     #   The name of the fleet.
     #   @return [String]
@@ -3118,13 +4052,52 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
+    # @!attribute [rw] stack_name
+    #   The name of the stack with which the entitlement is associated.
+    #   @return [String]
     #
-    #       {
-    #         resource_arn: "Arn", # required
-    #       }
+    # @!attribute [rw] entitlement_name
+    #   The name of the entitlement.
+    #   @return [String]
     #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum size of each page of results.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/ListEntitledApplicationsRequest AWS API Documentation
+    #
+    class ListEntitledApplicationsRequest < Struct.new(
+      :stack_name,
+      :entitlement_name,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] entitled_applications
+    #   The entitled applications.
+    #   @return [Array<Types::EntitledApplication>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token used to retrieve the next page of results for
+    #   this operation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/ListEntitledApplicationsResult AWS API Documentation
+    #
+    class ListEntitledApplicationsResult < Struct.new(
+      :entitled_applications,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -3281,16 +4254,73 @@ module Aws::AppStream
       include Aws::Structure
     end
 
+    # Describes the S3 location.
+    #
+    # @!attribute [rw] s3_bucket
+    #   The S3 bucket of the S3 object.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_key
+    #   The S3 key of the S3 object.
+    #
+    #   This is required when used for the following:
+    #
+    #   * IconS3Location (Actions: CreateApplication and UpdateApplication)
+    #
+    #   * SessionScriptS3Location (Actions: CreateFleet and UpdateFleet)
+    #
+    #   * ScriptDetails (Actions: CreateAppBlock)
+    #
+    #   * SourceS3Location when creating an app block with `CUSTOM`
+    #     PackagingType (Actions: CreateAppBlock)
+    #
+    #   * SourceS3Location when creating an app block with `APPSTREAM2`
+    #     PackagingType, and using an existing application package (VHD
+    #     file). In this case, `S3Key` refers to the VHD file. If a new
+    #     application package is required, then `S3Key` is not required.
+    #     (Actions: CreateAppBlock)
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/S3Location AWS API Documentation
+    #
+    class S3Location < Struct.new(
+      :s3_bucket,
+      :s3_key)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the details of the script.
+    #
+    # @!attribute [rw] script_s3_location
+    #   The S3 object location for the script.
+    #   @return [Types::S3Location]
+    #
+    # @!attribute [rw] executable_path
+    #   The run path for the script.
+    #   @return [String]
+    #
+    # @!attribute [rw] executable_parameters
+    #   The runtime parameters passed to the run path for the script.
+    #   @return [String]
+    #
+    # @!attribute [rw] timeout_in_seconds
+    #   The run timeout, in seconds, for the script.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/ScriptDetails AWS API Documentation
+    #
+    class ScriptDetails < Struct.new(
+      :script_s3_location,
+      :executable_path,
+      :executable_parameters,
+      :timeout_in_seconds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Describes the credentials for the service account used by the fleet or
     # image builder to connect to the directory.
-    #
-    # @note When making an API call, you may pass ServiceAccountCredentials
-    #   data as a hash:
-    #
-    #       {
-    #         account_name: "AccountName", # required
-    #         account_password: "AccountPassword", # required
-    #       }
     #
     # @!attribute [rw] account_name
     #   The user name of the account. This account must have the following
@@ -3463,6 +4493,12 @@ module Aws::AppStream
     #   embedded AppStream 2.0 streaming sessions.
     #   @return [Array<String>]
     #
+    # @!attribute [rw] streaming_experience_settings
+    #   The streaming protocol you want your stack to prefer. This can be
+    #   UDP or TCP. Currently, UDP is only supported in the Windows native
+    #   client.
+    #   @return [Types::StreamingExperienceSettings]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/Stack AWS API Documentation
     #
     class Stack < Struct.new(
@@ -3478,7 +4514,8 @@ module Aws::AppStream
       :user_settings,
       :application_settings,
       :access_endpoints,
-      :embed_host_domains)
+      :embed_host_domains,
+      :streaming_experience_settings)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3502,13 +4539,30 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartFleetRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the app block builder.
+    #   @return [String]
     #
-    #       {
-    #         name: "String", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/StartAppBlockBuilderRequest AWS API Documentation
     #
+    class StartAppBlockBuilderRequest < Struct.new(
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_block_builder
+    #   Describes an app block builder.
+    #   @return [Types::AppBlockBuilder]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/StartAppBlockBuilderResult AWS API Documentation
+    #
+    class StartAppBlockBuilderResult < Struct.new(
+      :app_block_builder)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] name
     #   The name of the fleet.
     #   @return [String]
@@ -3525,14 +4579,6 @@ module Aws::AppStream
     #
     class StartFleetResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass StartImageBuilderRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "String", # required
-    #         appstream_agent_version: "AppstreamAgentVersion",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the image builder.
     #   @return [String]
@@ -3564,13 +4610,30 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopFleetRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the app block builder.
+    #   @return [String]
     #
-    #       {
-    #         name: "String", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/StopAppBlockBuilderRequest AWS API Documentation
     #
+    class StopAppBlockBuilderRequest < Struct.new(
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_block_builder
+    #   Describes an app block builder.
+    #   @return [Types::AppBlockBuilder]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/StopAppBlockBuilderResult AWS API Documentation
+    #
+    class StopAppBlockBuilderResult < Struct.new(
+      :app_block_builder)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] name
     #   The name of the fleet.
     #   @return [String]
@@ -3587,13 +4650,6 @@ module Aws::AppStream
     #
     class StopFleetResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass StopImageBuilderRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "String", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the image builder.
     #   @return [String]
@@ -3620,15 +4676,6 @@ module Aws::AppStream
 
     # Describes a connector that enables persistent storage for users.
     #
-    # @note When making an API call, you may pass StorageConnector
-    #   data as a hash:
-    #
-    #       {
-    #         connector_type: "HOMEFOLDERS", # required, accepts HOMEFOLDERS, GOOGLE_DRIVE, ONE_DRIVE
-    #         resource_identifier: "ResourceIdentifier",
-    #         domains: ["Domain"],
-    #       }
-    #
     # @!attribute [rw] connector_type
     #   The type of storage connector.
     #   @return [String]
@@ -3651,16 +4698,22 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
+    # The streaming protocol you want your stack to prefer. This can be UDP
+    # or TCP. Currently, UDP is only supported in the Windows native client.
     #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
+    # @!attribute [rw] preferred_protocol
+    #   The preferred protocol that you want to use while streaming your
+    #   application.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/StreamingExperienceSettings AWS API Documentation
+    #
+    class StreamingExperienceSettings < Struct.new(
+      :preferred_protocol)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -3691,14 +4744,6 @@ module Aws::AppStream
     #
     class TagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -3720,18 +4765,174 @@ module Aws::AppStream
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateDirectoryConfigRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The unique name for the app block builder.
+    #   @return [String]
     #
-    #       {
-    #         directory_name: "DirectoryName", # required
-    #         organizational_unit_distinguished_names: ["OrganizationalUnitDistinguishedName"],
-    #         service_account_credentials: {
-    #           account_name: "AccountName", # required
-    #           account_password: "AccountPassword", # required
-    #         },
-    #       }
+    # @!attribute [rw] description
+    #   The description of the app block builder.
+    #   @return [String]
     #
+    # @!attribute [rw] display_name
+    #   The display name of the app block builder.
+    #   @return [String]
+    #
+    # @!attribute [rw] platform
+    #   The platform of the app block builder.
+    #
+    #   `WINDOWS_SERVER_2019` is the only valid value.
+    #   @return [String]
+    #
+    # @!attribute [rw] instance_type
+    #   The instance type to use when launching the app block builder. The
+    #   following instance types are available:
+    #
+    #   * stream.standard.small
+    #
+    #   * stream.standard.medium
+    #
+    #   * stream.standard.large
+    #
+    #   * stream.standard.xlarge
+    #
+    #   * stream.standard.2xlarge
+    #   @return [String]
+    #
+    # @!attribute [rw] vpc_config
+    #   The VPC configuration for the app block builder.
+    #
+    #   App block builders require that you specify at least two subnets in
+    #   different availability zones.
+    #   @return [Types::VpcConfig]
+    #
+    # @!attribute [rw] enable_default_internet_access
+    #   Enables or disables default internet access for the app block
+    #   builder.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] iam_role_arn
+    #   The Amazon Resource Name (ARN) of the IAM role to apply to the app
+    #   block builder. To assume a role, the app block builder calls the AWS
+    #   Security Token Service (STS) `AssumeRole` API operation and passes
+    #   the ARN of the role to use. The operation creates a new session with
+    #   temporary credentials. AppStream 2.0 retrieves the temporary
+    #   credentials and creates the **appstream\_machine\_role** credential
+    #   profile on the instance.
+    #
+    #   For more information, see [Using an IAM Role to Grant Permissions to
+    #   Applications and Scripts Running on AppStream 2.0 Streaming
+    #   Instances][1] in the *Amazon AppStream 2.0 Administration Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/appstream2/latest/developerguide/using-iam-roles-to-grant-permissions-to-applications-scripts-streaming-instances.html
+    #   @return [String]
+    #
+    # @!attribute [rw] access_endpoints
+    #   The list of interface VPC endpoint (interface endpoint) objects.
+    #   Administrators can connect to the app block builder only through the
+    #   specified endpoints.
+    #   @return [Array<Types::AccessEndpoint>]
+    #
+    # @!attribute [rw] attributes_to_delete
+    #   The attributes to delete from the app block builder.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateAppBlockBuilderRequest AWS API Documentation
+    #
+    class UpdateAppBlockBuilderRequest < Struct.new(
+      :name,
+      :description,
+      :display_name,
+      :platform,
+      :instance_type,
+      :vpc_config,
+      :enable_default_internet_access,
+      :iam_role_arn,
+      :access_endpoints,
+      :attributes_to_delete)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_block_builder
+    #   Describes an app block builder.
+    #   @return [Types::AppBlockBuilder]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateAppBlockBuilderResult AWS API Documentation
+    #
+    class UpdateAppBlockBuilderResult < Struct.new(
+      :app_block_builder)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] name
+    #   The name of the application. This name is visible to users when
+    #   display name is not specified.
+    #   @return [String]
+    #
+    # @!attribute [rw] display_name
+    #   The display name of the application. This name is visible to users
+    #   in the application catalog.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] icon_s3_location
+    #   The icon S3 location of the application.
+    #   @return [Types::S3Location]
+    #
+    # @!attribute [rw] launch_path
+    #   The launch path of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] working_directory
+    #   The working directory of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] launch_parameters
+    #   The launch parameters of the application.
+    #   @return [String]
+    #
+    # @!attribute [rw] app_block_arn
+    #   The ARN of the app block.
+    #   @return [String]
+    #
+    # @!attribute [rw] attributes_to_delete
+    #   The attributes to delete for an application.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateApplicationRequest AWS API Documentation
+    #
+    class UpdateApplicationRequest < Struct.new(
+      :name,
+      :display_name,
+      :description,
+      :icon_s3_location,
+      :launch_path,
+      :working_directory,
+      :launch_parameters,
+      :app_block_arn,
+      :attributes_to_delete)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] application
+    #   Describes an application in the application catalog.
+    #   @return [Types::Application]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateApplicationResult AWS API Documentation
+    #
+    class UpdateApplicationResult < Struct.new(
+      :application)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] directory_name
     #   The name of the Directory Config object.
     #   @return [String]
@@ -3746,12 +4947,26 @@ module Aws::AppStream
     #   builder to connect to the directory.
     #   @return [Types::ServiceAccountCredentials]
     #
+    # @!attribute [rw] certificate_based_auth_properties
+    #   The certificate-based authentication properties used to authenticate
+    #   SAML 2.0 Identity Provider (IdP) user identities to Active Directory
+    #   domain-joined streaming instances. Fallback is turned on by default
+    #   when certificate-based authentication is **Enabled** . Fallback
+    #   allows users to log in using their AD domain password if
+    #   certificate-based authentication is unsuccessful, or to unlock a
+    #   desktop lock screen. **Enabled\_no\_directory\_login\_fallback**
+    #   enables certificate-based authentication, but does not allow users
+    #   to log in using their AD domain password. Users will be disconnected
+    #   to re-authenticate using certificates.
+    #   @return [Types::CertificateBasedAuthProperties]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateDirectoryConfigRequest AWS API Documentation
     #
     class UpdateDirectoryConfigRequest < Struct.new(
       :directory_name,
       :organizational_unit_distinguished_names,
-      :service_account_credentials)
+      :service_account_credentials,
+      :certificate_based_auth_properties)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3768,37 +4983,50 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFleetRequest
-    #   data as a hash:
+    # @!attribute [rw] name
+    #   The name of the entitlement.
+    #   @return [String]
     #
-    #       {
-    #         image_name: "String",
-    #         image_arn: "Arn",
-    #         name: "String",
-    #         instance_type: "String",
-    #         compute_capacity: {
-    #           desired_instances: 1, # required
-    #         },
-    #         vpc_config: {
-    #           subnet_ids: ["String"],
-    #           security_group_ids: ["String"],
-    #         },
-    #         max_user_duration_in_seconds: 1,
-    #         disconnect_timeout_in_seconds: 1,
-    #         delete_vpc_config: false,
-    #         description: "Description",
-    #         display_name: "DisplayName",
-    #         enable_default_internet_access: false,
-    #         domain_join_info: {
-    #           directory_name: "DirectoryName",
-    #           organizational_unit_distinguished_name: "OrganizationalUnitDistinguishedName",
-    #         },
-    #         idle_disconnect_timeout_in_seconds: 1,
-    #         attributes_to_delete: ["VPC_CONFIGURATION"], # accepts VPC_CONFIGURATION, VPC_CONFIGURATION_SECURITY_GROUP_IDS, DOMAIN_JOIN_INFO, IAM_ROLE_ARN
-    #         iam_role_arn: "Arn",
-    #         stream_view: "APP", # accepts APP, DESKTOP
-    #       }
+    # @!attribute [rw] stack_name
+    #   The name of the stack with which the entitlement is associated.
+    #   @return [String]
     #
+    # @!attribute [rw] description
+    #   The description of the entitlement.
+    #   @return [String]
+    #
+    # @!attribute [rw] app_visibility
+    #   Specifies whether all or only selected apps are entitled.
+    #   @return [String]
+    #
+    # @!attribute [rw] attributes
+    #   The attributes of the entitlement.
+    #   @return [Array<Types::EntitlementAttribute>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateEntitlementRequest AWS API Documentation
+    #
+    class UpdateEntitlementRequest < Struct.new(
+      :name,
+      :stack_name,
+      :description,
+      :app_visibility,
+      :attributes)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] entitlement
+    #   The entitlement.
+    #   @return [Types::Entitlement]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateEntitlementResult AWS API Documentation
+    #
+    class UpdateEntitlementResult < Struct.new(
+      :entitlement)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] image_name
     #   The name of the image used to create the fleet.
     #   @return [String]
@@ -3820,6 +5048,10 @@ module Aws::AppStream
     #   * stream.standard.medium
     #
     #   * stream.standard.large
+    #
+    #   * stream.standard.xlarge
+    #
+    #   * stream.standard.2xlarge
     #
     #   * stream.compute.large
     #
@@ -3880,14 +5112,30 @@ module Aws::AppStream
     #   * stream.graphics-pro.8xlarge
     #
     #   * stream.graphics-pro.16xlarge
+    #
+    #   The following instance types are available for Elastic fleets:
+    #
+    #   * stream.standard.small
+    #
+    #   * stream.standard.medium
+    #
+    #   * stream.standard.large
+    #
+    #   * stream.standard.xlarge
+    #
+    #   * stream.standard.2xlarge
     #   @return [String]
     #
     # @!attribute [rw] compute_capacity
-    #   The desired capacity for the fleet.
+    #   The desired capacity for the fleet. This is not allowed for Elastic
+    #   fleets.
     #   @return [Types::ComputeCapacity]
     #
     # @!attribute [rw] vpc_config
-    #   The VPC configuration for the fleet.
+    #   The VPC configuration for the fleet. This is required for Elastic
+    #   fleets, but not required for other fleet types. Elastic fleets
+    #   require that you specify at least two subnets in different
+    #   availability zones.
     #   @return [Types::VpcConfig]
     #
     # @!attribute [rw] max_user_duration_in_seconds
@@ -3898,7 +5146,7 @@ module Aws::AppStream
     #   this time elapses, the instance is terminated and replaced by a new
     #   instance.
     #
-    #   Specify a value between 600 and 360000.
+    #   Specify a value between 600 and 432000.
     #   @return [Integer]
     #
     # @!attribute [rw] disconnect_timeout_in_seconds
@@ -3994,6 +5242,26 @@ module Aws::AppStream
     #   The default value is `APP`.
     #   @return [String]
     #
+    # @!attribute [rw] platform
+    #   The platform of the fleet. WINDOWS\_SERVER\_2019 and AMAZON\_LINUX2
+    #   are supported for Elastic fleets.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_concurrent_sessions
+    #   The maximum number of concurrent sessions for a fleet.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] usb_device_filter_strings
+    #   The USB device filter strings that specify which USB devices a user
+    #   can redirect to the fleet streaming session, when using the Windows
+    #   native client. This is allowed but not required for Elastic fleets.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] session_script_s3_location
+    #   The S3 location of the session scripts configuration zip file. This
+    #   only applies to Elastic fleets.
+    #   @return [Types::S3Location]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateFleetRequest AWS API Documentation
     #
     class UpdateFleetRequest < Struct.new(
@@ -4013,7 +5281,11 @@ module Aws::AppStream
       :idle_disconnect_timeout_in_seconds,
       :attributes_to_delete,
       :iam_role_arn,
-      :stream_view)
+      :stream_view,
+      :platform,
+      :max_concurrent_sessions,
+      :usb_device_filter_strings,
+      :session_script_s3_location)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -4030,18 +5302,6 @@ module Aws::AppStream
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateImagePermissionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         shared_account_id: "AwsAccountId", # required
-    #         image_permissions: { # required
-    #           allow_fleet: false,
-    #           allow_image_builder: false,
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the private image.
     #   @return [String]
@@ -4069,43 +5329,6 @@ module Aws::AppStream
     #
     class UpdateImagePermissionsResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateStackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         display_name: "DisplayName",
-    #         description: "Description",
-    #         name: "String", # required
-    #         storage_connectors: [
-    #           {
-    #             connector_type: "HOMEFOLDERS", # required, accepts HOMEFOLDERS, GOOGLE_DRIVE, ONE_DRIVE
-    #             resource_identifier: "ResourceIdentifier",
-    #             domains: ["Domain"],
-    #           },
-    #         ],
-    #         delete_storage_connectors: false,
-    #         redirect_url: "RedirectURL",
-    #         feedback_url: "FeedbackURL",
-    #         attributes_to_delete: ["STORAGE_CONNECTORS"], # accepts STORAGE_CONNECTORS, STORAGE_CONNECTOR_HOMEFOLDERS, STORAGE_CONNECTOR_GOOGLE_DRIVE, STORAGE_CONNECTOR_ONE_DRIVE, REDIRECT_URL, FEEDBACK_URL, THEME_NAME, USER_SETTINGS, EMBED_HOST_DOMAINS, IAM_ROLE_ARN, ACCESS_ENDPOINTS
-    #         user_settings: [
-    #           {
-    #             action: "CLIPBOARD_COPY_FROM_LOCAL_DEVICE", # required, accepts CLIPBOARD_COPY_FROM_LOCAL_DEVICE, CLIPBOARD_COPY_TO_LOCAL_DEVICE, FILE_UPLOAD, FILE_DOWNLOAD, PRINTING_TO_LOCAL_DEVICE, DOMAIN_PASSWORD_SIGNIN, DOMAIN_SMART_CARD_SIGNIN
-    #             permission: "ENABLED", # required, accepts ENABLED, DISABLED
-    #           },
-    #         ],
-    #         application_settings: {
-    #           enabled: false, # required
-    #           settings_group: "SettingsGroup",
-    #         },
-    #         access_endpoints: [
-    #           {
-    #             endpoint_type: "STREAMING", # required, accepts STREAMING
-    #             vpce_id: "String",
-    #           },
-    #         ],
-    #         embed_host_domains: ["EmbedHostDomain"],
-    #       }
-    #
     # @!attribute [rw] display_name
     #   The stack name to display.
     #   @return [String]
@@ -4165,6 +5388,12 @@ module Aws::AppStream
     #   embedded AppStream 2.0 streaming sessions.
     #   @return [Array<String>]
     #
+    # @!attribute [rw] streaming_experience_settings
+    #   The streaming protocol you want your stack to prefer. This can be
+    #   UDP or TCP. Currently, UDP is only supported in the Windows native
+    #   client.
+    #   @return [Types::StreamingExperienceSettings]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateStackRequest AWS API Documentation
     #
     class UpdateStackRequest < Struct.new(
@@ -4179,7 +5408,8 @@ module Aws::AppStream
       :user_settings,
       :application_settings,
       :access_endpoints,
-      :embed_host_domains)
+      :embed_host_domains,
+      :streaming_experience_settings)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -4302,14 +5532,6 @@ module Aws::AppStream
     # Describes an action and whether the action is enabled or disabled for
     # users during their streaming sessions.
     #
-    # @note When making an API call, you may pass UserSetting
-    #   data as a hash:
-    #
-    #       {
-    #         action: "CLIPBOARD_COPY_FROM_LOCAL_DEVICE", # required, accepts CLIPBOARD_COPY_FROM_LOCAL_DEVICE, CLIPBOARD_COPY_TO_LOCAL_DEVICE, FILE_UPLOAD, FILE_DOWNLOAD, PRINTING_TO_LOCAL_DEVICE, DOMAIN_PASSWORD_SIGNIN, DOMAIN_SMART_CARD_SIGNIN
-    #         permission: "ENABLED", # required, accepts ENABLED, DISABLED
-    #       }
-    #
     # @!attribute [rw] action
     #   The action that is enabled or disabled.
     #   @return [String]
@@ -4328,16 +5550,6 @@ module Aws::AppStream
     end
 
     # Describes a user in the user pool and the associated stack.
-    #
-    # @note When making an API call, you may pass UserStackAssociation
-    #   data as a hash:
-    #
-    #       {
-    #         stack_name: "String", # required
-    #         user_name: "Username", # required
-    #         authentication_type: "API", # required, accepts API, SAML, USERPOOL
-    #         send_email_notification: false,
-    #       }
     #
     # @!attribute [rw] stack_name
     #   The name of the stack that is associated with the user.
@@ -4399,14 +5611,6 @@ module Aws::AppStream
     end
 
     # Describes VPC configuration information for fleets and image builders.
-    #
-    # @note When making an API call, you may pass VpcConfig
-    #   data as a hash:
-    #
-    #       {
-    #         subnet_ids: ["String"],
-    #         security_group_ids: ["String"],
-    #       }
     #
     # @!attribute [rw] subnet_ids
     #   The identifiers of the subnets to which a network interface is

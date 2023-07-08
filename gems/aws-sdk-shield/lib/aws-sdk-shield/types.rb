@@ -25,11 +25,11 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # In order to grant the necessary access to the DDoS Response Team
-    # (DRT), the user submitting the request must have the `iam:PassRole`
+    # In order to grant the necessary access to the Shield Response Team
+    # (SRT) the user submitting the request must have the `iam:PassRole`
     # permission. This error indicates the user did not have the appropriate
     # permissions. For more information, see [Granting a User Permissions to
-    # Pass a Role to an AWS Service][1].
+    # Pass a Role to an Amazon Web Services Service][1].
     #
     #
     #
@@ -46,15 +46,39 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateDRTLogBucketRequest
-    #   data as a hash:
+    # The automatic application layer DDoS mitigation settings for a
+    # Protection. This configuration determines whether Shield Advanced
+    # automatically manages rules in the web ACL in order to respond to
+    # application layer events that Shield Advanced determines to be DDoS
+    # attacks.
     #
-    #       {
-    #         log_bucket: "LogBucket", # required
-    #       }
+    # @!attribute [rw] status
+    #   Indicates whether automatic application layer DDoS mitigation is
+    #   enabled for the protection.
+    #   @return [String]
     #
+    # @!attribute [rw] action
+    #   Specifies the action setting that Shield Advanced should use in the
+    #   WAF rules that it creates on behalf of the protected resource in
+    #   response to DDoS attacks. You specify this as part of the
+    #   configuration for the automatic application layer DDoS mitigation
+    #   feature, when you enable or update automatic mitigation. Shield
+    #   Advanced creates the WAF rules in a Shield Advanced-managed rule
+    #   group, inside the web ACL that you have associated with the
+    #   resource.
+    #   @return [Types::ResponseAction]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ApplicationLayerAutomaticResponseConfiguration AWS API Documentation
+    #
+    class ApplicationLayerAutomaticResponseConfiguration < Struct.new(
+      :status,
+      :action)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] log_bucket
-    #   The Amazon S3 bucket that contains your AWS WAF logs.
+    #   The Amazon S3 bucket that contains the logs that you want to share.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/AssociateDRTLogBucketRequest AWS API Documentation
@@ -69,16 +93,9 @@ module Aws::Shield
     #
     class AssociateDRTLogBucketResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass AssociateDRTRoleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         role_arn: "RoleArn", # required
-    #       }
-    #
     # @!attribute [rw] role_arn
-    #   The Amazon Resource Name (ARN) of the role the DRT will use to
-    #   access your AWS account.
+    #   The Amazon Resource Name (ARN) of the role the SRT will use to
+    #   access your Amazon Web Services account.
     #
     #   Prior to making the `AssociateDRTRole` request, you must attach the
     #   [AWSShieldDRTAccessPolicy][1] managed policy to this role. For more
@@ -102,14 +119,6 @@ module Aws::Shield
     #
     class AssociateDRTRoleResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass AssociateHealthCheckRequest
-    #   data as a hash:
-    #
-    #       {
-    #         protection_id: "ProtectionId", # required
-    #         health_check_arn: "HealthCheckArn", # required
-    #       }
-    #
     # @!attribute [rw] protection_id
     #   The unique identifier (ID) for the Protection object to add the
     #   health check association to.
@@ -133,22 +142,9 @@ module Aws::Shield
     #
     class AssociateHealthCheckResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass AssociateProactiveEngagementDetailsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         emergency_contact_list: [ # required
-    #           {
-    #             email_address: "EmailAddress", # required
-    #             phone_number: "PhoneNumber",
-    #             contact_notes: "ContactNotes",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] emergency_contact_list
-    #   A list of email addresses and phone numbers that the DDoS Response
-    #   Team (DRT) can use to contact you for escalations to the DRT and to
+    #   A list of email addresses and phone numbers that the Shield Response
+    #   Team (SRT) can use to contact you for escalations to the SRT and to
     #   initiate proactive customer support.
     #
     #   To enable proactive engagement, the contact list must include at
@@ -190,21 +186,11 @@ module Aws::Shield
     #   @return [Array<Types::SubResourceSummary>]
     #
     # @!attribute [rw] start_time
-    #   The time the attack started, in Unix time in seconds. For more
-    #   information see [timestamp][1].
-    #
-    #
-    #
-    #   [1]: http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#parameter-types
+    #   The time the attack started, in Unix time in seconds.
     #   @return [Time]
     #
     # @!attribute [rw] end_time
-    #   The time the attack ended, in Unix time in seconds. For more
-    #   information see [timestamp][1].
-    #
-    #
-    #
-    #   [1]: http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#parameter-types
+    #   The time the attack ended, in Unix time in seconds.
     #   @return [Time]
     #
     # @!attribute [rw] attack_counters
@@ -213,7 +199,16 @@ module Aws::Shield
     #   @return [Array<Types::SummarizedCounter>]
     #
     # @!attribute [rw] attack_properties
-    #   The array of AttackProperty objects.
+    #   The array of objects that provide details of the Shield event.
+    #
+    #   For infrastructure layer events (L3 and L4 events), you can view
+    #   metrics for top contributors in Amazon CloudWatch metrics. For more
+    #   information, see [Shield metrics and alarms][1] in the *WAF
+    #   Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/waf/latest/developerguide/monitoring-cloudwatch.html#set-ddos-alarms
     #   @return [Array<Types::AttackProperty>]
     #
     # @!attribute [rw] mitigations
@@ -235,33 +230,43 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # Details of the described attack.
+    # Details of a Shield event. This is provided as part of an
+    # AttackDetail.
     #
     # @!attribute [rw] attack_layer
-    #   The type of distributed denial of service (DDoS) event that was
-    #   observed. `NETWORK` indicates layer 3 and layer 4 events and
-    #   `APPLICATION` indicates layer 7 events.
+    #   The type of Shield event that was observed. `NETWORK` indicates
+    #   layer 3 and layer 4 events and `APPLICATION` indicates layer 7
+    #   events.
+    #
+    #   For infrastructure layer events (L3 and L4 events), you can view
+    #   metrics for top contributors in Amazon CloudWatch metrics. For more
+    #   information, see [Shield metrics and alarms][1] in the *WAF
+    #   Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/waf/latest/developerguide/monitoring-cloudwatch.html#set-ddos-alarms
     #   @return [String]
     #
     # @!attribute [rw] attack_property_identifier
-    #   Defines the DDoS attack property information that is provided. The
+    #   Defines the Shield event property information that is provided. The
     #   `WORDPRESS_PINGBACK_REFLECTOR` and `WORDPRESS_PINGBACK_SOURCE`
-    #   values are valid only for WordPress reflective pingback DDoS
-    #   attacks.
+    #   values are valid only for WordPress reflective pingback events.
     #   @return [String]
     #
     # @!attribute [rw] top_contributors
-    #   The array of contributor objects that includes the top five
-    #   contributors to an attack.
+    #   Contributor objects for the top five contributors to a Shield event.
+    #   A contributor is a source of traffic that Shield Advanced identifies
+    #   as responsible for some or all of an event.
     #   @return [Array<Types::Contributor>]
     #
     # @!attribute [rw] unit
-    #   The unit of the `Value` of the contributions.
+    #   The unit used for the `Contributor` `Value` property.
     #   @return [String]
     #
     # @!attribute [rw] total
-    #   The total contributions made to this attack by all contributors, not
-    #   just the five listed in the `TopContributors` list.
+    #   The total contributions made to this Shield event by all
+    #   contributors.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/AttackProperty AWS API Documentation
@@ -310,21 +315,11 @@ module Aws::Shield
     #   @return [String]
     #
     # @!attribute [rw] start_time
-    #   The start time of the attack, in Unix time in seconds. For more
-    #   information see [timestamp][1].
-    #
-    #
-    #
-    #   [1]: http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#parameter-types
+    #   The start time of the attack, in Unix time in seconds.
     #   @return [Time]
     #
     # @!attribute [rw] end_time
-    #   The end time of the attack, in Unix time in seconds. For more
-    #   information see [timestamp][1].
-    #
-    #
-    #
-    #   [1]: http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#parameter-types
+    #   The end time of the attack, in Unix time in seconds.
     #   @return [Time]
     #
     # @!attribute [rw] attack_vectors
@@ -438,13 +433,27 @@ module Aws::Shield
       include Aws::Structure
     end
 
+    # Specifies that Shield Advanced should configure its WAF rules with the
+    # WAF `Block` action.
+    #
+    # This is only used in the context of the `ResponseAction` setting.
+    #
+    # JSON specification: `"Block": \{\}`
+    #
+    # @api private
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/BlockAction AWS API Documentation
+    #
+    class BlockAction < Aws::EmptyStructure; end
+
     # A contributor to the attack and their contribution.
     #
     # @!attribute [rw] name
-    #   The name of the contributor. This is dependent on the
-    #   `AttackPropertyIdentifier`. For example, if the
-    #   `AttackPropertyIdentifier` is `SOURCE_COUNTRY`, the `Name` could be
-    #   `United States`.
+    #   The name of the contributor. The type of name that you'll find here
+    #   depends on the `AttackPropertyIdentifier` setting in the
+    #   `AttackProperty` where this contributor is defined. For example, if
+    #   the `AttackPropertyIdentifier` is `SOURCE_COUNTRY`, the `Name` could
+    #   be `United States`.
     #   @return [String]
     #
     # @!attribute [rw] value
@@ -461,23 +470,19 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateProtectionGroupRequest
-    #   data as a hash:
+    # Specifies that Shield Advanced should configure its WAF rules with the
+    # WAF `Count` action.
     #
-    #       {
-    #         protection_group_id: "ProtectionGroupId", # required
-    #         aggregation: "SUM", # required, accepts SUM, MEAN, MAX
-    #         pattern: "ALL", # required, accepts ALL, ARBITRARY, BY_RESOURCE_TYPE
-    #         resource_type: "CLOUDFRONT_DISTRIBUTION", # accepts CLOUDFRONT_DISTRIBUTION, ROUTE_53_HOSTED_ZONE, ELASTIC_IP_ALLOCATION, CLASSIC_LOAD_BALANCER, APPLICATION_LOAD_BALANCER, GLOBAL_ACCELERATOR
-    #         members: ["ResourceArn"],
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
+    # This is only used in the context of the `ResponseAction` setting.
     #
+    # JSON specification: `"Count": \{\}`
+    #
+    # @api private
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/CountAction AWS API Documentation
+    #
+    class CountAction < Aws::EmptyStructure; end
+
     # @!attribute [rw] protection_group_id
     #   The name of the protection group. You use this to identify the
     #   protection group in lists and to manage the protection group, for
@@ -485,8 +490,8 @@ module Aws::Shield
     #   @return [String]
     #
     # @!attribute [rw] aggregation
-    #   Defines how AWS Shield combines resource data for the group in order
-    #   to detect, mitigate, and report events.
+    #   Defines how Shield combines resource data for the group in order to
+    #   detect, mitigate, and report events.
     #
     #   * Sum - Use the total traffic across the group. This is a good
     #     choice for most cases. Examples include Elastic IP addresses for
@@ -498,9 +503,8 @@ module Aws::Shield
     #
     #   * Max - Use the highest traffic from each resource. This is useful
     #     for resources that don't share traffic and for resources that
-    #     share that traffic in a non-uniform way. Examples include
-    #     CloudFront distributions and origin resources for CloudFront
-    #     distributions.
+    #     share that traffic in a non-uniform way. Examples include Amazon
+    #     CloudFront and origin resources for CloudFront distributions.
     #   @return [String]
     #
     # @!attribute [rw] pattern
@@ -546,20 +550,6 @@ module Aws::Shield
     #
     class CreateProtectionGroupResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass CreateProtectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ProtectionName", # required
-    #         resource_arn: "ResourceArn", # required
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   Friendly name for the `Protection` you are creating.
     #   @return [String]
@@ -577,14 +567,14 @@ module Aws::Shield
     #     `arn:aws:elasticloadbalancing:region:account-id:loadbalancer/load-balancer-name
     #     `
     #
-    #   * For an AWS CloudFront distribution:
+    #   * For an Amazon CloudFront distribution:
     #     `arn:aws:cloudfront::account-id:distribution/distribution-id `
     #
-    #   * For an AWS Global Accelerator accelerator:
+    #   * For an Global Accelerator standard accelerator:
     #     `arn:aws:globalaccelerator::account-id:accelerator/accelerator-id
     #     `
     #
-    #   * For Amazon Route 53: `arn:aws:route53:::hostedzone/hosted-zone-id
+    #   * For Amazon Route 53: `arn:aws:route53:::hostedzone/hosted-zone-id
     #     `
     #
     #   * For an Elastic IP address:
@@ -629,13 +619,6 @@ module Aws::Shield
     #
     class CreateSubscriptionResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteProtectionGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         protection_group_id: "ProtectionGroupId", # required
-    #       }
-    #
     # @!attribute [rw] protection_group_id
     #   The name of the protection group. You use this to identify the
     #   protection group in lists and to manage the protection group, for
@@ -654,13 +637,6 @@ module Aws::Shield
     #
     class DeleteProtectionGroupResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteProtectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         protection_id: "ProtectionId", # required
-    #       }
-    #
     # @!attribute [rw] protection_id
     #   The unique identifier (ID) for the Protection object to be deleted.
     #   @return [String]
@@ -687,15 +663,8 @@ module Aws::Shield
     #
     class DeleteSubscriptionResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeAttackRequest
-    #   data as a hash:
-    #
-    #       {
-    #         attack_id: "AttackId", # required
-    #       }
-    #
     # @!attribute [rw] attack_id
-    #   The unique identifier (ID) for the attack that to be described.
+    #   The unique identifier (ID) for the attack.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DescribeAttackRequest AWS API Documentation
@@ -707,7 +676,7 @@ module Aws::Shield
     end
 
     # @!attribute [rw] attack
-    #   The attack that is described.
+    #   The attack that you requested.
     #   @return [Types::AttackDetail]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DescribeAttackResponse AWS API Documentation
@@ -725,7 +694,7 @@ module Aws::Shield
     class DescribeAttackStatisticsRequest < Aws::EmptyStructure; end
 
     # @!attribute [rw] time_range
-    #   The time range.
+    #   The time range of the attack.
     #   @return [Types::TimeRange]
     #
     # @!attribute [rw] data_items
@@ -748,12 +717,12 @@ module Aws::Shield
     class DescribeDRTAccessRequest < Aws::EmptyStructure; end
 
     # @!attribute [rw] role_arn
-    #   The Amazon Resource Name (ARN) of the role the DRT used to access
-    #   your AWS account.
+    #   The Amazon Resource Name (ARN) of the role the SRT used to access
+    #   your Amazon Web Services account.
     #   @return [String]
     #
     # @!attribute [rw] log_bucket_list
-    #   The list of Amazon S3 buckets accessed by the DRT.
+    #   The list of Amazon S3 buckets accessed by the SRT.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DescribeDRTAccessResponse AWS API Documentation
@@ -772,9 +741,9 @@ module Aws::Shield
     class DescribeEmergencyContactSettingsRequest < Aws::EmptyStructure; end
 
     # @!attribute [rw] emergency_contact_list
-    #   A list of email addresses and phone numbers that the DDoS Response
-    #   Team (DRT) can use to contact you if you have proactive engagement
-    #   enabled, for escalations to the DRT and to initiate proactive
+    #   A list of email addresses and phone numbers that the Shield Response
+    #   Team (SRT) can use to contact you if you have proactive engagement
+    #   enabled, for escalations to the SRT and to initiate proactive
     #   customer support.
     #   @return [Array<Types::EmergencyContact>]
     #
@@ -786,13 +755,6 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeProtectionGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         protection_group_id: "ProtectionGroupId", # required
-    #       }
-    #
     # @!attribute [rw] protection_group_id
     #   The name of the protection group. You use this to identify the
     #   protection group in lists and to manage the protection group, for
@@ -808,8 +770,8 @@ module Aws::Shield
     end
 
     # @!attribute [rw] protection_group
-    #   A grouping of protected resources that you and AWS Shield Advanced
-    #   can monitor as a collective. This resource grouping improves the
+    #   A grouping of protected resources that you and Shield Advanced can
+    #   monitor as a collective. This resource grouping improves the
     #   accuracy of detection and reduces false positives.
     #   @return [Types::ProtectionGroup]
     #
@@ -821,26 +783,16 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeProtectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         protection_id: "ProtectionId",
-    #         resource_arn: "ResourceArn",
-    #       }
-    #
     # @!attribute [rw] protection_id
-    #   The unique identifier (ID) for the Protection object that is
-    #   described. When submitting the `DescribeProtection` request you must
-    #   provide either the `ResourceArn` or the `ProtectionID`, but not
-    #   both.
+    #   The unique identifier (ID) for the Protection object to describe.
+    #   You must provide either the `ResourceArn` of the protected resource
+    #   or the `ProtectionID` of the protection, but not both.
     #   @return [String]
     #
     # @!attribute [rw] resource_arn
-    #   The ARN (Amazon Resource Name) of the AWS resource for the
-    #   Protection object that is described. When submitting the
-    #   `DescribeProtection` request you must provide either the
-    #   `ResourceArn` or the `ProtectionID`, but not both.
+    #   The ARN (Amazon Resource Name) of the protected Amazon Web Services
+    #   resource. You must provide either the `ResourceArn` of the protected
+    #   resource or the `ProtectionID` of the protection, but not both.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DescribeProtectionRequest AWS API Documentation
@@ -853,7 +805,7 @@ module Aws::Shield
     end
 
     # @!attribute [rw] protection
-    #   The Protection object that is described.
+    #   The Protection that you requested.
     #   @return [Types::Protection]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DescribeProtectionResponse AWS API Documentation
@@ -871,7 +823,7 @@ module Aws::Shield
     class DescribeSubscriptionRequest < Aws::EmptyStructure; end
 
     # @!attribute [rw] subscription
-    #   The AWS Shield Advanced subscription details for an account.
+    #   The Shield Advanced subscription details for an account.
     #   @return [Types::Subscription]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DescribeSubscriptionResponse AWS API Documentation
@@ -881,6 +833,22 @@ module Aws::Shield
       SENSITIVE = []
       include Aws::Structure
     end
+
+    # @!attribute [rw] resource_arn
+    #   The ARN (Amazon Resource Name) of the protected resource.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DisableApplicationLayerAutomaticResponseRequest AWS API Documentation
+    #
+    class DisableApplicationLayerAutomaticResponseRequest < Struct.new(
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DisableApplicationLayerAutomaticResponseResponse AWS API Documentation
+    #
+    class DisableApplicationLayerAutomaticResponseResponse < Aws::EmptyStructure; end
 
     # @api private
     #
@@ -892,15 +860,8 @@ module Aws::Shield
     #
     class DisableProactiveEngagementResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DisassociateDRTLogBucketRequest
-    #   data as a hash:
-    #
-    #       {
-    #         log_bucket: "LogBucket", # required
-    #       }
-    #
     # @!attribute [rw] log_bucket
-    #   The Amazon S3 bucket that contains your AWS WAF logs.
+    #   The Amazon S3 bucket that contains the logs that you want to share.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DisassociateDRTLogBucketRequest AWS API Documentation
@@ -925,14 +886,6 @@ module Aws::Shield
     #
     class DisassociateDRTRoleResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DisassociateHealthCheckRequest
-    #   data as a hash:
-    #
-    #       {
-    #         protection_id: "ProtectionId", # required
-    #         health_check_arn: "HealthCheckArn", # required
-    #       }
-    #
     # @!attribute [rw] protection_id
     #   The unique identifier (ID) for the Protection object to remove the
     #   health check association from.
@@ -956,18 +909,9 @@ module Aws::Shield
     #
     class DisassociateHealthCheckResponse < Aws::EmptyStructure; end
 
-    # Contact information that the DRT can use to contact you if you have
-    # proactive engagement enabled, for escalations to the DRT and to
+    # Contact information that the SRT can use to contact you if you have
+    # proactive engagement enabled, for escalations to the SRT and to
     # initiate proactive customer support.
-    #
-    # @note When making an API call, you may pass EmergencyContact
-    #   data as a hash:
-    #
-    #       {
-    #         email_address: "EmailAddress", # required
-    #         phone_number: "PhoneNumber",
-    #         contact_notes: "ContactNotes",
-    #       }
     #
     # @!attribute [rw] email_address
     #   The email address for the contact.
@@ -990,6 +934,34 @@ module Aws::Shield
       SENSITIVE = []
       include Aws::Structure
     end
+
+    # @!attribute [rw] resource_arn
+    #   The ARN (Amazon Resource Name) of the protected resource.
+    #   @return [String]
+    #
+    # @!attribute [rw] action
+    #   Specifies the action setting that Shield Advanced should use in the
+    #   WAF rules that it creates on behalf of the protected resource in
+    #   response to DDoS attacks. You specify this as part of the
+    #   configuration for the automatic application layer DDoS mitigation
+    #   feature, when you enable or update automatic mitigation. Shield
+    #   Advanced creates the WAF rules in a Shield Advanced-managed rule
+    #   group, inside the web ACL that you have associated with the
+    #   resource.
+    #   @return [Types::ResponseAction]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/EnableApplicationLayerAutomaticResponseRequest AWS API Documentation
+    #
+    class EnableApplicationLayerAutomaticResponseRequest < Struct.new(
+      :resource_arn,
+      :action)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/EnableApplicationLayerAutomaticResponseResponse AWS API Documentation
+    #
+    class EnableApplicationLayerAutomaticResponseResponse < Aws::EmptyStructure; end
 
     # @api private
     #
@@ -1015,6 +987,76 @@ module Aws::Shield
     #
     class GetSubscriptionStateResponse < Struct.new(
       :subscription_state)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Narrows the set of protections that the call retrieves. You can
+    # retrieve a single protection by providing its name or the ARN (Amazon
+    # Resource Name) of its protected resource. You can also retrieve all
+    # protections for a specific resource type. You can provide up to one
+    # criteria per filter type. Shield Advanced returns protections that
+    # exactly match all of the filter criteria that you provide.
+    #
+    # @!attribute [rw] resource_arns
+    #   The ARN (Amazon Resource Name) of the resource whose protection you
+    #   want to retrieve.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] protection_names
+    #   The name of the protection that you want to retrieve.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] resource_types
+    #   The type of protected resource whose protections you want to
+    #   retrieve.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/InclusionProtectionFilters AWS API Documentation
+    #
+    class InclusionProtectionFilters < Struct.new(
+      :resource_arns,
+      :protection_names,
+      :resource_types)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Narrows the set of protection groups that the call retrieves. You can
+    # retrieve a single protection group by its name and you can retrieve
+    # all protection groups that are configured with a specific pattern,
+    # aggregation, or resource type. You can provide up to one criteria per
+    # filter type. Shield Advanced returns the protection groups that
+    # exactly match all of the search criteria that you provide.
+    #
+    # @!attribute [rw] protection_group_ids
+    #   The ID of the protection group that you want to retrieve.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] patterns
+    #   The pattern specification of the protection groups that you want to
+    #   retrieve.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] resource_types
+    #   The resource type configuration of the protection groups that you
+    #   want to retrieve. In the protection group configuration, you specify
+    #   the resource type when you set the group's `Pattern` to
+    #   `BY_RESOURCE_TYPE`.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] aggregations
+    #   The aggregation setting of the protection groups that you want to
+    #   retrieve.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/InclusionProtectionGroupFilters AWS API Documentation
+    #
+    class InclusionProtectionGroupFilters < Struct.new(
+      :protection_group_ids,
+      :patterns,
+      :resource_types,
+      :aggregations)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1047,9 +1089,9 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # Exception that indicates that the NextToken specified in the request
-    # is invalid. Submit the request using the NextToken value that was
-    # returned in the response.
+    # Exception that indicates that the `NextToken` specified in the request
+    # is invalid. Submit the request using the `NextToken` value that was
+    # returned in the prior response.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1144,66 +1186,61 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAttacksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arns: ["ResourceArn"],
-    #         start_time: {
-    #           from_inclusive: Time.now,
-    #           to_exclusive: Time.now,
-    #         },
-    #         end_time: {
-    #           from_inclusive: Time.now,
-    #           to_exclusive: Time.now,
-    #         },
-    #         next_token: "Token",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] resource_arns
-    #   The ARN (Amazon Resource Name) of the resource that was attacked. If
-    #   this is left blank, all applicable resources for this account will
-    #   be included.
+    #   The ARNs (Amazon Resource Names) of the resources that were
+    #   attacked. If you leave this blank, all applicable resources for this
+    #   account will be included.
     #   @return [Array<String>]
     #
     # @!attribute [rw] start_time
     #   The start of the time period for the attacks. This is a `timestamp`
-    #   type. The sample request above indicates a `number` type because the
-    #   default used by WAF is Unix time in seconds. However any valid
-    #   [timestamp format][1] is allowed.
+    #   type. The request syntax listing for this call indicates a `number`
+    #   type, but you can provide the time in any valid [timestamp
+    #   format][1] setting.
     #
     #
     #
-    #   [1]: http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#parameter-types
+    #   [1]: https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-parameters-types.html#parameter-type-timestamp
     #   @return [Types::TimeRange]
     #
     # @!attribute [rw] end_time
     #   The end of the time period for the attacks. This is a `timestamp`
-    #   type. The sample request above indicates a `number` type because the
-    #   default used by WAF is Unix time in seconds. However any valid
-    #   [timestamp format][1] is allowed.
+    #   type. The request syntax listing for this call indicates a `number`
+    #   type, but you can provide the time in any valid [timestamp
+    #   format][1] setting.
     #
     #
     #
-    #   [1]: http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#parameter-types
+    #   [1]: https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-parameters-types.html#parameter-type-timestamp
     #   @return [Types::TimeRange]
     #
     # @!attribute [rw] next_token
-    #   The `ListAttacksRequest.NextMarker` value from a previous call to
-    #   `ListAttacksRequest`. Pass null if this is the first call.
+    #   When you request a list of objects from Shield Advanced, if the
+    #   response does not include all of the remaining available objects,
+    #   Shield Advanced includes a `NextToken` value in the response. You
+    #   can retrieve the next batch of objects by requesting the list again
+    #   and providing the token that was returned by the prior call in your
+    #   request.
+    #
+    #   You can indicate the maximum number of objects that you want Shield
+    #   Advanced to return for a single call with the `MaxResults` setting.
+    #   Shield Advanced will not return more than `MaxResults` objects, but
+    #   may return fewer, even if more objects are still available.
+    #
+    #   Whenever more objects remain that Shield Advanced has not yet
+    #   returned to you, the response will include a `NextToken` value.
+    #
+    #   On your first call to a list operation, leave this setting empty.
     #   @return [String]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of AttackSummary objects to return. If you leave
-    #   this blank, Shield Advanced returns the first 20 results.
+    #   The greatest number of objects that you want Shield Advanced to
+    #   return to the list request. Shield Advanced might return fewer
+    #   objects than you indicate in this setting, even if more objects are
+    #   available. If there are more objects remaining, Shield Advanced will
+    #   always also return a `NextToken` value in the response.
     #
-    #   This is a maximum value. Shield Advanced might return the results in
-    #   smaller batches. That is, the number of objects returned could be
-    #   less than `MaxResults`, even if there are still more objects yet to
-    #   return. If there are more objects to return, Shield Advanced returns
-    #   a value in `NextToken` that you can use in your next request, to get
-    #   the next batch of objects.
+    #   The default setting is 20.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ListAttacksRequest AWS API Documentation
@@ -1223,15 +1260,20 @@ module Aws::Shield
     #   @return [Array<Types::AttackSummary>]
     #
     # @!attribute [rw] next_token
-    #   The token returned by a previous call to indicate that there is more
-    #   data available. If not null, more results are available. Pass this
-    #   value for the `NextMarker` parameter in a subsequent call to
-    #   `ListAttacks` to retrieve the next set of items.
+    #   When you request a list of objects from Shield Advanced, if the
+    #   response does not include all of the remaining available objects,
+    #   Shield Advanced includes a `NextToken` value in the response. You
+    #   can retrieve the next batch of objects by requesting the list again
+    #   and providing the token that was returned by the prior call in your
+    #   request.
     #
-    #   Shield Advanced might return the list of AttackSummary objects in
-    #   batches smaller than the number specified by MaxResults. If there
-    #   are more attack summary objects to return, Shield Advanced will
-    #   always also return a `NextToken`.
+    #   You can indicate the maximum number of objects that you want Shield
+    #   Advanced to return for a single call with the `MaxResults` setting.
+    #   Shield Advanced will not return more than `MaxResults` objects, but
+    #   may return fewer, even if more objects are still available.
+    #
+    #   Whenever more objects remain that Shield Advanced has not yet
+    #   returned to you, the response will include a `NextToken` value.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ListAttacksResponse AWS API Documentation
@@ -1243,36 +1285,50 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListProtectionGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "Token",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
-    #   The next token value from a previous call to `ListProtectionGroups`.
-    #   Pass null if this is the first call.
+    #   When you request a list of objects from Shield Advanced, if the
+    #   response does not include all of the remaining available objects,
+    #   Shield Advanced includes a `NextToken` value in the response. You
+    #   can retrieve the next batch of objects by requesting the list again
+    #   and providing the token that was returned by the prior call in your
+    #   request.
+    #
+    #   You can indicate the maximum number of objects that you want Shield
+    #   Advanced to return for a single call with the `MaxResults` setting.
+    #   Shield Advanced will not return more than `MaxResults` objects, but
+    #   may return fewer, even if more objects are still available.
+    #
+    #   Whenever more objects remain that Shield Advanced has not yet
+    #   returned to you, the response will include a `NextToken` value.
+    #
+    #   On your first call to a list operation, leave this setting empty.
     #   @return [String]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of ProtectionGroup objects to return. If you
-    #   leave this blank, Shield Advanced returns the first 20 results.
+    #   The greatest number of objects that you want Shield Advanced to
+    #   return to the list request. Shield Advanced might return fewer
+    #   objects than you indicate in this setting, even if more objects are
+    #   available. If there are more objects remaining, Shield Advanced will
+    #   always also return a `NextToken` value in the response.
     #
-    #   This is a maximum value. Shield Advanced might return the results in
-    #   smaller batches. That is, the number of objects returned could be
-    #   less than `MaxResults`, even if there are still more objects yet to
-    #   return. If there are more objects to return, Shield Advanced returns
-    #   a value in `NextToken` that you can use in your next request, to get
-    #   the next batch of objects.
+    #   The default setting is 20.
     #   @return [Integer]
+    #
+    # @!attribute [rw] inclusion_filters
+    #   Narrows the set of protection groups that the call retrieves. You
+    #   can retrieve a single protection group by its name and you can
+    #   retrieve all protection groups that are configured with specific
+    #   pattern or aggregation settings. You can provide up to one criteria
+    #   per filter type. Shield Advanced returns the protection groups that
+    #   exactly match all of the search criteria that you provide.
+    #   @return [Types::InclusionProtectionGroupFilters]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ListProtectionGroupsRequest AWS API Documentation
     #
     class ListProtectionGroupsRequest < Struct.new(
       :next_token,
-      :max_results)
+      :max_results,
+      :inclusion_filters)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1281,10 +1337,20 @@ module Aws::Shield
     #   @return [Array<Types::ProtectionGroup>]
     #
     # @!attribute [rw] next_token
-    #   If you specify a value for `MaxResults` and you have more protection
-    #   groups than the value of MaxResults, AWS Shield Advanced returns
-    #   this token that you can use in your next request, to get the next
-    #   batch of objects.
+    #   When you request a list of objects from Shield Advanced, if the
+    #   response does not include all of the remaining available objects,
+    #   Shield Advanced includes a `NextToken` value in the response. You
+    #   can retrieve the next batch of objects by requesting the list again
+    #   and providing the token that was returned by the prior call in your
+    #   request.
+    #
+    #   You can indicate the maximum number of objects that you want Shield
+    #   Advanced to return for a single call with the `MaxResults` setting.
+    #   Shield Advanced will not return more than `MaxResults` objects, but
+    #   may return fewer, even if more objects are still available.
+    #
+    #   Whenever more objects remain that Shield Advanced has not yet
+    #   returned to you, the response will include a `NextToken` value.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ListProtectionGroupsResponse AWS API Documentation
@@ -1296,36 +1362,51 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListProtectionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "Token",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
-    #   The `ListProtectionsRequest.NextToken` value from a previous call to
-    #   `ListProtections`. Pass null if this is the first call.
+    #   When you request a list of objects from Shield Advanced, if the
+    #   response does not include all of the remaining available objects,
+    #   Shield Advanced includes a `NextToken` value in the response. You
+    #   can retrieve the next batch of objects by requesting the list again
+    #   and providing the token that was returned by the prior call in your
+    #   request.
+    #
+    #   You can indicate the maximum number of objects that you want Shield
+    #   Advanced to return for a single call with the `MaxResults` setting.
+    #   Shield Advanced will not return more than `MaxResults` objects, but
+    #   may return fewer, even if more objects are still available.
+    #
+    #   Whenever more objects remain that Shield Advanced has not yet
+    #   returned to you, the response will include a `NextToken` value.
+    #
+    #   On your first call to a list operation, leave this setting empty.
     #   @return [String]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of Protection objects to return. If you leave
-    #   this blank, Shield Advanced returns the first 20 results.
+    #   The greatest number of objects that you want Shield Advanced to
+    #   return to the list request. Shield Advanced might return fewer
+    #   objects than you indicate in this setting, even if more objects are
+    #   available. If there are more objects remaining, Shield Advanced will
+    #   always also return a `NextToken` value in the response.
     #
-    #   This is a maximum value. Shield Advanced might return the results in
-    #   smaller batches. That is, the number of objects returned could be
-    #   less than `MaxResults`, even if there are still more objects yet to
-    #   return. If there are more objects to return, Shield Advanced returns
-    #   a value in `NextToken` that you can use in your next request, to get
-    #   the next batch of objects.
+    #   The default setting is 20.
     #   @return [Integer]
+    #
+    # @!attribute [rw] inclusion_filters
+    #   Narrows the set of protections that the call retrieves. You can
+    #   retrieve a single protection by providing its name or the ARN
+    #   (Amazon Resource Name) of its protected resource. You can also
+    #   retrieve all protections for a specific resource type. You can
+    #   provide up to one criteria per filter type. Shield Advanced returns
+    #   protections that exactly match all of the filter criteria that you
+    #   provide.
+    #   @return [Types::InclusionProtectionFilters]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ListProtectionsRequest AWS API Documentation
     #
     class ListProtectionsRequest < Struct.new(
       :next_token,
-      :max_results)
+      :max_results,
+      :inclusion_filters)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1335,18 +1416,20 @@ module Aws::Shield
     #   @return [Array<Types::Protection>]
     #
     # @!attribute [rw] next_token
-    #   If you specify a value for `MaxResults` and you have more
-    #   Protections than the value of MaxResults, AWS Shield Advanced
-    #   returns a NextToken value in the response that allows you to list
-    #   another group of Protections. For the second and subsequent
-    #   ListProtections requests, specify the value of NextToken from the
-    #   previous response to get information about another batch of
-    #   Protections.
+    #   When you request a list of objects from Shield Advanced, if the
+    #   response does not include all of the remaining available objects,
+    #   Shield Advanced includes a `NextToken` value in the response. You
+    #   can retrieve the next batch of objects by requesting the list again
+    #   and providing the token that was returned by the prior call in your
+    #   request.
     #
-    #   Shield Advanced might return the list of Protection objects in
-    #   batches smaller than the number specified by MaxResults. If there
-    #   are more Protection objects to return, Shield Advanced will always
-    #   also return a `NextToken`.
+    #   You can indicate the maximum number of objects that you want Shield
+    #   Advanced to return for a single call with the `MaxResults` setting.
+    #   Shield Advanced will not return more than `MaxResults` objects, but
+    #   may return fewer, even if more objects are still available.
+    #
+    #   Whenever more objects remain that Shield Advanced has not yet
+    #   returned to you, the response will include a `NextToken` value.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ListProtectionsResponse AWS API Documentation
@@ -1358,15 +1441,6 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListResourcesInProtectionGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         protection_group_id: "ProtectionGroupId", # required
-    #         next_token: "Token",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] protection_group_id
     #   The name of the protection group. You use this to identify the
     #   protection group in lists and to manage the protection group, for
@@ -1374,21 +1448,32 @@ module Aws::Shield
     #   @return [String]
     #
     # @!attribute [rw] next_token
-    #   The next token value from a previous call to
-    #   `ListResourcesInProtectionGroup`. Pass null if this is the first
-    #   call.
+    #   When you request a list of objects from Shield Advanced, if the
+    #   response does not include all of the remaining available objects,
+    #   Shield Advanced includes a `NextToken` value in the response. You
+    #   can retrieve the next batch of objects by requesting the list again
+    #   and providing the token that was returned by the prior call in your
+    #   request.
+    #
+    #   You can indicate the maximum number of objects that you want Shield
+    #   Advanced to return for a single call with the `MaxResults` setting.
+    #   Shield Advanced will not return more than `MaxResults` objects, but
+    #   may return fewer, even if more objects are still available.
+    #
+    #   Whenever more objects remain that Shield Advanced has not yet
+    #   returned to you, the response will include a `NextToken` value.
+    #
+    #   On your first call to a list operation, leave this setting empty.
     #   @return [String]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of resource ARN objects to return. If you leave
-    #   this blank, Shield Advanced returns the first 20 results.
+    #   The greatest number of objects that you want Shield Advanced to
+    #   return to the list request. Shield Advanced might return fewer
+    #   objects than you indicate in this setting, even if more objects are
+    #   available. If there are more objects remaining, Shield Advanced will
+    #   always also return a `NextToken` value in the response.
     #
-    #   This is a maximum value. Shield Advanced might return the results in
-    #   smaller batches. That is, the number of objects returned could be
-    #   less than `MaxResults`, even if there are still more objects yet to
-    #   return. If there are more objects to return, Shield Advanced returns
-    #   a value in `NextToken` that you can use in your next request, to get
-    #   the next batch of objects.
+    #   The default setting is 20.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ListResourcesInProtectionGroupRequest AWS API Documentation
@@ -1407,10 +1492,20 @@ module Aws::Shield
     #   @return [Array<String>]
     #
     # @!attribute [rw] next_token
-    #   If you specify a value for `MaxResults` and you have more resources
-    #   in the protection group than the value of MaxResults, AWS Shield
-    #   Advanced returns this token that you can use in your next request,
-    #   to get the next batch of objects.
+    #   When you request a list of objects from Shield Advanced, if the
+    #   response does not include all of the remaining available objects,
+    #   Shield Advanced includes a `NextToken` value in the response. You
+    #   can retrieve the next batch of objects by requesting the list again
+    #   and providing the token that was returned by the prior call in your
+    #   request.
+    #
+    #   You can indicate the maximum number of objects that you want Shield
+    #   Advanced to return for a single call with the `MaxResults` setting.
+    #   Shield Advanced will not return more than `MaxResults` objects, but
+    #   may return fewer, even if more objects are still available.
+    #
+    #   Whenever more objects remain that Shield Advanced has not yet
+    #   returned to you, the response will include a `NextToken` value.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ListResourcesInProtectionGroupResponse AWS API Documentation
@@ -1422,13 +1517,6 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource to get tags for.
     #   @return [String]
@@ -1484,7 +1572,7 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # The ARN of the role that you specifed does not exist.
+    # The ARN of the role that you specified does not exist.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1523,18 +1611,26 @@ module Aws::Shield
     #   @return [String]
     #
     # @!attribute [rw] resource_arn
-    #   The ARN (Amazon Resource Name) of the AWS resource that is
-    #   protected.
+    #   The ARN (Amazon Resource Name) of the Amazon Web Services resource
+    #   that is protected.
     #   @return [String]
     #
     # @!attribute [rw] health_check_ids
-    #   The unique identifier (ID) for the Route 53 health check that's
+    #   The unique identifier (ID) for the Route 53 health check that's
     #   associated with the protection.
     #   @return [Array<String>]
     #
     # @!attribute [rw] protection_arn
     #   The ARN (Amazon Resource Name) of the protection.
     #   @return [String]
+    #
+    # @!attribute [rw] application_layer_automatic_response_configuration
+    #   The automatic application layer DDoS mitigation settings for the
+    #   protection. This configuration determines whether Shield Advanced
+    #   automatically manages rules in the web ACL in order to respond to
+    #   application layer events that Shield Advanced determines to be DDoS
+    #   attacks.
+    #   @return [Types::ApplicationLayerAutomaticResponseConfiguration]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/Protection AWS API Documentation
     #
@@ -1543,12 +1639,13 @@ module Aws::Shield
       :name,
       :resource_arn,
       :health_check_ids,
-      :protection_arn)
+      :protection_arn,
+      :application_layer_automatic_response_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # A grouping of protected resources that you and AWS Shield Advanced can
+    # A grouping of protected resources that you and Shield Advanced can
     # monitor as a collective. This resource grouping improves the accuracy
     # of detection and reduces false positives.
     #
@@ -1559,8 +1656,8 @@ module Aws::Shield
     #   @return [String]
     #
     # @!attribute [rw] aggregation
-    #   Defines how AWS Shield combines resource data for the group in order
-    #   to detect, mitigate, and report events.
+    #   Defines how Shield combines resource data for the group in order to
+    #   detect, mitigate, and report events.
     #
     #   * Sum - Use the total traffic across the group. This is a good
     #     choice for most cases. Examples include Elastic IP addresses for
@@ -1572,7 +1669,7 @@ module Aws::Shield
     #
     #   * Max - Use the highest traffic from each resource. This is useful
     #     for resources that don't share traffic and for resources that
-    #     share that traffic in a non-uniform way. Examples include
+    #     share that traffic in a non-uniform way. Examples include Amazon
     #     CloudFront distributions and origin resources for CloudFront
     #     distributions.
     #   @return [String]
@@ -1580,7 +1677,7 @@ module Aws::Shield
     # @!attribute [rw] pattern
     #   The criteria to use to choose the protected resources for inclusion
     #   in the group. You can include all resources that have protections,
-    #   provide a list of resource Amazon Resource Names (ARNs), or include
+    #   provide a list of resource ARNs (Amazon Resource Names), or include
     #   all resources of a specified resource type.
     #   @return [String]
     #
@@ -1592,7 +1689,7 @@ module Aws::Shield
     #   @return [String]
     #
     # @!attribute [rw] members
-    #   The Amazon Resource Names (ARNs) of the resources to include in the
+    #   The ARNs (Amazon Resource Names) of the resources to include in the
     #   protection group. You must set this when you set `Pattern` to
     #   `ARBITRARY` and you must not set it for any other `Pattern` setting.
     #   @return [Array<String>]
@@ -1718,6 +1815,37 @@ module Aws::Shield
       include Aws::Structure
     end
 
+    # Specifies the action setting that Shield Advanced should use in the
+    # WAF rules that it creates on behalf of the protected resource in
+    # response to DDoS attacks. You specify this as part of the
+    # configuration for the automatic application layer DDoS mitigation
+    # feature, when you enable or update automatic mitigation. Shield
+    # Advanced creates the WAF rules in a Shield Advanced-managed rule
+    # group, inside the web ACL that you have associated with the resource.
+    #
+    # @!attribute [rw] block
+    #   Specifies that Shield Advanced should configure its WAF rules with
+    #   the WAF `Block` action.
+    #
+    #   You must specify exactly one action, either `Block` or `Count`.
+    #   @return [Types::BlockAction]
+    #
+    # @!attribute [rw] count
+    #   Specifies that Shield Advanced should configure its WAF rules with
+    #   the WAF `Count` action.
+    #
+    #   You must specify exactly one action, either `Block` or `Count`.
+    #   @return [Types::CountAction]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/ResponseAction AWS API Documentation
+    #
+    class ResponseAction < Struct.new(
+      :block,
+      :count)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The attack information for the specified SubResource.
     #
     # @!attribute [rw] type
@@ -1747,15 +1875,10 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # Information about the AWS Shield Advanced subscription for an account.
+    # Information about the Shield Advanced subscription for an account.
     #
     # @!attribute [rw] start_time
-    #   The start time of the subscription, in Unix time in seconds. For
-    #   more information see [timestamp][1].
-    #
-    #
-    #
-    #   [1]: http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#parameter-types
+    #   The start time of the subscription, in Unix time in seconds.
     #   @return [Time]
     #
     # @!attribute [rw] end_time
@@ -1763,8 +1886,8 @@ module Aws::Shield
     #   @return [Time]
     #
     # @!attribute [rw] time_commitment_in_seconds
-    #   The length, in seconds, of the AWS Shield Advanced subscription for
-    #   the account.
+    #   The length, in seconds, of the Shield Advanced subscription for the
+    #   account.
     #   @return [Integer]
     #
     # @!attribute [rw] auto_renew
@@ -1783,15 +1906,15 @@ module Aws::Shield
     #   @return [Array<Types::Limit>]
     #
     # @!attribute [rw] proactive_engagement_status
-    #   If `ENABLED`, the DDoS Response Team (DRT) will use email and phone
-    #   to notify contacts about escalations to the DRT and to initiate
-    #   proactive customer support.
+    #   If `ENABLED`, the Shield Response Team (SRT) will use email and
+    #   phone to notify contacts about escalations to the SRT and to
+    #   initiate proactive customer support.
     #
     #   If `PENDING`, you have requested proactive engagement and the
     #   request is pending. The status changes to `ENABLED` when your
     #   request is fully processed.
     #
-    #   If `DISABLED`, the DRT will not proactively notify contacts about
+    #   If `DISABLED`, the SRT will not proactively notify contacts about
     #   escalations or to initiate proactive customer support.
     #   @return [String]
     #
@@ -1895,23 +2018,15 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # A tag associated with an AWS resource. Tags are key:value pairs that
-    # you can use to categorize and manage your resources, for purposes like
-    # billing or other management. Typically, the tag key represents a
-    # category, such as "environment", and the tag value represents a
-    # specific value within that category, such as "test,"
-    # "development," or "production". Or you might set the tag key to
-    # "customer" and the value to the customer name or ID. You can specify
-    # one or more tags to add to each AWS resource, up to 50 tags for a
-    # resource.
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey",
-    #         value: "TagValue",
-    #       }
+    # A tag associated with an Amazon Web Services resource. Tags are
+    # key:value pairs that you can use to categorize and manage your
+    # resources, for purposes like billing or other management. Typically,
+    # the tag key represents a category, such as "environment", and the
+    # tag value represents a specific value within that category, such as
+    # "test," "development," or "production". Or you might set the tag
+    # key to "customer" and the value to the customer name or ID. You can
+    # specify one or more tags to add to each Amazon Web Services resource,
+    # up to 50 tags for a resource.
     #
     # @!attribute [rw] key
     #   Part of the key:value pair that defines a tag. You can use a tag key
@@ -1934,19 +2049,6 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource that you want to add
     #   or update tags for.
@@ -1971,30 +2073,12 @@ module Aws::Shield
 
     # The time range.
     #
-    # @note When making an API call, you may pass TimeRange
-    #   data as a hash:
-    #
-    #       {
-    #         from_inclusive: Time.now,
-    #         to_exclusive: Time.now,
-    #       }
-    #
     # @!attribute [rw] from_inclusive
-    #   The start time, in Unix time in seconds. For more information see
-    #   [timestamp][1].
-    #
-    #
-    #
-    #   [1]: http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#parameter-types
+    #   The start time, in Unix time in seconds.
     #   @return [Time]
     #
     # @!attribute [rw] to_exclusive
-    #   The end time, in Unix time in seconds. For more information see
-    #   [timestamp][1].
-    #
-    #
-    #
-    #   [1]: http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#parameter-types
+    #   The end time, in Unix time in seconds.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/TimeRange AWS API Documentation
@@ -2006,14 +2090,6 @@ module Aws::Shield
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource that you want to
     #   remove tags from.
@@ -2036,23 +2112,38 @@ module Aws::Shield
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateEmergencyContactSettingsRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_arn
+    #   The ARN (Amazon Resource Name) of the resource.
+    #   @return [String]
     #
-    #       {
-    #         emergency_contact_list: [
-    #           {
-    #             email_address: "EmailAddress", # required
-    #             phone_number: "PhoneNumber",
-    #             contact_notes: "ContactNotes",
-    #           },
-    #         ],
-    #       }
+    # @!attribute [rw] action
+    #   Specifies the action setting that Shield Advanced should use in the
+    #   WAF rules that it creates on behalf of the protected resource in
+    #   response to DDoS attacks. You specify this as part of the
+    #   configuration for the automatic application layer DDoS mitigation
+    #   feature, when you enable or update automatic mitigation. Shield
+    #   Advanced creates the WAF rules in a Shield Advanced-managed rule
+    #   group, inside the web ACL that you have associated with the
+    #   resource.
+    #   @return [Types::ResponseAction]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/UpdateApplicationLayerAutomaticResponseRequest AWS API Documentation
+    #
+    class UpdateApplicationLayerAutomaticResponseRequest < Struct.new(
+      :resource_arn,
+      :action)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/UpdateApplicationLayerAutomaticResponseResponse AWS API Documentation
+    #
+    class UpdateApplicationLayerAutomaticResponseResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] emergency_contact_list
-    #   A list of email addresses and phone numbers that the DDoS Response
-    #   Team (DRT) can use to contact you if you have proactive engagement
-    #   enabled, for escalations to the DRT and to initiate proactive
+    #   A list of email addresses and phone numbers that the Shield Response
+    #   Team (SRT) can use to contact you if you have proactive engagement
+    #   enabled, for escalations to the SRT and to initiate proactive
     #   customer support.
     #
     #   If you have proactive engagement enabled, the contact list must
@@ -2071,17 +2162,6 @@ module Aws::Shield
     #
     class UpdateEmergencyContactSettingsResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateProtectionGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         protection_group_id: "ProtectionGroupId", # required
-    #         aggregation: "SUM", # required, accepts SUM, MEAN, MAX
-    #         pattern: "ALL", # required, accepts ALL, ARBITRARY, BY_RESOURCE_TYPE
-    #         resource_type: "CLOUDFRONT_DISTRIBUTION", # accepts CLOUDFRONT_DISTRIBUTION, ROUTE_53_HOSTED_ZONE, ELASTIC_IP_ALLOCATION, CLASSIC_LOAD_BALANCER, APPLICATION_LOAD_BALANCER, GLOBAL_ACCELERATOR
-    #         members: ["ResourceArn"],
-    #       }
-    #
     # @!attribute [rw] protection_group_id
     #   The name of the protection group. You use this to identify the
     #   protection group in lists and to manage the protection group, for
@@ -2089,8 +2169,8 @@ module Aws::Shield
     #   @return [String]
     #
     # @!attribute [rw] aggregation
-    #   Defines how AWS Shield combines resource data for the group in order
-    #   to detect, mitigate, and report events.
+    #   Defines how Shield combines resource data for the group in order to
+    #   detect, mitigate, and report events.
     #
     #   * Sum - Use the total traffic across the group. This is a good
     #     choice for most cases. Examples include Elastic IP addresses for
@@ -2102,7 +2182,7 @@ module Aws::Shield
     #
     #   * Max - Use the highest traffic from each resource. This is useful
     #     for resources that don't share traffic and for resources that
-    #     share that traffic in a non-uniform way. Examples include
+    #     share that traffic in a non-uniform way. Examples include Amazon
     #     CloudFront distributions and origin resources for CloudFront
     #     distributions.
     #   @return [String]
@@ -2143,13 +2223,6 @@ module Aws::Shield
     #
     class UpdateProtectionGroupResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateSubscriptionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         auto_renew: "ENABLED", # accepts ENABLED, DISABLED
-    #       }
-    #
     # @!attribute [rw] auto_renew
     #   When you initally create a subscription, `AutoRenew` is set to
     #   `ENABLED`. If `ENABLED`, the subscription will be automatically

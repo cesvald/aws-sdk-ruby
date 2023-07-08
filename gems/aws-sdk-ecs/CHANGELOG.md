@@ -1,6 +1,243 @@
 Unreleased Changes
 ------------------
 
+1.125.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.124.0 (2023-06-30)
+------------------
+
+* Feature - Added new field  "credentialspecs" to the ecs task definition to support gMSA of windows/linux in both domainless and domain-joined mode
+
+1.123.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.122.0 (2023-06-19)
+------------------
+
+* Feature - Documentation only update to address various tickets.
+
+1.121.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.120.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.119.0 (2023-05-18)
+------------------
+
+* Feature - Documentation only release to address various tickets.
+
+1.118.0 (2023-05-04)
+------------------
+
+* Feature - Documentation update for new error type NamespaceNotFoundException for CreateCluster and UpdateCluster
+
+1.117.0 (2023-05-02)
+------------------
+
+* Feature - Documentation only update to address Amazon ECS tickets.
+
+1.116.0 (2023-04-21)
+------------------
+
+* Feature - Documentation update to address various Amazon ECS tickets.
+
+1.115.0 (2023-04-19)
+------------------
+
+* Feature - This release supports the Account Setting "TagResourceAuthorization" that allows for enhanced Tagging security controls.
+
+1.114.0 (2023-04-14)
+------------------
+
+* Feature - This release supports  ephemeral storage for AWS Fargate Windows containers.
+
+1.113.0 (2023-04-10)
+------------------
+
+* Feature - This release adds support for enabling FIPS compliance on Amazon ECS Fargate tasks
+
+1.112.0 (2023-04-05)
+------------------
+
+* Feature - This is a document only updated to add information about Amazon Elastic Inference (EI).
+
+1.111.0 (2023-02-23)
+------------------
+
+* Feature - This release supports deleting Amazon ECS task definitions that are in the INACTIVE state.
+
+1.110.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.109.0 (2022-12-19)
+------------------
+
+* Feature - This release adds support for alarm-based rollbacks in ECS, a new feature that allows customers to add automated safeguards for Amazon ECS service rolling updates.
+
+1.108.0 (2022-12-15)
+------------------
+
+* Feature - This release adds support for container port ranges in ECS, a new capability that allows customers to provide container port ranges to simplify use cases where multiple ports are in use in a container. This release updates TaskDefinition mutation APIs and the Task description APIs.
+
+1.107.0 (2022-12-02)
+------------------
+
+* Feature - Documentation updates for Amazon ECS
+
+1.106.0 (2022-11-28)
+------------------
+
+* Feature - This release adds support for ECS Service Connect, a new capability that simplifies writing and operating resilient distributed applications. This release updates the TaskDefinition, Cluster, Service mutation APIs with Service connect constructs and also adds a new ListServicesByNamespace API.
+
+1.105.0 (2022-11-10)
+------------------
+
+* Feature - This release adds support for task scale-in protection with updateTaskProtection and getTaskProtection APIs. UpdateTaskProtection API can be used to protect a service managed task from being terminated by scale-in events and getTaskProtection API to get the scale-in protection status of a task.
+
+1.104.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.103.0 (2022-10-13)
+------------------
+
+* Feature - Documentation update to address tickets.
+
+1.102.0 (2022-10-04)
+------------------
+
+* Feature - Documentation updates to address various Amazon ECS tickets.
+
+1.101.0 (2022-09-16)
+------------------
+
+* Feature - This release supports new task definition sizes.
+
+1.100.0 (2022-06-21)
+------------------
+
+* Feature - Amazon ECS UpdateService now supports the following parameters: PlacementStrategies, PlacementConstraints and CapacityProviderStrategy.
+
+1.99.0 (2022-03-22)
+------------------
+
+* Feature - Documentation only update to address tickets
+
+1.98.0 (2022-03-15)
+------------------
+
+* Feature - Documentation only update to address tickets
+
+1.97.0 (2022-03-07)
+------------------
+
+* Feature - Amazon ECS UpdateService API now supports additional parameters: loadBalancers, propagateTags, enableECSManagedTags, and serviceRegistries
+
+1.96.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.95.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.94.0 (2022-01-05)
+------------------
+
+* Feature - Documentation update for ticket fixes.
+
+1.93.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.92.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.91.0 (2021-11-23)
+------------------
+
+* Feature - Documentation update for ARM support on Amazon ECS.
+
+1.90.0 (2021-11-10)
+------------------
+
+* Feature - This release adds support for container instance health.
+
+1.89.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.88.0 (2021-10-28)
+------------------
+
+* Feature - Amazon ECS now supports running Fargate tasks on Windows Operating Systems Families which includes Windows Server 2019 Core and Windows Server 2019 Full.
+
+1.87.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.86.0 (2021-10-12)
+------------------
+
+* Feature - Documentation only update to address tickets.
+
+1.85.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.84.0 (2021-08-11)
+------------------
+
+* Feature - Documentation updates for ECS.
+
+1.83.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.82.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.81.0 (2021-07-15)
+------------------
+
+* Feature - Documentation updates for support of awsvpc mode on Windows.
+
+1.80.0 (2021-06-02)
+------------------
+
+* Feature - Documentation updates for Amazon ECS.
+
+1.79.0 (2021-05-26)
+------------------
+
+* Feature - The release adds support for registering External instances to your Amazon ECS clusters.
+
 1.78.0 (2021-05-10)
 ------------------
 

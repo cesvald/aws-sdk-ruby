@@ -41,7 +41,7 @@ module Aws::S3
     #     acl: "private", # accepts private, public-read, public-read-write, authenticated-read
     #     bucket: "BucketName", # required
     #     create_bucket_configuration: {
-    #       location_constraint: "af-south-1", # accepts af-south-1, ap-east-1, ap-northeast-1, ap-northeast-2, ap-northeast-3, ap-south-1, ap-southeast-1, ap-southeast-2, ca-central-1, cn-north-1, cn-northwest-1, EU, eu-central-1, eu-north-1, eu-south-1, eu-west-1, eu-west-2, eu-west-3, me-south-1, sa-east-1, us-east-2, us-gov-east-1, us-gov-west-1, us-west-1, us-west-2
+    #       location_constraint: "af-south-1", # accepts af-south-1, ap-east-1, ap-northeast-1, ap-northeast-2, ap-northeast-3, ap-south-1, ap-southeast-1, ap-southeast-2, ap-southeast-3, ca-central-1, cn-north-1, cn-northwest-1, EU, eu-central-1, eu-north-1, eu-south-1, eu-west-1, eu-west-2, eu-west-3, me-south-1, sa-east-1, us-east-2, us-gov-east-1, us-gov-west-1, us-west-1, us-west-2
     #     },
     #     grant_full_control: "GrantFullControl",
     #     grant_read: "GrantRead",
@@ -49,6 +49,7 @@ module Aws::S3
     #     grant_write: "GrantWrite",
     #     grant_write_acp: "GrantWriteACP",
     #     object_lock_enabled_for_bucket: false,
+    #     object_ownership: "BucketOwnerPreferred", # accepts BucketOwnerPreferred, ObjectWriter, BucketOwnerEnforced
     #   })
     # @param [Hash] options ({})
     # @option options [String] :acl
@@ -65,16 +66,37 @@ module Aws::S3
     # @option options [String] :grant_read_acp
     #   Allows grantee to read the bucket ACL.
     # @option options [String] :grant_write
-    #   Allows grantee to create, overwrite, and delete any object in the
-    #   bucket.
+    #   Allows grantee to create new objects in the bucket.
+    #
+    #   For the bucket and object owners of existing objects, also allows
+    #   deletions and overwrites of those objects.
     # @option options [String] :grant_write_acp
     #   Allows grantee to write the ACL for the applicable bucket.
     # @option options [Boolean] :object_lock_enabled_for_bucket
     #   Specifies whether you want S3 Object Lock to be enabled for the new
     #   bucket.
+    # @option options [String] :object_ownership
+    #   The container element for object ownership for a bucket's ownership
+    #   controls.
+    #
+    #   BucketOwnerPreferred - Objects uploaded to the bucket change ownership
+    #   to the bucket owner if the objects are uploaded with the
+    #   `bucket-owner-full-control` canned ACL.
+    #
+    #   ObjectWriter - The uploading account will own the object if the object
+    #   is uploaded with the `bucket-owner-full-control` canned ACL.
+    #
+    #   BucketOwnerEnforced - Access control lists (ACLs) are disabled and no
+    #   longer affect permissions. The bucket owner automatically owns and has
+    #   full control over every object in the bucket. The bucket only accepts
+    #   PUT requests that don't specify an ACL or bucket owner full control
+    #   ACLs, such as the `bucket-owner-full-control` canned ACL or an
+    #   equivalent form of this ACL expressed in the XML format.
     # @return [Bucket]
     def create_bucket(options = {})
-      @client.create_bucket(options)
+      Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_bucket(options)
+      end
       Bucket.new(
         name: options[:bucket],
         client: @client
@@ -100,7 +122,9 @@ module Aws::S3
     def buckets(options = {})
       batches = Enumerator.new do |y|
         batch = []
-        resp = @client.list_buckets(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_buckets(options)
+        end
         resp.data.buckets.each do |b|
           batch << Bucket.new(
             name: b.name,

@@ -28,6 +28,7 @@ module Aws::QLDB
     DescribeLedgerRequest = Shapes::StructureShape.new(name: 'DescribeLedgerRequest')
     DescribeLedgerResponse = Shapes::StructureShape.new(name: 'DescribeLedgerResponse')
     Digest = Shapes::BlobShape.new(name: 'Digest')
+    EncryptionStatus = Shapes::StringShape.new(name: 'EncryptionStatus')
     ErrorCause = Shapes::StringShape.new(name: 'ErrorCause')
     ErrorMessage = Shapes::StringShape.new(name: 'ErrorMessage')
     ExportJournalToS3Request = Shapes::StructureShape.new(name: 'ExportJournalToS3Request')
@@ -46,6 +47,8 @@ module Aws::QLDB
     JournalS3ExportDescription = Shapes::StructureShape.new(name: 'JournalS3ExportDescription')
     JournalS3ExportList = Shapes::ListShape.new(name: 'JournalS3ExportList')
     KinesisConfiguration = Shapes::StructureShape.new(name: 'KinesisConfiguration')
+    KmsKey = Shapes::StringShape.new(name: 'KmsKey')
+    LedgerEncryptionDescription = Shapes::StructureShape.new(name: 'LedgerEncryptionDescription')
     LedgerList = Shapes::ListShape.new(name: 'LedgerList')
     LedgerName = Shapes::StringShape.new(name: 'LedgerName')
     LedgerState = Shapes::StringShape.new(name: 'LedgerState')
@@ -63,6 +66,7 @@ module Aws::QLDB
     ListTagsForResourceResponse = Shapes::StructureShape.new(name: 'ListTagsForResourceResponse')
     MaxResults = Shapes::IntegerShape.new(name: 'MaxResults')
     NextToken = Shapes::StringShape.new(name: 'NextToken')
+    OutputFormat = Shapes::StringShape.new(name: 'OutputFormat')
     ParameterName = Shapes::StringShape.new(name: 'ParameterName')
     PermissionsMode = Shapes::StringShape.new(name: 'PermissionsMode')
     ResourceAlreadyExistsException = Shapes::StructureShape.new(name: 'ResourceAlreadyExistsException')
@@ -90,6 +94,8 @@ module Aws::QLDB
     UniqueId = Shapes::StringShape.new(name: 'UniqueId')
     UntagResourceRequest = Shapes::StructureShape.new(name: 'UntagResourceRequest')
     UntagResourceResponse = Shapes::StructureShape.new(name: 'UntagResourceResponse')
+    UpdateLedgerPermissionsModeRequest = Shapes::StructureShape.new(name: 'UpdateLedgerPermissionsModeRequest')
+    UpdateLedgerPermissionsModeResponse = Shapes::StructureShape.new(name: 'UpdateLedgerPermissionsModeResponse')
     UpdateLedgerRequest = Shapes::StructureShape.new(name: 'UpdateLedgerRequest')
     UpdateLedgerResponse = Shapes::StructureShape.new(name: 'UpdateLedgerResponse')
     ValueHolder = Shapes::StructureShape.new(name: 'ValueHolder')
@@ -105,13 +111,16 @@ module Aws::QLDB
     CreateLedgerRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
     CreateLedgerRequest.add_member(:permissions_mode, Shapes::ShapeRef.new(shape: PermissionsMode, required: true, location_name: "PermissionsMode"))
     CreateLedgerRequest.add_member(:deletion_protection, Shapes::ShapeRef.new(shape: DeletionProtection, location_name: "DeletionProtection"))
+    CreateLedgerRequest.add_member(:kms_key, Shapes::ShapeRef.new(shape: KmsKey, location_name: "KmsKey"))
     CreateLedgerRequest.struct_class = Types::CreateLedgerRequest
 
     CreateLedgerResponse.add_member(:name, Shapes::ShapeRef.new(shape: LedgerName, location_name: "Name"))
     CreateLedgerResponse.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "Arn"))
     CreateLedgerResponse.add_member(:state, Shapes::ShapeRef.new(shape: LedgerState, location_name: "State"))
     CreateLedgerResponse.add_member(:creation_date_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationDateTime"))
+    CreateLedgerResponse.add_member(:permissions_mode, Shapes::ShapeRef.new(shape: PermissionsMode, location_name: "PermissionsMode"))
     CreateLedgerResponse.add_member(:deletion_protection, Shapes::ShapeRef.new(shape: DeletionProtection, location_name: "DeletionProtection"))
+    CreateLedgerResponse.add_member(:kms_key_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "KmsKeyArn"))
     CreateLedgerResponse.struct_class = Types::CreateLedgerResponse
 
     DeleteLedgerRequest.add_member(:name, Shapes::ShapeRef.new(shape: LedgerName, required: true, location: "uri", location_name: "name"))
@@ -138,7 +147,9 @@ module Aws::QLDB
     DescribeLedgerResponse.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "Arn"))
     DescribeLedgerResponse.add_member(:state, Shapes::ShapeRef.new(shape: LedgerState, location_name: "State"))
     DescribeLedgerResponse.add_member(:creation_date_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationDateTime"))
+    DescribeLedgerResponse.add_member(:permissions_mode, Shapes::ShapeRef.new(shape: PermissionsMode, location_name: "PermissionsMode"))
     DescribeLedgerResponse.add_member(:deletion_protection, Shapes::ShapeRef.new(shape: DeletionProtection, location_name: "DeletionProtection"))
+    DescribeLedgerResponse.add_member(:encryption_description, Shapes::ShapeRef.new(shape: LedgerEncryptionDescription, location_name: "EncryptionDescription"))
     DescribeLedgerResponse.struct_class = Types::DescribeLedgerResponse
 
     ExportJournalToS3Request.add_member(:name, Shapes::ShapeRef.new(shape: LedgerName, required: true, location: "uri", location_name: "name"))
@@ -146,6 +157,7 @@ module Aws::QLDB
     ExportJournalToS3Request.add_member(:exclusive_end_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "ExclusiveEndTime"))
     ExportJournalToS3Request.add_member(:s3_export_configuration, Shapes::ShapeRef.new(shape: S3ExportConfiguration, required: true, location_name: "S3ExportConfiguration"))
     ExportJournalToS3Request.add_member(:role_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "RoleArn"))
+    ExportJournalToS3Request.add_member(:output_format, Shapes::ShapeRef.new(shape: OutputFormat, location_name: "OutputFormat"))
     ExportJournalToS3Request.struct_class = Types::ExportJournalToS3Request
 
     ExportJournalToS3Response.add_member(:export_id, Shapes::ShapeRef.new(shape: UniqueId, required: true, location_name: "ExportId"))
@@ -204,6 +216,7 @@ module Aws::QLDB
     JournalS3ExportDescription.add_member(:exclusive_end_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "ExclusiveEndTime"))
     JournalS3ExportDescription.add_member(:s3_export_configuration, Shapes::ShapeRef.new(shape: S3ExportConfiguration, required: true, location_name: "S3ExportConfiguration"))
     JournalS3ExportDescription.add_member(:role_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "RoleArn"))
+    JournalS3ExportDescription.add_member(:output_format, Shapes::ShapeRef.new(shape: OutputFormat, location_name: "OutputFormat"))
     JournalS3ExportDescription.struct_class = Types::JournalS3ExportDescription
 
     JournalS3ExportList.member = Shapes::ShapeRef.new(shape: JournalS3ExportDescription)
@@ -211,6 +224,11 @@ module Aws::QLDB
     KinesisConfiguration.add_member(:stream_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "StreamArn"))
     KinesisConfiguration.add_member(:aggregation_enabled, Shapes::ShapeRef.new(shape: Boolean, location_name: "AggregationEnabled"))
     KinesisConfiguration.struct_class = Types::KinesisConfiguration
+
+    LedgerEncryptionDescription.add_member(:kms_key_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "KmsKeyArn"))
+    LedgerEncryptionDescription.add_member(:encryption_status, Shapes::ShapeRef.new(shape: EncryptionStatus, required: true, location_name: "EncryptionStatus"))
+    LedgerEncryptionDescription.add_member(:inaccessible_kms_key_date_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "InaccessibleKmsKeyDateTime"))
+    LedgerEncryptionDescription.struct_class = Types::LedgerEncryptionDescription
 
     LedgerList.member = Shapes::ShapeRef.new(shape: LedgerSummary)
 
@@ -321,8 +339,18 @@ module Aws::QLDB
 
     UntagResourceResponse.struct_class = Types::UntagResourceResponse
 
+    UpdateLedgerPermissionsModeRequest.add_member(:name, Shapes::ShapeRef.new(shape: LedgerName, required: true, location: "uri", location_name: "name"))
+    UpdateLedgerPermissionsModeRequest.add_member(:permissions_mode, Shapes::ShapeRef.new(shape: PermissionsMode, required: true, location_name: "PermissionsMode"))
+    UpdateLedgerPermissionsModeRequest.struct_class = Types::UpdateLedgerPermissionsModeRequest
+
+    UpdateLedgerPermissionsModeResponse.add_member(:name, Shapes::ShapeRef.new(shape: LedgerName, location_name: "Name"))
+    UpdateLedgerPermissionsModeResponse.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "Arn"))
+    UpdateLedgerPermissionsModeResponse.add_member(:permissions_mode, Shapes::ShapeRef.new(shape: PermissionsMode, location_name: "PermissionsMode"))
+    UpdateLedgerPermissionsModeResponse.struct_class = Types::UpdateLedgerPermissionsModeResponse
+
     UpdateLedgerRequest.add_member(:name, Shapes::ShapeRef.new(shape: LedgerName, required: true, location: "uri", location_name: "name"))
     UpdateLedgerRequest.add_member(:deletion_protection, Shapes::ShapeRef.new(shape: DeletionProtection, location_name: "DeletionProtection"))
+    UpdateLedgerRequest.add_member(:kms_key, Shapes::ShapeRef.new(shape: KmsKey, location_name: "KmsKey"))
     UpdateLedgerRequest.struct_class = Types::UpdateLedgerRequest
 
     UpdateLedgerResponse.add_member(:name, Shapes::ShapeRef.new(shape: LedgerName, location_name: "Name"))
@@ -330,6 +358,7 @@ module Aws::QLDB
     UpdateLedgerResponse.add_member(:state, Shapes::ShapeRef.new(shape: LedgerState, location_name: "State"))
     UpdateLedgerResponse.add_member(:creation_date_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationDateTime"))
     UpdateLedgerResponse.add_member(:deletion_protection, Shapes::ShapeRef.new(shape: DeletionProtection, location_name: "DeletionProtection"))
+    UpdateLedgerResponse.add_member(:encryption_description, Shapes::ShapeRef.new(shape: LedgerEncryptionDescription, location_name: "EncryptionDescription"))
     UpdateLedgerResponse.struct_class = Types::UpdateLedgerResponse
 
     ValueHolder.add_member(:ion_text, Shapes::ShapeRef.new(shape: IonText, location_name: "IonText"))
@@ -568,6 +597,16 @@ module Aws::QLDB
         o.http_request_uri = "/ledgers/{name}"
         o.input = Shapes::ShapeRef.new(shape: UpdateLedgerRequest)
         o.output = Shapes::ShapeRef.new(shape: UpdateLedgerResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
+      api.add_operation(:update_ledger_permissions_mode, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UpdateLedgerPermissionsMode"
+        o.http_method = "PATCH"
+        o.http_request_uri = "/ledgers/{name}/permissions-mode"
+        o.input = Shapes::ShapeRef.new(shape: UpdateLedgerPermissionsModeRequest)
+        o.output = Shapes::ShapeRef.new(shape: UpdateLedgerPermissionsModeResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
       end)

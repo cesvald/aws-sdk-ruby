@@ -77,7 +77,7 @@ module Aws::DynamoDBStreams
     # @!attribute [rw] l
     #   An attribute of type List. For example:
     #
-    #   `"L": [ \{"S": "Cookies"\} , \{"S": "Coffee"\}, \{"N", "3.14159"\}]`
+    #   `"L": [ \{"S": "Cookies"\} , \{"S": "Coffee"\}, \{"N": "3.14159"\}]`
     #   @return [Array<Types::AttributeValue>]
     #
     # @!attribute [rw] null
@@ -110,15 +110,6 @@ module Aws::DynamoDBStreams
     end
 
     # Represents the input of a `DescribeStream` operation.
-    #
-    # @note When making an API call, you may pass DescribeStreamInput
-    #   data as a hash:
-    #
-    #       {
-    #         stream_arn: "StreamArn", # required
-    #         limit: 1,
-    #         exclusive_start_shard_id: "ShardId",
-    #       }
     #
     # @!attribute [rw] stream_arn
     #   The Amazon Resource Name (ARN) for the stream.
@@ -180,14 +171,6 @@ module Aws::DynamoDBStreams
 
     # Represents the input of a `GetRecords` operation.
     #
-    # @note When making an API call, you may pass GetRecordsInput
-    #   data as a hash:
-    #
-    #       {
-    #         shard_iterator: "ShardIterator", # required
-    #         limit: 1,
-    #       }
-    #
     # @!attribute [rw] shard_iterator
     #   A shard iterator that was retrieved from a previous GetShardIterator
     #   operation. This iterator can be used to access the stream records in
@@ -231,16 +214,6 @@ module Aws::DynamoDBStreams
     end
 
     # Represents the input of a `GetShardIterator` operation.
-    #
-    # @note When making an API call, you may pass GetShardIteratorInput
-    #   data as a hash:
-    #
-    #       {
-    #         stream_arn: "StreamArn", # required
-    #         shard_id: "ShardId", # required
-    #         shard_iterator_type: "TRIM_HORIZON", # required, accepts TRIM_HORIZON, LATEST, AT_SEQUENCE_NUMBER, AFTER_SEQUENCE_NUMBER
-    #         sequence_number: "SequenceNumber",
-    #       }
     #
     # @!attribute [rw] stream_arn
     #   The Amazon Resource Name (ARN) for the stream.
@@ -389,17 +362,26 @@ module Aws::DynamoDBStreams
     # There is no limit to the number of daily on-demand backups that can be
     # taken.
     #
-    # Up to 50 simultaneous table operations are allowed per account. These
-    # operations include `CreateTable`, `UpdateTable`,
+    # For most purposes, up to 500 simultaneous table operations are allowed
+    # per account. These operations include `CreateTable`, `UpdateTable`,
     # `DeleteTable`,`UpdateTimeToLive`, `RestoreTableFromBackup`, and
     # `RestoreTableToPointInTime`.
     #
-    # The only exception is when you are creating a table with one or more
-    # secondary indexes. You can have up to 25 such requests running at a
-    # time; however, if the table or index specifications are complex,
-    # DynamoDB might temporarily reduce the number of concurrent operations.
+    # When you are creating a table with one or more secondary indexes, you
+    # can have up to 250 such requests running at a time. However, if the
+    # table or index specifications are complex, then DynamoDB might
+    # temporarily reduce the number of concurrent operations.
     #
-    # There is a soft account quota of 256 tables.
+    # When importing into DynamoDB, up to 50 simultaneous import table
+    # operations are allowed per account.
+    #
+    # There is a soft account quota of 2,500 tables.
+    #
+    # GetRecords was called with a value of more than 1000 for the limit
+    # request parameter.
+    #
+    # More than 2 processes are reading from the same streams shard at the
+    # same time. Exceeding this limit may result in request throttling.
     #
     # @!attribute [rw] message
     #   Too many operations for a given subscriber.
@@ -414,15 +396,6 @@ module Aws::DynamoDBStreams
     end
 
     # Represents the input of a `ListStreams` operation.
-    #
-    # @note When making an API call, you may pass ListStreamsInput
-    #   data as a hash:
-    #
-    #       {
-    #         table_name: "TableName",
-    #         limit: 1,
-    #         exclusive_start_stream_arn: "StreamArn",
-    #       }
     #
     # @!attribute [rw] table_name
     #   If this parameter is provided, then only the streams associated with
@@ -510,8 +483,8 @@ module Aws::DynamoDBStreams
     #   @return [String]
     #
     # @!attribute [rw] event_source
-    #   The AWS service from which the stream record originated. For
-    #   DynamoDB Streams, this is `aws:dynamodb`.
+    #   The Amazon Web Services service from which the stream record
+    #   originated. For DynamoDB Streams, this is `aws:dynamodb`.
     #   @return [String]
     #
     # @!attribute [rw] aws_region
@@ -630,7 +603,7 @@ module Aws::DynamoDBStreams
     #   might have the same timestamp. However, the combination of the
     #   following three elements is guaranteed to be unique:
     #
-    #   * the AWS customer ID.
+    #   * the Amazon Web Services customer ID.
     #
     #   * the table name
     #
@@ -661,7 +634,7 @@ module Aws::DynamoDBStreams
     #   might have the same timestamp. However, the combination of the
     #   following three elements is guaranteed to be unique:
     #
-    #   * the AWS customer ID.
+    #   * the Amazon Web Services customer ID.
     #
     #   * the table name
     #
@@ -750,7 +723,7 @@ module Aws::DynamoDBStreams
     #
     # @!attribute [rw] approximate_creation_date_time
     #   The approximate date and time when the stream record was created, in
-    #   [UNIX epoch time][1] format.
+    #   [UNIX epoch time][1] format and rounded down to the closest second.
     #
     #
     #

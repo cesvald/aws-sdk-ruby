@@ -1,6 +1,168 @@
 Unreleased Changes
 ------------------
 
+1.80.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.79.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.78.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.77.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.76.0 (2023-02-22)
+------------------
+
+* Feature - CloudFront now supports block lists in origin request policies so that you can forward all headers, cookies, or query string from viewer requests to the origin *except* for those specified in the block list.
+
+1.75.2 (2023-02-21)
+------------------
+
+* Issue - Improve performance of URL signing
+
+1.75.1 (2023-02-15)
+------------------
+
+* Issue - Improve performance of `UrlSigner#signed_url` (#2824).
+
+1.75.0 (2023-02-08)
+------------------
+
+* Feature - CloudFront Origin Access Control extends support to AWS Elemental MediaStore origins.
+
+1.74.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.73.0 (2022-12-30)
+------------------
+
+* Feature - Extend response headers policy to support removing headers from viewer responses
+
+1.72.0 (2022-12-16)
+------------------
+
+* Feature - Updated documentation for CloudFront
+
+1.71.0 (2022-12-07)
+------------------
+
+* Feature - Introducing UpdateDistributionWithStagingConfig that can be used to promote the staging configuration to the production.
+
+1.70.0 (2022-11-18)
+------------------
+
+* Feature - CloudFront API support for staging distributions and associated traffic management policies.
+
+1.69.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.68.0 (2022-08-31)
+------------------
+
+* Feature - Update API documentation for CloudFront origin access control (OAC)
+
+1.67.0 (2022-08-24)
+------------------
+
+* Feature - Adds support for CloudFront origin access control (OAC), making it possible to restrict public access to S3 bucket origins in all AWS Regions, those with SSE-KMS, and more.
+
+1.66.0 (2022-08-15)
+------------------
+
+* Feature - Adds Http 3 support to distributions
+
+1.65.0 (2022-05-16)
+------------------
+
+* Feature - Introduced a new error (TooLongCSPInResponseHeadersPolicy) that is returned when the value of the Content-Security-Policy header in a response headers policy exceeds the maximum allowed length.
+
+1.64.0 (2022-04-26)
+------------------
+
+* Feature - CloudFront now supports the Server-Timing header in HTTP responses sent from CloudFront. You can use this header to view metrics that help you gain insights about the behavior and performance of CloudFront. To use this header, enable it in a response headers policy.
+
+1.63.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.62.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.61.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.60.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.59.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.58.0 (2021-11-02)
+------------------
+
+* Feature - CloudFront now supports response headers policies to add HTTP headers to the responses that CloudFront sends to viewers. You can use these policies to add CORS headers, control browser caching, and more, without modifying your origin or writing any code.
+
+1.57.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.56.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.55.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.54.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.53.0 (2021-07-07)
+------------------
+
+* Feature - Amazon CloudFront now provides two new APIs, ListConflictingAliases and AssociateAlias, that help locate and move Alternate Domain Names (CNAMEs) if you encounter the CNAMEAlreadyExists error code.
+
+1.52.0 (2021-06-23)
+------------------
+
+* Feature - Amazon CloudFront adds support for a new security policy, TLSv1.2_2021.
+
+1.51.0 (2021-05-26)
+------------------
+
+* Feature - Documentation fix for CloudFront
+
 1.50.0 (2021-04-30)
 ------------------
 

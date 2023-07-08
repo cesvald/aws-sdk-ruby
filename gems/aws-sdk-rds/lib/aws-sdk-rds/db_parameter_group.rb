@@ -69,7 +69,9 @@ module Aws::RDS
     #
     # @return [self]
     def load
-      resp = @client.describe_db_parameter_groups(db_parameter_group_name: @name)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_db_parameter_groups(db_parameter_group_name: @name)
+      end
       @data = resp.db_parameter_groups[0]
       self
     end
@@ -184,7 +186,9 @@ module Aws::RDS
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -208,15 +212,49 @@ module Aws::RDS
     #   applied only to a DB instance running a database engine and engine
     #   version compatible with that DB parameter group family.
     #
-    #   To list all of the available parameter group families, use the
-    #   following command:
+    #   To list all of the available parameter group families for a DB engine,
+    #   use the following command:
     #
     #   `aws rds describe-db-engine-versions --query
-    #   "DBEngineVersions[].DBParameterGroupFamily"`
+    #   "DBEngineVersions[].DBParameterGroupFamily" --engine <engine>`
+    #
+    #   For example, to list all of the available parameter group families for
+    #   the MySQL DB engine, use the following command:
+    #
+    #   `aws rds describe-db-engine-versions --query
+    #   "DBEngineVersions[].DBParameterGroupFamily" --engine mysql`
     #
     #   <note markdown="1"> The output contains duplicates.
     #
     #    </note>
+    #
+    #   The following are the valid DB engine values:
+    #
+    #   * `aurora-mysql`
+    #
+    #   * `aurora-postgresql`
+    #
+    #   * `mariadb`
+    #
+    #   * `mysql`
+    #
+    #   * `oracle-ee`
+    #
+    #   * `oracle-ee-cdb`
+    #
+    #   * `oracle-se2`
+    #
+    #   * `oracle-se2-cdb`
+    #
+    #   * `postgres`
+    #
+    #   * `sqlserver-ee`
+    #
+    #   * `sqlserver-se`
+    #
+    #   * `sqlserver-ex`
+    #
+    #   * `sqlserver-web`
     # @option options [required, String] :description
     #   The description for the DB parameter group.
     # @option options [Array<Types::Tag>] :tags
@@ -224,7 +262,9 @@ module Aws::RDS
     # @return [DBParameterGroup]
     def create(options = {})
       options = options.merge(db_parameter_group_name: @name)
-      resp = @client.create_db_parameter_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_db_parameter_group(options)
+      end
       DBParameterGroup.new(
         name: resp.data.db_parameter_group.db_parameter_group_name,
         data: resp.data.db_parameter_group,
@@ -271,7 +311,9 @@ module Aws::RDS
     # @return [DBParameterGroup]
     def copy(options = {})
       options = options.merge(source_db_parameter_group_identifier: @name)
-      resp = @client.copy_db_parameter_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.copy_db_parameter_group(options)
+      end
       DBParameterGroup.new(
         name: resp.data.db_parameter_group.db_parameter_group_name,
         data: resp.data.db_parameter_group,
@@ -286,7 +328,9 @@ module Aws::RDS
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(db_parameter_group_name: @name)
-      resp = @client.delete_db_parameter_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_db_parameter_group(options)
+      end
       resp.data
     end
 
@@ -311,24 +355,43 @@ module Aws::RDS
     #   })
     # @param [Hash] options ({})
     # @option options [required, Array<Types::Parameter>] :parameters
-    #   An array of parameter names, values, and the apply method for the
-    #   parameter update. At least one parameter name, value, and apply method
-    #   must be supplied; later arguments are optional. A maximum of 20
-    #   parameters can be modified in a single request.
+    #   An array of parameter names, values, and the application methods for
+    #   the parameter update. At least one parameter name, value, and
+    #   application method must be supplied; later arguments are optional. A
+    #   maximum of 20 parameters can be modified in a single request.
     #
     #   Valid Values (for the application method): `immediate |
     #   pending-reboot`
     #
-    #   <note markdown="1"> You can use the immediate value with dynamic parameters only. You can
-    #   use the pending-reboot value for both dynamic and static parameters,
-    #   and changes are applied when you reboot the DB instance without
-    #   failover.
+    #   You can use the `immediate` value with dynamic parameters only. You
+    #   can use the `pending-reboot` value for both dynamic and static
+    #   parameters.
+    #
+    #   When the application method is `immediate`, changes to dynamic
+    #   parameters are applied immediately to the DB instances associated with
+    #   the parameter group.
+    #
+    #   When the application method is `pending-reboot`, changes to dynamic
+    #   and static parameters are applied after a reboot without failover to
+    #   the DB instances associated with the parameter group.
+    #
+    #   <note markdown="1"> You can't use `pending-reboot` with dynamic parameters on RDS for SQL
+    #   Server DB instances. Use `immediate`.
     #
     #    </note>
+    #
+    #   For more information on modifying DB parameters, see [Working with DB
+    #   parameter groups][1] in the *Amazon RDS User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithParamGroups.html
     # @return [DBParameterGroup]
     def modify(options = {})
       options = options.merge(db_parameter_group_name: @name)
-      resp = @client.modify_db_parameter_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.modify_db_parameter_group(options)
+      end
       DBParameterGroup.new(
         name: resp.data.db_parameter_group_name,
         client: @client
@@ -389,7 +452,9 @@ module Aws::RDS
     # @return [DBParameterGroup]
     def reset(options = {})
       options = options.merge(db_parameter_group_name: @name)
-      resp = @client.reset_db_parameter_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.reset_db_parameter_group(options)
+      end
       DBParameterGroup.new(
         name: resp.data.db_parameter_group_name,
         client: @client
@@ -408,7 +473,9 @@ module Aws::RDS
     # @return [EventSubscription]
     def subscribe_to(options = {})
       options = options.merge(source_identifier: @name)
-      resp = @client.add_source_identifier_to_subscription(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.add_source_identifier_to_subscription(options)
+      end
       EventSubscription.new(
         name: resp.data.event_subscription.cust_subscription_id,
         data: resp.data.event_subscription,
@@ -428,7 +495,9 @@ module Aws::RDS
     # @return [EventSubscription]
     def unsubscribe_from(options = {})
       options = options.merge(source_identifier: @name)
-      resp = @client.remove_source_identifier_from_subscription(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.remove_source_identifier_from_subscription(options)
+      end
       EventSubscription.new(
         name: resp.data.event_subscription.cust_subscription_id,
         data: resp.data.event_subscription,
@@ -489,7 +558,9 @@ module Aws::RDS
           source_type: "db-parameter-group",
           source_identifier: @name
         )
-        resp = @client.describe_events(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_events(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.events.each do |e|
@@ -530,7 +601,9 @@ module Aws::RDS
     def parameters(options = {})
       batches = Enumerator.new do |y|
         options = options.merge(db_parameter_group_name: @name)
-        resp = @client.describe_db_parameters(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_db_parameters(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.parameters.each do |p|

@@ -1,6 +1,173 @@
 Unreleased Changes
 ------------------
 
+1.87.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.86.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.85.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.84.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.83.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.82.0 (2022-12-15)
+------------------
+
+* Feature - Add support for Windows managed nodes groups.
+
+1.81.0 (2022-12-07)
+------------------
+
+* Feature - Adds support for EKS add-ons configurationValues fields and DescribeAddonConfiguration function
+
+1.80.0 (2022-11-29)
+------------------
+
+* Feature - Adds support for additional EKS add-ons metadata and filtering fields
+
+1.79.0 (2022-11-16)
+------------------
+
+* Feature - Adds support for customer-provided placement groups for Kubernetes control plane instances when creating local EKS clusters on Outposts
+
+1.78.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.77.0 (2022-09-12)
+------------------
+
+* Feature - Adding support for local Amazon EKS clusters on Outposts
+
+1.76.0 (2022-09-07)
+------------------
+
+* Feature - Adds support for EKS Addons ResolveConflicts "preserve" flag. Also adds new update failed status for EKS Addons.
+
+1.75.0 (2022-05-10)
+------------------
+
+* Feature - Adds BOTTLEROCKET_ARM_64_NVIDIA and BOTTLEROCKET_x86_64_NVIDIA AMI types to EKS managed nodegroups
+
+1.74.0 (2022-03-08)
+------------------
+
+* Feature - Introducing a new enum for NodeGroup error code: Ec2SubnetMissingIpv6Assignment
+
+1.73.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.72.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.71.0 (2022-01-05)
+------------------
+
+* Feature - Amazon EKS now supports running applications using IPv6 address space
+
+1.70.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.69.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.68.0 (2021-11-22)
+------------------
+
+* Feature - Adding missing exceptions to RegisterCluster operation
+
+1.67.0 (2021-11-15)
+------------------
+
+* Feature - Adding Tags support to Cluster Registrations.
+
+1.66.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.65.0 (2021-10-27)
+------------------
+
+* Feature - EKS managed node groups now support BOTTLEROCKET_x86_64 and BOTTLEROCKET_ARM_64 AMI types.
+
+1.64.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.63.0 (2021-09-07)
+------------------
+
+* Feature - Adding RegisterCluster and DeregisterCluster operations, to support connecting external clusters to EKS.
+
+1.62.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.61.0 (2021-08-20)
+------------------
+
+* Feature - Adds support for EKS add-ons "preserve" flag, which allows customers to maintain software on their EKS clusters after removing it from EKS add-ons management.
+
+1.60.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.59.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.58.0 (2021-07-12)
+------------------
+
+* Feature - Documentation updates for Wesley to support the parallel node upgrade feature.
+
+1.57.0 (2021-07-08)
+------------------
+
+* Feature - Added waiters for EKS FargateProfiles.
+
+1.56.0 (2021-07-06)
+------------------
+
+* Feature - Adding new error code UnsupportedAddonModification for Addons in EKS
+
+1.55.0 (2021-06-07)
+------------------
+
+* Feature - Added updateConfig option that allows customers to control upgrade velocity in Managed Node Group.
+
 1.54.0 (2021-05-19)
 ------------------
 

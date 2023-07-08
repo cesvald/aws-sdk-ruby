@@ -10,16 +10,6 @@
 module Aws::SNS
   module Types
 
-    # @note When making an API call, you may pass AddPermissionInput
-    #   data as a hash:
-    #
-    #       {
-    #         topic_arn: "topicARN", # required
-    #         label: "label", # required
-    #         aws_account_id: ["delegate"], # required
-    #         action_name: ["action"], # required
-    #       }
-    #
     # @!attribute [rw] topic_arn
     #   The ARN of the topic whose access control policy you wish to modify.
     #   @return [String]
@@ -29,9 +19,10 @@ module Aws::SNS
     #   @return [String]
     #
     # @!attribute [rw] aws_account_id
-    #   The AWS account IDs of the users (principals) who will be given
-    #   access to the specified actions. The users must have AWS accounts,
-    #   but do not need to be signed up for this service.
+    #   The Amazon Web Services account IDs of the users (principals) who
+    #   will be given access to the specified actions. The users must have
+    #   Amazon Web Services account, but do not need to be signed up for
+    #   this service.
     #   @return [Array<String>]
     #
     # @!attribute [rw] action_name
@@ -65,14 +56,64 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # Two or more batch entries in the request have the same `Id`.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/BatchEntryIdsNotDistinctException AWS API Documentation
+    #
+    class BatchEntryIdsNotDistinctException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The length of all the batch messages put together is more than the
+    # limit.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/BatchRequestTooLongException AWS API Documentation
+    #
+    class BatchRequestTooLongException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Gives a detailed description of failed messages in the batch.
+    #
+    # @!attribute [rw] id
+    #   The `Id` of an entry in a batch request
+    #   @return [String]
+    #
+    # @!attribute [rw] code
+    #   An error code representing why the action failed on this entry.
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   A message explaining why the action failed on this entry.
+    #   @return [String]
+    #
+    # @!attribute [rw] sender_fault
+    #   Specifies whether the error happened due to the caller of the batch
+    #   API action.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/BatchResultErrorEntry AWS API Documentation
+    #
+    class BatchResultErrorEntry < Struct.new(
+      :id,
+      :code,
+      :message,
+      :sender_fault)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The input for the `CheckIfPhoneNumberIsOptedOut` action.
-    #
-    # @note When making an API call, you may pass CheckIfPhoneNumberIsOptedOutInput
-    #   data as a hash:
-    #
-    #       {
-    #         phone_number: "PhoneNumber", # required
-    #       }
     #
     # @!attribute [rw] phone_number
     #   The phone number for which you want to check the opt out status.
@@ -122,15 +163,6 @@ module Aws::SNS
 
     # Input for ConfirmSubscription action.
     #
-    # @note When making an API call, you may pass ConfirmSubscriptionInput
-    #   data as a hash:
-    #
-    #       {
-    #         topic_arn: "topicARN", # required
-    #         token: "token", # required
-    #         authenticate_on_unsubscribe: "authenticateOnUnsubscribe",
-    #       }
-    #
     # @!attribute [rw] topic_arn
     #   The ARN of the topic for which you wish to confirm a subscription.
     #   @return [String]
@@ -141,10 +173,10 @@ module Aws::SNS
     #
     # @!attribute [rw] authenticate_on_unsubscribe
     #   Disallows unauthenticated unsubscribes of the subscription. If the
-    #   value of this parameter is `true` and the request has an AWS
-    #   signature, then only the topic owner and the subscription owner can
-    #   unsubscribe the endpoint. The unsubscribe action requires AWS
-    #   authentication.
+    #   value of this parameter is `true` and the request has an Amazon Web
+    #   Services signature, then only the topic owner and the subscription
+    #   owner can unsubscribe the endpoint. The unsubscribe action requires
+    #   Amazon Web Services authentication.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ConfirmSubscriptionInput AWS API Documentation
@@ -187,17 +219,6 @@ module Aws::SNS
 
     # Input for CreatePlatformApplication action.
     #
-    # @note When making an API call, you may pass CreatePlatformApplicationInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "String", # required
-    #         platform: "String", # required
-    #         attributes: { # required
-    #           "String" => "String",
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   Application names must be made up of only uppercase and lowercase
     #   ASCII letters, numbers, underscores, hyphens, and periods, and must
@@ -211,7 +232,7 @@ module Aws::SNS
     #   @return [String]
     #
     # @!attribute [rw] attributes
-    #   For a list of attributes, see [SetPlatformApplicationAttributes][1]
+    #   For a list of attributes, see [SetPlatformApplicationAttributes][1].
     #
     #
     #
@@ -243,18 +264,6 @@ module Aws::SNS
     end
 
     # Input for CreatePlatformEndpoint action.
-    #
-    # @note When making an API call, you may pass CreatePlatformEndpointInput
-    #   data as a hash:
-    #
-    #       {
-    #         platform_application_arn: "String", # required
-    #         token: "String", # required
-    #         custom_user_data: "String",
-    #         attributes: {
-    #           "String" => "String",
-    #         },
-    #       }
     #
     # @!attribute [rw] platform_application_arn
     #   PlatformApplicationArn returned from CreatePlatformApplication is
@@ -295,23 +304,31 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # @!attribute [rw] phone_number
+    #   The destination phone number to verify. On verification, Amazon SNS
+    #   adds this phone number to the list of verified phone numbers that
+    #   you can send SMS messages to.
+    #   @return [String]
+    #
+    # @!attribute [rw] language_code
+    #   The language to use for sending the OTP. The default value is
+    #   `en-US`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreateSMSSandboxPhoneNumberInput AWS API Documentation
+    #
+    class CreateSMSSandboxPhoneNumberInput < Struct.new(
+      :phone_number,
+      :language_code)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreateSMSSandboxPhoneNumberResult AWS API Documentation
+    #
+    class CreateSMSSandboxPhoneNumberResult < Aws::EmptyStructure; end
+
     # Input for CreateTopic action.
-    #
-    # @note When making an API call, you may pass CreateTopicInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "topicName", # required
-    #         attributes: {
-    #           "attributeName" => "attributeValue",
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the topic you want to create.
@@ -342,17 +359,30 @@ module Aws::SNS
     #     default, only the topic owner can publish or subscribe to the
     #     topic.
     #
-    #   The following attribute applies only to
-    #   [server-side-encryption][1]\:
+    #   * `SignatureVersion` – The signature version corresponds to the
+    #     hashing algorithm used while creating the signature of the
+    #     notifications, subscription confirmations, or unsubscribe
+    #     confirmation messages sent by Amazon SNS. By default,
+    #     `SignatureVersion` is set to `1`.
     #
-    #   * `KmsMasterKeyId` – The ID of an AWS-managed customer master key
-    #     (CMK) for Amazon SNS or a custom CMK. For more information, see
-    #     [Key Terms][2]. For more examples, see [KeyId][3] in the *AWS Key
-    #     Management Service API Reference*.
+    #   * `TracingConfig` – Tracing mode of an Amazon SNS topic. By default
+    #     `TracingConfig` is set to `PassThrough`, and the topic passes
+    #     through the tracing header it receives from an Amazon SNS
+    #     publisher to its subscriptions. If set to `Active`, Amazon SNS
+    #     will vend X-Ray segment data to topic owner account if the sampled
+    #     flag in the tracing header is true. This is only supported on
+    #     standard topics.
+    #
+    #   The following attribute applies only to [server-side encryption][1]:
+    #
+    #   * `KmsMasterKeyId` – The ID of an Amazon Web Services managed
+    #     customer master key (CMK) for Amazon SNS or a custom CMK. For more
+    #     information, see [Key Terms][2]. For more examples, see [KeyId][3]
+    #     in the *Key Management Service API Reference*.
     #
     #   ^
     #
-    #   The following attributes apply only to [FIFO topics][4]\:
+    #   The following attributes apply only to [FIFO topics][4]:
     #
     #   * `FifoTopic` – When this is set to `true`, a FIFO topic is created.
     #
@@ -370,7 +400,7 @@ module Aws::SNS
     #       message).
     #
     #       (Optional) To override the generated value, you can specify a
-    #       value for the the `MessageDeduplicationId` parameter for the
+    #       value for the `MessageDeduplicationId` parameter for the
     #       `Publish` action.
     #
     #
@@ -391,12 +421,23 @@ module Aws::SNS
     #    </note>
     #   @return [Array<Types::Tag>]
     #
+    # @!attribute [rw] data_protection_policy
+    #   The body of the policy document you want to use for this topic.
+    #
+    #   You can only add one policy per topic.
+    #
+    #   The policy must be in JSON string format.
+    #
+    #   Length Constraints: Maximum length of 30,720.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/CreateTopicInput AWS API Documentation
     #
     class CreateTopicInput < Struct.new(
       :name,
       :attributes,
-      :tags)
+      :tags,
+      :data_protection_policy)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -417,13 +458,6 @@ module Aws::SNS
 
     # Input for DeleteEndpoint action.
     #
-    # @note When making an API call, you may pass DeleteEndpointInput
-    #   data as a hash:
-    #
-    #       {
-    #         endpoint_arn: "String", # required
-    #       }
-    #
     # @!attribute [rw] endpoint_arn
     #   EndpointArn of endpoint to delete.
     #   @return [String]
@@ -438,13 +472,6 @@ module Aws::SNS
 
     # Input for DeletePlatformApplication action.
     #
-    # @note When making an API call, you may pass DeletePlatformApplicationInput
-    #   data as a hash:
-    #
-    #       {
-    #         platform_application_arn: "String", # required
-    #       }
-    #
     # @!attribute [rw] platform_application_arn
     #   PlatformApplicationArn of platform application object to delete.
     #   @return [String]
@@ -457,13 +484,22 @@ module Aws::SNS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteTopicInput
-    #   data as a hash:
+    # @!attribute [rw] phone_number
+    #   The destination phone number to delete.
+    #   @return [String]
     #
-    #       {
-    #         topic_arn: "topicARN", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeleteSMSSandboxPhoneNumberInput AWS API Documentation
     #
+    class DeleteSMSSandboxPhoneNumberInput < Struct.new(
+      :phone_number)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/DeleteSMSSandboxPhoneNumberResult AWS API Documentation
+    #
+    class DeleteSMSSandboxPhoneNumberResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] topic_arn
     #   The ARN of the topic you want to delete.
     #   @return [String]
@@ -476,10 +512,23 @@ module Aws::SNS
       include Aws::Structure
     end
 
-    # Endpoint for mobile app and device.
+    # The batch request doesn't contain any entries.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/EmptyBatchRequestException AWS API Documentation
+    #
+    class EmptyBatchRequestException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The endpoint for mobile app and device.
     #
     # @!attribute [rw] endpoint_arn
-    #   EndpointArn for mobile app and device.
+    #   The `EndpointArn` for mobile app and device.
     #   @return [String]
     #
     # @!attribute [rw] attributes
@@ -509,9 +558,10 @@ module Aws::SNS
       include Aws::Structure
     end
 
-    # Indicates that the number of filter polices in your AWS account
-    # exceeds the limit. To add more filter polices, submit an SNS Limit
-    # Increase case in the AWS Support Center.
+    # Indicates that the number of filter polices in your Amazon Web
+    # Services account exceeds the limit. To add more filter polices, submit
+    # an Amazon SNS Limit Increase case in the Amazon Web Services Support
+    # Center.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -524,14 +574,38 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # @!attribute [rw] resource_arn
+    #   The ARN of the topic whose `DataProtectionPolicy` you want to get.
+    #
+    #   For more information about ARNs, see [Amazon Resource Names
+    #   (ARNs)][1] in the Amazon Web Services General Reference.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetDataProtectionPolicyInput AWS API Documentation
+    #
+    class GetDataProtectionPolicyInput < Struct.new(
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] data_protection_policy
+    #   Retrieves the `DataProtectionPolicy` in JSON string format.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetDataProtectionPolicyResponse AWS API Documentation
+    #
+    class GetDataProtectionPolicyResponse < Struct.new(
+      :data_protection_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Input for GetEndpointAttributes action.
-    #
-    # @note When making an API call, you may pass GetEndpointAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         endpoint_arn: "String", # required
-    #       }
     #
     # @!attribute [rw] endpoint_arn
     #   EndpointArn for GetEndpointAttributes input.
@@ -579,13 +653,6 @@ module Aws::SNS
 
     # Input for GetPlatformApplicationAttributes action.
     #
-    # @note When making an API call, you may pass GetPlatformApplicationAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         platform_application_arn: "String", # required
-    #       }
-    #
     # @!attribute [rw] platform_application_arn
     #   PlatformApplicationArn for GetPlatformApplicationAttributesInput.
     #   @return [String]
@@ -602,6 +669,15 @@ module Aws::SNS
     #
     # @!attribute [rw] attributes
     #   Attributes include the following:
+    #
+    #   * `AppleCertificateExpiryDate` – The expiry date of the SSL
+    #     certificate used to configure certificate-based authentication.
+    #
+    #   * `ApplePlatformTeamID` – The Apple developer account ID used to
+    #     configure token-based authentication.
+    #
+    #   * `ApplePlatformBundleID` – The app identifier used to configure
+    #     token-based authentication.
     #
     #   * `EventEndpointCreated` – Topic ARN to which EndpointCreated event
     #     notifications should be sent.
@@ -626,13 +702,6 @@ module Aws::SNS
     end
 
     # The input for the `GetSMSAttributes` request.
-    #
-    # @note When making an API call, you may pass GetSMSAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         attributes: ["String"],
-    #       }
     #
     # @!attribute [rw] attributes
     #   A list of the individual attribute names, such as
@@ -670,14 +739,26 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # @api private
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetSMSSandboxAccountStatusInput AWS API Documentation
+    #
+    class GetSMSSandboxAccountStatusInput < Aws::EmptyStructure; end
+
+    # @!attribute [rw] is_in_sandbox
+    #   Indicates whether the calling Amazon Web Services account is in the
+    #   SMS sandbox.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/GetSMSSandboxAccountStatusResult AWS API Documentation
+    #
+    class GetSMSSandboxAccountStatusResult < Struct.new(
+      :is_in_sandbox)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Input for GetSubscriptionAttributes.
-    #
-    # @note When making an API call, you may pass GetSubscriptionAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         subscription_arn: "subscriptionARN", # required
-    #       }
     #
     # @!attribute [rw] subscription_arn
     #   The ARN of the subscription whose properties you want to get.
@@ -711,7 +792,16 @@ module Aws::SNS
     #     subscription. For more information, see [Amazon SNS Message
     #     Filtering][1] in the *Amazon SNS Developer Guide*.
     #
-    #   * `Owner` – The AWS account ID of the subscription's owner.
+    #   * `FilterPolicyScope` – This attribute lets you choose the filtering
+    #     scope by using one of the following string value types:
+    #
+    #     * `MessageAttributes` (default) – The filter is applied on the
+    #       message attributes.
+    #
+    #     * `MessageBody` – The filter is applied on the message body.
+    #
+    #   * `Owner` – The Amazon Web Services account ID of the
+    #     subscription's owner.
     #
     #   * `PendingConfirmation` – `true` if the subscription hasn't been
     #     confirmed. To confirm a pending subscription, call the
@@ -765,13 +855,6 @@ module Aws::SNS
 
     # Input for GetTopicAttributes action.
     #
-    # @note When making an API call, you may pass GetTopicAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         topic_arn: "topicARN", # required
-    #       }
-    #
     # @!attribute [rw] topic_arn
     #   The ARN of the topic whose properties you want to get.
     #   @return [String]
@@ -796,10 +879,31 @@ module Aws::SNS
     #   * `DisplayName` – The human-readable name used in the `From` field
     #     for notifications to `email` and `email-json` endpoints.
     #
-    #   * `Owner` – The AWS account ID of the topic's owner.
+    #   * `EffectiveDeliveryPolicy` – The JSON serialization of the
+    #     effective delivery policy, taking system defaults into account.
+    #
+    #   * `Owner` – The Amazon Web Services account ID of the topic's
+    #     owner.
     #
     #   * `Policy` – The JSON serialization of the topic's access control
     #     policy.
+    #
+    #   * `SignatureVersion` – The signature version corresponds to the
+    #     hashing algorithm used while creating the signature of the
+    #     notifications, subscription confirmations, or unsubscribe
+    #     confirmation messages sent by Amazon SNS.
+    #
+    #     * By default, `SignatureVersion` is set to **1**. The signature is
+    #       a Base64-encoded **SHA1withRSA** signature.
+    #
+    #     * When you set `SignatureVersion` to **2**. Amazon SNS uses a
+    #       Base64-encoded **SHA256withRSA** signature.
+    #
+    #       <note markdown="1"> If the API response does not include the `SignatureVersion`
+    #       attribute, it means that the `SignatureVersion` for the topic
+    #       has value **1**.
+    #
+    #        </note>
     #
     #   * `SubscriptionsConfirmed` – The number of confirmed subscriptions
     #     for the topic.
@@ -812,20 +916,24 @@ module Aws::SNS
     #
     #   * `TopicArn` – The topic's ARN.
     #
-    #   * `EffectiveDeliveryPolicy` – The JSON serialization of the
-    #     effective delivery policy, taking system defaults into account.
+    #   * `TracingConfig` – Tracing mode of an Amazon SNS topic. By default
+    #     `TracingConfig` is set to `PassThrough`, and the topic passes
+    #     through the tracing header it receives from an Amazon SNS
+    #     publisher to its subscriptions. If set to `Active`, Amazon SNS
+    #     will vend X-Ray segment data to topic owner account if the sampled
+    #     flag in the tracing header is true. This is only supported on
+    #     standard topics.
     #
-    #   The following attribute applies only to
-    #   [server-side-encryption][1]\:
+    #   The following attribute applies only to [server-side-encryption][1]:
     #
-    #   * `KmsMasterKeyId` - The ID of an AWS-managed customer master key
-    #     (CMK) for Amazon SNS or a custom CMK. For more information, see
-    #     [Key Terms][2]. For more examples, see [KeyId][3] in the *AWS Key
-    #     Management Service API Reference*.
+    #   * `KmsMasterKeyId` - The ID of an Amazon Web Services managed
+    #     customer master key (CMK) for Amazon SNS or a custom CMK. For more
+    #     information, see [Key Terms][2]. For more examples, see [KeyId][3]
+    #     in the *Key Management Service API Reference*.
     #
     #   ^
     #
-    #   The following attributes apply only to [FIFO topics][4]\:
+    #   The following attributes apply only to [FIFO topics][4]:
     #
     #   * `FifoTopic` – When this is set to `true`, a FIFO topic is created.
     #
@@ -843,7 +951,7 @@ module Aws::SNS
     #       message).
     #
     #       (Optional) To override the generated value, you can specify a
-    #       value for the the `MessageDeduplicationId` parameter for the
+    #       value for the `MessageDeduplicationId` parameter for the
     #       `Publish` action.
     #
     #
@@ -876,6 +984,20 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # The `Id` of a batch entry in a batch request doesn't abide by the
+    # specification.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/InvalidBatchEntryIdException AWS API Documentation
+    #
+    class InvalidBatchEntryIdException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Indicates that a request parameter does not comply with the associated
     # constraints.
     #
@@ -894,7 +1016,8 @@ module Aws::SNS
     # constraints.
     #
     # @!attribute [rw] message
-    #   The parameter value is invalid.
+    #   The parameter of an entry in a request doesn't abide by the
+    #   specification.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/InvalidParameterValueException AWS API Documentation
@@ -949,8 +1072,8 @@ module Aws::SNS
 
     # The request was rejected because the state of the specified resource
     # isn't valid for this request. For more information, see [How Key
-    # State Affects Use of a Customer Master Key][1] in the *AWS Key
-    # Management Service Developer Guide*.
+    # State Affects Use of a Customer Master Key][1] in the *Key Management
+    # Service Developer Guide*.
     #
     #
     #
@@ -981,7 +1104,8 @@ module Aws::SNS
       include Aws::Structure
     end
 
-    # The AWS access key ID needs a subscription for the service.
+    # The Amazon Web Services access key ID needs a subscription for the
+    # service.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -995,7 +1119,7 @@ module Aws::SNS
     end
 
     # The request was denied due to request throttling. For more information
-    # about throttling, see [Limits][1] in the *AWS Key Management Service
+    # about throttling, see [Limits][1] in the *Key Management Service
     # Developer Guide.*
     #
     #
@@ -1014,14 +1138,6 @@ module Aws::SNS
     end
 
     # Input for ListEndpointsByPlatformApplication action.
-    #
-    # @note When making an API call, you may pass ListEndpointsByPlatformApplicationInput
-    #   data as a hash:
-    #
-    #       {
-    #         platform_application_arn: "String", # required
-    #         next_token: "String",
-    #       }
     #
     # @!attribute [rw] platform_application_arn
     #   PlatformApplicationArn for ListEndpointsByPlatformApplicationInput
@@ -1064,14 +1180,44 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # @!attribute [rw] next_token
+    #   Token that the previous `ListOriginationNumbers` request returns.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of origination numbers to return.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListOriginationNumbersRequest AWS API Documentation
+    #
+    class ListOriginationNumbersRequest < Struct.new(
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   A `NextToken` string is returned when you call the
+    #   `ListOriginationNumbers` operation if additional pages of records
+    #   are available.
+    #   @return [String]
+    #
+    # @!attribute [rw] phone_numbers
+    #   A list of the calling account's verified and pending origination
+    #   numbers.
+    #   @return [Array<Types::PhoneNumberInformation>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListOriginationNumbersResult AWS API Documentation
+    #
+    class ListOriginationNumbersResult < Struct.new(
+      :next_token,
+      :phone_numbers)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The input for the `ListPhoneNumbersOptedOut` action.
-    #
-    # @note When making an API call, you may pass ListPhoneNumbersOptedOutInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "string",
-    #       }
     #
     # @!attribute [rw] next_token
     #   A `NextToken` string is used when you call the
@@ -1112,13 +1258,6 @@ module Aws::SNS
 
     # Input for ListPlatformApplications action.
     #
-    # @note When making an API call, you may pass ListPlatformApplicationsInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   NextToken string is used when calling ListPlatformApplications
     #   action to retrieve additional records that are available after the
@@ -1155,15 +1294,44 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # @!attribute [rw] next_token
+    #   Token that the previous `ListSMSSandboxPhoneNumbersInput` request
+    #   returns.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of phone numbers to return.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListSMSSandboxPhoneNumbersInput AWS API Documentation
+    #
+    class ListSMSSandboxPhoneNumbersInput < Struct.new(
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] phone_numbers
+    #   A list of the calling account's pending and verified phone numbers.
+    #   @return [Array<Types::SMSSandboxPhoneNumber>]
+    #
+    # @!attribute [rw] next_token
+    #   A `NextToken` string is returned when you call the
+    #   `ListSMSSandboxPhoneNumbersInput` operation if additional pages of
+    #   records are available.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ListSMSSandboxPhoneNumbersResult AWS API Documentation
+    #
+    class ListSMSSandboxPhoneNumbersResult < Struct.new(
+      :phone_numbers,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Input for ListSubscriptionsByTopic action.
-    #
-    # @note When making an API call, you may pass ListSubscriptionsByTopicInput
-    #   data as a hash:
-    #
-    #       {
-    #         topic_arn: "topicARN", # required
-    #         next_token: "nextToken",
-    #       }
     #
     # @!attribute [rw] topic_arn
     #   The ARN of the topic for which you wish to find subscriptions.
@@ -1205,13 +1373,6 @@ module Aws::SNS
 
     # Input for ListSubscriptions action.
     #
-    # @note When making an API call, you may pass ListSubscriptionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "nextToken",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   Token returned by the previous `ListSubscriptions` request.
     #   @return [String]
@@ -1244,13 +1405,6 @@ module Aws::SNS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the topic for which to list tags.
     #   @return [String]
@@ -1275,13 +1429,6 @@ module Aws::SNS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTopicsInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "nextToken",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   Token returned by the previous `ListTopics` request.
     #   @return [String]
@@ -1330,15 +1477,6 @@ module Aws::SNS
     # [1]: https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
     # [2]: https://docs.aws.amazon.com/sns/latest/dg/SNSMessageAttributes.html
     # [3]: https://docs.aws.amazon.com/sns/latest/dg/sms_publish-to-phone.html
-    #
-    # @note When making an API call, you may pass MessageAttributeValue
-    #   data as a hash:
-    #
-    #       {
-    #         data_type: "String", # required
-    #         string_value: "String",
-    #         binary_value: "data",
-    #       }
     #
     # @!attribute [rw] data_type
     #   Amazon SNS supports the following logical data types: String,
@@ -1389,13 +1527,6 @@ module Aws::SNS
 
     # Input for the OptInPhoneNumber action.
     #
-    # @note When making an API call, you may pass OptInPhoneNumberInput
-    #   data as a hash:
-    #
-    #       {
-    #         phone_number: "PhoneNumber", # required
-    #       }
-    #
     # @!attribute [rw] phone_number
     #   The phone number to opt in. Use E.164 format.
     #   @return [String]
@@ -1413,6 +1544,61 @@ module Aws::SNS
     # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/OptInPhoneNumberResponse AWS API Documentation
     #
     class OptInPhoneNumberResponse < Aws::EmptyStructure; end
+
+    # Indicates that the specified phone number opted out of receiving SMS
+    # messages from your Amazon Web Services account. You can't send SMS
+    # messages to phone numbers that opt out.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/OptedOutException AWS API Documentation
+    #
+    class OptedOutException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of phone numbers and their metadata.
+    #
+    # @!attribute [rw] created_at
+    #   The date and time when the phone number was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] phone_number
+    #   The phone number.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   The status of the phone number.
+    #   @return [String]
+    #
+    # @!attribute [rw] iso_2_country_code
+    #   The two-character code for the country or region, in ISO 3166-1
+    #   alpha-2 format.
+    #   @return [String]
+    #
+    # @!attribute [rw] route_type
+    #   The list of supported routes.
+    #   @return [String]
+    #
+    # @!attribute [rw] number_capabilities
+    #   The capabilities of each phone number.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PhoneNumberInformation AWS API Documentation
+    #
+    class PhoneNumberInformation < Struct.new(
+      :created_at,
+      :phone_number,
+      :status,
+      :iso_2_country_code,
+      :route_type,
+      :number_capabilities)
+      SENSITIVE = []
+      include Aws::Structure
+    end
 
     # Platform application object.
     #
@@ -1447,28 +1633,218 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # @!attribute [rw] topic_arn
+    #   The Amazon resource name (ARN) of the topic you want to batch
+    #   publish to.
+    #   @return [String]
+    #
+    # @!attribute [rw] publish_batch_request_entries
+    #   A list of `PublishBatch` request entries to be sent to the SNS
+    #   topic.
+    #   @return [Array<Types::PublishBatchRequestEntry>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PublishBatchInput AWS API Documentation
+    #
+    class PublishBatchInput < Struct.new(
+      :topic_arn,
+      :publish_batch_request_entries)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains the details of a single Amazon SNS message along with an `Id`
+    # that identifies a message within the batch.
+    #
+    # @!attribute [rw] id
+    #   An identifier for the message in this batch.
+    #
+    #   <note markdown="1"> The `Ids` of a batch request must be unique within a request.
+    #
+    #    This identifier can have up to 80 characters. The following
+    #   characters are accepted: alphanumeric characters, hyphens(-), and
+    #   underscores (\_).
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   The body of the message.
+    #   @return [String]
+    #
+    # @!attribute [rw] subject
+    #   The subject of the batch message.
+    #   @return [String]
+    #
+    # @!attribute [rw] message_structure
+    #   Set `MessageStructure` to `json` if you want to send a different
+    #   message for each protocol. For example, using one publish action,
+    #   you can send a short message to your SMS subscribers and a longer
+    #   message to your email subscribers. If you set `MessageStructure` to
+    #   `json`, the value of the `Message` parameter must:
+    #
+    #   * be a syntactically valid JSON object; and
+    #
+    #   * contain at least a top-level JSON key of "default" with a value
+    #     that is a string.
+    #
+    #   You can define other top-level keys that define the message you want
+    #   to send to a specific transport protocol (e.g. http).
+    #   @return [String]
+    #
+    # @!attribute [rw] message_attributes
+    #   Each message attribute consists of a `Name`, `Type`, and `Value`.
+    #   For more information, see [Amazon SNS message attributes][1] in the
+    #   Amazon SNS Developer Guide.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/sns/latest/dg/sns-message-attributes.html
+    #   @return [Hash<String,Types::MessageAttributeValue>]
+    #
+    # @!attribute [rw] message_deduplication_id
+    #   This parameter applies only to FIFO (first-in-first-out) topics.
+    #
+    #   The token used for deduplication of messages within a 5-minute
+    #   minimum deduplication interval. If a message with a particular
+    #   `MessageDeduplicationId` is sent successfully, subsequent messages
+    #   with the same `MessageDeduplicationId` are accepted successfully but
+    #   aren't delivered.
+    #
+    #   * Every message must have a unique `MessageDeduplicationId`.
+    #
+    #     * You may provide a `MessageDeduplicationId` explicitly.
+    #
+    #     * If you aren't able to provide a `MessageDeduplicationId` and
+    #       you enable `ContentBasedDeduplication` for your topic, Amazon
+    #       SNS uses a SHA-256 hash to generate the `MessageDeduplicationId`
+    #       using the body of the message (but not the attributes of the
+    #       message).
+    #
+    #     * If you don't provide a `MessageDeduplicationId` and the topic
+    #       doesn't have `ContentBasedDeduplication` set, the action fails
+    #       with an error.
+    #
+    #     * If the topic has a `ContentBasedDeduplication` set, your
+    #       `MessageDeduplicationId` overrides the generated one.
+    #
+    #   * When `ContentBasedDeduplication` is in effect, messages with
+    #     identical content sent within the deduplication interval are
+    #     treated as duplicates and only one copy of the message is
+    #     delivered.
+    #
+    #   * If you send one message with `ContentBasedDeduplication` enabled,
+    #     and then another message with a `MessageDeduplicationId` that is
+    #     the same as the one generated for the first
+    #     `MessageDeduplicationId`, the two messages are treated as
+    #     duplicates and only one copy of the message is delivered.
+    #
+    #   <note markdown="1"> The `MessageDeduplicationId` is available to the consumer of the
+    #   message (this can be useful for troubleshooting delivery issues).
+    #
+    #    If a message is sent successfully but the acknowledgement is lost
+    #   and the message is resent with the same `MessageDeduplicationId`
+    #   after the deduplication interval, Amazon SNS can't detect duplicate
+    #   messages.
+    #
+    #    Amazon SNS continues to keep track of the message deduplication ID
+    #   even after the message is received and deleted.
+    #
+    #    </note>
+    #
+    #   The length of `MessageDeduplicationId` is 128 characters.
+    #
+    #   `MessageDeduplicationId` can contain alphanumeric characters `(a-z,
+    #   A-Z, 0-9)` and punctuation `` (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~)
+    #   ``.
+    #   @return [String]
+    #
+    # @!attribute [rw] message_group_id
+    #   This parameter applies only to FIFO (first-in-first-out) topics.
+    #
+    #   The tag that specifies that a message belongs to a specific message
+    #   group. Messages that belong to the same message group are processed
+    #   in a FIFO manner (however, messages in different message groups
+    #   might be processed out of order). To interleave multiple ordered
+    #   streams within a single topic, use `MessageGroupId` values (for
+    #   example, session data for multiple users). In this scenario,
+    #   multiple consumers can process the topic, but the session data of
+    #   each user is processed in a FIFO fashion.
+    #
+    #   You must associate a non-empty `MessageGroupId` with a message. If
+    #   you don't provide a `MessageGroupId`, the action fails.
+    #
+    #   The length of `MessageGroupId` is 128 characters.
+    #
+    #   `MessageGroupId` can contain alphanumeric characters `(a-z, A-Z,
+    #   0-9)` and punctuation `` (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~) ``.
+    #
+    #   `MessageGroupId` is required for FIFO topics. You can't use it for
+    #   standard topics.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PublishBatchRequestEntry AWS API Documentation
+    #
+    class PublishBatchRequestEntry < Struct.new(
+      :id,
+      :message,
+      :subject,
+      :message_structure,
+      :message_attributes,
+      :message_deduplication_id,
+      :message_group_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] successful
+    #   A list of successful `PublishBatch` responses.
+    #   @return [Array<Types::PublishBatchResultEntry>]
+    #
+    # @!attribute [rw] failed
+    #   A list of failed `PublishBatch` responses.
+    #   @return [Array<Types::BatchResultErrorEntry>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PublishBatchResponse AWS API Documentation
+    #
+    class PublishBatchResponse < Struct.new(
+      :successful,
+      :failed)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Encloses data related to a successful message in a batch request for
+    # topic.
+    #
+    # @!attribute [rw] id
+    #   The `Id` of an entry in a batch request.
+    #   @return [String]
+    #
+    # @!attribute [rw] message_id
+    #   An identifier for the message.
+    #   @return [String]
+    #
+    # @!attribute [rw] sequence_number
+    #   This parameter applies only to FIFO (first-in-first-out) topics.
+    #
+    #   The large, non-consecutive number that Amazon SNS assigns to each
+    #   message.
+    #
+    #   The length of `SequenceNumber` is 128 bits. `SequenceNumber`
+    #   continues to increase for a particular `MessageGroupId`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PublishBatchResultEntry AWS API Documentation
+    #
+    class PublishBatchResultEntry < Struct.new(
+      :id,
+      :message_id,
+      :sequence_number)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Input for Publish action.
-    #
-    # @note When making an API call, you may pass PublishInput
-    #   data as a hash:
-    #
-    #       {
-    #         topic_arn: "topicARN",
-    #         target_arn: "String",
-    #         phone_number: "String",
-    #         message: "message", # required
-    #         subject: "subject",
-    #         message_structure: "messageStructure",
-    #         message_attributes: {
-    #           "String" => {
-    #             data_type: "String", # required
-    #             string_value: "String",
-    #             binary_value: "data",
-    #           },
-    #         },
-    #         message_deduplication_id: "String",
-    #         message_group_id: "String",
-    #       }
     #
     # @!attribute [rw] topic_arn
     #   The topic you want to publish to.
@@ -1585,7 +1961,7 @@ module Aws::SNS
     # @!attribute [rw] message_deduplication_id
     #   This parameter applies only to FIFO (first-in-first-out) topics. The
     #   `MessageDeduplicationId` can contain up to 128 alphanumeric
-    #   characters (a-z, A-Z, 0-9) and punctuation ``
+    #   characters `(a-z, A-Z, 0-9)` and punctuation ``
     #   (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~) ``.
     #
     #   Every message must have a unique `MessageDeduplicationId`, which is
@@ -1601,9 +1977,9 @@ module Aws::SNS
     #
     # @!attribute [rw] message_group_id
     #   This parameter applies only to FIFO (first-in-first-out) topics. The
-    #   `MessageGroupId` can contain up to 128 alphanumeric characters (a-z,
-    #   A-Z, 0-9) and punctuation `` (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~)
-    #   ``.
+    #   `MessageGroupId` can contain up to 128 alphanumeric characters
+    #   `(a-z, A-Z, 0-9)` and punctuation ``
+    #   (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~) ``.
     #
     #   The `MessageGroupId` is a tag that specifies that a message belongs
     #   to a specific message group. Messages that belong to the same
@@ -1655,15 +2031,36 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # @!attribute [rw] resource_arn
+    #   The ARN of the topic whose `DataProtectionPolicy` you want to add or
+    #   update.
+    #
+    #   For more information about ARNs, see [Amazon Resource Names
+    #   (ARNs)][1] in the Amazon Web Services General Reference.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   @return [String]
+    #
+    # @!attribute [rw] data_protection_policy
+    #   The JSON serialization of the topic's `DataProtectionPolicy`.
+    #
+    #   The `DataProtectionPolicy` must be in JSON string format.
+    #
+    #   Length Constraints: Maximum length of 30,720.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/PutDataProtectionPolicyInput AWS API Documentation
+    #
+    class PutDataProtectionPolicyInput < Struct.new(
+      :resource_arn,
+      :data_protection_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Input for RemovePermission action.
-    #
-    # @note When making an API call, you may pass RemovePermissionInput
-    #   data as a hash:
-    #
-    #       {
-    #         topic_arn: "topicARN", # required
-    #         label: "label", # required
-    #       }
     #
     # @!attribute [rw] topic_arn
     #   The ARN of the topic whose access control policy you wish to modify.
@@ -1682,7 +2079,8 @@ module Aws::SNS
       include Aws::Structure
     end
 
-    # Can't tag resource. Verify that the topic exists.
+    # Can’t perform the action on the specified resource. Make sure that the
+    # resource exists.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1695,17 +2093,40 @@ module Aws::SNS
       include Aws::Structure
     end
 
+    # A verified or pending destination phone number in the SMS sandbox.
+    #
+    # When you start using Amazon SNS to send SMS messages, your Amazon Web
+    # Services account is in the *SMS sandbox*. The SMS sandbox provides a
+    # safe environment for you to try Amazon SNS features without risking
+    # your reputation as an SMS sender. While your Amazon Web Services
+    # account is in the SMS sandbox, you can use all of the features of
+    # Amazon SNS. However, you can send SMS messages only to verified
+    # destination phone numbers. For more information, including how to move
+    # out of the sandbox to send messages without restrictions, see [SMS
+    # sandbox][1] in the *Amazon SNS Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html
+    #
+    # @!attribute [rw] phone_number
+    #   The destination phone number.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   The destination phone number's verification status.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SMSSandboxPhoneNumber AWS API Documentation
+    #
+    class SMSSandboxPhoneNumber < Struct.new(
+      :phone_number,
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Input for SetEndpointAttributes action.
-    #
-    # @note When making an API call, you may pass SetEndpointAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         endpoint_arn: "String", # required
-    #         attributes: { # required
-    #           "String" => "String",
-    #         },
-    #       }
     #
     # @!attribute [rw] endpoint_arn
     #   EndpointArn used for SetEndpointAttributes action.
@@ -1741,16 +2162,6 @@ module Aws::SNS
 
     # Input for SetPlatformApplicationAttributes action.
     #
-    # @note When making an API call, you may pass SetPlatformApplicationAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         platform_application_arn: "String", # required
-    #         attributes: { # required
-    #           "String" => "String",
-    #         },
-    #       }
-    #
     # @!attribute [rw] platform_application_arn
     #   PlatformApplicationArn for SetPlatformApplicationAttributes action.
     #   @return [String]
@@ -1760,16 +2171,34 @@ module Aws::SNS
     #   include the following:
     #
     #   * `PlatformCredential` – The credential received from the
-    #     notification service. For `APNS` and `APNS_SANDBOX`,
-    #     `PlatformCredential` is `private key`. For `GCM` (Firebase Cloud
-    #     Messaging), `PlatformCredential` is `API key`. For `ADM`,
-    #     `PlatformCredential` is `client secret`.
+    #     notification service.
+    #
+    #     * For ADM, `PlatformCredential`is client secret.
+    #
+    #     * For Apple Services using certificate credentials,
+    #       `PlatformCredential` is private key.
+    #
+    #     * For Apple Services using token credentials, `PlatformCredential`
+    #       is signing key.
+    #
+    #     * For GCM (Firebase Cloud Messaging), `PlatformCredential` is API
+    #       key.
+    #   ^
     #
     #   * `PlatformPrincipal` – The principal received from the notification
-    #     service. For `APNS` and `APNS_SANDBOX`, `PlatformPrincipal` is
-    #     `SSL certificate`. For `GCM` (Firebase Cloud Messaging), there is
-    #     no `PlatformPrincipal`. For `ADM`, `PlatformPrincipal` is `client
-    #     id`.
+    #     service.
+    #
+    #     * For ADM, `PlatformPrincipal`is client id.
+    #
+    #     * For Apple Services using certificate credentials,
+    #       `PlatformPrincipal` is SSL certificate.
+    #
+    #     * For Apple Services using token credentials, `PlatformPrincipal`
+    #       is signing key ID.
+    #
+    #     * For GCM (Firebase Cloud Messaging), there is no
+    #       `PlatformPrincipal`.
+    #   ^
     #
     #   * `EventEndpointCreated` – Topic ARN to which `EndpointCreated`
     #     event notifications are sent.
@@ -1792,6 +2221,15 @@ module Aws::SNS
     #
     #   * `SuccessFeedbackSampleRate` – Sample rate percentage (0-100) of
     #     successfully delivered messages.
+    #
+    #   The following attributes only apply to `APNs` token-based
+    #   authentication:
+    #
+    #   * `ApplePlatformTeamID` – The identifier that's assigned to your
+    #     Apple developer account team.
+    #
+    #   * `ApplePlatformBundleID` – The bundle identifier that's assigned
+    #     to your iOS app.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/SetPlatformApplicationAttributesInput AWS API Documentation
@@ -1805,18 +2243,10 @@ module Aws::SNS
 
     # The input for the SetSMSAttributes action.
     #
-    # @note When making an API call, you may pass SetSMSAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         attributes: { # required
-    #           "String" => "String",
-    #         },
-    #       }
-    #
     # @!attribute [rw] attributes
-    #   The default settings for sending SMS messages from your account. You
-    #   can set values for the following attribute names:
+    #   The default settings for sending SMS messages from your Amazon Web
+    #   Services account. You can set values for the following attribute
+    #   names:
     #
     #   `MonthlySpendLimit` – The maximum amount in USD that you are willing
     #   to spend each month to send SMS messages. When Amazon SNS determines
@@ -1867,7 +2297,7 @@ module Aws::SNS
     #   daily SMS usage reports from Amazon SNS. Each day, Amazon SNS will
     #   deliver a usage report as a CSV file to the bucket. The report
     #   includes the following information for each SMS message that was
-    #   successfully delivered by your account:
+    #   successfully delivered by your Amazon Web Services account:
     #
     #   * Time that the message was published (in UTC)
     #
@@ -1887,7 +2317,7 @@ module Aws::SNS
     #   * Total number of parts
     #
     #   To receive the report, the bucket must have a policy that allows the
-    #   Amazon SNS service principle to perform the `s3:PutObject` and
+    #   Amazon SNS service principal to perform the `s3:PutObject` and
     #   `s3:GetBucketLocation` actions.
     #
     #   For an example bucket policy and usage report, see [Monitoring SMS
@@ -1915,15 +2345,6 @@ module Aws::SNS
 
     # Input for SetSubscriptionAttributes action.
     #
-    # @note When making an API call, you may pass SetSubscriptionAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         subscription_arn: "subscriptionARN", # required
-    #         attribute_name: "attributeName", # required
-    #         attribute_value: "attributeValue",
-    #       }
-    #
     # @!attribute [rw] subscription_arn
     #   The ARN of the subscription to modify.
     #   @return [String]
@@ -1940,6 +2361,14 @@ module Aws::SNS
     #   * `FilterPolicy` – The simple JSON object that lets your subscriber
     #     receive only a subset of messages, rather than receiving every
     #     message published to the topic.
+    #
+    #   * `FilterPolicyScope` – This attribute lets you choose the filtering
+    #     scope by using one of the following string value types:
+    #
+    #     * `MessageAttributes` (default) – The filter is applied on the
+    #       message attributes.
+    #
+    #     * `MessageBody` – The filter is applied on the message body.
     #
     #   * `RawMessageDelivery` – When set to `true`, enables raw message
     #     delivery to Amazon SQS or HTTP/S endpoints. This eliminates the
@@ -1990,15 +2419,6 @@ module Aws::SNS
 
     # Input for SetTopicAttributes action.
     #
-    # @note When making an API call, you may pass SetTopicAttributesInput
-    #   data as a hash:
-    #
-    #       {
-    #         topic_arn: "topicARN", # required
-    #         attribute_name: "attributeName", # required
-    #         attribute_value: "attributeValue",
-    #       }
-    #
     # @!attribute [rw] topic_arn
     #   The ARN of the topic to modify.
     #   @return [String]
@@ -2010,6 +2430,10 @@ module Aws::SNS
     #   special request parameters that the `SetTopicAttributes` action
     #   uses:
     #
+    #   * `ApplicationSuccessFeedbackRoleArn` – Indicates failed message
+    #     delivery status for an Amazon SNS topic that is subscribed to a
+    #     platform application endpoint.
+    #
     #   * `DeliveryPolicy` – The policy that defines how Amazon SNS retries
     #     failed deliveries to HTTP/S endpoints.
     #
@@ -2020,17 +2444,120 @@ module Aws::SNS
     #     default, only the topic owner can publish or subscribe to the
     #     topic.
     #
-    #   The following attribute applies only to
-    #   [server-side-encryption][1]\:
+    #   * `TracingConfig` – Tracing mode of an Amazon SNS topic. By default
+    #     `TracingConfig` is set to `PassThrough`, and the topic passes
+    #     through the tracing header it receives from an Amazon SNS
+    #     publisher to its subscriptions. If set to `Active`, Amazon SNS
+    #     will vend X-Ray segment data to topic owner account if the sampled
+    #     flag in the tracing header is true. This is only supported on
+    #     standard topics.
     #
-    #   * `KmsMasterKeyId` – The ID of an AWS-managed customer master key
-    #     (CMK) for Amazon SNS or a custom CMK. For more information, see
-    #     [Key Terms][2]. For more examples, see [KeyId][3] in the *AWS Key
-    #     Management Service API Reference*.
+    #   * HTTP
     #
-    #   ^
+    #     * `HTTPSuccessFeedbackRoleArn` – Indicates successful message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       HTTP endpoint.
     #
-    #   The following attribute applies only to [FIFO topics][4]\:
+    #     * `HTTPSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an HTTP endpoint.
+    #
+    #     * `HTTPFailureFeedbackRoleArn` – Indicates failed message delivery
+    #       status for an Amazon SNS topic that is subscribed to an HTTP
+    #       endpoint.
+    #
+    #   * Amazon Kinesis Data Firehose
+    #
+    #     * `FirehoseSuccessFeedbackRoleArn` – Indicates successful message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Amazon Kinesis Data Firehose endpoint.
+    #
+    #     * `FirehoseSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an Amazon Kinesis Data Firehose endpoint.
+    #
+    #     * `FirehoseFailureFeedbackRoleArn` – Indicates failed message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Amazon Kinesis Data Firehose endpoint.
+    #
+    #   * Lambda
+    #
+    #     * `LambdaSuccessFeedbackRoleArn` – Indicates successful message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Lambda endpoint.
+    #
+    #     * `LambdaSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an Lambda endpoint.
+    #
+    #     * `LambdaFailureFeedbackRoleArn` – Indicates failed message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Lambda endpoint.
+    #
+    #   * Platform application endpoint
+    #
+    #     * `ApplicationSuccessFeedbackRoleArn` – Indicates successful
+    #       message delivery status for an Amazon SNS topic that is
+    #       subscribed to an Amazon Web Services application endpoint.
+    #
+    #     * `ApplicationSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an Amazon Web Services application endpoint.
+    #
+    #     * `ApplicationFailureFeedbackRoleArn` – Indicates failed message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Amazon Web Services application endpoint.
+    #
+    #     <note markdown="1"> In addition to being able to configure topic attributes for
+    #     message delivery status of notification messages sent to Amazon
+    #     SNS application endpoints, you can also configure application
+    #     attributes for the delivery status of push notification messages
+    #     sent to push notification services.
+    #
+    #      For example, For more information, see [Using Amazon SNS
+    #     Application Attributes for Message Delivery Status][1].
+    #
+    #      </note>
+    #
+    #   * Amazon SQS
+    #
+    #     * `SQSSuccessFeedbackRoleArn` – Indicates successful message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Amazon SQS endpoint.
+    #
+    #     * `SQSSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an Amazon SQS endpoint.
+    #
+    #     * `SQSFailureFeedbackRoleArn` – Indicates failed message delivery
+    #       status for an Amazon SNS topic that is subscribed to an Amazon
+    #       SQS endpoint.
+    #
+    #   <note markdown="1"> The &lt;ENDPOINT&gt;SuccessFeedbackRoleArn and
+    #   &lt;ENDPOINT&gt;FailureFeedbackRoleArn attributes are used to give
+    #   Amazon SNS write access to use CloudWatch Logs on your behalf. The
+    #   &lt;ENDPOINT&gt;SuccessFeedbackSampleRate attribute is for
+    #   specifying the sample rate percentage (0-100) of successfully
+    #   delivered messages. After you configure the
+    #   &lt;ENDPOINT&gt;FailureFeedbackRoleArn attribute, then all failed
+    #   message deliveries generate CloudWatch Logs.
+    #
+    #    </note>
+    #
+    #   The following attribute applies only to [server-side-encryption][2]:
+    #
+    #   * `KmsMasterKeyId` – The ID of an Amazon Web Services managed
+    #     customer master key (CMK) for Amazon SNS or a custom CMK. For more
+    #     information, see [Key Terms][3]. For more examples, see [KeyId][4]
+    #     in the *Key Management Service API Reference*.
+    #
+    #   * `SignatureVersion` – The signature version corresponds to the
+    #     hashing algorithm used while creating the signature of the
+    #     notifications, subscription confirmations, or unsubscribe
+    #     confirmation messages sent by Amazon SNS. By default,
+    #     `SignatureVersion` is set to `1`.
+    #
+    #   The following attribute applies only to [FIFO topics][5]:
     #
     #   * `ContentBasedDeduplication` – Enables content-based deduplication
     #     for FIFO topics.
@@ -2038,7 +2565,7 @@ module Aws::SNS
     #     * By default, `ContentBasedDeduplication` is set to `false`. If
     #       you create a FIFO topic and this attribute is `false`, you must
     #       specify a value for the `MessageDeduplicationId` parameter for
-    #       the [Publish][5] action.
+    #       the [Publish][6] action.
     #
     #     * When you set `ContentBasedDeduplication` to `true`, Amazon SNS
     #       uses a SHA-256 hash to generate the `MessageDeduplicationId`
@@ -2046,16 +2573,17 @@ module Aws::SNS
     #       message).
     #
     #       (Optional) To override the generated value, you can specify a
-    #       value for the the `MessageDeduplicationId` parameter for the
+    #       value for the `MessageDeduplicationId` parameter for the
     #       `Publish` action.
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html
-    #   [2]: https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html#sse-key-terms
-    #   [3]: https://docs.aws.amazon.com/kms/latest/APIReference/API_DescribeKey.html#API_DescribeKey_RequestParameters
-    #   [4]: https://docs.aws.amazon.com/sns/latest/dg/sns-fifo-topics.html
-    #   [5]: https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
+    #   [1]: https://docs.aws.amazon.com/sns/latest/dg/sns-msg-status.html
+    #   [2]: https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html
+    #   [3]: https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html#sse-key-terms
+    #   [4]: https://docs.aws.amazon.com/kms/latest/APIReference/API_DescribeKey.html#API_DescribeKey_RequestParameters
+    #   [5]: https://docs.aws.amazon.com/sns/latest/dg/sns-fifo-topics.html
+    #   [6]: https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
     #   @return [String]
     #
     # @!attribute [rw] attribute_value
@@ -2088,19 +2616,6 @@ module Aws::SNS
 
     # Input for Subscribe action.
     #
-    # @note When making an API call, you may pass SubscribeInput
-    #   data as a hash:
-    #
-    #       {
-    #         topic_arn: "topicARN", # required
-    #         protocol: "protocol", # required
-    #         endpoint: "endpoint",
-    #         attributes: {
-    #           "attributeName" => "attributeValue",
-    #         },
-    #         return_subscription_arn: false,
-    #       }
-    #
     # @!attribute [rw] topic_arn
     #   The ARN of the topic you want to subscribe to.
     #   @return [String]
@@ -2123,8 +2638,7 @@ module Aws::SNS
     #   * `application` – delivery of JSON-encoded message to an EndpointArn
     #     for a mobile app and device
     #
-    #   * `lambda` – delivery of JSON-encoded message to an AWS Lambda
-    #     function
+    #   * `lambda` – delivery of JSON-encoded message to an Lambda function
     #
     #   * `firehose` – delivery of JSON-encoded message to an Amazon Kinesis
     #     Data Firehose delivery stream.
@@ -2153,8 +2667,8 @@ module Aws::SNS
     #   * For the `application` protocol, the endpoint is the EndpointArn of
     #     a mobile app and device.
     #
-    #   * For the `lambda` protocol, the endpoint is the ARN of an AWS
-    #     Lambda function.
+    #   * For the `lambda` protocol, the endpoint is the ARN of an Lambda
+    #     function.
     #
     #   * For the `firehose` protocol, the endpoint is the ARN of an Amazon
     #     Kinesis Data Firehose delivery stream.
@@ -2164,8 +2678,7 @@ module Aws::SNS
     #   A map of attributes with their corresponding values.
     #
     #   The following lists the names, descriptions, and values of the
-    #   special request parameters that the `SetTopicAttributes` action
-    #   uses:
+    #   special request parameters that the `Subscribe` action uses:
     #
     #   * `DeliveryPolicy` – The policy that defines how Amazon SNS retries
     #     failed deliveries to HTTP/S endpoints.
@@ -2173,6 +2686,14 @@ module Aws::SNS
     #   * `FilterPolicy` – The simple JSON object that lets your subscriber
     #     receive only a subset of messages, rather than receiving every
     #     message published to the topic.
+    #
+    #   * `FilterPolicyScope` – This attribute lets you choose the filtering
+    #     scope by using one of the following string value types:
+    #
+    #     * `MessageAttributes` (default) – The filter is applied on the
+    #       message attributes.
+    #
+    #     * `MessageBody` – The filter is applied on the message body.
     #
     #   * `RawMessageDelivery` – When set to `true`, enables raw message
     #     delivery to Amazon SQS or HTTP/S endpoints. This eliminates the
@@ -2304,14 +2825,6 @@ module Aws::SNS
 
     # The list of tags to be added to the specified topic.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
-    #
     # @!attribute [rw] key
     #   The required key portion of the tag.
     #   @return [String]
@@ -2356,19 +2869,6 @@ module Aws::SNS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the topic to which to add tags.
     #   @return [String]
@@ -2392,7 +2892,7 @@ module Aws::SNS
     class TagResourceResponse < Aws::EmptyStructure; end
 
     # Indicates that the rate at which requests have been submitted for this
-    # action exceeds the limit for your account.
+    # action exceeds the limit for your Amazon Web Services account.
     #
     # @!attribute [rw] message
     #   Throttled request.
@@ -2401,6 +2901,19 @@ module Aws::SNS
     # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ThrottledException AWS API Documentation
     #
     class ThrottledException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The batch request contains more entries than permissible.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/TooManyEntriesInBatchRequestException AWS API Documentation
+    #
+    class TooManyEntriesInBatchRequestException < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -2437,13 +2950,6 @@ module Aws::SNS
 
     # Input for Unsubscribe action.
     #
-    # @note When making an API call, you may pass UnsubscribeInput
-    #   data as a hash:
-    #
-    #       {
-    #         subscription_arn: "subscriptionARN", # required
-    #       }
-    #
     # @!attribute [rw] subscription_arn
     #   The ARN of the subscription to be deleted.
     #   @return [String]
@@ -2456,14 +2962,6 @@ module Aws::SNS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the topic from which to remove tags.
     #   @return [String]
@@ -2484,6 +2982,76 @@ module Aws::SNS
     # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/UntagResourceResponse AWS API Documentation
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
+
+    # Indicates that a request parameter does not comply with the associated
+    # constraints.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/UserErrorException AWS API Documentation
+    #
+    class UserErrorException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Indicates that a parameter in the request is invalid.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/ValidationException AWS API Documentation
+    #
+    class ValidationException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Indicates that the one-time password (OTP) used for verification is
+    # invalid.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   The status of the verification error.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/VerificationException AWS API Documentation
+    #
+    class VerificationException < Struct.new(
+      :message,
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] phone_number
+    #   The destination phone number to verify.
+    #   @return [String]
+    #
+    # @!attribute [rw] one_time_password
+    #   The OTP sent to the destination number from the
+    #   `CreateSMSSandBoxPhoneNumber` call.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/VerifySMSSandboxPhoneNumberInput AWS API Documentation
+    #
+    class VerifySMSSandboxPhoneNumberInput < Struct.new(
+      :phone_number,
+      :one_time_password)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The destination phone number's verification status.
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sns-2010-03-31/VerifySMSSandboxPhoneNumberResult AWS API Documentation
+    #
+    class VerifySMSSandboxPhoneNumberResult < Aws::EmptyStructure; end
 
   end
 end

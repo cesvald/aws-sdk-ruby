@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:ssmincidents)
@@ -73,8 +77,13 @@ module Aws::SSMIncidents
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::SSMIncidents::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::SSMIncidents
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::SSMIncidents
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::SSMIncidents
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::SSMIncidents
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::SSMIncidents
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::SSMIncidents::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::SSMIncidents::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::SSMIncidents
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::SSMIncidents
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -331,7 +388,7 @@ module Aws::SSMIncidents
     # Regions with the provided KMS key.
     #
     # @option params [String] :client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token that ensures that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -340,6 +397,9 @@ module Aws::SSMIncidents
     # @option params [required, Hash<String,Types::RegionMapInputValue>] :regions
     #   The Regions that Incident Manager replicates your data to. You can
     #   have up to three Regions in your replication set.
+    #
+    # @option params [Hash<String,String>] :tags
+    #   A list of tags to add to the replication set.
     #
     # @return [Types::CreateReplicationSetOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -353,6 +413,9 @@ module Aws::SSMIncidents
     #       "RegionName" => {
     #         sse_kms_key_id: "SseKmsKey",
     #       },
+    #     },
+    #     tags: {
+    #       "TagKey" => "TagValue",
     #     },
     #   })
     #
@@ -378,11 +441,10 @@ module Aws::SSMIncidents
     #   incident.
     #
     # @option params [Types::ChatChannel] :chat_channel
-    #   The AWS Chatbot chat channel used for collaboration during an
-    #   incident.
+    #   The Chatbot chat channel used for collaboration during an incident.
     #
     # @option params [String] :client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -393,11 +455,15 @@ module Aws::SSMIncidents
     #   spaces.
     #
     # @option params [Array<String>] :engagements
-    #   The contacts and escalation plans that the response plan engages
-    #   during an incident.
+    #   The Amazon Resource Name (ARN) for the contacts and escalation plans
+    #   that the response plan engages during an incident.
     #
     # @option params [required, Types::IncidentTemplate] :incident_template
     #   Details used to create an incident when using this response plan.
+    #
+    # @option params [Array<Types::Integration>] :integrations
+    #   Information about third-party services integrated into the response
+    #   plan.
     #
     # @option params [required, String] :name
     #   The short format name of the response plan. Can't include spaces.
@@ -417,6 +483,11 @@ module Aws::SSMIncidents
     #         ssm_automation: {
     #           document_name: "SsmAutomationDocumentNameString", # required
     #           document_version: "SsmAutomationDocumentVersionString",
+    #           dynamic_parameters: {
+    #             "DynamicSsmParametersKeyString" => {
+    #               variable: "INCIDENT_RECORD_ARN", # accepts INCIDENT_RECORD_ARN, INVOLVED_RESOURCES
+    #             },
+    #           },
     #           parameters: {
     #             "SsmParametersKeyString" => ["SsmParameterValuesMemberString"],
     #           },
@@ -436,6 +507,9 @@ module Aws::SSMIncidents
     #     incident_template: { # required
     #       dedupe_string: "DedupeString",
     #       impact: 1, # required
+    #       incident_tags: {
+    #         "TagKey" => "TagValue",
+    #       },
     #       notification_targets: [
     #         {
     #           sns_topic_arn: "Arn",
@@ -444,6 +518,17 @@ module Aws::SSMIncidents
     #       summary: "IncidentSummary",
     #       title: "IncidentTitle", # required
     #     },
+    #     integrations: [
+    #       {
+    #         pager_duty_configuration: {
+    #           name: "PagerDutyConfigurationNameString", # required
+    #           pager_duty_incident_configuration: { # required
+    #             service_id: "PagerDutyIncidentConfigurationServiceIdString", # required
+    #           },
+    #           secret_id: "PagerDutyConfigurationSecretIdString", # required
+    #         },
+    #       },
+    #     ],
     #     name: "ResponsePlanName", # required
     #     tags: {
     #       "TagKey" => "TagValue",
@@ -464,13 +549,13 @@ module Aws::SSMIncidents
     end
 
     # Creates a custom timeline event on the incident details page of an
-    # incident record. Timeline events are automatically created by Incident
-    # Manager, marking key moment during an incident. You can create custom
-    # timeline events to mark important events that are automatically
-    # detected by Incident Manager.
+    # incident record. Incident Manager automatically creates timeline
+    # events that mark key moments during an incident. You can create custom
+    # timeline events to mark important events that Incident Manager can
+    # detect automatically.
     #
-    # @option params [required, String] :client_token
-    #   A token ensuring that the action is called only once with the
+    # @option params [String] :client_token
+    #   A token that ensures that a client calls the action only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -479,16 +564,25 @@ module Aws::SSMIncidents
     # @option params [required, String] :event_data
     #   A short description of the event.
     #
+    # @option params [Array<Types::EventReference>] :event_references
+    #   Adds one or more references to the `TimelineEvent`. A reference is an
+    #   Amazon Web Services resource involved or associated with the incident.
+    #   To specify a reference, enter its Amazon Resource Name (ARN). You can
+    #   also specify a related item associated with a resource. For example,
+    #   to specify an Amazon DynamoDB (DynamoDB) table as a resource, use the
+    #   table's ARN. You can also specify an Amazon CloudWatch metric
+    #   associated with the DynamoDB table as a related item.
+    #
     # @option params [required, Time,DateTime,Date,Integer,String] :event_time
     #   The time that the event occurred.
     #
     # @option params [required, String] :event_type
-    #   The type of the event. You can create timeline events of type `Custom
+    #   The type of event. You can create timeline events of type `Custom
     #   Event`.
     #
     # @option params [required, String] :incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident record you are adding
-    #   the event to.
+    #   The Amazon Resource Name (ARN) of the incident record that the action
+    #   adds the incident to.
     #
     # @return [Types::CreateTimelineEventOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -498,8 +592,14 @@ module Aws::SSMIncidents
     # @example Request syntax with placeholder values
     #
     #   resp = client.create_timeline_event({
-    #     client_token: "ClientToken", # required
+    #     client_token: "ClientToken",
     #     event_data: "EventData", # required
+    #     event_references: [
+    #       {
+    #         related_item_id: "GeneratedId",
+    #         resource: "Arn",
+    #       },
+    #     ],
     #     event_time: Time.now, # required
     #     event_type: "TimelineEventType", # required
     #     incident_record_arn: "Arn", # required
@@ -566,8 +666,8 @@ module Aws::SSMIncidents
       req.send_request(options)
     end
 
-    # Deletes the resource policy that AWS Resource Access Manager uses to
-    # share your Incident Manager resource.
+    # Deletes the resource policy that Resource Access Manager uses to share
+    # your Incident Manager resource.
     #
     # @option params [required, String] :policy_id
     #   The ID of the resource policy you're deleting.
@@ -621,12 +721,12 @@ module Aws::SSMIncidents
     # Deletes a timeline event from an incident.
     #
     # @option params [required, String] :event_id
-    #   The ID of the event you are updating. You can find this by using
-    #   `ListTimelineEvents`.
+    #   The ID of the event to update. You can use `ListTimelineEvents` to
+    #   find an event's ID.
     #
     # @option params [required, String] :incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident that the event is part
-    #   of.
+    #   The Amazon Resource Name (ARN) of the incident that includes the
+    #   timeline event.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -646,7 +746,7 @@ module Aws::SSMIncidents
       req.send_request(options)
     end
 
-    # Returns the details of the specified incident record.
+    # Returns the details for the specified incident record.
     #
     # @option params [required, String] :arn
     #   The Amazon Resource Name (ARN) of the incident record.
@@ -711,6 +811,7 @@ module Aws::SSMIncidents
     #
     # @example Response structure
     #
+    #   resp.replication_set.arn #=> String
     #   resp.replication_set.created_by #=> String
     #   resp.replication_set.created_time #=> Time
     #   resp.replication_set.deletion_protected #=> Boolean
@@ -742,7 +843,7 @@ module Aws::SSMIncidents
     # plan.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of resource policies to display per page of
+    #   The maximum number of resource policies to display for each page of
     #   results.
     #
     # @option params [String] :next_token
@@ -797,6 +898,7 @@ module Aws::SSMIncidents
     #   * {Types::GetResponsePlanOutput#display_name #display_name} => String
     #   * {Types::GetResponsePlanOutput#engagements #engagements} => Array&lt;String&gt;
     #   * {Types::GetResponsePlanOutput#incident_template #incident_template} => Types::IncidentTemplate
+    #   * {Types::GetResponsePlanOutput#integrations #integrations} => Array&lt;Types::Integration&gt;
     #   * {Types::GetResponsePlanOutput#name #name} => String
     #
     # @example Request syntax with placeholder values
@@ -810,6 +912,8 @@ module Aws::SSMIncidents
     #   resp.actions #=> Array
     #   resp.actions[0].ssm_automation.document_name #=> String
     #   resp.actions[0].ssm_automation.document_version #=> String
+    #   resp.actions[0].ssm_automation.dynamic_parameters #=> Hash
+    #   resp.actions[0].ssm_automation.dynamic_parameters["DynamicSsmParametersKeyString"].variable #=> String, one of "INCIDENT_RECORD_ARN", "INVOLVED_RESOURCES"
     #   resp.actions[0].ssm_automation.parameters #=> Hash
     #   resp.actions[0].ssm_automation.parameters["SsmParametersKeyString"] #=> Array
     #   resp.actions[0].ssm_automation.parameters["SsmParametersKeyString"][0] #=> String
@@ -823,10 +927,16 @@ module Aws::SSMIncidents
     #   resp.engagements[0] #=> String
     #   resp.incident_template.dedupe_string #=> String
     #   resp.incident_template.impact #=> Integer
+    #   resp.incident_template.incident_tags #=> Hash
+    #   resp.incident_template.incident_tags["TagKey"] #=> String
     #   resp.incident_template.notification_targets #=> Array
     #   resp.incident_template.notification_targets[0].sns_topic_arn #=> String
     #   resp.incident_template.summary #=> String
     #   resp.incident_template.title #=> String
+    #   resp.integrations #=> Array
+    #   resp.integrations[0].pager_duty_configuration.name #=> String
+    #   resp.integrations[0].pager_duty_configuration.pager_duty_incident_configuration.service_id #=> String
+    #   resp.integrations[0].pager_duty_configuration.secret_id #=> String
     #   resp.name #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/GetResponsePlan AWS API Documentation
@@ -841,12 +951,12 @@ module Aws::SSMIncidents
     # Retrieves a timeline event based on its ID and incident record.
     #
     # @option params [required, String] :event_id
-    #   The ID of the event. You can get an event's ID when you create it or
+    #   The ID of the event. You can get an event's ID when you create it, or
     #   by using `ListTimelineEvents`.
     #
     # @option params [required, String] :incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident that the timeline event
-    #   is part of.
+    #   The Amazon Resource Name (ARN) of the incident that includes the
+    #   timeline event.
     #
     # @return [Types::GetTimelineEventOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -863,6 +973,9 @@ module Aws::SSMIncidents
     #
     #   resp.event.event_data #=> String
     #   resp.event.event_id #=> String
+    #   resp.event.event_references #=> Array
+    #   resp.event.event_references[0].related_item_id #=> String
+    #   resp.event.event_references[0].resource #=> String
     #   resp.event.event_time #=> Time
     #   resp.event.event_type #=> String
     #   resp.event.event_updated_time #=> Time
@@ -882,8 +995,8 @@ module Aws::SSMIncidents
     # want to update.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   Filter the list of incident records you are searching through. You can
-    #   filter on the following keys:
+    #   Filters the list of incident records you want to search through. You
+    #   can filter on the following keys:
     #
     #   * `creationTime`
     #
@@ -892,6 +1005,17 @@ module Aws::SSMIncidents
     #   * `status`
     #
     #   * `createdBy`
+    #
+    #   Note the following when when you use Filters:
+    #
+    #   * If you don't specify a Filter, the response includes all incident
+    #     records.
+    #
+    #   * If you specify more than one filter in a single request, the
+    #     response returns incident records that match all filters.
+    #
+    #   * If you specify a filter with more than one value, the response
+    #     returns incident records that match any of the values provided.
     #
     # @option params [Integer] :max_results
     #   The maximum number of results per page.
@@ -953,8 +1077,8 @@ module Aws::SSMIncidents
     # List all related items for an incident record.
     #
     # @option params [required, String] :incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident record that you are
-    #   listing related items for.
+    #   The Amazon Resource Name (ARN) of the incident record containing the
+    #   listed related items.
     #
     # @option params [Integer] :max_results
     #   The maximum number of related items per page.
@@ -981,9 +1105,13 @@ module Aws::SSMIncidents
     #
     #   resp.next_token #=> String
     #   resp.related_items #=> Array
-    #   resp.related_items[0].identifier.type #=> String, one of "ANALYSIS", "INCIDENT", "METRIC", "PARENT", "ATTACHMENT", "OTHER"
+    #   resp.related_items[0].generated_id #=> String
+    #   resp.related_items[0].identifier.type #=> String, one of "ANALYSIS", "INCIDENT", "METRIC", "PARENT", "ATTACHMENT", "OTHER", "AUTOMATION", "INVOLVED_RESOURCE", "TASK"
     #   resp.related_items[0].identifier.value.arn #=> String
     #   resp.related_items[0].identifier.value.metric_definition #=> String
+    #   resp.related_items[0].identifier.value.pager_duty_incident_detail.auto_resolve #=> Boolean
+    #   resp.related_items[0].identifier.value.pager_duty_incident_detail.id #=> String
+    #   resp.related_items[0].identifier.value.pager_duty_incident_detail.secret_id #=> String
     #   resp.related_items[0].identifier.value.url #=> String
     #   resp.related_items[0].title #=> String
     #
@@ -1101,19 +1229,30 @@ module Aws::SSMIncidents
       req.send_request(options)
     end
 
-    # Lists timeline events of the specified incident record.
+    # Lists timeline events for the specified incident record.
     #
     # @option params [Array<Types::Filter>] :filters
     #   Filters the timeline events based on the provided conditional values.
-    #   You can filter timeline events using the following keys:
+    #   You can filter timeline events with the following keys:
     #
     #   * `eventTime`
     #
     #   * `eventType`
     #
+    #   Note the following when deciding how to use Filters:
+    #
+    #   * If you don't specify a Filter, the response includes all timeline
+    #     events.
+    #
+    #   * If you specify more than one filter in a single request, the
+    #     response returns timeline events that match all filters.
+    #
+    #   * If you specify a filter with more than one value, the response
+    #     returns timeline events that match any of the values provided.
+    #
     # @option params [required, String] :incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident that the event is part
-    #   of.
+    #   The Amazon Resource Name (ARN) of the incident that includes the
+    #   timeline event.
     #
     # @option params [Integer] :max_results
     #   The maximum number of results per page.
@@ -1122,7 +1261,7 @@ module Aws::SSMIncidents
     #   The pagination token to continue to the next page of results.
     #
     # @option params [String] :sort_by
-    #   Sort by the specified key value pair.
+    #   Sort timeline events by the specified key value pair.
     #
     # @option params [String] :sort_order
     #   Sorts the order of timeline events by the value specified in the
@@ -1162,6 +1301,9 @@ module Aws::SSMIncidents
     #
     #   resp.event_summaries #=> Array
     #   resp.event_summaries[0].event_id #=> String
+    #   resp.event_summaries[0].event_references #=> Array
+    #   resp.event_summaries[0].event_references[0].related_item_id #=> String
+    #   resp.event_summaries[0].event_references[0].resource #=> String
     #   resp.event_summaries[0].event_time #=> Time
     #   resp.event_summaries[0].event_type #=> String
     #   resp.event_summaries[0].event_updated_time #=> Time
@@ -1177,13 +1319,20 @@ module Aws::SSMIncidents
       req.send_request(options)
     end
 
-    # Adds a resource policy to the specified response plan.
+    # Adds a resource policy to the specified response plan. The resource
+    # policy is used to share the response plan using Resource Access
+    # Manager (RAM). For more information about cross-account sharing, see
+    # [Cross-Region and cross-account incident management][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/incident-manager/latest/userguide/incident-manager-cross-account-cross-region.html
     #
     # @option params [required, String] :policy
     #   Details of the resource policy.
     #
     # @option params [required, String] :resource_arn
-    #   The Amazon Resource Name (ARN) of the response plan you're adding the
+    #   The Amazon Resource Name (ARN) of the response plan to add the
     #   resource policy to.
     #
     # @return [Types::PutResourcePolicyOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -1214,7 +1363,7 @@ module Aws::SSMIncidents
     # or manually.
     #
     # @option params [String] :client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -1243,13 +1392,13 @@ module Aws::SSMIncidents
     #
     # @option params [Array<Types::RelatedItem>] :related_items
     #   Add related items to the incident for other responders to use. Related
-    #   items are AWS resources, external links, or files uploaded to an S3
-    #   bucket.
+    #   items are Amazon Web Services resources, external links, or files
+    #   uploaded to an Amazon S3 bucket.
     #
     # @option params [required, String] :response_plan_arn
     #   The Amazon Resource Name (ARN) of the response plan that pre-defines
-    #   summary, chat channels, SNS topics, runbooks, title, and impact of the
-    #   incident.
+    #   summary, chat channels, Amazon SNS topics, runbooks, title, and impact
+    #   of the incident.
     #
     # @option params [String] :title
     #   Provide a title for the incident. Providing a title overwrites the
@@ -1269,11 +1418,17 @@ module Aws::SSMIncidents
     #     impact: 1,
     #     related_items: [
     #       {
+    #         generated_id: "GeneratedId",
     #         identifier: { # required
-    #           type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
+    #           type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER, AUTOMATION, INVOLVED_RESOURCE, TASK
     #           value: { # required
     #             arn: "Arn",
     #             metric_definition: "MetricDefinition",
+    #             pager_duty_incident_detail: {
+    #               auto_resolve: false,
+    #               id: "PagerDutyIncidentDetailIdString", # required
+    #               secret_id: "PagerDutyIncidentDetailSecretIdString",
+    #             },
     #             url: "Url",
     #           },
     #         },
@@ -1310,7 +1465,7 @@ module Aws::SSMIncidents
     #   tags to.
     #
     # @option params [required, Hash<String,String>] :tags
-    #   A list of tags that you are adding to the response plan.
+    #   A list of tags to add to the response plan.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1339,7 +1494,7 @@ module Aws::SSMIncidents
     #   tag from.
     #
     # @option params [required, Array<String>] :tag_keys
-    #   The name of the tag you're removing from the response plan.
+    #   The name of the tag to remove from the response plan.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1363,18 +1518,17 @@ module Aws::SSMIncidents
     # final Region in a replication set.
     #
     # @option params [required, String] :arn
-    #   The Amazon Resource Name (ARN) of the replication set you're
-    #   updating.
+    #   The Amazon Resource Name (ARN) of the replication set to update.
     #
     # @option params [String] :client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token that ensures that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
     #
     # @option params [required, Boolean] :deletion_protected
-    #   Details if deletion protection is enabled or disabled in your account.
+    #   Specifies if deletion protection is turned on or off in your account.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1395,8 +1549,8 @@ module Aws::SSMIncidents
       req.send_request(options)
     end
 
-    # Update the details of an incident record. You can use this action to
-    # update an incident record from the defined chat channel. For more
+    # Update the details of an incident record. You can use this operation
+    # to update an incident record from the defined chat channel. For more
     # information about using actions in chat channels, see [Interacting
     # through chat][1].
     #
@@ -1409,23 +1563,24 @@ module Aws::SSMIncidents
     #   updating.
     #
     # @option params [Types::ChatChannel] :chat_channel
-    #   The AWS Chatbot chat channel for responders to collaborate in.
+    #   The Chatbot chat channel where responders can collaborate.
     #
     # @option params [String] :client_token
-    #   A token ensuring that the action is called only once with the
-    #   specified details.
+    #   A token that ensures that a client calls the operation only once with
+    #   the specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
     #
     # @option params [Integer] :impact
-    #   Defines the impact to customers and applications. Providing an impact
-    #   overwrites the impact provided by the response plan.
+    #   Defines the impact of the incident to customers and applications. If
+    #   you provide an impact for an incident, it overwrites the impact
+    #   provided by the response plan.
     #
     #   **Possible impacts:**
     #
-    #   * `1` - Critical impact, this typically relates to full application
-    #     failure that impacts many to all customers.
+    #   * `1` - Critical impact, full application failure that impacts many to
+    #     all customers.
     #
     #   * `2` - High impact, partial application failure with impact to many
     #     customers.
@@ -1433,28 +1588,27 @@ module Aws::SSMIncidents
     #   * `3` - Medium impact, the application is providing reduced service to
     #     customers.
     #
-    #   * `4` - Low impact, customer might aren't impacted by the problem
-    #     yet.
+    #   * `4` - Low impact, customer aren't impacted by the problem yet.
     #
     #   * `5` - No impact, customers aren't currently impacted but urgent
     #     action is needed to avoid impact.
     #
     # @option params [Array<Types::NotificationTargetItem>] :notification_targets
-    #   The SNS targets that AWS Chatbot uses to notify the chat channel of
-    #   updates to an incident. You can also make updates to the incident
-    #   through the chat channel using the SNS topics.
+    #   The Amazon SNS targets that Incident Manager notifies when a client
+    #   updates an incident.
     #
-    #   Using multiple SNS topics creates redundancy in the case that a Region
-    #   is down during the incident.
+    #   Using multiple SNS topics creates redundancy in the event that a
+    #   Region is down during the incident.
     #
     # @option params [String] :status
-    #   The status of the incident. An incident can be `Open` or `Resolved`.
+    #   The status of the incident. Possible statuses are `Open` or
+    #   `Resolved`.
     #
     # @option params [String] :summary
-    #   The summary describes what has happened during the incident.
+    #   A longer description of what occurred during the incident.
     #
     # @option params [String] :title
-    #   The title of the incident is a brief and easily recognizable.
+    #   A brief description of the incident.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1492,18 +1646,19 @@ module Aws::SSMIncidents
     # record.
     #
     # @option params [String] :client_token
-    #   A token ensuring that the action is called only once with the
-    #   specified details.
+    #   A token that ensures that a client calls the operation only once with
+    #   the specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
     #
     # @option params [required, String] :incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident record you are updating
-    #   related items in.
+    #   The Amazon Resource Name (ARN) of the incident record that contains
+    #   the related items that you update.
     #
     # @option params [required, Types::RelatedItemsUpdate] :related_items_update
-    #   Details about the item you are adding or deleting.
+    #   Details about the item that you are add to, or delete from, an
+    #   incident.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1514,21 +1669,32 @@ module Aws::SSMIncidents
     #     incident_record_arn: "Arn", # required
     #     related_items_update: { # required
     #       item_to_add: {
+    #         generated_id: "GeneratedId",
     #         identifier: { # required
-    #           type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
+    #           type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER, AUTOMATION, INVOLVED_RESOURCE, TASK
     #           value: { # required
     #             arn: "Arn",
     #             metric_definition: "MetricDefinition",
+    #             pager_duty_incident_detail: {
+    #               auto_resolve: false,
+    #               id: "PagerDutyIncidentDetailIdString", # required
+    #               secret_id: "PagerDutyIncidentDetailSecretIdString",
+    #             },
     #             url: "Url",
     #           },
     #         },
     #         title: "RelatedItemTitleString",
     #       },
     #       item_to_remove: {
-    #         type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
+    #         type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER, AUTOMATION, INVOLVED_RESOURCE, TASK
     #         value: { # required
     #           arn: "Arn",
     #           metric_definition: "MetricDefinition",
+    #           pager_duty_incident_detail: {
+    #             auto_resolve: false,
+    #             id: "PagerDutyIncidentDetailIdString", # required
+    #             secret_id: "PagerDutyIncidentDetailSecretIdString",
+    #           },
     #           url: "Url",
     #         },
     #       },
@@ -1554,7 +1720,7 @@ module Aws::SSMIncidents
     #   updating.
     #
     # @option params [String] :client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token that ensures that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -1599,25 +1765,29 @@ module Aws::SSMIncidents
     #   The Amazon Resource Name (ARN) of the response plan.
     #
     # @option params [Types::ChatChannel] :chat_channel
-    #   The AWS Chatbot chat channel used for collaboration during an
-    #   incident.
+    #   The Chatbot chat channel used for collaboration during an incident.
+    #
+    #   Use the empty structure to remove the chat channel from the response
+    #   plan.
     #
     # @option params [String] :client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
     #
     # @option params [String] :display_name
-    #   The long format name of the response plan. Can't contain spaces.
+    #   The long format name of the response plan. The display name can't
+    #   contain spaces.
     #
     # @option params [Array<String>] :engagements
-    #   The contacts and escalation plans that Incident Manager engages at the
-    #   start of the incident.
+    #   The Amazon Resource Name (ARN) for the contacts and escalation plans
+    #   that the response plan engages during an incident.
     #
     # @option params [String] :incident_template_dedupe_string
-    #   Used to create only one incident record for an incident.
+    #   The string Incident Manager uses to prevent duplicate incidents from
+    #   being created by the same incident in the same account.
     #
     # @option params [Integer] :incident_template_impact
     #   Defines the impact to the customers. Providing an impact overwrites
@@ -1636,15 +1806,26 @@ module Aws::SSMIncidents
     #   * `1` - No impact
     #
     # @option params [Array<Types::NotificationTargetItem>] :incident_template_notification_targets
-    #   The SNS targets that AWS Chatbot uses to notify the chat channels and
-    #   perform actions on the incident record.
+    #   The Amazon SNS targets that are notified when updates are made to an
+    #   incident.
     #
     # @option params [String] :incident_template_summary
     #   A brief summary of the incident. This typically contains what has
     #   happened, what's currently happening, and next steps.
     #
+    # @option params [Hash<String,String>] :incident_template_tags
+    #   Tags to assign to the template. When the `StartIncident` API action is
+    #   called, Incident Manager assigns the tags specified in the template to
+    #   the incident. To call this action, you must also have permission to
+    #   call the `TagResource` API action for the incident record resource.
+    #
     # @option params [String] :incident_template_title
-    #   The short format name of the incident. Can't contain spaces.
+    #   The short format name of the incident. The title can't contain
+    #   spaces.
+    #
+    # @option params [Array<Types::Integration>] :integrations
+    #   Information about third-party services integrated into the response
+    #   plan.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1656,6 +1837,11 @@ module Aws::SSMIncidents
     #         ssm_automation: {
     #           document_name: "SsmAutomationDocumentNameString", # required
     #           document_version: "SsmAutomationDocumentVersionString",
+    #           dynamic_parameters: {
+    #             "DynamicSsmParametersKeyString" => {
+    #               variable: "INCIDENT_RECORD_ARN", # accepts INCIDENT_RECORD_ARN, INVOLVED_RESOURCES
+    #             },
+    #           },
     #           parameters: {
     #             "SsmParametersKeyString" => ["SsmParameterValuesMemberString"],
     #           },
@@ -1681,7 +1867,21 @@ module Aws::SSMIncidents
     #       },
     #     ],
     #     incident_template_summary: "IncidentSummary",
+    #     incident_template_tags: {
+    #       "TagKey" => "TagValue",
+    #     },
     #     incident_template_title: "IncidentTitle",
+    #     integrations: [
+    #       {
+    #         pager_duty_configuration: {
+    #           name: "PagerDutyConfigurationNameString", # required
+    #           pager_duty_incident_configuration: { # required
+    #             service_id: "PagerDutyIncidentConfigurationServiceIdString", # required
+    #           },
+    #           secret_id: "PagerDutyConfigurationSecretIdString", # required
+    #         },
+    #       },
+    #     ],
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/UpdateResponsePlan AWS API Documentation
@@ -1696,9 +1896,9 @@ module Aws::SSMIncidents
     # Updates a timeline event. You can update events of type `Custom
     # Event`.
     #
-    # @option params [required, String] :client_token
-    #   A token ensuring that the action is called only once with the
-    #   specified details.
+    # @option params [String] :client_token
+    #   A token that ensures that a client calls the operation only once with
+    #   the specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
@@ -1707,27 +1907,47 @@ module Aws::SSMIncidents
     #   A short description of the event.
     #
     # @option params [required, String] :event_id
-    #   The ID of the event you are updating. You can find this by using
-    #   `ListTimelineEvents`.
+    #   The ID of the event to update. You can use `ListTimelineEvents` to
+    #   find an event's ID.
+    #
+    # @option params [Array<Types::EventReference>] :event_references
+    #   Updates all existing references in a `TimelineEvent`. A reference is
+    #   an Amazon Web Services resource involved or associated with the
+    #   incident. To specify a reference, enter its Amazon Resource Name
+    #   (ARN). You can also specify a related item associated with that
+    #   resource. For example, to specify an Amazon DynamoDB (DynamoDB) table
+    #   as a resource, use its ARN. You can also specify an Amazon CloudWatch
+    #   metric associated with the DynamoDB table as a related item.
+    #
+    #   This update action overrides all existing references. If you want to
+    #   keep existing references, you must specify them in the call. If you
+    #   don't, this action removes any existing references and enters only
+    #   new references.
     #
     # @option params [Time,DateTime,Date,Integer,String] :event_time
     #   The time that the event occurred.
     #
     # @option params [String] :event_type
-    #   The type of the event. You can update events of type `Custom Event`.
+    #   The type of event. You can update events of type `Custom Event`.
     #
     # @option params [required, String] :incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident that the timeline event
-    #   is part of.
+    #   The Amazon Resource Name (ARN) of the incident that includes the
+    #   timeline event.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
     # @example Request syntax with placeholder values
     #
     #   resp = client.update_timeline_event({
-    #     client_token: "ClientToken", # required
+    #     client_token: "ClientToken",
     #     event_data: "EventData",
     #     event_id: "UUID", # required
+    #     event_references: [
+    #       {
+    #         related_item_id: "GeneratedId",
+    #         resource: "Arn",
+    #       },
+    #     ],
     #     event_time: Time.now,
     #     event_type: "TimelineEventType",
     #     incident_record_arn: "Arn", # required
@@ -1755,7 +1975,7 @@ module Aws::SSMIncidents
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-ssmincidents'
-      context[:gem_version] = '1.0.0'
+      context[:gem_version] = '1.26.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

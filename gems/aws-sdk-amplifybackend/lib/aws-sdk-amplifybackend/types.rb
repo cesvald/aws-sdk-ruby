@@ -13,32 +13,18 @@ module Aws::AmplifyBackend
     # The authentication settings for accessing provisioned data models in
     # your Amplify project.
     #
-    # @note When making an API call, you may pass BackendAPIAppSyncAuthSettings
-    #   data as a hash:
-    #
-    #       {
-    #         cognito_user_pool_id: "__string",
-    #         description: "__string",
-    #         expiration_time: 1.0,
-    #         open_id_auth_ttl: "__string",
-    #         open_id_client_id: "__string",
-    #         open_id_iat_ttl: "__string",
-    #         open_id_issue_url: "__string",
-    #         open_id_provider_name: "__string",
-    #       }
-    #
     # @!attribute [rw] cognito_user_pool_id
-    #   The Amazon Cognito user pool ID, if Amazon Cognito is used as an
+    #   The Amazon Cognito user pool ID, if Amazon Cognito was used as an
     #   authentication setting to access your data models.
     #   @return [String]
     #
     # @!attribute [rw] description
-    #   The API key description for API\_KEY, if it is used as an
+    #   The API key description for API\_KEY, if it was used as an
     #   authentication mechanism to access your data models.
     #   @return [String]
     #
     # @!attribute [rw] expiration_time
-    #   The API key expiration time for API\_KEY, if it is used as an
+    #   The API key expiration time for API\_KEY, if it was used as an
     #   authentication mechanism to access your data models.
     #   @return [Float]
     #
@@ -47,7 +33,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] open_id_client_id
-    #   The clientID for openID, if openID is used as an authentication
+    #   The clientID for openID, if openID was used as an authentication
     #   setting to access your data models.
     #   @return [String]
     #
@@ -56,12 +42,12 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] open_id_issue_url
-    #   The openID issuer URL, if openID is used as an authentication
+    #   The openID issuer URL, if openID was used as an authentication
     #   setting to access your data models.
     #   @return [String]
     #
     # @!attribute [rw] open_id_provider_name
-    #   The openID provider name, if openID is used as an authentication
+    #   The OpenID provider name, if OpenID was used as an authentication
     #   mechanism to access your data models.
     #   @return [String]
     #
@@ -81,23 +67,6 @@ module Aws::AmplifyBackend
     end
 
     # Describes the auth types for your configured data models.
-    #
-    # @note When making an API call, you may pass BackendAPIAuthType
-    #   data as a hash:
-    #
-    #       {
-    #         mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #         settings: {
-    #           cognito_user_pool_id: "__string",
-    #           description: "__string",
-    #           expiration_time: 1.0,
-    #           open_id_auth_ttl: "__string",
-    #           open_id_client_id: "__string",
-    #           open_id_iat_ttl: "__string",
-    #           open_id_issue_url: "__string",
-    #           open_id_provider_name: "__string",
-    #         },
-    #       }
     #
     # @!attribute [rw] mode
     #   Describes the authentication mode.
@@ -141,7 +110,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] job_id
@@ -169,15 +138,8 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # Describes the conflict resolution configuration for the data model
+    # Describes the conflict resolution configuration for your data model
     # configured in your Amplify project.
-    #
-    # @note When making an API call, you may pass BackendAPIConflictResolution
-    #   data as a hash:
-    #
-    #       {
-    #         resolution_strategy: "OPTIMISTIC_CONCURRENCY", # accepts OPTIMISTIC_CONCURRENCY, LAMBDA, AUTOMERGE, NONE
-    #       }
     #
     # @!attribute [rw] resolution_strategy
     #   The strategy for conflict resolution.
@@ -211,48 +173,8 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # The resource configuration for the data model, configured as a part of
-    # the Amplify project.
-    #
-    # @note When making an API call, you may pass BackendAPIResourceConfig
-    #   data as a hash:
-    #
-    #       {
-    #         additional_auth_types: [
-    #           {
-    #             mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #             settings: {
-    #               cognito_user_pool_id: "__string",
-    #               description: "__string",
-    #               expiration_time: 1.0,
-    #               open_id_auth_ttl: "__string",
-    #               open_id_client_id: "__string",
-    #               open_id_iat_ttl: "__string",
-    #               open_id_issue_url: "__string",
-    #               open_id_provider_name: "__string",
-    #             },
-    #           },
-    #         ],
-    #         api_name: "__string",
-    #         conflict_resolution: {
-    #           resolution_strategy: "OPTIMISTIC_CONCURRENCY", # accepts OPTIMISTIC_CONCURRENCY, LAMBDA, AUTOMERGE, NONE
-    #         },
-    #         default_auth_type: {
-    #           mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #           settings: {
-    #             cognito_user_pool_id: "__string",
-    #             description: "__string",
-    #             expiration_time: 1.0,
-    #             open_id_auth_ttl: "__string",
-    #             open_id_client_id: "__string",
-    #             open_id_iat_ttl: "__string",
-    #             open_id_issue_url: "__string",
-    #             open_id_provider_name: "__string",
-    #           },
-    #         },
-    #         service: "__string",
-    #         transform_schema: "__string",
-    #       }
+    # The resource config for the data model, configured as a part of the
+    # Amplify project.
     #
     # @!attribute [rw] additional_auth_types
     #   Additional authentication methods used to interact with your data
@@ -261,7 +183,7 @@ module Aws::AmplifyBackend
     #
     # @!attribute [rw] api_name
     #   The API name used to interact with the data model, configured as a
-    #   part of the Amplify project.
+    #   part of your Amplify project.
     #   @return [String]
     #
     # @!attribute [rw] conflict_resolution
@@ -307,7 +229,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] job_id
@@ -335,6 +257,37 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
+    # Describes Apple social federation configurations for allowing your app
+    # users to sign in using OAuth.
+    #
+    # @!attribute [rw] client_id
+    #   Describes the client\_id (also called Services ID) that comes from
+    #   Apple.
+    #   @return [String]
+    #
+    # @!attribute [rw] key_id
+    #   Describes the key\_id that comes from Apple.
+    #   @return [String]
+    #
+    # @!attribute [rw] private_key
+    #   Describes the private\_key that comes from Apple.
+    #   @return [String]
+    #
+    # @!attribute [rw] team_id
+    #   Describes the team\_id that comes from Apple.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/BackendAuthAppleProviderConfig AWS API Documentation
+    #
+    class BackendAuthAppleProviderConfig < Struct.new(
+      :client_id,
+      :key_id,
+      :private_key,
+      :team_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The response object for this operation.
     #
     # @!attribute [rw] app_id
@@ -346,7 +299,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] job_id
@@ -377,21 +330,13 @@ module Aws::AmplifyBackend
     # Describes third-party social federation configurations for allowing
     # your app users to sign in using OAuth.
     #
-    # @note When making an API call, you may pass BackendAuthSocialProviderConfig
-    #   data as a hash:
-    #
-    #       {
-    #         client_id: "__string",
-    #         client_secret: "__string",
-    #       }
-    #
     # @!attribute [rw] client_id
-    #   Describes the client\_id that can be obtained from the third-party
+    #   Describes the client\_id, which can be obtained from the third-party
     #   social federation provider.
     #   @return [String]
     #
     # @!attribute [rw] client_secret
-    #   Describes the client\_secret that can be obtained from third-party
+    #   Describes the client\_secret, which can be obtained from third-party
     #   social federation providers.
     #   @return [String]
     #
@@ -415,7 +360,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] login_auth_config
@@ -470,7 +415,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] job_id
@@ -504,6 +449,57 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
+    # Describes the read, write, and delete permissions users have against
+    # your storage S3 bucket.
+    #
+    # @!attribute [rw] authenticated
+    #   Lists all authenticated user read, write, and delete permissions for
+    #   your S3 bucket.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] un_authenticated
+    #   Lists all unauthenticated user read, write, and delete permissions
+    #   for your S3 bucket.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/BackendStoragePermissions AWS API Documentation
+    #
+    class BackendStoragePermissions < Struct.new(
+      :authenticated,
+      :un_authenticated)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The response object for this operation.
+    #
+    # @!attribute [rw] app_id
+    #   The app ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   The name of the backend environment.
+    #   @return [String]
+    #
+    # @!attribute [rw] job_id
+    #   The ID for the job.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   The current status of the request.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/BackendStorageRespObj AWS API Documentation
+    #
+    class BackendStorageRespObj < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :job_id,
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # An error returned if a request is not formed properly.
     #
     # @!attribute [rw] message
@@ -532,15 +528,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CloneBackendRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         target_environment_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -571,7 +558,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] job_id
@@ -654,51 +641,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBackendAPIRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_config: { # required
-    #           additional_auth_types: [
-    #             {
-    #               mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #               settings: {
-    #                 cognito_user_pool_id: "__string",
-    #                 description: "__string",
-    #                 expiration_time: 1.0,
-    #                 open_id_auth_ttl: "__string",
-    #                 open_id_client_id: "__string",
-    #                 open_id_iat_ttl: "__string",
-    #                 open_id_issue_url: "__string",
-    #                 open_id_provider_name: "__string",
-    #               },
-    #             },
-    #           ],
-    #           api_name: "__string",
-    #           conflict_resolution: {
-    #             resolution_strategy: "OPTIMISTIC_CONCURRENCY", # accepts OPTIMISTIC_CONCURRENCY, LAMBDA, AUTOMERGE, NONE
-    #           },
-    #           default_auth_type: {
-    #             mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #             settings: {
-    #               cognito_user_pool_id: "__string",
-    #               description: "__string",
-    #               expiration_time: 1.0,
-    #               open_id_auth_ttl: "__string",
-    #               open_id_client_id: "__string",
-    #               open_id_iat_ttl: "__string",
-    #               open_id_issue_url: "__string",
-    #               open_id_provider_name: "__string",
-    #             },
-    #           },
-    #           service: "__string",
-    #           transform_schema: "__string",
-    #         },
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -706,8 +648,8 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] resource_config
-    #   The resource configuration for the data model, configured as a part
-    #   of the Amplify project.
+    #   The resource config for the data model, configured as a part of the
+    #   Amplify project.
     #   @return [Types::BackendAPIResourceConfig]
     #
     # @!attribute [rw] resource_name
@@ -755,36 +697,22 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # Describes the forgot password policy for authenticating into the
-    # Amplify app.
-    #
-    # @note When making an API call, you may pass CreateBackendAuthForgotPasswordConfig
-    #   data as a hash:
-    #
-    #       {
-    #         delivery_method: "EMAIL", # required, accepts EMAIL, SMS
-    #         email_settings: {
-    #           email_message: "__string",
-    #           email_subject: "__string",
-    #         },
-    #         sms_settings: {
-    #           sms_message: "__string",
-    #         },
-    #       }
+    # **(DEPRECATED)** Describes the forgot password policy for
+    # authenticating into the Amplify app.
     #
     # @!attribute [rw] delivery_method
-    #   Describes which method to use (either SMS or email) to deliver
-    #   messages to app users that want to recover their password.
+    #   **(DEPRECATED)** Describes which mode to use (either SMS or email)
+    #   to deliver messages to app users who want to recover their password.
     #   @return [String]
     #
     # @!attribute [rw] email_settings
-    #   The configuration for the email sent when an app user forgets their
-    #   password.
+    #   **(DEPRECATED)** The configuration for the email sent when an app
+    #   user forgets their password.
     #   @return [Types::EmailSettings]
     #
     # @!attribute [rw] sms_settings
-    #   The configuration for the SMS message sent when an app user forgets
-    #   their password.
+    #   **(DEPRECATED)** The configuration for the SMS message sent when an
+    #   app user forgets their password.
     #   @return [Types::SmsSettings]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendAuthForgotPasswordConfig AWS API Documentation
@@ -800,16 +728,8 @@ module Aws::AmplifyBackend
     # Describes authorization configurations for the auth resources,
     # configured as a part of your Amplify project.
     #
-    # @note When making an API call, you may pass CreateBackendAuthIdentityPoolConfig
-    #   data as a hash:
-    #
-    #       {
-    #         identity_pool_name: "__string", # required
-    #         unauthenticated_login: false, # required
-    #       }
-    #
     # @!attribute [rw] identity_pool_name
-    #   Name of the identity pool used for authorization.
+    #   Name of the Amazon Cognito identity pool used for authorization.
     #   @return [String]
     #
     # @!attribute [rw] unauthenticated_login
@@ -826,20 +746,9 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # Describes whether to apply multi-factor authentication (MFA) policies
-    # for your Amazon Cognito user pool that's configured as a part of your
-    # Amplify project.
-    #
-    # @note When making an API call, you may pass CreateBackendAuthMFAConfig
-    #   data as a hash:
-    #
-    #       {
-    #         mfa_mode: "ON", # required, accepts ON, OFF, OPTIONAL
-    #         settings: {
-    #           mfa_types: ["SMS"], # accepts SMS, TOTP
-    #           sms_message: "__string",
-    #         },
-    #       }
+    # Describes whether to apply multi-factor authentication policies for
+    # your Amazon Cognito user pool configured as a part of your Amplify
+    # project.
     #
     # @!attribute [rw] mfa_mode
     #   Describes whether MFA should be \[ON, OFF, or OPTIONAL\] for
@@ -862,31 +771,6 @@ module Aws::AmplifyBackend
 
     # Creates the OAuth configuration for your Amplify project.
     #
-    # @note When making an API call, you may pass CreateBackendAuthOAuthConfig
-    #   data as a hash:
-    #
-    #       {
-    #         domain_prefix: "__string",
-    #         o_auth_grant_type: "CODE", # required, accepts CODE, IMPLICIT
-    #         o_auth_scopes: ["PHONE"], # required, accepts PHONE, EMAIL, OPENID, PROFILE, AWS_COGNITO_SIGNIN_USER_ADMIN
-    #         redirect_sign_in_ur_is: ["__string"], # required
-    #         redirect_sign_out_ur_is: ["__string"], # required
-    #         social_provider_settings: {
-    #           facebook: {
-    #             client_id: "__string",
-    #             client_secret: "__string",
-    #           },
-    #           google: {
-    #             client_id: "__string",
-    #             client_secret: "__string",
-    #           },
-    #           login_with_amazon: {
-    #             client_id: "__string",
-    #             client_secret: "__string",
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain_prefix
     #   The domain prefix for your Amplify app.
     #   @return [String]
@@ -897,7 +781,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] o_auth_scopes
-    #   List of OAuth-related flows that allow your app users to
+    #   List of OAuth-related flows used to allow your app users to
     #   authenticate from your Amplify app.
     #   @return [Array<String>]
     #
@@ -911,8 +795,7 @@ module Aws::AmplifyBackend
     #   @return [Array<String>]
     #
     # @!attribute [rw] social_provider_settings
-    #   The settings for using social identity providers for access to your
-    #   Amplify app.
+    #   The settings for using social providers to access your Amplify app.
     #   @return [Types::SocialProviderSettings]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendAuthOAuthConfig AWS API Documentation
@@ -928,16 +811,8 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # The password policy configuration for the backend of your Amplify
+    # The password policy configuration for the backend to your Amplify
     # project.
-    #
-    # @note When making an API call, you may pass CreateBackendAuthPasswordPolicyConfig
-    #   data as a hash:
-    #
-    #       {
-    #         additional_constraints: ["REQUIRE_DIGIT"], # accepts REQUIRE_DIGIT, REQUIRE_LOWERCASE, REQUIRE_SYMBOL, REQUIRE_UPPERCASE
-    #         minimum_length: 1.0, # required
-    #       }
     #
     # @!attribute [rw] additional_constraints
     #   Additional constraints for the password used to access the backend
@@ -982,70 +857,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBackendAuthRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_config: { # required
-    #           auth_resources: "USER_POOL_ONLY", # required, accepts USER_POOL_ONLY, IDENTITY_POOL_AND_USER_POOL
-    #           identity_pool_configs: {
-    #             identity_pool_name: "__string", # required
-    #             unauthenticated_login: false, # required
-    #           },
-    #           service: "COGNITO", # required, accepts COGNITO
-    #           user_pool_configs: { # required
-    #             forgot_password: {
-    #               delivery_method: "EMAIL", # required, accepts EMAIL, SMS
-    #               email_settings: {
-    #                 email_message: "__string",
-    #                 email_subject: "__string",
-    #               },
-    #               sms_settings: {
-    #                 sms_message: "__string",
-    #               },
-    #             },
-    #             mfa: {
-    #               mfa_mode: "ON", # required, accepts ON, OFF, OPTIONAL
-    #               settings: {
-    #                 mfa_types: ["SMS"], # accepts SMS, TOTP
-    #                 sms_message: "__string",
-    #               },
-    #             },
-    #             o_auth: {
-    #               domain_prefix: "__string",
-    #               o_auth_grant_type: "CODE", # required, accepts CODE, IMPLICIT
-    #               o_auth_scopes: ["PHONE"], # required, accepts PHONE, EMAIL, OPENID, PROFILE, AWS_COGNITO_SIGNIN_USER_ADMIN
-    #               redirect_sign_in_ur_is: ["__string"], # required
-    #               redirect_sign_out_ur_is: ["__string"], # required
-    #               social_provider_settings: {
-    #                 facebook: {
-    #                   client_id: "__string",
-    #                   client_secret: "__string",
-    #                 },
-    #                 google: {
-    #                   client_id: "__string",
-    #                   client_secret: "__string",
-    #                 },
-    #                 login_with_amazon: {
-    #                   client_id: "__string",
-    #                   client_secret: "__string",
-    #                 },
-    #               },
-    #             },
-    #             password_policy: {
-    #               additional_constraints: ["REQUIRE_DIGIT"], # accepts REQUIRE_DIGIT, REQUIRE_LOWERCASE, REQUIRE_SYMBOL, REQUIRE_UPPERCASE
-    #               minimum_length: 1.0, # required
-    #             },
-    #             required_sign_up_attributes: ["ADDRESS"], # required, accepts ADDRESS, BIRTHDATE, EMAIL, FAMILY_NAME, GENDER, GIVEN_NAME, LOCALE, MIDDLE_NAME, NAME, NICKNAME, PHONE_NUMBER, PICTURE, PREFERRED_USERNAME, PROFILE, UPDATED_AT, WEBSITE, ZONE_INFO
-    #             sign_in_method: "EMAIL", # required, accepts EMAIL, EMAIL_AND_PHONE_NUMBER, PHONE_NUMBER, USERNAME
-    #             user_pool_name: "__string", # required
-    #           },
-    #         },
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -1074,65 +885,6 @@ module Aws::AmplifyBackend
     # Defines the resource configuration when creating an auth resource in
     # your Amplify project.
     #
-    # @note When making an API call, you may pass CreateBackendAuthResourceConfig
-    #   data as a hash:
-    #
-    #       {
-    #         auth_resources: "USER_POOL_ONLY", # required, accepts USER_POOL_ONLY, IDENTITY_POOL_AND_USER_POOL
-    #         identity_pool_configs: {
-    #           identity_pool_name: "__string", # required
-    #           unauthenticated_login: false, # required
-    #         },
-    #         service: "COGNITO", # required, accepts COGNITO
-    #         user_pool_configs: { # required
-    #           forgot_password: {
-    #             delivery_method: "EMAIL", # required, accepts EMAIL, SMS
-    #             email_settings: {
-    #               email_message: "__string",
-    #               email_subject: "__string",
-    #             },
-    #             sms_settings: {
-    #               sms_message: "__string",
-    #             },
-    #           },
-    #           mfa: {
-    #             mfa_mode: "ON", # required, accepts ON, OFF, OPTIONAL
-    #             settings: {
-    #               mfa_types: ["SMS"], # accepts SMS, TOTP
-    #               sms_message: "__string",
-    #             },
-    #           },
-    #           o_auth: {
-    #             domain_prefix: "__string",
-    #             o_auth_grant_type: "CODE", # required, accepts CODE, IMPLICIT
-    #             o_auth_scopes: ["PHONE"], # required, accepts PHONE, EMAIL, OPENID, PROFILE, AWS_COGNITO_SIGNIN_USER_ADMIN
-    #             redirect_sign_in_ur_is: ["__string"], # required
-    #             redirect_sign_out_ur_is: ["__string"], # required
-    #             social_provider_settings: {
-    #               facebook: {
-    #                 client_id: "__string",
-    #                 client_secret: "__string",
-    #               },
-    #               google: {
-    #                 client_id: "__string",
-    #                 client_secret: "__string",
-    #               },
-    #               login_with_amazon: {
-    #                 client_id: "__string",
-    #                 client_secret: "__string",
-    #               },
-    #             },
-    #           },
-    #           password_policy: {
-    #             additional_constraints: ["REQUIRE_DIGIT"], # accepts REQUIRE_DIGIT, REQUIRE_LOWERCASE, REQUIRE_SYMBOL, REQUIRE_UPPERCASE
-    #             minimum_length: 1.0, # required
-    #           },
-    #           required_sign_up_attributes: ["ADDRESS"], # required, accepts ADDRESS, BIRTHDATE, EMAIL, FAMILY_NAME, GENDER, GIVEN_NAME, LOCALE, MIDDLE_NAME, NAME, NICKNAME, PHONE_NUMBER, PICTURE, PREFERRED_USERNAME, PROFILE, UPDATED_AT, WEBSITE, ZONE_INFO
-    #           sign_in_method: "EMAIL", # required, accepts EMAIL, EMAIL_AND_PHONE_NUMBER, PHONE_NUMBER, USERNAME
-    #           user_pool_name: "__string", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] auth_resources
     #   Defines whether you want to configure only authentication or both
     #   authentication and authorization settings.
@@ -1140,7 +892,7 @@ module Aws::AmplifyBackend
     #
     # @!attribute [rw] identity_pool_configs
     #   Describes the authorization configuration for the Amazon Cognito
-    #   identity pool, provisioned as a part of the auth resource in your
+    #   identity pool, provisioned as a part of your auth resource in the
     #   Amplify project.
     #   @return [Types::CreateBackendAuthIdentityPoolConfig]
     #
@@ -1150,9 +902,9 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] user_pool_configs
-    #   Describes the authentication configuration for the Amazon Cognito
-    #   user pool, provisioned as a part of the auth resource in your
-    #   Amplify project.
+    #   Describes authentication configuration for the Amazon Cognito user
+    #   pool, provisioned as a part of your auth resource in the Amplify
+    #   project.
     #   @return [Types::CreateBackendAuthUserPoolConfig]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendAuthResourceConfig AWS API Documentation
@@ -1200,66 +952,16 @@ module Aws::AmplifyBackend
     # Describes the Amazon Cognito user pool configuration for the auth
     # resource to be configured for your Amplify project.
     #
-    # @note When making an API call, you may pass CreateBackendAuthUserPoolConfig
-    #   data as a hash:
-    #
-    #       {
-    #         forgot_password: {
-    #           delivery_method: "EMAIL", # required, accepts EMAIL, SMS
-    #           email_settings: {
-    #             email_message: "__string",
-    #             email_subject: "__string",
-    #           },
-    #           sms_settings: {
-    #             sms_message: "__string",
-    #           },
-    #         },
-    #         mfa: {
-    #           mfa_mode: "ON", # required, accepts ON, OFF, OPTIONAL
-    #           settings: {
-    #             mfa_types: ["SMS"], # accepts SMS, TOTP
-    #             sms_message: "__string",
-    #           },
-    #         },
-    #         o_auth: {
-    #           domain_prefix: "__string",
-    #           o_auth_grant_type: "CODE", # required, accepts CODE, IMPLICIT
-    #           o_auth_scopes: ["PHONE"], # required, accepts PHONE, EMAIL, OPENID, PROFILE, AWS_COGNITO_SIGNIN_USER_ADMIN
-    #           redirect_sign_in_ur_is: ["__string"], # required
-    #           redirect_sign_out_ur_is: ["__string"], # required
-    #           social_provider_settings: {
-    #             facebook: {
-    #               client_id: "__string",
-    #               client_secret: "__string",
-    #             },
-    #             google: {
-    #               client_id: "__string",
-    #               client_secret: "__string",
-    #             },
-    #             login_with_amazon: {
-    #               client_id: "__string",
-    #               client_secret: "__string",
-    #             },
-    #           },
-    #         },
-    #         password_policy: {
-    #           additional_constraints: ["REQUIRE_DIGIT"], # accepts REQUIRE_DIGIT, REQUIRE_LOWERCASE, REQUIRE_SYMBOL, REQUIRE_UPPERCASE
-    #           minimum_length: 1.0, # required
-    #         },
-    #         required_sign_up_attributes: ["ADDRESS"], # required, accepts ADDRESS, BIRTHDATE, EMAIL, FAMILY_NAME, GENDER, GIVEN_NAME, LOCALE, MIDDLE_NAME, NAME, NICKNAME, PHONE_NUMBER, PICTURE, PREFERRED_USERNAME, PROFILE, UPDATED_AT, WEBSITE, ZONE_INFO
-    #         sign_in_method: "EMAIL", # required, accepts EMAIL, EMAIL_AND_PHONE_NUMBER, PHONE_NUMBER, USERNAME
-    #         user_pool_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] forgot_password
-    #   Describes the forgotten password policy for your Amazon Cognito user
-    #   pool, configured as a part of your Amplify project.
+    #   **(DEPRECATED)** Describes the forgotten password policy for your
+    #   Amazon Cognito user pool, configured as a part of your Amplify
+    #   project.
     #   @return [Types::CreateBackendAuthForgotPasswordConfig]
     #
     # @!attribute [rw] mfa
-    #   Describes whether to apply multi-factor authentication (MFA)
-    #   policies for your Amazon Cognito user pool that's configured as a
-    #   part of your Amplify project.
+    #   Describes whether to apply multi-factor authentication policies for
+    #   your Amazon Cognito user pool configured as a part of your Amplify
+    #   project.
     #   @return [Types::CreateBackendAuthMFAConfig]
     #
     # @!attribute [rw] o_auth
@@ -1273,19 +975,23 @@ module Aws::AmplifyBackend
     #   @return [Types::CreateBackendAuthPasswordPolicyConfig]
     #
     # @!attribute [rw] required_sign_up_attributes
-    #   The required attributes to sign up new users in the Amazon Cognito
-    #   user pool.
+    #   The required attributes to sign up new users in the user pool.
     #   @return [Array<String>]
     #
     # @!attribute [rw] sign_in_method
-    #   Describes the sign-in methods that your Amplify app users to log in
-    #   using the Amazon Cognito user pool that's configured as a part of
-    #   your Amplify project.
+    #   Describes the sign-in methods that your Amplify app users use to log
+    #   in using the Amazon Cognito user pool, configured as a part of your
+    #   Amplify project.
     #   @return [String]
     #
     # @!attribute [rw] user_pool_name
     #   The Amazon Cognito user pool name.
     #   @return [String]
+    #
+    # @!attribute [rw] verification_message
+    #   Describes the email or SMS verification message for your Amazon
+    #   Cognito user pool, configured as a part of your Amplify project.
+    #   @return [Types::CreateBackendAuthVerificationMessageConfig]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendAuthUserPoolConfig AWS API Documentation
     #
@@ -1296,7 +1002,33 @@ module Aws::AmplifyBackend
       :password_policy,
       :required_sign_up_attributes,
       :sign_in_method,
-      :user_pool_name)
+      :user_pool_name,
+      :verification_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Creates an email or SMS verification message for the auth resource
+    # configured for your Amplify project.
+    #
+    # @!attribute [rw] delivery_method
+    #   The type of verification message to send.
+    #   @return [String]
+    #
+    # @!attribute [rw] email_settings
+    #   The settings for the email message.
+    #   @return [Types::EmailSettings]
+    #
+    # @!attribute [rw] sms_settings
+    #   The settings for the SMS message.
+    #   @return [Types::SmsSettings]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendAuthVerificationMessageConfig AWS API Documentation
+    #
+    class CreateBackendAuthVerificationMessageConfig < Struct.new(
+      :delivery_method,
+      :email_settings,
+      :sms_settings)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1315,14 +1047,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBackendConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_manager_app_id: "__string",
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -1405,7 +1129,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] resource_config
-    #   The resource configuration for the backend creation request.
+    #   The resource configuration for creating a backend.
     #   @return [Types::ResourceConfig]
     #
     # @!attribute [rw] resource_name
@@ -1424,18 +1148,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBackendRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         app_name: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_config: {
-    #         },
-    #         resource_name: "__string",
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -1474,7 +1186,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] job_id
@@ -1533,13 +1245,101 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateTokenRequest
-    #   data as a hash:
+    # The request object for this operation.
     #
-    #       {
-    #         app_id: "__string", # required
-    #       }
+    # @!attribute [rw] backend_environment_name
+    #   The name of the backend environment.
+    #   @return [String]
     #
+    # @!attribute [rw] resource_config
+    #   The resource configuration for creating backend storage.
+    #   @return [Types::CreateBackendStorageResourceConfig]
+    #
+    # @!attribute [rw] resource_name
+    #   The name of the storage resource.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendStorageReqObj AWS API Documentation
+    #
+    class CreateBackendStorageReqObj < Struct.new(
+      :backend_environment_name,
+      :resource_config,
+      :resource_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_config
+    #   The resource configuration for creating backend storage.
+    #   @return [Types::CreateBackendStorageResourceConfig]
+    #
+    # @!attribute [rw] resource_name
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendStorageRequest AWS API Documentation
+    #
+    class CreateBackendStorageRequest < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :resource_config,
+      :resource_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The resource configuration for creating backend storage.
+    #
+    # @!attribute [rw] bucket_name
+    #   The name of the S3 bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] permissions
+    #   The authorization configuration for the storage S3 bucket.
+    #   @return [Types::BackendStoragePermissions]
+    #
+    # @!attribute [rw] service_name
+    #   The name of the storage service.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendStorageResourceConfig AWS API Documentation
+    #
+    class CreateBackendStorageResourceConfig < Struct.new(
+      :bucket_name,
+      :permissions,
+      :service_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] job_id
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendStorageResponse AWS API Documentation
+    #
+    class CreateBackendStorageResponse < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :job_id,
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -1604,51 +1404,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBackendAPIRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_config: {
-    #           additional_auth_types: [
-    #             {
-    #               mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #               settings: {
-    #                 cognito_user_pool_id: "__string",
-    #                 description: "__string",
-    #                 expiration_time: 1.0,
-    #                 open_id_auth_ttl: "__string",
-    #                 open_id_client_id: "__string",
-    #                 open_id_iat_ttl: "__string",
-    #                 open_id_issue_url: "__string",
-    #                 open_id_provider_name: "__string",
-    #               },
-    #             },
-    #           ],
-    #           api_name: "__string",
-    #           conflict_resolution: {
-    #             resolution_strategy: "OPTIMISTIC_CONCURRENCY", # accepts OPTIMISTIC_CONCURRENCY, LAMBDA, AUTOMERGE, NONE
-    #           },
-    #           default_auth_type: {
-    #             mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #             settings: {
-    #               cognito_user_pool_id: "__string",
-    #               description: "__string",
-    #               expiration_time: 1.0,
-    #               open_id_auth_ttl: "__string",
-    #               open_id_client_id: "__string",
-    #               open_id_iat_ttl: "__string",
-    #               open_id_issue_url: "__string",
-    #               open_id_provider_name: "__string",
-    #             },
-    #           },
-    #           service: "__string",
-    #           transform_schema: "__string",
-    #         },
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -1656,8 +1411,8 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] resource_config
-    #   The resource configuration for the data model, configured as a part
-    #   of the Amplify project.
+    #   The resource config for the data model, configured as a part of the
+    #   Amplify project.
     #   @return [Types::BackendAPIResourceConfig]
     #
     # @!attribute [rw] resource_name
@@ -1705,15 +1460,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBackendAuthRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -1764,14 +1510,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBackendRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -1798,7 +1536,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] job_id
@@ -1857,14 +1595,52 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteTokenRequest
-    #   data as a hash:
+    # @!attribute [rw] app_id
+    #   @return [String]
     #
-    #       {
-    #         app_id: "__string", # required
-    #         session_id: "__string", # required
-    #       }
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
     #
+    # @!attribute [rw] resource_name
+    #   @return [String]
+    #
+    # @!attribute [rw] service_name
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/DeleteBackendStorageRequest AWS API Documentation
+    #
+    class DeleteBackendStorageRequest < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :resource_name,
+      :service_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] job_id
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/DeleteBackendStorageResponse AWS API Documentation
+    #
+    class DeleteBackendStorageResponse < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :job_id,
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -1905,20 +1681,14 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass EmailSettings
-    #   data as a hash:
-    #
-    #       {
-    #         email_message: "__string",
-    #         email_subject: "__string",
-    #       }
+    # The settings for the email message.
     #
     # @!attribute [rw] email_message
-    #   The body of the email.
+    #   The contents of the email message.
     #   @return [String]
     #
     # @!attribute [rw] email_subject
-    #   The subject of the email.
+    #   The contents of the subject line of the email message.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/EmailSettings AWS API Documentation
@@ -1943,15 +1713,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GenerateBackendAPIModelsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2002,34 +1763,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # The response object for this operation.
-    #
-    # @!attribute [rw] models
-    #   Stringified JSON of the DataStore model.
-    #   @return [String]
-    #
-    # @!attribute [rw] status
-    #   The current status of the request.
-    #   @return [String]
-    #
-    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendAPICodegenRespObj AWS API Documentation
-    #
-    class GetBackendAPICodegenRespObj < Struct.new(
-      :models,
-      :status)
-      SENSITIVE = []
-      include Aws::Structure
-    end
-
-    # @note When making an API call, you may pass GetBackendAPIModelsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2049,66 +1782,31 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
+    # The response object for this operation.
+    #
     # @!attribute [rw] models
+    #   Stringified JSON of the datastore model.
     #   @return [String]
     #
     # @!attribute [rw] status
+    #   The current status of the request.
+    #   @return [String]
+    #
+    # @!attribute [rw] model_introspection_schema
+    #   Stringified JSON of the model introspection schema for an existing
+    #   backend API resource.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendAPIModelsResponse AWS API Documentation
     #
     class GetBackendAPIModelsResponse < Struct.new(
       :models,
-      :status)
+      :status,
+      :model_introspection_schema)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackendAPIRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_config: {
-    #           additional_auth_types: [
-    #             {
-    #               mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #               settings: {
-    #                 cognito_user_pool_id: "__string",
-    #                 description: "__string",
-    #                 expiration_time: 1.0,
-    #                 open_id_auth_ttl: "__string",
-    #                 open_id_client_id: "__string",
-    #                 open_id_iat_ttl: "__string",
-    #                 open_id_issue_url: "__string",
-    #                 open_id_provider_name: "__string",
-    #               },
-    #             },
-    #           ],
-    #           api_name: "__string",
-    #           conflict_resolution: {
-    #             resolution_strategy: "OPTIMISTIC_CONCURRENCY", # accepts OPTIMISTIC_CONCURRENCY, LAMBDA, AUTOMERGE, NONE
-    #           },
-    #           default_auth_type: {
-    #             mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #             settings: {
-    #               cognito_user_pool_id: "__string",
-    #               description: "__string",
-    #               expiration_time: 1.0,
-    #               open_id_auth_ttl: "__string",
-    #               open_id_client_id: "__string",
-    #               open_id_iat_ttl: "__string",
-    #               open_id_issue_url: "__string",
-    #               open_id_provider_name: "__string",
-    #             },
-    #           },
-    #           service: "__string",
-    #           transform_schema: "__string",
-    #         },
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2116,8 +1814,8 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] resource_config
-    #   The resource configuration for the data model, configured as a part
-    #   of the Amplify project.
+    #   The resource config for the data model, configured as a part of the
+    #   Amplify project.
     #   @return [Types::BackendAPIResourceConfig]
     #
     # @!attribute [rw] resource_name
@@ -2145,7 +1843,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] resource_config
@@ -2178,8 +1876,8 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] resource_config
-    #   The resource configuration for the data model, configured as a part
-    #   of the Amplify project.
+    #   The resource config for the data model, configured as a part of the
+    #   Amplify project.
     #   @return [Types::BackendAPIResourceConfig]
     #
     # @!attribute [rw] resource_name
@@ -2211,15 +1909,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackendAuthRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2250,7 +1939,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] resource_config
@@ -2303,15 +1992,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackendJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         job_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2384,14 +2064,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackendRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string",
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2409,8 +2081,12 @@ module Aws::AmplifyBackend
 
     # The response object for this operation.
     #
+    # @!attribute [rw] amplify_feature_flags
+    #   A stringified version of the cli.json file for your Amplify project.
+    #   @return [String]
+    #
     # @!attribute [rw] amplify_meta_config
-    #   A stringified version of the current configurations for your Amplify
+    #   A stringified version of the current configs for your Amplify
     #   project.
     #   @return [String]
     #
@@ -2437,6 +2113,7 @@ module Aws::AmplifyBackend
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendRespObj AWS API Documentation
     #
     class GetBackendRespObj < Struct.new(
+      :amplify_feature_flags,
       :amplify_meta_config,
       :app_id,
       :app_name,
@@ -2447,6 +2124,9 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
+    # @!attribute [rw] amplify_feature_flags
+    #   @return [String]
+    #
     # @!attribute [rw] amplify_meta_config
     #   @return [String]
     #
@@ -2468,6 +2148,7 @@ module Aws::AmplifyBackend
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendResponse AWS API Documentation
     #
     class GetBackendResponse < Struct.new(
+      :amplify_feature_flags,
       :amplify_meta_config,
       :app_id,
       :app_name,
@@ -2478,14 +2159,121 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTokenRequest
-    #   data as a hash:
+    # The request object for this operation.
     #
-    #       {
-    #         app_id: "__string", # required
-    #         session_id: "__string", # required
-    #       }
+    # @!attribute [rw] resource_name
+    #   The name of the storage resource.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendStorageReqObj AWS API Documentation
+    #
+    class GetBackendStorageReqObj < Struct.new(
+      :resource_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_name
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendStorageRequest AWS API Documentation
+    #
+    class GetBackendStorageRequest < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :resource_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The details for a backend storage resource.
+    #
+    # @!attribute [rw] bucket_name
+    #   The name of the S3 bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] imported
+    #   Returns True if the storage resource has been imported.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] permissions
+    #   The authorization configuration for the storage S3 bucket.
+    #   @return [Types::BackendStoragePermissions]
+    #
+    # @!attribute [rw] service_name
+    #   The name of the storage service.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendStorageResourceConfig AWS API Documentation
+    #
+    class GetBackendStorageResourceConfig < Struct.new(
+      :bucket_name,
+      :imported,
+      :permissions,
+      :service_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The response object for this operation.
+    #
+    # @!attribute [rw] app_id
+    #   The app ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   The name of the backend environment.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_config
+    #   The resource configuration for the backend storage resource.
+    #   @return [Types::GetBackendStorageResourceConfig]
+    #
+    # @!attribute [rw] resource_name
+    #   The name of the storage resource.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendStorageRespObj AWS API Documentation
+    #
+    class GetBackendStorageRespObj < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :resource_config,
+      :resource_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_config
+    #   The details for a backend storage resource.
+    #   @return [Types::GetBackendStorageResourceConfig]
+    #
+    # @!attribute [rw] resource_name
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendStorageResponse AWS API Documentation
+    #
+    class GetBackendStorageResponse < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :resource_config,
+      :resource_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2554,6 +2342,162 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
+    # The request object for this operation.
+    #
+    # @!attribute [rw] identity_pool_id
+    #   The ID of the Amazon Cognito identity pool.
+    #   @return [String]
+    #
+    # @!attribute [rw] native_client_id
+    #   The ID of the Amazon Cognito native client.
+    #   @return [String]
+    #
+    # @!attribute [rw] user_pool_id
+    #   The ID of the Amazon Cognito user pool.
+    #   @return [String]
+    #
+    # @!attribute [rw] web_client_id
+    #   The ID of the Amazon Cognito web client.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ImportBackendAuthReqObj AWS API Documentation
+    #
+    class ImportBackendAuthReqObj < Struct.new(
+      :identity_pool_id,
+      :native_client_id,
+      :user_pool_id,
+      :web_client_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] identity_pool_id
+    #   @return [String]
+    #
+    # @!attribute [rw] native_client_id
+    #   @return [String]
+    #
+    # @!attribute [rw] user_pool_id
+    #   @return [String]
+    #
+    # @!attribute [rw] web_client_id
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ImportBackendAuthRequest AWS API Documentation
+    #
+    class ImportBackendAuthRequest < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :identity_pool_id,
+      :native_client_id,
+      :user_pool_id,
+      :web_client_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] error
+    #   @return [String]
+    #
+    # @!attribute [rw] job_id
+    #   @return [String]
+    #
+    # @!attribute [rw] operation
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ImportBackendAuthResponse AWS API Documentation
+    #
+    class ImportBackendAuthResponse < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :error,
+      :job_id,
+      :operation,
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The request object for this operation.
+    #
+    # @!attribute [rw] bucket_name
+    #   The name of the S3 bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] service_name
+    #   The name of the storage service.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ImportBackendStorageReqObj AWS API Documentation
+    #
+    class ImportBackendStorageReqObj < Struct.new(
+      :bucket_name,
+      :service_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] bucket_name
+    #   @return [String]
+    #
+    # @!attribute [rw] service_name
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ImportBackendStorageRequest AWS API Documentation
+    #
+    class ImportBackendStorageRequest < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :bucket_name,
+      :service_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] job_id
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ImportBackendStorageResponse AWS API Documentation
+    #
+    class ImportBackendStorageResponse < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :job_id,
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # An error returned if there's a temporary issue with the service.
     #
     # @!attribute [rw] message
@@ -2568,14 +2512,15 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # An error that is returned when a limit of a specific type is exceeded.
+    # An error that is returned when a limit of a specific type has been
+    # exceeded.
     #
     # @!attribute [rw] limit_type
     #   The type of limit that was exceeded.
     #   @return [String]
     #
     # @!attribute [rw] message
-    #   An error message to inform that the request failed.
+    #   An error message to inform that the request has failed.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/LimitExceededException AWS API Documentation
@@ -2642,19 +2587,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBackendJobsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         job_id: "__string",
-    #         max_results: 1,
-    #         next_token: "__string",
-    #         operation: "__string",
-    #         status: "__string",
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2707,19 +2639,68 @@ module Aws::AmplifyBackend
 
     # The request object for this operation.
     #
-    # @note When making an API call, you may pass LoginAuthConfigReqObj
-    #   data as a hash:
+    # @!attribute [rw] next_token
+    #   Reserved for future use.
+    #   @return [String]
     #
-    #       {
-    #         aws_cognito_identity_pool_id: "__string",
-    #         aws_cognito_region: "__string",
-    #         aws_user_pools_id: "__string",
-    #         aws_user_pools_web_client_id: "__string",
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ListS3BucketsReqObj AWS API Documentation
+    #
+    class ListS3BucketsReqObj < Struct.new(
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ListS3BucketsRequest AWS API Documentation
+    #
+    class ListS3BucketsRequest < Struct.new(
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The response object for this operation.
+    #
+    # @!attribute [rw] buckets
+    #   The list of S3 buckets.
+    #   @return [Array<Types::S3BucketInfo>]
+    #
+    # @!attribute [rw] next_token
+    #   Reserved for future use.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ListS3BucketsRespObj AWS API Documentation
+    #
+    class ListS3BucketsRespObj < Struct.new(
+      :buckets,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] buckets
+    #   @return [Array<Types::S3BucketInfo>]
+    #
+    # @!attribute [rw] next_token
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ListS3BucketsResponse AWS API Documentation
+    #
+    class ListS3BucketsResponse < Struct.new(
+      :buckets,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The request object for this operation.
     #
     # @!attribute [rw] aws_cognito_identity_pool_id
-    #   The Amazon Cognito identity pool ID used for Amplify Admin UI login
-    #   authorization.
+    #   The Amazon Cognito identity pool ID used for the Amplify Admin UI
+    #   login authorization.
     #   @return [String]
     #
     # @!attribute [rw] aws_cognito_region
@@ -2749,11 +2730,11 @@ module Aws::AmplifyBackend
     # An error returned when a specific resource type is not found.
     #
     # @!attribute [rw] message
-    #   An error message to inform that the request failed.
+    #   An error message to inform that the request has failed.
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of resource that wasn't found.
+    #   The type of resource that is not found.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/NotFoundException AWS API Documentation
@@ -2779,14 +2760,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RemoveAllBackendsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         clean_amplify_app: false,
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2809,7 +2782,7 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @!attribute [rw] job_id
@@ -2877,13 +2850,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RemoveBackendConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -2898,7 +2864,7 @@ module Aws::AmplifyBackend
     # The response object for this operation.
     #
     # @!attribute [rw] error
-    #   If the request failed, this is the returned error.
+    #   If the request fails, this error is returned.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/RemoveBackendConfigRespObj AWS API Documentation
@@ -2920,20 +2886,50 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
+    # The request object for this operation.
+    #
+    # @!attribute [rw] resource_name
+    #   The name of the storage resource.
+    #   @return [String]
+    #
+    # @!attribute [rw] service_name
+    #   The name of the storage service.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/RemoveBackendStorageReqObj AWS API Documentation
+    #
+    class RemoveBackendStorageReqObj < Struct.new(
+      :resource_name,
+      :service_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @api private
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ResourceConfig AWS API Documentation
     #
     class ResourceConfig < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass Settings
-    #   data as a hash:
+    # Describes the metadata of the S3 bucket.
     #
-    #       {
-    #         mfa_types: ["SMS"], # accepts SMS, TOTP
-    #         sms_message: "__string",
-    #       }
+    # @!attribute [rw] creation_date
+    #   The creation date of the S3 bucket.
+    #   @return [String]
     #
+    # @!attribute [rw] name
+    #   The name of the S3 bucket.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/S3BucketInfo AWS API Documentation
+    #
+    class S3BucketInfo < Struct.new(
+      :creation_date,
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] mfa_types
     #   @return [Array<String>]
     #
@@ -2950,15 +2946,10 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SmsSettings
-    #   data as a hash:
-    #
-    #       {
-    #         sms_message: "__string",
-    #       }
+    # The settings for the SMS message.
     #
     # @!attribute [rw] sms_message
-    #   The body of the SMS message.
+    #   The contents of the SMS message.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/SmsSettings AWS API Documentation
@@ -2969,24 +2960,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SocialProviderSettings
-    #   data as a hash:
-    #
-    #       {
-    #         facebook: {
-    #           client_id: "__string",
-    #           client_secret: "__string",
-    #         },
-    #         google: {
-    #           client_id: "__string",
-    #           client_secret: "__string",
-    #         },
-    #         login_with_amazon: {
-    #           client_id: "__string",
-    #           client_secret: "__string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] facebook
     #   Describes third-party social federation configurations for allowing
     #   your app users to sign in using OAuth.
@@ -3002,17 +2975,24 @@ module Aws::AmplifyBackend
     #   your app users to sign in using OAuth.
     #   @return [Types::BackendAuthSocialProviderConfig]
     #
+    # @!attribute [rw] sign_in_with_apple
+    #   Describes Apple social federation configurations for allowing your
+    #   app users to sign in using OAuth.
+    #   @return [Types::BackendAuthAppleProviderConfig]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/SocialProviderSettings AWS API Documentation
     #
     class SocialProviderSettings < Struct.new(
       :facebook,
       :google,
-      :login_with_amazon)
+      :login_with_amazon,
+      :sign_in_with_apple)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # An error that is returned when a limit of a specific type is exceeded.
+    # An error that is returned when a limit of a specific type has been
+    # exceeded.
     #
     # @!attribute [rw] limit_type
     #   @return [String]
@@ -3029,51 +3009,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateBackendAPIRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_config: {
-    #           additional_auth_types: [
-    #             {
-    #               mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #               settings: {
-    #                 cognito_user_pool_id: "__string",
-    #                 description: "__string",
-    #                 expiration_time: 1.0,
-    #                 open_id_auth_ttl: "__string",
-    #                 open_id_client_id: "__string",
-    #                 open_id_iat_ttl: "__string",
-    #                 open_id_issue_url: "__string",
-    #                 open_id_provider_name: "__string",
-    #               },
-    #             },
-    #           ],
-    #           api_name: "__string",
-    #           conflict_resolution: {
-    #             resolution_strategy: "OPTIMISTIC_CONCURRENCY", # accepts OPTIMISTIC_CONCURRENCY, LAMBDA, AUTOMERGE, NONE
-    #           },
-    #           default_auth_type: {
-    #             mode: "API_KEY", # accepts API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT
-    #             settings: {
-    #               cognito_user_pool_id: "__string",
-    #               description: "__string",
-    #               expiration_time: 1.0,
-    #               open_id_auth_ttl: "__string",
-    #               open_id_client_id: "__string",
-    #               open_id_iat_ttl: "__string",
-    #               open_id_issue_url: "__string",
-    #               open_id_provider_name: "__string",
-    #             },
-    #           },
-    #           service: "__string",
-    #           transform_schema: "__string",
-    #         },
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -3081,8 +3016,8 @@ module Aws::AmplifyBackend
     #   @return [String]
     #
     # @!attribute [rw] resource_config
-    #   The resource configuration for the data model, configured as a part
-    #   of the Amplify project.
+    #   The resource config for the data model, configured as a part of the
+    #   Amplify project.
     #   @return [Types::BackendAPIResourceConfig]
     #
     # @!attribute [rw] resource_name
@@ -3130,36 +3065,23 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # Describes the forgot password policy for authenticating into the
-    # Amplify app.
-    #
-    # @note When making an API call, you may pass UpdateBackendAuthForgotPasswordConfig
-    #   data as a hash:
-    #
-    #       {
-    #         delivery_method: "EMAIL", # accepts EMAIL, SMS
-    #         email_settings: {
-    #           email_message: "__string",
-    #           email_subject: "__string",
-    #         },
-    #         sms_settings: {
-    #           sms_message: "__string",
-    #         },
-    #       }
+    # **(DEPRECATED)** Describes the forgot password policy for
+    # authenticating into the Amplify app.
     #
     # @!attribute [rw] delivery_method
-    #   Describes which method to use (either SMS or email) to deliver
-    #   messages to app users that want to recover their password.
+    #   **(DEPRECATED)** Describes which mode to use (either SMS or email)
+    #   to deliver messages to app users that want to recover their
+    #   password.
     #   @return [String]
     #
     # @!attribute [rw] email_settings
-    #   The configuration for the email sent when an app user forgets their
-    #   password.
+    #   **(DEPRECATED)** The configuration for the email sent when an app
+    #   user forgets their password.
     #   @return [Types::EmailSettings]
     #
     # @!attribute [rw] sms_settings
-    #   The configuration for the SMS message sent when an Amplify app user
-    #   forgets their password.
+    #   **(DEPRECATED)** The configuration for the SMS message sent when an
+    #   Amplify app user forgets their password.
     #   @return [Types::SmsSettings]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/UpdateBackendAuthForgotPasswordConfig AWS API Documentation
@@ -3176,15 +3098,8 @@ module Aws::AmplifyBackend
     # identity pool, provisioned as a part of your auth resource in the
     # Amplify project.
     #
-    # @note When making an API call, you may pass UpdateBackendAuthIdentityPoolConfig
-    #   data as a hash:
-    #
-    #       {
-    #         unauthenticated_login: false,
-    #       }
-    #
     # @!attribute [rw] unauthenticated_login
-    #   A Boolean value that you can set to allow or disallow guest-level
+    #   A boolean value that can be set to allow or disallow guest-level
     #   authorization into your Amplify app.
     #   @return [Boolean]
     #
@@ -3198,17 +3113,6 @@ module Aws::AmplifyBackend
 
     # Updates the multi-factor authentication (MFA) configuration for the
     # backend of your Amplify project.
-    #
-    # @note When making an API call, you may pass UpdateBackendAuthMFAConfig
-    #   data as a hash:
-    #
-    #       {
-    #         mfa_mode: "ON", # accepts ON, OFF, OPTIONAL
-    #         settings: {
-    #           mfa_types: ["SMS"], # accepts SMS, TOTP
-    #           sms_message: "__string",
-    #         },
-    #       }
     #
     # @!attribute [rw] mfa_mode
     #   The MFA mode for the backend of your Amplify project.
@@ -3230,31 +3134,6 @@ module Aws::AmplifyBackend
 
     # The OAuth configurations for authenticating users into your Amplify
     # app.
-    #
-    # @note When making an API call, you may pass UpdateBackendAuthOAuthConfig
-    #   data as a hash:
-    #
-    #       {
-    #         domain_prefix: "__string",
-    #         o_auth_grant_type: "CODE", # accepts CODE, IMPLICIT
-    #         o_auth_scopes: ["PHONE"], # accepts PHONE, EMAIL, OPENID, PROFILE, AWS_COGNITO_SIGNIN_USER_ADMIN
-    #         redirect_sign_in_ur_is: ["__string"],
-    #         redirect_sign_out_ur_is: ["__string"],
-    #         social_provider_settings: {
-    #           facebook: {
-    #             client_id: "__string",
-    #             client_secret: "__string",
-    #           },
-    #           google: {
-    #             client_id: "__string",
-    #             client_secret: "__string",
-    #           },
-    #           login_with_amazon: {
-    #             client_id: "__string",
-    #             client_secret: "__string",
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] domain_prefix
     #   The Amazon Cognito domain prefix used to create a hosted UI for
@@ -3300,20 +3179,11 @@ module Aws::AmplifyBackend
     end
 
     # Describes the password policy for your Amazon Cognito user pool
-    # that's configured as a part of your Amplify project.
-    #
-    # @note When making an API call, you may pass UpdateBackendAuthPasswordPolicyConfig
-    #   data as a hash:
-    #
-    #       {
-    #         additional_constraints: ["REQUIRE_DIGIT"], # accepts REQUIRE_DIGIT, REQUIRE_LOWERCASE, REQUIRE_SYMBOL, REQUIRE_UPPERCASE
-    #         minimum_length: 1.0,
-    #       }
+    # configured as a part of your Amplify project.
     #
     # @!attribute [rw] additional_constraints
-    #   Describes additional constrains on the password requirements to sign
-    #   in to the auth resource, configured as a part of your Amplify
-    #   project.
+    #   Describes additional constraints on password requirements to sign in
+    #   to the auth resource, configured as a part of your Amplify project.
     #   @return [Array<String>]
     #
     # @!attribute [rw] minimum_length
@@ -3349,66 +3219,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateBackendAuthRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         resource_config: { # required
-    #           auth_resources: "USER_POOL_ONLY", # required, accepts USER_POOL_ONLY, IDENTITY_POOL_AND_USER_POOL
-    #           identity_pool_configs: {
-    #             unauthenticated_login: false,
-    #           },
-    #           service: "COGNITO", # required, accepts COGNITO
-    #           user_pool_configs: { # required
-    #             forgot_password: {
-    #               delivery_method: "EMAIL", # accepts EMAIL, SMS
-    #               email_settings: {
-    #                 email_message: "__string",
-    #                 email_subject: "__string",
-    #               },
-    #               sms_settings: {
-    #                 sms_message: "__string",
-    #               },
-    #             },
-    #             mfa: {
-    #               mfa_mode: "ON", # accepts ON, OFF, OPTIONAL
-    #               settings: {
-    #                 mfa_types: ["SMS"], # accepts SMS, TOTP
-    #                 sms_message: "__string",
-    #               },
-    #             },
-    #             o_auth: {
-    #               domain_prefix: "__string",
-    #               o_auth_grant_type: "CODE", # accepts CODE, IMPLICIT
-    #               o_auth_scopes: ["PHONE"], # accepts PHONE, EMAIL, OPENID, PROFILE, AWS_COGNITO_SIGNIN_USER_ADMIN
-    #               redirect_sign_in_ur_is: ["__string"],
-    #               redirect_sign_out_ur_is: ["__string"],
-    #               social_provider_settings: {
-    #                 facebook: {
-    #                   client_id: "__string",
-    #                   client_secret: "__string",
-    #                 },
-    #                 google: {
-    #                   client_id: "__string",
-    #                   client_secret: "__string",
-    #                 },
-    #                 login_with_amazon: {
-    #                   client_id: "__string",
-    #                   client_secret: "__string",
-    #                 },
-    #               },
-    #             },
-    #             password_policy: {
-    #               additional_constraints: ["REQUIRE_DIGIT"], # accepts REQUIRE_DIGIT, REQUIRE_LOWERCASE, REQUIRE_SYMBOL, REQUIRE_UPPERCASE
-    #               minimum_length: 1.0,
-    #             },
-    #           },
-    #         },
-    #         resource_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -3437,61 +3247,6 @@ module Aws::AmplifyBackend
     # Defines the resource configuration when updating an authentication
     # resource in your Amplify project.
     #
-    # @note When making an API call, you may pass UpdateBackendAuthResourceConfig
-    #   data as a hash:
-    #
-    #       {
-    #         auth_resources: "USER_POOL_ONLY", # required, accepts USER_POOL_ONLY, IDENTITY_POOL_AND_USER_POOL
-    #         identity_pool_configs: {
-    #           unauthenticated_login: false,
-    #         },
-    #         service: "COGNITO", # required, accepts COGNITO
-    #         user_pool_configs: { # required
-    #           forgot_password: {
-    #             delivery_method: "EMAIL", # accepts EMAIL, SMS
-    #             email_settings: {
-    #               email_message: "__string",
-    #               email_subject: "__string",
-    #             },
-    #             sms_settings: {
-    #               sms_message: "__string",
-    #             },
-    #           },
-    #           mfa: {
-    #             mfa_mode: "ON", # accepts ON, OFF, OPTIONAL
-    #             settings: {
-    #               mfa_types: ["SMS"], # accepts SMS, TOTP
-    #               sms_message: "__string",
-    #             },
-    #           },
-    #           o_auth: {
-    #             domain_prefix: "__string",
-    #             o_auth_grant_type: "CODE", # accepts CODE, IMPLICIT
-    #             o_auth_scopes: ["PHONE"], # accepts PHONE, EMAIL, OPENID, PROFILE, AWS_COGNITO_SIGNIN_USER_ADMIN
-    #             redirect_sign_in_ur_is: ["__string"],
-    #             redirect_sign_out_ur_is: ["__string"],
-    #             social_provider_settings: {
-    #               facebook: {
-    #                 client_id: "__string",
-    #                 client_secret: "__string",
-    #               },
-    #               google: {
-    #                 client_id: "__string",
-    #                 client_secret: "__string",
-    #               },
-    #               login_with_amazon: {
-    #                 client_id: "__string",
-    #                 client_secret: "__string",
-    #               },
-    #             },
-    #           },
-    #           password_policy: {
-    #             additional_constraints: ["REQUIRE_DIGIT"], # accepts REQUIRE_DIGIT, REQUIRE_LOWERCASE, REQUIRE_SYMBOL, REQUIRE_UPPERCASE
-    #             minimum_length: 1.0,
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] auth_resources
     #   Defines the service name to use when configuring an authentication
     #   resource in your Amplify project.
@@ -3499,7 +3254,7 @@ module Aws::AmplifyBackend
     #
     # @!attribute [rw] identity_pool_configs
     #   Describes the authorization configuration for the Amazon Cognito
-    #   identity pool, provisioned as a part of the auth resource in your
+    #   identity pool, provisioned as a part of your auth resource in the
     #   Amplify project.
     #   @return [Types::UpdateBackendAuthIdentityPoolConfig]
     #
@@ -3510,7 +3265,7 @@ module Aws::AmplifyBackend
     #
     # @!attribute [rw] user_pool_configs
     #   Describes the authentication configuration for the Amazon Cognito
-    #   user pool, provisioned as a part of the auth resource in your
+    #   user pool, provisioned as a part of your auth resource in the
     #   Amplify project.
     #   @return [Types::UpdateBackendAuthUserPoolConfig]
     #
@@ -3556,66 +3311,20 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # Describes the Amazon Cognito user pool configuration to configure the
-    # authorization resource for your Amplify project on an update.
-    #
-    # @note When making an API call, you may pass UpdateBackendAuthUserPoolConfig
-    #   data as a hash:
-    #
-    #       {
-    #         forgot_password: {
-    #           delivery_method: "EMAIL", # accepts EMAIL, SMS
-    #           email_settings: {
-    #             email_message: "__string",
-    #             email_subject: "__string",
-    #           },
-    #           sms_settings: {
-    #             sms_message: "__string",
-    #           },
-    #         },
-    #         mfa: {
-    #           mfa_mode: "ON", # accepts ON, OFF, OPTIONAL
-    #           settings: {
-    #             mfa_types: ["SMS"], # accepts SMS, TOTP
-    #             sms_message: "__string",
-    #           },
-    #         },
-    #         o_auth: {
-    #           domain_prefix: "__string",
-    #           o_auth_grant_type: "CODE", # accepts CODE, IMPLICIT
-    #           o_auth_scopes: ["PHONE"], # accepts PHONE, EMAIL, OPENID, PROFILE, AWS_COGNITO_SIGNIN_USER_ADMIN
-    #           redirect_sign_in_ur_is: ["__string"],
-    #           redirect_sign_out_ur_is: ["__string"],
-    #           social_provider_settings: {
-    #             facebook: {
-    #               client_id: "__string",
-    #               client_secret: "__string",
-    #             },
-    #             google: {
-    #               client_id: "__string",
-    #               client_secret: "__string",
-    #             },
-    #             login_with_amazon: {
-    #               client_id: "__string",
-    #               client_secret: "__string",
-    #             },
-    #           },
-    #         },
-    #         password_policy: {
-    #           additional_constraints: ["REQUIRE_DIGIT"], # accepts REQUIRE_DIGIT, REQUIRE_LOWERCASE, REQUIRE_SYMBOL, REQUIRE_UPPERCASE
-    #           minimum_length: 1.0,
-    #         },
-    #       }
+    # Describes the Amazon Cognito user pool configuration for the
+    # authorization resource to be configured for your Amplify project on an
+    # update.
     #
     # @!attribute [rw] forgot_password
-    #   Describes the forgot password policy for your Amazon Cognito user
-    #   pool, configured as a part of your Amplify project.
+    #   **(DEPRECATED)** Describes the forgot password policy for your
+    #   Amazon Cognito user pool, configured as a part of your Amplify
+    #   project.
     #   @return [Types::UpdateBackendAuthForgotPasswordConfig]
     #
     # @!attribute [rw] mfa
-    #   Describes whether to apply multi-factor authentication (MFA)
-    #   policies for your Amazon Cognito user pool that's configured as a
-    #   part of your Amplify project.
+    #   Describes whether to apply multi-factor authentication policies for
+    #   your Amazon Cognito user pool configured as a part of your Amplify
+    #   project.
     #   @return [Types::UpdateBackendAuthMFAConfig]
     #
     # @!attribute [rw] o_auth
@@ -3628,13 +3337,44 @@ module Aws::AmplifyBackend
     #   configured as a part of your Amplify project.
     #   @return [Types::UpdateBackendAuthPasswordPolicyConfig]
     #
+    # @!attribute [rw] verification_message
+    #   Describes the email or SMS verification message for your Amazon
+    #   Cognito user pool, configured as a part of your Amplify project.
+    #   @return [Types::UpdateBackendAuthVerificationMessageConfig]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/UpdateBackendAuthUserPoolConfig AWS API Documentation
     #
     class UpdateBackendAuthUserPoolConfig < Struct.new(
       :forgot_password,
       :mfa,
       :o_auth,
-      :password_policy)
+      :password_policy,
+      :verification_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Updates the configuration of the email or SMS message for the auth
+    # resource configured for your Amplify project.
+    #
+    # @!attribute [rw] delivery_method
+    #   The type of verification message to send.
+    #   @return [String]
+    #
+    # @!attribute [rw] email_settings
+    #   The settings for the email message.
+    #   @return [Types::EmailSettings]
+    #
+    # @!attribute [rw] sms_settings
+    #   The settings for the SMS message.
+    #   @return [Types::SmsSettings]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/UpdateBackendAuthVerificationMessageConfig AWS API Documentation
+    #
+    class UpdateBackendAuthVerificationMessageConfig < Struct.new(
+      :delivery_method,
+      :email_settings,
+      :sms_settings)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3653,19 +3393,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateBackendConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         login_auth_config: {
-    #           aws_cognito_identity_pool_id: "__string",
-    #           aws_cognito_region: "__string",
-    #           aws_user_pools_id: "__string",
-    #           aws_user_pools_web_client_id: "__string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -3706,17 +3433,6 @@ module Aws::AmplifyBackend
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateBackendJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         app_id: "__string", # required
-    #         backend_environment_name: "__string", # required
-    #         job_id: "__string", # required
-    #         operation: "__string",
-    #         status: "__string",
-    #       }
-    #
     # @!attribute [rw] app_id
     #   @return [String]
     #
@@ -3779,6 +3495,91 @@ module Aws::AmplifyBackend
       :operation,
       :status,
       :update_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The request object for this operation.
+    #
+    # @!attribute [rw] resource_config
+    #   The resource configuration for updating backend storage.
+    #   @return [Types::UpdateBackendStorageResourceConfig]
+    #
+    # @!attribute [rw] resource_name
+    #   The name of the storage resource.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/UpdateBackendStorageReqObj AWS API Documentation
+    #
+    class UpdateBackendStorageReqObj < Struct.new(
+      :resource_config,
+      :resource_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_config
+    #   The resource configuration for updating backend storage.
+    #   @return [Types::UpdateBackendStorageResourceConfig]
+    #
+    # @!attribute [rw] resource_name
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/UpdateBackendStorageRequest AWS API Documentation
+    #
+    class UpdateBackendStorageRequest < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :resource_config,
+      :resource_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The resource configuration for updating backend storage.
+    #
+    # @!attribute [rw] permissions
+    #   The authorization configuration for the storage S3 bucket.
+    #   @return [Types::BackendStoragePermissions]
+    #
+    # @!attribute [rw] service_name
+    #   The name of the storage service.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/UpdateBackendStorageResourceConfig AWS API Documentation
+    #
+    class UpdateBackendStorageResourceConfig < Struct.new(
+      :permissions,
+      :service_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] app_id
+    #   @return [String]
+    #
+    # @!attribute [rw] backend_environment_name
+    #   @return [String]
+    #
+    # @!attribute [rw] job_id
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/UpdateBackendStorageResponse AWS API Documentation
+    #
+    class UpdateBackendStorageResponse < Struct.new(
+      :app_id,
+      :backend_environment_name,
+      :job_id,
+      :status)
       SENSITIVE = []
       include Aws::Structure
     end

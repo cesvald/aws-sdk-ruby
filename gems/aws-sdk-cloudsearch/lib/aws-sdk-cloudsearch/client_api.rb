@@ -118,6 +118,7 @@ module Aws::CloudSearch
     PartitionCount = Shapes::IntegerShape.new(name: 'PartitionCount')
     PartitionInstanceType = Shapes::StringShape.new(name: 'PartitionInstanceType')
     PolicyDocument = Shapes::StringShape.new(name: 'PolicyDocument')
+    ResourceAlreadyExistsException = Shapes::StructureShape.new(name: 'ResourceAlreadyExistsException')
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
     ScalingParameters = Shapes::StructureShape.new(name: 'ScalingParameters')
     ScalingParametersStatus = Shapes::StructureShape.new(name: 'ScalingParametersStatus')
@@ -482,6 +483,8 @@ module Aws::CloudSearch
     OptionStatus.add_member(:pending_deletion, Shapes::ShapeRef.new(shape: Boolean, location_name: "PendingDeletion"))
     OptionStatus.struct_class = Types::OptionStatus
 
+    ResourceAlreadyExistsException.struct_class = Types::ResourceAlreadyExistsException
+
     ResourceNotFoundException.struct_class = Types::ResourceNotFoundException
 
     ScalingParameters.add_member(:desired_instance_type, Shapes::ShapeRef.new(shape: PartitionInstanceType, location_name: "DesiredInstanceType"))
@@ -579,6 +582,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: BaseException)
         o.errors << Shapes::ShapeRef.new(shape: InternalException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:create_domain, Seahorse::Model::Operation.new.tap do |o|
@@ -590,6 +594,8 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: BaseException)
         o.errors << Shapes::ShapeRef.new(shape: InternalException)
         o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:define_analysis_scheme, Seahorse::Model::Operation.new.tap do |o|
@@ -603,6 +609,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:define_expression, Seahorse::Model::Operation.new.tap do |o|
@@ -616,6 +623,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:define_index_field, Seahorse::Model::Operation.new.tap do |o|
@@ -629,6 +637,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:define_suggester, Seahorse::Model::Operation.new.tap do |o|
@@ -642,6 +651,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:delete_analysis_scheme, Seahorse::Model::Operation.new.tap do |o|
@@ -654,6 +664,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: InternalException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:delete_domain, Seahorse::Model::Operation.new.tap do |o|
@@ -676,6 +687,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: InternalException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:delete_index_field, Seahorse::Model::Operation.new.tap do |o|
@@ -688,6 +700,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: InternalException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:delete_suggester, Seahorse::Model::Operation.new.tap do |o|
@@ -700,6 +713,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: InternalException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:describe_analysis_schemes, Seahorse::Model::Operation.new.tap do |o|
@@ -814,6 +828,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: BaseException)
         o.errors << Shapes::ShapeRef.new(shape: InternalException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:list_domain_names, Seahorse::Model::Operation.new.tap do |o|
@@ -866,6 +881,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:update_service_access_policies, Seahorse::Model::Operation.new.tap do |o|
@@ -879,6 +895,7 @@ module Aws::CloudSearch
         o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidTypeException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
     end
 

@@ -58,7 +58,7 @@ module Aws::DeviceFarm
     #
     #
     #
-    #   [1]: https://aws.amazon.com/device-farm/faq/
+    #   [1]: http://aws.amazon.com/device-farm/faqs/
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/AccountSettings AWS API Documentation
@@ -270,23 +270,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the create device pool operation.
     #
-    # @note When making an API call, you may pass CreateDevicePoolRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "AmazonResourceName", # required
-    #         name: "Name", # required
-    #         description: "Message",
-    #         rules: [ # required
-    #           {
-    #             attribute: "ARN", # accepts ARN, PLATFORM, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, APPIUM_VERSION, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE, OS_VERSION, MODEL, AVAILABILITY
-    #             operator: "EQUALS", # accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
-    #             value: "String",
-    #           },
-    #         ],
-    #         max_devices: 1,
-    #       }
-    #
     # @!attribute [rw] project_arn
     #   The ARN of the project for the device pool.
     #   @return [String]
@@ -340,17 +323,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateInstanceProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         description: "Message",
-    #         package_cleanup: false,
-    #         exclude_app_packages_from_cleanup: ["String"],
-    #         reboot_after_use: false,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of your instance profile.
     #   @return [String]
@@ -401,24 +373,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateNetworkProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "AmazonResourceName", # required
-    #         name: "Name", # required
-    #         description: "Message",
-    #         type: "CURATED", # accepts CURATED, PRIVATE
-    #         uplink_bandwidth_bits: 1,
-    #         downlink_bandwidth_bits: 1,
-    #         uplink_delay_ms: 1,
-    #         downlink_delay_ms: 1,
-    #         uplink_jitter_ms: 1,
-    #         downlink_jitter_ms: 1,
-    #         uplink_loss_percent: 1,
-    #         downlink_loss_percent: 1,
-    #       }
-    #
     # @!attribute [rw] project_arn
     #   The Amazon Resource Name (ARN) of the project for which you want to
     #   create a network profile.
@@ -510,14 +464,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the create project operation.
     #
-    # @note When making an API call, you may pass CreateProjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         default_job_timeout_minutes: 1,
-    #       }
-    #
     # @!attribute [rw] name
     #   The project's name.
     #   @return [String]
@@ -528,11 +474,16 @@ module Aws::DeviceFarm
     #   unless overridden when scheduling a run.
     #   @return [Integer]
     #
+    # @!attribute [rw] vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #   @return [Types::VpcConfig]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateProjectRequest AWS API Documentation
     #
     class CreateProjectRequest < Struct.new(
       :name,
-      :default_job_timeout_minutes)
+      :default_job_timeout_minutes,
+      :vpc_config)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -554,14 +505,6 @@ module Aws::DeviceFarm
     # Configuration settings for a remote access session, including billing
     # method.
     #
-    # @note When making an API call, you may pass CreateRemoteAccessSessionConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         billing_method: "METERED", # accepts METERED, UNMETERED
-    #         vpce_configuration_arns: ["AmazonResourceName"],
-    #       }
-    #
     # @!attribute [rw] billing_method
     #   The billing method for the remote access session.
     #   @return [String]
@@ -580,27 +523,6 @@ module Aws::DeviceFarm
     end
 
     # Creates and submits a request to start a remote access session.
-    #
-    # @note When making an API call, you may pass CreateRemoteAccessSessionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "AmazonResourceName", # required
-    #         device_arn: "AmazonResourceName", # required
-    #         instance_arn: "AmazonResourceName",
-    #         ssh_public_key: "SshPublicKey",
-    #         remote_debug_enabled: false,
-    #         remote_record_enabled: false,
-    #         remote_record_app_arn: "AmazonResourceName",
-    #         name: "Name",
-    #         client_id: "ClientId",
-    #         configuration: {
-    #           billing_method: "METERED", # accepts METERED, UNMETERED
-    #           vpce_configuration_arns: ["AmazonResourceName"],
-    #         },
-    #         interaction_mode: "INTERACTIVE", # accepts INTERACTIVE, NO_VIDEO, VIDEO_ONLY
-    #         skip_app_resign: false,
-    #       }
     #
     # @!attribute [rw] project_arn
     #   The Amazon Resource Name (ARN) of the project for which you want to
@@ -698,7 +620,7 @@ module Aws::DeviceFarm
     #
     #
     #
-    #   [1]: https://aws.amazon.com/device-farm/faq/
+    #   [1]: http://aws.amazon.com/device-farm/faqs/
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateRemoteAccessSessionRequest AWS API Documentation
@@ -736,14 +658,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateTestGridProjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ResourceName", # required
-    #         description: "ResourceDescription",
-    #       }
-    #
     # @!attribute [rw] name
     #   Human-readable name of the Selenium testing project.
     #   @return [String]
@@ -752,11 +666,16 @@ module Aws::DeviceFarm
     #   Human-readable description of the project.
     #   @return [String]
     #
+    # @!attribute [rw] vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #   @return [Types::TestGridVpcConfig]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateTestGridProjectRequest AWS API Documentation
     #
     class CreateTestGridProjectRequest < Struct.new(
       :name,
-      :description)
+      :description,
+      :vpc_config)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -773,14 +692,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateTestGridUrlRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "DeviceFarmArn", # required
-    #         expires_in_seconds: 1, # required
-    #       }
-    #
     # @!attribute [rw] project_arn
     #   ARN (from CreateTestGridProject or ListTestGridProjects) to
     #   associate with the short-term URL.
@@ -814,21 +725,11 @@ module Aws::DeviceFarm
     class CreateTestGridUrlResult < Struct.new(
       :url,
       :expires)
-      SENSITIVE = []
+      SENSITIVE = [:url]
       include Aws::Structure
     end
 
     # Represents a request to the create upload operation.
-    #
-    # @note When making an API call, you may pass CreateUploadRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "AmazonResourceName", # required
-    #         name: "Name", # required
-    #         type: "ANDROID_APP", # required, accepts ANDROID_APP, IOS_APP, WEB_APP, EXTERNAL_DATA, APPIUM_JAVA_JUNIT_TEST_PACKAGE, APPIUM_JAVA_TESTNG_TEST_PACKAGE, APPIUM_PYTHON_TEST_PACKAGE, APPIUM_NODE_TEST_PACKAGE, APPIUM_RUBY_TEST_PACKAGE, APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE, APPIUM_WEB_JAVA_TESTNG_TEST_PACKAGE, APPIUM_WEB_PYTHON_TEST_PACKAGE, APPIUM_WEB_NODE_TEST_PACKAGE, APPIUM_WEB_RUBY_TEST_PACKAGE, CALABASH_TEST_PACKAGE, INSTRUMENTATION_TEST_PACKAGE, UIAUTOMATION_TEST_PACKAGE, UIAUTOMATOR_TEST_PACKAGE, XCTEST_TEST_PACKAGE, XCTEST_UI_TEST_PACKAGE, APPIUM_JAVA_JUNIT_TEST_SPEC, APPIUM_JAVA_TESTNG_TEST_SPEC, APPIUM_PYTHON_TEST_SPEC, APPIUM_NODE_TEST_SPEC, APPIUM_RUBY_TEST_SPEC, APPIUM_WEB_JAVA_JUNIT_TEST_SPEC, APPIUM_WEB_JAVA_TESTNG_TEST_SPEC, APPIUM_WEB_PYTHON_TEST_SPEC, APPIUM_WEB_NODE_TEST_SPEC, APPIUM_WEB_RUBY_TEST_SPEC, INSTRUMENTATION_TEST_SPEC, XCTEST_UI_TEST_SPEC
-    #         content_type: "ContentType",
-    #       }
     #
     # @!attribute [rw] project_arn
     #   The ARN of the project for the upload.
@@ -945,16 +846,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateVPCEConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         vpce_configuration_name: "VPCEConfigurationName", # required
-    #         vpce_service_name: "VPCEServiceName", # required
-    #         service_dns_name: "ServiceDnsName", # required
-    #         vpce_configuration_description: "VPCEConfigurationDescription",
-    #       }
-    #
     # @!attribute [rw] vpce_configuration_name
     #   The friendly name you give to your VPC endpoint configuration, to
     #   manage your configurations more easily.
@@ -1008,15 +899,6 @@ module Aws::DeviceFarm
     #
     # For web app tests, you can specify both `iosPaths` and `androidPaths`.
     #
-    # @note When making an API call, you may pass CustomerArtifactPaths
-    #   data as a hash:
-    #
-    #       {
-    #         ios_paths: ["String"],
-    #         android_paths: ["String"],
-    #         device_host_paths: ["String"],
-    #       }
-    #
     # @!attribute [rw] ios_paths
     #   Comma-separated list of paths on the iOS device where the artifacts
     #   generated by the customer's tests are pulled from.
@@ -1045,13 +927,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the delete device pool operation.
     #
-    # @note When making an API call, you may pass DeleteDevicePoolRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   Represents the Amazon Resource Name (ARN) of the Device Farm device
     #   pool to delete.
@@ -1071,13 +946,6 @@ module Aws::DeviceFarm
     #
     class DeleteDevicePoolResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteInstanceProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the instance profile you are
     #   requesting to delete.
@@ -1095,13 +963,6 @@ module Aws::DeviceFarm
     #
     class DeleteInstanceProfileResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteNetworkProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The ARN of the network profile to delete.
     #   @return [String]
@@ -1119,13 +980,6 @@ module Aws::DeviceFarm
     class DeleteNetworkProfileResult < Aws::EmptyStructure; end
 
     # Represents a request to the delete project operation.
-    #
-    # @note When making an API call, you may pass DeleteProjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
     #
     # @!attribute [rw] arn
     #   Represents the Amazon Resource Name (ARN) of the Device Farm project
@@ -1147,13 +1001,6 @@ module Aws::DeviceFarm
     class DeleteProjectResult < Aws::EmptyStructure; end
 
     # Represents the request to delete the specified remote access session.
-    #
-    # @note When making an API call, you may pass DeleteRemoteAccessSessionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the session for which you want to
@@ -1177,13 +1024,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the delete run operation.
     #
-    # @note When making an API call, you may pass DeleteRunRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) for the run to delete.
     #   @return [String]
@@ -1202,13 +1042,6 @@ module Aws::DeviceFarm
     #
     class DeleteRunResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteTestGridProjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "DeviceFarmArn", # required
-    #       }
-    #
     # @!attribute [rw] project_arn
     #   The ARN of the project to delete, from CreateTestGridProject or
     #   ListTestGridProjects.
@@ -1227,13 +1060,6 @@ module Aws::DeviceFarm
     class DeleteTestGridProjectResult < Aws::EmptyStructure; end
 
     # Represents a request to the delete upload operation.
-    #
-    # @note When making an API call, you may pass DeleteUploadRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
     #
     # @!attribute [rw] arn
     #   Represents the Amazon Resource Name (ARN) of the Device Farm upload
@@ -1254,13 +1080,6 @@ module Aws::DeviceFarm
     #
     class DeleteUploadResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteVPCEConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the VPC endpoint configuration you
     #   want to delete.
@@ -1421,15 +1240,6 @@ module Aws::DeviceFarm
     #
     # It is also passed in as the `filters` parameter to `ListDevices`. For
     # an example of the JSON request syntax, see ListDevices.
-    #
-    # @note When making an API call, you may pass DeviceFilter
-    #   data as a hash:
-    #
-    #       {
-    #         attribute: "ARN", # accepts ARN, PLATFORM, OS_VERSION, MODEL, AVAILABILITY, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE
-    #         operator: "EQUALS", # accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
-    #         values: ["String"],
-    #       }
     #
     # @!attribute [rw] attribute
     #   The aspect of a device such as platform or model used as the
@@ -1711,20 +1521,6 @@ module Aws::DeviceFarm
     # number of devices to be included in the run. It is passed in as the
     # `deviceSelectionConfiguration` request parameter in ScheduleRun.
     #
-    # @note When making an API call, you may pass DeviceSelectionConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [ # required
-    #           {
-    #             attribute: "ARN", # accepts ARN, PLATFORM, OS_VERSION, MODEL, AVAILABILITY, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE
-    #             operator: "EQUALS", # accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
-    #             values: ["String"],
-    #           },
-    #         ],
-    #         max_devices: 1, # required
-    #       }
-    #
     # @!attribute [rw] filters
     #   Used to dynamically select a set of devices for a test run. A filter
     #   is made up of an attribute, an operator, and one or more values.
@@ -1856,17 +1652,6 @@ module Aws::DeviceFarm
     # Represents configuration information about a test run, such as the
     # execution timeout (in minutes).
     #
-    # @note When making an API call, you may pass ExecutionConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         job_timeout_minutes: 1,
-    #         accounts_cleanup: false,
-    #         app_packages_cleanup: false,
-    #         video_capture: false,
-    #         skip_app_resign: false,
-    #       }
-    #
     # @!attribute [rw] job_timeout_minutes
     #   The number of minutes a test run executes before it times out.
     #   @return [Integer]
@@ -1896,7 +1681,7 @@ module Aws::DeviceFarm
     #
     #
     #
-    #   [1]: https://aws.amazon.com/device-farm/faq/
+    #   [1]: http://aws.amazon.com/device-farm/faqs/
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ExecutionConfiguration AWS API Documentation
@@ -1934,13 +1719,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDeviceInstanceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the instance you're requesting
     #   information about.
@@ -1967,47 +1745,6 @@ module Aws::DeviceFarm
     end
 
     # Represents a request to the get device pool compatibility operation.
-    #
-    # @note When making an API call, you may pass GetDevicePoolCompatibilityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         device_pool_arn: "AmazonResourceName", # required
-    #         app_arn: "AmazonResourceName",
-    #         test_type: "BUILTIN_FUZZ", # accepts BUILTIN_FUZZ, BUILTIN_EXPLORER, WEB_PERFORMANCE_PROFILE, APPIUM_JAVA_JUNIT, APPIUM_JAVA_TESTNG, APPIUM_PYTHON, APPIUM_NODE, APPIUM_RUBY, APPIUM_WEB_JAVA_JUNIT, APPIUM_WEB_JAVA_TESTNG, APPIUM_WEB_PYTHON, APPIUM_WEB_NODE, APPIUM_WEB_RUBY, CALABASH, INSTRUMENTATION, UIAUTOMATION, UIAUTOMATOR, XCTEST, XCTEST_UI, REMOTE_ACCESS_RECORD, REMOTE_ACCESS_REPLAY
-    #         test: {
-    #           type: "BUILTIN_FUZZ", # required, accepts BUILTIN_FUZZ, BUILTIN_EXPLORER, WEB_PERFORMANCE_PROFILE, APPIUM_JAVA_JUNIT, APPIUM_JAVA_TESTNG, APPIUM_PYTHON, APPIUM_NODE, APPIUM_RUBY, APPIUM_WEB_JAVA_JUNIT, APPIUM_WEB_JAVA_TESTNG, APPIUM_WEB_PYTHON, APPIUM_WEB_NODE, APPIUM_WEB_RUBY, CALABASH, INSTRUMENTATION, UIAUTOMATION, UIAUTOMATOR, XCTEST, XCTEST_UI, REMOTE_ACCESS_RECORD, REMOTE_ACCESS_REPLAY
-    #           test_package_arn: "AmazonResourceName",
-    #           test_spec_arn: "AmazonResourceName",
-    #           filter: "Filter",
-    #           parameters: {
-    #             "String" => "String",
-    #           },
-    #         },
-    #         configuration: {
-    #           extra_data_package_arn: "AmazonResourceName",
-    #           network_profile_arn: "AmazonResourceName",
-    #           locale: "String",
-    #           location: {
-    #             latitude: 1.0, # required
-    #             longitude: 1.0, # required
-    #           },
-    #           vpce_configuration_arns: ["AmazonResourceName"],
-    #           customer_artifact_paths: {
-    #             ios_paths: ["String"],
-    #             android_paths: ["String"],
-    #             device_host_paths: ["String"],
-    #           },
-    #           radios: {
-    #             wifi: false,
-    #             bluetooth: false,
-    #             nfc: false,
-    #             gps: false,
-    #           },
-    #           auxiliary_apps: ["AmazonResourceName"],
-    #           billing_method: "METERED", # accepts METERED, UNMETERED
-    #         },
-    #       }
     #
     # @!attribute [rw] device_pool_arn
     #   The device pool's ARN.
@@ -2104,13 +1841,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the get device pool operation.
     #
-    # @note When making an API call, you may pass GetDevicePoolRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The device pool's ARN.
     #   @return [String]
@@ -2139,13 +1869,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the get device request.
     #
-    # @note When making an API call, you may pass GetDeviceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The device type's ARN.
     #   @return [String]
@@ -2172,13 +1895,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetInstanceProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of an instance profile.
     #   @return [String]
@@ -2204,13 +1920,6 @@ module Aws::DeviceFarm
     end
 
     # Represents a request to the get job operation.
-    #
-    # @note When making an API call, you may pass GetJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
     #
     # @!attribute [rw] arn
     #   The job's ARN.
@@ -2238,13 +1947,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetNetworkProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The ARN of the network profile to return information about.
     #   @return [String]
@@ -2271,13 +1973,6 @@ module Aws::DeviceFarm
 
     # Represents the request to retrieve the offering status for the
     # specified customer or account.
-    #
-    # @note When making an API call, you may pass GetOfferingStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #       }
     #
     # @!attribute [rw] next_token
     #   An identifier that was returned from the previous call to this
@@ -2321,13 +2016,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the get project operation.
     #
-    # @note When making an API call, you may pass GetProjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The project's ARN.
     #   @return [String]
@@ -2356,13 +2044,6 @@ module Aws::DeviceFarm
 
     # Represents the request to get information about the specified remote
     # access session.
-    #
-    # @note When making an API call, you may pass GetRemoteAccessSessionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the remote access session about
@@ -2395,13 +2076,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the get run operation.
     #
-    # @note When making an API call, you may pass GetRunRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The run's ARN.
     #   @return [String]
@@ -2430,13 +2104,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the get suite operation.
     #
-    # @note When making an API call, you may pass GetSuiteRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The suite's ARN.
     #   @return [String]
@@ -2463,13 +2130,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTestGridProjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "DeviceFarmArn", # required
-    #       }
-    #
     # @!attribute [rw] project_arn
     #   The ARN of the Selenium testing project, from either
     #   CreateTestGridProject or ListTestGridProjects.
@@ -2495,15 +2155,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTestGridSessionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "DeviceFarmArn",
-    #         session_id: "ResourceId",
-    #         session_arn: "DeviceFarmArn",
-    #       }
-    #
     # @!attribute [rw] project_arn
     #   The ARN for the project that this session belongs to. See
     #   CreateTestGridProject and ListTestGridProjects.
@@ -2541,13 +2192,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the get test operation.
     #
-    # @note When making an API call, you may pass GetTestRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The test's ARN.
     #   @return [String]
@@ -2576,13 +2220,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the get upload operation.
     #
-    # @note When making an API call, you may pass GetUploadRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The upload's ARN.
     #   @return [String]
@@ -2610,13 +2247,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetVPCEConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the VPC endpoint configuration you
     #   want to describe.
@@ -2693,14 +2323,6 @@ module Aws::DeviceFarm
     # Represents the request to install an Android application (in .apk
     # format) or an iOS application (in .ipa format) as part of a remote
     # access session.
-    #
-    # @note When making an API call, you may pass InstallToRemoteAccessSessionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         remote_access_session_arn: "AmazonResourceName", # required
-    #         app_arn: "AmazonResourceName", # required
-    #       }
     #
     # @!attribute [rw] remote_access_session_arn
     #   The Amazon Resource Name (ARN) of the remote access session about
@@ -2986,15 +2608,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the list artifacts operation.
     #
-    # @note When making an API call, you may pass ListArtifactsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         type: "SCREENSHOT", # required, accepts SCREENSHOT, FILE, LOG
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The run, job, suite, or test ARN.
     #   @return [String]
@@ -3049,14 +2662,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDeviceInstancesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   An integer that specifies the maximum number of items you want to
     #   return in the API response.
@@ -3096,15 +2701,6 @@ module Aws::DeviceFarm
     end
 
     # Represents the result of a list device pools request.
-    #
-    # @note When making an API call, you may pass ListDevicePoolsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         type: "CURATED", # accepts CURATED, PRIVATE
-    #         next_token: "PaginationToken",
-    #       }
     #
     # @!attribute [rw] arn
     #   The project ARN.
@@ -3161,21 +2757,6 @@ module Aws::DeviceFarm
     end
 
     # Represents the result of a list devices request.
-    #
-    # @note When making an API call, you may pass ListDevicesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName",
-    #         next_token: "PaginationToken",
-    #         filters: [
-    #           {
-    #             attribute: "ARN", # accepts ARN, PLATFORM, OS_VERSION, MODEL, AVAILABILITY, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE
-    #             operator: "EQUALS", # accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
-    #             values: ["String"],
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the project.
@@ -3292,14 +2873,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListInstanceProfilesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   An integer that specifies the maximum number of items you want to
     #   return in the API response.
@@ -3339,14 +2912,6 @@ module Aws::DeviceFarm
     end
 
     # Represents a request to the list jobs operation.
-    #
-    # @note When making an API call, you may pass ListJobsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         next_token: "PaginationToken",
-    #       }
     #
     # @!attribute [rw] arn
     #   The run's Amazon Resource Name (ARN).
@@ -3389,15 +2954,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListNetworkProfilesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         type: "CURATED", # accepts CURATED, PRIVATE
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the project for which you want to
     #   list network profiles.
@@ -3443,13 +2999,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListOfferingPromotionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   An identifier that was returned from the previous call to this
     #   operation, which can be used to return the next set of items in the
@@ -3483,13 +3032,6 @@ module Aws::DeviceFarm
     end
 
     # Represents the request to list the offering transaction history.
-    #
-    # @note When making an API call, you may pass ListOfferingTransactionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #       }
     #
     # @!attribute [rw] next_token
     #   An identifier that was returned from the previous call to this
@@ -3529,13 +3071,6 @@ module Aws::DeviceFarm
 
     # Represents the request to list all offerings.
     #
-    # @note When making an API call, you may pass ListOfferingsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   An identifier that was returned from the previous call to this
     #   operation, which can be used to return the next set of items in the
@@ -3572,14 +3107,6 @@ module Aws::DeviceFarm
     end
 
     # Represents a request to the list projects operation.
-    #
-    # @note When making an API call, you may pass ListProjectsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName",
-    #         next_token: "PaginationToken",
-    #       }
     #
     # @!attribute [rw] arn
     #   Optional. If no Amazon Resource Name (ARN) is specified, then AWS
@@ -3627,14 +3154,6 @@ module Aws::DeviceFarm
     # Represents the request to return information about the remote access
     # session.
     #
-    # @note When making an API call, you may pass ListRemoteAccessSessionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the project about which you are
     #   requesting information.
@@ -3680,14 +3199,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the list runs operation.
     #
-    # @note When making an API call, you may pass ListRunsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the project for which you want to
     #   list runs.
@@ -3732,14 +3243,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the list samples operation.
     #
-    # @note When making an API call, you may pass ListSamplesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the job used to list samples.
     #   @return [String]
@@ -3783,14 +3286,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the list suites operation.
     #
-    # @note When making an API call, you may pass ListSuitesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The job's Amazon Resource Name (ARN).
     #   @return [String]
@@ -3832,13 +3327,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "DeviceFarmArn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource or resources for
     #   which to list tags. You can associate tags with the following Device
@@ -3869,14 +3357,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTestGridProjectsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_result: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] max_result
     #   Return no more than this number of results.
     #   @return [Integer]
@@ -3913,15 +3393,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTestGridSessionActionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         session_arn: "DeviceFarmArn", # required
-    #         max_result: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] session_arn
     #   The ARN of the session to retrieve.
     #   @return [String]
@@ -3961,16 +3432,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTestGridSessionArtifactsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         session_arn: "DeviceFarmArn", # required
-    #         type: "VIDEO", # accepts VIDEO, LOG
-    #         max_result: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] session_arn
     #   The ARN of a TestGridSession.
     #   @return [String]
@@ -4015,20 +3476,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTestGridSessionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "DeviceFarmArn", # required
-    #         status: "ACTIVE", # accepts ACTIVE, CLOSED, ERRORED
-    #         creation_time_after: Time.now,
-    #         creation_time_before: Time.now,
-    #         end_time_after: Time.now,
-    #         end_time_before: Time.now,
-    #         max_result: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] project_arn
     #   ARN of a TestGridProject.
     #   @return [String]
@@ -4096,14 +3543,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the list tests operation.
     #
-    # @note When making an API call, you may pass ListTestsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The test suite's Amazon Resource Name (ARN).
     #   @return [String]
@@ -4146,14 +3585,6 @@ module Aws::DeviceFarm
     end
 
     # Represents a request to the list unique problems operation.
-    #
-    # @note When making an API call, you may pass ListUniqueProblemsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         next_token: "PaginationToken",
-    #       }
     #
     # @!attribute [rw] arn
     #   The unique problems' ARNs.
@@ -4213,15 +3644,6 @@ module Aws::DeviceFarm
     end
 
     # Represents a request to the list uploads operation.
-    #
-    # @note When making an API call, you may pass ListUploadsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         type: "ANDROID_APP", # accepts ANDROID_APP, IOS_APP, WEB_APP, EXTERNAL_DATA, APPIUM_JAVA_JUNIT_TEST_PACKAGE, APPIUM_JAVA_TESTNG_TEST_PACKAGE, APPIUM_PYTHON_TEST_PACKAGE, APPIUM_NODE_TEST_PACKAGE, APPIUM_RUBY_TEST_PACKAGE, APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE, APPIUM_WEB_JAVA_TESTNG_TEST_PACKAGE, APPIUM_WEB_PYTHON_TEST_PACKAGE, APPIUM_WEB_NODE_TEST_PACKAGE, APPIUM_WEB_RUBY_TEST_PACKAGE, CALABASH_TEST_PACKAGE, INSTRUMENTATION_TEST_PACKAGE, UIAUTOMATION_TEST_PACKAGE, UIAUTOMATOR_TEST_PACKAGE, XCTEST_TEST_PACKAGE, XCTEST_UI_TEST_PACKAGE, APPIUM_JAVA_JUNIT_TEST_SPEC, APPIUM_JAVA_TESTNG_TEST_SPEC, APPIUM_PYTHON_TEST_SPEC, APPIUM_NODE_TEST_SPEC, APPIUM_RUBY_TEST_SPEC, APPIUM_WEB_JAVA_JUNIT_TEST_SPEC, APPIUM_WEB_JAVA_TESTNG_TEST_SPEC, APPIUM_WEB_PYTHON_TEST_SPEC, APPIUM_WEB_NODE_TEST_SPEC, APPIUM_WEB_RUBY_TEST_SPEC, INSTRUMENTATION_TEST_SPEC, XCTEST_UI_TEST_SPEC
-    #         next_token: "PaginationToken",
-    #       }
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the project for which you want to
@@ -4336,14 +3758,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListVPCEConfigurationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   An integer that specifies the maximum number of items you want to
     #   return in the API response.
@@ -4388,14 +3802,6 @@ module Aws::DeviceFarm
     # coordinate system degrees (for example, 47.6204, -122.3491).
     #
     # Elevation is currently not supported.
-    #
-    # @note When making an API call, you may pass Location
-    #   data as a hash:
-    #
-    #       {
-    #         latitude: 1.0, # required
-    #         longitude: 1.0, # required
-    #       }
     #
     # @!attribute [rw] latitude
     #   The latitude.
@@ -4757,27 +4163,23 @@ module Aws::DeviceFarm
     #   When the project was created.
     #   @return [Time]
     #
+    # @!attribute [rw] vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #   @return [Types::VpcConfig]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Project AWS API Documentation
     #
     class Project < Struct.new(
       :arn,
       :name,
       :default_job_timeout_minutes,
-      :created)
+      :created,
+      :vpc_config)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Represents a request for a purchase offering.
-    #
-    # @note When making an API call, you may pass PurchaseOfferingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         offering_id: "OfferingIdentifier",
-    #         quantity: 1,
-    #         offering_promotion_id: "OfferingPromotionIdentifier",
-    #       }
     #
     # @!attribute [rw] offering_id
     #   The ID of the offering.
@@ -4817,16 +4219,6 @@ module Aws::DeviceFarm
 
     # Represents the set of radios and their states on a device. Examples of
     # radios include Wi-Fi, GPS, Bluetooth, and NFC.
-    #
-    # @note When making an API call, you may pass Radios
-    #   data as a hash:
-    #
-    #       {
-    #         wifi: false,
-    #         bluetooth: false,
-    #         nfc: false,
-    #         gps: false,
-    #       }
     #
     # @!attribute [rw] wifi
     #   True if Wi-Fi is enabled at the beginning of the test. Otherwise,
@@ -5055,8 +4447,12 @@ module Aws::DeviceFarm
     #
     #
     #
-    #   [1]: https://aws.amazon.com/device-farm/faq/
+    #   [1]: http://aws.amazon.com/device-farm/faqs/
     #   @return [Boolean]
+    #
+    # @!attribute [rw] vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #   @return [Types::VpcConfig]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/RemoteAccessSession AWS API Documentation
     #
@@ -5081,20 +4477,13 @@ module Aws::DeviceFarm
       :endpoint,
       :device_udid,
       :interaction_mode,
-      :skip_app_resign)
+      :skip_app_resign,
+      :vpc_config)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # A request that represents an offering renewal.
-    #
-    # @note When making an API call, you may pass RenewOfferingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         offering_id: "OfferingIdentifier",
-    #         quantity: 1,
-    #       }
     #
     # @!attribute [rw] offering_id
     #   The ID of a request to renew an offering.
@@ -5148,15 +4537,6 @@ module Aws::DeviceFarm
     end
 
     # Represents a condition for a device pool.
-    #
-    # @note When making an API call, you may pass Rule
-    #   data as a hash:
-    #
-    #       {
-    #         attribute: "ARN", # accepts ARN, PLATFORM, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, APPIUM_VERSION, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE, OS_VERSION, MODEL, AVAILABILITY
-    #         operator: "EQUALS", # accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
-    #         value: "String",
-    #       }
     #
     # @!attribute [rw] attribute
     #   The rule's stringified attribute. For example, specify the value as
@@ -5504,7 +4884,7 @@ module Aws::DeviceFarm
     #
     #
     #
-    #   [1]: https://aws.amazon.com/device-farm/faq/
+    #   [1]: http://aws.amazon.com/device-farm/faqs/
     #   @return [Boolean]
     #
     # @!attribute [rw] test_spec_arn
@@ -5515,6 +4895,10 @@ module Aws::DeviceFarm
     #   The results of a device filter used to select the devices for a test
     #   run.
     #   @return [Types::DeviceSelectionResult]
+    #
+    # @!attribute [rw] vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #   @return [Types::VpcConfig]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Run AWS API Documentation
     #
@@ -5549,7 +4933,8 @@ module Aws::DeviceFarm
       :web_url,
       :skip_app_resign,
       :test_spec_arn,
-      :device_selection_result)
+      :device_selection_result,
+      :vpc_config)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -5624,33 +5009,6 @@ module Aws::DeviceFarm
     # Represents the settings for a run. Includes things like location,
     # radio states, auxiliary apps, and network profiles.
     #
-    # @note When making an API call, you may pass ScheduleRunConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         extra_data_package_arn: "AmazonResourceName",
-    #         network_profile_arn: "AmazonResourceName",
-    #         locale: "String",
-    #         location: {
-    #           latitude: 1.0, # required
-    #           longitude: 1.0, # required
-    #         },
-    #         vpce_configuration_arns: ["AmazonResourceName"],
-    #         customer_artifact_paths: {
-    #           ios_paths: ["String"],
-    #           android_paths: ["String"],
-    #           device_host_paths: ["String"],
-    #         },
-    #         radios: {
-    #           wifi: false,
-    #           bluetooth: false,
-    #           nfc: false,
-    #           gps: false,
-    #         },
-    #         auxiliary_apps: ["AmazonResourceName"],
-    #         billing_method: "METERED", # accepts METERED, UNMETERED
-    #       }
-    #
     # @!attribute [rw] extra_data_package_arn
     #   The ARN of the extra data for the run. The extra data is a .zip file
     #   that AWS Device Farm extracts to external data for Android or the
@@ -5716,65 +5074,6 @@ module Aws::DeviceFarm
     end
 
     # Represents a request to the schedule run operation.
-    #
-    # @note When making an API call, you may pass ScheduleRunRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "AmazonResourceName", # required
-    #         app_arn: "AmazonResourceName",
-    #         device_pool_arn: "AmazonResourceName",
-    #         device_selection_configuration: {
-    #           filters: [ # required
-    #             {
-    #               attribute: "ARN", # accepts ARN, PLATFORM, OS_VERSION, MODEL, AVAILABILITY, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE
-    #               operator: "EQUALS", # accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
-    #               values: ["String"],
-    #             },
-    #           ],
-    #           max_devices: 1, # required
-    #         },
-    #         name: "Name",
-    #         test: { # required
-    #           type: "BUILTIN_FUZZ", # required, accepts BUILTIN_FUZZ, BUILTIN_EXPLORER, WEB_PERFORMANCE_PROFILE, APPIUM_JAVA_JUNIT, APPIUM_JAVA_TESTNG, APPIUM_PYTHON, APPIUM_NODE, APPIUM_RUBY, APPIUM_WEB_JAVA_JUNIT, APPIUM_WEB_JAVA_TESTNG, APPIUM_WEB_PYTHON, APPIUM_WEB_NODE, APPIUM_WEB_RUBY, CALABASH, INSTRUMENTATION, UIAUTOMATION, UIAUTOMATOR, XCTEST, XCTEST_UI, REMOTE_ACCESS_RECORD, REMOTE_ACCESS_REPLAY
-    #           test_package_arn: "AmazonResourceName",
-    #           test_spec_arn: "AmazonResourceName",
-    #           filter: "Filter",
-    #           parameters: {
-    #             "String" => "String",
-    #           },
-    #         },
-    #         configuration: {
-    #           extra_data_package_arn: "AmazonResourceName",
-    #           network_profile_arn: "AmazonResourceName",
-    #           locale: "String",
-    #           location: {
-    #             latitude: 1.0, # required
-    #             longitude: 1.0, # required
-    #           },
-    #           vpce_configuration_arns: ["AmazonResourceName"],
-    #           customer_artifact_paths: {
-    #             ios_paths: ["String"],
-    #             android_paths: ["String"],
-    #             device_host_paths: ["String"],
-    #           },
-    #           radios: {
-    #             wifi: false,
-    #             bluetooth: false,
-    #             nfc: false,
-    #             gps: false,
-    #           },
-    #           auxiliary_apps: ["AmazonResourceName"],
-    #           billing_method: "METERED", # accepts METERED, UNMETERED
-    #         },
-    #         execution_configuration: {
-    #           job_timeout_minutes: 1,
-    #           accounts_cleanup: false,
-    #           app_packages_cleanup: false,
-    #           video_capture: false,
-    #           skip_app_resign: false,
-    #         },
-    #       }
     #
     # @!attribute [rw] project_arn
     #   The ARN of the project for the run to be scheduled.
@@ -5849,19 +5148,6 @@ module Aws::DeviceFarm
     # parameter to ScheduleRun. For an example of the JSON request syntax,
     # see ScheduleRun.
     #
-    # @note When making an API call, you may pass ScheduleRunTest
-    #   data as a hash:
-    #
-    #       {
-    #         type: "BUILTIN_FUZZ", # required, accepts BUILTIN_FUZZ, BUILTIN_EXPLORER, WEB_PERFORMANCE_PROFILE, APPIUM_JAVA_JUNIT, APPIUM_JAVA_TESTNG, APPIUM_PYTHON, APPIUM_NODE, APPIUM_RUBY, APPIUM_WEB_JAVA_JUNIT, APPIUM_WEB_JAVA_TESTNG, APPIUM_WEB_PYTHON, APPIUM_WEB_NODE, APPIUM_WEB_RUBY, CALABASH, INSTRUMENTATION, UIAUTOMATION, UIAUTOMATOR, XCTEST, XCTEST_UI, REMOTE_ACCESS_RECORD, REMOTE_ACCESS_REPLAY
-    #         test_package_arn: "AmazonResourceName",
-    #         test_spec_arn: "AmazonResourceName",
-    #         filter: "Filter",
-    #         parameters: {
-    #           "String" => "String",
-    #         },
-    #       }
-    #
     # @!attribute [rw] type
     #   The test's type.
     #
@@ -5925,8 +5211,8 @@ module Aws::DeviceFarm
     #
     #   For all tests:
     #
-    #   * `app_performance_monitoring`\: Performance monitoring is enabled
-    #     by default. Set this parameter to false to disable it.
+    #   * `app_performance_monitoring`: Performance monitoring is enabled by
+    #     default. Set this parameter to false to disable it.
     #
     #   ^
     #
@@ -6033,13 +5319,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   Represents the Amazon Resource Name (ARN) of the Device Farm job to
     #   stop.
@@ -6066,13 +5345,6 @@ module Aws::DeviceFarm
     end
 
     # Represents the request to stop the remote access session.
-    #
-    # @note When making an API call, you may pass StopRemoteAccessSessionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the remote access session to stop.
@@ -6103,13 +5375,6 @@ module Aws::DeviceFarm
     end
 
     # Represents the request to stop a specific run.
-    #
-    # @note When making an API call, you may pass StopRunRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #       }
     #
     # @!attribute [rw] arn
     #   Represents the Amazon Resource Name (ARN) of the Device Farm run to
@@ -6288,14 +5553,6 @@ module Aws::DeviceFarm
     # which you define. Tag keys can have a maximum character length of 128
     # characters. Tag values can have a maximum length of 256 characters.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
-    #
     # @!attribute [rw] key
     #   One part of a key-value pair that makes up a tag. A `key` is a
     #   general label that acts like a category for more specific tag
@@ -6351,19 +5608,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "DeviceFarmArn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource or resources to which
     #   to add tags. You can associate tags with the following Device Farm
@@ -6550,6 +5794,10 @@ module Aws::DeviceFarm
     #   A human-readable description for the project.
     #   @return [String]
     #
+    # @!attribute [rw] vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #   @return [Types::TestGridVpcConfig]
+    #
     # @!attribute [rw] created
     #   When the project was created.
     #   @return [Time]
@@ -6560,6 +5808,7 @@ module Aws::DeviceFarm
       :arn,
       :name,
       :description,
+      :vpc_config,
       :created)
       SENSITIVE = []
       include Aws::Structure
@@ -6667,6 +5916,30 @@ module Aws::DeviceFarm
       :filename,
       :type,
       :url)
+      SENSITIVE = [:url]
+      include Aws::Structure
+    end
+
+    # The VPC security groups and subnets that are attached to a project.
+    #
+    # @!attribute [rw] security_group_ids
+    #   A list of VPC security group IDs in your Amazon VPC.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] subnet_ids
+    #   A list of VPC subnet IDs in your Amazon VPC.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] vpc_id
+    #   The ID of the Amazon VPC.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/TestGridVpcConfig AWS API Documentation
+    #
+    class TestGridVpcConfig < Struct.new(
+      :security_group_ids,
+      :subnet_ids,
+      :vpc_id)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -6729,14 +6002,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "DeviceFarmArn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource or resources from
     #   which to delete tags. You can associate tags with the following
@@ -6762,15 +6027,6 @@ module Aws::DeviceFarm
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateDeviceInstanceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         profile_arn: "AmazonResourceName",
-    #         labels: ["String"],
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the device instance.
     #   @return [String]
@@ -6808,24 +6064,6 @@ module Aws::DeviceFarm
     end
 
     # Represents a request to the update device pool operation.
-    #
-    # @note When making an API call, you may pass UpdateDevicePoolRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         name: "Name",
-    #         description: "Message",
-    #         rules: [
-    #           {
-    #             attribute: "ARN", # accepts ARN, PLATFORM, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, APPIUM_VERSION, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE, OS_VERSION, MODEL, AVAILABILITY
-    #             operator: "EQUALS", # accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
-    #             value: "String",
-    #           },
-    #         ],
-    #         max_devices: 1,
-    #         clear_max_devices: false,
-    #       }
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the Device Farm device pool to
@@ -6899,18 +6137,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateInstanceProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         name: "Name",
-    #         description: "Message",
-    #         package_cleanup: false,
-    #         exclude_app_packages_from_cleanup: ["String"],
-    #         reboot_after_use: false,
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the instance profile.
     #   @return [String]
@@ -6966,24 +6192,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateNetworkProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         name: "Name",
-    #         description: "Message",
-    #         type: "CURATED", # accepts CURATED, PRIVATE
-    #         uplink_bandwidth_bits: 1,
-    #         downlink_bandwidth_bits: 1,
-    #         uplink_delay_ms: 1,
-    #         downlink_delay_ms: 1,
-    #         uplink_jitter_ms: 1,
-    #         downlink_jitter_ms: 1,
-    #         uplink_loss_percent: 1,
-    #         downlink_loss_percent: 1,
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the project for which you want to
     #   update network profile settings.
@@ -7077,15 +6285,6 @@ module Aws::DeviceFarm
 
     # Represents a request to the update project operation.
     #
-    # @note When making an API call, you may pass UpdateProjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         name: "Name",
-    #         default_job_timeout_minutes: 1,
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the project whose name to update.
     #   @return [String]
@@ -7100,12 +6299,17 @@ module Aws::DeviceFarm
     #   times out.
     #   @return [Integer]
     #
+    # @!attribute [rw] vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #   @return [Types::VpcConfig]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateProjectRequest AWS API Documentation
     #
     class UpdateProjectRequest < Struct.new(
       :arn,
       :name,
-      :default_job_timeout_minutes)
+      :default_job_timeout_minutes,
+      :vpc_config)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -7124,15 +6328,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateTestGridProjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         project_arn: "DeviceFarmArn", # required
-    #         name: "ResourceName",
-    #         description: "ResourceDescription",
-    #       }
-    #
     # @!attribute [rw] project_arn
     #   ARN of the project to update.
     #   @return [String]
@@ -7145,12 +6340,17 @@ module Aws::DeviceFarm
     #   Human-readable description for the project.
     #   @return [String]
     #
+    # @!attribute [rw] vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #   @return [Types::TestGridVpcConfig]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateTestGridProjectRequest AWS API Documentation
     #
     class UpdateTestGridProjectRequest < Struct.new(
       :project_arn,
       :name,
-      :description)
+      :description,
+      :vpc_config)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -7167,16 +6367,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateUploadRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         name: "Name",
-    #         content_type: "ContentType",
-    #         edit_content: false,
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the uploaded test spec.
     #   @return [String]
@@ -7219,17 +6409,6 @@ module Aws::DeviceFarm
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateVPCEConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "AmazonResourceName", # required
-    #         vpce_configuration_name: "VPCEConfigurationName",
-    #         vpce_service_name: "VPCEServiceName",
-    #         service_dns_name: "ServiceDnsName",
-    #         vpce_configuration_description: "VPCEConfigurationDescription",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the VPC endpoint configuration you
     #   want to update.
@@ -7420,7 +6599,7 @@ module Aws::DeviceFarm
       :content_type,
       :message,
       :category)
-      SENSITIVE = []
+      SENSITIVE = [:url]
       include Aws::Structure
     end
 
@@ -7459,6 +6638,31 @@ module Aws::DeviceFarm
       :vpce_service_name,
       :service_dns_name,
       :vpce_configuration_description)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains the VPC configuration data necessary to interface with AWS
+    # Device Farm's services.
+    #
+    # @!attribute [rw] security_group_ids
+    #   An array of one or more security groups IDs in your Amazon VPC.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] subnet_ids
+    #   An array of one or more subnet IDs in your Amazon VPC.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] vpc_id
+    #   The ID of the Amazon VPC.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/VpcConfig AWS API Documentation
+    #
+    class VpcConfig < Struct.new(
+      :security_group_ids,
+      :subnet_ids,
+      :vpc_id)
       SENSITIVE = []
       include Aws::Structure
     end

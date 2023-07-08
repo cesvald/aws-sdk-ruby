@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:kinesisanalyticsv2)
@@ -73,8 +77,13 @@ module Aws::KinesisAnalyticsV2
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::KinesisAnalyticsV2::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::KinesisAnalyticsV2
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::KinesisAnalyticsV2
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::KinesisAnalyticsV2
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::KinesisAnalyticsV2
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::KinesisAnalyticsV2
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::KinesisAnalyticsV2::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::KinesisAnalyticsV2::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::KinesisAnalyticsV2
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::KinesisAnalyticsV2
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -511,7 +568,7 @@ module Aws::KinesisAnalyticsV2
     # Adds an InputProcessingConfiguration to a SQL-based Kinesis Data
     # Analytics application. An input processor pre-processes records on the
     # input stream before the application's SQL code executes. Currently,
-    # the only input processor available is [AWS Lambda][1].
+    # the only input processor available is [Amazon Lambda][1].
     #
     #
     #
@@ -579,7 +636,7 @@ module Aws::KinesisAnalyticsV2
     # If you want Kinesis Data Analytics to deliver data from an
     # in-application stream within your application to an external
     # destination (such as an Kinesis data stream, a Kinesis Data Firehose
-    # delivery stream, or an AWS Lambda function), you add the relevant
+    # delivery stream, or an Amazon Lambda function), you add the relevant
     # configuration to your application using this operation. You can
     # configure one or more outputs for your application. Each output
     # configuration maps an in-application stream and an external
@@ -608,8 +665,8 @@ module Aws::KinesisAnalyticsV2
     #   An array of objects, each describing one output configuration. In the
     #   output configuration, you specify the name of an in-application
     #   stream, a destination (that is, a Kinesis data stream, a Kinesis Data
-    #   Firehose delivery stream, or an AWS Lambda function), and record the
-    #   formation to use when writing to the destination.
+    #   Firehose delivery stream, or an Amazon Lambda function), and record
+    #   the formation to use when writing to the destination.
     #
     # @return [Types::AddApplicationOutputResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -848,8 +905,7 @@ module Aws::KinesisAnalyticsV2
     #   A summary description of the application.
     #
     # @option params [required, String] :runtime_environment
-    #   The runtime environment for the application (`SQL-1_0`, `FLINK-1_6`,
-    #   `FLINK-1_8`, or `FLINK-1_11`).
+    #   The runtime environment for the application.
     #
     # @option params [required, String] :service_execution_role
     #   The IAM role used by the application to access Kinesis data streams,
@@ -875,9 +931,9 @@ module Aws::KinesisAnalyticsV2
     #   [1]: https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html
     #
     # @option params [String] :application_mode
-    #   Use the `STREAMING` mode to create a Kinesis Data Analytics Studio
-    #   notebook. To create a Kinesis Data Analytics Studio notebook, use the
-    #   `INTERACTIVE` mode.
+    #   Use the `STREAMING` mode to create a Kinesis Data Analytics For Flink
+    #   application. To create a Kinesis Data Analytics Studio notebook, use
+    #   the `INTERACTIVE` mode.
     #
     # @return [Types::CreateApplicationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -888,7 +944,7 @@ module Aws::KinesisAnalyticsV2
     #   resp = client.create_application({
     #     application_name: "ApplicationName", # required
     #     application_description: "ApplicationDescription",
-    #     runtime_environment: "SQL-1_0", # required, accepts SQL-1_0, FLINK-1_6, FLINK-1_8, FLINK-1_11, ZEPPELIN-FLINK-1_0
+    #     runtime_environment: "SQL-1_0", # required, accepts SQL-1_0, FLINK-1_6, FLINK-1_8, ZEPPELIN-FLINK-1_0, FLINK-1_11, FLINK-1_13, ZEPPELIN-FLINK-2_0, FLINK-1_15, ZEPPELIN-FLINK-3_0
     #     service_execution_role: "RoleARN", # required
     #     application_configuration: {
     #       sql_application_configuration: {
@@ -1083,9 +1139,9 @@ module Aws::KinesisAnalyticsV2
     #   resp.application_detail.application_arn #=> String
     #   resp.application_detail.application_description #=> String
     #   resp.application_detail.application_name #=> String
-    #   resp.application_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "FLINK-1_11", "ZEPPELIN-FLINK-1_0"
+    #   resp.application_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "ZEPPELIN-FLINK-1_0", "FLINK-1_11", "FLINK-1_13", "ZEPPELIN-FLINK-2_0", "FLINK-1_15", "ZEPPELIN-FLINK-3_0"
     #   resp.application_detail.service_execution_role #=> String
-    #   resp.application_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "MAINTENANCE", "ROLLING_BACK", "ROLLED_BACK"
+    #   resp.application_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "ROLLING_BACK", "MAINTENANCE", "ROLLED_BACK"
     #   resp.application_detail.application_version_id #=> Integer
     #   resp.application_detail.create_timestamp #=> Time
     #   resp.application_detail.last_update_timestamp #=> Time
@@ -1205,8 +1261,7 @@ module Aws::KinesisAnalyticsV2
     end
 
     # Creates and returns a URL that you can use to connect to an
-    # application's extension. Currently, the only available extension is
-    # the Apache Flink dashboard.
+    # application's extension.
     #
     # The IAM role or user used to call this API defines the permissions to
     # access the extension. After the presigned URL is created, no
@@ -1625,9 +1680,9 @@ module Aws::KinesisAnalyticsV2
     #   resp.application_detail.application_arn #=> String
     #   resp.application_detail.application_description #=> String
     #   resp.application_detail.application_name #=> String
-    #   resp.application_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "FLINK-1_11", "ZEPPELIN-FLINK-1_0"
+    #   resp.application_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "ZEPPELIN-FLINK-1_0", "FLINK-1_11", "FLINK-1_13", "ZEPPELIN-FLINK-2_0", "FLINK-1_15", "ZEPPELIN-FLINK-3_0"
     #   resp.application_detail.service_execution_role #=> String
-    #   resp.application_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "MAINTENANCE", "ROLLING_BACK", "ROLLED_BACK"
+    #   resp.application_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "ROLLING_BACK", "MAINTENANCE", "ROLLED_BACK"
     #   resp.application_detail.application_version_id #=> Integer
     #   resp.application_detail.create_timestamp #=> Time
     #   resp.application_detail.last_update_timestamp #=> Time
@@ -1815,9 +1870,9 @@ module Aws::KinesisAnalyticsV2
     #   resp.application_version_detail.application_arn #=> String
     #   resp.application_version_detail.application_description #=> String
     #   resp.application_version_detail.application_name #=> String
-    #   resp.application_version_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "FLINK-1_11", "ZEPPELIN-FLINK-1_0"
+    #   resp.application_version_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "ZEPPELIN-FLINK-1_0", "FLINK-1_11", "FLINK-1_13", "ZEPPELIN-FLINK-2_0", "FLINK-1_15", "ZEPPELIN-FLINK-3_0"
     #   resp.application_version_detail.service_execution_role #=> String
-    #   resp.application_version_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "MAINTENANCE", "ROLLING_BACK", "ROLLED_BACK"
+    #   resp.application_version_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "ROLLING_BACK", "MAINTENANCE", "ROLLED_BACK"
     #   resp.application_version_detail.application_version_id #=> Integer
     #   resp.application_version_detail.create_timestamp #=> Time
     #   resp.application_version_detail.last_update_timestamp #=> Time
@@ -2086,8 +2141,8 @@ module Aws::KinesisAnalyticsV2
     # @option params [String] :next_token
     #   If a previous invocation of this operation returned a pagination
     #   token, pass it into this value to retrieve the next set of results.
-    #   For more information about pagination, see [Using the AWS Command Line
-    #   Interface's Pagination Options][1].
+    #   For more information about pagination, see [Using the Amazon Command
+    #   Line Interface's Pagination Options][1].
     #
     #
     #
@@ -2110,7 +2165,7 @@ module Aws::KinesisAnalyticsV2
     #
     #   resp.application_version_summaries #=> Array
     #   resp.application_version_summaries[0].application_version_id #=> Integer
-    #   resp.application_version_summaries[0].application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "MAINTENANCE", "ROLLING_BACK", "ROLLED_BACK"
+    #   resp.application_version_summaries[0].application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "ROLLING_BACK", "MAINTENANCE", "ROLLED_BACK"
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/ListApplicationVersions AWS API Documentation
@@ -2135,7 +2190,7 @@ module Aws::KinesisAnalyticsV2
     # @option params [String] :next_token
     #   If a previous command returned a pagination token, pass it into this
     #   value to retrieve the next set of results. For more information about
-    #   pagination, see [Using the AWS Command Line Interface's Pagination
+    #   pagination, see [Using the Amazon Command Line Interface's Pagination
     #   Options][1].
     #
     #
@@ -2159,9 +2214,9 @@ module Aws::KinesisAnalyticsV2
     #   resp.application_summaries #=> Array
     #   resp.application_summaries[0].application_name #=> String
     #   resp.application_summaries[0].application_arn #=> String
-    #   resp.application_summaries[0].application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "MAINTENANCE", "ROLLING_BACK", "ROLLED_BACK"
+    #   resp.application_summaries[0].application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "ROLLING_BACK", "MAINTENANCE", "ROLLED_BACK"
     #   resp.application_summaries[0].application_version_id #=> Integer
-    #   resp.application_summaries[0].runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "FLINK-1_11", "ZEPPELIN-FLINK-1_0"
+    #   resp.application_summaries[0].runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "ZEPPELIN-FLINK-1_0", "FLINK-1_11", "FLINK-1_13", "ZEPPELIN-FLINK-2_0", "FLINK-1_15", "ZEPPELIN-FLINK-3_0"
     #   resp.application_summaries[0].application_mode #=> String, one of "STREAMING", "INTERACTIVE"
     #   resp.next_token #=> String
     #
@@ -2245,9 +2300,9 @@ module Aws::KinesisAnalyticsV2
     #   resp.application_detail.application_arn #=> String
     #   resp.application_detail.application_description #=> String
     #   resp.application_detail.application_name #=> String
-    #   resp.application_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "FLINK-1_11", "ZEPPELIN-FLINK-1_0"
+    #   resp.application_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "ZEPPELIN-FLINK-1_0", "FLINK-1_11", "FLINK-1_13", "ZEPPELIN-FLINK-2_0", "FLINK-1_15", "ZEPPELIN-FLINK-3_0"
     #   resp.application_detail.service_execution_role #=> String
-    #   resp.application_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "MAINTENANCE", "ROLLING_BACK", "ROLLED_BACK"
+    #   resp.application_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "ROLLING_BACK", "MAINTENANCE", "ROLLED_BACK"
     #   resp.application_detail.application_version_id #=> Integer
     #   resp.application_detail.create_timestamp #=> Time
     #   resp.application_detail.last_update_timestamp #=> Time
@@ -2738,12 +2793,12 @@ module Aws::KinesisAnalyticsV2
     #         },
     #         catalog_configuration_update: {
     #           glue_data_catalog_configuration_update: { # required
-    #             database_arn_update: "DatabaseARN",
+    #             database_arn_update: "DatabaseARN", # required
     #           },
     #         },
     #         deploy_as_application_configuration_update: {
-    #           s3_content_location_update: { # required
-    #             bucket_arn_update: "BucketARN", # required
+    #           s3_content_location_update: {
+    #             bucket_arn_update: "BucketARN",
     #             base_path_update: "BasePath",
     #           },
     #         },
@@ -2788,9 +2843,9 @@ module Aws::KinesisAnalyticsV2
     #   resp.application_detail.application_arn #=> String
     #   resp.application_detail.application_description #=> String
     #   resp.application_detail.application_name #=> String
-    #   resp.application_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "FLINK-1_11", "ZEPPELIN-FLINK-1_0"
+    #   resp.application_detail.runtime_environment #=> String, one of "SQL-1_0", "FLINK-1_6", "FLINK-1_8", "ZEPPELIN-FLINK-1_0", "FLINK-1_11", "FLINK-1_13", "ZEPPELIN-FLINK-2_0", "FLINK-1_15", "ZEPPELIN-FLINK-3_0"
     #   resp.application_detail.service_execution_role #=> String
-    #   resp.application_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "MAINTENANCE", "ROLLING_BACK", "ROLLED_BACK"
+    #   resp.application_detail.application_status #=> String, one of "DELETING", "STARTING", "STOPPING", "READY", "RUNNING", "UPDATING", "AUTOSCALING", "FORCE_STOPPING", "ROLLING_BACK", "MAINTENANCE", "ROLLED_BACK"
     #   resp.application_detail.application_version_id #=> Integer
     #   resp.application_detail.create_timestamp #=> Time
     #   resp.application_detail.last_update_timestamp #=> Time
@@ -2988,7 +3043,7 @@ module Aws::KinesisAnalyticsV2
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-kinesisanalyticsv2'
-      context[:gem_version] = '1.30.0'
+      context[:gem_version] = '1.47.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

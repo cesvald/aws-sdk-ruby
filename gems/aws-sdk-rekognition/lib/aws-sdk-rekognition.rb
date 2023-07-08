@@ -13,10 +13,14 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-rekognition/types'
 require_relative 'aws-sdk-rekognition/client_api'
+require_relative 'aws-sdk-rekognition/plugins/endpoints.rb'
 require_relative 'aws-sdk-rekognition/client'
 require_relative 'aws-sdk-rekognition/errors'
 require_relative 'aws-sdk-rekognition/waiters'
 require_relative 'aws-sdk-rekognition/resource'
+require_relative 'aws-sdk-rekognition/endpoint_parameters'
+require_relative 'aws-sdk-rekognition/endpoint_provider'
+require_relative 'aws-sdk-rekognition/endpoints'
 require_relative 'aws-sdk-rekognition/customizations'
 
 # This module provides support for Amazon Rekognition. This module is available in the
@@ -29,7 +33,7 @@ require_relative 'aws-sdk-rekognition/customizations'
 # structure.
 #
 #     rekognition = Aws::Rekognition::Client.new
-#     resp = rekognition.compare_faces(params)
+#     resp = rekognition.associate_faces(params)
 #
 # See {Client} for more information.
 #
@@ -49,6 +53,6 @@ require_relative 'aws-sdk-rekognition/customizations'
 # @!group service
 module Aws::Rekognition
 
-  GEM_VERSION = '1.51.0'
+  GEM_VERSION = '1.84.0'
 
 end

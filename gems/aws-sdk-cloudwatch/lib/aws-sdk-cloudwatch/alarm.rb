@@ -102,7 +102,8 @@ module Aws::CloudWatch
       data[:state_reason_data]
     end
 
-    # The time stamp of the last update to the alarm state.
+    # The time stamp of the last update to the value of either the
+    # `StateValue` or `EvaluationState` parameters.
     # @return [Time]
     def state_updated_timestamp
       data[:state_updated_timestamp]
@@ -180,8 +181,17 @@ module Aws::CloudWatch
       data[:comparison_operator]
     end
 
-    # Sets how this alarm is to handle missing data points. If this
-    # parameter is omitted, the default behavior of `missing` is used.
+    # Sets how this alarm is to handle missing data points. The valid values
+    # are `breaching`, `notBreaching`, `ignore`, and `missing`. For more
+    # information, see [Configuring how CloudWatch alarms treat missing
+    # data][1].
+    #
+    # If this parameter is omitted, the default behavior of `missing` is
+    # used.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarms-and-missing-data
     # @return [String]
     def treat_missing_data
       data[:treat_missing_data]
@@ -214,6 +224,26 @@ module Aws::CloudWatch
       data[:threshold_metric_id]
     end
 
+    # If the value of this field is `PARTIAL_DATA`, the alarm is being
+    # evaluated based on only partial data. This happens if the query used
+    # for the alarm returns more than 10,000 metrics. For more information,
+    # see [Create alarms on Metrics Insights queries][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Create_Metrics_Insights_Alarm.html
+    # @return [String]
+    def evaluation_state
+      data[:evaluation_state]
+    end
+
+    # The date and time that the alarm's `StateValue` most recently
+    # changed.
+    # @return [Time]
+    def state_transitioned_timestamp
+      data[:state_transitioned_timestamp]
+    end
+
     # @!endgroup
 
     # @return [Client]
@@ -228,7 +258,9 @@ module Aws::CloudWatch
     #
     # @return [self]
     def load
-      resp = @client.describe_alarms(alarm_names: [@name])
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_alarms(alarm_names: [@name])
+      end
       @data = resp.metric_alarms[0]
       self
     end
@@ -273,7 +305,9 @@ module Aws::CloudWatch
       options, params = separate_params_and_options(options)
       waiter = Waiters::AlarmExists.new(options)
       yield_waiter_and_warn(waiter, &block) if block_given?
-      waiter.wait(params.merge(alarm_names: [@name]))
+      Aws::Plugins::UserAgent.feature('resource') do
+        waiter.wait(params.merge(alarm_names: [@name]))
+      end
       Alarm.new({
         name: @name,
         client: @client
@@ -374,7 +408,9 @@ module Aws::CloudWatch
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -386,7 +422,9 @@ module Aws::CloudWatch
     # @return [EmptyStructure]
     def delete(options = {})
       options = Aws::Util.deep_merge(options, alarm_names: [@name])
-      resp = @client.delete_alarms(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_alarms(options)
+      end
       resp.data
     end
 
@@ -425,7 +463,9 @@ module Aws::CloudWatch
     # @return [Types::DescribeAlarmHistoryOutput]
     def describe_history(options = {})
       options = options.merge(alarm_name: @name)
-      resp = @client.describe_alarm_history(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_alarm_history(options)
+      end
       resp.data
     end
 
@@ -436,7 +476,9 @@ module Aws::CloudWatch
     # @return [EmptyStructure]
     def disable_actions(options = {})
       options = Aws::Util.deep_merge(options, alarm_names: [@name])
-      resp = @client.disable_alarm_actions(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.disable_alarm_actions(options)
+      end
       resp.data
     end
 
@@ -447,7 +489,9 @@ module Aws::CloudWatch
     # @return [EmptyStructure]
     def enable_actions(options = {})
       options = Aws::Util.deep_merge(options, alarm_names: [@name])
-      resp = @client.enable_alarm_actions(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.enable_alarm_actions(options)
+      end
       resp.data
     end
 
@@ -475,7 +519,9 @@ module Aws::CloudWatch
     # @return [EmptyStructure]
     def set_state(options = {})
       options = options.merge(alarm_name: @name)
-      resp = @client.set_alarm_state(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.set_alarm_state(options)
+      end
       resp.data
     end
 
@@ -554,7 +600,9 @@ module Aws::CloudWatch
           batch.each do |item|
             params[:alarm_names] << item.name
           end
-          batch[0].client.delete_alarms(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.delete_alarms(params)
+          end
         end
         nil
       end
@@ -568,7 +616,9 @@ module Aws::CloudWatch
           batch.each do |item|
             params[:alarm_names] << item.name
           end
-          batch[0].client.disable_alarm_actions(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.disable_alarm_actions(params)
+          end
         end
         nil
       end
@@ -582,7 +632,9 @@ module Aws::CloudWatch
           batch.each do |item|
             params[:alarm_names] << item.name
           end
-          batch[0].client.enable_alarm_actions(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.enable_alarm_actions(params)
+          end
         end
         nil
       end

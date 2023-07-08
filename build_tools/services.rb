@@ -10,7 +10,7 @@ module BuildTools
     MANIFEST_PATH = File.expand_path('../../services.json', __FILE__)
 
     # Minimum `aws-sdk-core` version for new gem builds
-    MINIMUM_CORE_VERSION = "3.112.0"
+    MINIMUM_CORE_VERSION = "3.177.0"
 
     EVENTSTREAM_PLUGIN = "Aws::Plugins::EventStreamConfiguration"
 
@@ -63,7 +63,10 @@ module BuildTools
         waiters: model_path('waiters-2.json', config['models']),
         resources: model_path('resources-1.json', config['models']),
         examples: load_examples(svc_name, config['models']),
-        smoke_tests: model_path('smoke.json', config['models']),
+        smoke_tests: load_smoke(svc_name, config['models']),
+        legacy_endpoints: config.fetch('legacyEndpoints', false),
+        endpoint_rules: model_path('endpoint-rule-set-1.json', config['models']),
+        endpoint_tests: model_path('endpoint-tests-1.json', config['models']),
         gem_dependencies: gem_dependencies(api, config['dependencies'] || {}),
         add_plugins: add_plugins(api, config['addPlugins'] || []),
         remove_plugins: config['removePlugins'] || []
@@ -93,6 +96,17 @@ module BuildTools
       end
     end
 
+    def load_smoke(svc_name, models_dir)
+      path = model_path('smoke.json', models_dir)
+      if path
+        smoke = JSON.load(File.read(path))
+        BuildTools::Customizations.apply_smoke_customizations(svc_name, smoke)
+        smoke
+      else
+        nil
+      end
+    end
+
     def add_plugins(api, plugins)
       plugins << EVENTSTREAM_PLUGIN if eventstream?(api)
       plugins.inject({}) do |hash, plugin|
@@ -112,7 +126,7 @@ module BuildTools
       end
 
       gems_dir = File.expand_path('../../gems', __FILE__)
-      prefix = %w[sts sso].include?(gem) ? ["#{gems_dir}/aws-sdk-core/lib/aws-sdk-#{gem}"] :
+      prefix = %w[sts sso ssooidc].include?(gem) ? ["#{gems_dir}/aws-sdk-core/lib/aws-sdk-#{gem}"] :
         ["#{gems_dir}/aws-sdk-#{gem}/lib/aws-sdk-#{gem}"]
       (prefix + parts).join('/') + '.rb'
     end

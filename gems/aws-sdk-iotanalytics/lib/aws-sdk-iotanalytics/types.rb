@@ -13,17 +13,6 @@ module Aws::IoTAnalytics
     # An activity that adds other attributes based on existing attributes in
     # the message.
     #
-    # @note When making an API call, you may pass AddAttributesActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         attributes: { # required
-    #           "AttributeName" => "AttributeName",
-    #         },
-    #         next: "ActivityName",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the addAttributes activity.
     #   @return [String]
@@ -73,19 +62,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchPutMessageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         channel_name: "ChannelName", # required
-    #         messages: [ # required
-    #           {
-    #             message_id: "MessageId", # required
-    #             payload: "data", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] channel_name
     #   The name of the channel where the messages are sent.
     #   @return [String]
@@ -94,7 +70,7 @@ module Aws::IoTAnalytics
     #   The list of messages to be sent. Each message has the format: \\\{
     #   "messageId": "string", "payload": "string"\\}.
     #
-    #   The field names of message payloads (data) that you send to AWS IoT
+    #   The field names of message payloads (data) that you send to IoT
     #   Analytics:
     #
     #   * Must contain only alphanumeric characters and undescores (\_). No
@@ -135,14 +111,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CancelPipelineReprocessingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_name: "PipelineName", # required
-    #         reprocessing_id: "ReprocessingId", # required
-    #       }
-    #
     # @!attribute [rw] pipeline_name
     #   The name of pipeline for which data reprocessing is canceled.
     #   @return [String]
@@ -171,7 +139,7 @@ module Aws::IoTAnalytics
     # @!attribute [rw] storage
     #   Where channel data is stored. You can choose one of
     #   `serviceManagedS3` or `customerManagedS3` storage. If not specified,
-    #   the default is `serviceManagedS3`. You cannot change this storage
+    #   the default is `serviceManagedS3`. You can't change this storage
     #   option after the channel is created.
     #   @return [Types::ChannelStorage]
     #
@@ -198,7 +166,7 @@ module Aws::IoTAnalytics
     # @!attribute [rw] last_message_arrival_time
     #   The last time when a new message arrived in the channel.
     #
-    #   AWS IoT Analytics updates this value at most once per minute for one
+    #   IoT Analytics updates this value at most once per minute for one
     #   channel. Hence, the `lastMessageArrivalTime` value is an
     #   approximation.
     #
@@ -222,15 +190,6 @@ module Aws::IoTAnalytics
     # The activity that determines the source of the messages to be
     # processed.
     #
-    # @note When making an API call, you may pass ChannelActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         channel_name: "ChannelName", # required
-    #         next: "ActivityName",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the channel activity.
     #   @return [String]
@@ -253,16 +212,14 @@ module Aws::IoTAnalytics
 
     # Specifies one or more sets of channel messages.
     #
-    # @note When making an API call, you may pass ChannelMessages
-    #   data as a hash:
-    #
-    #       {
-    #         s3_paths: ["S3PathChannelMessage"],
-    #       }
-    #
     # @!attribute [rw] s3_paths
     #   Specifies one or more keys that identify the Amazon Simple Storage
     #   Service (Amazon S3) objects that save your channel messages.
+    #
+    #   You must use the full path for the key.
+    #
+    #   Example path: `channel/mychannel/__dt=2020-02-29
+    #   00:00:00/1582940490000_1582940520000_123456789012_mychannel_0_2118.0.json.gz`
     #   @return [Array<String>]
     #
     class ChannelMessages < Struct.new(
@@ -283,36 +240,22 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Where channel data is stored. You may choose one of `serviceManagedS3`
-    # or `customerManagedS3` storage. If not specified, the default is
-    # `serviceManagedS3`. This cannot be changed after creation of the
-    # channel.
-    #
-    # @note When making an API call, you may pass ChannelStorage
-    #   data as a hash:
-    #
-    #       {
-    #         service_managed_s3: {
-    #         },
-    #         customer_managed_s3: {
-    #           bucket: "BucketName", # required
-    #           key_prefix: "S3KeyPrefix",
-    #           role_arn: "RoleArn", # required
-    #         },
-    #       }
+    # Where channel data is stored. You may choose one of
+    # `serviceManagedS3`, `customerManagedS3` storage. If not specified, the
+    # default is `serviceManagedS3`. This can't be changed after creation
+    # of the channel.
     #
     # @!attribute [rw] service_managed_s3
-    #   Use this to store channel data in an S3 bucket managed by AWS IoT
-    #   Analytics. You cannot change the choice of service-managed or
-    #   customer-managed S3 storage after the channel is created.
+    #   Used to store channel data in an S3 bucket managed by IoT Analytics.
+    #   You can't change the choice of S3 storage after the data store is
+    #   created.
     #   @return [Types::ServiceManagedChannelS3Storage]
     #
     # @!attribute [rw] customer_managed_s3
-    #   Use this to store channel data in an S3 bucket that you manage. If
+    #   Used to store channel data in an S3 bucket that you manage. If
     #   customer managed storage is selected, the `retentionPeriod`
-    #   parameter is ignored. You cannot change the choice of
-    #   service-managed or customer-managed S3 storage after the channel is
-    #   created.
+    #   parameter is ignored. You can't change the choice of S3 storage
+    #   after the data store is created.
     #   @return [Types::CustomerManagedChannelS3Storage]
     #
     class ChannelStorage < Struct.new(
@@ -325,8 +268,7 @@ module Aws::IoTAnalytics
     # Where channel data is stored.
     #
     # @!attribute [rw] service_managed_s3
-    #   Used to store channel data in an S3 bucket managed by AWS IoT
-    #   Analytics.
+    #   Used to store channel data in an S3 bucket managed by IoT Analytics.
     #   @return [Types::ServiceManagedChannelS3StorageSummary]
     #
     # @!attribute [rw] customer_managed_s3
@@ -365,7 +307,7 @@ module Aws::IoTAnalytics
     # @!attribute [rw] last_message_arrival_time
     #   The last time when a new message arrived in the channel.
     #
-    #   AWS IoT Analytics updates this value at most once per minute for one
+    #   IoT Analytics updates this value at most once per minute for one
     #   channel. Hence, the `lastMessageArrivalTime` value is an
     #   approximation.
     #
@@ -386,21 +328,13 @@ module Aws::IoTAnalytics
 
     # Contains information about a column that stores your data.
     #
-    # @note When making an API call, you may pass Column
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ColumnName", # required
-    #         type: "ColumnDataType", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the column.
     #   @return [String]
     #
     # @!attribute [rw] type
     #   The type of data. For more information about the supported data
-    #   types, see [Common data types][1] in the *AWS Glue Developer Guide*.
+    #   types, see [Common data types][1] in the *Glue Developer Guide*.
     #
     #
     #
@@ -416,31 +350,6 @@ module Aws::IoTAnalytics
 
     # Information required to run the `containerAction` to produce dataset
     # contents.
-    #
-    # @note When making an API call, you may pass ContainerDatasetAction
-    #   data as a hash:
-    #
-    #       {
-    #         image: "Image", # required
-    #         execution_role_arn: "RoleArn", # required
-    #         resource_configuration: { # required
-    #           compute_type: "ACU_1", # required, accepts ACU_1, ACU_2
-    #           volume_size_in_gb: 1, # required
-    #         },
-    #         variables: [
-    #           {
-    #             name: "VariableName", # required
-    #             string_value: "StringValue",
-    #             double_value: 1.0,
-    #             dataset_content_version_value: {
-    #               dataset_name: "DatasetName", # required
-    #             },
-    #             output_file_uri_value: {
-    #               file_name: "OutputFileName", # required
-    #             },
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] image
     #   The ARN of the Docker container stored in your account. The Docker
@@ -476,32 +385,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         channel_name: "ChannelName", # required
-    #         channel_storage: {
-    #           service_managed_s3: {
-    #           },
-    #           customer_managed_s3: {
-    #             bucket: "BucketName", # required
-    #             key_prefix: "S3KeyPrefix",
-    #             role_arn: "RoleArn", # required
-    #           },
-    #         },
-    #         retention_period: {
-    #           unlimited: false,
-    #           number_of_days: 1,
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] channel_name
     #   The name of the channel.
     #   @return [String]
@@ -509,7 +392,7 @@ module Aws::IoTAnalytics
     # @!attribute [rw] channel_storage
     #   Where channel data is stored. You can choose one of
     #   `serviceManagedS3` or `customerManagedS3` storage. If not specified,
-    #   the default is `serviceManagedS3`. You cannot change this storage
+    #   the default is `serviceManagedS3`. You can't change this storage
     #   option after the channel is created.
     #   @return [Types::ChannelStorage]
     #
@@ -551,14 +434,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDatasetContentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #         version_id: "DatasetContentVersion",
-    #       }
-    #
     # @!attribute [rw] dataset_name
     #   The name of the dataset.
     #   @return [String]
@@ -589,115 +464,17 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDatasetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #         actions: [ # required
-    #           {
-    #             action_name: "DatasetActionName",
-    #             query_action: {
-    #               sql_query: "SqlQuery", # required
-    #               filters: [
-    #                 {
-    #                   delta_time: {
-    #                     offset_seconds: 1, # required
-    #                     time_expression: "TimeExpression", # required
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #             container_action: {
-    #               image: "Image", # required
-    #               execution_role_arn: "RoleArn", # required
-    #               resource_configuration: { # required
-    #                 compute_type: "ACU_1", # required, accepts ACU_1, ACU_2
-    #                 volume_size_in_gb: 1, # required
-    #               },
-    #               variables: [
-    #                 {
-    #                   name: "VariableName", # required
-    #                   string_value: "StringValue",
-    #                   double_value: 1.0,
-    #                   dataset_content_version_value: {
-    #                     dataset_name: "DatasetName", # required
-    #                   },
-    #                   output_file_uri_value: {
-    #                     file_name: "OutputFileName", # required
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         ],
-    #         triggers: [
-    #           {
-    #             schedule: {
-    #               expression: "ScheduleExpression",
-    #             },
-    #             dataset: {
-    #               name: "DatasetName", # required
-    #             },
-    #           },
-    #         ],
-    #         content_delivery_rules: [
-    #           {
-    #             entry_name: "EntryName",
-    #             destination: { # required
-    #               iot_events_destination_configuration: {
-    #                 input_name: "IotEventsInputName", # required
-    #                 role_arn: "RoleArn", # required
-    #               },
-    #               s3_destination_configuration: {
-    #                 bucket: "BucketName", # required
-    #                 key: "BucketKeyExpression", # required
-    #                 glue_configuration: {
-    #                   table_name: "GlueTableName", # required
-    #                   database_name: "GlueDatabaseName", # required
-    #                 },
-    #                 role_arn: "RoleArn", # required
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         retention_period: {
-    #           unlimited: false,
-    #           number_of_days: 1,
-    #         },
-    #         versioning_configuration: {
-    #           unlimited: false,
-    #           max_versions: 1,
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         late_data_rules: [
-    #           {
-    #             rule_name: "LateDataRuleName",
-    #             rule_configuration: { # required
-    #               delta_time_session_window_configuration: {
-    #                 timeout_in_minutes: 1, # required
-    #               },
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] dataset_name
-    #   The name of the data set.
+    #   The name of the dataset.
     #   @return [String]
     #
     # @!attribute [rw] actions
-    #   A list of actions that create the data set contents.
+    #   A list of actions that create the dataset contents.
     #   @return [Array<Types::DatasetAction>]
     #
     # @!attribute [rw] triggers
-    #   A list of triggers. A trigger causes data set contents to be
-    #   populated at a specified time interval or when another data set's
+    #   A list of triggers. A trigger causes dataset contents to be
+    #   populated at a specified time interval or when another dataset's
     #   contents are created. The list of triggers can be empty or contain
     #   up to five `DataSetTrigger` objects.
     #   @return [Array<Types::DatasetTrigger>]
@@ -712,9 +489,9 @@ module Aws::IoTAnalytics
     #   for the dataset. If not specified or set to `null`, versions of
     #   dataset contents are retained for at most 90 days. The number of
     #   versions of dataset contents retained is determined by the
-    #   `versioningConfiguration` parameter. For more information, see
-    #   [Keeping Multiple Versions of AWS IoT Analytics Data Sets][1] in the
-    #   *AWS IoT Analytics User Guide*.
+    #   `versioningConfiguration` parameter. For more information, see [
+    #   Keeping Multiple Versions of IoT Analytics datasets][1] in the *IoT
+    #   Analytics User Guide*.
     #
     #
     #
@@ -726,8 +503,8 @@ module Aws::IoTAnalytics
     #   specified or set to null, only the latest version plus the latest
     #   succeeded version (if they are different) are kept for the time
     #   period specified by the `retentionPeriod` parameter. For more
-    #   information, see [Keeping Multiple Versions of AWS IoT Analytics
-    #   Data Sets][1] in the *AWS IoT Analytics User Guide*.
+    #   information, see [Keeping Multiple Versions of IoT Analytics
+    #   datasets][1] in the *IoT Analytics User Guide*.
     #
     #
     #
@@ -735,13 +512,13 @@ module Aws::IoTAnalytics
     #   @return [Types::VersioningConfiguration]
     #
     # @!attribute [rw] tags
-    #   Metadata which can be used to manage the data set.
+    #   Metadata which can be used to manage the dataset.
     #   @return [Array<Types::Tag>]
     #
     # @!attribute [rw] late_data_rules
-    #   A list of data rules that send notifications to Amazon CloudWatch,
-    #   when data arrives late. To specify `lateDataRules`, the dataset must
-    #   use a [DeltaTimer][1] filter.
+    #   A list of data rules that send notifications to CloudWatch, when
+    #   data arrives late. To specify `lateDataRules`, the dataset must use
+    #   a [DeltaTimer][1] filter.
     #
     #
     #
@@ -781,55 +558,16 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDatastoreRequest
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_name: "DatastoreName", # required
-    #         datastore_storage: {
-    #           service_managed_s3: {
-    #           },
-    #           customer_managed_s3: {
-    #             bucket: "BucketName", # required
-    #             key_prefix: "S3KeyPrefix",
-    #             role_arn: "RoleArn", # required
-    #           },
-    #         },
-    #         retention_period: {
-    #           unlimited: false,
-    #           number_of_days: 1,
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         file_format_configuration: {
-    #           json_configuration: {
-    #           },
-    #           parquet_configuration: {
-    #             schema_definition: {
-    #               columns: [
-    #                 {
-    #                   name: "ColumnName", # required
-    #                   type: "ColumnDataType", # required
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] datastore_name
     #   The name of the data store.
     #   @return [String]
     #
     # @!attribute [rw] datastore_storage
-    #   Where data store data is stored. You can choose one of
-    #   `serviceManagedS3` or `customerManagedS3` storage. If not specified,
-    #   the default is `serviceManagedS3`. You cannot change this storage
-    #   option after the data store is created.
+    #   Where data in a data store is stored.. You can choose
+    #   `serviceManagedS3` storage, `customerManagedS3` storage, or
+    #   `iotSiteWiseMultiLayerStorage` storage. The default is
+    #   `serviceManagedS3`. You can't change the choice of Amazon S3
+    #   storage after your data store is created.
     #   @return [Types::DatastoreStorage]
     #
     # @!attribute [rw] retention_period
@@ -842,7 +580,7 @@ module Aws::IoTAnalytics
     #   @return [Array<Types::Tag>]
     #
     # @!attribute [rw] file_format_configuration
-    #   Contains the configuration information of file formats. AWS IoT
+    #   Contains the configuration information of file formats. IoT
     #   Analytics data stores support JSON and [Parquet][1].
     #
     #   The default file format is JSON. You can specify only one format.
@@ -854,12 +592,17 @@ module Aws::IoTAnalytics
     #   [1]: https://parquet.apache.org/
     #   @return [Types::FileFormatConfiguration]
     #
+    # @!attribute [rw] datastore_partitions
+    #   Contains information about the partition dimensions in a data store.
+    #   @return [Types::DatastorePartitions]
+    #
     class CreateDatastoreRequest < Struct.new(
       :datastore_name,
       :datastore_storage,
       :retention_period,
       :tags,
-      :file_format_configuration)
+      :file_format_configuration,
+      :datastore_partitions)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -884,80 +627,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreatePipelineRequest
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_name: "PipelineName", # required
-    #         pipeline_activities: [ # required
-    #           {
-    #             channel: {
-    #               name: "ActivityName", # required
-    #               channel_name: "ChannelName", # required
-    #               next: "ActivityName",
-    #             },
-    #             lambda: {
-    #               name: "ActivityName", # required
-    #               lambda_name: "LambdaName", # required
-    #               batch_size: 1, # required
-    #               next: "ActivityName",
-    #             },
-    #             datastore: {
-    #               name: "ActivityName", # required
-    #               datastore_name: "DatastoreName", # required
-    #             },
-    #             add_attributes: {
-    #               name: "ActivityName", # required
-    #               attributes: { # required
-    #                 "AttributeName" => "AttributeName",
-    #               },
-    #               next: "ActivityName",
-    #             },
-    #             remove_attributes: {
-    #               name: "ActivityName", # required
-    #               attributes: ["AttributeName"], # required
-    #               next: "ActivityName",
-    #             },
-    #             select_attributes: {
-    #               name: "ActivityName", # required
-    #               attributes: ["AttributeName"], # required
-    #               next: "ActivityName",
-    #             },
-    #             filter: {
-    #               name: "ActivityName", # required
-    #               filter: "FilterExpression", # required
-    #               next: "ActivityName",
-    #             },
-    #             math: {
-    #               name: "ActivityName", # required
-    #               attribute: "AttributeName", # required
-    #               math: "MathExpression", # required
-    #               next: "ActivityName",
-    #             },
-    #             device_registry_enrich: {
-    #               name: "ActivityName", # required
-    #               attribute: "AttributeName", # required
-    #               thing_name: "AttributeName", # required
-    #               role_arn: "RoleArn", # required
-    #               next: "ActivityName",
-    #             },
-    #             device_shadow_enrich: {
-    #               name: "ActivityName", # required
-    #               attribute: "AttributeName", # required
-    #               thing_name: "AttributeName", # required
-    #               role_arn: "RoleArn", # required
-    #               next: "ActivityName",
-    #             },
-    #           },
-    #         ],
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] pipeline_name
     #   The name of the pipeline.
     #   @return [String]
@@ -966,7 +635,7 @@ module Aws::IoTAnalytics
     #   A list of `PipelineActivity` objects. Activities perform
     #   transformations on your messages, such as removing, renaming or
     #   adding message attributes; filtering messages based on attribute
-    #   values; invoking your Lambda functions on messages for advanced
+    #   values; invoking your Lambda unctions on messages for advanced
     #   processing; or performing mathematical transformations to normalize
     #   device data.
     #
@@ -1005,34 +674,25 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Use this to store channel data in an S3 bucket that you manage. If
-    # customer managed storage is selected, the `retentionPeriod` parameter
-    # is ignored. You cannot change the choice of service-managed or
-    # customer-managed S3 storage after the channel is created.
-    #
-    # @note When making an API call, you may pass CustomerManagedChannelS3Storage
-    #   data as a hash:
-    #
-    #       {
-    #         bucket: "BucketName", # required
-    #         key_prefix: "S3KeyPrefix",
-    #         role_arn: "RoleArn", # required
-    #       }
+    # Used to store channel data in an S3 bucket that you manage. If
+    # customer-managed storage is selected, the `retentionPeriod` parameter
+    # is ignored. You can't change the choice of S3 storage after the data
+    # store is created.
     #
     # @!attribute [rw] bucket
     #   The name of the S3 bucket in which channel data is stored.
     #   @return [String]
     #
     # @!attribute [rw] key_prefix
-    #   Optional. The prefix used to create the keys of the channel data
+    #   (Optional) The prefix used to create the keys of the channel data
     #   objects. Each object in an S3 bucket has a key that is its unique
     #   identifier in the bucket. Each object in a bucket has exactly one
     #   key. The prefix must end with a forward slash (/).
     #   @return [String]
     #
     # @!attribute [rw] role_arn
-    #   The ARN of the role that grants AWS IoT Analytics permission to
-    #   interact with your Amazon S3 resources.
+    #   The ARN of the role that grants IoT Analytics permission to interact
+    #   with your Amazon S3 resources.
     #   @return [String]
     #
     class CustomerManagedChannelS3Storage < Struct.new(
@@ -1050,15 +710,15 @@ module Aws::IoTAnalytics
     #   @return [String]
     #
     # @!attribute [rw] key_prefix
-    #   Optional. The prefix used to create the keys of the channel data
+    #   (Optional) The prefix used to create the keys of the channel data
     #   objects. Each object in an S3 bucket has a key that is its unique
     #   identifier within the bucket (each object in a bucket has exactly
     #   one key). The prefix must end with a forward slash (/).
     #   @return [String]
     #
     # @!attribute [rw] role_arn
-    #   The ARN of the role that grants AWS IoT Analytics permission to
-    #   interact with your Amazon S3 resources.
+    #   The ARN of the role that grants IoT Analytics permission to interact
+    #   with your Amazon S3 resources.
     #   @return [String]
     #
     class CustomerManagedChannelS3StorageSummary < Struct.new(
@@ -1069,34 +729,24 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Use this to store data store data in an S3 bucket that you manage.
-    # When customer-managed storage is selected, the `retentionPeriod`
-    # parameter is ignored. You cannot change the choice of service-managed
-    # or customer-managed S3 storage after the data store is created.
-    #
-    # @note When making an API call, you may pass CustomerManagedDatastoreS3Storage
-    #   data as a hash:
-    #
-    #       {
-    #         bucket: "BucketName", # required
-    #         key_prefix: "S3KeyPrefix",
-    #         role_arn: "RoleArn", # required
-    #       }
+    # S3-customer-managed; When you choose customer-managed storage, the
+    # `retentionPeriod` parameter is ignored. You can't change the choice
+    # of Amazon S3 storage after your data store is created.
     #
     # @!attribute [rw] bucket
-    #   The name of the S3 bucket in which data store data is stored.
+    #   The name of the Amazon S3 bucket where your data is stored.
     #   @return [String]
     #
     # @!attribute [rw] key_prefix
-    #   Optional. The prefix used to create the keys of the data store data
-    #   objects. Each object in an S3 bucket has a key that is its unique
-    #   identifier in the bucket. Each object in a bucket has exactly one
-    #   key. The prefix must end with a forward slash (/).
+    #   (Optional) The prefix used to create the keys of the data store data
+    #   objects. Each object in an Amazon S3 bucket has a key that is its
+    #   unique identifier in the bucket. Each object in a bucket has exactly
+    #   one key. The prefix must end with a forward slash (/).
     #   @return [String]
     #
     # @!attribute [rw] role_arn
-    #   The ARN of the role that grants AWS IoT Analytics permission to
-    #   interact with your Amazon S3 resources.
+    #   The ARN of the role that grants IoT Analytics permission to interact
+    #   with your Amazon S3 resources.
     #   @return [String]
     #
     class CustomerManagedDatastoreS3Storage < Struct.new(
@@ -1107,22 +757,22 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Used to store data store data in an S3 bucket that you manage.
+    # Contains information about the data store that you manage.
     #
     # @!attribute [rw] bucket
-    #   The name of the S3 bucket in which data store data is stored.
+    #   The name of the Amazon S3 bucket where your data is stored.
     #   @return [String]
     #
     # @!attribute [rw] key_prefix
-    #   Optional. The prefix used to create the keys of the data store data
-    #   objects. Each object in an S3 bucket has a key that is its unique
-    #   identifier in the bucket. Each object in a bucket has exactly one
-    #   key. The prefix must end with a forward slash (/).
+    #   (Optional) The prefix used to create the keys of the data store data
+    #   objects. Each object in an Amazon S3 bucket has a key that is its
+    #   unique identifier in the bucket. Each object in a bucket has exactly
+    #   one key. The prefix must end with a forward slash (/).
     #   @return [String]
     #
     # @!attribute [rw] role_arn
-    #   The ARN of the role that grants AWS IoT Analytics permission to
-    #   interact with your Amazon S3 resources.
+    #   The ARN of the role that grants IoT Analytics permission to interact
+    #   with your Amazon S3 resources.
     #   @return [String]
     #
     class CustomerManagedDatastoreS3StorageSummary < Struct.new(
@@ -1133,23 +783,23 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Information about a data set.
+    # Information about a dataset.
     #
     # @!attribute [rw] name
-    #   The name of the data set.
+    #   The name of the dataset.
     #   @return [String]
     #
     # @!attribute [rw] arn
-    #   The ARN of the data set.
+    #   The ARN of the dataset.
     #   @return [String]
     #
     # @!attribute [rw] actions
-    #   The `DatasetAction` objects that automatically create the data set
+    #   The `DatasetAction` objects that automatically create the dataset
     #   contents.
     #   @return [Array<Types::DatasetAction>]
     #
     # @!attribute [rw] triggers
-    #   The `DatasetTrigger` objects that specify when the data set is
+    #   The `DatasetTrigger` objects that specify when the dataset is
     #   automatically updated.
     #   @return [Array<Types::DatasetTrigger>]
     #
@@ -1159,19 +809,19 @@ module Aws::IoTAnalytics
     #   @return [Array<Types::DatasetContentDeliveryRule>]
     #
     # @!attribute [rw] status
-    #   The status of the data set.
+    #   The status of the dataset.
     #   @return [String]
     #
     # @!attribute [rw] creation_time
-    #   When the data set was created.
+    #   When the dataset was created.
     #   @return [Time]
     #
     # @!attribute [rw] last_update_time
-    #   The last time the data set was updated.
+    #   The last time the dataset was updated.
     #   @return [Time]
     #
     # @!attribute [rw] retention_period
-    #   Optional. How long, in days, message data is kept for the data set.
+    #   Optional. How long, in days, message data is kept for the dataset.
     #   @return [Types::RetentionPeriod]
     #
     # @!attribute [rw] versioning_configuration
@@ -1179,8 +829,8 @@ module Aws::IoTAnalytics
     #   specified or set to null, only the latest version plus the latest
     #   succeeded version (if they are different) are kept for the time
     #   period specified by the `retentionPeriod` parameter. For more
-    #   information, see [Keeping Multiple Versions of AWS IoT Analytics
-    #   Data Sets][1] in the *AWS IoT Analytics User Guide*.
+    #   information, see [ Keeping Multiple Versions of IoT Analytics
+    #   datasets][1] in the *IoT Analytics User Guide*.
     #
     #
     #
@@ -1188,9 +838,9 @@ module Aws::IoTAnalytics
     #   @return [Types::VersioningConfiguration]
     #
     # @!attribute [rw] late_data_rules
-    #   A list of data rules that send notifications to Amazon CloudWatch,
-    #   when data arrives late. To specify `lateDataRules`, the dataset must
-    #   use a [DeltaTimer][1] filter.
+    #   A list of data rules that send notifications to CloudWatch, when
+    #   data arrives late. To specify `lateDataRules`, the dataset must use
+    #   a [DeltaTimer][1] filter.
     #
     #
     #
@@ -1213,56 +863,17 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # A `DatasetAction` object that specifies how data set contents are
+    # A `DatasetAction` object that specifies how dataset contents are
     # automatically created.
     #
-    # @note When making an API call, you may pass DatasetAction
-    #   data as a hash:
-    #
-    #       {
-    #         action_name: "DatasetActionName",
-    #         query_action: {
-    #           sql_query: "SqlQuery", # required
-    #           filters: [
-    #             {
-    #               delta_time: {
-    #                 offset_seconds: 1, # required
-    #                 time_expression: "TimeExpression", # required
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         container_action: {
-    #           image: "Image", # required
-    #           execution_role_arn: "RoleArn", # required
-    #           resource_configuration: { # required
-    #             compute_type: "ACU_1", # required, accepts ACU_1, ACU_2
-    #             volume_size_in_gb: 1, # required
-    #           },
-    #           variables: [
-    #             {
-    #               name: "VariableName", # required
-    #               string_value: "StringValue",
-    #               double_value: 1.0,
-    #               dataset_content_version_value: {
-    #                 dataset_name: "DatasetName", # required
-    #               },
-    #               output_file_uri_value: {
-    #                 file_name: "OutputFileName", # required
-    #               },
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] action_name
-    #   The name of the data set action by which data set contents are
+    #   The name of the dataset action by which dataset contents are
     #   automatically created.
     #   @return [String]
     #
     # @!attribute [rw] query_action
     #   An `SqlQueryDatasetAction` object that uses an SQL query to
-    #   automatically create data set contents.
+    #   automatically create dataset contents.
     #   @return [Types::SqlQueryDatasetAction]
     #
     # @!attribute [rw] container_action
@@ -1301,28 +912,9 @@ module Aws::IoTAnalytics
 
     # The destination to which dataset contents are delivered.
     #
-    # @note When making an API call, you may pass DatasetContentDeliveryDestination
-    #   data as a hash:
-    #
-    #       {
-    #         iot_events_destination_configuration: {
-    #           input_name: "IotEventsInputName", # required
-    #           role_arn: "RoleArn", # required
-    #         },
-    #         s3_destination_configuration: {
-    #           bucket: "BucketName", # required
-    #           key: "BucketKeyExpression", # required
-    #           glue_configuration: {
-    #             table_name: "GlueTableName", # required
-    #             database_name: "GlueDatabaseName", # required
-    #           },
-    #           role_arn: "RoleArn", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] iot_events_destination_configuration
-    #   Configuration information for delivery of dataset contents to AWS
-    #   IoT Events.
+    #   Configuration information for delivery of dataset contents to IoT
+    #   Events.
     #   @return [Types::IotEventsDestinationConfiguration]
     #
     # @!attribute [rw] s3_destination_configuration
@@ -1340,28 +932,6 @@ module Aws::IoTAnalytics
     # When dataset contents are created, they are delivered to destination
     # specified here.
     #
-    # @note When making an API call, you may pass DatasetContentDeliveryRule
-    #   data as a hash:
-    #
-    #       {
-    #         entry_name: "EntryName",
-    #         destination: { # required
-    #           iot_events_destination_configuration: {
-    #             input_name: "IotEventsInputName", # required
-    #             role_arn: "RoleArn", # required
-    #           },
-    #           s3_destination_configuration: {
-    #             bucket: "BucketName", # required
-    #             key: "BucketKeyExpression", # required
-    #             glue_configuration: {
-    #               table_name: "GlueTableName", # required
-    #               database_name: "GlueDatabaseName", # required
-    #             },
-    #             role_arn: "RoleArn", # required
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] entry_name
     #   The name of the dataset content delivery rules entry.
     #   @return [String]
@@ -1377,16 +947,16 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # The state of the data set contents and the reason they are in this
+    # The state of the dataset contents and the reason they are in this
     # state.
     #
     # @!attribute [rw] state
-    #   The state of the data set contents. Can be one of READY, CREATING,
+    #   The state of the dataset contents. Can be one of READY, CREATING,
     #   SUCCEEDED, or FAILED.
     #   @return [String]
     #
     # @!attribute [rw] reason
-    #   The reason the data set contents are in this state.
+    #   The reason the dataset contents are in this state.
     #   @return [String]
     #
     class DatasetContentStatus < Struct.new(
@@ -1403,7 +973,7 @@ module Aws::IoTAnalytics
     #   @return [String]
     #
     # @!attribute [rw] status
-    #   The status of the data set contents.
+    #   The status of the dataset contents.
     #   @return [Types::DatasetContentStatus]
     #
     # @!attribute [rw] creation_time
@@ -1433,13 +1003,6 @@ module Aws::IoTAnalytics
     # The dataset whose latest contents are used as input to the notebook or
     # application.
     #
-    # @note When making an API call, you may pass DatasetContentVersionValue
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #       }
-    #
     # @!attribute [rw] dataset_name
     #   The name of the dataset whose latest contents are used as input to
     #   the notebook or application.
@@ -1451,14 +1014,14 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # The reference to a data set entry.
+    # The reference to a dataset entry.
     #
     # @!attribute [rw] entry_name
-    #   The name of the data set item.
+    #   The name of the dataset item.
     #   @return [String]
     #
     # @!attribute [rw] data_uri
-    #   The presigned URI of the data set item.
+    #   The presigned URI of the dataset item.
     #   @return [String]
     #
     class DatasetEntry < Struct.new(
@@ -1468,28 +1031,28 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # A summary of information about a data set.
+    # A summary of information about a dataset.
     #
     # @!attribute [rw] dataset_name
-    #   The name of the data set.
+    #   The name of the dataset.
     #   @return [String]
     #
     # @!attribute [rw] status
-    #   The status of the data set.
+    #   The status of the dataset.
     #   @return [String]
     #
     # @!attribute [rw] creation_time
-    #   The time the data set was created.
+    #   The time the dataset was created.
     #   @return [Time]
     #
     # @!attribute [rw] last_update_time
-    #   The last time the data set was updated.
+    #   The last time the dataset was updated.
     #   @return [Time]
     #
     # @!attribute [rw] triggers
-    #   A list of triggers. A trigger causes data set content to be
-    #   populated at a specified time interval or when another data set is
-    #   populated. The list of triggers can be empty or contain up to five
+    #   A list of triggers. A trigger causes dataset content to be populated
+    #   at a specified time interval or when another dataset is populated.
+    #   The list of triggers can be empty or contain up to five
     #   `DataSetTrigger` objects
     #   @return [Array<Types::DatasetTrigger>]
     #
@@ -1508,28 +1071,16 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # The `DatasetTrigger` that specifies when the data set is automatically
+    # The `DatasetTrigger` that specifies when the dataset is automatically
     # updated.
-    #
-    # @note When making an API call, you may pass DatasetTrigger
-    #   data as a hash:
-    #
-    #       {
-    #         schedule: {
-    #           expression: "ScheduleExpression",
-    #         },
-    #         dataset: {
-    #           name: "DatasetName", # required
-    #         },
-    #       }
     #
     # @!attribute [rw] schedule
     #   The Schedule when the trigger is initiated.
     #   @return [Types::Schedule]
     #
     # @!attribute [rw] dataset
-    #   The data set whose content creation triggers the creation of this
-    #   data set's contents.
+    #   The dataset whose content creation triggers the creation of this
+    #   dataset's contents.
     #   @return [Types::TriggeringDataset]
     #
     class DatasetTrigger < Struct.new(
@@ -1546,10 +1097,11 @@ module Aws::IoTAnalytics
     #   @return [String]
     #
     # @!attribute [rw] storage
-    #   Where data store data is stored. You can choose one of
-    #   `serviceManagedS3` or `customerManagedS3` storage. If not specified,
-    #   the default is `serviceManagedS3`. You cannot change this storage
-    #   option after the data store is created.
+    #   Where data in a data store is stored.. You can choose
+    #   `serviceManagedS3` storage, `customerManagedS3` storage, or
+    #   `iotSiteWiseMultiLayerStorage` storage. The default is
+    #   `serviceManagedS3`. You can't change the choice of Amazon S3
+    #   storage after your data store is created.
     #   @return [Types::DatastoreStorage]
     #
     # @!attribute [rw] arn
@@ -1588,16 +1140,16 @@ module Aws::IoTAnalytics
     # @!attribute [rw] last_message_arrival_time
     #   The last time when a new message arrived in the data store.
     #
-    #   AWS IoT Analytics updates this value at most once per minute for one
-    #   data store. Hence, the `lastMessageArrivalTime` value is an
-    #   approximation.
+    #   IoT Analytics updates this value at most once per minute for Amazon
+    #   Simple Storage Service one data store. Hence, the
+    #   `lastMessageArrivalTime` value is an approximation.
     #
     #   This feature only applies to messages that arrived in the data store
     #   after October 23, 2020.
     #   @return [Time]
     #
     # @!attribute [rw] file_format_configuration
-    #   Contains the configuration information of file formats. AWS IoT
+    #   Contains the configuration information of file formats. IoT
     #   Analytics data stores support JSON and [Parquet][1].
     #
     #   The default file format is JSON. You can specify only one format.
@@ -1609,6 +1161,10 @@ module Aws::IoTAnalytics
     #   [1]: https://parquet.apache.org/
     #   @return [Types::FileFormatConfiguration]
     #
+    # @!attribute [rw] datastore_partitions
+    #   Contains information about the partition dimensions in a data store.
+    #   @return [Types::DatastorePartitions]
+    #
     class Datastore < Struct.new(
       :name,
       :storage,
@@ -1618,21 +1174,14 @@ module Aws::IoTAnalytics
       :creation_time,
       :last_update_time,
       :last_message_arrival_time,
-      :file_format_configuration)
+      :file_format_configuration,
+      :datastore_partitions)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # The datastore activity that specifies where to store the processed
     # data.
-    #
-    # @note When making an API call, you may pass DatastoreActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         datastore_name: "DatastoreName", # required
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the datastore activity.
@@ -1649,6 +1198,65 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
+    # Used to store data used by IoT SiteWise in an Amazon S3 bucket that
+    # you manage. You can't change the choice of Amazon S3 storage after
+    # your data store is created.
+    #
+    # @!attribute [rw] customer_managed_s3_storage
+    #   Used to store data used by IoT SiteWise in an Amazon S3 bucket that
+    #   you manage.
+    #   @return [Types::IotSiteWiseCustomerManagedDatastoreS3Storage]
+    #
+    class DatastoreIotSiteWiseMultiLayerStorage < Struct.new(
+      :customer_managed_s3_storage)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains information about the data store that you manage, which
+    # stores data used by IoT SiteWise.
+    #
+    # @!attribute [rw] customer_managed_s3_storage
+    #   Used to store data used by IoT SiteWise in an Amazon S3 bucket that
+    #   you manage.
+    #   @return [Types::IotSiteWiseCustomerManagedDatastoreS3StorageSummary]
+    #
+    class DatastoreIotSiteWiseMultiLayerStorageSummary < Struct.new(
+      :customer_managed_s3_storage)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A single dimension to partition a data store. The dimension must be an
+    # `AttributePartition` or a `TimestampPartition`.
+    #
+    # @!attribute [rw] attribute_partition
+    #   A partition dimension defined by an `attributeName`.
+    #   @return [Types::Partition]
+    #
+    # @!attribute [rw] timestamp_partition
+    #   A partition dimension defined by a timestamp attribute.
+    #   @return [Types::TimestampPartition]
+    #
+    class DatastorePartition < Struct.new(
+      :attribute_partition,
+      :timestamp_partition)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains information about the partition dimensions in a data store.
+    #
+    # @!attribute [rw] partitions
+    #   A list of partition dimensions in a data store.
+    #   @return [Array<Types::DatastorePartition>]
+    #
+    class DatastorePartitions < Struct.new(
+      :partitions)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Statistical information about the data store.
     #
     # @!attribute [rw] size
@@ -1661,59 +1269,57 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Where data store data is stored. You can choose one of
-    # `serviceManagedS3` or `customerManagedS3` storage. If not specified,
-    # the default is `serviceManagedS3`. You cannot change this storage
-    # option after the data store is created.
-    #
-    # @note When making an API call, you may pass DatastoreStorage
-    #   data as a hash:
-    #
-    #       {
-    #         service_managed_s3: {
-    #         },
-    #         customer_managed_s3: {
-    #           bucket: "BucketName", # required
-    #           key_prefix: "S3KeyPrefix",
-    #           role_arn: "RoleArn", # required
-    #         },
-    #       }
+    # Where data in a data store is stored.. You can choose
+    # `serviceManagedS3` storage, `customerManagedS3` storage, or
+    # `iotSiteWiseMultiLayerStorage` storage. The default is
+    # `serviceManagedS3`. You can't change the choice of Amazon S3 storage
+    # after your data store is created.
     #
     # @!attribute [rw] service_managed_s3
-    #   Use this to store data store data in an S3 bucket managed by AWS IoT
-    #   Analytics. You cannot change the choice of service-managed or
-    #   customer-managed S3 storage after the data store is created.
+    #   Used to store data in an Amazon S3 bucket managed by IoT Analytics.
+    #   You can't change the choice of Amazon S3 storage after your data
+    #   store is created.
     #   @return [Types::ServiceManagedDatastoreS3Storage]
     #
     # @!attribute [rw] customer_managed_s3
-    #   Use this to store data store data in an S3 bucket that you manage.
-    #   When customer managed storage is selected, the `retentionPeriod`
-    #   parameter is ignored. The choice of service-managed or
-    #   customer-managed S3 storage cannot be changed after creation of the
-    #   data store.
+    #   S3-customer-managed; When you choose customer-managed storage, the
+    #   `retentionPeriod` parameter is ignored. You can't change the choice
+    #   of Amazon S3 storage after your data store is created.
     #   @return [Types::CustomerManagedDatastoreS3Storage]
+    #
+    # @!attribute [rw] iot_site_wise_multi_layer_storage
+    #   Used to store data used by IoT SiteWise in an Amazon S3 bucket that
+    #   you manage. You can't change the choice of Amazon S3 storage after
+    #   your data store is created.
+    #   @return [Types::DatastoreIotSiteWiseMultiLayerStorage]
     #
     class DatastoreStorage < Struct.new(
       :service_managed_s3,
-      :customer_managed_s3)
+      :customer_managed_s3,
+      :iot_site_wise_multi_layer_storage)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Where data store data is stored.
+    # Contains information about your data store.
     #
     # @!attribute [rw] service_managed_s3
-    #   Used to store data store data in an S3 bucket managed by AWS IoT
-    #   Analytics.
+    #   Used to store data in an Amazon S3 bucket managed by IoT Analytics.
     #   @return [Types::ServiceManagedDatastoreS3StorageSummary]
     #
     # @!attribute [rw] customer_managed_s3
-    #   Used to store data store data in an S3 bucket that you manage.
+    #   Used to store data in an Amazon S3 bucket managed by IoT Analytics.
     #   @return [Types::CustomerManagedDatastoreS3StorageSummary]
+    #
+    # @!attribute [rw] iot_site_wise_multi_layer_storage
+    #   Used to store data used by IoT SiteWise in an Amazon S3 bucket that
+    #   you manage.
+    #   @return [Types::DatastoreIotSiteWiseMultiLayerStorageSummary]
     #
     class DatastoreStorageSummary < Struct.new(
       :service_managed_s3,
-      :customer_managed_s3)
+      :customer_managed_s3,
+      :iot_site_wise_multi_layer_storage)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1725,7 +1331,7 @@ module Aws::IoTAnalytics
     #   @return [String]
     #
     # @!attribute [rw] datastore_storage
-    #   Where data store data is stored.
+    #   Where data in a data store is stored.
     #   @return [Types::DatastoreStorageSummary]
     #
     # @!attribute [rw] status
@@ -1743,9 +1349,9 @@ module Aws::IoTAnalytics
     # @!attribute [rw] last_message_arrival_time
     #   The last time when a new message arrived in the data store.
     #
-    #   AWS IoT Analytics updates this value at most once per minute for one
-    #   data store. Hence, the `lastMessageArrivalTime` value is an
-    #   approximation.
+    #   IoT Analytics updates this value at most once per minute for Amazon
+    #   Simple Storage Service one data store. Hence, the
+    #   `lastMessageArrivalTime` value is an approximation.
     #
     #   This feature only applies to messages that arrived in the data store
     #   after October 23, 2020.
@@ -1755,6 +1361,10 @@ module Aws::IoTAnalytics
     #   The file format of the data in the data store.
     #   @return [String]
     #
+    # @!attribute [rw] datastore_partitions
+    #   Contains information about the partition dimensions in a data store.
+    #   @return [Types::DatastorePartitions]
+    #
     class DatastoreSummary < Struct.new(
       :datastore_name,
       :datastore_storage,
@@ -1762,18 +1372,12 @@ module Aws::IoTAnalytics
       :creation_time,
       :last_update_time,
       :last_message_arrival_time,
-      :file_format_type)
+      :file_format_type,
+      :datastore_partitions)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         channel_name: "ChannelName", # required
-    #       }
-    #
     # @!attribute [rw] channel_name
     #   The name of the channel to delete.
     #   @return [String]
@@ -1784,14 +1388,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDatasetContentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #         version_id: "DatasetContentVersion",
-    #       }
-    #
     # @!attribute [rw] dataset_name
     #   The name of the dataset whose content is deleted.
     #   @return [String]
@@ -1810,15 +1406,8 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDatasetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #       }
-    #
     # @!attribute [rw] dataset_name
-    #   The name of the data set to delete.
+    #   The name of the dataset to delete.
     #   @return [String]
     #
     class DeleteDatasetRequest < Struct.new(
@@ -1827,13 +1416,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDatastoreRequest
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_name: "DatastoreName", # required
-    #       }
-    #
     # @!attribute [rw] datastore_name
     #   The name of the data store to delete.
     #   @return [String]
@@ -1844,13 +1426,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeletePipelineRequest
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_name: "PipelineName", # required
-    #       }
-    #
     # @!attribute [rw] pipeline_name
     #   The name of the pipeline to delete.
     #   @return [String]
@@ -1863,14 +1438,6 @@ module Aws::IoTAnalytics
 
     # Used to limit data to that which has arrived since the last execution
     # of the action.
-    #
-    # @note When making an API call, you may pass DeltaTime
-    #   data as a hash:
-    #
-    #       {
-    #         offset_seconds: 1, # required
-    #         time_expression: "TimeExpression", # required
-    #       }
     #
     # @!attribute [rw] offset_seconds
     #   The number of seconds of estimated in-flight lag time of message
@@ -1904,7 +1471,7 @@ module Aws::IoTAnalytics
     # [ `DeltaTime` ][1] specifies a time interval. You can use `DeltaTime`
     # to create dataset contents with data that has arrived in the data
     # store since the last execution. For an example of `DeltaTime`, see [
-    # Creating a SQL dataset with a delta window (CLI)][2] in the *AWS IoT
+    # Creating a SQL dataset with a delta window (CLI)][2] in the *IoT
     # Analytics User Guide*.
     #
     #
@@ -1912,18 +1479,11 @@ module Aws::IoTAnalytics
     # [1]: https://docs.aws.amazon.com/iotanalytics/latest/APIReference/API_DeltaTime.html
     # [2]: https://docs.aws.amazon.com/iotanalytics/latest/userguide/automate-create-dataset.html#automate-example6
     #
-    # @note When making an API call, you may pass DeltaTimeSessionWindowConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         timeout_in_minutes: 1, # required
-    #       }
-    #
     # @!attribute [rw] timeout_in_minutes
-    #   A time interval. You can use `timeoutInMinutes` so that AWS IoT
+    #   A time interval. You can use `timeoutInMinutes` so that IoT
     #   Analytics can batch up late data notifications that have been
-    #   generated since the last execution. AWS IoT Analytics sends one
-    #   batch of notifications to Amazon CloudWatch Events at one time.
+    #   generated since the last execution. IoT Analytics sends one batch of
+    #   notifications to Amazon CloudWatch Events at one time.
     #
     #   For more information about how to write a timestamp expression, see
     #   [Date and Time Functions and Operators][1], in the *Presto 0.172
@@ -1940,21 +1500,13 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         channel_name: "ChannelName", # required
-    #         include_statistics: false,
-    #       }
-    #
     # @!attribute [rw] channel_name
     #   The name of the channel whose information is retrieved.
     #   @return [String]
     #
     # @!attribute [rw] include_statistics
     #   If true, additional statistical information about the channel is
-    #   included in the response. This feature cannot be used with a channel
+    #   included in the response. This feature can't be used with a channel
     #   whose S3 storage is customer-managed.
     #   @return [Boolean]
     #
@@ -1981,15 +1533,8 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDatasetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #       }
-    #
     # @!attribute [rw] dataset_name
-    #   The name of the data set whose information is retrieved.
+    #   The name of the dataset whose information is retrieved.
     #   @return [String]
     #
     class DescribeDatasetRequest < Struct.new(
@@ -1999,7 +1544,7 @@ module Aws::IoTAnalytics
     end
 
     # @!attribute [rw] dataset
-    #   An object that contains information about the data set.
+    #   An object that contains information about the dataset.
     #   @return [Types::Dataset]
     #
     class DescribeDatasetResponse < Struct.new(
@@ -2008,21 +1553,13 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDatastoreRequest
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_name: "DatastoreName", # required
-    #         include_statistics: false,
-    #       }
-    #
     # @!attribute [rw] datastore_name
     #   The name of the data store
     #   @return [String]
     #
     # @!attribute [rw] include_statistics
     #   If true, additional statistical information about the data store is
-    #   included in the response. This feature cannot be used with a data
+    #   included in the response. This feature can't be used with a data
     #   store whose S3 storage is customer-managed.
     #   @return [Boolean]
     #
@@ -2054,7 +1591,7 @@ module Aws::IoTAnalytics
     class DescribeLoggingOptionsRequest < Aws::EmptyStructure; end
 
     # @!attribute [rw] logging_options
-    #   The current settings of the AWS IoT Analytics logging options.
+    #   The current settings of the IoT Analytics logging options.
     #   @return [Types::LoggingOptions]
     #
     class DescribeLoggingOptionsResponse < Struct.new(
@@ -2063,13 +1600,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribePipelineRequest
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_name: "PipelineName", # required
-    #       }
-    #
     # @!attribute [rw] pipeline_name
     #   The name of the pipeline whose information is retrieved.
     #   @return [String]
@@ -2090,19 +1620,8 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # An activity that adds data from the AWS IoT device registry to your
+    # An activity that adds data from the IoT device registry to your
     # message.
-    #
-    # @note When making an API call, you may pass DeviceRegistryEnrichActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         attribute: "AttributeName", # required
-    #         thing_name: "AttributeName", # required
-    #         role_arn: "RoleArn", # required
-    #         next: "ActivityName",
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the `deviceRegistryEnrich` activity.
@@ -2136,19 +1655,8 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # An activity that adds information from the AWS IoT Device Shadow
-    # service to a message.
-    #
-    # @note When making an API call, you may pass DeviceShadowEnrichActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         attribute: "AttributeName", # required
-    #         thing_name: "AttributeName", # required
-    #         role_arn: "RoleArn", # required
-    #         next: "ActivityName",
-    #       }
+    # An activity that adds information from the IoT Device Shadow service
+    # to a message.
     #
     # @!attribute [rw] name
     #   The name of the `deviceShadowEnrich` activity.
@@ -2198,8 +1706,8 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Contains the configuration information of file formats. AWS IoT
-    # Analytics data stores support JSON and [Parquet][1].
+    # Contains the configuration information of file formats. IoT Analytics
+    # data stores support JSON and [Parquet][1].
     #
     # The default file format is JSON. You can specify only one format.
     #
@@ -2208,24 +1716,6 @@ module Aws::IoTAnalytics
     #
     #
     # [1]: https://parquet.apache.org/
-    #
-    # @note When making an API call, you may pass FileFormatConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         json_configuration: {
-    #         },
-    #         parquet_configuration: {
-    #           schema_definition: {
-    #             columns: [
-    #               {
-    #                 name: "ColumnName", # required
-    #                 type: "ColumnDataType", # required
-    #               },
-    #             ],
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] json_configuration
     #   Contains the configuration information of the JSON format.
@@ -2243,15 +1733,6 @@ module Aws::IoTAnalytics
     end
 
     # An activity that filters a message based on its attributes.
-    #
-    # @note When making an API call, you may pass FilterActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         filter: "FilterExpression", # required
-    #         next: "ActivityName",
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the filter activity.
@@ -2275,23 +1756,15 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDatasetContentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #         version_id: "DatasetContentVersion",
-    #       }
-    #
     # @!attribute [rw] dataset_name
-    #   The name of the data set whose contents are retrieved.
+    #   The name of the dataset whose contents are retrieved.
     #   @return [String]
     #
     # @!attribute [rw] version_id
-    #   The version of the data set whose contents are retrieved. You can
+    #   The version of the dataset whose contents are retrieved. You can
     #   also use the strings "$LATEST" or "$LATEST\_SUCCEEDED" to
     #   retrieve the contents of the latest or latest successfully completed
-    #   data set. If not specified, "$LATEST\_SUCCEEDED" is the default.
+    #   dataset. If not specified, "$LATEST\_SUCCEEDED" is the default.
     #   @return [String]
     #
     class GetDatasetContentRequest < Struct.new(
@@ -2310,7 +1783,7 @@ module Aws::IoTAnalytics
     #   @return [Time]
     #
     # @!attribute [rw] status
-    #   The status of the data set content.
+    #   The status of the dataset content.
     #   @return [Types::DatasetContentStatus]
     #
     class GetDatasetContentResponse < Struct.new(
@@ -2321,27 +1794,19 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Configuration information for coordination with AWS Glue, a fully
-    # managed extract, transform and load (ETL) service.
-    #
-    # @note When making an API call, you may pass GlueConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         table_name: "GlueTableName", # required
-    #         database_name: "GlueDatabaseName", # required
-    #       }
+    # Configuration information for coordination with Glue, a fully managed
+    # extract, transform and load (ETL) service.
     #
     # @!attribute [rw] table_name
-    #   The name of the table in your AWS Glue Data Catalog that is used to
-    #   perform the ETL operations. An AWS Glue Data Catalog table contains
+    #   The name of the table in your Glue Data Catalog that is used to
+    #   perform the ETL operations. An Glue Data Catalog table contains
     #   partitioned data and descriptions of data sources and targets.
     #   @return [String]
     #
     # @!attribute [rw] database_name
-    #   The name of the database in your AWS Glue Data Catalog in which the
-    #   table is located. An AWS Glue Data Catalog database contains
-    #   metadata tables.
+    #   The name of the database in your Glue Data Catalog in which the
+    #   table is located. An Glue Data Catalog database contains metadata
+    #   tables.
     #   @return [String]
     #
     class GlueConfiguration < Struct.new(
@@ -2373,30 +1838,65 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Configuration information for delivery of dataset contents to AWS IoT
+    # Configuration information for delivery of dataset contents to IoT
     # Events.
     #
-    # @note When making an API call, you may pass IotEventsDestinationConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         input_name: "IotEventsInputName", # required
-    #         role_arn: "RoleArn", # required
-    #       }
-    #
     # @!attribute [rw] input_name
-    #   The name of the AWS IoT Events input to which dataset contents are
+    #   The name of the IoT Events input to which dataset contents are
     #   delivered.
     #   @return [String]
     #
     # @!attribute [rw] role_arn
-    #   The ARN of the role that grants AWS IoT Analytics permission to
-    #   deliver dataset contents to an AWS IoT Events input.
+    #   The ARN of the role that grants IoT Analytics permission to deliver
+    #   dataset contents to an IoT Events input.
     #   @return [String]
     #
     class IotEventsDestinationConfiguration < Struct.new(
       :input_name,
       :role_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Used to store data used by IoT SiteWise in an Amazon S3 bucket that
+    # you manage. You can't change the choice of Amazon S3 storage after
+    # your data store is created.
+    #
+    # @!attribute [rw] bucket
+    #   The name of the Amazon S3 bucket where your data is stored.
+    #   @return [String]
+    #
+    # @!attribute [rw] key_prefix
+    #   (Optional) The prefix used to create the keys of the data store data
+    #   objects. Each object in an Amazon S3 bucket has a key that is its
+    #   unique identifier in the bucket. Each object in a bucket has exactly
+    #   one key. The prefix must end with a forward slash (/).
+    #   @return [String]
+    #
+    class IotSiteWiseCustomerManagedDatastoreS3Storage < Struct.new(
+      :bucket,
+      :key_prefix)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains information about the data store that you manage, which
+    # stores data used by IoT SiteWise.
+    #
+    # @!attribute [rw] bucket
+    #   The name of the Amazon S3 bucket where your data is stored.
+    #   @return [String]
+    #
+    # @!attribute [rw] key_prefix
+    #   (Optional) The prefix used to create the keys of the data store data
+    #   objects. Each object in an Amazon S3 bucket has a key that is its
+    #   unique identifier in the bucket. Each object in a bucket has exactly
+    #   one key. The prefix must end with a forward slash (/).
+    #   @return [String]
+    #
+    class IotSiteWiseCustomerManagedDatastoreS3StorageSummary < Struct.new(
+      :bucket,
+      :key_prefix)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2408,16 +1908,6 @@ module Aws::IoTAnalytics
     class JsonConfiguration < Aws::EmptyStructure; end
 
     # An activity that runs a Lambda function to modify the message.
-    #
-    # @note When making an API call, you may pass LambdaActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         lambda_name: "LambdaName", # required
-    #         batch_size: 1, # required
-    #         next: "ActivityName",
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the lambda activity.
@@ -2451,18 +1941,6 @@ module Aws::IoTAnalytics
     # A structure that contains the name and configuration information of a
     # late data rule.
     #
-    # @note When making an API call, you may pass LateDataRule
-    #   data as a hash:
-    #
-    #       {
-    #         rule_name: "LateDataRuleName",
-    #         rule_configuration: { # required
-    #           delta_time_session_window_configuration: {
-    #             timeout_in_minutes: 1, # required
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] rule_name
     #   The name of the late data rule.
     #   @return [String]
@@ -2479,15 +1957,6 @@ module Aws::IoTAnalytics
     end
 
     # The information needed to configure a delta time session window.
-    #
-    # @note When making an API call, you may pass LateDataRuleConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         delta_time_session_window_configuration: {
-    #           timeout_in_minutes: 1, # required
-    #         },
-    #       }
     #
     # @!attribute [rw] delta_time_session_window_configuration
     #   The information needed to configure a delta time session window.
@@ -2510,14 +1979,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListChannelsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The token for the next set of results.
     #   @return [String]
@@ -2551,20 +2012,8 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDatasetContentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         scheduled_on_or_after: Time.now,
-    #         scheduled_before: Time.now,
-    #       }
-    #
     # @!attribute [rw] dataset_name
-    #   The name of the data set whose contents information you want to
-    #   list.
+    #   The name of the dataset whose contents information you want to list.
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -2576,13 +2025,13 @@ module Aws::IoTAnalytics
     #   @return [Integer]
     #
     # @!attribute [rw] scheduled_on_or_after
-    #   A filter to limit results to those data set contents whose creation
+    #   A filter to limit results to those dataset contents whose creation
     #   is scheduled on or after the given time. See the field
     #   `triggers.schedule` in the `CreateDataset` request. (timestamp)
     #   @return [Time]
     #
     # @!attribute [rw] scheduled_before
-    #   A filter to limit results to those data set contents whose creation
+    #   A filter to limit results to those dataset contents whose creation
     #   is scheduled before the given time. See the field
     #   `triggers.schedule` in the `CreateDataset` request. (timestamp)
     #   @return [Time]
@@ -2598,7 +2047,7 @@ module Aws::IoTAnalytics
     end
 
     # @!attribute [rw] dataset_content_summaries
-    #   Summary information about data set contents that have been created.
+    #   Summary information about dataset contents that have been created.
     #   @return [Array<Types::DatasetContentSummary>]
     #
     # @!attribute [rw] next_token
@@ -2613,14 +2062,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDatasetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The token for the next set of results.
     #   @return [String]
@@ -2654,14 +2095,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDatastoresRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The token for the next set of results.
     #   @return [String]
@@ -2695,14 +2128,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPipelinesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The token for the next set of results.
     #   @return [String]
@@ -2736,13 +2161,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the resource whose tags you want to list.
     #   @return [String]
@@ -2765,17 +2183,8 @@ module Aws::IoTAnalytics
 
     # Information about logging options.
     #
-    # @note When making an API call, you may pass LoggingOptions
-    #   data as a hash:
-    #
-    #       {
-    #         role_arn: "RoleArn", # required
-    #         level: "ERROR", # required, accepts ERROR
-    #         enabled: false, # required
-    #       }
-    #
     # @!attribute [rw] role_arn
-    #   The ARN of the role that grants permission to AWS IoT Analytics to
+    #   The ARN of the role that grants permission to IoT Analytics to
     #   perform logging.
     #   @return [String]
     #
@@ -2784,7 +2193,7 @@ module Aws::IoTAnalytics
     #   @return [String]
     #
     # @!attribute [rw] enabled
-    #   If true, logging is enabled for AWS IoT Analytics.
+    #   If true, logging is enabled for IoT Analytics.
     #   @return [Boolean]
     #
     class LoggingOptions < Struct.new(
@@ -2797,16 +2206,6 @@ module Aws::IoTAnalytics
 
     # An activity that computes an arithmetic expression using the
     # message's attributes.
-    #
-    # @note When making an API call, you may pass MathActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         attribute: "AttributeName", # required
-    #         math: "MathExpression", # required
-    #         next: "ActivityName",
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the math activity.
@@ -2837,14 +2236,6 @@ module Aws::IoTAnalytics
 
     # Information about a message.
     #
-    # @note When making an API call, you may pass Message
-    #   data as a hash:
-    #
-    #       {
-    #         message_id: "MessageId", # required
-    #         payload: "data", # required
-    #       }
-    #
     # @!attribute [rw] message_id
     #   The ID you want to assign to the message. Each `messageId` must be
     #   unique within each batch sent.
@@ -2866,13 +2257,6 @@ module Aws::IoTAnalytics
     # The value of the variable as a structure that specifies an output file
     # URI.
     #
-    # @note When making an API call, you may pass OutputFileUriValue
-    #   data as a hash:
-    #
-    #       {
-    #         file_name: "OutputFileName", # required
-    #       }
-    #
     # @!attribute [rw] file_name
     #   The URI of the location where dataset contents are stored, usually
     #   the URI of a file in an S3 bucket.
@@ -2886,26 +2270,24 @@ module Aws::IoTAnalytics
 
     # Contains the configuration information of the Parquet format.
     #
-    # @note When making an API call, you may pass ParquetConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         schema_definition: {
-    #           columns: [
-    #             {
-    #               name: "ColumnName", # required
-    #               type: "ColumnDataType", # required
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] schema_definition
     #   Information needed to define a schema.
     #   @return [Types::SchemaDefinition]
     #
     class ParquetConfiguration < Struct.new(
       :schema_definition)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A partition dimension defined by an attribute.
+    #
+    # @!attribute [rw] attribute_name
+    #   The name of the attribute that defines a partition dimension.
+    #   @return [String]
+    #
+    class Partition < Struct.new(
+      :attribute_name)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2949,69 +2331,6 @@ module Aws::IoTAnalytics
 
     # An activity that performs a transformation on a message.
     #
-    # @note When making an API call, you may pass PipelineActivity
-    #   data as a hash:
-    #
-    #       {
-    #         channel: {
-    #           name: "ActivityName", # required
-    #           channel_name: "ChannelName", # required
-    #           next: "ActivityName",
-    #         },
-    #         lambda: {
-    #           name: "ActivityName", # required
-    #           lambda_name: "LambdaName", # required
-    #           batch_size: 1, # required
-    #           next: "ActivityName",
-    #         },
-    #         datastore: {
-    #           name: "ActivityName", # required
-    #           datastore_name: "DatastoreName", # required
-    #         },
-    #         add_attributes: {
-    #           name: "ActivityName", # required
-    #           attributes: { # required
-    #             "AttributeName" => "AttributeName",
-    #           },
-    #           next: "ActivityName",
-    #         },
-    #         remove_attributes: {
-    #           name: "ActivityName", # required
-    #           attributes: ["AttributeName"], # required
-    #           next: "ActivityName",
-    #         },
-    #         select_attributes: {
-    #           name: "ActivityName", # required
-    #           attributes: ["AttributeName"], # required
-    #           next: "ActivityName",
-    #         },
-    #         filter: {
-    #           name: "ActivityName", # required
-    #           filter: "FilterExpression", # required
-    #           next: "ActivityName",
-    #         },
-    #         math: {
-    #           name: "ActivityName", # required
-    #           attribute: "AttributeName", # required
-    #           math: "MathExpression", # required
-    #           next: "ActivityName",
-    #         },
-    #         device_registry_enrich: {
-    #           name: "ActivityName", # required
-    #           attribute: "AttributeName", # required
-    #           thing_name: "AttributeName", # required
-    #           role_arn: "RoleArn", # required
-    #           next: "ActivityName",
-    #         },
-    #         device_shadow_enrich: {
-    #           name: "ActivityName", # required
-    #           attribute: "AttributeName", # required
-    #           thing_name: "AttributeName", # required
-    #           role_arn: "RoleArn", # required
-    #           next: "ActivityName",
-    #         },
-    #       }
-    #
     # @!attribute [rw] channel
     #   Determines the source of the messages to be processed.
     #   @return [Types::ChannelActivity]
@@ -3033,8 +2352,8 @@ module Aws::IoTAnalytics
     #   @return [Types::RemoveAttributesActivity]
     #
     # @!attribute [rw] select_attributes
-    #   Creates a new message using only the specified attributes from the
-    #   original message.
+    #   Used to create a new message using only the specified attributes
+    #   from the original message.
     #   @return [Types::SelectAttributesActivity]
     #
     # @!attribute [rw] filter
@@ -3047,12 +2366,11 @@ module Aws::IoTAnalytics
     #   @return [Types::MathActivity]
     #
     # @!attribute [rw] device_registry_enrich
-    #   Adds data from the AWS IoT device registry to your message.
+    #   Adds data from the IoT device registry to your message.
     #   @return [Types::DeviceRegistryEnrichActivity]
     #
     # @!attribute [rw] device_shadow_enrich
-    #   Adds information from the AWS IoT Device Shadow service to a
-    #   message.
+    #   Adds information from the IoT Device Shadow service to a message.
     #   @return [Types::DeviceShadowEnrichActivity]
     #
     class PipelineActivity < Struct.new(
@@ -3097,19 +2415,8 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutLoggingOptionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         logging_options: { # required
-    #           role_arn: "RoleArn", # required
-    #           level: "ERROR", # required, accepts ERROR
-    #           enabled: false, # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] logging_options
-    #   The new values of the AWS IoT Analytics logging options.
+    #   The new values of the IoT Analytics logging options.
     #   @return [Types::LoggingOptions]
     #
     class PutLoggingOptionsRequest < Struct.new(
@@ -3120,16 +2427,6 @@ module Aws::IoTAnalytics
 
     # Information that is used to filter message data, to segregate it
     # according to the timeframe in which it arrives.
-    #
-    # @note When making an API call, you may pass QueryFilter
-    #   data as a hash:
-    #
-    #       {
-    #         delta_time: {
-    #           offset_seconds: 1, # required
-    #           time_expression: "TimeExpression", # required
-    #         },
-    #       }
     #
     # @!attribute [rw] delta_time
     #   Used to limit data to that which has arrived since the last
@@ -3143,15 +2440,6 @@ module Aws::IoTAnalytics
     end
 
     # An activity that removes attributes from a message.
-    #
-    # @note When making an API call, you may pass RemoveAttributesActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         attributes: ["AttributeName"], # required
-    #         next: "ActivityName",
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the `removeAttributes` activity.
@@ -3219,14 +2507,6 @@ module Aws::IoTAnalytics
     # The configuration of the resource used to execute the
     # `containerAction`.
     #
-    # @note When making an API call, you may pass ResourceConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         compute_type: "ACU_1", # required, accepts ACU_1, ACU_2
-    #         volume_size_in_gb: 1, # required
-    #       }
-    #
     # @!attribute [rw] compute_type
     #   The type of the compute resource used to execute the
     #   `containerAction`. Possible values are: `ACU_1` (vCPU=4, memory=16
@@ -3258,14 +2538,6 @@ module Aws::IoTAnalytics
 
     # How long, in days, message data is kept.
     #
-    # @note When making an API call, you may pass RetentionPeriod
-    #   data as a hash:
-    #
-    #       {
-    #         unlimited: false,
-    #         number_of_days: 1,
-    #       }
-    #
     # @!attribute [rw] unlimited
     #   If true, message data is kept indefinitely.
     #   @return [Boolean]
@@ -3282,77 +2554,11 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RunPipelineActivityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_activity: { # required
-    #           channel: {
-    #             name: "ActivityName", # required
-    #             channel_name: "ChannelName", # required
-    #             next: "ActivityName",
-    #           },
-    #           lambda: {
-    #             name: "ActivityName", # required
-    #             lambda_name: "LambdaName", # required
-    #             batch_size: 1, # required
-    #             next: "ActivityName",
-    #           },
-    #           datastore: {
-    #             name: "ActivityName", # required
-    #             datastore_name: "DatastoreName", # required
-    #           },
-    #           add_attributes: {
-    #             name: "ActivityName", # required
-    #             attributes: { # required
-    #               "AttributeName" => "AttributeName",
-    #             },
-    #             next: "ActivityName",
-    #           },
-    #           remove_attributes: {
-    #             name: "ActivityName", # required
-    #             attributes: ["AttributeName"], # required
-    #             next: "ActivityName",
-    #           },
-    #           select_attributes: {
-    #             name: "ActivityName", # required
-    #             attributes: ["AttributeName"], # required
-    #             next: "ActivityName",
-    #           },
-    #           filter: {
-    #             name: "ActivityName", # required
-    #             filter: "FilterExpression", # required
-    #             next: "ActivityName",
-    #           },
-    #           math: {
-    #             name: "ActivityName", # required
-    #             attribute: "AttributeName", # required
-    #             math: "MathExpression", # required
-    #             next: "ActivityName",
-    #           },
-    #           device_registry_enrich: {
-    #             name: "ActivityName", # required
-    #             attribute: "AttributeName", # required
-    #             thing_name: "AttributeName", # required
-    #             role_arn: "RoleArn", # required
-    #             next: "ActivityName",
-    #           },
-    #           device_shadow_enrich: {
-    #             name: "ActivityName", # required
-    #             attribute: "AttributeName", # required
-    #             thing_name: "AttributeName", # required
-    #             role_arn: "RoleArn", # required
-    #             next: "ActivityName",
-    #           },
-    #         },
-    #         payloads: ["data"], # required
-    #       }
-    #
     # @!attribute [rw] pipeline_activity
     #   The pipeline activity that is run. This must not be a channel
-    #   activity or a datastore activity because these activities are used
+    #   activity or a data store activity because these activities are used
     #   in a pipeline only to load the original message and to store the
-    #   (possibly) transformed message. If a lambda activity is specified,
+    #   (possibly) transformed message. If a Lambda activity is specified,
     #   only short-running Lambda functions (those with a timeout of less
     #   than 30 seconds or less) can be used.
     #   @return [Types::PipelineActivity]
@@ -3389,19 +2595,6 @@ module Aws::IoTAnalytics
     # Configuration information for delivery of dataset contents to Amazon
     # Simple Storage Service (Amazon S3).
     #
-    # @note When making an API call, you may pass S3DestinationConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         bucket: "BucketName", # required
-    #         key: "BucketKeyExpression", # required
-    #         glue_configuration: {
-    #           table_name: "GlueTableName", # required
-    #           database_name: "GlueDatabaseName", # required
-    #         },
-    #         role_arn: "RoleArn", # required
-    #       }
-    #
     # @!attribute [rw] bucket
     #   The name of the S3 bucket to which dataset contents are delivered.
     #   @return [String]
@@ -3435,13 +2628,13 @@ module Aws::IoTAnalytics
     #   @return [String]
     #
     # @!attribute [rw] glue_configuration
-    #   Configuration information for coordination with AWS Glue, a fully
+    #   Configuration information for coordination with Glue, a fully
     #   managed extract, transform and load (ETL) service.
     #   @return [Types::GlueConfiguration]
     #
     # @!attribute [rw] role_arn
-    #   The ARN of the role that grants AWS IoT Analytics permission to
-    #   interact with your Amazon S3 and AWS Glue resources.
+    #   The ARN of the role that grants IoT Analytics permission to interact
+    #   with your Amazon S3 and Glue resources.
     #   @return [String]
     #
     class S3DestinationConfiguration < Struct.new(
@@ -3453,16 +2646,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SampleChannelDataRequest
-    #   data as a hash:
-    #
-    #       {
-    #         channel_name: "ChannelName", # required
-    #         max_messages: 1,
-    #         start_time: Time.now,
-    #         end_time: Time.now,
-    #       }
-    #
     # @!attribute [rw] channel_name
     #   The name of the channel whose message samples are retrieved.
     #   @return [String]
@@ -3503,13 +2686,6 @@ module Aws::IoTAnalytics
 
     # The schedule for when to trigger an update.
     #
-    # @note When making an API call, you may pass Schedule
-    #   data as a hash:
-    #
-    #       {
-    #         expression: "ScheduleExpression",
-    #       }
-    #
     # @!attribute [rw] expression
     #   The expression that defines when to trigger an update. For more
     #   information, see [Schedule Expressions for Rules][1] in the *Amazon
@@ -3528,23 +2704,11 @@ module Aws::IoTAnalytics
 
     # Information needed to define a schema.
     #
-    # @note When making an API call, you may pass SchemaDefinition
-    #   data as a hash:
-    #
-    #       {
-    #         columns: [
-    #           {
-    #             name: "ColumnName", # required
-    #             type: "ColumnDataType", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] columns
     #   Specifies one or more columns that store your data.
     #
     #   Each schema can have up to 100 columns. Each column can have up to
-    #   100 nested types
+    #   100 nested types.
     #   @return [Array<Types::Column>]
     #
     class SchemaDefinition < Struct.new(
@@ -3553,17 +2717,8 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Creates a new message using only the specified attributes from the
-    # original message.
-    #
-    # @note When making an API call, you may pass SelectAttributesActivity
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ActivityName", # required
-    #         attributes: ["AttributeName"], # required
-    #         next: "ActivityName",
-    #       }
+    # Used to create a new message using only the specified attributes from
+    # the original message.
     #
     # @!attribute [rw] name
     #   The name of the `selectAttributes` activity.
@@ -3585,28 +2740,27 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # Use this to store channel data in an S3 bucket managed by AWS IoT
-    # Analytics. You cannot change the choice of service-managed or
-    # customer-managed S3 storage after the channel is created.
+    # Used to store channel data in an S3 bucket managed by IoT Analytics.
+    # You can't change the choice of S3 storage after the data store is
+    # created.
     #
     # @api private
     #
     class ServiceManagedChannelS3Storage < Aws::EmptyStructure; end
 
-    # Used to store channel data in an S3 bucket managed by AWS IoT
-    # Analytics.
+    # Used to store channel data in an S3 bucket managed by IoT Analytics.
     #
     class ServiceManagedChannelS3StorageSummary < Aws::EmptyStructure; end
 
-    # Use this to store data store data in an S3 bucket managed by AWS IoT
-    # Analytics. You cannot change the choice of service-managed or
-    # customer-managed S3 storage after the data store is created.
+    # Used to store data in an Amazon S3 bucket managed by IoT Analytics.
+    # You can't change the choice of Amazon S3 storage after your data
+    # store is created.
     #
     # @api private
     #
     class ServiceManagedDatastoreS3Storage < Aws::EmptyStructure; end
 
-    # Used to store data store data in an S3 bucket managed by AWS IoT
+    # Contains information about the data store that is managed by IoT
     # Analytics.
     #
     class ServiceManagedDatastoreS3StorageSummary < Aws::EmptyStructure; end
@@ -3624,21 +2778,6 @@ module Aws::IoTAnalytics
 
     # The SQL query to modify the message.
     #
-    # @note When making an API call, you may pass SqlQueryDatasetAction
-    #   data as a hash:
-    #
-    #       {
-    #         sql_query: "SqlQuery", # required
-    #         filters: [
-    #           {
-    #             delta_time: {
-    #               offset_seconds: 1, # required
-    #               time_expression: "TimeExpression", # required
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] sql_query
     #   A SQL query string.
     #   @return [String]
@@ -3654,18 +2793,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartPipelineReprocessingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_name: "PipelineName", # required
-    #         start_time: Time.now,
-    #         end_time: Time.now,
-    #         channel_messages: {
-    #           s3_paths: ["S3PathChannelMessage"],
-    #         },
-    #       }
-    #
     # @!attribute [rw] pipeline_name
     #   The name of the pipeline on which to start reprocessing.
     #   @return [String]
@@ -3713,14 +2840,6 @@ module Aws::IoTAnalytics
 
     # A set of key-value pairs that are used to manage the resource.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
-    #
     # @!attribute [rw] key
     #   The tag's key.
     #   @return [String]
@@ -3736,19 +2855,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the resource whose tags you want to modify.
     #   @return [String]
@@ -3777,15 +2883,27 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
+    # A partition dimension defined by a timestamp attribute.
+    #
+    # @!attribute [rw] attribute_name
+    #   The attribute name of the partition defined by a timestamp.
+    #   @return [String]
+    #
+    # @!attribute [rw] timestamp_format
+    #   The timestamp format of a partition defined by a timestamp. The
+    #   default format is seconds since epoch (January 1, 1970 at midnight
+    #   UTC time).
+    #   @return [String]
+    #
+    class TimestampPartition < Struct.new(
+      :attribute_name,
+      :timestamp_format)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Information about the dataset whose content generation triggers the
     # new dataset content generation.
-    #
-    # @note When making an API call, you may pass TriggeringDataset
-    #   data as a hash:
-    #
-    #       {
-    #         name: "DatasetName", # required
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the dataset whose content generation triggers the new
@@ -3798,14 +2916,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the resource whose tags you want to remove.
     #   @return [String]
@@ -3823,26 +2933,6 @@ module Aws::IoTAnalytics
 
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         channel_name: "ChannelName", # required
-    #         channel_storage: {
-    #           service_managed_s3: {
-    #           },
-    #           customer_managed_s3: {
-    #             bucket: "BucketName", # required
-    #             key_prefix: "S3KeyPrefix",
-    #             role_arn: "RoleArn", # required
-    #           },
-    #         },
-    #         retention_period: {
-    #           unlimited: false,
-    #           number_of_days: 1,
-    #         },
-    #       }
-    #
     # @!attribute [rw] channel_name
     #   The name of the channel to be updated.
     #   @return [String]
@@ -3850,14 +2940,14 @@ module Aws::IoTAnalytics
     # @!attribute [rw] channel_storage
     #   Where channel data is stored. You can choose one of
     #   `serviceManagedS3` or `customerManagedS3` storage. If not specified,
-    #   the default is `serviceManagedS3`. You cannot change this storage
+    #   the default is `serviceManagedS3`. You can't change this storage
     #   option after the channel is created.
     #   @return [Types::ChannelStorage]
     #
     # @!attribute [rw] retention_period
     #   How long, in days, message data is kept for the channel. The
-    #   retention period cannot be updated if the channel's S3 storage is
-    #   customer-managed.
+    #   retention period can't be updated if the channel's Amazon S3
+    #   storage is customer-managed.
     #   @return [Types::RetentionPeriod]
     #
     class UpdateChannelRequest < Struct.new(
@@ -3868,100 +2958,8 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateDatasetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #         actions: [ # required
-    #           {
-    #             action_name: "DatasetActionName",
-    #             query_action: {
-    #               sql_query: "SqlQuery", # required
-    #               filters: [
-    #                 {
-    #                   delta_time: {
-    #                     offset_seconds: 1, # required
-    #                     time_expression: "TimeExpression", # required
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #             container_action: {
-    #               image: "Image", # required
-    #               execution_role_arn: "RoleArn", # required
-    #               resource_configuration: { # required
-    #                 compute_type: "ACU_1", # required, accepts ACU_1, ACU_2
-    #                 volume_size_in_gb: 1, # required
-    #               },
-    #               variables: [
-    #                 {
-    #                   name: "VariableName", # required
-    #                   string_value: "StringValue",
-    #                   double_value: 1.0,
-    #                   dataset_content_version_value: {
-    #                     dataset_name: "DatasetName", # required
-    #                   },
-    #                   output_file_uri_value: {
-    #                     file_name: "OutputFileName", # required
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         ],
-    #         triggers: [
-    #           {
-    #             schedule: {
-    #               expression: "ScheduleExpression",
-    #             },
-    #             dataset: {
-    #               name: "DatasetName", # required
-    #             },
-    #           },
-    #         ],
-    #         content_delivery_rules: [
-    #           {
-    #             entry_name: "EntryName",
-    #             destination: { # required
-    #               iot_events_destination_configuration: {
-    #                 input_name: "IotEventsInputName", # required
-    #                 role_arn: "RoleArn", # required
-    #               },
-    #               s3_destination_configuration: {
-    #                 bucket: "BucketName", # required
-    #                 key: "BucketKeyExpression", # required
-    #                 glue_configuration: {
-    #                   table_name: "GlueTableName", # required
-    #                   database_name: "GlueDatabaseName", # required
-    #                 },
-    #                 role_arn: "RoleArn", # required
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         retention_period: {
-    #           unlimited: false,
-    #           number_of_days: 1,
-    #         },
-    #         versioning_configuration: {
-    #           unlimited: false,
-    #           max_versions: 1,
-    #         },
-    #         late_data_rules: [
-    #           {
-    #             rule_name: "LateDataRuleName",
-    #             rule_configuration: { # required
-    #               delta_time_session_window_configuration: {
-    #                 timeout_in_minutes: 1, # required
-    #               },
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] dataset_name
-    #   The name of the data set to update.
+    #   The name of the dataset to update.
     #   @return [String]
     #
     # @!attribute [rw] actions
@@ -3987,8 +2985,8 @@ module Aws::IoTAnalytics
     #   specified or set to null, only the latest version plus the latest
     #   succeeded version (if they are different) are kept for the time
     #   period specified by the `retentionPeriod` parameter. For more
-    #   information, see [Keeping Multiple Versions of AWS IoT Analytics
-    #   Data Sets][1] in the *AWS IoT Analytics User Guide*.
+    #   information, see [Keeping Multiple Versions of IoT Analytics
+    #   datasets][1] in the *IoT Analytics User Guide*.
     #
     #
     #
@@ -3996,9 +2994,9 @@ module Aws::IoTAnalytics
     #   @return [Types::VersioningConfiguration]
     #
     # @!attribute [rw] late_data_rules
-    #   A list of data rules that send notifications to Amazon CloudWatch,
-    #   when data arrives late. To specify `lateDataRules`, the dataset must
-    #   use a [DeltaTimer][1] filter.
+    #   A list of data rules that send notifications to CloudWatch, when
+    #   data arrives late. To specify `lateDataRules`, the dataset must use
+    #   a [DeltaTimer][1] filter.
     #
     #
     #
@@ -4017,59 +3015,26 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateDatastoreRequest
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_name: "DatastoreName", # required
-    #         retention_period: {
-    #           unlimited: false,
-    #           number_of_days: 1,
-    #         },
-    #         datastore_storage: {
-    #           service_managed_s3: {
-    #           },
-    #           customer_managed_s3: {
-    #             bucket: "BucketName", # required
-    #             key_prefix: "S3KeyPrefix",
-    #             role_arn: "RoleArn", # required
-    #           },
-    #         },
-    #         file_format_configuration: {
-    #           json_configuration: {
-    #           },
-    #           parquet_configuration: {
-    #             schema_definition: {
-    #               columns: [
-    #                 {
-    #                   name: "ColumnName", # required
-    #                   type: "ColumnDataType", # required
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] datastore_name
     #   The name of the data store to be updated.
     #   @return [String]
     #
     # @!attribute [rw] retention_period
     #   How long, in days, message data is kept for the data store. The
-    #   retention period cannot be updated if the data store's S3 storage
-    #   is customer-managed.
+    #   retention period can't be updated if the data store's Amazon S3
+    #   storage is customer-managed.
     #   @return [Types::RetentionPeriod]
     #
     # @!attribute [rw] datastore_storage
-    #   Where data store data is stored. You can choose one of
-    #   `serviceManagedS3` or `customerManagedS3` storage. If not specified,
-    #   the default is`serviceManagedS3`. You cannot change this storage
-    #   option after the data store is created.
+    #   Where data in a data store is stored.. You can choose
+    #   `serviceManagedS3` storage, `customerManagedS3` storage, or
+    #   `iotSiteWiseMultiLayerStorage` storage. The default is
+    #   `serviceManagedS3`. You can't change the choice of Amazon S3
+    #   storage after your data store is created.
     #   @return [Types::DatastoreStorage]
     #
     # @!attribute [rw] file_format_configuration
-    #   Contains the configuration information of file formats. AWS IoT
+    #   Contains the configuration information of file formats. IoT
     #   Analytics data stores support JSON and [Parquet][1].
     #
     #   The default file format is JSON. You can specify only one format.
@@ -4090,74 +3055,6 @@ module Aws::IoTAnalytics
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdatePipelineRequest
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_name: "PipelineName", # required
-    #         pipeline_activities: [ # required
-    #           {
-    #             channel: {
-    #               name: "ActivityName", # required
-    #               channel_name: "ChannelName", # required
-    #               next: "ActivityName",
-    #             },
-    #             lambda: {
-    #               name: "ActivityName", # required
-    #               lambda_name: "LambdaName", # required
-    #               batch_size: 1, # required
-    #               next: "ActivityName",
-    #             },
-    #             datastore: {
-    #               name: "ActivityName", # required
-    #               datastore_name: "DatastoreName", # required
-    #             },
-    #             add_attributes: {
-    #               name: "ActivityName", # required
-    #               attributes: { # required
-    #                 "AttributeName" => "AttributeName",
-    #               },
-    #               next: "ActivityName",
-    #             },
-    #             remove_attributes: {
-    #               name: "ActivityName", # required
-    #               attributes: ["AttributeName"], # required
-    #               next: "ActivityName",
-    #             },
-    #             select_attributes: {
-    #               name: "ActivityName", # required
-    #               attributes: ["AttributeName"], # required
-    #               next: "ActivityName",
-    #             },
-    #             filter: {
-    #               name: "ActivityName", # required
-    #               filter: "FilterExpression", # required
-    #               next: "ActivityName",
-    #             },
-    #             math: {
-    #               name: "ActivityName", # required
-    #               attribute: "AttributeName", # required
-    #               math: "MathExpression", # required
-    #               next: "ActivityName",
-    #             },
-    #             device_registry_enrich: {
-    #               name: "ActivityName", # required
-    #               attribute: "AttributeName", # required
-    #               thing_name: "AttributeName", # required
-    #               role_arn: "RoleArn", # required
-    #               next: "ActivityName",
-    #             },
-    #             device_shadow_enrich: {
-    #               name: "ActivityName", # required
-    #               attribute: "AttributeName", # required
-    #               thing_name: "AttributeName", # required
-    #               role_arn: "RoleArn", # required
-    #               next: "ActivityName",
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] pipeline_name
     #   The name of the pipeline to update.
     #   @return [String]
@@ -4188,21 +3085,6 @@ module Aws::IoTAnalytics
     # An instance of a variable to be passed to the `containerAction`
     # execution. Each variable must have a name and a value given by one of
     # `stringValue`, `datasetContentVersionValue`, or `outputFileUriValue`.
-    #
-    # @note When making an API call, you may pass Variable
-    #   data as a hash:
-    #
-    #       {
-    #         name: "VariableName", # required
-    #         string_value: "StringValue",
-    #         double_value: 1.0,
-    #         dataset_content_version_value: {
-    #           dataset_name: "DatasetName", # required
-    #         },
-    #         output_file_uri_value: {
-    #           file_name: "OutputFileName", # required
-    #         },
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the variable.
@@ -4237,14 +3119,6 @@ module Aws::IoTAnalytics
     end
 
     # Information about the versioning of dataset contents.
-    #
-    # @note When making an API call, you may pass VersioningConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         unlimited: false,
-    #         max_versions: 1,
-    #       }
     #
     # @!attribute [rw] unlimited
     #   If true, unlimited versions of dataset contents are kept.

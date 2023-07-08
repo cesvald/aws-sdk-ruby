@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:ssmcontacts)
@@ -73,8 +77,13 @@ module Aws::SSMContacts
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::SSMContacts::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::SSMContacts
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::SSMContacts
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::SSMContacts
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::SSMContacts
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::SSMContacts
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::SSMContacts::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::SSMContacts::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::SSMContacts
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::SSMContacts
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -353,7 +410,19 @@ module Aws::SSMContacts
     #   Information provided by the user when the user acknowledges the page.
     #
     # @option params [required, String] :accept_code
-    #   The accept code is a 6-digit code used to acknowledge the page.
+    #   A 6-digit code used to acknowledge the page.
+    #
+    # @option params [String] :accept_code_validation
+    #   An optional field that Incident Manager uses to `ENFORCE` `AcceptCode`
+    #   validation when acknowledging an page. Acknowledgement can occur by
+    #   replying to a page, or when entering the AcceptCode in the console.
+    #   Enforcing AcceptCode validation causes Incident Manager to verify that
+    #   the code entered by the user matches the code sent by Incident Manager
+    #   with the page.
+    #
+    #   Incident Manager can also `IGNORE` `AcceptCode` validation. Ignoring
+    #   `AcceptCode` validation causes Incident Manager to accept any value
+    #   entered for the `AcceptCode`.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -365,6 +434,7 @@ module Aws::SSMContacts
     #     accept_type: "DELIVERED", # required, accepts DELIVERED, READ
     #     note: "ReceiptInfo",
     #     accept_code: "AcceptCode", # required
+    #     accept_code_validation: "IGNORE", # accepts IGNORE, ENFORCE
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/AcceptPage AWS API Documentation
@@ -429,7 +499,7 @@ module Aws::SSMContacts
     #   first Region of your replication set.
     #
     # @option params [String] :idempotency_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -444,9 +514,9 @@ module Aws::SSMContacts
     #   resp = client.create_contact({
     #     alias: "ContactAlias", # required
     #     display_name: "ContactName",
-    #     type: "PERSONAL", # required, accepts PERSONAL, ESCALATION
+    #     type: "PERSONAL", # required, accepts PERSONAL, ESCALATION, ONCALL_SCHEDULE
     #     plan: { # required
-    #       stages: [ # required
+    #       stages: [
     #         {
     #           duration_in_minutes: 1, # required
     #           targets: [ # required
@@ -463,6 +533,7 @@ module Aws::SSMContacts
     #           ],
     #         },
     #       ],
+    #       rotation_ids: ["SsmContactsArn"],
     #     },
     #     tags: [
     #       {
@@ -490,7 +561,8 @@ module Aws::SSMContacts
     # your contact.
     #
     # @option params [required, String] :contact_id
-    #   The Amazon Resource Name (ARN) of the contact channel.
+    #   The Amazon Resource Name (ARN) of the contact you are adding the
+    #   contact channel to.
     #
     # @option params [required, String] :name
     #   The name of the contact channel.
@@ -521,7 +593,7 @@ module Aws::SSMContacts
     #   until it has been activated.
     #
     # @option params [String] :idempotency_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -554,6 +626,181 @@ module Aws::SSMContacts
     # @param [Hash] params ({})
     def create_contact_channel(params = {}, options = {})
       req = build_request(:create_contact_channel, params)
+      req.send_request(options)
+    end
+
+    # Creates a rotation in an on-call schedule.
+    #
+    # @option params [required, String] :name
+    #   The name of the rotation.
+    #
+    # @option params [required, Array<String>] :contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts to add to the
+    #   rotation.
+    #
+    #   The order that you list the contacts in is their shift order in the
+    #   rotation schedule. To change the order of the contact's shifts, use
+    #   the UpdateRotation operation.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :start_time
+    #   The date and time that the rotation goes into effect.
+    #
+    # @option params [required, String] :time_zone_id
+    #   The time zone to base the rotation’s activity on in Internet Assigned
+    #   Numbers Authority (IANA) format. For example:
+    #   "America/Los\_Angeles", "UTC", or "Asia/Seoul". For more
+    #   information, see the [Time Zone Database][1] on the IANA website.
+    #
+    #   <note markdown="1"> Designators for time zones that don’t support Daylight Savings Time
+    #   rules, such as Pacific Standard Time (PST) and Pacific Daylight Time
+    #   (PDT), are not supported.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://www.iana.org/time-zones
+    #
+    # @option params [required, Types::RecurrenceSettings] :recurrence
+    #   Information about the rule that specifies when a shift's team members
+    #   rotate.
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   Optional metadata to assign to the rotation. Tags enable you to
+    #   categorize a resource in different ways, such as by purpose, owner, or
+    #   environment. For more information, see [Tagging Incident Manager
+    #   resources][1] in the *Incident Manager User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/incident-manager/latest/userguide/tagging.html
+    #
+    # @option params [String] :idempotency_token
+    #   A token that ensures that the operation is called only once with the
+    #   specified details.
+    #
+    # @return [Types::CreateRotationResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateRotationResult#rotation_arn #rotation_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_rotation({
+    #     name: "RotationName", # required
+    #     contact_ids: ["SsmContactsArn"], # required
+    #     start_time: Time.now,
+    #     time_zone_id: "TimeZoneId", # required
+    #     recurrence: { # required
+    #       monthly_settings: [
+    #         {
+    #           day_of_month: 1, # required
+    #           hand_off_time: { # required
+    #             hour_of_day: 1, # required
+    #             minute_of_hour: 1, # required
+    #           },
+    #         },
+    #       ],
+    #       weekly_settings: [
+    #         {
+    #           day_of_week: "MON", # required, accepts MON, TUE, WED, THU, FRI, SAT, SUN
+    #           hand_off_time: { # required
+    #             hour_of_day: 1, # required
+    #             minute_of_hour: 1, # required
+    #           },
+    #         },
+    #       ],
+    #       daily_settings: [
+    #         {
+    #           hour_of_day: 1, # required
+    #           minute_of_hour: 1, # required
+    #         },
+    #       ],
+    #       number_of_on_calls: 1, # required
+    #       shift_coverages: {
+    #         "MON" => [
+    #           {
+    #             start: {
+    #               hour_of_day: 1, # required
+    #               minute_of_hour: 1, # required
+    #             },
+    #             end: {
+    #               hour_of_day: 1, # required
+    #               minute_of_hour: 1, # required
+    #             },
+    #           },
+    #         ],
+    #       },
+    #       recurrence_multiplier: 1, # required
+    #     },
+    #     tags: [
+    #       {
+    #         key: "TagKey",
+    #         value: "TagValue",
+    #       },
+    #     ],
+    #     idempotency_token: "IdempotencyToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.rotation_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/CreateRotation AWS API Documentation
+    #
+    # @overload create_rotation(params = {})
+    # @param [Hash] params ({})
+    def create_rotation(params = {}, options = {})
+      req = build_request(:create_rotation, params)
+      req.send_request(options)
+    end
+
+    # Creates an override for a rotation in an on-call schedule.
+    #
+    # @option params [required, String] :rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation to create an override
+    #   for.
+    #
+    # @option params [required, Array<String>] :new_contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts to replace those in
+    #   the current on-call rotation with.
+    #
+    #   If you want to include any current team members in the override shift,
+    #   you must include their ARNs in the new contact ID list.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :start_time
+    #   The date and time when the override goes into effect.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :end_time
+    #   The date and time when the override ends.
+    #
+    # @option params [String] :idempotency_token
+    #   A token that ensures that the operation is called only once with the
+    #   specified details.
+    #
+    # @return [Types::CreateRotationOverrideResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateRotationOverrideResult#rotation_override_id #rotation_override_id} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_rotation_override({
+    #     rotation_id: "SsmContactsArn", # required
+    #     new_contact_ids: ["SsmContactsArn"], # required
+    #     start_time: Time.now, # required
+    #     end_time: Time.now, # required
+    #     idempotency_token: "IdempotencyToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.rotation_override_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/CreateRotationOverride AWS API Documentation
+    #
+    # @overload create_rotation_override(params = {})
+    # @param [Hash] params ({})
+    def create_rotation_override(params = {}, options = {})
+      req = build_request(:create_rotation_override, params)
       req.send_request(options)
     end
 
@@ -630,6 +877,56 @@ module Aws::SSMContacts
     # @param [Hash] params ({})
     def delete_contact_channel(params = {}, options = {})
       req = build_request(:delete_contact_channel, params)
+      req.send_request(options)
+    end
+
+    # Deletes a rotation from the system. If a rotation belongs to more than
+    # one on-call schedule, this operation deletes it from all of them.
+    #
+    # @option params [required, String] :rotation_id
+    #   The Amazon Resource Name (ARN) of the on-call rotation to delete.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_rotation({
+    #     rotation_id: "SsmContactsArn", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/DeleteRotation AWS API Documentation
+    #
+    # @overload delete_rotation(params = {})
+    # @param [Hash] params ({})
+    def delete_rotation(params = {}, options = {})
+      req = build_request(:delete_rotation, params)
+      req.send_request(options)
+    end
+
+    # Deletes an existing override for an on-call rotation.
+    #
+    # @option params [required, String] :rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation that was overridden.
+    #
+    # @option params [required, String] :rotation_override_id
+    #   The Amazon Resource Name (ARN) of the on-call rotation override to
+    #   delete.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_rotation_override({
+    #     rotation_id: "SsmContactsArn", # required
+    #     rotation_override_id: "Uuid", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/DeleteRotationOverride AWS API Documentation
+    #
+    # @overload delete_rotation_override(params = {})
+    # @param [Hash] params ({})
+    def delete_rotation_override(params = {}, options = {})
+      req = build_request(:delete_rotation_override, params)
       req.send_request(options)
     end
 
@@ -756,7 +1053,7 @@ module Aws::SSMContacts
     #   resp.contact_arn #=> String
     #   resp.alias #=> String
     #   resp.display_name #=> String
-    #   resp.type #=> String, one of "PERSONAL", "ESCALATION"
+    #   resp.type #=> String, one of "PERSONAL", "ESCALATION", "ONCALL_SCHEDULE"
     #   resp.plan.stages #=> Array
     #   resp.plan.stages[0].duration_in_minutes #=> Integer
     #   resp.plan.stages[0].targets #=> Array
@@ -764,6 +1061,8 @@ module Aws::SSMContacts
     #   resp.plan.stages[0].targets[0].channel_target_info.retry_interval_in_minutes #=> Integer
     #   resp.plan.stages[0].targets[0].contact_target_info.contact_id #=> String
     #   resp.plan.stages[0].targets[0].contact_target_info.is_essential #=> Boolean
+    #   resp.plan.rotation_ids #=> Array
+    #   resp.plan.rotation_ids[0] #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/GetContact AWS API Documentation
     #
@@ -844,6 +1143,109 @@ module Aws::SSMContacts
       req.send_request(options)
     end
 
+    # Retrieves information about an on-call rotation.
+    #
+    # @option params [required, String] :rotation_id
+    #   The Amazon Resource Name (ARN) of the on-call rotation to retrieve
+    #   information about.
+    #
+    # @return [Types::GetRotationResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetRotationResult#rotation_arn #rotation_arn} => String
+    #   * {Types::GetRotationResult#name #name} => String
+    #   * {Types::GetRotationResult#contact_ids #contact_ids} => Array&lt;String&gt;
+    #   * {Types::GetRotationResult#start_time #start_time} => Time
+    #   * {Types::GetRotationResult#time_zone_id #time_zone_id} => String
+    #   * {Types::GetRotationResult#recurrence #recurrence} => Types::RecurrenceSettings
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_rotation({
+    #     rotation_id: "SsmContactsArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.rotation_arn #=> String
+    #   resp.name #=> String
+    #   resp.contact_ids #=> Array
+    #   resp.contact_ids[0] #=> String
+    #   resp.start_time #=> Time
+    #   resp.time_zone_id #=> String
+    #   resp.recurrence.monthly_settings #=> Array
+    #   resp.recurrence.monthly_settings[0].day_of_month #=> Integer
+    #   resp.recurrence.monthly_settings[0].hand_off_time.hour_of_day #=> Integer
+    #   resp.recurrence.monthly_settings[0].hand_off_time.minute_of_hour #=> Integer
+    #   resp.recurrence.weekly_settings #=> Array
+    #   resp.recurrence.weekly_settings[0].day_of_week #=> String, one of "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"
+    #   resp.recurrence.weekly_settings[0].hand_off_time.hour_of_day #=> Integer
+    #   resp.recurrence.weekly_settings[0].hand_off_time.minute_of_hour #=> Integer
+    #   resp.recurrence.daily_settings #=> Array
+    #   resp.recurrence.daily_settings[0].hour_of_day #=> Integer
+    #   resp.recurrence.daily_settings[0].minute_of_hour #=> Integer
+    #   resp.recurrence.number_of_on_calls #=> Integer
+    #   resp.recurrence.shift_coverages #=> Hash
+    #   resp.recurrence.shift_coverages["DayOfWeek"] #=> Array
+    #   resp.recurrence.shift_coverages["DayOfWeek"][0].start.hour_of_day #=> Integer
+    #   resp.recurrence.shift_coverages["DayOfWeek"][0].start.minute_of_hour #=> Integer
+    #   resp.recurrence.shift_coverages["DayOfWeek"][0].end.hour_of_day #=> Integer
+    #   resp.recurrence.shift_coverages["DayOfWeek"][0].end.minute_of_hour #=> Integer
+    #   resp.recurrence.recurrence_multiplier #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/GetRotation AWS API Documentation
+    #
+    # @overload get_rotation(params = {})
+    # @param [Hash] params ({})
+    def get_rotation(params = {}, options = {})
+      req = build_request(:get_rotation, params)
+      req.send_request(options)
+    end
+
+    # Retrieves information about an override to an on-call rotation.
+    #
+    # @option params [required, String] :rotation_id
+    #   The Amazon Resource Name (ARN) of the overridden rotation to retrieve
+    #   information about.
+    #
+    # @option params [required, String] :rotation_override_id
+    #   The Amazon Resource Name (ARN) of the on-call rotation override to
+    #   retrieve information about.
+    #
+    # @return [Types::GetRotationOverrideResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetRotationOverrideResult#rotation_override_id #rotation_override_id} => String
+    #   * {Types::GetRotationOverrideResult#rotation_arn #rotation_arn} => String
+    #   * {Types::GetRotationOverrideResult#new_contact_ids #new_contact_ids} => Array&lt;String&gt;
+    #   * {Types::GetRotationOverrideResult#start_time #start_time} => Time
+    #   * {Types::GetRotationOverrideResult#end_time #end_time} => Time
+    #   * {Types::GetRotationOverrideResult#create_time #create_time} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_rotation_override({
+    #     rotation_id: "SsmContactsArn", # required
+    #     rotation_override_id: "Uuid", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.rotation_override_id #=> String
+    #   resp.rotation_arn #=> String
+    #   resp.new_contact_ids #=> Array
+    #   resp.new_contact_ids[0] #=> String
+    #   resp.start_time #=> Time
+    #   resp.end_time #=> Time
+    #   resp.create_time #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/GetRotationOverride AWS API Documentation
+    #
+    # @overload get_rotation_override(params = {})
+    # @param [Hash] params ({})
+    def get_rotation_override(params = {}, options = {})
+      req = build_request(:get_rotation_override, params)
+      req.send_request(options)
+    end
+
     # Lists all contact channels for the specified contact.
     #
     # @option params [required, String] :contact_id
@@ -920,7 +1322,7 @@ module Aws::SSMContacts
     #     next_token: "PaginationToken",
     #     max_results: 1,
     #     alias_prefix: "ContactAlias",
-    #     type: "PERSONAL", # accepts PERSONAL, ESCALATION
+    #     type: "PERSONAL", # accepts PERSONAL, ESCALATION, ONCALL_SCHEDULE
     #   })
     #
     # @example Response structure
@@ -930,7 +1332,7 @@ module Aws::SSMContacts
     #   resp.contacts[0].contact_arn #=> String
     #   resp.contacts[0].alias #=> String
     #   resp.contacts[0].display_name #=> String
-    #   resp.contacts[0].type #=> String, one of "PERSONAL", "ESCALATION"
+    #   resp.contacts[0].type #=> String, one of "PERSONAL", "ESCALATION", "ONCALL_SCHEDULE"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListContacts AWS API Documentation
     #
@@ -1041,6 +1443,52 @@ module Aws::SSMContacts
       req.send_request(options)
     end
 
+    # Returns the resolution path of an engagement. For example, the
+    # escalation plan engaged in an incident might target an on-call
+    # schedule that includes several contacts in a rotation, but just one
+    # contact on-call when the incident starts. The resolution path
+    # indicates the hierarchy of *escalation plan &gt; on-call schedule &gt;
+    # contact*.
+    #
+    # @option params [String] :next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results.
+    #
+    # @option params [required, String] :page_id
+    #   The Amazon Resource Name (ARN) of the contact engaged for the
+    #   incident.
+    #
+    # @return [Types::ListPageResolutionsResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListPageResolutionsResult#next_token #next_token} => String
+    #   * {Types::ListPageResolutionsResult#page_resolutions #page_resolutions} => Array&lt;Types::ResolutionContact&gt;
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_page_resolutions({
+    #     next_token: "PaginationToken",
+    #     page_id: "SsmContactsArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.next_token #=> String
+    #   resp.page_resolutions #=> Array
+    #   resp.page_resolutions[0].contact_arn #=> String
+    #   resp.page_resolutions[0].type #=> String, one of "PERSONAL", "ESCALATION", "ONCALL_SCHEDULE"
+    #   resp.page_resolutions[0].stage_index #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListPageResolutions AWS API Documentation
+    #
+    # @overload list_page_resolutions(params = {})
+    # @param [Hash] params ({})
+    def list_page_resolutions(params = {}, options = {})
+      req = build_request(:list_page_resolutions, params)
+      req.send_request(options)
+    end
+
     # Lists the engagements to a contact's contact channels.
     #
     # @option params [required, String] :contact_id
@@ -1141,6 +1589,328 @@ module Aws::SSMContacts
       req.send_request(options)
     end
 
+    # Returns a list of shifts based on rotation configuration parameters.
+    #
+    # <note markdown="1"> The Incident Manager primarily uses this operation to populate the
+    # **Preview** calendar. It is not typically run by end users.
+    #
+    #  </note>
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :rotation_start_time
+    #   The date and time a rotation would begin. The first shift is
+    #   calculated from this date and time.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :start_time
+    #   Used to filter the range of calculated shifts before sending the
+    #   response back to the user.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :end_time
+    #   The date and time a rotation shift would end.
+    #
+    # @option params [required, Array<String>] :members
+    #   The contacts that would be assigned to a rotation.
+    #
+    # @option params [required, String] :time_zone_id
+    #   The time zone the rotation’s activity would be based on, in Internet
+    #   Assigned Numbers Authority (IANA) format. For example:
+    #   "America/Los\_Angeles", "UTC", or "Asia/Seoul".
+    #
+    # @option params [required, Types::RecurrenceSettings] :recurrence
+    #   Information about how long a rotation would last before restarting at
+    #   the beginning of the shift order.
+    #
+    # @option params [Array<Types::PreviewOverride>] :overrides
+    #   Information about changes that would be made in a rotation override.
+    #
+    # @option params [String] :next_token
+    #   A token to start the list. This token is used to get the next set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that can be specified in a subsequent call to get the
+    #   next set of results.
+    #
+    # @return [Types::ListPreviewRotationShiftsResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListPreviewRotationShiftsResult#rotation_shifts #rotation_shifts} => Array&lt;Types::RotationShift&gt;
+    #   * {Types::ListPreviewRotationShiftsResult#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_preview_rotation_shifts({
+    #     rotation_start_time: Time.now,
+    #     start_time: Time.now,
+    #     end_time: Time.now, # required
+    #     members: ["Member"], # required
+    #     time_zone_id: "TimeZoneId", # required
+    #     recurrence: { # required
+    #       monthly_settings: [
+    #         {
+    #           day_of_month: 1, # required
+    #           hand_off_time: { # required
+    #             hour_of_day: 1, # required
+    #             minute_of_hour: 1, # required
+    #           },
+    #         },
+    #       ],
+    #       weekly_settings: [
+    #         {
+    #           day_of_week: "MON", # required, accepts MON, TUE, WED, THU, FRI, SAT, SUN
+    #           hand_off_time: { # required
+    #             hour_of_day: 1, # required
+    #             minute_of_hour: 1, # required
+    #           },
+    #         },
+    #       ],
+    #       daily_settings: [
+    #         {
+    #           hour_of_day: 1, # required
+    #           minute_of_hour: 1, # required
+    #         },
+    #       ],
+    #       number_of_on_calls: 1, # required
+    #       shift_coverages: {
+    #         "MON" => [
+    #           {
+    #             start: {
+    #               hour_of_day: 1, # required
+    #               minute_of_hour: 1, # required
+    #             },
+    #             end: {
+    #               hour_of_day: 1, # required
+    #               minute_of_hour: 1, # required
+    #             },
+    #           },
+    #         ],
+    #       },
+    #       recurrence_multiplier: 1, # required
+    #     },
+    #     overrides: [
+    #       {
+    #         new_members: ["Member"],
+    #         start_time: Time.now,
+    #         end_time: Time.now,
+    #       },
+    #     ],
+    #     next_token: "PaginationToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.rotation_shifts #=> Array
+    #   resp.rotation_shifts[0].contact_ids #=> Array
+    #   resp.rotation_shifts[0].contact_ids[0] #=> String
+    #   resp.rotation_shifts[0].start_time #=> Time
+    #   resp.rotation_shifts[0].end_time #=> Time
+    #   resp.rotation_shifts[0].type #=> String, one of "REGULAR", "OVERRIDDEN"
+    #   resp.rotation_shifts[0].shift_details.overridden_contact_ids #=> Array
+    #   resp.rotation_shifts[0].shift_details.overridden_contact_ids[0] #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListPreviewRotationShifts AWS API Documentation
+    #
+    # @overload list_preview_rotation_shifts(params = {})
+    # @param [Hash] params ({})
+    def list_preview_rotation_shifts(params = {}, options = {})
+      req = build_request(:list_preview_rotation_shifts, params)
+      req.send_request(options)
+    end
+
+    # Retrieves a list of overrides currently specified for an on-call
+    # rotation.
+    #
+    # @option params [required, String] :rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation to retrieve information
+    #   about.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :start_time
+    #   The date and time for the beginning of a time range for listing
+    #   overrides.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :end_time
+    #   The date and time for the end of a time range for listing overrides.
+    #
+    # @option params [String] :next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that you can specify in a subsequent call to get the
+    #   next set of results.
+    #
+    # @return [Types::ListRotationOverridesResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListRotationOverridesResult#rotation_overrides #rotation_overrides} => Array&lt;Types::RotationOverride&gt;
+    #   * {Types::ListRotationOverridesResult#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_rotation_overrides({
+    #     rotation_id: "SsmContactsArn", # required
+    #     start_time: Time.now, # required
+    #     end_time: Time.now, # required
+    #     next_token: "PaginationToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.rotation_overrides #=> Array
+    #   resp.rotation_overrides[0].rotation_override_id #=> String
+    #   resp.rotation_overrides[0].new_contact_ids #=> Array
+    #   resp.rotation_overrides[0].new_contact_ids[0] #=> String
+    #   resp.rotation_overrides[0].start_time #=> Time
+    #   resp.rotation_overrides[0].end_time #=> Time
+    #   resp.rotation_overrides[0].create_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListRotationOverrides AWS API Documentation
+    #
+    # @overload list_rotation_overrides(params = {})
+    # @param [Hash] params ({})
+    def list_rotation_overrides(params = {}, options = {})
+      req = build_request(:list_rotation_overrides, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of shifts generated by an existing rotation in the
+    # system.
+    #
+    # @option params [required, String] :rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation to retrieve shift
+    #   information about.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :start_time
+    #   The date and time for the beginning of the time range to list shifts
+    #   for.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :end_time
+    #   The date and time for the end of the time range to list shifts for.
+    #
+    # @option params [String] :next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that you can specify in a subsequent call to get the
+    #   next set of results.
+    #
+    # @return [Types::ListRotationShiftsResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListRotationShiftsResult#rotation_shifts #rotation_shifts} => Array&lt;Types::RotationShift&gt;
+    #   * {Types::ListRotationShiftsResult#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_rotation_shifts({
+    #     rotation_id: "SsmContactsArn", # required
+    #     start_time: Time.now,
+    #     end_time: Time.now, # required
+    #     next_token: "PaginationToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.rotation_shifts #=> Array
+    #   resp.rotation_shifts[0].contact_ids #=> Array
+    #   resp.rotation_shifts[0].contact_ids[0] #=> String
+    #   resp.rotation_shifts[0].start_time #=> Time
+    #   resp.rotation_shifts[0].end_time #=> Time
+    #   resp.rotation_shifts[0].type #=> String, one of "REGULAR", "OVERRIDDEN"
+    #   resp.rotation_shifts[0].shift_details.overridden_contact_ids #=> Array
+    #   resp.rotation_shifts[0].shift_details.overridden_contact_ids[0] #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListRotationShifts AWS API Documentation
+    #
+    # @overload list_rotation_shifts(params = {})
+    # @param [Hash] params ({})
+    def list_rotation_shifts(params = {}, options = {})
+      req = build_request(:list_rotation_shifts, params)
+      req.send_request(options)
+    end
+
+    # Retrieves a list of on-call rotations.
+    #
+    # @option params [String] :rotation_name_prefix
+    #   A filter to include rotations in list results based on their common
+    #   prefix. For example, entering prod returns a list of all rotation
+    #   names that begin with `prod`, such as `production` and `prod-1`.
+    #
+    # @option params [String] :next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that you can specify in a subsequent call to get the
+    #   next set of results.
+    #
+    # @return [Types::ListRotationsResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListRotationsResult#next_token #next_token} => String
+    #   * {Types::ListRotationsResult#rotations #rotations} => Array&lt;Types::Rotation&gt;
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_rotations({
+    #     rotation_name_prefix: "RotationName",
+    #     next_token: "PaginationToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.next_token #=> String
+    #   resp.rotations #=> Array
+    #   resp.rotations[0].rotation_arn #=> String
+    #   resp.rotations[0].name #=> String
+    #   resp.rotations[0].contact_ids #=> Array
+    #   resp.rotations[0].contact_ids[0] #=> String
+    #   resp.rotations[0].start_time #=> Time
+    #   resp.rotations[0].time_zone_id #=> String
+    #   resp.rotations[0].recurrence.monthly_settings #=> Array
+    #   resp.rotations[0].recurrence.monthly_settings[0].day_of_month #=> Integer
+    #   resp.rotations[0].recurrence.monthly_settings[0].hand_off_time.hour_of_day #=> Integer
+    #   resp.rotations[0].recurrence.monthly_settings[0].hand_off_time.minute_of_hour #=> Integer
+    #   resp.rotations[0].recurrence.weekly_settings #=> Array
+    #   resp.rotations[0].recurrence.weekly_settings[0].day_of_week #=> String, one of "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"
+    #   resp.rotations[0].recurrence.weekly_settings[0].hand_off_time.hour_of_day #=> Integer
+    #   resp.rotations[0].recurrence.weekly_settings[0].hand_off_time.minute_of_hour #=> Integer
+    #   resp.rotations[0].recurrence.daily_settings #=> Array
+    #   resp.rotations[0].recurrence.daily_settings[0].hour_of_day #=> Integer
+    #   resp.rotations[0].recurrence.daily_settings[0].minute_of_hour #=> Integer
+    #   resp.rotations[0].recurrence.number_of_on_calls #=> Integer
+    #   resp.rotations[0].recurrence.shift_coverages #=> Hash
+    #   resp.rotations[0].recurrence.shift_coverages["DayOfWeek"] #=> Array
+    #   resp.rotations[0].recurrence.shift_coverages["DayOfWeek"][0].start.hour_of_day #=> Integer
+    #   resp.rotations[0].recurrence.shift_coverages["DayOfWeek"][0].start.minute_of_hour #=> Integer
+    #   resp.rotations[0].recurrence.shift_coverages["DayOfWeek"][0].end.hour_of_day #=> Integer
+    #   resp.rotations[0].recurrence.shift_coverages["DayOfWeek"][0].end.minute_of_hour #=> Integer
+    #   resp.rotations[0].recurrence.recurrence_multiplier #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListRotations AWS API Documentation
+    #
+    # @overload list_rotations(params = {})
+    # @param [Hash] params ({})
+    def list_rotations(params = {}, options = {})
+      req = build_request(:list_rotations, params)
+      req.send_request(options)
+    end
+
     # Lists the tags of an escalation plan or contact.
     #
     # @option params [required, String] :resource_arn
@@ -1171,7 +1941,15 @@ module Aws::SSMContacts
       req.send_request(options)
     end
 
-    # Adds a resource to the specified contact or escalation plan.
+    # Adds a resource policy to the specified contact or escalation plan.
+    # The resource policy is used to share the contact or escalation plan
+    # using Resource Access Manager (RAM). For more information about
+    # cross-account sharing, see [Setting up cross-account
+    # functionality][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/incident-manager/latest/userguide/xa.html
     #
     # @option params [required, String] :contact_arn
     #   The Amazon Resource Name (ARN) of the contact or escalation plan.
@@ -1199,7 +1977,7 @@ module Aws::SSMContacts
 
     # Sends an activation code to a contact channel. The contact can use
     # this code to activate the contact channel in the console or with the
-    # `ActivateChannel` action. Incident Manager can't engage a contact
+    # `ActivateChannel` operation. Incident Manager can't engage a contact
     # channel until it has been activated.
     #
     # @option params [required, String] :contact_channel_id
@@ -1251,7 +2029,7 @@ module Aws::SSMContacts
     #   The ARN of the incident that the engagement is part of.
     #
     # @option params [String] :idempotency_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -1394,7 +2172,7 @@ module Aws::SSMContacts
     #     contact_id: "SsmContactsArn", # required
     #     display_name: "ContactName",
     #     plan: {
-    #       stages: [ # required
+    #       stages: [
     #         {
     #           duration_in_minutes: 1, # required
     #           targets: [ # required
@@ -1411,6 +2189,7 @@ module Aws::SSMContacts
     #           ],
     #         },
     #       ],
+    #       rotation_ids: ["SsmContactsArn"],
     #     },
     #   })
     #
@@ -1430,7 +2209,7 @@ module Aws::SSMContacts
     #   update.
     #
     # @option params [String] :name
-    #   The name of the contact channel
+    #   The name of the contact channel.
     #
     # @option params [Types::ContactChannelAddress] :delivery_address
     #   The details that Incident Manager uses when trying to engage the
@@ -1457,6 +2236,103 @@ module Aws::SSMContacts
       req.send_request(options)
     end
 
+    # Updates the information specified for an on-call rotation.
+    #
+    # @option params [required, String] :rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation to update.
+    #
+    # @option params [Array<String>] :contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts to include in the
+    #   updated rotation.
+    #
+    #   The order in which you list the contacts is their shift order in the
+    #   rotation schedule.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :start_time
+    #   The date and time the rotation goes into effect.
+    #
+    # @option params [String] :time_zone_id
+    #   The time zone to base the updated rotation’s activity on, in Internet
+    #   Assigned Numbers Authority (IANA) format. For example:
+    #   "America/Los\_Angeles", "UTC", or "Asia/Seoul". For more
+    #   information, see the [Time Zone Database][1] on the IANA website.
+    #
+    #   <note markdown="1"> Designators for time zones that don’t support Daylight Savings Time
+    #   Rules, such as Pacific Standard Time (PST) and Pacific Daylight Time
+    #   (PDT), aren't supported.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://www.iana.org/time-zones
+    #
+    # @option params [required, Types::RecurrenceSettings] :recurrence
+    #   Information about how long the updated rotation lasts before
+    #   restarting at the beginning of the shift order.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_rotation({
+    #     rotation_id: "SsmContactsArn", # required
+    #     contact_ids: ["SsmContactsArn"],
+    #     start_time: Time.now,
+    #     time_zone_id: "TimeZoneId",
+    #     recurrence: { # required
+    #       monthly_settings: [
+    #         {
+    #           day_of_month: 1, # required
+    #           hand_off_time: { # required
+    #             hour_of_day: 1, # required
+    #             minute_of_hour: 1, # required
+    #           },
+    #         },
+    #       ],
+    #       weekly_settings: [
+    #         {
+    #           day_of_week: "MON", # required, accepts MON, TUE, WED, THU, FRI, SAT, SUN
+    #           hand_off_time: { # required
+    #             hour_of_day: 1, # required
+    #             minute_of_hour: 1, # required
+    #           },
+    #         },
+    #       ],
+    #       daily_settings: [
+    #         {
+    #           hour_of_day: 1, # required
+    #           minute_of_hour: 1, # required
+    #         },
+    #       ],
+    #       number_of_on_calls: 1, # required
+    #       shift_coverages: {
+    #         "MON" => [
+    #           {
+    #             start: {
+    #               hour_of_day: 1, # required
+    #               minute_of_hour: 1, # required
+    #             },
+    #             end: {
+    #               hour_of_day: 1, # required
+    #               minute_of_hour: 1, # required
+    #             },
+    #           },
+    #         ],
+    #       },
+    #       recurrence_multiplier: 1, # required
+    #     },
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/UpdateRotation AWS API Documentation
+    #
+    # @overload update_rotation(params = {})
+    # @param [Hash] params ({})
+    def update_rotation(params = {}, options = {})
+      req = build_request(:update_rotation, params)
+      req.send_request(options)
+    end
+
     # @!endgroup
 
     # @param params ({})
@@ -1470,7 +2346,7 @@ module Aws::SSMContacts
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-ssmcontacts'
-      context[:gem_version] = '1.0.0'
+      context[:gem_version] = '1.21.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

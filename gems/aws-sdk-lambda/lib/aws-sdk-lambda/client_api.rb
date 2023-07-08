@@ -26,7 +26,13 @@ module Aws::Lambda
     AliasConfiguration = Shapes::StructureShape.new(name: 'AliasConfiguration')
     AliasList = Shapes::ListShape.new(name: 'AliasList')
     AliasRoutingConfiguration = Shapes::StructureShape.new(name: 'AliasRoutingConfiguration')
+    AllowCredentials = Shapes::BooleanShape.new(name: 'AllowCredentials')
+    AllowMethodsList = Shapes::ListShape.new(name: 'AllowMethodsList')
+    AllowOriginsList = Shapes::ListShape.new(name: 'AllowOriginsList')
     AllowedPublishers = Shapes::StructureShape.new(name: 'AllowedPublishers')
+    AmazonManagedKafkaEventSourceConfig = Shapes::StructureShape.new(name: 'AmazonManagedKafkaEventSourceConfig')
+    Architecture = Shapes::StringShape.new(name: 'Architecture')
+    ArchitecturesList = Shapes::ListShape.new(name: 'ArchitecturesList')
     Arn = Shapes::StringShape.new(name: 'Arn')
     BatchSize = Shapes::IntegerShape.new(name: 'BatchSize')
     BisectBatchOnFunctionError = Shapes::BooleanShape.new(name: 'BisectBatchOnFunctionError')
@@ -42,13 +48,19 @@ module Aws::Lambda
     CodeSigningPolicy = Shapes::StringShape.new(name: 'CodeSigningPolicy')
     CodeStorageExceededException = Shapes::StructureShape.new(name: 'CodeStorageExceededException')
     CodeVerificationFailedException = Shapes::StructureShape.new(name: 'CodeVerificationFailedException')
+    CollectionName = Shapes::StringShape.new(name: 'CollectionName')
+    CompatibleArchitectures = Shapes::ListShape.new(name: 'CompatibleArchitectures')
     CompatibleRuntimes = Shapes::ListShape.new(name: 'CompatibleRuntimes')
     Concurrency = Shapes::StructureShape.new(name: 'Concurrency')
+    Cors = Shapes::StructureShape.new(name: 'Cors')
     CreateAliasRequest = Shapes::StructureShape.new(name: 'CreateAliasRequest')
     CreateCodeSigningConfigRequest = Shapes::StructureShape.new(name: 'CreateCodeSigningConfigRequest')
     CreateCodeSigningConfigResponse = Shapes::StructureShape.new(name: 'CreateCodeSigningConfigResponse')
     CreateEventSourceMappingRequest = Shapes::StructureShape.new(name: 'CreateEventSourceMappingRequest')
     CreateFunctionRequest = Shapes::StructureShape.new(name: 'CreateFunctionRequest')
+    CreateFunctionUrlConfigRequest = Shapes::StructureShape.new(name: 'CreateFunctionUrlConfigRequest')
+    CreateFunctionUrlConfigResponse = Shapes::StructureShape.new(name: 'CreateFunctionUrlConfigResponse')
+    DatabaseName = Shapes::StringShape.new(name: 'DatabaseName')
     Date = Shapes::TimestampShape.new(name: 'Date')
     DeadLetterConfig = Shapes::StructureShape.new(name: 'DeadLetterConfig')
     DeleteAliasRequest = Shapes::StructureShape.new(name: 'DeleteAliasRequest')
@@ -59,11 +71,13 @@ module Aws::Lambda
     DeleteFunctionConcurrencyRequest = Shapes::StructureShape.new(name: 'DeleteFunctionConcurrencyRequest')
     DeleteFunctionEventInvokeConfigRequest = Shapes::StructureShape.new(name: 'DeleteFunctionEventInvokeConfigRequest')
     DeleteFunctionRequest = Shapes::StructureShape.new(name: 'DeleteFunctionRequest')
+    DeleteFunctionUrlConfigRequest = Shapes::StructureShape.new(name: 'DeleteFunctionUrlConfigRequest')
     DeleteLayerVersionRequest = Shapes::StructureShape.new(name: 'DeleteLayerVersionRequest')
     DeleteProvisionedConcurrencyConfigRequest = Shapes::StructureShape.new(name: 'DeleteProvisionedConcurrencyConfigRequest')
     Description = Shapes::StringShape.new(name: 'Description')
     DestinationArn = Shapes::StringShape.new(name: 'DestinationArn')
     DestinationConfig = Shapes::StructureShape.new(name: 'DestinationConfig')
+    DocumentDBEventSourceConfig = Shapes::StructureShape.new(name: 'DocumentDBEventSourceConfig')
     EC2AccessDeniedException = Shapes::StructureShape.new(name: 'EC2AccessDeniedException')
     EC2ThrottledException = Shapes::StructureShape.new(name: 'EC2ThrottledException')
     EC2UnexpectedException = Shapes::StructureShape.new(name: 'EC2UnexpectedException')
@@ -83,6 +97,8 @@ module Aws::Lambda
     EnvironmentVariableName = Shapes::StringShape.new(name: 'EnvironmentVariableName')
     EnvironmentVariableValue = Shapes::StringShape.new(name: 'EnvironmentVariableValue')
     EnvironmentVariables = Shapes::MapShape.new(name: 'EnvironmentVariables')
+    EphemeralStorage = Shapes::StructureShape.new(name: 'EphemeralStorage')
+    EphemeralStorageSize = Shapes::IntegerShape.new(name: 'EphemeralStorageSize')
     EventSourceMappingConfiguration = Shapes::StructureShape.new(name: 'EventSourceMappingConfiguration')
     EventSourceMappingsList = Shapes::ListShape.new(name: 'EventSourceMappingsList')
     EventSourcePosition = Shapes::StringShape.new(name: 'EventSourcePosition')
@@ -90,6 +106,10 @@ module Aws::Lambda
     FileSystemArn = Shapes::StringShape.new(name: 'FileSystemArn')
     FileSystemConfig = Shapes::StructureShape.new(name: 'FileSystemConfig')
     FileSystemConfigList = Shapes::ListShape.new(name: 'FileSystemConfigList')
+    Filter = Shapes::StructureShape.new(name: 'Filter')
+    FilterCriteria = Shapes::StructureShape.new(name: 'FilterCriteria')
+    FilterList = Shapes::ListShape.new(name: 'FilterList')
+    FullDocument = Shapes::StringShape.new(name: 'FullDocument')
     FunctionArn = Shapes::StringShape.new(name: 'FunctionArn')
     FunctionArnList = Shapes::ListShape.new(name: 'FunctionArnList')
     FunctionCode = Shapes::StructureShape.new(name: 'FunctionCode')
@@ -101,6 +121,11 @@ module Aws::Lambda
     FunctionName = Shapes::StringShape.new(name: 'FunctionName')
     FunctionResponseType = Shapes::StringShape.new(name: 'FunctionResponseType')
     FunctionResponseTypeList = Shapes::ListShape.new(name: 'FunctionResponseTypeList')
+    FunctionUrl = Shapes::StringShape.new(name: 'FunctionUrl')
+    FunctionUrlAuthType = Shapes::StringShape.new(name: 'FunctionUrlAuthType')
+    FunctionUrlConfig = Shapes::StructureShape.new(name: 'FunctionUrlConfig')
+    FunctionUrlConfigList = Shapes::ListShape.new(name: 'FunctionUrlConfigList')
+    FunctionUrlQualifier = Shapes::StringShape.new(name: 'FunctionUrlQualifier')
     FunctionVersion = Shapes::StringShape.new(name: 'FunctionVersion')
     GetAccountSettingsRequest = Shapes::StructureShape.new(name: 'GetAccountSettingsRequest')
     GetAccountSettingsResponse = Shapes::StructureShape.new(name: 'GetAccountSettingsResponse')
@@ -116,6 +141,8 @@ module Aws::Lambda
     GetFunctionEventInvokeConfigRequest = Shapes::StructureShape.new(name: 'GetFunctionEventInvokeConfigRequest')
     GetFunctionRequest = Shapes::StructureShape.new(name: 'GetFunctionRequest')
     GetFunctionResponse = Shapes::StructureShape.new(name: 'GetFunctionResponse')
+    GetFunctionUrlConfigRequest = Shapes::StructureShape.new(name: 'GetFunctionUrlConfigRequest')
+    GetFunctionUrlConfigResponse = Shapes::StructureShape.new(name: 'GetFunctionUrlConfigResponse')
     GetLayerVersionByArnRequest = Shapes::StructureShape.new(name: 'GetLayerVersionByArnRequest')
     GetLayerVersionPolicyRequest = Shapes::StructureShape.new(name: 'GetLayerVersionPolicyRequest')
     GetLayerVersionPolicyResponse = Shapes::StructureShape.new(name: 'GetLayerVersionPolicyResponse')
@@ -125,7 +152,11 @@ module Aws::Lambda
     GetPolicyResponse = Shapes::StructureShape.new(name: 'GetPolicyResponse')
     GetProvisionedConcurrencyConfigRequest = Shapes::StructureShape.new(name: 'GetProvisionedConcurrencyConfigRequest')
     GetProvisionedConcurrencyConfigResponse = Shapes::StructureShape.new(name: 'GetProvisionedConcurrencyConfigResponse')
+    GetRuntimeManagementConfigRequest = Shapes::StructureShape.new(name: 'GetRuntimeManagementConfigRequest')
+    GetRuntimeManagementConfigResponse = Shapes::StructureShape.new(name: 'GetRuntimeManagementConfigResponse')
     Handler = Shapes::StringShape.new(name: 'Handler')
+    Header = Shapes::StringShape.new(name: 'Header')
+    HeadersList = Shapes::ListShape.new(name: 'HeadersList')
     HttpStatus = Shapes::IntegerShape.new(name: 'HttpStatus')
     ImageConfig = Shapes::StructureShape.new(name: 'ImageConfig')
     ImageConfigError = Shapes::StructureShape.new(name: 'ImageConfigError')
@@ -143,6 +174,12 @@ module Aws::Lambda
     InvocationType = Shapes::StringShape.new(name: 'InvocationType')
     InvokeAsyncRequest = Shapes::StructureShape.new(name: 'InvokeAsyncRequest')
     InvokeAsyncResponse = Shapes::StructureShape.new(name: 'InvokeAsyncResponse')
+    InvokeMode = Shapes::StringShape.new(name: 'InvokeMode')
+    InvokeResponseStreamUpdate = Shapes::StructureShape.new(name: 'InvokeResponseStreamUpdate')
+    InvokeWithResponseStreamCompleteEvent = Shapes::StructureShape.new(name: 'InvokeWithResponseStreamCompleteEvent')
+    InvokeWithResponseStreamRequest = Shapes::StructureShape.new(name: 'InvokeWithResponseStreamRequest')
+    InvokeWithResponseStreamResponse = Shapes::StructureShape.new(name: 'InvokeWithResponseStreamResponse')
+    InvokeWithResponseStreamResponseEvent = Shapes::StructureShape.new(name: 'InvokeWithResponseStreamResponseEvent')
     KMSAccessDeniedException = Shapes::StructureShape.new(name: 'KMSAccessDeniedException')
     KMSDisabledException = Shapes::StructureShape.new(name: 'KMSDisabledException')
     KMSInvalidStateException = Shapes::StructureShape.new(name: 'KMSInvalidStateException')
@@ -175,6 +212,8 @@ module Aws::Lambda
     ListEventSourceMappingsResponse = Shapes::StructureShape.new(name: 'ListEventSourceMappingsResponse')
     ListFunctionEventInvokeConfigsRequest = Shapes::StructureShape.new(name: 'ListFunctionEventInvokeConfigsRequest')
     ListFunctionEventInvokeConfigsResponse = Shapes::StructureShape.new(name: 'ListFunctionEventInvokeConfigsResponse')
+    ListFunctionUrlConfigsRequest = Shapes::StructureShape.new(name: 'ListFunctionUrlConfigsRequest')
+    ListFunctionUrlConfigsResponse = Shapes::StructureShape.new(name: 'ListFunctionUrlConfigsResponse')
     ListFunctionsByCodeSigningConfigRequest = Shapes::StructureShape.new(name: 'ListFunctionsByCodeSigningConfigRequest')
     ListFunctionsByCodeSigningConfigResponse = Shapes::StructureShape.new(name: 'ListFunctionsByCodeSigningConfigResponse')
     ListFunctionsRequest = Shapes::StructureShape.new(name: 'ListFunctionsRequest')
@@ -193,16 +232,20 @@ module Aws::Lambda
     LogType = Shapes::StringShape.new(name: 'LogType')
     Long = Shapes::IntegerShape.new(name: 'Long')
     MasterRegion = Shapes::StringShape.new(name: 'MasterRegion')
+    MaxAge = Shapes::IntegerShape.new(name: 'MaxAge')
     MaxFunctionEventInvokeConfigListItems = Shapes::IntegerShape.new(name: 'MaxFunctionEventInvokeConfigListItems')
+    MaxItems = Shapes::IntegerShape.new(name: 'MaxItems')
     MaxLayerListItems = Shapes::IntegerShape.new(name: 'MaxLayerListItems')
     MaxListItems = Shapes::IntegerShape.new(name: 'MaxListItems')
     MaxProvisionedConcurrencyConfigListItems = Shapes::IntegerShape.new(name: 'MaxProvisionedConcurrencyConfigListItems')
     MaximumBatchingWindowInSeconds = Shapes::IntegerShape.new(name: 'MaximumBatchingWindowInSeconds')
+    MaximumConcurrency = Shapes::IntegerShape.new(name: 'MaximumConcurrency')
     MaximumEventAgeInSeconds = Shapes::IntegerShape.new(name: 'MaximumEventAgeInSeconds')
     MaximumRecordAgeInSeconds = Shapes::IntegerShape.new(name: 'MaximumRecordAgeInSeconds')
     MaximumRetryAttempts = Shapes::IntegerShape.new(name: 'MaximumRetryAttempts')
     MaximumRetryAttemptsEventSourceMapping = Shapes::IntegerShape.new(name: 'MaximumRetryAttemptsEventSourceMapping')
     MemorySize = Shapes::IntegerShape.new(name: 'MemorySize')
+    Method = Shapes::StringShape.new(name: 'Method')
     NameSpacedFunctionArn = Shapes::StringShape.new(name: 'NameSpacedFunctionArn')
     NamespacedFunctionName = Shapes::StringShape.new(name: 'NamespacedFunctionName')
     NamespacedStatementId = Shapes::StringShape.new(name: 'NamespacedStatementId')
@@ -210,12 +253,15 @@ module Aws::Lambda
     OnFailure = Shapes::StructureShape.new(name: 'OnFailure')
     OnSuccess = Shapes::StructureShape.new(name: 'OnSuccess')
     OrganizationId = Shapes::StringShape.new(name: 'OrganizationId')
+    Origin = Shapes::StringShape.new(name: 'Origin')
     PackageType = Shapes::StringShape.new(name: 'PackageType')
     ParallelizationFactor = Shapes::IntegerShape.new(name: 'ParallelizationFactor')
+    Pattern = Shapes::StringShape.new(name: 'Pattern')
     PolicyLengthExceededException = Shapes::StructureShape.new(name: 'PolicyLengthExceededException')
     PositiveInteger = Shapes::IntegerShape.new(name: 'PositiveInteger')
     PreconditionFailedException = Shapes::StructureShape.new(name: 'PreconditionFailedException')
     Principal = Shapes::StringShape.new(name: 'Principal')
+    PrincipalOrgID = Shapes::StringShape.new(name: 'PrincipalOrgID')
     ProvisionedConcurrencyConfigList = Shapes::ListShape.new(name: 'ProvisionedConcurrencyConfigList')
     ProvisionedConcurrencyConfigListItem = Shapes::StructureShape.new(name: 'ProvisionedConcurrencyConfigListItem')
     ProvisionedConcurrencyConfigNotFoundException = Shapes::StructureShape.new(name: 'ProvisionedConcurrencyConfigNotFoundException')
@@ -229,9 +275,12 @@ module Aws::Lambda
     PutFunctionEventInvokeConfigRequest = Shapes::StructureShape.new(name: 'PutFunctionEventInvokeConfigRequest')
     PutProvisionedConcurrencyConfigRequest = Shapes::StructureShape.new(name: 'PutProvisionedConcurrencyConfigRequest')
     PutProvisionedConcurrencyConfigResponse = Shapes::StructureShape.new(name: 'PutProvisionedConcurrencyConfigResponse')
+    PutRuntimeManagementConfigRequest = Shapes::StructureShape.new(name: 'PutRuntimeManagementConfigRequest')
+    PutRuntimeManagementConfigResponse = Shapes::StructureShape.new(name: 'PutRuntimeManagementConfigResponse')
     Qualifier = Shapes::StringShape.new(name: 'Qualifier')
     Queue = Shapes::StringShape.new(name: 'Queue')
     Queues = Shapes::ListShape.new(name: 'Queues')
+    RecursiveInvocationException = Shapes::StructureShape.new(name: 'RecursiveInvocationException')
     RemoveLayerVersionPermissionRequest = Shapes::StructureShape.new(name: 'RemoveLayerVersionPermissionRequest')
     RemovePermissionRequest = Shapes::StructureShape.new(name: 'RemovePermissionRequest')
     RequestTooLargeException = Shapes::StructureShape.new(name: 'RequestTooLargeException')
@@ -241,17 +290,30 @@ module Aws::Lambda
     ResourceInUseException = Shapes::StructureShape.new(name: 'ResourceInUseException')
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
     ResourceNotReadyException = Shapes::StructureShape.new(name: 'ResourceNotReadyException')
+    ResponseStreamingInvocationType = Shapes::StringShape.new(name: 'ResponseStreamingInvocationType')
     RoleArn = Shapes::StringShape.new(name: 'RoleArn')
     Runtime = Shapes::StringShape.new(name: 'Runtime')
+    RuntimeVersionArn = Shapes::StringShape.new(name: 'RuntimeVersionArn')
+    RuntimeVersionConfig = Shapes::StructureShape.new(name: 'RuntimeVersionConfig')
+    RuntimeVersionError = Shapes::StructureShape.new(name: 'RuntimeVersionError')
     S3Bucket = Shapes::StringShape.new(name: 'S3Bucket')
     S3Key = Shapes::StringShape.new(name: 'S3Key')
     S3ObjectVersion = Shapes::StringShape.new(name: 'S3ObjectVersion')
+    ScalingConfig = Shapes::StructureShape.new(name: 'ScalingConfig')
     SecurityGroupId = Shapes::StringShape.new(name: 'SecurityGroupId')
     SecurityGroupIds = Shapes::ListShape.new(name: 'SecurityGroupIds')
     SelfManagedEventSource = Shapes::StructureShape.new(name: 'SelfManagedEventSource')
+    SelfManagedKafkaEventSourceConfig = Shapes::StructureShape.new(name: 'SelfManagedKafkaEventSourceConfig')
     SensitiveString = Shapes::StringShape.new(name: 'SensitiveString')
     ServiceException = Shapes::StructureShape.new(name: 'ServiceException')
     SigningProfileVersionArns = Shapes::ListShape.new(name: 'SigningProfileVersionArns')
+    SnapStart = Shapes::StructureShape.new(name: 'SnapStart')
+    SnapStartApplyOn = Shapes::StringShape.new(name: 'SnapStartApplyOn')
+    SnapStartException = Shapes::StructureShape.new(name: 'SnapStartException')
+    SnapStartNotReadyException = Shapes::StructureShape.new(name: 'SnapStartNotReadyException')
+    SnapStartOptimizationStatus = Shapes::StringShape.new(name: 'SnapStartOptimizationStatus')
+    SnapStartResponse = Shapes::StructureShape.new(name: 'SnapStartResponse')
+    SnapStartTimeoutException = Shapes::StructureShape.new(name: 'SnapStartTimeoutException')
     SourceAccessConfiguration = Shapes::StructureShape.new(name: 'SourceAccessConfiguration')
     SourceAccessConfigurations = Shapes::ListShape.new(name: 'SourceAccessConfigurations')
     SourceAccessType = Shapes::StringShape.new(name: 'SourceAccessType')
@@ -291,6 +353,9 @@ module Aws::Lambda
     UpdateFunctionCodeRequest = Shapes::StructureShape.new(name: 'UpdateFunctionCodeRequest')
     UpdateFunctionConfigurationRequest = Shapes::StructureShape.new(name: 'UpdateFunctionConfigurationRequest')
     UpdateFunctionEventInvokeConfigRequest = Shapes::StructureShape.new(name: 'UpdateFunctionEventInvokeConfigRequest')
+    UpdateFunctionUrlConfigRequest = Shapes::StructureShape.new(name: 'UpdateFunctionUrlConfigRequest')
+    UpdateFunctionUrlConfigResponse = Shapes::StructureShape.new(name: 'UpdateFunctionUrlConfigResponse')
+    UpdateRuntimeOn = Shapes::StringShape.new(name: 'UpdateRuntimeOn')
     Version = Shapes::StringShape.new(name: 'Version')
     VpcConfig = Shapes::StructureShape.new(name: 'VpcConfig')
     VpcConfigResponse = Shapes::StructureShape.new(name: 'VpcConfigResponse')
@@ -331,6 +396,8 @@ module Aws::Lambda
     AddPermissionRequest.add_member(:event_source_token, Shapes::ShapeRef.new(shape: EventSourceToken, location_name: "EventSourceToken"))
     AddPermissionRequest.add_member(:qualifier, Shapes::ShapeRef.new(shape: Qualifier, location: "querystring", location_name: "Qualifier"))
     AddPermissionRequest.add_member(:revision_id, Shapes::ShapeRef.new(shape: String, location_name: "RevisionId"))
+    AddPermissionRequest.add_member(:principal_org_id, Shapes::ShapeRef.new(shape: PrincipalOrgID, location_name: "PrincipalOrgID"))
+    AddPermissionRequest.add_member(:function_url_auth_type, Shapes::ShapeRef.new(shape: FunctionUrlAuthType, location_name: "FunctionUrlAuthType"))
     AddPermissionRequest.struct_class = Types::AddPermissionRequest
 
     AddPermissionResponse.add_member(:statement, Shapes::ShapeRef.new(shape: String, location_name: "Statement"))
@@ -352,8 +419,17 @@ module Aws::Lambda
     AliasRoutingConfiguration.add_member(:additional_version_weights, Shapes::ShapeRef.new(shape: AdditionalVersionWeights, location_name: "AdditionalVersionWeights"))
     AliasRoutingConfiguration.struct_class = Types::AliasRoutingConfiguration
 
+    AllowMethodsList.member = Shapes::ShapeRef.new(shape: Method)
+
+    AllowOriginsList.member = Shapes::ShapeRef.new(shape: Origin)
+
     AllowedPublishers.add_member(:signing_profile_version_arns, Shapes::ShapeRef.new(shape: SigningProfileVersionArns, required: true, location_name: "SigningProfileVersionArns"))
     AllowedPublishers.struct_class = Types::AllowedPublishers
+
+    AmazonManagedKafkaEventSourceConfig.add_member(:consumer_group_id, Shapes::ShapeRef.new(shape: URI, location_name: "ConsumerGroupId"))
+    AmazonManagedKafkaEventSourceConfig.struct_class = Types::AmazonManagedKafkaEventSourceConfig
+
+    ArchitecturesList.member = Shapes::ShapeRef.new(shape: Architecture)
 
     CodeSigningConfig.add_member(:code_signing_config_id, Shapes::ShapeRef.new(shape: CodeSigningConfigId, required: true, location_name: "CodeSigningConfigId"))
     CodeSigningConfig.add_member(:code_signing_config_arn, Shapes::ShapeRef.new(shape: CodeSigningConfigArn, required: true, location_name: "CodeSigningConfigArn"))
@@ -380,10 +456,20 @@ module Aws::Lambda
     CodeVerificationFailedException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
     CodeVerificationFailedException.struct_class = Types::CodeVerificationFailedException
 
+    CompatibleArchitectures.member = Shapes::ShapeRef.new(shape: Architecture)
+
     CompatibleRuntimes.member = Shapes::ShapeRef.new(shape: Runtime)
 
     Concurrency.add_member(:reserved_concurrent_executions, Shapes::ShapeRef.new(shape: ReservedConcurrentExecutions, location_name: "ReservedConcurrentExecutions"))
     Concurrency.struct_class = Types::Concurrency
+
+    Cors.add_member(:allow_credentials, Shapes::ShapeRef.new(shape: AllowCredentials, location_name: "AllowCredentials"))
+    Cors.add_member(:allow_headers, Shapes::ShapeRef.new(shape: HeadersList, location_name: "AllowHeaders"))
+    Cors.add_member(:allow_methods, Shapes::ShapeRef.new(shape: AllowMethodsList, location_name: "AllowMethods"))
+    Cors.add_member(:allow_origins, Shapes::ShapeRef.new(shape: AllowOriginsList, location_name: "AllowOrigins"))
+    Cors.add_member(:expose_headers, Shapes::ShapeRef.new(shape: HeadersList, location_name: "ExposeHeaders"))
+    Cors.add_member(:max_age, Shapes::ShapeRef.new(shape: MaxAge, location_name: "MaxAge"))
+    Cors.struct_class = Types::Cors
 
     CreateAliasRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
     CreateAliasRequest.add_member(:name, Shapes::ShapeRef.new(shape: Alias, required: true, location_name: "Name"))
@@ -404,6 +490,7 @@ module Aws::Lambda
     CreateEventSourceMappingRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location_name: "FunctionName"))
     CreateEventSourceMappingRequest.add_member(:enabled, Shapes::ShapeRef.new(shape: Enabled, location_name: "Enabled"))
     CreateEventSourceMappingRequest.add_member(:batch_size, Shapes::ShapeRef.new(shape: BatchSize, location_name: "BatchSize"))
+    CreateEventSourceMappingRequest.add_member(:filter_criteria, Shapes::ShapeRef.new(shape: FilterCriteria, location_name: "FilterCriteria"))
     CreateEventSourceMappingRequest.add_member(:maximum_batching_window_in_seconds, Shapes::ShapeRef.new(shape: MaximumBatchingWindowInSeconds, location_name: "MaximumBatchingWindowInSeconds"))
     CreateEventSourceMappingRequest.add_member(:parallelization_factor, Shapes::ShapeRef.new(shape: ParallelizationFactor, location_name: "ParallelizationFactor"))
     CreateEventSourceMappingRequest.add_member(:starting_position, Shapes::ShapeRef.new(shape: EventSourcePosition, location_name: "StartingPosition"))
@@ -418,6 +505,10 @@ module Aws::Lambda
     CreateEventSourceMappingRequest.add_member(:source_access_configurations, Shapes::ShapeRef.new(shape: SourceAccessConfigurations, location_name: "SourceAccessConfigurations"))
     CreateEventSourceMappingRequest.add_member(:self_managed_event_source, Shapes::ShapeRef.new(shape: SelfManagedEventSource, location_name: "SelfManagedEventSource"))
     CreateEventSourceMappingRequest.add_member(:function_response_types, Shapes::ShapeRef.new(shape: FunctionResponseTypeList, location_name: "FunctionResponseTypes"))
+    CreateEventSourceMappingRequest.add_member(:amazon_managed_kafka_event_source_config, Shapes::ShapeRef.new(shape: AmazonManagedKafkaEventSourceConfig, location_name: "AmazonManagedKafkaEventSourceConfig"))
+    CreateEventSourceMappingRequest.add_member(:self_managed_kafka_event_source_config, Shapes::ShapeRef.new(shape: SelfManagedKafkaEventSourceConfig, location_name: "SelfManagedKafkaEventSourceConfig"))
+    CreateEventSourceMappingRequest.add_member(:scaling_config, Shapes::ShapeRef.new(shape: ScalingConfig, location_name: "ScalingConfig"))
+    CreateEventSourceMappingRequest.add_member(:document_db_event_source_config, Shapes::ShapeRef.new(shape: DocumentDBEventSourceConfig, location_name: "DocumentDBEventSourceConfig"))
     CreateEventSourceMappingRequest.struct_class = Types::CreateEventSourceMappingRequest
 
     CreateFunctionRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location_name: "FunctionName"))
@@ -440,7 +531,25 @@ module Aws::Lambda
     CreateFunctionRequest.add_member(:file_system_configs, Shapes::ShapeRef.new(shape: FileSystemConfigList, location_name: "FileSystemConfigs"))
     CreateFunctionRequest.add_member(:image_config, Shapes::ShapeRef.new(shape: ImageConfig, location_name: "ImageConfig"))
     CreateFunctionRequest.add_member(:code_signing_config_arn, Shapes::ShapeRef.new(shape: CodeSigningConfigArn, location_name: "CodeSigningConfigArn"))
+    CreateFunctionRequest.add_member(:architectures, Shapes::ShapeRef.new(shape: ArchitecturesList, location_name: "Architectures"))
+    CreateFunctionRequest.add_member(:ephemeral_storage, Shapes::ShapeRef.new(shape: EphemeralStorage, location_name: "EphemeralStorage"))
+    CreateFunctionRequest.add_member(:snap_start, Shapes::ShapeRef.new(shape: SnapStart, location_name: "SnapStart"))
     CreateFunctionRequest.struct_class = Types::CreateFunctionRequest
+
+    CreateFunctionUrlConfigRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
+    CreateFunctionUrlConfigRequest.add_member(:qualifier, Shapes::ShapeRef.new(shape: FunctionUrlQualifier, location: "querystring", location_name: "Qualifier"))
+    CreateFunctionUrlConfigRequest.add_member(:auth_type, Shapes::ShapeRef.new(shape: FunctionUrlAuthType, required: true, location_name: "AuthType"))
+    CreateFunctionUrlConfigRequest.add_member(:cors, Shapes::ShapeRef.new(shape: Cors, location_name: "Cors"))
+    CreateFunctionUrlConfigRequest.add_member(:invoke_mode, Shapes::ShapeRef.new(shape: InvokeMode, location_name: "InvokeMode"))
+    CreateFunctionUrlConfigRequest.struct_class = Types::CreateFunctionUrlConfigRequest
+
+    CreateFunctionUrlConfigResponse.add_member(:function_url, Shapes::ShapeRef.new(shape: FunctionUrl, required: true, location_name: "FunctionUrl"))
+    CreateFunctionUrlConfigResponse.add_member(:function_arn, Shapes::ShapeRef.new(shape: FunctionArn, required: true, location_name: "FunctionArn"))
+    CreateFunctionUrlConfigResponse.add_member(:auth_type, Shapes::ShapeRef.new(shape: FunctionUrlAuthType, required: true, location_name: "AuthType"))
+    CreateFunctionUrlConfigResponse.add_member(:cors, Shapes::ShapeRef.new(shape: Cors, location_name: "Cors"))
+    CreateFunctionUrlConfigResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "CreationTime"))
+    CreateFunctionUrlConfigResponse.add_member(:invoke_mode, Shapes::ShapeRef.new(shape: InvokeMode, location_name: "InvokeMode"))
+    CreateFunctionUrlConfigResponse.struct_class = Types::CreateFunctionUrlConfigResponse
 
     DeadLetterConfig.add_member(:target_arn, Shapes::ShapeRef.new(shape: ResourceArn, location_name: "TargetArn"))
     DeadLetterConfig.struct_class = Types::DeadLetterConfig
@@ -471,6 +580,10 @@ module Aws::Lambda
     DeleteFunctionRequest.add_member(:qualifier, Shapes::ShapeRef.new(shape: Qualifier, location: "querystring", location_name: "Qualifier"))
     DeleteFunctionRequest.struct_class = Types::DeleteFunctionRequest
 
+    DeleteFunctionUrlConfigRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
+    DeleteFunctionUrlConfigRequest.add_member(:qualifier, Shapes::ShapeRef.new(shape: FunctionUrlQualifier, location: "querystring", location_name: "Qualifier"))
+    DeleteFunctionUrlConfigRequest.struct_class = Types::DeleteFunctionUrlConfigRequest
+
     DeleteLayerVersionRequest.add_member(:layer_name, Shapes::ShapeRef.new(shape: LayerName, required: true, location: "uri", location_name: "LayerName"))
     DeleteLayerVersionRequest.add_member(:version_number, Shapes::ShapeRef.new(shape: LayerVersionNumber, required: true, location: "uri", location_name: "VersionNumber"))
     DeleteLayerVersionRequest.struct_class = Types::DeleteLayerVersionRequest
@@ -482,6 +595,11 @@ module Aws::Lambda
     DestinationConfig.add_member(:on_success, Shapes::ShapeRef.new(shape: OnSuccess, location_name: "OnSuccess"))
     DestinationConfig.add_member(:on_failure, Shapes::ShapeRef.new(shape: OnFailure, location_name: "OnFailure"))
     DestinationConfig.struct_class = Types::DestinationConfig
+
+    DocumentDBEventSourceConfig.add_member(:database_name, Shapes::ShapeRef.new(shape: DatabaseName, location_name: "DatabaseName"))
+    DocumentDBEventSourceConfig.add_member(:collection_name, Shapes::ShapeRef.new(shape: CollectionName, location_name: "CollectionName"))
+    DocumentDBEventSourceConfig.add_member(:full_document, Shapes::ShapeRef.new(shape: FullDocument, location_name: "FullDocument"))
+    DocumentDBEventSourceConfig.struct_class = Types::DocumentDBEventSourceConfig
 
     EC2AccessDeniedException.add_member(:type, Shapes::ShapeRef.new(shape: String, location_name: "Type"))
     EC2AccessDeniedException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
@@ -535,6 +653,9 @@ module Aws::Lambda
     EnvironmentVariables.key = Shapes::ShapeRef.new(shape: EnvironmentVariableName)
     EnvironmentVariables.value = Shapes::ShapeRef.new(shape: EnvironmentVariableValue)
 
+    EphemeralStorage.add_member(:size, Shapes::ShapeRef.new(shape: EphemeralStorageSize, required: true, location_name: "Size"))
+    EphemeralStorage.struct_class = Types::EphemeralStorage
+
     EventSourceMappingConfiguration.add_member(:uuid, Shapes::ShapeRef.new(shape: String, location_name: "UUID"))
     EventSourceMappingConfiguration.add_member(:starting_position, Shapes::ShapeRef.new(shape: EventSourcePosition, location_name: "StartingPosition"))
     EventSourceMappingConfiguration.add_member(:starting_position_timestamp, Shapes::ShapeRef.new(shape: Date, location_name: "StartingPositionTimestamp"))
@@ -542,6 +663,7 @@ module Aws::Lambda
     EventSourceMappingConfiguration.add_member(:maximum_batching_window_in_seconds, Shapes::ShapeRef.new(shape: MaximumBatchingWindowInSeconds, location_name: "MaximumBatchingWindowInSeconds"))
     EventSourceMappingConfiguration.add_member(:parallelization_factor, Shapes::ShapeRef.new(shape: ParallelizationFactor, location_name: "ParallelizationFactor"))
     EventSourceMappingConfiguration.add_member(:event_source_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "EventSourceArn"))
+    EventSourceMappingConfiguration.add_member(:filter_criteria, Shapes::ShapeRef.new(shape: FilterCriteria, location_name: "FilterCriteria"))
     EventSourceMappingConfiguration.add_member(:function_arn, Shapes::ShapeRef.new(shape: FunctionArn, location_name: "FunctionArn"))
     EventSourceMappingConfiguration.add_member(:last_modified, Shapes::ShapeRef.new(shape: Date, location_name: "LastModified"))
     EventSourceMappingConfiguration.add_member(:last_processing_result, Shapes::ShapeRef.new(shape: String, location_name: "LastProcessingResult"))
@@ -557,6 +679,10 @@ module Aws::Lambda
     EventSourceMappingConfiguration.add_member(:maximum_retry_attempts, Shapes::ShapeRef.new(shape: MaximumRetryAttemptsEventSourceMapping, location_name: "MaximumRetryAttempts"))
     EventSourceMappingConfiguration.add_member(:tumbling_window_in_seconds, Shapes::ShapeRef.new(shape: TumblingWindowInSeconds, location_name: "TumblingWindowInSeconds"))
     EventSourceMappingConfiguration.add_member(:function_response_types, Shapes::ShapeRef.new(shape: FunctionResponseTypeList, location_name: "FunctionResponseTypes"))
+    EventSourceMappingConfiguration.add_member(:amazon_managed_kafka_event_source_config, Shapes::ShapeRef.new(shape: AmazonManagedKafkaEventSourceConfig, location_name: "AmazonManagedKafkaEventSourceConfig"))
+    EventSourceMappingConfiguration.add_member(:self_managed_kafka_event_source_config, Shapes::ShapeRef.new(shape: SelfManagedKafkaEventSourceConfig, location_name: "SelfManagedKafkaEventSourceConfig"))
+    EventSourceMappingConfiguration.add_member(:scaling_config, Shapes::ShapeRef.new(shape: ScalingConfig, location_name: "ScalingConfig"))
+    EventSourceMappingConfiguration.add_member(:document_db_event_source_config, Shapes::ShapeRef.new(shape: DocumentDBEventSourceConfig, location_name: "DocumentDBEventSourceConfig"))
     EventSourceMappingConfiguration.struct_class = Types::EventSourceMappingConfiguration
 
     EventSourceMappingsList.member = Shapes::ShapeRef.new(shape: EventSourceMappingConfiguration)
@@ -566,6 +692,14 @@ module Aws::Lambda
     FileSystemConfig.struct_class = Types::FileSystemConfig
 
     FileSystemConfigList.member = Shapes::ShapeRef.new(shape: FileSystemConfig)
+
+    Filter.add_member(:pattern, Shapes::ShapeRef.new(shape: Pattern, location_name: "Pattern"))
+    Filter.struct_class = Types::Filter
+
+    FilterCriteria.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    FilterCriteria.struct_class = Types::FilterCriteria
+
+    FilterList.member = Shapes::ShapeRef.new(shape: Filter)
 
     FunctionArnList.member = Shapes::ShapeRef.new(shape: FunctionArn)
 
@@ -613,6 +747,10 @@ module Aws::Lambda
     FunctionConfiguration.add_member(:image_config_response, Shapes::ShapeRef.new(shape: ImageConfigResponse, location_name: "ImageConfigResponse"))
     FunctionConfiguration.add_member(:signing_profile_version_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "SigningProfileVersionArn"))
     FunctionConfiguration.add_member(:signing_job_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "SigningJobArn"))
+    FunctionConfiguration.add_member(:architectures, Shapes::ShapeRef.new(shape: ArchitecturesList, location_name: "Architectures"))
+    FunctionConfiguration.add_member(:ephemeral_storage, Shapes::ShapeRef.new(shape: EphemeralStorage, location_name: "EphemeralStorage"))
+    FunctionConfiguration.add_member(:snap_start, Shapes::ShapeRef.new(shape: SnapStartResponse, location_name: "SnapStart"))
+    FunctionConfiguration.add_member(:runtime_version_config, Shapes::ShapeRef.new(shape: RuntimeVersionConfig, location_name: "RuntimeVersionConfig"))
     FunctionConfiguration.struct_class = Types::FunctionConfiguration
 
     FunctionEventInvokeConfig.add_member(:last_modified, Shapes::ShapeRef.new(shape: Date, location_name: "LastModified"))
@@ -627,6 +765,17 @@ module Aws::Lambda
     FunctionList.member = Shapes::ShapeRef.new(shape: FunctionConfiguration)
 
     FunctionResponseTypeList.member = Shapes::ShapeRef.new(shape: FunctionResponseType)
+
+    FunctionUrlConfig.add_member(:function_url, Shapes::ShapeRef.new(shape: FunctionUrl, required: true, location_name: "FunctionUrl"))
+    FunctionUrlConfig.add_member(:function_arn, Shapes::ShapeRef.new(shape: FunctionArn, required: true, location_name: "FunctionArn"))
+    FunctionUrlConfig.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "CreationTime"))
+    FunctionUrlConfig.add_member(:last_modified_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "LastModifiedTime"))
+    FunctionUrlConfig.add_member(:cors, Shapes::ShapeRef.new(shape: Cors, location_name: "Cors"))
+    FunctionUrlConfig.add_member(:auth_type, Shapes::ShapeRef.new(shape: FunctionUrlAuthType, required: true, location_name: "AuthType"))
+    FunctionUrlConfig.add_member(:invoke_mode, Shapes::ShapeRef.new(shape: InvokeMode, location_name: "InvokeMode"))
+    FunctionUrlConfig.struct_class = Types::FunctionUrlConfig
+
+    FunctionUrlConfigList.member = Shapes::ShapeRef.new(shape: FunctionUrlConfig)
 
     GetAccountSettingsRequest.struct_class = Types::GetAccountSettingsRequest
 
@@ -678,6 +827,19 @@ module Aws::Lambda
     GetFunctionResponse.add_member(:concurrency, Shapes::ShapeRef.new(shape: Concurrency, location_name: "Concurrency"))
     GetFunctionResponse.struct_class = Types::GetFunctionResponse
 
+    GetFunctionUrlConfigRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
+    GetFunctionUrlConfigRequest.add_member(:qualifier, Shapes::ShapeRef.new(shape: FunctionUrlQualifier, location: "querystring", location_name: "Qualifier"))
+    GetFunctionUrlConfigRequest.struct_class = Types::GetFunctionUrlConfigRequest
+
+    GetFunctionUrlConfigResponse.add_member(:function_url, Shapes::ShapeRef.new(shape: FunctionUrl, required: true, location_name: "FunctionUrl"))
+    GetFunctionUrlConfigResponse.add_member(:function_arn, Shapes::ShapeRef.new(shape: FunctionArn, required: true, location_name: "FunctionArn"))
+    GetFunctionUrlConfigResponse.add_member(:auth_type, Shapes::ShapeRef.new(shape: FunctionUrlAuthType, required: true, location_name: "AuthType"))
+    GetFunctionUrlConfigResponse.add_member(:cors, Shapes::ShapeRef.new(shape: Cors, location_name: "Cors"))
+    GetFunctionUrlConfigResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "CreationTime"))
+    GetFunctionUrlConfigResponse.add_member(:last_modified_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "LastModifiedTime"))
+    GetFunctionUrlConfigResponse.add_member(:invoke_mode, Shapes::ShapeRef.new(shape: InvokeMode, location_name: "InvokeMode"))
+    GetFunctionUrlConfigResponse.struct_class = Types::GetFunctionUrlConfigResponse
+
     GetLayerVersionByArnRequest.add_member(:arn, Shapes::ShapeRef.new(shape: LayerVersionArn, required: true, location: "querystring", location_name: "Arn"))
     GetLayerVersionByArnRequest.struct_class = Types::GetLayerVersionByArnRequest
 
@@ -701,6 +863,7 @@ module Aws::Lambda
     GetLayerVersionResponse.add_member(:version, Shapes::ShapeRef.new(shape: LayerVersionNumber, location_name: "Version"))
     GetLayerVersionResponse.add_member(:compatible_runtimes, Shapes::ShapeRef.new(shape: CompatibleRuntimes, location_name: "CompatibleRuntimes"))
     GetLayerVersionResponse.add_member(:license_info, Shapes::ShapeRef.new(shape: LicenseInfo, location_name: "LicenseInfo"))
+    GetLayerVersionResponse.add_member(:compatible_architectures, Shapes::ShapeRef.new(shape: CompatibleArchitectures, location_name: "CompatibleArchitectures"))
     GetLayerVersionResponse.struct_class = Types::GetLayerVersionResponse
 
     GetPolicyRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: NamespacedFunctionName, required: true, location: "uri", location_name: "FunctionName"))
@@ -722,6 +885,17 @@ module Aws::Lambda
     GetProvisionedConcurrencyConfigResponse.add_member(:status_reason, Shapes::ShapeRef.new(shape: String, location_name: "StatusReason"))
     GetProvisionedConcurrencyConfigResponse.add_member(:last_modified, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModified"))
     GetProvisionedConcurrencyConfigResponse.struct_class = Types::GetProvisionedConcurrencyConfigResponse
+
+    GetRuntimeManagementConfigRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: NamespacedFunctionName, required: true, location: "uri", location_name: "FunctionName"))
+    GetRuntimeManagementConfigRequest.add_member(:qualifier, Shapes::ShapeRef.new(shape: Qualifier, location: "querystring", location_name: "Qualifier"))
+    GetRuntimeManagementConfigRequest.struct_class = Types::GetRuntimeManagementConfigRequest
+
+    GetRuntimeManagementConfigResponse.add_member(:update_runtime_on, Shapes::ShapeRef.new(shape: UpdateRuntimeOn, location_name: "UpdateRuntimeOn"))
+    GetRuntimeManagementConfigResponse.add_member(:runtime_version_arn, Shapes::ShapeRef.new(shape: RuntimeVersionArn, location_name: "RuntimeVersionArn"))
+    GetRuntimeManagementConfigResponse.add_member(:function_arn, Shapes::ShapeRef.new(shape: NameSpacedFunctionArn, location_name: "FunctionArn"))
+    GetRuntimeManagementConfigResponse.struct_class = Types::GetRuntimeManagementConfigResponse
+
+    HeadersList.member = Shapes::ShapeRef.new(shape: Header)
 
     ImageConfig.add_member(:entry_point, Shapes::ShapeRef.new(shape: StringList, location_name: "EntryPoint"))
     ImageConfig.add_member(:command, Shapes::ShapeRef.new(shape: StringList, location_name: "Command"))
@@ -792,6 +966,36 @@ module Aws::Lambda
     InvokeAsyncResponse.add_member(:status, Shapes::ShapeRef.new(shape: HttpStatus, location: "statusCode", location_name: "Status"))
     InvokeAsyncResponse.struct_class = Types::InvokeAsyncResponse
 
+    InvokeResponseStreamUpdate.add_member(:payload, Shapes::ShapeRef.new(shape: Blob, eventpayload: true, eventpayload_type: 'blob', location_name: "Payload", metadata: {"eventpayload"=>true}))
+    InvokeResponseStreamUpdate.struct_class = Types::InvokeResponseStreamUpdate
+
+    InvokeWithResponseStreamCompleteEvent.add_member(:error_code, Shapes::ShapeRef.new(shape: String, location_name: "ErrorCode"))
+    InvokeWithResponseStreamCompleteEvent.add_member(:error_details, Shapes::ShapeRef.new(shape: String, location_name: "ErrorDetails"))
+    InvokeWithResponseStreamCompleteEvent.add_member(:log_result, Shapes::ShapeRef.new(shape: String, location_name: "LogResult"))
+    InvokeWithResponseStreamCompleteEvent.struct_class = Types::InvokeWithResponseStreamCompleteEvent
+
+    InvokeWithResponseStreamRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: NamespacedFunctionName, required: true, location: "uri", location_name: "FunctionName"))
+    InvokeWithResponseStreamRequest.add_member(:invocation_type, Shapes::ShapeRef.new(shape: ResponseStreamingInvocationType, location: "header", location_name: "X-Amz-Invocation-Type"))
+    InvokeWithResponseStreamRequest.add_member(:log_type, Shapes::ShapeRef.new(shape: LogType, location: "header", location_name: "X-Amz-Log-Type"))
+    InvokeWithResponseStreamRequest.add_member(:client_context, Shapes::ShapeRef.new(shape: String, location: "header", location_name: "X-Amz-Client-Context"))
+    InvokeWithResponseStreamRequest.add_member(:qualifier, Shapes::ShapeRef.new(shape: Qualifier, location: "querystring", location_name: "Qualifier"))
+    InvokeWithResponseStreamRequest.add_member(:payload, Shapes::ShapeRef.new(shape: Blob, location_name: "Payload"))
+    InvokeWithResponseStreamRequest.struct_class = Types::InvokeWithResponseStreamRequest
+    InvokeWithResponseStreamRequest[:payload] = :payload
+    InvokeWithResponseStreamRequest[:payload_member] = InvokeWithResponseStreamRequest.member(:payload)
+
+    InvokeWithResponseStreamResponse.add_member(:status_code, Shapes::ShapeRef.new(shape: Integer, location: "statusCode", location_name: "StatusCode"))
+    InvokeWithResponseStreamResponse.add_member(:executed_version, Shapes::ShapeRef.new(shape: Version, location: "header", location_name: "X-Amz-Executed-Version"))
+    InvokeWithResponseStreamResponse.add_member(:event_stream, Shapes::ShapeRef.new(shape: InvokeWithResponseStreamResponseEvent, eventstream: true, location_name: "EventStream"))
+    InvokeWithResponseStreamResponse.add_member(:response_stream_content_type, Shapes::ShapeRef.new(shape: String, location: "header", location_name: "Content-Type"))
+    InvokeWithResponseStreamResponse.struct_class = Types::InvokeWithResponseStreamResponse
+    InvokeWithResponseStreamResponse[:payload] = :event_stream
+    InvokeWithResponseStreamResponse[:payload_member] = InvokeWithResponseStreamResponse.member(:event_stream)
+
+    InvokeWithResponseStreamResponseEvent.add_member(:payload_chunk, Shapes::ShapeRef.new(shape: InvokeResponseStreamUpdate, event: true, location_name: "PayloadChunk"))
+    InvokeWithResponseStreamResponseEvent.add_member(:invoke_complete, Shapes::ShapeRef.new(shape: InvokeWithResponseStreamCompleteEvent, event: true, location_name: "InvokeComplete"))
+    InvokeWithResponseStreamResponseEvent.struct_class = Types::InvokeWithResponseStreamResponseEvent
+
     KMSAccessDeniedException.add_member(:type, Shapes::ShapeRef.new(shape: String, location_name: "Type"))
     KMSAccessDeniedException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
     KMSAccessDeniedException.struct_class = Types::KMSAccessDeniedException
@@ -837,6 +1041,7 @@ module Aws::Lambda
     LayerVersionsListItem.add_member(:created_date, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreatedDate"))
     LayerVersionsListItem.add_member(:compatible_runtimes, Shapes::ShapeRef.new(shape: CompatibleRuntimes, location_name: "CompatibleRuntimes"))
     LayerVersionsListItem.add_member(:license_info, Shapes::ShapeRef.new(shape: LicenseInfo, location_name: "LicenseInfo"))
+    LayerVersionsListItem.add_member(:compatible_architectures, Shapes::ShapeRef.new(shape: CompatibleArchitectures, location_name: "CompatibleArchitectures"))
     LayerVersionsListItem.struct_class = Types::LayerVersionsListItem
 
     LayersList.member = Shapes::ShapeRef.new(shape: LayersListItem)
@@ -885,6 +1090,15 @@ module Aws::Lambda
     ListFunctionEventInvokeConfigsResponse.add_member(:next_marker, Shapes::ShapeRef.new(shape: String, location_name: "NextMarker"))
     ListFunctionEventInvokeConfigsResponse.struct_class = Types::ListFunctionEventInvokeConfigsResponse
 
+    ListFunctionUrlConfigsRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
+    ListFunctionUrlConfigsRequest.add_member(:marker, Shapes::ShapeRef.new(shape: String, location: "querystring", location_name: "Marker"))
+    ListFunctionUrlConfigsRequest.add_member(:max_items, Shapes::ShapeRef.new(shape: MaxItems, location: "querystring", location_name: "MaxItems"))
+    ListFunctionUrlConfigsRequest.struct_class = Types::ListFunctionUrlConfigsRequest
+
+    ListFunctionUrlConfigsResponse.add_member(:function_url_configs, Shapes::ShapeRef.new(shape: FunctionUrlConfigList, required: true, location_name: "FunctionUrlConfigs"))
+    ListFunctionUrlConfigsResponse.add_member(:next_marker, Shapes::ShapeRef.new(shape: String, location_name: "NextMarker"))
+    ListFunctionUrlConfigsResponse.struct_class = Types::ListFunctionUrlConfigsResponse
+
     ListFunctionsByCodeSigningConfigRequest.add_member(:code_signing_config_arn, Shapes::ShapeRef.new(shape: CodeSigningConfigArn, required: true, location: "uri", location_name: "CodeSigningConfigArn"))
     ListFunctionsByCodeSigningConfigRequest.add_member(:marker, Shapes::ShapeRef.new(shape: String, location: "querystring", location_name: "Marker"))
     ListFunctionsByCodeSigningConfigRequest.add_member(:max_items, Shapes::ShapeRef.new(shape: MaxListItems, location: "querystring", location_name: "MaxItems"))
@@ -908,6 +1122,7 @@ module Aws::Lambda
     ListLayerVersionsRequest.add_member(:layer_name, Shapes::ShapeRef.new(shape: LayerName, required: true, location: "uri", location_name: "LayerName"))
     ListLayerVersionsRequest.add_member(:marker, Shapes::ShapeRef.new(shape: String, location: "querystring", location_name: "Marker"))
     ListLayerVersionsRequest.add_member(:max_items, Shapes::ShapeRef.new(shape: MaxLayerListItems, location: "querystring", location_name: "MaxItems"))
+    ListLayerVersionsRequest.add_member(:compatible_architecture, Shapes::ShapeRef.new(shape: Architecture, location: "querystring", location_name: "CompatibleArchitecture"))
     ListLayerVersionsRequest.struct_class = Types::ListLayerVersionsRequest
 
     ListLayerVersionsResponse.add_member(:next_marker, Shapes::ShapeRef.new(shape: String, location_name: "NextMarker"))
@@ -917,6 +1132,7 @@ module Aws::Lambda
     ListLayersRequest.add_member(:compatible_runtime, Shapes::ShapeRef.new(shape: Runtime, location: "querystring", location_name: "CompatibleRuntime"))
     ListLayersRequest.add_member(:marker, Shapes::ShapeRef.new(shape: String, location: "querystring", location_name: "Marker"))
     ListLayersRequest.add_member(:max_items, Shapes::ShapeRef.new(shape: MaxLayerListItems, location: "querystring", location_name: "MaxItems"))
+    ListLayersRequest.add_member(:compatible_architecture, Shapes::ShapeRef.new(shape: Architecture, location: "querystring", location_name: "CompatibleArchitecture"))
     ListLayersRequest.struct_class = Types::ListLayersRequest
 
     ListLayersResponse.add_member(:next_marker, Shapes::ShapeRef.new(shape: String, location_name: "NextMarker"))
@@ -981,6 +1197,7 @@ module Aws::Lambda
     PublishLayerVersionRequest.add_member(:content, Shapes::ShapeRef.new(shape: LayerVersionContentInput, required: true, location_name: "Content"))
     PublishLayerVersionRequest.add_member(:compatible_runtimes, Shapes::ShapeRef.new(shape: CompatibleRuntimes, location_name: "CompatibleRuntimes"))
     PublishLayerVersionRequest.add_member(:license_info, Shapes::ShapeRef.new(shape: LicenseInfo, location_name: "LicenseInfo"))
+    PublishLayerVersionRequest.add_member(:compatible_architectures, Shapes::ShapeRef.new(shape: CompatibleArchitectures, location_name: "CompatibleArchitectures"))
     PublishLayerVersionRequest.struct_class = Types::PublishLayerVersionRequest
 
     PublishLayerVersionResponse.add_member(:content, Shapes::ShapeRef.new(shape: LayerVersionContentOutput, location_name: "Content"))
@@ -991,6 +1208,7 @@ module Aws::Lambda
     PublishLayerVersionResponse.add_member(:version, Shapes::ShapeRef.new(shape: LayerVersionNumber, location_name: "Version"))
     PublishLayerVersionResponse.add_member(:compatible_runtimes, Shapes::ShapeRef.new(shape: CompatibleRuntimes, location_name: "CompatibleRuntimes"))
     PublishLayerVersionResponse.add_member(:license_info, Shapes::ShapeRef.new(shape: LicenseInfo, location_name: "LicenseInfo"))
+    PublishLayerVersionResponse.add_member(:compatible_architectures, Shapes::ShapeRef.new(shape: CompatibleArchitectures, location_name: "CompatibleArchitectures"))
     PublishLayerVersionResponse.struct_class = Types::PublishLayerVersionResponse
 
     PublishVersionRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
@@ -1031,7 +1249,22 @@ module Aws::Lambda
     PutProvisionedConcurrencyConfigResponse.add_member(:last_modified, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModified"))
     PutProvisionedConcurrencyConfigResponse.struct_class = Types::PutProvisionedConcurrencyConfigResponse
 
+    PutRuntimeManagementConfigRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
+    PutRuntimeManagementConfigRequest.add_member(:qualifier, Shapes::ShapeRef.new(shape: Qualifier, location: "querystring", location_name: "Qualifier"))
+    PutRuntimeManagementConfigRequest.add_member(:update_runtime_on, Shapes::ShapeRef.new(shape: UpdateRuntimeOn, required: true, location_name: "UpdateRuntimeOn"))
+    PutRuntimeManagementConfigRequest.add_member(:runtime_version_arn, Shapes::ShapeRef.new(shape: RuntimeVersionArn, location_name: "RuntimeVersionArn"))
+    PutRuntimeManagementConfigRequest.struct_class = Types::PutRuntimeManagementConfigRequest
+
+    PutRuntimeManagementConfigResponse.add_member(:update_runtime_on, Shapes::ShapeRef.new(shape: UpdateRuntimeOn, required: true, location_name: "UpdateRuntimeOn"))
+    PutRuntimeManagementConfigResponse.add_member(:function_arn, Shapes::ShapeRef.new(shape: FunctionArn, required: true, location_name: "FunctionArn"))
+    PutRuntimeManagementConfigResponse.add_member(:runtime_version_arn, Shapes::ShapeRef.new(shape: RuntimeVersionArn, location_name: "RuntimeVersionArn"))
+    PutRuntimeManagementConfigResponse.struct_class = Types::PutRuntimeManagementConfigResponse
+
     Queues.member = Shapes::ShapeRef.new(shape: Queue)
+
+    RecursiveInvocationException.add_member(:type, Shapes::ShapeRef.new(shape: String, location_name: "Type"))
+    RecursiveInvocationException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    RecursiveInvocationException.struct_class = Types::RecursiveInvocationException
 
     RemoveLayerVersionPermissionRequest.add_member(:layer_name, Shapes::ShapeRef.new(shape: LayerName, required: true, location: "uri", location_name: "LayerName"))
     RemoveLayerVersionPermissionRequest.add_member(:version_number, Shapes::ShapeRef.new(shape: LayerVersionNumber, required: true, location: "uri", location_name: "VersionNumber"))
@@ -1065,16 +1298,49 @@ module Aws::Lambda
     ResourceNotReadyException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "message"))
     ResourceNotReadyException.struct_class = Types::ResourceNotReadyException
 
+    RuntimeVersionConfig.add_member(:runtime_version_arn, Shapes::ShapeRef.new(shape: RuntimeVersionArn, location_name: "RuntimeVersionArn"))
+    RuntimeVersionConfig.add_member(:error, Shapes::ShapeRef.new(shape: RuntimeVersionError, location_name: "Error"))
+    RuntimeVersionConfig.struct_class = Types::RuntimeVersionConfig
+
+    RuntimeVersionError.add_member(:error_code, Shapes::ShapeRef.new(shape: String, location_name: "ErrorCode"))
+    RuntimeVersionError.add_member(:message, Shapes::ShapeRef.new(shape: SensitiveString, location_name: "Message"))
+    RuntimeVersionError.struct_class = Types::RuntimeVersionError
+
+    ScalingConfig.add_member(:maximum_concurrency, Shapes::ShapeRef.new(shape: MaximumConcurrency, location_name: "MaximumConcurrency"))
+    ScalingConfig.struct_class = Types::ScalingConfig
+
     SecurityGroupIds.member = Shapes::ShapeRef.new(shape: SecurityGroupId)
 
     SelfManagedEventSource.add_member(:endpoints, Shapes::ShapeRef.new(shape: Endpoints, location_name: "Endpoints"))
     SelfManagedEventSource.struct_class = Types::SelfManagedEventSource
+
+    SelfManagedKafkaEventSourceConfig.add_member(:consumer_group_id, Shapes::ShapeRef.new(shape: URI, location_name: "ConsumerGroupId"))
+    SelfManagedKafkaEventSourceConfig.struct_class = Types::SelfManagedKafkaEventSourceConfig
 
     ServiceException.add_member(:type, Shapes::ShapeRef.new(shape: String, location_name: "Type"))
     ServiceException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
     ServiceException.struct_class = Types::ServiceException
 
     SigningProfileVersionArns.member = Shapes::ShapeRef.new(shape: Arn)
+
+    SnapStart.add_member(:apply_on, Shapes::ShapeRef.new(shape: SnapStartApplyOn, location_name: "ApplyOn"))
+    SnapStart.struct_class = Types::SnapStart
+
+    SnapStartException.add_member(:type, Shapes::ShapeRef.new(shape: String, location_name: "Type"))
+    SnapStartException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    SnapStartException.struct_class = Types::SnapStartException
+
+    SnapStartNotReadyException.add_member(:type, Shapes::ShapeRef.new(shape: String, location_name: "Type"))
+    SnapStartNotReadyException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    SnapStartNotReadyException.struct_class = Types::SnapStartNotReadyException
+
+    SnapStartResponse.add_member(:apply_on, Shapes::ShapeRef.new(shape: SnapStartApplyOn, location_name: "ApplyOn"))
+    SnapStartResponse.add_member(:optimization_status, Shapes::ShapeRef.new(shape: SnapStartOptimizationStatus, location_name: "OptimizationStatus"))
+    SnapStartResponse.struct_class = Types::SnapStartResponse
+
+    SnapStartTimeoutException.add_member(:type, Shapes::ShapeRef.new(shape: String, location_name: "Type"))
+    SnapStartTimeoutException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    SnapStartTimeoutException.struct_class = Types::SnapStartTimeoutException
 
     SourceAccessConfiguration.add_member(:type, Shapes::ShapeRef.new(shape: SourceAccessType, location_name: "Type"))
     SourceAccessConfiguration.add_member(:uri, Shapes::ShapeRef.new(shape: URI, location_name: "URI"))
@@ -1142,6 +1408,7 @@ module Aws::Lambda
     UpdateEventSourceMappingRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, location_name: "FunctionName"))
     UpdateEventSourceMappingRequest.add_member(:enabled, Shapes::ShapeRef.new(shape: Enabled, location_name: "Enabled"))
     UpdateEventSourceMappingRequest.add_member(:batch_size, Shapes::ShapeRef.new(shape: BatchSize, location_name: "BatchSize"))
+    UpdateEventSourceMappingRequest.add_member(:filter_criteria, Shapes::ShapeRef.new(shape: FilterCriteria, location_name: "FilterCriteria"))
     UpdateEventSourceMappingRequest.add_member(:maximum_batching_window_in_seconds, Shapes::ShapeRef.new(shape: MaximumBatchingWindowInSeconds, location_name: "MaximumBatchingWindowInSeconds"))
     UpdateEventSourceMappingRequest.add_member(:destination_config, Shapes::ShapeRef.new(shape: DestinationConfig, location_name: "DestinationConfig"))
     UpdateEventSourceMappingRequest.add_member(:maximum_record_age_in_seconds, Shapes::ShapeRef.new(shape: MaximumRecordAgeInSeconds, location_name: "MaximumRecordAgeInSeconds"))
@@ -1151,6 +1418,8 @@ module Aws::Lambda
     UpdateEventSourceMappingRequest.add_member(:source_access_configurations, Shapes::ShapeRef.new(shape: SourceAccessConfigurations, location_name: "SourceAccessConfigurations"))
     UpdateEventSourceMappingRequest.add_member(:tumbling_window_in_seconds, Shapes::ShapeRef.new(shape: TumblingWindowInSeconds, location_name: "TumblingWindowInSeconds"))
     UpdateEventSourceMappingRequest.add_member(:function_response_types, Shapes::ShapeRef.new(shape: FunctionResponseTypeList, location_name: "FunctionResponseTypes"))
+    UpdateEventSourceMappingRequest.add_member(:scaling_config, Shapes::ShapeRef.new(shape: ScalingConfig, location_name: "ScalingConfig"))
+    UpdateEventSourceMappingRequest.add_member(:document_db_event_source_config, Shapes::ShapeRef.new(shape: DocumentDBEventSourceConfig, location_name: "DocumentDBEventSourceConfig"))
     UpdateEventSourceMappingRequest.struct_class = Types::UpdateEventSourceMappingRequest
 
     UpdateFunctionCodeRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
@@ -1162,6 +1431,7 @@ module Aws::Lambda
     UpdateFunctionCodeRequest.add_member(:publish, Shapes::ShapeRef.new(shape: Boolean, location_name: "Publish"))
     UpdateFunctionCodeRequest.add_member(:dry_run, Shapes::ShapeRef.new(shape: Boolean, location_name: "DryRun"))
     UpdateFunctionCodeRequest.add_member(:revision_id, Shapes::ShapeRef.new(shape: String, location_name: "RevisionId"))
+    UpdateFunctionCodeRequest.add_member(:architectures, Shapes::ShapeRef.new(shape: ArchitecturesList, location_name: "Architectures"))
     UpdateFunctionCodeRequest.struct_class = Types::UpdateFunctionCodeRequest
 
     UpdateFunctionConfigurationRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
@@ -1180,6 +1450,8 @@ module Aws::Lambda
     UpdateFunctionConfigurationRequest.add_member(:layers, Shapes::ShapeRef.new(shape: LayerList, location_name: "Layers"))
     UpdateFunctionConfigurationRequest.add_member(:file_system_configs, Shapes::ShapeRef.new(shape: FileSystemConfigList, location_name: "FileSystemConfigs"))
     UpdateFunctionConfigurationRequest.add_member(:image_config, Shapes::ShapeRef.new(shape: ImageConfig, location_name: "ImageConfig"))
+    UpdateFunctionConfigurationRequest.add_member(:ephemeral_storage, Shapes::ShapeRef.new(shape: EphemeralStorage, location_name: "EphemeralStorage"))
+    UpdateFunctionConfigurationRequest.add_member(:snap_start, Shapes::ShapeRef.new(shape: SnapStart, location_name: "SnapStart"))
     UpdateFunctionConfigurationRequest.struct_class = Types::UpdateFunctionConfigurationRequest
 
     UpdateFunctionEventInvokeConfigRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
@@ -1188,6 +1460,22 @@ module Aws::Lambda
     UpdateFunctionEventInvokeConfigRequest.add_member(:maximum_event_age_in_seconds, Shapes::ShapeRef.new(shape: MaximumEventAgeInSeconds, location_name: "MaximumEventAgeInSeconds"))
     UpdateFunctionEventInvokeConfigRequest.add_member(:destination_config, Shapes::ShapeRef.new(shape: DestinationConfig, location_name: "DestinationConfig"))
     UpdateFunctionEventInvokeConfigRequest.struct_class = Types::UpdateFunctionEventInvokeConfigRequest
+
+    UpdateFunctionUrlConfigRequest.add_member(:function_name, Shapes::ShapeRef.new(shape: FunctionName, required: true, location: "uri", location_name: "FunctionName"))
+    UpdateFunctionUrlConfigRequest.add_member(:qualifier, Shapes::ShapeRef.new(shape: FunctionUrlQualifier, location: "querystring", location_name: "Qualifier"))
+    UpdateFunctionUrlConfigRequest.add_member(:auth_type, Shapes::ShapeRef.new(shape: FunctionUrlAuthType, location_name: "AuthType"))
+    UpdateFunctionUrlConfigRequest.add_member(:cors, Shapes::ShapeRef.new(shape: Cors, location_name: "Cors"))
+    UpdateFunctionUrlConfigRequest.add_member(:invoke_mode, Shapes::ShapeRef.new(shape: InvokeMode, location_name: "InvokeMode"))
+    UpdateFunctionUrlConfigRequest.struct_class = Types::UpdateFunctionUrlConfigRequest
+
+    UpdateFunctionUrlConfigResponse.add_member(:function_url, Shapes::ShapeRef.new(shape: FunctionUrl, required: true, location_name: "FunctionUrl"))
+    UpdateFunctionUrlConfigResponse.add_member(:function_arn, Shapes::ShapeRef.new(shape: FunctionArn, required: true, location_name: "FunctionArn"))
+    UpdateFunctionUrlConfigResponse.add_member(:auth_type, Shapes::ShapeRef.new(shape: FunctionUrlAuthType, required: true, location_name: "AuthType"))
+    UpdateFunctionUrlConfigResponse.add_member(:cors, Shapes::ShapeRef.new(shape: Cors, location_name: "Cors"))
+    UpdateFunctionUrlConfigResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "CreationTime"))
+    UpdateFunctionUrlConfigResponse.add_member(:last_modified_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "LastModifiedTime"))
+    UpdateFunctionUrlConfigResponse.add_member(:invoke_mode, Shapes::ShapeRef.new(shape: InvokeMode, location_name: "InvokeMode"))
+    UpdateFunctionUrlConfigResponse.struct_class = Types::UpdateFunctionUrlConfigResponse
 
     VpcConfig.add_member(:subnet_ids, Shapes::ShapeRef.new(shape: SubnetIds, location_name: "SubnetIds"))
     VpcConfig.add_member(:security_group_ids, Shapes::ShapeRef.new(shape: SecurityGroupIds, location_name: "SecurityGroupIds"))
@@ -1297,6 +1585,19 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: CodeSigningConfigNotFoundException)
       end)
 
+      api.add_operation(:create_function_url_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateFunctionUrlConfig"
+        o.http_method = "POST"
+        o.http_request_uri = "/2021-10-31/functions/{FunctionName}/url"
+        o.input = Shapes::ShapeRef.new(shape: CreateFunctionUrlConfigRequest)
+        o.output = Shapes::ShapeRef.new(shape: CreateFunctionUrlConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+      end)
+
       api.add_operation(:delete_alias, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DeleteAlias"
         o.http_method = "DELETE"
@@ -1331,6 +1632,7 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
         o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
       end)
 
@@ -1383,6 +1685,19 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: ServiceException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
+      end)
+
+      api.add_operation(:delete_function_url_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteFunctionUrlConfig"
+        o.http_method = "DELETE"
+        o.http_request_uri = "/2021-10-31/functions/{FunctionName}/url"
+        o.input = Shapes::ShapeRef.new(shape: DeleteFunctionUrlConfigRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
         o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
       end)
 
@@ -1514,6 +1829,18 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
       end)
 
+      api.add_operation(:get_function_url_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetFunctionUrlConfig"
+        o.http_method = "GET"
+        o.http_request_uri = "/2021-10-31/functions/{FunctionName}/url"
+        o.input = Shapes::ShapeRef.new(shape: GetFunctionUrlConfigRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetFunctionUrlConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+      end)
+
       api.add_operation(:get_layer_version, Seahorse::Model::Operation.new.tap do |o|
         o.name = "GetLayerVersion"
         o.http_method = "GET"
@@ -1575,6 +1902,18 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: ProvisionedConcurrencyConfigNotFoundException)
       end)
 
+      api.add_operation(:get_runtime_management_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetRuntimeManagementConfig"
+        o.http_method = "GET"
+        o.http_request_uri = "/2021-07-20/functions/{FunctionName}/runtime-management-config"
+        o.input = Shapes::ShapeRef.new(shape: GetRuntimeManagementConfigRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetRuntimeManagementConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+      end)
+
       api.add_operation(:invoke, Seahorse::Model::Operation.new.tap do |o|
         o.name = "Invoke"
         o.http_method = "POST"
@@ -1595,6 +1934,9 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: EFSMountFailureException)
         o.errors << Shapes::ShapeRef.new(shape: EFSMountTimeoutException)
         o.errors << Shapes::ShapeRef.new(shape: EFSIOException)
+        o.errors << Shapes::ShapeRef.new(shape: SnapStartException)
+        o.errors << Shapes::ShapeRef.new(shape: SnapStartTimeoutException)
+        o.errors << Shapes::ShapeRef.new(shape: SnapStartNotReadyException)
         o.errors << Shapes::ShapeRef.new(shape: EC2ThrottledException)
         o.errors << Shapes::ShapeRef.new(shape: EC2AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidSubnetIDException)
@@ -1607,6 +1949,7 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: InvalidRuntimeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotReadyException)
+        o.errors << Shapes::ShapeRef.new(shape: RecursiveInvocationException)
       end)
 
       api.add_operation(:invoke_async, Seahorse::Model::Operation.new.tap do |o|
@@ -1621,6 +1964,44 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: InvalidRequestContentException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidRuntimeException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
+      end)
+
+      api.add_operation(:invoke_with_response_stream, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "InvokeWithResponseStream"
+        o.http_method = "POST"
+        o.http_request_uri = "/2021-11-15/functions/{FunctionName}/response-streaming-invocations"
+        o.input = Shapes::ShapeRef.new(shape: InvokeWithResponseStreamRequest)
+        o.output = Shapes::ShapeRef.new(shape: InvokeWithResponseStreamResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestContentException)
+        o.errors << Shapes::ShapeRef.new(shape: RequestTooLargeException)
+        o.errors << Shapes::ShapeRef.new(shape: UnsupportedMediaTypeException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: EC2UnexpectedException)
+        o.errors << Shapes::ShapeRef.new(shape: SubnetIPAddressLimitReachedException)
+        o.errors << Shapes::ShapeRef.new(shape: ENILimitReachedException)
+        o.errors << Shapes::ShapeRef.new(shape: EFSMountConnectivityException)
+        o.errors << Shapes::ShapeRef.new(shape: EFSMountFailureException)
+        o.errors << Shapes::ShapeRef.new(shape: EFSMountTimeoutException)
+        o.errors << Shapes::ShapeRef.new(shape: EFSIOException)
+        o.errors << Shapes::ShapeRef.new(shape: SnapStartException)
+        o.errors << Shapes::ShapeRef.new(shape: SnapStartTimeoutException)
+        o.errors << Shapes::ShapeRef.new(shape: SnapStartNotReadyException)
+        o.errors << Shapes::ShapeRef.new(shape: EC2ThrottledException)
+        o.errors << Shapes::ShapeRef.new(shape: EC2AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidSubnetIDException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidSecurityGroupIDException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidZipFileException)
+        o.errors << Shapes::ShapeRef.new(shape: KMSDisabledException)
+        o.errors << Shapes::ShapeRef.new(shape: KMSInvalidStateException)
+        o.errors << Shapes::ShapeRef.new(shape: KMSAccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: KMSNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRuntimeException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotReadyException)
+        o.errors << Shapes::ShapeRef.new(shape: RecursiveInvocationException)
       end)
 
       api.add_operation(:list_aliases, Seahorse::Model::Operation.new.tap do |o|
@@ -1685,6 +2066,24 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
         o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_items",
+          tokens: {
+            "next_marker" => "marker"
+          }
+        )
+      end)
+
+      api.add_operation(:list_function_url_configs, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListFunctionUrlConfigs"
+        o.http_method = "GET"
+        o.http_request_uri = "/2021-10-31/functions/{FunctionName}/urls"
+        o.input = Shapes::ShapeRef.new(shape: ListFunctionUrlConfigsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListFunctionUrlConfigsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
         o[:pager] = Aws::Pager.new(
           limit_key: "max_items",
           tokens: {
@@ -1875,6 +2274,7 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
         o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
       end)
 
       api.add_operation(:put_provisioned_concurrency_config, Seahorse::Model::Operation.new.tap do |o|
@@ -1888,6 +2288,19 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
         o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
         o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+      end)
+
+      api.add_operation(:put_runtime_management_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "PutRuntimeManagementConfig"
+        o.http_method = "PUT"
+        o.http_request_uri = "/2021-07-20/functions/{FunctionName}/runtime-management-config"
+        o.input = Shapes::ShapeRef.new(shape: PutRuntimeManagementConfigRequest)
+        o.output = Shapes::ShapeRef.new(shape: PutRuntimeManagementConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
       end)
 
       api.add_operation(:remove_layer_version_permission, Seahorse::Model::Operation.new.tap do |o|
@@ -2025,6 +2438,20 @@ module Aws::Lambda
         o.errors << Shapes::ShapeRef.new(shape: ServiceException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
+      end)
+
+      api.add_operation(:update_function_url_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UpdateFunctionUrlConfig"
+        o.http_method = "PUT"
+        o.http_request_uri = "/2021-10-31/functions/{FunctionName}/url"
+        o.input = Shapes::ShapeRef.new(shape: UpdateFunctionUrlConfigRequest)
+        o.output = Shapes::ShapeRef.new(shape: UpdateFunctionUrlConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
         o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
       end)
     end

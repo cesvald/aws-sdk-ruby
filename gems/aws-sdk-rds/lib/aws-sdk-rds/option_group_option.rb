@@ -137,6 +137,13 @@ module Aws::RDS
       data[:option_group_option_versions]
     end
 
+    # Specifies whether the option can be copied across Amazon Web Services
+    # accounts.
+    # @return [Boolean]
+    def copyable_cross_account
+      data[:copyable_cross_account]
+    end
+
     # @!endgroup
 
     # @return [Client]
@@ -261,7 +268,9 @@ module Aws::RDS
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @deprecated

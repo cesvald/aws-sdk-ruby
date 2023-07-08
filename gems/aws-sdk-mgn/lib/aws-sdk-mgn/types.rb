@@ -27,6 +27,178 @@ module Aws::Mgn
       include Aws::Structure
     end
 
+    # @!attribute [rw] application_aggregated_status
+    #   Application aggregated status.
+    #   @return [Types::ApplicationAggregatedStatus]
+    #
+    # @!attribute [rw] application_id
+    #   Application ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   Application ARN.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_date_time
+    #   Application creation dateTime.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Application description.
+    #   @return [String]
+    #
+    # @!attribute [rw] is_archived
+    #   Application archival status.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] last_modified_date_time
+    #   Application last modified dateTime.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   Application name.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   Application tags.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] wave_id
+    #   Application wave ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/Application AWS API Documentation
+    #
+    class Application < Struct.new(
+      :application_aggregated_status,
+      :application_id,
+      :arn,
+      :creation_date_time,
+      :description,
+      :is_archived,
+      :last_modified_date_time,
+      :name,
+      :tags,
+      :wave_id)
+      SENSITIVE = [:tags]
+      include Aws::Structure
+    end
+
+    # Application aggregated status.
+    #
+    # @!attribute [rw] health_status
+    #   Application aggregated status health status.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_update_date_time
+    #   Application aggregated status last update dateTime.
+    #   @return [String]
+    #
+    # @!attribute [rw] progress_status
+    #   Application aggregated status progress status.
+    #   @return [String]
+    #
+    # @!attribute [rw] total_source_servers
+    #   Application aggregated status total source servers amount.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ApplicationAggregatedStatus AWS API Documentation
+    #
+    class ApplicationAggregatedStatus < Struct.new(
+      :health_status,
+      :last_update_date_time,
+      :progress_status,
+      :total_source_servers)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_id
+    #   Application ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ArchiveApplicationRequest AWS API Documentation
+    #
+    class ArchiveApplicationRequest < Struct.new(
+      :account_id,
+      :application_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] wave_id
+    #   Wave ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ArchiveWaveRequest AWS API Documentation
+    #
+    class ArchiveWaveRequest < Struct.new(
+      :account_id,
+      :wave_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_i_ds
+    #   Application IDs list.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] wave_id
+    #   Wave ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/AssociateApplicationsRequest AWS API Documentation
+    #
+    class AssociateApplicationsRequest < Struct.new(
+      :account_id,
+      :application_i_ds,
+      :wave_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/AssociateApplicationsResponse AWS API Documentation
+    #
+    class AssociateApplicationsResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_id
+    #   Application ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_server_i_ds
+    #   Source server IDs list.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/AssociateSourceServersRequest AWS API Documentation
+    #
+    class AssociateSourceServersRequest < Struct.new(
+      :account_id,
+      :application_id,
+      :source_server_i_ds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/AssociateSourceServersResponse AWS API Documentation
+    #
+    class AssociateSourceServersResponse < Aws::EmptyStructure; end
+
     # Source server CPU information.
     #
     # @!attribute [rw] cores
@@ -46,15 +218,9 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ChangeServerLifeCycleStateRequest
-    #   data as a hash:
-    #
-    #       {
-    #         life_cycle: { # required
-    #           state: "READY_FOR_TEST", # required, accepts READY_FOR_TEST, READY_FOR_CUTOVER, CUTOVER
-    #         },
-    #         source_server_id: "SourceServerID", # required
-    #       }
+    # @!attribute [rw] account_id
+    #   The request to change the source server migration account ID.
+    #   @return [String]
     #
     # @!attribute [rw] life_cycle
     #   The request to change the source server migration lifecycle state.
@@ -68,6 +234,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ChangeServerLifeCycleStateRequest AWS API Documentation
     #
     class ChangeServerLifeCycleStateRequest < Struct.new(
+      :account_id,
       :life_cycle,
       :source_server_id)
       SENSITIVE = []
@@ -75,13 +242,6 @@ module Aws::Mgn
     end
 
     # The request to change the source server migration lifecycle state.
-    #
-    # @note When making an API call, you may pass ChangeServerLifeCycleStateSourceServerLifecycle
-    #   data as a hash:
-    #
-    #       {
-    #         state: "READY_FOR_TEST", # required, accepts READY_FOR_TEST, READY_FOR_CUTOVER, CUTOVER
-    #       }
     #
     # @!attribute [rw] state
     #   The request to change the source server migration lifecycle state.
@@ -101,21 +261,26 @@ module Aws::Mgn
     # @!attribute [rw] code
     #   @return [String]
     #
+    # @!attribute [rw] errors
+    #   Conflict Exception specific errors.
+    #   @return [Array<Types::ErrorDetails>]
+    #
     # @!attribute [rw] message
     #   @return [String]
     #
     # @!attribute [rw] resource_id
-    #   A conflict occured when prompting for the Resource ID.
+    #   A conflict occurred when prompting for the Resource ID.
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   A conflict occured when prompting for resource type.
+    #   A conflict occurred when prompting for resource type.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ConflictException AWS API Documentation
     #
     class ConflictException < Struct.new(
       :code,
+      :errors,
       :message,
       :resource_id,
       :resource_type)
@@ -123,29 +288,111 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateReplicationConfigurationTemplateRequest
-    #   data as a hash:
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
     #
-    #       {
-    #         associate_default_security_group: false, # required
-    #         bandwidth_throttling: 1, # required
-    #         create_public_ip: false, # required
-    #         data_plane_routing: "PRIVATE_IP", # required, accepts PRIVATE_IP, PUBLIC_IP
-    #         default_large_staging_disk_type: "GP2", # required, accepts GP2, ST1
-    #         ebs_encryption: "NONE", # required, accepts NONE, DEFAULT, CUSTOM
-    #         ebs_encryption_key_arn: "ARN",
-    #         replication_server_instance_type: "EC2InstanceType", # required
-    #         replication_servers_security_groups_i_ds: ["SecurityGroupID"], # required
-    #         staging_area_subnet_id: "SubnetID", # required
-    #         staging_area_tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         use_dedicated_replication_server: false, # required
-    #       }
+    # @!attribute [rw] description
+    #   Application description.
+    #   @return [String]
     #
+    # @!attribute [rw] name
+    #   Application name.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   Application tags.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/CreateApplicationRequest AWS API Documentation
+    #
+    class CreateApplicationRequest < Struct.new(
+      :account_id,
+      :description,
+      :name,
+      :tags)
+      SENSITIVE = [:tags]
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] associate_public_ip_address
+    #   Associate public Ip address.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] boot_mode
+    #   Launch configuration template boot mode.
+    #   @return [String]
+    #
+    # @!attribute [rw] copy_private_ip
+    #   Copy private Ip.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] copy_tags
+    #   Copy tags.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] enable_map_auto_tagging
+    #   Enable map auto tagging.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] large_volume_conf
+    #   Large volume config.
+    #   @return [Types::LaunchTemplateDiskConf]
+    #
+    # @!attribute [rw] launch_disposition
+    #   Launch disposition.
+    #   @return [String]
+    #
+    # @!attribute [rw] licensing
+    #   Configure Licensing.
+    #   @return [Types::Licensing]
+    #
+    # @!attribute [rw] map_auto_tagging_mpe_id
+    #   Launch configuration template map auto tagging MPE ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] post_launch_actions
+    #   Launch configuration template post launch actions.
+    #   @return [Types::PostLaunchActions]
+    #
+    # @!attribute [rw] small_volume_conf
+    #   Small volume config.
+    #   @return [Types::LaunchTemplateDiskConf]
+    #
+    # @!attribute [rw] small_volume_max_size
+    #   Small volume maximum size.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] tags
+    #   Request to associate tags during creation of a Launch Configuration
+    #   Template.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] target_instance_type_right_sizing_method
+    #   Target instance type right-sizing method.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/CreateLaunchConfigurationTemplateRequest AWS API Documentation
+    #
+    class CreateLaunchConfigurationTemplateRequest < Struct.new(
+      :associate_public_ip_address,
+      :boot_mode,
+      :copy_private_ip,
+      :copy_tags,
+      :enable_map_auto_tagging,
+      :large_volume_conf,
+      :launch_disposition,
+      :licensing,
+      :map_auto_tagging_mpe_id,
+      :post_launch_actions,
+      :small_volume_conf,
+      :small_volume_max_size,
+      :tags,
+      :target_instance_type_right_sizing_method)
+      SENSITIVE = [:tags]
+      include Aws::Structure
+    end
+
     # @!attribute [rw] associate_default_security_group
     #   Request to associate the default Application Migration Service
     #   Security group with the Replication Settings template.
@@ -167,17 +414,17 @@ module Aws::Mgn
     #   @return [String]
     #
     # @!attribute [rw] default_large_staging_disk_type
-    #   Request to configure the Staging Disk EBS volume type to "gp2"
+    #   Request to configure the default large staging disk EBS volume type
     #   during Replication Settings template creation.
     #   @return [String]
     #
     # @!attribute [rw] ebs_encryption
-    #   Request to configure EBS enryption during Replication Settings
+    #   Request to configure EBS encryption during Replication Settings
     #   template creation.
     #   @return [String]
     #
     # @!attribute [rw] ebs_encryption_key_arn
-    #   Request to configure an EBS enryption key during Replication
+    #   Request to configure an EBS encryption key during Replication
     #   Settings template creation.
     #   @return [String]
     #
@@ -187,8 +434,8 @@ module Aws::Mgn
     #   @return [String]
     #
     # @!attribute [rw] replication_servers_security_groups_i_ds
-    #   Request to configure the Replication Server Secuirity group ID
-    #   during Replication Settings template creation.
+    #   Request to configure the Replication Server Security group ID during
+    #   Replication Settings template creation.
     #   @return [Array<String>]
     #
     # @!attribute [rw] staging_area_subnet_id
@@ -197,7 +444,7 @@ module Aws::Mgn
     #   @return [String]
     #
     # @!attribute [rw] staging_area_tags
-    #   Request to configure Staiging Area tags during Replication Settings
+    #   Request to configure Staging Area tags during Replication Settings
     #   template creation.
     #   @return [Hash<String,String>]
     #
@@ -209,6 +456,11 @@ module Aws::Mgn
     # @!attribute [rw] use_dedicated_replication_server
     #   Request to use Dedicated Replication Servers during Replication
     #   Settings template creation.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] use_fips_endpoint
+    #   Request to use Fips Endpoint during Replication Settings template
+    #   creation.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/CreateReplicationConfigurationTemplateRequest AWS API Documentation
@@ -226,8 +478,36 @@ module Aws::Mgn
       :staging_area_subnet_id,
       :staging_area_tags,
       :tags,
-      :use_dedicated_replication_server)
+      :use_dedicated_replication_server,
+      :use_fips_endpoint)
       SENSITIVE = [:staging_area_tags, :tags]
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Wave description.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   Wave name.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   Wave tags.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/CreateWaveRequest AWS API Documentation
+    #
+    class CreateWaveRequest < Struct.new(
+      :account_id,
+      :description,
+      :name,
+      :tags)
+      SENSITIVE = [:tags]
       include Aws::Structure
     end
 
@@ -269,7 +549,11 @@ module Aws::Mgn
     #   @return [String]
     #
     # @!attribute [rw] lag_duration
-    #   Request to query data replication lag durating.
+    #   Request to query data replication lag duration.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_snapshot_date_time
+    #   Request to query data replication last snapshot time.
     #   @return [String]
     #
     # @!attribute [rw] replicated_disks
@@ -284,6 +568,7 @@ module Aws::Mgn
       :data_replication_state,
       :eta_date_time,
       :lag_duration,
+      :last_snapshot_date_time,
       :replicated_disks)
       SENSITIVE = []
       include Aws::Structure
@@ -347,7 +632,7 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # Data replication intiation step.
+    # Data replication initiation step.
     #
     # @!attribute [rw] name
     #   Request to query data initiation step name.
@@ -366,12 +651,30 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteJobRequest
-    #   data as a hash:
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
     #
-    #       {
-    #         job_id: "JobID", # required
-    #       }
+    # @!attribute [rw] application_id
+    #   Application ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DeleteApplicationRequest AWS API Documentation
+    #
+    class DeleteApplicationRequest < Struct.new(
+      :account_id,
+      :application_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DeleteApplicationResponse AWS API Documentation
+    #
+    class DeleteApplicationResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] account_id
+    #   Request to delete Job from service by Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] job_id
     #   Request to delete Job from service by Job ID.
@@ -380,6 +683,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DeleteJobRequest AWS API Documentation
     #
     class DeleteJobRequest < Struct.new(
+      :account_id,
       :job_id)
       SENSITIVE = []
       include Aws::Structure
@@ -389,13 +693,22 @@ module Aws::Mgn
     #
     class DeleteJobResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteReplicationConfigurationTemplateRequest
-    #   data as a hash:
+    # @!attribute [rw] launch_configuration_template_id
+    #   ID of resource to be deleted.
+    #   @return [String]
     #
-    #       {
-    #         replication_configuration_template_id: "ReplicationConfigurationTemplateID", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DeleteLaunchConfigurationTemplateRequest AWS API Documentation
     #
+    class DeleteLaunchConfigurationTemplateRequest < Struct.new(
+      :launch_configuration_template_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DeleteLaunchConfigurationTemplateResponse AWS API Documentation
+    #
+    class DeleteLaunchConfigurationTemplateResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] replication_configuration_template_id
     #   Request to delete Replication Configuration Template from service by
     #   Replication Configuration Template ID.
@@ -413,12 +726,9 @@ module Aws::Mgn
     #
     class DeleteReplicationConfigurationTemplateResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteSourceServerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         source_server_id: "SourceServerID", # required
-    #       }
+    # @!attribute [rw] account_id
+    #   Request to delete Source Server from service by Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] source_server_id
     #   Request to delete Source Server from service by Server ID.
@@ -427,6 +737,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DeleteSourceServerRequest AWS API Documentation
     #
     class DeleteSourceServerRequest < Struct.new(
+      :account_id,
       :source_server_id)
       SENSITIVE = []
       include Aws::Structure
@@ -436,14 +747,42 @@ module Aws::Mgn
     #
     class DeleteSourceServerResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeJobLogItemsRequest
-    #   data as a hash:
+    # @!attribute [rw] vcenter_client_id
+    #   ID of resource to be deleted.
+    #   @return [String]
     #
-    #       {
-    #         job_id: "JobID", # required
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DeleteVcenterClientRequest AWS API Documentation
+    #
+    class DeleteVcenterClientRequest < Struct.new(
+      :vcenter_client_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] wave_id
+    #   Wave ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DeleteWaveRequest AWS API Documentation
+    #
+    class DeleteWaveRequest < Struct.new(
+      :account_id,
+      :wave_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DeleteWaveResponse AWS API Documentation
+    #
+    class DeleteWaveResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] account_id
+    #   Request to describe Job log Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] job_id
     #   Request to describe Job log job ID.
@@ -460,6 +799,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DescribeJobLogItemsRequest AWS API Documentation
     #
     class DescribeJobLogItemsRequest < Struct.new(
+      :account_id,
       :job_id,
       :max_results,
       :next_token)
@@ -484,34 +824,26 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeJobsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filters: { # required
-    #           from_date: "ISO8601DatetimeString",
-    #           job_i_ds: ["JobID"],
-    #           to_date: "ISO8601DatetimeString",
-    #         },
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
+    # @!attribute [rw] account_id
+    #   Request to describe job log items by Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] filters
     #   Request to describe Job log filters.
     #   @return [Types::DescribeJobsRequestFilters]
     #
     # @!attribute [rw] max_results
-    #   Request to describe Job log by max results.
+    #   Request to describe job log items by max results.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
-    #   Request to describe Job logby next token.
+    #   Request to describe job log items by next token.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DescribeJobsRequest AWS API Documentation
     #
     class DescribeJobsRequest < Struct.new(
+      :account_id,
       :filters,
       :max_results,
       :next_token)
@@ -520,15 +852,6 @@ module Aws::Mgn
     end
 
     # Request to describe Job log filters.
-    #
-    # @note When making an API call, you may pass DescribeJobsRequestFilters
-    #   data as a hash:
-    #
-    #       {
-    #         from_date: "ISO8601DatetimeString",
-    #         job_i_ds: ["JobID"],
-    #         to_date: "ISO8601DatetimeString",
-    #       }
     #
     # @!attribute [rw] from_date
     #   Request to describe Job log filters by date.
@@ -539,7 +862,7 @@ module Aws::Mgn
     #   @return [Array<String>]
     #
     # @!attribute [rw] to_date
-    #   Request to describe Job log by last date.
+    #   Request to describe job log items by last date.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DescribeJobsRequestFilters AWS API Documentation
@@ -569,15 +892,49 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeReplicationConfigurationTemplatesRequest
-    #   data as a hash:
+    # @!attribute [rw] launch_configuration_template_i_ds
+    #   Request to filter Launch Configuration Templates list by Launch
+    #   Configuration Template ID.
+    #   @return [Array<String>]
     #
-    #       {
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #         replication_configuration_template_i_ds: ["ReplicationConfigurationTemplateID"], # required
-    #       }
+    # @!attribute [rw] max_results
+    #   Maximum results to be returned in
+    #   DescribeLaunchConfigurationTemplates.
+    #   @return [Integer]
     #
+    # @!attribute [rw] next_token
+    #   Next pagination token returned from
+    #   DescribeLaunchConfigurationTemplates.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DescribeLaunchConfigurationTemplatesRequest AWS API Documentation
+    #
+    class DescribeLaunchConfigurationTemplatesRequest < Struct.new(
+      :launch_configuration_template_i_ds,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] items
+    #   List of items returned by DescribeLaunchConfigurationTemplates.
+    #   @return [Array<Types::LaunchConfigurationTemplate>]
+    #
+    # @!attribute [rw] next_token
+    #   Next pagination token returned from
+    #   DescribeLaunchConfigurationTemplates.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DescribeLaunchConfigurationTemplatesResponse AWS API Documentation
+    #
+    class DescribeLaunchConfigurationTemplatesResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] max_results
     #   Request to describe Replication Configuration template by max
     #   results.
@@ -621,17 +978,9 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeSourceServersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filters: { # required
-    #           is_archived: false,
-    #           source_server_i_ds: ["SourceServerID"],
-    #         },
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
+    # @!attribute [rw] account_id
+    #   Request to filter Source Servers list by Accoun ID.
+    #   @return [String]
     #
     # @!attribute [rw] filters
     #   Request to filter Source Servers list.
@@ -648,6 +997,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DescribeSourceServersRequest AWS API Documentation
     #
     class DescribeSourceServersRequest < Struct.new(
+      :account_id,
       :filters,
       :max_results,
       :next_token)
@@ -657,17 +1007,21 @@ module Aws::Mgn
 
     # Request to filter Source Servers list.
     #
-    # @note When making an API call, you may pass DescribeSourceServersRequestFilters
-    #   data as a hash:
-    #
-    #       {
-    #         is_archived: false,
-    #         source_server_i_ds: ["SourceServerID"],
-    #       }
+    # @!attribute [rw] application_i_ds
+    #   Request to filter Source Servers list by application IDs.
+    #   @return [Array<String>]
     #
     # @!attribute [rw] is_archived
     #   Request to filter Source Servers list by archived.
     #   @return [Boolean]
+    #
+    # @!attribute [rw] life_cycle_states
+    #   Request to filter Source Servers list by life cycle states.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] replication_types
+    #   Request to filter Source Servers list by replication type.
+    #   @return [Array<String>]
     #
     # @!attribute [rw] source_server_i_ds
     #   Request to filter Source Servers list by Source Server ID.
@@ -676,7 +1030,10 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DescribeSourceServersRequestFilters AWS API Documentation
     #
     class DescribeSourceServersRequestFilters < Struct.new(
+      :application_i_ds,
       :is_archived,
+      :life_cycle_states,
+      :replication_types,
       :source_server_i_ds)
       SENSITIVE = []
       include Aws::Structure
@@ -699,12 +1056,95 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisconnectFromServiceRequest
-    #   data as a hash:
+    # @!attribute [rw] max_results
+    #   Maximum results to be returned in DescribeVcenterClients.
+    #   @return [Integer]
     #
-    #       {
-    #         source_server_id: "SourceServerID", # required
-    #       }
+    # @!attribute [rw] next_token
+    #   Next pagination token to be provided for DescribeVcenterClients.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DescribeVcenterClientsRequest AWS API Documentation
+    #
+    class DescribeVcenterClientsRequest < Struct.new(
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] items
+    #   List of items returned by DescribeVcenterClients.
+    #   @return [Array<Types::VcenterClient>]
+    #
+    # @!attribute [rw] next_token
+    #   Next pagination token returned from DescribeVcenterClients.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DescribeVcenterClientsResponse AWS API Documentation
+    #
+    class DescribeVcenterClientsResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_i_ds
+    #   Application IDs list.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] wave_id
+    #   Wave ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DisassociateApplicationsRequest AWS API Documentation
+    #
+    class DisassociateApplicationsRequest < Struct.new(
+      :account_id,
+      :application_i_ds,
+      :wave_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DisassociateApplicationsResponse AWS API Documentation
+    #
+    class DisassociateApplicationsResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_id
+    #   Application ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_server_i_ds
+    #   Source server IDs list.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DisassociateSourceServersRequest AWS API Documentation
+    #
+    class DisassociateSourceServersRequest < Struct.new(
+      :account_id,
+      :application_id,
+      :source_server_i_ds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DisassociateSourceServersResponse AWS API Documentation
+    #
+    class DisassociateSourceServersResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] account_id
+    #   Request to disconnect Source Server from service by Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] source_server_id
     #   Request to disconnect Source Server from service by Server ID.
@@ -713,6 +1153,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/DisconnectFromServiceRequest AWS API Documentation
     #
     class DisconnectFromServiceRequest < Struct.new(
+      :account_id,
       :source_server_id)
       SENSITIVE = []
       include Aws::Structure
@@ -737,31 +1178,166 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass FinalizeCutoverRequest
-    #   data as a hash:
+    # Error details.
     #
-    #       {
-    #         source_server_id: "SourceServerID", # required
-    #       }
+    # @!attribute [rw] code
+    #   Error details code.
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   Error details message.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_id
+    #   Error details resourceId.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_type
+    #   Error details resourceType.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ErrorDetails AWS API Documentation
+    #
+    class ErrorDetails < Struct.new(
+      :code,
+      :message,
+      :resource_id,
+      :resource_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Export errors data.
+    #
+    # @!attribute [rw] raw_error
+    #   Export errors data raw error.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ExportErrorData AWS API Documentation
+    #
+    class ExportErrorData < Struct.new(
+      :raw_error)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Export task.
+    #
+    # @!attribute [rw] creation_date_time
+    #   Export task creation datetime.
+    #   @return [String]
+    #
+    # @!attribute [rw] end_date_time
+    #   Export task end datetime.
+    #   @return [String]
+    #
+    # @!attribute [rw] export_id
+    #   Export task id.
+    #   @return [String]
+    #
+    # @!attribute [rw] progress_percentage
+    #   Export task progress percentage.
+    #   @return [Float]
+    #
+    # @!attribute [rw] s3_bucket
+    #   Export task s3 bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_bucket_owner
+    #   Export task s3 bucket owner.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_key
+    #   Export task s3 key.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   Export task status.
+    #   @return [String]
+    #
+    # @!attribute [rw] summary
+    #   Export task summary.
+    #   @return [Types::ExportTaskSummary]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ExportTask AWS API Documentation
+    #
+    class ExportTask < Struct.new(
+      :creation_date_time,
+      :end_date_time,
+      :export_id,
+      :progress_percentage,
+      :s3_bucket,
+      :s3_bucket_owner,
+      :s3_key,
+      :status,
+      :summary)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Export task error.
+    #
+    # @!attribute [rw] error_data
+    #   Export task error data.
+    #   @return [Types::ExportErrorData]
+    #
+    # @!attribute [rw] error_date_time
+    #   Export task error datetime.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ExportTaskError AWS API Documentation
+    #
+    class ExportTaskError < Struct.new(
+      :error_data,
+      :error_date_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Export task summary.
+    #
+    # @!attribute [rw] applications_count
+    #   Export task summary applications count.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] servers_count
+    #   Export task summary servers count.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] waves_count
+    #   Export task summary waves count.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ExportTaskSummary AWS API Documentation
+    #
+    class ExportTaskSummary < Struct.new(
+      :applications_count,
+      :servers_count,
+      :waves_count)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Request to finalize Cutover by Source Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] source_server_id
-    #   Request to finalize Cutover by Soure Server ID.
+    #   Request to finalize Cutover by Source Server ID.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/FinalizeCutoverRequest AWS API Documentation
     #
     class FinalizeCutoverRequest < Struct.new(
+      :account_id,
       :source_server_id)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetLaunchConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         source_server_id: "SourceServerID", # required
-    #       }
+    # @!attribute [rw] account_id
+    #   Request to get Launch Configuration information by Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] source_server_id
     #   Request to get Launch Configuration information by Source Server ID.
@@ -770,25 +1346,24 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/GetLaunchConfigurationRequest AWS API Documentation
     #
     class GetLaunchConfigurationRequest < Struct.new(
+      :account_id,
       :source_server_id)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetReplicationConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         source_server_id: "SourceServerID", # required
-    #       }
+    # @!attribute [rw] account_id
+    #   Request to get Replication Configuration by Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] source_server_id
-    #   Request to get Replication Configuaration by Source Server ID.
+    #   Request to get Replication Configuration by Source Server ID.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/GetReplicationConfigurationRequest AWS API Documentation
     #
     class GetReplicationConfigurationRequest < Struct.new(
+      :account_id,
       :source_server_id)
       SENSITIVE = []
       include Aws::Structure
@@ -808,6 +1383,10 @@ module Aws::Mgn
     #   Hostname identification hint.
     #   @return [String]
     #
+    # @!attribute [rw] vm_path
+    #   vCenter VM path identification hint.
+    #   @return [String]
+    #
     # @!attribute [rw] vm_ware_uuid
     #   vmWare UUID identification hint.
     #   @return [String]
@@ -818,7 +1397,201 @@ module Aws::Mgn
       :aws_instance_id,
       :fqdn,
       :hostname,
+      :vm_path,
       :vm_ware_uuid)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Import error data.
+    #
+    # @!attribute [rw] account_id
+    #   Import error data source account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_id
+    #   Import error data application ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] ec2_launch_template_id
+    #   Import error data ec2 LaunchTemplate ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] raw_error
+    #   Import error data raw error.
+    #   @return [String]
+    #
+    # @!attribute [rw] row_number
+    #   Import error data row number.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] source_server_id
+    #   Import error data source server ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] wave_id
+    #   Import error data wave id.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ImportErrorData AWS API Documentation
+    #
+    class ImportErrorData < Struct.new(
+      :account_id,
+      :application_id,
+      :ec2_launch_template_id,
+      :raw_error,
+      :row_number,
+      :source_server_id,
+      :wave_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Import task.
+    #
+    # @!attribute [rw] creation_date_time
+    #   Import task creation datetime.
+    #   @return [String]
+    #
+    # @!attribute [rw] end_date_time
+    #   Import task end datetime.
+    #   @return [String]
+    #
+    # @!attribute [rw] import_id
+    #   Import task id.
+    #   @return [String]
+    #
+    # @!attribute [rw] progress_percentage
+    #   Import task progress percentage.
+    #   @return [Float]
+    #
+    # @!attribute [rw] s3_bucket_source
+    #   Import task s3 bucket source.
+    #   @return [Types::S3BucketSource]
+    #
+    # @!attribute [rw] status
+    #   Import task status.
+    #   @return [String]
+    #
+    # @!attribute [rw] summary
+    #   Import task summary.
+    #   @return [Types::ImportTaskSummary]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ImportTask AWS API Documentation
+    #
+    class ImportTask < Struct.new(
+      :creation_date_time,
+      :end_date_time,
+      :import_id,
+      :progress_percentage,
+      :s3_bucket_source,
+      :status,
+      :summary)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Import task error.
+    #
+    # @!attribute [rw] error_data
+    #   Import task error data.
+    #   @return [Types::ImportErrorData]
+    #
+    # @!attribute [rw] error_date_time
+    #   Import task error datetime.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_type
+    #   Import task error type.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ImportTaskError AWS API Documentation
+    #
+    class ImportTaskError < Struct.new(
+      :error_data,
+      :error_date_time,
+      :error_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Import task summary.
+    #
+    # @!attribute [rw] applications
+    #   Import task summary applications.
+    #   @return [Types::ImportTaskSummaryApplications]
+    #
+    # @!attribute [rw] servers
+    #   Import task summary servers.
+    #   @return [Types::ImportTaskSummaryServers]
+    #
+    # @!attribute [rw] waves
+    #   Import task summary waves.
+    #   @return [Types::ImportTaskSummaryWaves]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ImportTaskSummary AWS API Documentation
+    #
+    class ImportTaskSummary < Struct.new(
+      :applications,
+      :servers,
+      :waves)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Import task summary applications.
+    #
+    # @!attribute [rw] created_count
+    #   Import task summary applications created count.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] modified_count
+    #   Import task summary applications modified count.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ImportTaskSummaryApplications AWS API Documentation
+    #
+    class ImportTaskSummaryApplications < Struct.new(
+      :created_count,
+      :modified_count)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Import task summary servers.
+    #
+    # @!attribute [rw] created_count
+    #   Import task summary servers created count.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] modified_count
+    #   Import task summary servers modified count.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ImportTaskSummaryServers AWS API Documentation
+    #
+    class ImportTaskSummaryServers < Struct.new(
+      :created_count,
+      :modified_count)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Import task summery waves.
+    #
+    # @!attribute [rw] created_count
+    #   Import task summery waves created count.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] modified_count
+    #   Import task summery waves modified count.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ImportTaskSummaryWaves AWS API Documentation
+    #
+    class ImportTaskSummaryWaves < Struct.new(
+      :created_count,
+      :modified_count)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -885,7 +1658,7 @@ module Aws::Mgn
     #   @return [String]
     #
     # @!attribute [rw] tags
-    #   Tags associated with spcific Job.
+    #   Tags associated with specific Job.
     #   @return [Hash<String,String>]
     #
     # @!attribute [rw] type
@@ -961,6 +1734,46 @@ module Aws::Mgn
       include Aws::Structure
     end
 
+    # Launch Status of the Job Post Launch Actions.
+    #
+    # @!attribute [rw] execution_id
+    #   AWS Systems Manager Document's execution ID of the of the Job Post
+    #   Launch Actions.
+    #   @return [String]
+    #
+    # @!attribute [rw] execution_status
+    #   AWS Systems Manager Document's execution status.
+    #   @return [String]
+    #
+    # @!attribute [rw] failure_reason
+    #   AWS Systems Manager Document's failure reason.
+    #   @return [String]
+    #
+    # @!attribute [rw] ssm_document
+    #   AWS Systems Manager's Document of the of the Job Post Launch
+    #   Actions.
+    #   @return [Types::SsmDocument]
+    #
+    # @!attribute [rw] ssm_document_type
+    #   AWS Systems Manager Document type.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/JobPostLaunchActionsLaunchStatus AWS API Documentation
+    #
+    class JobPostLaunchActionsLaunchStatus < Struct.new(
+      :execution_id,
+      :execution_status,
+      :failure_reason,
+      :ssm_document,
+      :ssm_document_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] boot_mode
+    #   Launch configuration boot mode.
+    #   @return [String]
+    #
     # @!attribute [rw] copy_private_ip
     #   Copy Private IP during Launch Configuration.
     #   @return [Boolean]
@@ -970,57 +1783,188 @@ module Aws::Mgn
     #   @return [Boolean]
     #
     # @!attribute [rw] ec2_launch_template_id
-    #   Configure EC2 lauch configuration template ID.
+    #   Launch configuration EC2 Launch template ID.
     #   @return [String]
     #
+    # @!attribute [rw] enable_map_auto_tagging
+    #   Enable map auto tagging.
+    #   @return [Boolean]
+    #
     # @!attribute [rw] launch_disposition
-    #   Configure launch dispostion for launch configuration.
+    #   Launch disposition for launch configuration.
     #   @return [String]
     #
     # @!attribute [rw] licensing
-    #   Configure launch configuration OS licensing.
+    #   Launch configuration OS licensing.
     #   @return [Types::Licensing]
     #
-    # @!attribute [rw] name
-    #   Configure launch configuration name.
+    # @!attribute [rw] map_auto_tagging_mpe_id
+    #   Map auto tagging MPE ID.
     #   @return [String]
     #
+    # @!attribute [rw] name
+    #   Launch configuration name.
+    #   @return [String]
+    #
+    # @!attribute [rw] post_launch_actions
+    #   Post Launch Actions to executed on the Test or Cutover instance.
+    #   @return [Types::PostLaunchActions]
+    #
     # @!attribute [rw] source_server_id
-    #   Configure launch configuration Source Server ID.
+    #   Launch configuration Source Server ID.
     #   @return [String]
     #
     # @!attribute [rw] target_instance_type_right_sizing_method
-    #   Configure launch configuration Target instance type right sizing
-    #   method.
+    #   Launch configuration Target instance type right sizing method.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/LaunchConfiguration AWS API Documentation
     #
     class LaunchConfiguration < Struct.new(
+      :boot_mode,
       :copy_private_ip,
       :copy_tags,
       :ec2_launch_template_id,
+      :enable_map_auto_tagging,
       :launch_disposition,
       :licensing,
+      :map_auto_tagging_mpe_id,
       :name,
+      :post_launch_actions,
       :source_server_id,
       :target_instance_type_right_sizing_method)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Configure launced instance.
+    # @!attribute [rw] arn
+    #   ARN of the Launch Configuration Template.
+    #   @return [String]
+    #
+    # @!attribute [rw] associate_public_ip_address
+    #   Associate public Ip address.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] boot_mode
+    #   Launch configuration template boot mode.
+    #   @return [String]
+    #
+    # @!attribute [rw] copy_private_ip
+    #   Copy private Ip.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] copy_tags
+    #   Copy tags.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] ec2_launch_template_id
+    #   EC2 launch template ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] enable_map_auto_tagging
+    #   Enable map auto tagging.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] large_volume_conf
+    #   Large volume config.
+    #   @return [Types::LaunchTemplateDiskConf]
+    #
+    # @!attribute [rw] launch_configuration_template_id
+    #   ID of the Launch Configuration Template.
+    #   @return [String]
+    #
+    # @!attribute [rw] launch_disposition
+    #   Launch disposition.
+    #   @return [String]
+    #
+    # @!attribute [rw] licensing
+    #   Configure Licensing.
+    #   @return [Types::Licensing]
+    #
+    # @!attribute [rw] map_auto_tagging_mpe_id
+    #   Launch configuration template map auto tagging MPE ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] post_launch_actions
+    #   Post Launch Actions of the Launch Configuration Template.
+    #   @return [Types::PostLaunchActions]
+    #
+    # @!attribute [rw] small_volume_conf
+    #   Small volume config.
+    #   @return [Types::LaunchTemplateDiskConf]
+    #
+    # @!attribute [rw] small_volume_max_size
+    #   Small volume maximum size.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] tags
+    #   Tags of the Launch Configuration Template.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] target_instance_type_right_sizing_method
+    #   Target instance type right-sizing method.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/LaunchConfigurationTemplate AWS API Documentation
+    #
+    class LaunchConfigurationTemplate < Struct.new(
+      :arn,
+      :associate_public_ip_address,
+      :boot_mode,
+      :copy_private_ip,
+      :copy_tags,
+      :ec2_launch_template_id,
+      :enable_map_auto_tagging,
+      :large_volume_conf,
+      :launch_configuration_template_id,
+      :launch_disposition,
+      :licensing,
+      :map_auto_tagging_mpe_id,
+      :post_launch_actions,
+      :small_volume_conf,
+      :small_volume_max_size,
+      :tags,
+      :target_instance_type_right_sizing_method)
+      SENSITIVE = [:tags]
+      include Aws::Structure
+    end
+
+    # Launch template disk configuration.
+    #
+    # @!attribute [rw] iops
+    #   Launch template disk iops configuration.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] throughput
+    #   Launch template disk throughput configuration.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] volume_type
+    #   Launch template disk volume type configuration.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/LaunchTemplateDiskConf AWS API Documentation
+    #
+    class LaunchTemplateDiskConf < Struct.new(
+      :iops,
+      :throughput,
+      :volume_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Launched instance.
     #
     # @!attribute [rw] ec2_instance_id
-    #   Configure launced instance EC2 ID.
+    #   Launched instance EC2 ID.
     #   @return [String]
     #
     # @!attribute [rw] first_boot
-    #   Configure launced instance first boot.
+    #   Launched instance first boot.
     #   @return [String]
     #
     # @!attribute [rw] job_id
-    #   Configure launced instance Job ID.
+    #   Launched instance Job ID.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/LaunchedInstance AWS API Documentation
@@ -1034,13 +1978,6 @@ module Aws::Mgn
     end
 
     # Configure Licensing.
-    #
-    # @note When making an API call, you may pass Licensing
-    #   data as a hash:
-    #
-    #       {
-    #         os_byol: false,
-    #       }
     #
     # @!attribute [rw] os_byol
     #   Configure BYOL OS licensing.
@@ -1171,7 +2108,7 @@ module Aws::Mgn
     # Lifecycle last Test.
     #
     # @!attribute [rw] finalized
-    #   Lifecycle last Test finlized.
+    #   Lifecycle last Test finalized.
     #   @return [Types::LifeCycleLastTestFinalized]
     #
     # @!attribute [rw] initiated
@@ -1192,7 +2129,7 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # Lifecycle last Test finlized.
+    # Lifecycle last Test finalized.
     #
     # @!attribute [rw] api_call_date_time
     #   Lifecycle Test failed API call date and time.
@@ -1239,13 +2176,366 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
+    # @!attribute [rw] account_id
+    #   Applications list Account ID.
+    #   @return [String]
     #
-    #       {
-    #         resource_arn: "ARN", # required
-    #       }
+    # @!attribute [rw] filters
+    #   Applications list filters.
+    #   @return [Types::ListApplicationsRequestFilters]
     #
+    # @!attribute [rw] max_results
+    #   Maximum results to return when listing applications.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   Request next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListApplicationsRequest AWS API Documentation
+    #
+    class ListApplicationsRequest < Struct.new(
+      :account_id,
+      :filters,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Applications list filters.
+    #
+    # @!attribute [rw] application_i_ds
+    #   Filter applications list by application ID.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] is_archived
+    #   Filter applications list by archival status.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] wave_i_ds
+    #   Filter applications list by wave ID.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListApplicationsRequestFilters AWS API Documentation
+    #
+    class ListApplicationsRequestFilters < Struct.new(
+      :application_i_ds,
+      :is_archived,
+      :wave_i_ds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] items
+    #   Applications list.
+    #   @return [Array<Types::Application>]
+    #
+    # @!attribute [rw] next_token
+    #   Response next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListApplicationsResponse AWS API Documentation
+    #
+    class ListApplicationsResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List export errors request.
+    #
+    # @!attribute [rw] export_id
+    #   List export errors request export id.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   List export errors request max results.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   List export errors request next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListExportErrorsRequest AWS API Documentation
+    #
+    class ListExportErrorsRequest < Struct.new(
+      :export_id,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List export errors response.
+    #
+    # @!attribute [rw] items
+    #   List export errors response items.
+    #   @return [Array<Types::ExportTaskError>]
+    #
+    # @!attribute [rw] next_token
+    #   List export errors response next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListExportErrorsResponse AWS API Documentation
+    #
+    class ListExportErrorsResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List export request.
+    #
+    # @!attribute [rw] filters
+    #   List exports request filters.
+    #   @return [Types::ListExportsRequestFilters]
+    #
+    # @!attribute [rw] max_results
+    #   List export request max results.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   List export request next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListExportsRequest AWS API Documentation
+    #
+    class ListExportsRequest < Struct.new(
+      :filters,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List exports request filters.
+    #
+    # @!attribute [rw] export_i_ds
+    #   List exports request filters export ids.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListExportsRequestFilters AWS API Documentation
+    #
+    class ListExportsRequestFilters < Struct.new(
+      :export_i_ds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List export response.
+    #
+    # @!attribute [rw] items
+    #   List export response items.
+    #   @return [Array<Types::ExportTask>]
+    #
+    # @!attribute [rw] next_token
+    #   List export response next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListExportsResponse AWS API Documentation
+    #
+    class ListExportsResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List import errors request.
+    #
+    # @!attribute [rw] import_id
+    #   List import errors request import id.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   List import errors request max results.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   List import errors request next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListImportErrorsRequest AWS API Documentation
+    #
+    class ListImportErrorsRequest < Struct.new(
+      :import_id,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List imports errors response.
+    #
+    # @!attribute [rw] items
+    #   List imports errors response items.
+    #   @return [Array<Types::ImportTaskError>]
+    #
+    # @!attribute [rw] next_token
+    #   List imports errors response next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListImportErrorsResponse AWS API Documentation
+    #
+    class ListImportErrorsResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List imports request.
+    #
+    # @!attribute [rw] filters
+    #   List imports request filters.
+    #   @return [Types::ListImportsRequestFilters]
+    #
+    # @!attribute [rw] max_results
+    #   List imports request max results.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   List imports request next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListImportsRequest AWS API Documentation
+    #
+    class ListImportsRequest < Struct.new(
+      :filters,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List imports request filters.
+    #
+    # @!attribute [rw] import_i_ds
+    #   List imports request filters import IDs.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListImportsRequestFilters AWS API Documentation
+    #
+    class ListImportsRequestFilters < Struct.new(
+      :import_i_ds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List import response.
+    #
+    # @!attribute [rw] items
+    #   List import response items.
+    #   @return [Array<Types::ImportTask>]
+    #
+    # @!attribute [rw] next_token
+    #   List import response next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListImportsResponse AWS API Documentation
+    #
+    class ListImportsResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List managed accounts request.
+    #
+    # @!attribute [rw] max_results
+    #   List managed accounts request max results.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   List managed accounts request next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListManagedAccountsRequest AWS API Documentation
+    #
+    class ListManagedAccountsRequest < Struct.new(
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List managed accounts response.
+    #
+    # @!attribute [rw] items
+    #   List managed accounts response items.
+    #   @return [Array<Types::ManagedAccount>]
+    #
+    # @!attribute [rw] next_token
+    #   List managed accounts response next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListManagedAccountsResponse AWS API Documentation
+    #
+    class ListManagedAccountsResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID to return when listing source server post migration
+    #   custom actions.
+    #   @return [String]
+    #
+    # @!attribute [rw] filters
+    #   Filters to apply when listing source server post migration custom
+    #   actions.
+    #   @return [Types::SourceServerActionsRequestFilters]
+    #
+    # @!attribute [rw] max_results
+    #   Maximum amount of items to return when listing source server post
+    #   migration custom actions.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   Next token to use when listing source server post migration custom
+    #   actions.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_server_id
+    #   Source server ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListSourceServerActionsRequest AWS API Documentation
+    #
+    class ListSourceServerActionsRequest < Struct.new(
+      :account_id,
+      :filters,
+      :max_results,
+      :next_token,
+      :source_server_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] items
+    #   List of source server post migration custom actions.
+    #   @return [Array<Types::SourceServerActionDocument>]
+    #
+    # @!attribute [rw] next_token
+    #   Next token returned when listing source server post migration custom
+    #   actions.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListSourceServerActionsResponse AWS API Documentation
+    #
+    class ListSourceServerActionsResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   List tags for resource request by ARN.
     #   @return [String]
@@ -1270,12 +2560,134 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass MarkAsArchivedRequest
-    #   data as a hash:
+    # @!attribute [rw] filters
+    #   Filters to apply when listing template post migration custom
+    #   actions.
+    #   @return [Types::TemplateActionsRequestFilters]
     #
-    #       {
-    #         source_server_id: "SourceServerID", # required
-    #       }
+    # @!attribute [rw] launch_configuration_template_id
+    #   Launch configuration template ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   Maximum amount of items to return when listing template post
+    #   migration custom actions.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   Next token to use when listing template post migration custom
+    #   actions.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListTemplateActionsRequest AWS API Documentation
+    #
+    class ListTemplateActionsRequest < Struct.new(
+      :filters,
+      :launch_configuration_template_id,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] items
+    #   List of template post migration custom actions.
+    #   @return [Array<Types::TemplateActionDocument>]
+    #
+    # @!attribute [rw] next_token
+    #   Next token returned when listing template post migration custom
+    #   actions.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListTemplateActionsResponse AWS API Documentation
+    #
+    class ListTemplateActionsResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Request account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] filters
+    #   Waves list filters.
+    #   @return [Types::ListWavesRequestFilters]
+    #
+    # @!attribute [rw] max_results
+    #   Maximum results to return when listing waves.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   Request next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListWavesRequest AWS API Documentation
+    #
+    class ListWavesRequest < Struct.new(
+      :account_id,
+      :filters,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Waves list filters.
+    #
+    # @!attribute [rw] is_archived
+    #   Filter waves list by archival status.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] wave_i_ds
+    #   Filter waves list by wave ID.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListWavesRequestFilters AWS API Documentation
+    #
+    class ListWavesRequestFilters < Struct.new(
+      :is_archived,
+      :wave_i_ds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] items
+    #   Waves list.
+    #   @return [Array<Types::Wave>]
+    #
+    # @!attribute [rw] next_token
+    #   Response next token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ListWavesResponse AWS API Documentation
+    #
+    class ListWavesResponse < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Managed account.
+    #
+    # @!attribute [rw] account_id
+    #   Managed account, account ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ManagedAccount AWS API Documentation
+    #
+    class ManagedAccount < Struct.new(
+      :account_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Mark as archived by Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] source_server_id
     #   Mark as archived by Source Server ID.
@@ -1284,6 +2696,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/MarkAsArchivedRequest AWS API Documentation
     #
     class MarkAsArchivedRequest < Struct.new(
+      :account_id,
       :source_server_id)
       SENSITIVE = []
       include Aws::Structure
@@ -1333,6 +2746,14 @@ module Aws::Mgn
     #   Participating server launch status.
     #   @return [String]
     #
+    # @!attribute [rw] launched_ec2_instance_id
+    #   Participating server's launched ec2 instance ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] post_launch_actions_status
+    #   Participating server's Post Launch Actions Status.
+    #   @return [Types::PostLaunchActionsStatus]
+    #
     # @!attribute [rw] source_server_id
     #   Participating server Source Server ID.
     #   @return [String]
@@ -1341,10 +2762,288 @@ module Aws::Mgn
     #
     class ParticipatingServer < Struct.new(
       :launch_status,
+      :launched_ec2_instance_id,
+      :post_launch_actions_status,
       :source_server_id)
       SENSITIVE = []
       include Aws::Structure
     end
+
+    # @!attribute [rw] account_id
+    #   Pause Replication Request account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_server_id
+    #   Pause Replication Request source server ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/PauseReplicationRequest AWS API Documentation
+    #
+    class PauseReplicationRequest < Struct.new(
+      :account_id,
+      :source_server_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Post Launch Actions to executed on the Test or Cutover instance.
+    #
+    # @!attribute [rw] cloud_watch_log_group_name
+    #   AWS Systems Manager Command's CloudWatch log group name.
+    #   @return [String]
+    #
+    # @!attribute [rw] deployment
+    #   Deployment type in which AWS Systems Manager Documents will be
+    #   executed.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_log_bucket
+    #   AWS Systems Manager Command's logs S3 log bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_output_key_prefix
+    #   AWS Systems Manager Command's logs S3 output key prefix.
+    #   @return [String]
+    #
+    # @!attribute [rw] ssm_documents
+    #   AWS Systems Manager Documents.
+    #   @return [Array<Types::SsmDocument>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/PostLaunchActions AWS API Documentation
+    #
+    class PostLaunchActions < Struct.new(
+      :cloud_watch_log_group_name,
+      :deployment,
+      :s3_log_bucket,
+      :s3_output_key_prefix,
+      :ssm_documents)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Status of the Post Launch Actions running on the Test or Cutover
+    # instance.
+    #
+    # @!attribute [rw] post_launch_actions_launch_status_list
+    #   List of Post Launch Action status.
+    #   @return [Array<Types::JobPostLaunchActionsLaunchStatus>]
+    #
+    # @!attribute [rw] ssm_agent_discovery_datetime
+    #   Time where the AWS Systems Manager was detected as running on the
+    #   Test or Cutover instance.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/PostLaunchActionsStatus AWS API Documentation
+    #
+    class PostLaunchActionsStatus < Struct.new(
+      :post_launch_actions_launch_status_list,
+      :ssm_agent_discovery_datetime)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Source server post migration custom account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] action_id
+    #   Source server post migration custom action ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] action_name
+    #   Source server post migration custom action name.
+    #   @return [String]
+    #
+    # @!attribute [rw] active
+    #   Source server post migration custom action active status.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] category
+    #   Source server post migration custom action category.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Source server post migration custom action description.
+    #   @return [String]
+    #
+    # @!attribute [rw] document_identifier
+    #   Source server post migration custom action document identifier.
+    #   @return [String]
+    #
+    # @!attribute [rw] document_version
+    #   Source server post migration custom action document version.
+    #   @return [String]
+    #
+    # @!attribute [rw] external_parameters
+    #   Source server post migration custom action external parameters.
+    #   @return [Hash<String,Types::SsmExternalParameter>]
+    #
+    # @!attribute [rw] must_succeed_for_cutover
+    #   Source server post migration custom action must succeed for cutover.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] order
+    #   Source server post migration custom action order.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] parameters
+    #   Source server post migration custom action parameters.
+    #   @return [Hash<String,Array<Types::SsmParameterStoreParameter>>]
+    #
+    # @!attribute [rw] source_server_id
+    #   Source server ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] timeout_seconds
+    #   Source server post migration custom action timeout in seconds.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/PutSourceServerActionRequest AWS API Documentation
+    #
+    class PutSourceServerActionRequest < Struct.new(
+      :account_id,
+      :action_id,
+      :action_name,
+      :active,
+      :category,
+      :description,
+      :document_identifier,
+      :document_version,
+      :external_parameters,
+      :must_succeed_for_cutover,
+      :order,
+      :parameters,
+      :source_server_id,
+      :timeout_seconds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] action_id
+    #   Template post migration custom action ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] action_name
+    #   Template post migration custom action name.
+    #   @return [String]
+    #
+    # @!attribute [rw] active
+    #   Template post migration custom action active status.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] category
+    #   Template post migration custom action category.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Template post migration custom action description.
+    #   @return [String]
+    #
+    # @!attribute [rw] document_identifier
+    #   Template post migration custom action document identifier.
+    #   @return [String]
+    #
+    # @!attribute [rw] document_version
+    #   Template post migration custom action document version.
+    #   @return [String]
+    #
+    # @!attribute [rw] external_parameters
+    #   Template post migration custom action external parameters.
+    #   @return [Hash<String,Types::SsmExternalParameter>]
+    #
+    # @!attribute [rw] launch_configuration_template_id
+    #   Launch configuration template ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] must_succeed_for_cutover
+    #   Template post migration custom action must succeed for cutover.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] operating_system
+    #   Operating system eligible for this template post migration custom
+    #   action.
+    #   @return [String]
+    #
+    # @!attribute [rw] order
+    #   Template post migration custom action order.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] parameters
+    #   Template post migration custom action parameters.
+    #   @return [Hash<String,Array<Types::SsmParameterStoreParameter>>]
+    #
+    # @!attribute [rw] timeout_seconds
+    #   Template post migration custom action timeout in seconds.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/PutTemplateActionRequest AWS API Documentation
+    #
+    class PutTemplateActionRequest < Struct.new(
+      :action_id,
+      :action_name,
+      :active,
+      :category,
+      :description,
+      :document_identifier,
+      :document_version,
+      :external_parameters,
+      :launch_configuration_template_id,
+      :must_succeed_for_cutover,
+      :operating_system,
+      :order,
+      :parameters,
+      :timeout_seconds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Source server post migration account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] action_id
+    #   Source server post migration custom action ID to remove.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_server_id
+    #   Source server ID of the post migration custom action to remove.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/RemoveSourceServerActionRequest AWS API Documentation
+    #
+    class RemoveSourceServerActionRequest < Struct.new(
+      :account_id,
+      :action_id,
+      :source_server_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/RemoveSourceServerActionResponse AWS API Documentation
+    #
+    class RemoveSourceServerActionResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] action_id
+    #   Template post migration custom action ID to remove.
+    #   @return [String]
+    #
+    # @!attribute [rw] launch_configuration_template_id
+    #   Launch configuration template ID of the post migration custom action
+    #   to remove.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/RemoveTemplateActionRequest AWS API Documentation
+    #
+    class RemoveTemplateActionRequest < Struct.new(
+      :action_id,
+      :launch_configuration_template_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/RemoveTemplateActionResponse AWS API Documentation
+    #
+    class RemoveTemplateActionResponse < Aws::EmptyStructure; end
 
     # @!attribute [rw] associate_default_security_group
     #   Replication Configuration associate default Application Migration
@@ -1407,6 +3106,10 @@ module Aws::Mgn
     #   Replication Configuration use Dedicated Replication Server.
     #   @return [Boolean]
     #
+    # @!attribute [rw] use_fips_endpoint
+    #   Replication Configuration use Fips Endpoint.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ReplicationConfiguration AWS API Documentation
     #
     class ReplicationConfiguration < Struct.new(
@@ -1424,22 +3127,13 @@ module Aws::Mgn
       :source_server_id,
       :staging_area_subnet_id,
       :staging_area_tags,
-      :use_dedicated_replication_server)
+      :use_dedicated_replication_server,
+      :use_fips_endpoint)
       SENSITIVE = [:staging_area_tags]
       include Aws::Structure
     end
 
     # Replication Configuration replicated disk.
-    #
-    # @note When making an API call, you may pass ReplicationConfigurationReplicatedDisk
-    #   data as a hash:
-    #
-    #       {
-    #         device_name: "BoundedString",
-    #         iops: 1,
-    #         is_boot_disk: false,
-    #         staging_disk_type: "AUTO", # accepts AUTO, GP2, IO1, SC1, ST1, STANDARD
-    #       }
     #
     # @!attribute [rw] device_name
     #   Replication Configuration replicated disk device name.
@@ -1457,13 +3151,18 @@ module Aws::Mgn
     #   Replication Configuration replicated disk staging disk type.
     #   @return [String]
     #
+    # @!attribute [rw] throughput
+    #   Replication Configuration replicated disk throughput.
+    #   @return [Integer]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ReplicationConfigurationReplicatedDisk AWS API Documentation
     #
     class ReplicationConfigurationReplicatedDisk < Struct.new(
       :device_name,
       :iops,
       :is_boot_disk,
-      :staging_disk_type)
+      :staging_disk_type,
+      :throughput)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1478,7 +3177,7 @@ module Aws::Mgn
     #   @return [Boolean]
     #
     # @!attribute [rw] bandwidth_throttling
-    #   Replication Configuration template bandwidth throtting.
+    #   Replication Configuration template bandwidth throttling.
     #   @return [Integer]
     #
     # @!attribute [rw] create_public_ip
@@ -1490,7 +3189,7 @@ module Aws::Mgn
     #   @return [String]
     #
     # @!attribute [rw] default_large_staging_disk_type
-    #   Replication Configuration template use dedault large Staging Disk
+    #   Replication Configuration template use default large Staging Disk
     #   type.
     #   @return [String]
     #
@@ -1503,7 +3202,7 @@ module Aws::Mgn
     #   @return [String]
     #
     # @!attribute [rw] replication_configuration_template_id
-    #   Replication Configuration template template ID.
+    #   Replication Configuration template ID.
     #   @return [String]
     #
     # @!attribute [rw] replication_server_instance_type
@@ -1530,6 +3229,10 @@ module Aws::Mgn
     #   Replication Configuration template use Dedicated Replication Server.
     #   @return [Boolean]
     #
+    # @!attribute [rw] use_fips_endpoint
+    #   Replication Configuration template use Fips Endpoint.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ReplicationConfigurationTemplate AWS API Documentation
     #
     class ReplicationConfigurationTemplate < Struct.new(
@@ -1547,7 +3250,8 @@ module Aws::Mgn
       :staging_area_subnet_id,
       :staging_area_tags,
       :tags,
-      :use_dedicated_replication_server)
+      :use_dedicated_replication_server,
+      :use_fips_endpoint)
       SENSITIVE = [:staging_area_tags, :tags]
       include Aws::Structure
     end
@@ -1579,12 +3283,26 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RetryDataReplicationRequest
-    #   data as a hash:
+    # @!attribute [rw] account_id
+    #   Resume Replication Request account ID.
+    #   @return [String]
     #
-    #       {
-    #         source_server_id: "SourceServerID", # required
-    #       }
+    # @!attribute [rw] source_server_id
+    #   Resume Replication Request source server ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ResumeReplicationRequest AWS API Documentation
+    #
+    class ResumeReplicationRequest < Struct.new(
+      :account_id,
+      :source_server_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Retry data replication for Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] source_server_id
     #   Retry data replication for Source Server ID.
@@ -1593,7 +3311,75 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/RetryDataReplicationRequest AWS API Documentation
     #
     class RetryDataReplicationRequest < Struct.new(
+      :account_id,
       :source_server_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # S3 bucket source.
+    #
+    # @!attribute [rw] s3_bucket
+    #   S3 bucket source s3 bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_bucket_owner
+    #   S3 bucket source s3 bucket owner.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_key
+    #   S3 bucket source s3 key.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/S3BucketSource AWS API Documentation
+    #
+    class S3BucketSource < Struct.new(
+      :s3_bucket,
+      :s3_bucket_owner,
+      :s3_key)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The request could not be completed because its exceeded the service
+    # quota.
+    #
+    # @!attribute [rw] code
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @!attribute [rw] quota_code
+    #   Exceeded the service quota code.
+    #   @return [String]
+    #
+    # @!attribute [rw] quota_value
+    #   Exceeded the service quota value.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] resource_id
+    #   Exceeded the service quota resource ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_type
+    #   Exceeded the service quota resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] service_code
+    #   Exceeded the service quota service code.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/ServiceQuotaExceededException AWS API Documentation
+    #
+    class ServiceQuotaExceededException < Struct.new(
+      :code,
+      :message,
+      :quota_code,
+      :quota_value,
+      :resource_id,
+      :resource_type,
+      :service_code)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1647,6 +3433,10 @@ module Aws::Mgn
       include Aws::Structure
     end
 
+    # @!attribute [rw] application_id
+    #   Source server application ID.
+    #   @return [String]
+    #
     # @!attribute [rw] arn
     #   Source server ARN.
     #   @return [String]
@@ -1654,6 +3444,10 @@ module Aws::Mgn
     # @!attribute [rw] data_replication_info
     #   Source server data replication info.
     #   @return [Types::DataReplicationInfo]
+    #
+    # @!attribute [rw] fqdn_for_action_framework
+    #   Source server fqdn for action framework.
+    #   @return [String]
     #
     # @!attribute [rw] is_archived
     #   Source server archived status.
@@ -1667,6 +3461,10 @@ module Aws::Mgn
     #   Source server lifecycle state.
     #   @return [Types::LifeCycle]
     #
+    # @!attribute [rw] replication_type
+    #   Source server replication type.
+    #   @return [String]
+    #
     # @!attribute [rw] source_properties
     #   Source server properties.
     #   @return [Types::SourceProperties]
@@ -1679,30 +3477,199 @@ module Aws::Mgn
     #   Source server Tags.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] user_provided_id
+    #   Source server user provided ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] vcenter_client_id
+    #   Source server vCenter client id.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/SourceServer AWS API Documentation
     #
     class SourceServer < Struct.new(
+      :application_id,
       :arn,
       :data_replication_info,
+      :fqdn_for_action_framework,
       :is_archived,
       :launched_instance,
       :life_cycle,
+      :replication_type,
       :source_properties,
       :source_server_id,
-      :tags)
+      :tags,
+      :user_provided_id,
+      :vcenter_client_id)
       SENSITIVE = [:tags]
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartCutoverRequest
-    #   data as a hash:
+    # @!attribute [rw] action_id
+    #   Source server post migration custom action ID.
+    #   @return [String]
     #
-    #       {
-    #         source_server_i_ds: ["SourceServerID"], # required
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
+    # @!attribute [rw] action_name
+    #   Source server post migration custom action name.
+    #   @return [String]
+    #
+    # @!attribute [rw] active
+    #   Source server post migration custom action active status.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] category
+    #   Source server post migration custom action category.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Source server post migration custom action description.
+    #   @return [String]
+    #
+    # @!attribute [rw] document_identifier
+    #   Source server post migration custom action document identifier.
+    #   @return [String]
+    #
+    # @!attribute [rw] document_version
+    #   Source server post migration custom action document version.
+    #   @return [String]
+    #
+    # @!attribute [rw] external_parameters
+    #   Source server post migration custom action external parameters.
+    #   @return [Hash<String,Types::SsmExternalParameter>]
+    #
+    # @!attribute [rw] must_succeed_for_cutover
+    #   Source server post migration custom action must succeed for cutover.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] order
+    #   Source server post migration custom action order.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] parameters
+    #   Source server post migration custom action parameters.
+    #   @return [Hash<String,Array<Types::SsmParameterStoreParameter>>]
+    #
+    # @!attribute [rw] timeout_seconds
+    #   Source server post migration custom action timeout in seconds.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/SourceServerActionDocument AWS API Documentation
+    #
+    class SourceServerActionDocument < Struct.new(
+      :action_id,
+      :action_name,
+      :active,
+      :category,
+      :description,
+      :document_identifier,
+      :document_version,
+      :external_parameters,
+      :must_succeed_for_cutover,
+      :order,
+      :parameters,
+      :timeout_seconds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Source server post migration custom action filters.
+    #
+    # @!attribute [rw] action_i_ds
+    #   Action IDs to filter source server post migration custom actions by.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/SourceServerActionsRequestFilters AWS API Documentation
+    #
+    class SourceServerActionsRequestFilters < Struct.new(
+      :action_i_ds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # AWS Systems Manager Document.
+    #
+    # @!attribute [rw] action_name
+    #   User-friendly name for the AWS Systems Manager Document.
+    #   @return [String]
+    #
+    # @!attribute [rw] external_parameters
+    #   AWS Systems Manager Document external parameters.
+    #   @return [Hash<String,Types::SsmExternalParameter>]
+    #
+    # @!attribute [rw] must_succeed_for_cutover
+    #   If true, Cutover will not be enabled if the document has failed.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] parameters
+    #   AWS Systems Manager Document parameters.
+    #   @return [Hash<String,Array<Types::SsmParameterStoreParameter>>]
+    #
+    # @!attribute [rw] ssm_document_name
+    #   AWS Systems Manager Document name or full ARN.
+    #   @return [String]
+    #
+    # @!attribute [rw] timeout_seconds
+    #   AWS Systems Manager Document timeout seconds.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/SsmDocument AWS API Documentation
+    #
+    class SsmDocument < Struct.new(
+      :action_name,
+      :external_parameters,
+      :must_succeed_for_cutover,
+      :parameters,
+      :ssm_document_name,
+      :timeout_seconds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # AWS Systems Manager Document external parameter.
+    #
+    # @note SsmExternalParameter is a union - when making an API calls you must set exactly one of the members.
+    #
+    # @note SsmExternalParameter is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of SsmExternalParameter corresponding to the set member.
+    #
+    # @!attribute [rw] dynamic_path
+    #   AWS Systems Manager Document external parameters dynamic path.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/SsmExternalParameter AWS API Documentation
+    #
+    class SsmExternalParameter < Struct.new(
+      :dynamic_path,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class DynamicPath < SsmExternalParameter; end
+      class Unknown < SsmExternalParameter; end
+    end
+
+    # AWS Systems Manager Parameter Store parameter.
+    #
+    # @!attribute [rw] parameter_name
+    #   AWS Systems Manager Parameter Store parameter name.
+    #   @return [String]
+    #
+    # @!attribute [rw] parameter_type
+    #   AWS Systems Manager Parameter Store parameter type.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/SsmParameterStoreParameter AWS API Documentation
+    #
+    class SsmParameterStoreParameter < Struct.new(
+      :parameter_name,
+      :parameter_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Start Cutover by Account IDs
+    #   @return [String]
     #
     # @!attribute [rw] source_server_i_ds
     #   Start Cutover by Source Server IDs.
@@ -1715,6 +3682,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/StartCutoverRequest AWS API Documentation
     #
     class StartCutoverRequest < Struct.new(
+      :account_id,
       :source_server_i_ds,
       :tags)
       SENSITIVE = [:tags]
@@ -1733,15 +3701,100 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartTestRequest
-    #   data as a hash:
+    # Start export request.
     #
-    #       {
-    #         source_server_i_ds: ["SourceServerID"], # required
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
+    # @!attribute [rw] s3_bucket
+    #   Start export request s3 bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_bucket_owner
+    #   Start export request s3 bucket owner.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_key
+    #   Start export request s3key.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/StartExportRequest AWS API Documentation
+    #
+    class StartExportRequest < Struct.new(
+      :s3_bucket,
+      :s3_bucket_owner,
+      :s3_key)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Start export response.
+    #
+    # @!attribute [rw] export_task
+    #   Start export response export task.
+    #   @return [Types::ExportTask]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/StartExportResponse AWS API Documentation
+    #
+    class StartExportResponse < Struct.new(
+      :export_task)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Start import request.
+    #
+    # @!attribute [rw] client_token
+    #   Start import request client token.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_bucket_source
+    #   Start import request s3 bucket source.
+    #   @return [Types::S3BucketSource]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/StartImportRequest AWS API Documentation
+    #
+    class StartImportRequest < Struct.new(
+      :client_token,
+      :s3_bucket_source)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Start import response.
+    #
+    # @!attribute [rw] import_task
+    #   Start import response import task.
+    #   @return [Types::ImportTask]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/StartImportResponse AWS API Documentation
+    #
+    class StartImportResponse < Struct.new(
+      :import_task)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID on which to start replication.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_server_id
+    #   ID of source server on which to start replication.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/StartReplicationRequest AWS API Documentation
+    #
+    class StartReplicationRequest < Struct.new(
+      :account_id,
+      :source_server_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Start Test for Account ID.
+    #   @return [String]
     #
     # @!attribute [rw] source_server_i_ds
     #   Start Test for Source Server IDs.
@@ -1754,6 +3807,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/StartTestRequest AWS API Documentation
     #
     class StartTestRequest < Struct.new(
+      :account_id,
       :source_server_i_ds,
       :tags)
       SENSITIVE = [:tags]
@@ -1772,16 +3826,23 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
+    # @!attribute [rw] account_id
+    #   Stop Replication Request account ID.
+    #   @return [String]
     #
-    #       {
-    #         resource_arn: "ARN", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
+    # @!attribute [rw] source_server_id
+    #   Stop Replication Request source server ID.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/StopReplicationRequest AWS API Documentation
+    #
+    class StopReplicationRequest < Struct.new(
+      :account_id,
+      :source_server_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   Tag resource by ARN.
     #   @return [String]
@@ -1799,15 +3860,96 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TerminateTargetInstancesRequest
-    #   data as a hash:
+    # @!attribute [rw] action_id
+    #   Template post migration custom action ID.
+    #   @return [String]
     #
-    #       {
-    #         source_server_i_ds: ["SourceServerID"], # required
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
+    # @!attribute [rw] action_name
+    #   Template post migration custom action name.
+    #   @return [String]
+    #
+    # @!attribute [rw] active
+    #   Template post migration custom action active status.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] category
+    #   Template post migration custom action category.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Template post migration custom action description.
+    #   @return [String]
+    #
+    # @!attribute [rw] document_identifier
+    #   Template post migration custom action document identifier.
+    #   @return [String]
+    #
+    # @!attribute [rw] document_version
+    #   Template post migration custom action document version.
+    #   @return [String]
+    #
+    # @!attribute [rw] external_parameters
+    #   Template post migration custom action external parameters.
+    #   @return [Hash<String,Types::SsmExternalParameter>]
+    #
+    # @!attribute [rw] must_succeed_for_cutover
+    #   Template post migration custom action must succeed for cutover.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] operating_system
+    #   Operating system eligible for this template post migration custom
+    #   action.
+    #   @return [String]
+    #
+    # @!attribute [rw] order
+    #   Template post migration custom action order.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] parameters
+    #   Template post migration custom action parameters.
+    #   @return [Hash<String,Array<Types::SsmParameterStoreParameter>>]
+    #
+    # @!attribute [rw] timeout_seconds
+    #   Template post migration custom action timeout in seconds.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/TemplateActionDocument AWS API Documentation
+    #
+    class TemplateActionDocument < Struct.new(
+      :action_id,
+      :action_name,
+      :active,
+      :category,
+      :description,
+      :document_identifier,
+      :document_version,
+      :external_parameters,
+      :must_succeed_for_cutover,
+      :operating_system,
+      :order,
+      :parameters,
+      :timeout_seconds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Template post migration custom action filters.
+    #
+    # @!attribute [rw] action_i_ds
+    #   Action IDs to filter template post migration custom actions by.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/TemplateActionsRequestFilters AWS API Documentation
+    #
+    class TemplateActionsRequestFilters < Struct.new(
+      :action_i_ds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Terminate Target instance by Account ID
+    #   @return [String]
     #
     # @!attribute [rw] source_server_i_ds
     #   Terminate Target instance by Source Server IDs.
@@ -1820,6 +3962,7 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/TerminateTargetInstancesRequest AWS API Documentation
     #
     class TerminateTargetInstancesRequest < Struct.new(
+      :account_id,
       :source_server_i_ds,
       :tags)
       SENSITIVE = [:tags]
@@ -1866,7 +4009,41 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # Unitialized account exception.
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] application_id
+    #   Application ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/UnarchiveApplicationRequest AWS API Documentation
+    #
+    class UnarchiveApplicationRequest < Struct.new(
+      :account_id,
+      :application_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] wave_id
+    #   Wave ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/UnarchiveWaveRequest AWS API Documentation
+    #
+    class UnarchiveWaveRequest < Struct.new(
+      :account_id,
+      :wave_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Uninitialized account exception.
     #
     # @!attribute [rw] code
     #   @return [String]
@@ -1883,14 +4060,6 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ARN", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   Untag resource by ARN.
     #   @return [String]
@@ -1908,20 +4077,40 @@ module Aws::Mgn
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateLaunchConfigurationRequest
-    #   data as a hash:
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
     #
-    #       {
-    #         copy_private_ip: false,
-    #         copy_tags: false,
-    #         launch_disposition: "STOPPED", # accepts STOPPED, STARTED
-    #         licensing: {
-    #           os_byol: false,
-    #         },
-    #         name: "SmallBoundedString",
-    #         source_server_id: "SourceServerID", # required
-    #         target_instance_type_right_sizing_method: "NONE", # accepts NONE, BASIC
-    #       }
+    # @!attribute [rw] application_id
+    #   Application ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Application description.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   Application name.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/UpdateApplicationRequest AWS API Documentation
+    #
+    class UpdateApplicationRequest < Struct.new(
+      :account_id,
+      :application_id,
+      :description,
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Update Launch configuration Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] boot_mode
+    #   Update Launch configuration boot mode request.
+    #   @return [String]
     #
     # @!attribute [rw] copy_private_ip
     #   Update Launch configuration copy Private IP request.
@@ -1929,6 +4118,10 @@ module Aws::Mgn
     #
     # @!attribute [rw] copy_tags
     #   Update Launch configuration copy Tags request.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] enable_map_auto_tagging
+    #   Enable map auto tagging.
     #   @return [Boolean]
     #
     # @!attribute [rw] launch_disposition
@@ -1939,9 +4132,17 @@ module Aws::Mgn
     #   Update Launch configuration licensing request.
     #   @return [Types::Licensing]
     #
+    # @!attribute [rw] map_auto_tagging_mpe_id
+    #   Launch configuration map auto tagging MPE ID.
+    #   @return [String]
+    #
     # @!attribute [rw] name
     #   Update Launch configuration name request.
     #   @return [String]
+    #
+    # @!attribute [rw] post_launch_actions
+    #   Post Launch Actions to executed on the Test or Cutover instance.
+    #   @return [Types::PostLaunchActions]
     #
     # @!attribute [rw] source_server_id
     #   Update Launch configuration by Source Server ID request.
@@ -1954,46 +4155,102 @@ module Aws::Mgn
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/UpdateLaunchConfigurationRequest AWS API Documentation
     #
     class UpdateLaunchConfigurationRequest < Struct.new(
+      :account_id,
+      :boot_mode,
       :copy_private_ip,
       :copy_tags,
+      :enable_map_auto_tagging,
       :launch_disposition,
       :licensing,
+      :map_auto_tagging_mpe_id,
       :name,
+      :post_launch_actions,
       :source_server_id,
       :target_instance_type_right_sizing_method)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateReplicationConfigurationRequest
-    #   data as a hash:
+    # @!attribute [rw] associate_public_ip_address
+    #   Associate public Ip address.
+    #   @return [Boolean]
     #
-    #       {
-    #         associate_default_security_group: false,
-    #         bandwidth_throttling: 1,
-    #         create_public_ip: false,
-    #         data_plane_routing: "PRIVATE_IP", # accepts PRIVATE_IP, PUBLIC_IP
-    #         default_large_staging_disk_type: "GP2", # accepts GP2, ST1
-    #         ebs_encryption: "NONE", # accepts NONE, DEFAULT, CUSTOM
-    #         ebs_encryption_key_arn: "ARN",
-    #         name: "SmallBoundedString",
-    #         replicated_disks: [
-    #           {
-    #             device_name: "BoundedString",
-    #             iops: 1,
-    #             is_boot_disk: false,
-    #             staging_disk_type: "AUTO", # accepts AUTO, GP2, IO1, SC1, ST1, STANDARD
-    #           },
-    #         ],
-    #         replication_server_instance_type: "EC2InstanceType",
-    #         replication_servers_security_groups_i_ds: ["SecurityGroupID"],
-    #         source_server_id: "SourceServerID", # required
-    #         staging_area_subnet_id: "SubnetID",
-    #         staging_area_tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         use_dedicated_replication_server: false,
-    #       }
+    # @!attribute [rw] boot_mode
+    #   Launch configuration template boot mode.
+    #   @return [String]
+    #
+    # @!attribute [rw] copy_private_ip
+    #   Copy private Ip.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] copy_tags
+    #   Copy tags.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] enable_map_auto_tagging
+    #   Enable map auto tagging.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] large_volume_conf
+    #   Large volume config.
+    #   @return [Types::LaunchTemplateDiskConf]
+    #
+    # @!attribute [rw] launch_configuration_template_id
+    #   Launch Configuration Template ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] launch_disposition
+    #   Launch disposition.
+    #   @return [String]
+    #
+    # @!attribute [rw] licensing
+    #   Configure Licensing.
+    #   @return [Types::Licensing]
+    #
+    # @!attribute [rw] map_auto_tagging_mpe_id
+    #   Launch configuration template map auto tagging MPE ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] post_launch_actions
+    #   Post Launch Action to execute on the Test or Cutover instance.
+    #   @return [Types::PostLaunchActions]
+    #
+    # @!attribute [rw] small_volume_conf
+    #   Small volume config.
+    #   @return [Types::LaunchTemplateDiskConf]
+    #
+    # @!attribute [rw] small_volume_max_size
+    #   Small volume maximum size.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] target_instance_type_right_sizing_method
+    #   Target instance type right-sizing method.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/UpdateLaunchConfigurationTemplateRequest AWS API Documentation
+    #
+    class UpdateLaunchConfigurationTemplateRequest < Struct.new(
+      :associate_public_ip_address,
+      :boot_mode,
+      :copy_private_ip,
+      :copy_tags,
+      :enable_map_auto_tagging,
+      :large_volume_conf,
+      :launch_configuration_template_id,
+      :launch_disposition,
+      :licensing,
+      :map_auto_tagging_mpe_id,
+      :post_launch_actions,
+      :small_volume_conf,
+      :small_volume_max_size,
+      :target_instance_type_right_sizing_method)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Update replication configuration Account ID request.
+    #   @return [String]
     #
     # @!attribute [rw] associate_default_security_group
     #   Update replication configuration associate default Application
@@ -2060,9 +4317,14 @@ module Aws::Mgn
     #   request.
     #   @return [Boolean]
     #
+    # @!attribute [rw] use_fips_endpoint
+    #   Update replication configuration use Fips Endpoint.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/UpdateReplicationConfigurationRequest AWS API Documentation
     #
     class UpdateReplicationConfigurationRequest < Struct.new(
+      :account_id,
       :associate_default_security_group,
       :bandwidth_throttling,
       :create_public_ip,
@@ -2077,33 +4339,12 @@ module Aws::Mgn
       :source_server_id,
       :staging_area_subnet_id,
       :staging_area_tags,
-      :use_dedicated_replication_server)
+      :use_dedicated_replication_server,
+      :use_fips_endpoint)
       SENSITIVE = [:staging_area_tags]
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateReplicationConfigurationTemplateRequest
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "ARN",
-    #         associate_default_security_group: false,
-    #         bandwidth_throttling: 1,
-    #         create_public_ip: false,
-    #         data_plane_routing: "PRIVATE_IP", # accepts PRIVATE_IP, PUBLIC_IP
-    #         default_large_staging_disk_type: "GP2", # accepts GP2, ST1
-    #         ebs_encryption: "NONE", # accepts NONE, DEFAULT, CUSTOM
-    #         ebs_encryption_key_arn: "ARN",
-    #         replication_configuration_template_id: "ReplicationConfigurationTemplateID", # required
-    #         replication_server_instance_type: "EC2InstanceType",
-    #         replication_servers_security_groups_i_ds: ["SecurityGroupID"],
-    #         staging_area_subnet_id: "SubnetID",
-    #         staging_area_tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         use_dedicated_replication_server: false,
-    #       }
-    #
     # @!attribute [rw] arn
     #   Update replication configuration template ARN request.
     #   @return [String]
@@ -2169,6 +4410,10 @@ module Aws::Mgn
     #   Server request.
     #   @return [Boolean]
     #
+    # @!attribute [rw] use_fips_endpoint
+    #   Update replication configuration template use Fips Endpoint request.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/UpdateReplicationConfigurationTemplateRequest AWS API Documentation
     #
     class UpdateReplicationConfigurationTemplateRequest < Struct.new(
@@ -2185,8 +4430,58 @@ module Aws::Mgn
       :replication_servers_security_groups_i_ds,
       :staging_area_subnet_id,
       :staging_area_tags,
-      :use_dedicated_replication_server)
+      :use_dedicated_replication_server,
+      :use_fips_endpoint)
       SENSITIVE = [:staging_area_tags]
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID on which to update replication type.
+    #   @return [String]
+    #
+    # @!attribute [rw] replication_type
+    #   Replication type to which to update source server.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_server_id
+    #   ID of source server on which to update replication type.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/UpdateSourceServerReplicationTypeRequest AWS API Documentation
+    #
+    class UpdateSourceServerReplicationTypeRequest < Struct.new(
+      :account_id,
+      :replication_type,
+      :source_server_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Account ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Wave description.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   Wave name.
+    #   @return [String]
+    #
+    # @!attribute [rw] wave_id
+    #   Wave ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/UpdateWaveRequest AWS API Documentation
+    #
+    class UpdateWaveRequest < Struct.new(
+      :account_id,
+      :description,
+      :name,
+      :wave_id)
+      SENSITIVE = []
       include Aws::Structure
     end
 
@@ -2232,6 +4527,142 @@ module Aws::Mgn
     class ValidationExceptionField < Struct.new(
       :message,
       :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # vCenter client.
+    #
+    # @!attribute [rw] arn
+    #   Arn of vCenter client.
+    #   @return [String]
+    #
+    # @!attribute [rw] datacenter_name
+    #   Datacenter name of vCenter client.
+    #   @return [String]
+    #
+    # @!attribute [rw] hostname
+    #   Hostname of vCenter client .
+    #   @return [String]
+    #
+    # @!attribute [rw] last_seen_datetime
+    #   Last seen time of vCenter client.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_server_tags
+    #   Tags for Source Server of vCenter client.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] tags
+    #   Tags for vCenter client.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] vcenter_client_id
+    #   ID of vCenter client.
+    #   @return [String]
+    #
+    # @!attribute [rw] vcenter_uuid
+    #   Vcenter UUID of vCenter client.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/VcenterClient AWS API Documentation
+    #
+    class VcenterClient < Struct.new(
+      :arn,
+      :datacenter_name,
+      :hostname,
+      :last_seen_datetime,
+      :source_server_tags,
+      :tags,
+      :vcenter_client_id,
+      :vcenter_uuid)
+      SENSITIVE = [:source_server_tags, :tags]
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] arn
+    #   Wave ARN.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_date_time
+    #   Wave creation dateTime.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Wave description.
+    #   @return [String]
+    #
+    # @!attribute [rw] is_archived
+    #   Wave archival status.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] last_modified_date_time
+    #   Wave last modified dateTime.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   Wave name.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   Wave tags.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] wave_aggregated_status
+    #   Wave aggregated status.
+    #   @return [Types::WaveAggregatedStatus]
+    #
+    # @!attribute [rw] wave_id
+    #   Wave ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/Wave AWS API Documentation
+    #
+    class Wave < Struct.new(
+      :arn,
+      :creation_date_time,
+      :description,
+      :is_archived,
+      :last_modified_date_time,
+      :name,
+      :tags,
+      :wave_aggregated_status,
+      :wave_id)
+      SENSITIVE = [:tags]
+      include Aws::Structure
+    end
+
+    # Wave aggregated status.
+    #
+    # @!attribute [rw] health_status
+    #   Wave aggregated status health status.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_update_date_time
+    #   Wave aggregated status last update dateTime.
+    #   @return [String]
+    #
+    # @!attribute [rw] progress_status
+    #   Wave aggregated status progress status.
+    #   @return [String]
+    #
+    # @!attribute [rw] replication_started_date_time
+    #   DateTime marking when the first source server in the wave started
+    #   replication.
+    #   @return [String]
+    #
+    # @!attribute [rw] total_applications
+    #   Wave aggregated status total applications amount.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mgn-2020-02-26/WaveAggregatedStatus AWS API Documentation
+    #
+    class WaveAggregatedStatus < Struct.new(
+      :health_status,
+      :last_update_date_time,
+      :progress_status,
+      :replication_started_date_time,
+      :total_applications)
       SENSITIVE = []
       include Aws::Structure
     end

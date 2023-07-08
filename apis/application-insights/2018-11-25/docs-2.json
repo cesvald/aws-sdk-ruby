@@ -79,6 +79,21 @@
         "ListApplicationsResponse$ApplicationInfoList": "<p>The list of applications.</p>"
       }
     },
+    "AutoConfigEnabled": {
+      "base": null,
+      "refs": {
+        "ApplicationInfo$AutoConfigEnabled": "<p> Indicates whether auto-configuration is turned on for this application. </p>",
+        "CreateApplicationRequest$AutoConfigEnabled": "<p> Indicates whether Application Insights automatically configures unmonitored resources in the resource group. </p>",
+        "UpdateApplicationRequest$AutoConfigEnabled": "<p> Turns auto-configuration on or off. </p>",
+        "UpdateComponentConfigurationRequest$AutoConfigEnabled": "<p> Automatically configures the component by applying the recommended configurations. </p>"
+      }
+    },
+    "AutoCreate": {
+      "base": null,
+      "refs": {
+        "CreateApplicationRequest$AutoCreate": "<p> Configures all of the resources in the resource group by applying the recommended configurations. </p>"
+      }
+    },
     "BadRequestException": {
       "base": "<p>The request is not understood by the server.</p>",
       "refs": {
@@ -155,6 +170,7 @@
         "DescribeComponentConfigurationRecommendationRequest$ComponentName": "<p>The name of the component.</p>",
         "DescribeComponentConfigurationRequest$ComponentName": "<p>The name of the component.</p>",
         "DescribeComponentRequest$ComponentName": "<p>The name of the component.</p>",
+        "ListProblemsRequest$ComponentName": "<p> The name of the component. </p>",
         "UpdateComponentConfigurationRequest$ComponentName": "<p>The name of the component.</p>"
       }
     },
@@ -362,6 +378,12 @@
         "ApplicationComponent$DetectedWorkload": "<p> Workloads detected in the application component. </p>"
       }
     },
+    "DiscoveryType": {
+      "base": null,
+      "refs": {
+        "ApplicationInfo$DiscoveryType": "<p> The method used by Application Insights to onboard your resources. </p>"
+      }
+    },
     "EbsCause": {
       "base": null,
       "refs": {
@@ -437,6 +459,12 @@
         "Feedback$value": null
       }
     },
+    "GroupingType": {
+      "base": null,
+      "refs": {
+        "CreateApplicationRequest$GroupingType": "<p>Application Insights can create applications based on a resource group or on an account. To create an account-based application using all of the resources in the account, set this parameter to <code>ACCOUNT_BASED</code>. </p>"
+      }
+    },
     "HealthEventArn": {
       "base": null,
       "refs": {
@@ -476,6 +504,12 @@
     "InternalServerException": {
       "base": "<p>The server encountered an internal error and is unable to complete the request.</p>",
       "refs": {
+      }
+    },
+    "LastRecurrenceTime": {
+      "base": null,
+      "refs": {
+        "Problem$LastRecurrenceTime": "<p> The last time that the problem reoccurred after its last resolution. </p>"
       }
     },
     "LifeCycle": {
@@ -772,6 +806,12 @@
         "Observation$RdsEventMessage": "<p> The message of an RDS event. </p>"
       }
     },
+    "RecurringCount": {
+      "base": null,
+      "refs": {
+        "Problem$RecurringCount": "<p> The number of times that the same problem reoccurred after the first time it was resolved. </p>"
+      }
+    },
     "RelatedObservations": {
       "base": "<p>Describes observations related to the problem.</p>",
       "refs": {
@@ -821,6 +861,7 @@
         "ListLogPatternsRequest$ResourceGroupName": "<p>The name of the resource group.</p>",
         "ListLogPatternsResponse$ResourceGroupName": "<p>The name of the resource group.</p>",
         "ListProblemsRequest$ResourceGroupName": "<p>The name of the resource group.</p>",
+        "ListProblemsResponse$ResourceGroupName": "<p> The name of the resource group. </p>",
         "Problem$ResourceGroupName": "<p>The name of the resource group affected by the problem.</p>",
         "UpdateApplicationRequest$ResourceGroupName": "<p>The name of the resource group.</p>",
         "UpdateComponentConfigurationRequest$ResourceGroupName": "<p>The name of the resource group.</p>",
@@ -968,10 +1009,10 @@
       "base": null,
       "refs": {
         "ApplicationComponent$Tier": "<p>The stack tier of the application component.</p>",
-        "DescribeComponentConfigurationRecommendationRequest$Tier": "<p>The tier of the application component. Supported tiers include <code>DOT_NET_CORE</code>, <code>DOT_NET_WORKER</code>, <code>DOT_NET_WEB</code>, <code>SQL_SERVER</code>, and <code>DEFAULT</code>.</p>",
+        "DescribeComponentConfigurationRecommendationRequest$Tier": "<p>The tier of the application component.</p>",
         "DescribeComponentConfigurationResponse$Tier": "<p>The tier of the application component. Supported tiers include <code>DOT_NET_CORE</code>, <code>DOT_NET_WORKER</code>, <code>DOT_NET_WEB</code>, <code>SQL_SERVER</code>, and <code>DEFAULT</code> </p>",
         "DetectedWorkload$key": null,
-        "UpdateComponentConfigurationRequest$Tier": "<p>The tier of the application component. Supported tiers include <code>DOT_NET_WORKER</code>, <code>DOT_NET_WEB</code>, <code>DOT_NET_CORE</code>, <code>SQL_SERVER</code>, and <code>DEFAULT</code>.</p>"
+        "UpdateComponentConfigurationRequest$Tier": "<p>The tier of the application component.</p>"
       }
     },
     "Title": {

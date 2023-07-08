@@ -16,7 +16,9 @@ module Aws::EC2InstanceConnect
     AuthException = Shapes::StructureShape.new(name: 'AuthException')
     AvailabilityZone = Shapes::StringShape.new(name: 'AvailabilityZone')
     EC2InstanceNotFoundException = Shapes::StructureShape.new(name: 'EC2InstanceNotFoundException')
+    EC2InstanceStateInvalidException = Shapes::StructureShape.new(name: 'EC2InstanceStateInvalidException')
     EC2InstanceTypeInvalidException = Shapes::StructureShape.new(name: 'EC2InstanceTypeInvalidException')
+    EC2InstanceUnavailableException = Shapes::StructureShape.new(name: 'EC2InstanceUnavailableException')
     InstanceId = Shapes::StringShape.new(name: 'InstanceId')
     InstanceOSUser = Shapes::StringShape.new(name: 'InstanceOSUser')
     InvalidArgsException = Shapes::StructureShape.new(name: 'InvalidArgsException')
@@ -41,8 +43,14 @@ module Aws::EC2InstanceConnect
     EC2InstanceNotFoundException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
     EC2InstanceNotFoundException.struct_class = Types::EC2InstanceNotFoundException
 
+    EC2InstanceStateInvalidException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    EC2InstanceStateInvalidException.struct_class = Types::EC2InstanceStateInvalidException
+
     EC2InstanceTypeInvalidException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
     EC2InstanceTypeInvalidException.struct_class = Types::EC2InstanceTypeInvalidException
+
+    EC2InstanceUnavailableException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    EC2InstanceUnavailableException.struct_class = Types::EC2InstanceUnavailableException
 
     InvalidArgsException.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
     InvalidArgsException.struct_class = Types::InvalidArgsException
@@ -50,7 +58,7 @@ module Aws::EC2InstanceConnect
     SendSSHPublicKeyRequest.add_member(:instance_id, Shapes::ShapeRef.new(shape: InstanceId, required: true, location_name: "InstanceId"))
     SendSSHPublicKeyRequest.add_member(:instance_os_user, Shapes::ShapeRef.new(shape: InstanceOSUser, required: true, location_name: "InstanceOSUser"))
     SendSSHPublicKeyRequest.add_member(:ssh_public_key, Shapes::ShapeRef.new(shape: SSHPublicKey, required: true, location_name: "SSHPublicKey"))
-    SendSSHPublicKeyRequest.add_member(:availability_zone, Shapes::ShapeRef.new(shape: AvailabilityZone, required: true, location_name: "AvailabilityZone"))
+    SendSSHPublicKeyRequest.add_member(:availability_zone, Shapes::ShapeRef.new(shape: AvailabilityZone, location_name: "AvailabilityZone"))
     SendSSHPublicKeyRequest.struct_class = Types::SendSSHPublicKeyRequest
 
     SendSSHPublicKeyResponse.add_member(:request_id, Shapes::ShapeRef.new(shape: RequestId, location_name: "RequestId"))
@@ -111,6 +119,8 @@ module Aws::EC2InstanceConnect
         o.errors << Shapes::ShapeRef.new(shape: ServiceException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
         o.errors << Shapes::ShapeRef.new(shape: EC2InstanceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: EC2InstanceStateInvalidException)
+        o.errors << Shapes::ShapeRef.new(shape: EC2InstanceUnavailableException)
       end)
 
       api.add_operation(:send_serial_console_ssh_public_key, Seahorse::Model::Operation.new.tap do |o|
@@ -128,6 +138,8 @@ module Aws::EC2InstanceConnect
         o.errors << Shapes::ShapeRef.new(shape: EC2InstanceTypeInvalidException)
         o.errors << Shapes::ShapeRef.new(shape: SerialConsoleSessionLimitExceededException)
         o.errors << Shapes::ShapeRef.new(shape: SerialConsoleSessionUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: EC2InstanceStateInvalidException)
+        o.errors << Shapes::ShapeRef.new(shape: EC2InstanceUnavailableException)
       end)
     end
 

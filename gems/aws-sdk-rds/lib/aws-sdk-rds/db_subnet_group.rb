@@ -65,6 +65,28 @@ module Aws::RDS
       data[:db_subnet_group_arn]
     end
 
+    # The network type of the DB subnet group.
+    #
+    # Valid values:
+    #
+    # * `IPV4`
+    #
+    # * `DUAL`
+    #
+    # A `DBSubnetGroup` can support only the IPv4 protocol or the IPv4 and
+    # the IPv6 protocols (`DUAL`).
+    #
+    # For more information, see [ Working with a DB instance in a VPC][1] in
+    # the *Amazon RDS User Guide.*
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html
+    # @return [Array<String>]
+    def supported_network_types
+      data[:supported_network_types]
+    end
+
     # @!endgroup
 
     # @return [Client]
@@ -79,7 +101,9 @@ module Aws::RDS
     #
     # @return [self]
     def load
-      resp = @client.describe_db_subnet_groups(db_subnet_group_name: @name)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_db_subnet_groups(db_subnet_group_name: @name)
+      end
       @data = resp.db_subnet_groups[0]
       self
     end
@@ -194,7 +218,9 @@ module Aws::RDS
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -221,7 +247,9 @@ module Aws::RDS
     # @return [DBSubnetGroup]
     def create(options = {})
       options = options.merge(db_subnet_group_name: @name)
-      resp = @client.create_db_subnet_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_db_subnet_group(options)
+      end
       DBSubnetGroup.new(
         name: resp.data.db_subnet_group.db_subnet_group_name,
         data: resp.data.db_subnet_group,
@@ -236,7 +264,9 @@ module Aws::RDS
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(db_subnet_group_name: @name)
-      resp = @client.delete_db_subnet_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_db_subnet_group(options)
+      end
       resp.data
     end
 
@@ -254,7 +284,9 @@ module Aws::RDS
     # @return [DBSubnetGroup]
     def modify(options = {})
       options = options.merge(db_subnet_group_name: @name)
-      resp = @client.modify_db_subnet_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.modify_db_subnet_group(options)
+      end
       DBSubnetGroup.new(
         name: resp.data.db_subnet_group.db_subnet_group_name,
         data: resp.data.db_subnet_group,

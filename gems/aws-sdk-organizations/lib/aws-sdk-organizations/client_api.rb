@@ -20,6 +20,7 @@ module Aws::Organizations
     AccessDeniedForDependencyException = Shapes::StructureShape.new(name: 'AccessDeniedForDependencyException')
     AccessDeniedForDependencyExceptionReason = Shapes::StringShape.new(name: 'AccessDeniedForDependencyExceptionReason')
     Account = Shapes::StructureShape.new(name: 'Account')
+    AccountAlreadyClosedException = Shapes::StructureShape.new(name: 'AccountAlreadyClosedException')
     AccountAlreadyRegisteredException = Shapes::StructureShape.new(name: 'AccountAlreadyRegisteredException')
     AccountArn = Shapes::StringShape.new(name: 'AccountArn')
     AccountId = Shapes::StringShape.new(name: 'AccountId')
@@ -41,10 +42,13 @@ module Aws::Organizations
     ChildNotFoundException = Shapes::StructureShape.new(name: 'ChildNotFoundException')
     ChildType = Shapes::StringShape.new(name: 'ChildType')
     Children = Shapes::ListShape.new(name: 'Children')
+    CloseAccountRequest = Shapes::StructureShape.new(name: 'CloseAccountRequest')
     ConcurrentModificationException = Shapes::StructureShape.new(name: 'ConcurrentModificationException')
+    ConflictException = Shapes::StructureShape.new(name: 'ConflictException')
     ConstraintViolationException = Shapes::StructureShape.new(name: 'ConstraintViolationException')
     ConstraintViolationExceptionReason = Shapes::StringShape.new(name: 'ConstraintViolationExceptionReason')
     CreateAccountFailureReason = Shapes::StringShape.new(name: 'CreateAccountFailureReason')
+    CreateAccountName = Shapes::StringShape.new(name: 'CreateAccountName')
     CreateAccountRequest = Shapes::StructureShape.new(name: 'CreateAccountRequest')
     CreateAccountRequestId = Shapes::StringShape.new(name: 'CreateAccountRequestId')
     CreateAccountResponse = Shapes::StructureShape.new(name: 'CreateAccountResponse')
@@ -83,6 +87,7 @@ module Aws::Organizations
     DescribeOrganizationalUnitResponse = Shapes::StructureShape.new(name: 'DescribeOrganizationalUnitResponse')
     DescribePolicyRequest = Shapes::StructureShape.new(name: 'DescribePolicyRequest')
     DescribePolicyResponse = Shapes::StructureShape.new(name: 'DescribePolicyResponse')
+    DescribeResourcePolicyResponse = Shapes::StructureShape.new(name: 'DescribeResourcePolicyResponse')
     DestinationParentNotFoundException = Shapes::StructureShape.new(name: 'DestinationParentNotFoundException')
     DetachPolicyRequest = Shapes::StructureShape.new(name: 'DetachPolicyRequest')
     DisableAWSServiceAccessRequest = Shapes::StructureShape.new(name: 'DisableAWSServiceAccessRequest')
@@ -209,8 +214,16 @@ module Aws::Organizations
     PolicyTypeStatus = Shapes::StringShape.new(name: 'PolicyTypeStatus')
     PolicyTypeSummary = Shapes::StructureShape.new(name: 'PolicyTypeSummary')
     PolicyTypes = Shapes::ListShape.new(name: 'PolicyTypes')
+    PutResourcePolicyRequest = Shapes::StructureShape.new(name: 'PutResourcePolicyRequest')
+    PutResourcePolicyResponse = Shapes::StructureShape.new(name: 'PutResourcePolicyResponse')
     RegisterDelegatedAdministratorRequest = Shapes::StructureShape.new(name: 'RegisterDelegatedAdministratorRequest')
     RemoveAccountFromOrganizationRequest = Shapes::StructureShape.new(name: 'RemoveAccountFromOrganizationRequest')
+    ResourcePolicy = Shapes::StructureShape.new(name: 'ResourcePolicy')
+    ResourcePolicyArn = Shapes::StringShape.new(name: 'ResourcePolicyArn')
+    ResourcePolicyContent = Shapes::StringShape.new(name: 'ResourcePolicyContent')
+    ResourcePolicyId = Shapes::StringShape.new(name: 'ResourcePolicyId')
+    ResourcePolicyNotFoundException = Shapes::StructureShape.new(name: 'ResourcePolicyNotFoundException')
+    ResourcePolicySummary = Shapes::StructureShape.new(name: 'ResourcePolicySummary')
     RoleName = Shapes::StringShape.new(name: 'RoleName')
     Root = Shapes::StructureShape.new(name: 'Root')
     RootArn = Shapes::StringShape.new(name: 'RootArn')
@@ -265,6 +278,9 @@ module Aws::Organizations
     Account.add_member(:joined_timestamp, Shapes::ShapeRef.new(shape: Timestamp, location_name: "JoinedTimestamp"))
     Account.struct_class = Types::Account
 
+    AccountAlreadyClosedException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "Message"))
+    AccountAlreadyClosedException.struct_class = Types::AccountAlreadyClosedException
+
     AccountAlreadyRegisteredException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "Message"))
     AccountAlreadyRegisteredException.struct_class = Types::AccountAlreadyRegisteredException
 
@@ -301,15 +317,21 @@ module Aws::Organizations
 
     Children.member = Shapes::ShapeRef.new(shape: Child)
 
+    CloseAccountRequest.add_member(:account_id, Shapes::ShapeRef.new(shape: AccountId, required: true, location_name: "AccountId"))
+    CloseAccountRequest.struct_class = Types::CloseAccountRequest
+
     ConcurrentModificationException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "Message"))
     ConcurrentModificationException.struct_class = Types::ConcurrentModificationException
+
+    ConflictException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "Message"))
+    ConflictException.struct_class = Types::ConflictException
 
     ConstraintViolationException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "Message"))
     ConstraintViolationException.add_member(:reason, Shapes::ShapeRef.new(shape: ConstraintViolationExceptionReason, location_name: "Reason"))
     ConstraintViolationException.struct_class = Types::ConstraintViolationException
 
     CreateAccountRequest.add_member(:email, Shapes::ShapeRef.new(shape: Email, required: true, location_name: "Email"))
-    CreateAccountRequest.add_member(:account_name, Shapes::ShapeRef.new(shape: AccountName, required: true, location_name: "AccountName"))
+    CreateAccountRequest.add_member(:account_name, Shapes::ShapeRef.new(shape: CreateAccountName, required: true, location_name: "AccountName"))
     CreateAccountRequest.add_member(:role_name, Shapes::ShapeRef.new(shape: RoleName, location_name: "RoleName"))
     CreateAccountRequest.add_member(:iam_user_access_to_billing, Shapes::ShapeRef.new(shape: IAMUserAccessToBilling, location_name: "IamUserAccessToBilling"))
     CreateAccountRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
@@ -321,7 +343,7 @@ module Aws::Organizations
     CreateAccountStates.member = Shapes::ShapeRef.new(shape: CreateAccountState)
 
     CreateAccountStatus.add_member(:id, Shapes::ShapeRef.new(shape: CreateAccountRequestId, location_name: "Id"))
-    CreateAccountStatus.add_member(:account_name, Shapes::ShapeRef.new(shape: AccountName, location_name: "AccountName"))
+    CreateAccountStatus.add_member(:account_name, Shapes::ShapeRef.new(shape: CreateAccountName, location_name: "AccountName"))
     CreateAccountStatus.add_member(:state, Shapes::ShapeRef.new(shape: CreateAccountState, location_name: "State"))
     CreateAccountStatus.add_member(:requested_timestamp, Shapes::ShapeRef.new(shape: Timestamp, location_name: "RequestedTimestamp"))
     CreateAccountStatus.add_member(:completed_timestamp, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CompletedTimestamp"))
@@ -336,7 +358,7 @@ module Aws::Organizations
     CreateAccountStatuses.member = Shapes::ShapeRef.new(shape: CreateAccountStatus)
 
     CreateGovCloudAccountRequest.add_member(:email, Shapes::ShapeRef.new(shape: Email, required: true, location_name: "Email"))
-    CreateGovCloudAccountRequest.add_member(:account_name, Shapes::ShapeRef.new(shape: AccountName, required: true, location_name: "AccountName"))
+    CreateGovCloudAccountRequest.add_member(:account_name, Shapes::ShapeRef.new(shape: CreateAccountName, required: true, location_name: "AccountName"))
     CreateGovCloudAccountRequest.add_member(:role_name, Shapes::ShapeRef.new(shape: RoleName, location_name: "RoleName"))
     CreateGovCloudAccountRequest.add_member(:iam_user_access_to_billing, Shapes::ShapeRef.new(shape: IAMUserAccessToBilling, location_name: "IamUserAccessToBilling"))
     CreateGovCloudAccountRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
@@ -442,6 +464,9 @@ module Aws::Organizations
 
     DescribePolicyResponse.add_member(:policy, Shapes::ShapeRef.new(shape: Policy, location_name: "Policy"))
     DescribePolicyResponse.struct_class = Types::DescribePolicyResponse
+
+    DescribeResourcePolicyResponse.add_member(:resource_policy, Shapes::ShapeRef.new(shape: ResourcePolicy, location_name: "ResourcePolicy"))
+    DescribeResourcePolicyResponse.struct_class = Types::DescribeResourcePolicyResponse
 
     DestinationParentNotFoundException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "Message"))
     DestinationParentNotFoundException.struct_class = Types::DestinationParentNotFoundException
@@ -798,12 +823,30 @@ module Aws::Organizations
 
     PolicyTypes.member = Shapes::ShapeRef.new(shape: PolicyTypeSummary)
 
+    PutResourcePolicyRequest.add_member(:content, Shapes::ShapeRef.new(shape: ResourcePolicyContent, required: true, location_name: "Content"))
+    PutResourcePolicyRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    PutResourcePolicyRequest.struct_class = Types::PutResourcePolicyRequest
+
+    PutResourcePolicyResponse.add_member(:resource_policy, Shapes::ShapeRef.new(shape: ResourcePolicy, location_name: "ResourcePolicy"))
+    PutResourcePolicyResponse.struct_class = Types::PutResourcePolicyResponse
+
     RegisterDelegatedAdministratorRequest.add_member(:account_id, Shapes::ShapeRef.new(shape: AccountId, required: true, location_name: "AccountId"))
     RegisterDelegatedAdministratorRequest.add_member(:service_principal, Shapes::ShapeRef.new(shape: ServicePrincipal, required: true, location_name: "ServicePrincipal"))
     RegisterDelegatedAdministratorRequest.struct_class = Types::RegisterDelegatedAdministratorRequest
 
     RemoveAccountFromOrganizationRequest.add_member(:account_id, Shapes::ShapeRef.new(shape: AccountId, required: true, location_name: "AccountId"))
     RemoveAccountFromOrganizationRequest.struct_class = Types::RemoveAccountFromOrganizationRequest
+
+    ResourcePolicy.add_member(:resource_policy_summary, Shapes::ShapeRef.new(shape: ResourcePolicySummary, location_name: "ResourcePolicySummary"))
+    ResourcePolicy.add_member(:content, Shapes::ShapeRef.new(shape: ResourcePolicyContent, location_name: "Content"))
+    ResourcePolicy.struct_class = Types::ResourcePolicy
+
+    ResourcePolicyNotFoundException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "Message"))
+    ResourcePolicyNotFoundException.struct_class = Types::ResourcePolicyNotFoundException
+
+    ResourcePolicySummary.add_member(:id, Shapes::ShapeRef.new(shape: ResourcePolicyId, location_name: "Id"))
+    ResourcePolicySummary.add_member(:arn, Shapes::ShapeRef.new(shape: ResourcePolicyArn, location_name: "Arn"))
+    ResourcePolicySummary.struct_class = Types::ResourcePolicySummary
 
     Root.add_member(:id, Shapes::ShapeRef.new(shape: RootId, location_name: "Id"))
     Root.add_member(:arn, Shapes::ShapeRef.new(shape: RootArn, location_name: "Arn"))
@@ -937,6 +980,25 @@ module Aws::Organizations
         o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
         o.errors << Shapes::ShapeRef.new(shape: ServiceException)
         o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+      end)
+
+      api.add_operation(:close_account, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CloseAccount"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CloseAccountRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: AccountAlreadyClosedException)
+        o.errors << Shapes::ShapeRef.new(shape: AccountNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AWSOrganizationsNotInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: ConcurrentModificationException)
+        o.errors << Shapes::ShapeRef.new(shape: ConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: ConstraintViolationException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+        o.errors << Shapes::ShapeRef.new(shape: UnsupportedAPIEndpointException)
       end)
 
       api.add_operation(:create_account, Seahorse::Model::Operation.new.tap do |o|
@@ -1089,6 +1151,22 @@ module Aws::Organizations
         o.errors << Shapes::ShapeRef.new(shape: UnsupportedAPIEndpointException)
       end)
 
+      api.add_operation(:delete_resource_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteResourcePolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: UnsupportedAPIEndpointException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+        o.errors << Shapes::ShapeRef.new(shape: ConcurrentModificationException)
+        o.errors << Shapes::ShapeRef.new(shape: ConstraintViolationException)
+        o.errors << Shapes::ShapeRef.new(shape: AWSOrganizationsNotInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourcePolicyNotFoundException)
+      end)
+
       api.add_operation(:deregister_delegated_administrator, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DeregisterDelegatedAdministrator"
         o.http_method = "POST"
@@ -1207,6 +1285,21 @@ module Aws::Organizations
         o.errors << Shapes::ShapeRef.new(shape: ServiceException)
         o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
         o.errors << Shapes::ShapeRef.new(shape: UnsupportedAPIEndpointException)
+      end)
+
+      api.add_operation(:describe_resource_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeResourcePolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.output = Shapes::ShapeRef.new(shape: DescribeResourcePolicyResponse)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: UnsupportedAPIEndpointException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+        o.errors << Shapes::ShapeRef.new(shape: AWSOrganizationsNotInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourcePolicyNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ConstraintViolationException)
       end)
 
       api.add_operation(:detach_policy, Seahorse::Model::Operation.new.tap do |o|
@@ -1690,6 +1783,22 @@ module Aws::Organizations
         o.errors << Shapes::ShapeRef.new(shape: ConcurrentModificationException)
         o.errors << Shapes::ShapeRef.new(shape: AWSOrganizationsNotInUseException)
         o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+      end)
+
+      api.add_operation(:put_resource_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "PutResourcePolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: PutResourcePolicyRequest)
+        o.output = Shapes::ShapeRef.new(shape: PutResourcePolicyResponse)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceException)
+        o.errors << Shapes::ShapeRef.new(shape: UnsupportedAPIEndpointException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyRequestsException)
+        o.errors << Shapes::ShapeRef.new(shape: ConcurrentModificationException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ConstraintViolationException)
+        o.errors << Shapes::ShapeRef.new(shape: AWSOrganizationsNotInUseException)
       end)
 
       api.add_operation(:register_delegated_administrator, Seahorse::Model::Operation.new.tap do |o|

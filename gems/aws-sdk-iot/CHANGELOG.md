@@ -1,6 +1,213 @@
 Unreleased Changes
 ------------------
 
+1.109.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.108.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.107.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.106.0 (2023-06-06)
+------------------
+
+* Feature - Adding IoT Device Management Software Package Catalog APIs to register, store, and report system software packages, along with their versions and metadata in a centralized location.
+
+1.105.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.104.0 (2023-04-28)
+------------------
+
+* Feature - This release allows AWS IoT Core users to specify a TLS security policy when creating and updating AWS IoT Domain Configurations.
+
+1.103.0 (2023-04-20)
+------------------
+
+* Feature - Support additional OTA states in GetOTAUpdate API
+
+1.102.0 (2023-04-11)
+------------------
+
+* Feature - Re-release to remove unexpected API changes
+
+1.101.0 (2023-03-02)
+------------------
+
+* Feature - A recurring maintenance window is an optional configuration used for rolling out the job document to all devices in the target group observing a predetermined start time, duration, and frequency that the maintenance window occurs.
+
+1.100.0 (2023-01-31)
+------------------
+
+* Feature - Added support for IoT Rules Engine Cloudwatch Logs action batch mode.
+
+1.99.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.98.0 (2022-11-28)
+------------------
+
+* Feature - Job scheduling enables the scheduled rollout of a Job with start and end times and a customizable end behavior when end time is reached. This is available for continuous and snapshot jobs. Added support for MQTT5 properties to AWS IoT TopicRule Republish Action.
+
+1.97.0 (2022-11-11)
+------------------
+
+* Feature - This release add new api listRelatedResourcesForAuditFinding and new member type IssuerCertificates for Iot device device defender Audit.
+
+1.96.0 (2022-10-31)
+------------------
+
+* Feature - This release adds the Amazon Location action to IoT Rules Engine.
+
+1.95.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.94.0 (2022-08-04)
+------------------
+
+* Feature - The release is to support attach a provisioning template to CACert for JITP function,  Customer now doesn't have to hardcode a roleArn and templateBody during register a CACert to enable JITP.
+
+1.93.0 (2022-07-20)
+------------------
+
+* Feature - GA release the ability to enable/disable IoT Fleet Indexing for Device Defender and Named Shadow information, and search them through IoT Fleet Indexing APIs. This includes Named Shadow Selection as a part of the UpdateIndexingConfiguration API.
+
+1.92.0 (2022-07-07)
+------------------
+
+* Feature - This release adds support to register a CA certificate without having to provide a verification certificate. This also allows multiple AWS accounts to register the same CA in the same region.
+
+1.91.0 (2022-06-27)
+------------------
+
+* Feature - This release ease the restriction for the input of tag value to align with AWS standard, now instead of min length 1, we change it to min length 0.
+
+1.90.0 (2022-05-12)
+------------------
+
+* Feature - Documentation update for China region ListMetricValues for IoT
+
+1.89.0 (2022-05-05)
+------------------
+
+* Feature - AWS IoT Jobs now allows you to create up to 100,000 active continuous and snapshot jobs by using concurrency control.
+
+1.88.0 (2022-04-04)
+------------------
+
+* Feature - AWS IoT - AWS IoT Device Defender adds support to list metric datapoints collected for IoT devices through the ListMetricValues API
+
+1.87.0 (2022-03-30)
+------------------
+
+* Feature - Doc only update for IoT that fixes customer-reported issues.
+
+1.86.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.85.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.84.0 (2022-02-02)
+------------------
+
+* Feature - This release adds support for configuring AWS IoT logging level per client ID, source IP, or principal ID.
+
+1.83.0 (2022-01-05)
+------------------
+
+* Feature - This release adds an automatic retry mechanism for AWS IoT Jobs. You can now define a maximum number of retries for each Job rollout, along with the criteria to trigger the retry for FAILED/TIMED_OUT/ALL(both FAILED an TIMED_OUT) job.
+
+1.82.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.81.0 (2021-12-08)
+------------------
+
+* Feature - This release allows customer to enable caching of custom authorizer on HTTP protocol for clients that use persistent or Keep-Alive connection in order to reduce the number of Lambda invocations.
+
+1.80.0 (2021-11-30)
+------------------
+
+* Feature - Added the ability to enable/disable IoT Fleet Indexing for Device Defender and Named Shadow information, and search them through IoT Fleet Indexing APIs.
+
+1.79.0 (2021-11-23)
+------------------
+
+* Feature - This release introduces a new feature, Managed Job Template, for AWS IoT Jobs Service. Customers can now use service provided managed job templates to easily create jobs for supported standard job actions.
+
+1.78.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.77.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.76.0 (2021-09-21)
+------------------
+
+* Feature - This release adds support for verifying, viewing and filtering AWS IoT Device Defender detect violations with four verification states.
+
+1.75.0 (2021-09-13)
+------------------
+
+* Feature - AWS IoT Rules Engine adds OpenSearch action. The OpenSearch rule action lets you stream data from IoT sensors and applications to Amazon OpenSearch Service which is a successor to Amazon Elasticsearch Service.
+
+1.74.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.73.0 (2021-08-31)
+------------------
+
+* Feature - Added Create/Update/Delete/Describe/List APIs for a new IoT resource named FleetMetric. Added a new Fleet Indexing query API named GetBucketsAggregation. Added a new field named DisconnectedReason in Fleet Indexing query response. Updated their related documentations.
+
+1.72.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.71.0 (2021-07-29)
+------------------
+
+* Feature - Increase maximum credential duration of role alias to 12 hours.
+
+1.70.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.69.0 (2021-05-25)
+------------------
+
+* Feature - This release includes support for a new feature: Job templates for AWS IoT Device Management Jobs. The release includes job templates as a new resource and APIs for managing job templates.
+
 1.68.0 (2021-03-31)
 ------------------
 

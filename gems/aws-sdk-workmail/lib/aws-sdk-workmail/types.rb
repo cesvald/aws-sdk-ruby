@@ -10,7 +10,7 @@
 module Aws::WorkMail
   module Types
 
-    # A rule that controls access to an Amazon WorkMail organization.
+    # A rule that controls access to an WorkMail organization.
     #
     # @!attribute [rw] name
     #   The rule name.
@@ -60,6 +60,14 @@ module Aws::WorkMail
     #   The date that the rule was modified.
     #   @return [Time]
     #
+    # @!attribute [rw] impersonation_role_ids
+    #   Impersonation role IDs to include in the rule.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] not_impersonation_role_ids
+    #   Impersonation role IDs to exclude from the rule.
+    #   @return [Array<String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/AccessControlRule AWS API Documentation
     #
     class AccessControlRule < Struct.new(
@@ -73,20 +81,13 @@ module Aws::WorkMail
       :user_ids,
       :not_user_ids,
       :date_created,
-      :date_modified)
+      :date_modified,
+      :impersonation_role_ids,
+      :not_impersonation_role_ids)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateDelegateToResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         resource_id: "ResourceId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The organization under which the resource exists.
     #   @return [String]
@@ -113,15 +114,6 @@ module Aws::WorkMail
     #
     class AssociateDelegateToResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass AssociateMemberToGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         group_id: "WorkMailIdentifier", # required
-    #         member_id: "WorkMailIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The organization under which the group exists.
     #   @return [String]
@@ -148,17 +140,87 @@ module Aws::WorkMail
     #
     class AssociateMemberToGroupResponse < Aws::EmptyStructure; end
 
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization under which the impersonation role will be
+    #   assumed.
+    #   @return [String]
+    #
+    # @!attribute [rw] impersonation_role_id
+    #   The impersonation role ID to assume.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/AssumeImpersonationRoleRequest AWS API Documentation
+    #
+    class AssumeImpersonationRoleRequest < Struct.new(
+      :organization_id,
+      :impersonation_role_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] token
+    #   The authentication token for the impersonation role.
+    #   @return [String]
+    #
+    # @!attribute [rw] expires_in
+    #   The authentication token's validity, in seconds.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/AssumeImpersonationRoleResponse AWS API Documentation
+    #
+    class AssumeImpersonationRoleResponse < Struct.new(
+      :token,
+      :expires_in)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # List all the `AvailabilityConfiguration`'s for the given WorkMail
+    # organization.
+    #
+    # @!attribute [rw] domain_name
+    #   Displays the domain to which the provider applies.
+    #   @return [String]
+    #
+    # @!attribute [rw] provider_type
+    #   Displays the provider type that applies to this domain.
+    #   @return [String]
+    #
+    # @!attribute [rw] ews_provider
+    #   If `ProviderType` is `EWS`, then this field contains
+    #   `RedactedEwsAvailabilityProvider`. Otherwise, it is not required.
+    #   @return [Types::RedactedEwsAvailabilityProvider]
+    #
+    # @!attribute [rw] lambda_provider
+    #   If ProviderType is `LAMBDA` then this field contains
+    #   `LambdaAvailabilityProvider`. Otherwise, it is not required.
+    #   @return [Types::LambdaAvailabilityProvider]
+    #
+    # @!attribute [rw] date_created
+    #   The date and time at which the availability configuration was
+    #   created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] date_modified
+    #   The date and time at which the availability configuration was last
+    #   modified.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/AvailabilityConfiguration AWS API Documentation
+    #
+    class AvailabilityConfiguration < Struct.new(
+      :domain_name,
+      :provider_type,
+      :ews_provider,
+      :lambda_provider,
+      :date_created,
+      :date_modified)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # At least one delegate must be associated to the resource to disable
     # automatic replies from the resource.
-    #
-    # @note When making an API call, you may pass BookingOptions
-    #   data as a hash:
-    #
-    #       {
-    #         auto_accept_requests: false,
-    #         auto_decline_recurring_requests: false,
-    #         auto_decline_conflicting_requests: false,
-    #       }
     #
     # @!attribute [rw] auto_accept_requests
     #   The resource's ability to automatically reply to requests. If
@@ -185,15 +247,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CancelMailboxExportJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "IdempotencyClientToken", # required
-    #         job_id: "MailboxExportJobId", # required
-    #         organization_id: "OrganizationId", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   The idempotency token for the client request.
     #
@@ -223,15 +276,6 @@ module Aws::WorkMail
     #
     class CancelMailboxExportJobResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass CreateAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #         alias: "EmailAddress", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The organization under which the member (user or group) exists.
     #   @return [String]
@@ -258,14 +302,51 @@ module Aws::WorkMail
     #
     class CreateAliasResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass CreateGroupRequest
-    #   data as a hash:
+    # @!attribute [rw] client_token
+    #   An idempotent token that ensures that an API request is executed
+    #   only once.
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         name: "GroupName", # required
-    #       }
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
     #
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization for which the `AvailabilityConfiguration`
+    #   will be created.
+    #   @return [String]
+    #
+    # @!attribute [rw] domain_name
+    #   The domain to which the provider applies.
+    #   @return [String]
+    #
+    # @!attribute [rw] ews_provider
+    #   Exchange Web Services (EWS) availability provider definition. The
+    #   request must contain exactly one provider definition, either
+    #   `EwsProvider` or `LambdaProvider`.
+    #   @return [Types::EwsAvailabilityProvider]
+    #
+    # @!attribute [rw] lambda_provider
+    #   Lambda availability provider definition. The request must contain
+    #   exactly one provider definition, either `EwsProvider` or
+    #   `LambdaProvider`.
+    #   @return [Types::LambdaAvailabilityProvider]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/CreateAvailabilityConfigurationRequest AWS API Documentation
+    #
+    class CreateAvailabilityConfigurationRequest < Struct.new(
+      :client_token,
+      :organization_id,
+      :domain_name,
+      :ews_provider,
+      :lambda_provider)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/CreateAvailabilityConfigurationResponse AWS API Documentation
+    #
+    class CreateAvailabilityConfigurationResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] organization_id
     #   The organization under which the group is to be created.
     #   @return [String]
@@ -295,28 +376,62 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateMobileDeviceAccessRuleRequest
-    #   data as a hash:
+    # @!attribute [rw] client_token
+    #   The idempotency token for the client request.
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         client_token: "IdempotencyClientToken",
-    #         name: "MobileDeviceAccessRuleName", # required
-    #         description: "MobileDeviceAccessRuleDescription",
-    #         effect: "ALLOW", # required, accepts ALLOW, DENY
-    #         device_types: ["DeviceType"],
-    #         not_device_types: ["DeviceType"],
-    #         device_models: ["DeviceModel"],
-    #         not_device_models: ["DeviceModel"],
-    #         device_operating_systems: ["DeviceOperatingSystem"],
-    #         not_device_operating_systems: ["DeviceOperatingSystem"],
-    #         device_user_agents: ["DeviceUserAgent"],
-    #         not_device_user_agents: ["DeviceUserAgent"],
-    #       }
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
     #
     # @!attribute [rw] organization_id
-    #   The Amazon WorkMail organization under which the rule will be
-    #   created.
+    #   The WorkMail organization to create the new impersonation role
+    #   within.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The name of the new impersonation role.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   The impersonation role's type. The available impersonation role
+    #   types are `READ_ONLY` or `FULL_ACCESS`.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The description of the new impersonation role.
+    #   @return [String]
+    #
+    # @!attribute [rw] rules
+    #   The list of rules for the impersonation role.
+    #   @return [Array<Types::ImpersonationRule>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/CreateImpersonationRoleRequest AWS API Documentation
+    #
+    class CreateImpersonationRoleRequest < Struct.new(
+      :client_token,
+      :organization_id,
+      :name,
+      :type,
+      :description,
+      :rules)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] impersonation_role_id
+    #   The new impersonation role ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/CreateImpersonationRoleResponse AWS API Documentation
+    #
+    class CreateImpersonationRoleResponse < Struct.new(
+      :impersonation_role_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization under which the rule will be created.
     #   @return [String]
     #
     # @!attribute [rw] client_token
@@ -407,23 +522,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_id: "DirectoryId",
-    #         alias: "OrganizationName", # required
-    #         client_token: "IdempotencyClientToken",
-    #         domains: [
-    #           {
-    #             domain_name: "DomainName",
-    #             hosted_zone_id: "HostedZoneId",
-    #           },
-    #         ],
-    #         kms_key_arn: "KmsKeyArn",
-    #         enable_interoperability: false,
-    #       }
-    #
     # @!attribute [rw] directory_id
     #   The AWS Directory Service directory ID.
     #   @return [String]
@@ -444,14 +542,14 @@ module Aws::WorkMail
     #   @return [Array<Types::Domain>]
     #
     # @!attribute [rw] kms_key_arn
-    #   The Amazon Resource Name (ARN) of a customer managed master key from
-    #   AWS KMS.
+    #   The Amazon Resource Name (ARN) of a customer managed key from AWS
+    #   KMS.
     #   @return [String]
     #
     # @!attribute [rw] enable_interoperability
-    #   When `true`, allows organization interoperability between Amazon
-    #   WorkMail and Microsoft Exchange. Can only be set to `true` if an AD
-    #   Connector directory ID is included in the request.
+    #   When `true`, allows organization interoperability between WorkMail
+    #   and Microsoft Exchange. If `true`, you must include a AD Connector
+    #   directory ID in the request.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/CreateOrganizationRequest AWS API Documentation
@@ -479,15 +577,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         name: "ResourceName", # required
-    #         type: "ROOM", # required, accepts ROOM, EQUIPMENT
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier associated with the organization for which the
     #   resource is created.
@@ -524,16 +613,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateUserRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         name: "UserName", # required
-    #         display_name: "String", # required
-    #         password: "Password", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier of the organization for which the user is created.
     #   @return [String]
@@ -595,14 +674,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteAccessControlRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         name: "AccessControlRuleName", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization.
     #   @return [String]
@@ -624,15 +695,6 @@ module Aws::WorkMail
     #
     class DeleteAccessControlRuleResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #         alias: "EmailAddress", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the user exists.
     #   @return [String]
@@ -662,14 +724,46 @@ module Aws::WorkMail
     #
     class DeleteAliasResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteGroupRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization for which the `AvailabilityConfiguration`
+    #   will be deleted.
+    #   @return [String]
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         group_id: "WorkMailIdentifier", # required
-    #       }
+    # @!attribute [rw] domain_name
+    #   The domain for which the `AvailabilityConfiguration` will be
+    #   deleted.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteAvailabilityConfigurationRequest AWS API Documentation
+    #
+    class DeleteAvailabilityConfigurationRequest < Struct.new(
+      :organization_id,
+      :domain_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteAvailabilityConfigurationResponse AWS API Documentation
+    #
+    class DeleteAvailabilityConfigurationResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] organization_id
+    #   The ID of the organization from which the email monitoring
+    #   configuration is deleted.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteEmailMonitoringConfigurationRequest AWS API Documentation
+    #
+    class DeleteEmailMonitoringConfigurationRequest < Struct.new(
+      :organization_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteEmailMonitoringConfigurationResponse AWS API Documentation
+    #
+    class DeleteEmailMonitoringConfigurationResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] organization_id
     #   The organization that contains the group.
     #   @return [String]
@@ -691,15 +785,28 @@ module Aws::WorkMail
     #
     class DeleteGroupResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteMailboxPermissionsRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization from which to delete the impersonation
+    #   role.
+    #   @return [String]
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #         grantee_id: "WorkMailIdentifier", # required
-    #       }
+    # @!attribute [rw] impersonation_role_id
+    #   The ID of the impersonation role to delete.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteImpersonationRoleRequest AWS API Documentation
+    #
+    class DeleteImpersonationRoleRequest < Struct.new(
+      :organization_id,
+      :impersonation_role_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteImpersonationRoleResponse AWS API Documentation
+    #
+    class DeleteImpersonationRoleResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] organization_id
     #   The identifier of the organization under which the member (user or
     #   group) exists.
@@ -728,17 +835,44 @@ module Aws::WorkMail
     #
     class DeleteMailboxPermissionsResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteMobileDeviceAccessRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         mobile_device_access_rule_id: "MobileDeviceAccessRuleId", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
-    #   The Amazon WorkMail organization under which the rule will be
+    #   The WorkMail organization for which the access override will be
     #   deleted.
+    #   @return [String]
+    #
+    # @!attribute [rw] user_id
+    #   The WorkMail user for which you want to delete the override. Accepts
+    #   the following types of user identities:
+    #
+    #   * User ID: `12345678-1234-1234-1234-123456789012` or
+    #     `S-1-1-12-1234567890-123456789-123456789-1234`
+    #
+    #   * Email address: `user@domain.tld`
+    #
+    #   * User name: `user`
+    #   @return [String]
+    #
+    # @!attribute [rw] device_id
+    #   The mobile device for which you delete the override. `DeviceId` is
+    #   case insensitive.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteMobileDeviceAccessOverrideRequest AWS API Documentation
+    #
+    class DeleteMobileDeviceAccessOverrideRequest < Struct.new(
+      :organization_id,
+      :user_id,
+      :device_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteMobileDeviceAccessOverrideResponse AWS API Documentation
+    #
+    class DeleteMobileDeviceAccessOverrideResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization under which the rule will be deleted.
     #   @return [String]
     #
     # @!attribute [rw] mobile_device_access_rule_id
@@ -758,15 +892,6 @@ module Aws::WorkMail
     #
     class DeleteMobileDeviceAccessRuleResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "IdempotencyClientToken",
-    #         organization_id: "OrganizationId", # required
-    #         delete_directory: false, # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   The idempotency token associated with the request.
     #
@@ -810,14 +935,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         resource_id: "ResourceId", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier associated with the organization from which the
     #   resource is deleted.
@@ -840,14 +957,6 @@ module Aws::WorkMail
     #
     class DeleteResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteRetentionPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         id: "ShortString", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The organization ID.
     #   @return [String]
@@ -869,14 +978,6 @@ module Aws::WorkMail
     #
     class DeleteRetentionPolicyResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteUserRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         user_id: "WorkMailIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The organization that contains the user to be deleted.
     #   @return [String]
@@ -898,17 +999,9 @@ module Aws::WorkMail
     #
     class DeleteUserResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeregisterFromWorkMailRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
-    #   The identifier for the organization under which the Amazon WorkMail
-    #   entity exists.
+    #   The identifier for the organization under which the WorkMail entity
+    #   exists.
     #   @return [String]
     #
     # @!attribute [rw] entity_id
@@ -928,14 +1021,59 @@ module Aws::WorkMail
     #
     class DeregisterFromWorkMailResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeGroupRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization for which the domain will be deregistered.
+    #   @return [String]
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         group_id: "WorkMailIdentifier", # required
-    #       }
+    # @!attribute [rw] domain_name
+    #   The domain to deregister in WorkMail and SES.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeregisterMailDomainRequest AWS API Documentation
+    #
+    class DeregisterMailDomainRequest < Struct.new(
+      :organization_id,
+      :domain_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeregisterMailDomainResponse AWS API Documentation
+    #
+    class DeregisterMailDomainResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] organization_id
+    #   The ID of the organization for which the email monitoring
+    #   configuration is described.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DescribeEmailMonitoringConfigurationRequest AWS API Documentation
+    #
+    class DescribeEmailMonitoringConfigurationRequest < Struct.new(
+      :organization_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] role_arn
+    #   The Amazon Resource Name (ARN) of the IAM Role associated with the
+    #   email monitoring configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] log_group_arn
+    #   The Amazon Resource Name (ARN) of the CloudWatch Log group
+    #   associated with the email monitoring configuration.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DescribeEmailMonitoringConfigurationResponse AWS API Documentation
+    #
+    class DescribeEmailMonitoringConfigurationResponse < Struct.new(
+      :role_arn,
+      :log_group_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the group exists.
     #   @return [String]
@@ -966,8 +1104,8 @@ module Aws::WorkMail
     #   @return [String]
     #
     # @!attribute [rw] state
-    #   The state of the user: enabled (registered to Amazon WorkMail) or
-    #   disabled (deregistered or never registered to WorkMail).
+    #   The state of the user: enabled (registered to WorkMail) or disabled
+    #   (deregistered or never registered to WorkMail).
     #   @return [String]
     #
     # @!attribute [rw] enabled_date
@@ -993,14 +1131,30 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeMailboxExportJobRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   Lists the ID of the given organization.
+    #   @return [String]
     #
-    #       {
-    #         job_id: "MailboxExportJobId", # required
-    #         organization_id: "OrganizationId", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DescribeInboundDmarcSettingsRequest AWS API Documentation
     #
+    class DescribeInboundDmarcSettingsRequest < Struct.new(
+      :organization_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] enforced
+    #   Lists the enforcement setting of the applied policy.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DescribeInboundDmarcSettingsResponse AWS API Documentation
+    #
+    class DescribeInboundDmarcSettingsResponse < Struct.new(
+      :enforced)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] job_id
     #   The mailbox export job ID.
     #   @return [String]
@@ -1090,13 +1244,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization to be described.
     #   @return [String]
@@ -1122,7 +1269,7 @@ module Aws::WorkMail
     #   @return [String]
     #
     # @!attribute [rw] directory_id
-    #   The identifier for the directory associated with an Amazon WorkMail
+    #   The identifier for the directory associated with an WorkMail
     #   organization.
     #   @return [String]
     #
@@ -1164,14 +1311,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         resource_id: "ResourceId", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier associated with the organization for which the
     #   resource is described.
@@ -1211,7 +1350,7 @@ module Aws::WorkMail
     #   @return [Types::BookingOptions]
     #
     # @!attribute [rw] state
-    #   The state of the resource: enabled (registered to Amazon WorkMail),
+    #   The state of the resource: enabled (registered to WorkMail),
     #   disabled (deregistered or never registered to WorkMail), or deleted.
     #   @return [String]
     #
@@ -1240,14 +1379,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeUserRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         user_id: "WorkMailIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the user exists.
     #   @return [String]
@@ -1282,28 +1413,28 @@ module Aws::WorkMail
     #   @return [String]
     #
     # @!attribute [rw] state
-    #   The state of a user: enabled (registered to Amazon WorkMail) or
-    #   disabled (deregistered or never registered to WorkMail).
+    #   The state of a user: enabled (registered to WorkMail) or disabled
+    #   (deregistered or never registered to WorkMail).
     #   @return [String]
     #
     # @!attribute [rw] user_role
     #   In certain cases, other entities are modeled as users. If
-    #   interoperability is enabled, resources are imported into Amazon
-    #   WorkMail as users. Because different WorkMail organizations rely on
-    #   different directory types, administrators can distinguish between an
+    #   interoperability is enabled, resources are imported into WorkMail as
+    #   users. Because different WorkMail organizations rely on different
+    #   directory types, administrators can distinguish between an
     #   unregistered user (account is disabled and has a user role) and the
     #   directory administrators. The values are USER, RESOURCE, and
     #   SYSTEM\_USER.
     #   @return [String]
     #
     # @!attribute [rw] enabled_date
-    #   The date and time at which the user was enabled for Amazon WorkMail
-    #   usage, in UNIX epoch time format.
+    #   The date and time at which the user was enabled for WorkMailusage,
+    #   in UNIX epoch time format.
     #   @return [Time]
     #
     # @!attribute [rw] disabled_date
-    #   The date and time at which the user was disabled for Amazon WorkMail
-    #   usage, in UNIX epoch time format.
+    #   The date and time at which the user was disabled for WorkMail usage,
+    #   in UNIX epoch time format.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DescribeUserResponse AWS API Documentation
@@ -1363,15 +1494,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateDelegateFromResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         resource_id: "ResourceId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the resource exists.
     #   @return [String]
@@ -1400,15 +1522,6 @@ module Aws::WorkMail
     #
     class DisassociateDelegateFromResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DisassociateMemberFromGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         group_id: "WorkMailIdentifier", # required
-    #         member_id: "WorkMailIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the group exists.
     #   @return [String]
@@ -1435,24 +1548,41 @@ module Aws::WorkMail
     #
     class DisassociateMemberFromGroupResponse < Aws::EmptyStructure; end
 
-    # The domain to associate with an Amazon WorkMail organization.
+    # A DNS record uploaded to your DNS provider.
+    #
+    # @!attribute [rw] type
+    #   The RFC 1035 record type. Possible values: `CNAME`, `A`, `MX`.
+    #   @return [String]
+    #
+    # @!attribute [rw] hostname
+    #   The DNS hostname.- For example, `domain.example.com`.
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   The value returned by the DNS for a query to that hostname and
+    #   record type.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DnsRecord AWS API Documentation
+    #
+    class DnsRecord < Struct.new(
+      :type,
+      :hostname,
+      :value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The domain to associate with an WorkMail organization.
     #
     # When you configure a domain hosted in Amazon Route 53 (Route 53), all
     # recommended DNS records are added to the organization when you create
-    # it. For more information, see [Adding a domain][1] in the *Amazon
-    # WorkMail Administrator Guide*.
+    # it. For more information, see [Adding a domain][1] in the *WorkMail
+    # Administrator Guide*.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/workmail/latest/adminguide/add_domain.html
-    #
-    # @note When making an API call, you may pass Domain
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName",
-    #         hosted_zone_id: "HostedZoneId",
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The fully qualified domain name.
@@ -1528,17 +1658,33 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
+    # Describes an EWS based availability provider. This is only used as
+    # input to the service.
+    #
+    # @!attribute [rw] ews_endpoint
+    #   The endpoint of the remote EWS server.
+    #   @return [String]
+    #
+    # @!attribute [rw] ews_username
+    #   The username used to authenticate the remote EWS server.
+    #   @return [String]
+    #
+    # @!attribute [rw] ews_password
+    #   The password used to authenticate the remote EWS server.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/EwsAvailabilityProvider AWS API Documentation
+    #
+    class EwsAvailabilityProvider < Struct.new(
+      :ews_endpoint,
+      :ews_username,
+      :ews_password)
+      SENSITIVE = [:ews_password]
+      include Aws::Structure
+    end
+
     # The configuration applied to an organization's folders by its
     # retention policy.
-    #
-    # @note When making an API call, you may pass FolderConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         name: "INBOX", # required, accepts INBOX, DELETED_ITEMS, SENT_ITEMS, DRAFTS, JUNK_EMAIL
-    #         action: "NONE", # required, accepts NONE, DELETE, PERMANENTLY_DELETE
-    #         period: 1,
-    #       }
     #
     # @!attribute [rw] name
     #   The folder name.
@@ -1550,8 +1696,8 @@ module Aws::WorkMail
     #   @return [String]
     #
     # @!attribute [rw] period
-    #   The period of time at which the folder configuration action is
-    #   applied.
+    #   The number of days for which the folder-configuration action
+    #   applies.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/FolderConfiguration AWS API Documentation
@@ -1564,16 +1710,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAccessControlEffectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         ip_address: "IpAddress", # required
-    #         action: "AccessControlRuleAction", # required
-    #         user_id: "WorkMailIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization.
     #   @return [String]
@@ -1592,13 +1728,18 @@ module Aws::WorkMail
     #   The user ID.
     #   @return [String]
     #
+    # @!attribute [rw] impersonation_role_id
+    #   The impersonation role ID.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetAccessControlEffectRequest AWS API Documentation
     #
     class GetAccessControlEffectRequest < Struct.new(
       :organization_id,
       :ip_address,
       :action,
-      :user_id)
+      :user_id,
+      :impersonation_role_id)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1620,13 +1761,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDefaultRetentionPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The organization ID.
     #   @return [String]
@@ -1666,14 +1800,175 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetMailboxDetailsRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization where the impersonation role is defined.
+    #   @return [String]
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         user_id: "WorkMailIdentifier", # required
-    #       }
+    # @!attribute [rw] impersonation_role_id
+    #   The impersonation role ID to test.
+    #   @return [String]
     #
+    # @!attribute [rw] target_user
+    #   The WorkMail organization user chosen to test the impersonation
+    #   role. The following identity formats are available:
+    #
+    #   * User ID: `12345678-1234-1234-1234-123456789012` or
+    #     `S-1-1-12-1234567890-123456789-123456789-1234`
+    #
+    #   * Email address: `user@domain.tld`
+    #
+    #   * User name: `user`
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetImpersonationRoleEffectRequest AWS API Documentation
+    #
+    class GetImpersonationRoleEffectRequest < Struct.new(
+      :organization_id,
+      :impersonation_role_id,
+      :target_user)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] type
+    #   The impersonation role type.
+    #   @return [String]
+    #
+    # @!attribute [rw] effect
+    #   `Effect of the impersonation role on the target user based on its
+    #   rules. Available effects are ALLOW or DENY.</p>
+    #   `
+    #   @return [String]
+    #
+    # @!attribute [rw] matched_rules
+    #   A list of the rules that match the input and produce the configured
+    #   effect.
+    #   @return [Array<Types::ImpersonationMatchedRule>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetImpersonationRoleEffectResponse AWS API Documentation
+    #
+    class GetImpersonationRoleEffectResponse < Struct.new(
+      :type,
+      :effect,
+      :matched_rules)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization from which to retrieve the impersonation
+    #   role.
+    #   @return [String]
+    #
+    # @!attribute [rw] impersonation_role_id
+    #   The impersonation role ID to retrieve.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetImpersonationRoleRequest AWS API Documentation
+    #
+    class GetImpersonationRoleRequest < Struct.new(
+      :organization_id,
+      :impersonation_role_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] impersonation_role_id
+    #   The impersonation role ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The impersonation role name.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   The impersonation role type.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The impersonation role description.
+    #   @return [String]
+    #
+    # @!attribute [rw] rules
+    #   The list of rules for the given impersonation role.
+    #   @return [Array<Types::ImpersonationRule>]
+    #
+    # @!attribute [rw] date_created
+    #   The date when the impersonation role was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] date_modified
+    #   The date when the impersonation role was last modified.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetImpersonationRoleResponse AWS API Documentation
+    #
+    class GetImpersonationRoleResponse < Struct.new(
+      :impersonation_role_id,
+      :name,
+      :type,
+      :description,
+      :rules,
+      :date_created,
+      :date_modified)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization for which the domain is retrieved.
+    #   @return [String]
+    #
+    # @!attribute [rw] domain_name
+    #   The domain from which you want to retrieve details.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetMailDomainRequest AWS API Documentation
+    #
+    class GetMailDomainRequest < Struct.new(
+      :organization_id,
+      :domain_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] records
+    #   A list of the DNS records that WorkMail recommends adding in your
+    #   DNS provider for the best user experience. The records configure
+    #   your domain with DMARC, SPF, DKIM, and direct incoming email traffic
+    #   to SES. See admin guide for more details.
+    #   @return [Array<Types::DnsRecord>]
+    #
+    # @!attribute [rw] is_test_domain
+    #   Specifies whether the domain is a test domain provided by WorkMail,
+    #   or a custom domain.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] is_default
+    #   Specifies whether the domain is the default domain for your
+    #   organization.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] ownership_verification_status
+    #   Indicates the status of the domain ownership verification.
+    #   @return [String]
+    #
+    # @!attribute [rw] dkim_verification_status
+    #   Indicates the status of a DKIM verification.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetMailDomainResponse AWS API Documentation
+    #
+    class GetMailDomainResponse < Struct.new(
+      :records,
+      :is_test_domain,
+      :is_default,
+      :ownership_verification_status,
+      :dkim_verification_status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] organization_id
     #   The identifier for the organization that contains the user whose
     #   mailbox details are being requested.
@@ -1710,19 +2005,8 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetMobileDeviceAccessEffectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         device_type: "DeviceType",
-    #         device_model: "DeviceModel",
-    #         device_operating_system: "DeviceOperatingSystem",
-    #         device_user_agent: "DeviceUserAgent",
-    #       }
-    #
     # @!attribute [rw] organization_id
-    #   The Amazon WorkMail organization to simulate the access effect for.
+    #   The WorkMail organization to simulate the access effect for.
     #   @return [String]
     #
     # @!attribute [rw] device_type
@@ -1755,8 +2039,8 @@ module Aws::WorkMail
 
     # @!attribute [rw] effect
     #   The effect of the simulated access, `ALLOW` or `DENY`, after
-    #   evaluating mobile device access rules in the Amazon WorkMail
-    #   organization for the simulated user parameters.
+    #   evaluating mobile device access rules in the WorkMail organization
+    #   for the simulated user parameters.
     #   @return [String]
     #
     # @!attribute [rw] matched_rules
@@ -1773,7 +2057,75 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # The representation of an Amazon WorkMail group.
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization to which you want to apply the override.
+    #   @return [String]
+    #
+    # @!attribute [rw] user_id
+    #   Identifies the WorkMail user for the override. Accepts the following
+    #   types of user identities:
+    #
+    #   * User ID: `12345678-1234-1234-1234-123456789012` or
+    #     `S-1-1-12-1234567890-123456789-123456789-1234`
+    #
+    #   * Email address: `user@domain.tld`
+    #
+    #   * User name: `user`
+    #   @return [String]
+    #
+    # @!attribute [rw] device_id
+    #   The mobile device to which the override applies. `DeviceId` is case
+    #   insensitive.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetMobileDeviceAccessOverrideRequest AWS API Documentation
+    #
+    class GetMobileDeviceAccessOverrideRequest < Struct.new(
+      :organization_id,
+      :user_id,
+      :device_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] user_id
+    #   The WorkMail user to which the access override applies.
+    #   @return [String]
+    #
+    # @!attribute [rw] device_id
+    #   The device to which the access override applies.
+    #   @return [String]
+    #
+    # @!attribute [rw] effect
+    #   The effect of the override, `ALLOW` or `DENY`.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   A description of the override.
+    #   @return [String]
+    #
+    # @!attribute [rw] date_created
+    #   The date the override was first created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] date_modified
+    #   The date the description was last modified.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetMobileDeviceAccessOverrideResponse AWS API Documentation
+    #
+    class GetMobileDeviceAccessOverrideResponse < Struct.new(
+      :user_id,
+      :device_id,
+      :effect,
+      :description,
+      :date_created,
+      :date_modified)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The representation of an WorkMail group.
     #
     # @!attribute [rw] id
     #   The identifier of the group.
@@ -1792,13 +2144,11 @@ module Aws::WorkMail
     #   @return [String]
     #
     # @!attribute [rw] enabled_date
-    #   The date indicating when the group was enabled for Amazon WorkMail
-    #   use.
+    #   The date indicating when the group was enabled for WorkMail use.
     #   @return [Time]
     #
     # @!attribute [rw] disabled_date
-    #   The date indicating when the group was disabled from Amazon WorkMail
-    #   use.
+    #   The date indicating when the group was disabled from WorkMail use.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/Group AWS API Documentation
@@ -1814,6 +2164,99 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
+    # The impersonation rule that matched the input.
+    #
+    # @!attribute [rw] impersonation_rule_id
+    #   The ID of the rule that matched the input
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The name of the rule that matched the input.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ImpersonationMatchedRule AWS API Documentation
+    #
+    class ImpersonationMatchedRule < Struct.new(
+      :impersonation_rule_id,
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An impersonation role for the given WorkMail organization.
+    #
+    # @!attribute [rw] impersonation_role_id
+    #   The identifier of the impersonation role.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The impersonation role name.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   The impersonation role type.
+    #   @return [String]
+    #
+    # @!attribute [rw] date_created
+    #   The date when the impersonation role was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] date_modified
+    #   The date when the impersonation role was last modified.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ImpersonationRole AWS API Documentation
+    #
+    class ImpersonationRole < Struct.new(
+      :impersonation_role_id,
+      :name,
+      :type,
+      :date_created,
+      :date_modified)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The rules for the given impersonation role.
+    #
+    # @!attribute [rw] impersonation_rule_id
+    #   The identifier of the rule.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The rule name.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The rule description.
+    #   @return [String]
+    #
+    # @!attribute [rw] effect
+    #   The effect of the rule when it matches the input. Allowed effect
+    #   values are `ALLOW` or `DENY`.
+    #   @return [String]
+    #
+    # @!attribute [rw] target_users
+    #   A list of user IDs that match the rule.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] not_target_users
+    #   A list of user IDs that don't match the rule.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ImpersonationRule AWS API Documentation
+    #
+    class ImpersonationRule < Struct.new(
+      :impersonation_rule_id,
+      :name,
+      :description,
+      :effect,
+      :target_users,
+      :not_target_users)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The configuration for a resource isn't valid. A resource must either
     # be able to auto-respond to requests or have at least one delegate
     # associated that can do so on its behalf.
@@ -1824,6 +2267,25 @@ module Aws::WorkMail
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/InvalidConfigurationException AWS API Documentation
     #
     class InvalidConfigurationException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # You SES configuration has customizations that WorkMail cannot save.
+    # The error message lists the invalid setting. For examples of invalid
+    # settings, refer to [CreateReceiptRule][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/ses/latest/APIReference/API_CreateReceiptRule.html
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/InvalidCustomSesConfigurationException AWS API Documentation
+    #
+    class InvalidCustomSesConfigurationException < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -1857,6 +2319,21 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
+    # Describes a Lambda based availability provider.
+    #
+    # @!attribute [rw] lambda_arn
+    #   The Amazon Resource Name (ARN) of the Lambda that acts as the
+    #   availability provider.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/LambdaAvailabilityProvider AWS API Documentation
+    #
+    class LambdaAvailabilityProvider < Struct.new(
+      :lambda_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request exceeds the limit of the resource.
     #
     # @!attribute [rw] message
@@ -1870,13 +2347,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAccessControlRulesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization.
     #   @return [String]
@@ -1901,16 +2371,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAliasesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the entity exists.
     #   @return [String]
@@ -1957,16 +2417,49 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListGroupMembersRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization for which the
+    #   `AvailabilityConfiguration`'s will be listed.
+    #   @return [String]
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         group_id: "WorkMailIdentifier", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] max_results
+    #   The maximum number of results to return in a single call.
+    #   @return [Integer]
     #
+    # @!attribute [rw] next_token
+    #   The token to use to retrieve the next page of results. The first
+    #   call does not require a token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListAvailabilityConfigurationsRequest AWS API Documentation
+    #
+    class ListAvailabilityConfigurationsRequest < Struct.new(
+      :organization_id,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] availability_configurations
+    #   The list of `AvailabilityConfiguration`'s that exist for the
+    #   specified WorkMail organization.
+    #   @return [Array<Types::AvailabilityConfiguration>]
+    #
+    # @!attribute [rw] next_token
+    #   The token to use to retrieve the next page of results. The value is
+    #   `null` when there are no further results to return.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListAvailabilityConfigurationsResponse AWS API Documentation
+    #
+    class ListAvailabilityConfigurationsResponse < Struct.new(
+      :availability_configurations,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the group exists.
     #   @return [String]
@@ -2014,15 +2507,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the groups exist.
     #   @return [String]
@@ -2064,15 +2548,92 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListMailboxExportJobsRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization to which the listed impersonation roles
+    #   belong.
+    #   @return [String]
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] next_token
+    #   The token used to retrieve the next page of results. The first call
+    #   doesn't require a token.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   The maximum number of results returned in a single call.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListImpersonationRolesRequest AWS API Documentation
+    #
+    class ListImpersonationRolesRequest < Struct.new(
+      :organization_id,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] roles
+    #   The list of impersonation roles under the given WorkMail
+    #   organization.
+    #   @return [Array<Types::ImpersonationRole>]
+    #
+    # @!attribute [rw] next_token
+    #   The token to retrieve the next page of results. The value is `null`
+    #   when there are no results to return.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListImpersonationRolesResponse AWS API Documentation
+    #
+    class ListImpersonationRolesResponse < Struct.new(
+      :roles,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization for which to list domains.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of results to return in a single call.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   The token to use to retrieve the next page of results. The first
+    #   call does not require a token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListMailDomainsRequest AWS API Documentation
+    #
+    class ListMailDomainsRequest < Struct.new(
+      :organization_id,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] mail_domains
+    #   The list of mail domain summaries, specifying domains that exist in
+    #   the specified WorkMail organization, along with the information
+    #   about whether the domain is or isn't the default.
+    #   @return [Array<Types::MailDomainSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   The token to use to retrieve the next page of results. The value
+    #   becomes `null` when there are no more results to return.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListMailDomainsResponse AWS API Documentation
+    #
+    class ListMailDomainsResponse < Struct.new(
+      :mail_domains,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] organization_id
     #   The organization ID.
     #   @return [String]
@@ -2112,16 +2673,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListMailboxPermissionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier of the organization under which the user, group, or
     #   resource exists.
@@ -2170,15 +2721,69 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListMobileDeviceAccessRulesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
-    #   The Amazon WorkMail organization for which to list the rules.
+    #   The WorkMail organization under which to list mobile device access
+    #   overrides.
+    #   @return [String]
+    #
+    # @!attribute [rw] user_id
+    #   The WorkMail user under which you list the mobile device access
+    #   overrides. Accepts the following types of user identities:
+    #
+    #   * User ID: `12345678-1234-1234-1234-123456789012` or
+    #     `S-1-1-12-1234567890-123456789-123456789-1234`
+    #
+    #   * Email address: `user@domain.tld`
+    #
+    #   * User name: `user`
+    #   @return [String]
+    #
+    # @!attribute [rw] device_id
+    #   The mobile device to which the access override applies.
+    #   @return [String]
+    #
+    # @!attribute [rw] next_token
+    #   The token to use to retrieve the next page of results. The first
+    #   call does not require a token.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of results to return in a single call.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListMobileDeviceAccessOverridesRequest AWS API Documentation
+    #
+    class ListMobileDeviceAccessOverridesRequest < Struct.new(
+      :organization_id,
+      :user_id,
+      :device_id,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] overrides
+    #   The list of mobile device access overrides that exist for the
+    #   specified WorkMail organization and user.
+    #   @return [Array<Types::MobileDeviceAccessOverride>]
+    #
+    # @!attribute [rw] next_token
+    #   The token to use to retrieve the next page of results. The value is
+    #   “null” when there are no more results to return.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListMobileDeviceAccessOverridesResponse AWS API Documentation
+    #
+    class ListMobileDeviceAccessOverridesResponse < Struct.new(
+      :overrides,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization for which to list the rules.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListMobileDeviceAccessRulesRequest AWS API Documentation
@@ -2191,7 +2796,7 @@ module Aws::WorkMail
 
     # @!attribute [rw] rules
     #   The list of mobile device access rules that exist under the
-    #   specified Amazon WorkMail organization.
+    #   specified WorkMail organization.
     #   @return [Array<Types::MobileDeviceAccessRule>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListMobileDeviceAccessRulesResponse AWS API Documentation
@@ -2202,14 +2807,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListOrganizationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The token to use to retrieve the next page of results. The first
     #   call does not contain any tokens.
@@ -2247,16 +2844,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListResourceDelegatesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         resource_id: "WorkMailIdentifier", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization that contains the resource for
     #   which delegates are listed.
@@ -2305,15 +2892,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListResourcesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the resources exist.
     #   @return [String]
@@ -2356,13 +2934,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The resource ARN.
     #   @return [String]
@@ -2387,15 +2958,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListUsersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the users exist.
     #   @return [String]
@@ -2437,8 +2999,21 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # For an email or alias to be created in Amazon WorkMail, the included
-    # domain must be defined in the organization.
+    # The domain you're trying to change is in use by another user or
+    # organization in your account. See the error message for details.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/MailDomainInUseException AWS API Documentation
+    #
+    class MailDomainInUseException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The domain specified is not found in your organization.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -2461,6 +3036,25 @@ module Aws::WorkMail
     #
     class MailDomainStateException < Struct.new(
       :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The data for a given domain.
+    #
+    # @!attribute [rw] domain_name
+    #   The domain name.
+    #   @return [String]
+    #
+    # @!attribute [rw] default_domain
+    #   Whether the domain is default or not.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/MailDomainSummary AWS API Documentation
+    #
+    class MailDomainSummary < Struct.new(
+      :domain_name,
+      :default_domain)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2542,13 +3136,11 @@ module Aws::WorkMail
     #   @return [String]
     #
     # @!attribute [rw] enabled_date
-    #   The date indicating when the member was enabled for Amazon WorkMail
-    #   use.
+    #   The date indicating when the member was enabled for WorkMail use.
     #   @return [Time]
     #
     # @!attribute [rw] disabled_date
-    #   The date indicating when the member was disabled from Amazon
-    #   WorkMail use.
+    #   The date indicating when the member was disabled from WorkMail use.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/Member AWS API Documentation
@@ -2583,8 +3175,46 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # A rule that controls access to mobile devices for an Amazon WorkMail
-    # group.
+    # The override object.
+    #
+    # @!attribute [rw] user_id
+    #   The WorkMail user to which the access override applies.
+    #   @return [String]
+    #
+    # @!attribute [rw] device_id
+    #   The device to which the override applies.
+    #   @return [String]
+    #
+    # @!attribute [rw] effect
+    #   The effect of the override, `ALLOW` or `DENY`.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   A description of the override.
+    #   @return [String]
+    #
+    # @!attribute [rw] date_created
+    #   The date the override was first created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] date_modified
+    #   The date the override was last modified.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/MobileDeviceAccessOverride AWS API Documentation
+    #
+    class MobileDeviceAccessOverride < Struct.new(
+      :user_id,
+      :device_id,
+      :effect,
+      :description,
+      :date_created,
+      :date_modified)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A rule that controls access to mobile devices for an WorkMail group.
     #
     # @!attribute [rw] mobile_device_access_rule_id
     #   The ID assigned to a mobile access rule.
@@ -2668,7 +3298,7 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # The user, group, or resource name isn't unique in Amazon WorkMail.
+    # The user, group, or resource name isn't unique in WorkMail.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -2778,22 +3408,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutAccessControlRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "AccessControlRuleName", # required
-    #         effect: "ALLOW", # required, accepts ALLOW, DENY
-    #         description: "AccessControlRuleDescription", # required
-    #         ip_ranges: ["IpRange"],
-    #         not_ip_ranges: ["IpRange"],
-    #         actions: ["AccessControlRuleAction"],
-    #         not_actions: ["AccessControlRuleAction"],
-    #         user_ids: ["WorkMailIdentifier"],
-    #         not_user_ids: ["WorkMailIdentifier"],
-    #         organization_id: "OrganizationId", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The rule name.
     #   @return [String]
@@ -2838,6 +3452,14 @@ module Aws::WorkMail
     #   The identifier of the organization.
     #   @return [String]
     #
+    # @!attribute [rw] impersonation_role_ids
+    #   Impersonation role IDs to include in the rule.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] not_impersonation_role_ids
+    #   Impersonation role IDs to exclude from the rule.
+    #   @return [Array<String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutAccessControlRuleRequest AWS API Documentation
     #
     class PutAccessControlRuleRequest < Struct.new(
@@ -2850,7 +3472,9 @@ module Aws::WorkMail
       :not_actions,
       :user_ids,
       :not_user_ids,
-      :organization_id)
+      :organization_id,
+      :impersonation_role_ids,
+      :not_impersonation_role_ids)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2859,16 +3483,57 @@ module Aws::WorkMail
     #
     class PutAccessControlRuleResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass PutMailboxPermissionsRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   The ID of the organization for which the email monitoring
+    #   configuration is set.
+    #   @return [String]
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #         grantee_id: "WorkMailIdentifier", # required
-    #         permission_values: ["FULL_ACCESS"], # required, accepts FULL_ACCESS, SEND_AS, SEND_ON_BEHALF
-    #       }
+    # @!attribute [rw] role_arn
+    #   The Amazon Resource Name (ARN) of the IAM Role associated with the
+    #   email monitoring configuration.
+    #   @return [String]
     #
+    # @!attribute [rw] log_group_arn
+    #   The Amazon Resource Name (ARN) of the CloudWatch Log group
+    #   associated with the email monitoring configuration.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutEmailMonitoringConfigurationRequest AWS API Documentation
+    #
+    class PutEmailMonitoringConfigurationRequest < Struct.new(
+      :organization_id,
+      :role_arn,
+      :log_group_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutEmailMonitoringConfigurationResponse AWS API Documentation
+    #
+    class PutEmailMonitoringConfigurationResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] organization_id
+    #   The ID of the organization that you are applying the DMARC policy
+    #   to.
+    #   @return [String]
+    #
+    # @!attribute [rw] enforced
+    #   Enforces or suspends a policy after it's applied.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutInboundDmarcSettingsRequest AWS API Documentation
+    #
+    class PutInboundDmarcSettingsRequest < Struct.new(
+      :organization_id,
+      :enforced)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutInboundDmarcSettingsResponse AWS API Documentation
+    #
+    class PutInboundDmarcSettingsResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] organization_id
     #   The identifier of the organization under which the user, group, or
     #   resource exists.
@@ -2909,23 +3574,52 @@ module Aws::WorkMail
     #
     class PutMailboxPermissionsResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass PutRetentionPolicyRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   Identifies the WorkMail organization for which you create the
+    #   override.
+    #   @return [String]
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         id: "ShortString",
-    #         name: "ShortString", # required
-    #         description: "PolicyDescription",
-    #         folder_configurations: [ # required
-    #           {
-    #             name: "INBOX", # required, accepts INBOX, DELETED_ITEMS, SENT_ITEMS, DRAFTS, JUNK_EMAIL
-    #             action: "NONE", # required, accepts NONE, DELETE, PERMANENTLY_DELETE
-    #             period: 1,
-    #           },
-    #         ],
-    #       }
+    # @!attribute [rw] user_id
+    #   The WorkMail user for which you create the override. Accepts the
+    #   following types of user identities:
     #
+    #   * User ID: `12345678-1234-1234-1234-123456789012` or
+    #     `S-1-1-12-1234567890-123456789-123456789-1234`
+    #
+    #   * Email address: `user@domain.tld`
+    #
+    #   * User name: `user`
+    #   @return [String]
+    #
+    # @!attribute [rw] device_id
+    #   The mobile device for which you create the override. `DeviceId` is
+    #   case insensitive.
+    #   @return [String]
+    #
+    # @!attribute [rw] effect
+    #   The effect of the override, `ALLOW` or `DENY`.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   A description of the override.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutMobileDeviceAccessOverrideRequest AWS API Documentation
+    #
+    class PutMobileDeviceAccessOverrideRequest < Struct.new(
+      :organization_id,
+      :user_id,
+      :device_id,
+      :effect,
+      :description)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutMobileDeviceAccessOverrideResponse AWS API Documentation
+    #
+    class PutMobileDeviceAccessOverrideResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] organization_id
     #   The organization ID.
     #   @return [String]
@@ -2962,15 +3656,55 @@ module Aws::WorkMail
     #
     class PutRetentionPolicyResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass RegisterToWorkMailRequest
-    #   data as a hash:
+    # Describes an EWS based availability provider when returned from the
+    # service. It does not contain the password of the endpoint.
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #         email: "EmailAddress", # required
-    #       }
+    # @!attribute [rw] ews_endpoint
+    #   The endpoint of the remote EWS server.
+    #   @return [String]
     #
+    # @!attribute [rw] ews_username
+    #   The username used to authenticate the remote EWS server.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/RedactedEwsAvailabilityProvider AWS API Documentation
+    #
+    class RedactedEwsAvailabilityProvider < Struct.new(
+      :ews_endpoint,
+      :ews_username)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] client_token
+    #   Idempotency token used when retrying requests.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization under which you're creating the domain.
+    #   @return [String]
+    #
+    # @!attribute [rw] domain_name
+    #   The name of the mail domain to create in WorkMail and SES.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/RegisterMailDomainRequest AWS API Documentation
+    #
+    class RegisterMailDomainRequest < Struct.new(
+      :client_token,
+      :organization_id,
+      :domain_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/RegisterMailDomainResponse AWS API Documentation
+    #
+    class RegisterMailDomainResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] organization_id
     #   The identifier for the organization under which the user, group, or
     #   resource exists.
@@ -2998,7 +3732,7 @@ module Aws::WorkMail
     #
     class RegisterToWorkMailResponse < Aws::EmptyStructure; end
 
-    # This user, group, or resource name is not allowed in Amazon WorkMail.
+    # This user, group, or resource name is not allowed in WorkMail.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -3011,15 +3745,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ResetPasswordRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         user_id: "WorkMailIdentifier", # required
-    #         password: "Password", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier of the organization that contains the user for which
     #   the password is reset.
@@ -3071,13 +3796,12 @@ module Aws::WorkMail
     #   @return [String]
     #
     # @!attribute [rw] enabled_date
-    #   The date indicating when the resource was enabled for Amazon
-    #   WorkMail use.
+    #   The date indicating when the resource was enabled for WorkMail use.
     #   @return [Time]
     #
     # @!attribute [rw] disabled_date
-    #   The date indicating when the resource was disabled from Amazon
-    #   WorkMail use.
+    #   The date indicating when the resource was disabled from WorkMail
+    #   use.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/Resource AWS API Documentation
@@ -3107,20 +3831,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartMailboxExportJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "IdempotencyClientToken", # required
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #         description: "Description",
-    #         role_arn: "RoleArn", # required
-    #         kms_key_arn: "KmsKeyArn", # required
-    #         s3_bucket_name: "S3BucketName", # required
-    #         s3_prefix: "S3ObjectKey", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   The idempotency token for the client request.
     #
@@ -3187,14 +3897,6 @@ module Aws::WorkMail
 
     # Describes a tag applied to a resource.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
-    #
     # @!attribute [rw] key
     #   The key of the tag.
     #   @return [String]
@@ -3212,19 +3914,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The resource ARN.
     #   @return [String]
@@ -3245,6 +3934,55 @@ module Aws::WorkMail
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/TagResourceResponse AWS API Documentation
     #
     class TagResourceResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization where the availability provider will be
+    #   tested.
+    #   @return [String]
+    #
+    # @!attribute [rw] domain_name
+    #   The domain to which the provider applies. If this field is provided,
+    #   a stored availability provider associated to this domain name will
+    #   be tested.
+    #   @return [String]
+    #
+    # @!attribute [rw] ews_provider
+    #   Describes an EWS based availability provider. This is only used as
+    #   input to the service.
+    #   @return [Types::EwsAvailabilityProvider]
+    #
+    # @!attribute [rw] lambda_provider
+    #   Describes a Lambda based availability provider.
+    #   @return [Types::LambdaAvailabilityProvider]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/TestAvailabilityConfigurationRequest AWS API Documentation
+    #
+    class TestAvailabilityConfigurationRequest < Struct.new(
+      :organization_id,
+      :domain_name,
+      :ews_provider,
+      :lambda_provider)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] test_passed
+    #   Boolean indicating whether the test passed or failed.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] failure_reason
+    #   String containing the reason for a failed test if `TestPassed` is
+    #   false.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/TestAvailabilityConfigurationResponse AWS API Documentation
+    #
+    class TestAvailabilityConfigurationResponse < Struct.new(
+      :test_passed,
+      :failure_reason)
+      SENSITIVE = []
+      include Aws::Structure
+    end
 
     # The resource can have up to 50 user-applied tags.
     #
@@ -3272,14 +4010,6 @@ module Aws::WorkMail
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The resource ARN.
     #   @return [String]
@@ -3301,15 +4031,108 @@ module Aws::WorkMail
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateMailboxQuotaRequest
-    #   data as a hash:
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization for which the `AvailabilityConfiguration`
+    #   will be updated.
+    #   @return [String]
     #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         user_id: "WorkMailIdentifier", # required
-    #         mailbox_quota: 1, # required
-    #       }
+    # @!attribute [rw] domain_name
+    #   The domain to which the provider applies the availability
+    #   configuration.
+    #   @return [String]
     #
+    # @!attribute [rw] ews_provider
+    #   The EWS availability provider definition. The request must contain
+    #   exactly one provider definition, either `EwsProvider` or
+    #   `LambdaProvider`. The previously stored provider will be overridden
+    #   by the one provided.
+    #   @return [Types::EwsAvailabilityProvider]
+    #
+    # @!attribute [rw] lambda_provider
+    #   The Lambda availability provider definition. The request must
+    #   contain exactly one provider definition, either `EwsProvider` or
+    #   `LambdaProvider`. The previously stored provider will be overridden
+    #   by the one provided.
+    #   @return [Types::LambdaAvailabilityProvider]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/UpdateAvailabilityConfigurationRequest AWS API Documentation
+    #
+    class UpdateAvailabilityConfigurationRequest < Struct.new(
+      :organization_id,
+      :domain_name,
+      :ews_provider,
+      :lambda_provider)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/UpdateAvailabilityConfigurationResponse AWS API Documentation
+    #
+    class UpdateAvailabilityConfigurationResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization for which to list domains.
+    #   @return [String]
+    #
+    # @!attribute [rw] domain_name
+    #   The domain name that will become the default domain.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/UpdateDefaultMailDomainRequest AWS API Documentation
+    #
+    class UpdateDefaultMailDomainRequest < Struct.new(
+      :organization_id,
+      :domain_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/UpdateDefaultMailDomainResponse AWS API Documentation
+    #
+    class UpdateDefaultMailDomainResponse < Aws::EmptyStructure; end
+
+    # @!attribute [rw] organization_id
+    #   The WorkMail organization that contains the impersonation role to
+    #   update.
+    #   @return [String]
+    #
+    # @!attribute [rw] impersonation_role_id
+    #   The ID of the impersonation role to update.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The updated impersonation role name.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   The updated impersonation role type.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   The updated impersonation role description.
+    #   @return [String]
+    #
+    # @!attribute [rw] rules
+    #   The updated list of rules.
+    #   @return [Array<Types::ImpersonationRule>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/UpdateImpersonationRoleRequest AWS API Documentation
+    #
+    class UpdateImpersonationRoleRequest < Struct.new(
+      :organization_id,
+      :impersonation_role_id,
+      :name,
+      :type,
+      :description,
+      :rules)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/UpdateImpersonationRoleResponse AWS API Documentation
+    #
+    class UpdateImpersonationRoleResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] organization_id
     #   The identifier for the organization that contains the user for whom
     #   to update the mailbox quota.
@@ -3337,28 +4160,8 @@ module Aws::WorkMail
     #
     class UpdateMailboxQuotaResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateMobileDeviceAccessRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         mobile_device_access_rule_id: "MobileDeviceAccessRuleId", # required
-    #         name: "MobileDeviceAccessRuleName", # required
-    #         description: "MobileDeviceAccessRuleDescription",
-    #         effect: "ALLOW", # required, accepts ALLOW, DENY
-    #         device_types: ["DeviceType"],
-    #         not_device_types: ["DeviceType"],
-    #         device_models: ["DeviceModel"],
-    #         not_device_models: ["DeviceModel"],
-    #         device_operating_systems: ["DeviceOperatingSystem"],
-    #         not_device_operating_systems: ["DeviceOperatingSystem"],
-    #         device_user_agents: ["DeviceUserAgent"],
-    #         not_device_user_agents: ["DeviceUserAgent"],
-    #       }
-    #
     # @!attribute [rw] organization_id
-    #   The Amazon WorkMail organization under which the rule will be
-    #   updated.
+    #   The WorkMail organization under which the rule will be updated.
     #   @return [String]
     #
     # @!attribute [rw] mobile_device_access_rule_id
@@ -3438,15 +4241,6 @@ module Aws::WorkMail
     #
     class UpdateMobileDeviceAccessRuleResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdatePrimaryEmailAddressRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         entity_id: "WorkMailIdentifier", # required
-    #         email: "EmailAddress", # required
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The organization that contains the user, group, or resource to
     #   update.
@@ -3474,20 +4268,6 @@ module Aws::WorkMail
     #
     class UpdatePrimaryEmailAddressResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_id: "OrganizationId", # required
-    #         resource_id: "ResourceId", # required
-    #         name: "ResourceName",
-    #         booking_options: {
-    #           auto_accept_requests: false,
-    #           auto_decline_recurring_requests: false,
-    #           auto_decline_conflicting_requests: false,
-    #         },
-    #       }
-    #
     # @!attribute [rw] organization_id
     #   The identifier associated with the organization for which the
     #   resource is updated.
@@ -3520,7 +4300,7 @@ module Aws::WorkMail
     #
     class UpdateResourceResponse < Aws::EmptyStructure; end
 
-    # The representation of an Amazon WorkMail user.
+    # The representation of an WorkMail user.
     #
     # @!attribute [rw] id
     #   The identifier of the user.
@@ -3547,13 +4327,11 @@ module Aws::WorkMail
     #   @return [String]
     #
     # @!attribute [rw] enabled_date
-    #   The date indicating when the user was enabled for Amazon WorkMail
-    #   use.
+    #   The date indicating when the user was enabled for WorkMail use.
     #   @return [Time]
     #
     # @!attribute [rw] disabled_date
-    #   The date indicating when the user was disabled from Amazon WorkMail
-    #   use.
+    #   The date indicating when the user was disabled from WorkMail use.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/User AWS API Documentation

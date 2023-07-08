@@ -18,7 +18,7 @@ module Aws
         @code = self.class.code
         @context = context
         @data = data
-        @message = message && !message.empty? ? message : self.class
+        @message = message && !message.empty? ? message : self.class.to_s
         super(@message)
       end
 
@@ -209,6 +209,23 @@ module Aws
 
     # Raised when SSO Credentials are invalid
     class InvalidSSOCredentials < RuntimeError; end
+
+    # Raised when SSO Token is invalid
+    class InvalidSSOToken < RuntimeError; end
+
+    # Raised when a client is unable to sign a request because
+    # the bearer token is not configured or available
+    class MissingBearerTokenError < RuntimeError
+      def initialize(*args)
+        msg = 'unable to sign request without token set'
+        super(msg)
+      end
+    end
+
+
+    # Raised when there is a circular reference in chained
+    # source_profiles
+    class SourceProfileCircularReferenceError < RuntimeError; end
 
     # Raised when a client is constructed and region is not specified.
     class MissingRegionError < ArgumentError

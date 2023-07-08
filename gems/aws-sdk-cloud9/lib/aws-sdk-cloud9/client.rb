@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:cloud9)
@@ -73,8 +77,13 @@ module Aws::Cloud9
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::Cloud9::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::Cloud9
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::Cloud9
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::Cloud9
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::Cloud9
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::Cloud9
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::Cloud9::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::Cloud9::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::Cloud9
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::Cloud9
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -337,20 +394,21 @@ module Aws::Cloud9
 
     # @!group API Operations
 
-    # Creates an AWS Cloud9 development environment, launches an Amazon
-    # Elastic Compute Cloud (Amazon EC2) instance, and then connects from
-    # the instance to the environment.
+    # Creates an Cloud9 development environment, launches an Amazon Elastic
+    # Compute Cloud (Amazon EC2) instance, and then connects from the
+    # instance to the environment.
     #
     # @option params [required, String] :name
     #   The name of the environment to create.
     #
-    #   This name is visible to other AWS IAM users in the same AWS account.
+    #   This name is visible to other IAM users in the same Amazon Web
+    #   Services account.
     #
     # @option params [String] :description
     #   The description of the environment to create.
     #
     # @option params [String] :client_request_token
-    #   A unique, case-sensitive string that helps AWS Cloud9 to ensure this
+    #   A unique, case-sensitive string that helps Cloud9 to ensure this
     #   operation completes no more than one time.
     #
     #   For more information, see [Client Tokens][1] in the *Amazon EC2 API
@@ -358,23 +416,29 @@ module Aws::Cloud9
     #
     #
     #
-    #   [1]: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html
     #
     # @option params [required, String] :instance_type
     #   The type of instance to connect to the environment (for example,
     #   `t2.micro`).
     #
     # @option params [String] :subnet_id
-    #   The ID of the subnet in Amazon VPC that AWS Cloud9 will use to
-    #   communicate with the Amazon EC2 instance.
+    #   The ID of the subnet in Amazon VPC that Cloud9 will use to communicate
+    #   with the Amazon EC2 instance.
     #
     # @option params [String] :image_id
     #   The identifier for the Amazon Machine Image (AMI) that's used to
     #   create the EC2 instance. To choose an AMI for the instance, you must
-    #   specify a valid AMI alias or a valid AWS Systems Manager (SSM) path.
+    #   specify a valid AMI alias or a valid Amazon EC2 Systems Manager (SSM)
+    #   path.
     #
-    #   The default AMI is used if the parameter isn't explicitly assigned a
-    #   value in the request.
+    #   The default Amazon Linux AMI is currently used if the parameter isn't
+    #   explicitly assigned a value in the request.
+    #
+    #   In the future the parameter for Amazon Linux will no longer be
+    #   available when you specify an AMI for your instance. Amazon Linux 2
+    #   will then become the default AMI, which is used to launch your
+    #   instance if no parameter is explicitly defined.
     #
     #   <b>AMI aliases </b>
     #
@@ -402,24 +466,30 @@ module Aws::Cloud9
     #
     # @option params [String] :owner_arn
     #   The Amazon Resource Name (ARN) of the environment owner. This ARN can
-    #   be the ARN of any AWS IAM principal. If this value is not specified,
-    #   the ARN defaults to this environment's creator.
+    #   be the ARN of any IAM principal. If this value is not specified, the
+    #   ARN defaults to this environment's creator.
     #
     # @option params [Array<Types::Tag>] :tags
-    #   An array of key-value pairs that will be associated with the new AWS
+    #   An array of key-value pairs that will be associated with the new
     #   Cloud9 development environment.
     #
     # @option params [String] :connection_type
     #   The connection type used for connecting to an Amazon EC2 environment.
     #   Valid values are `CONNECT_SSH` (default) and `CONNECT_SSM` (connected
-    #   through AWS Systems Manager).
+    #   through Amazon EC2 Systems Manager).
     #
-    #   For more information, see [Accessing no-ingress EC2 instances with AWS
-    #   Systems Manager][1] in the *AWS Cloud9 User Guide*.
+    #   For more information, see [Accessing no-ingress EC2 instances with
+    #   Amazon EC2 Systems Manager][1] in the *Cloud9 User Guide*.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/cloud9/latest/user-guide/ec2-ssm.html
+    #
+    # @option params [Boolean] :dry_run
+    #   Checks whether you have the required permissions for the action,
+    #   without actually making the request, and provides an error response.
+    #   If you have the required permissions, the error response is
+    #   `DryRunOperation`. Otherwise, it is `UnauthorizedOperation`.
     #
     # @return [Types::CreateEnvironmentEC2Result] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -460,6 +530,7 @@ module Aws::Cloud9
     #       },
     #     ],
     #     connection_type: "CONNECT_SSH", # accepts CONNECT_SSH, CONNECT_SSM
+    #     dry_run: false,
     #   })
     #
     # @example Response structure
@@ -475,7 +546,7 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Adds an environment member to an AWS Cloud9 development environment.
+    # Adds an environment member to an Cloud9 development environment.
     #
     # @option params [required, String] :environment_id
     #   The ID of the environment that contains the environment member you
@@ -489,9 +560,9 @@ module Aws::Cloud9
     #   The type of environment member permissions you want to associate with
     #   this environment member. Available values include:
     #
-    #   * `read-only`\: Has read-only access to the environment.
+    #   * `read-only`: Has read-only access to the environment.
     #
-    #   * `read-write`\: Has read-write access to the environment.
+    #   * `read-write`: Has read-write access to the environment.
     #
     # @return [Types::CreateEnvironmentMembershipResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -541,9 +612,8 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Deletes an AWS Cloud9 development environment. If an Amazon EC2
-    # instance is connected to the environment, also terminates the
-    # instance.
+    # Deletes an Cloud9 development environment. If an Amazon EC2 instance
+    # is connected to the environment, also terminates the instance.
     #
     # @option params [required, String] :environment_id
     #   The ID of the environment to delete.
@@ -576,8 +646,7 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Deletes an environment member from an AWS Cloud9 development
-    # environment.
+    # Deletes an environment member from a development environment.
     #
     # @option params [required, String] :environment_id
     #   The ID of the environment to delete the environment member from.
@@ -616,8 +685,8 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Gets information about environment members for an AWS Cloud9
-    # development environment.
+    # Gets information about environment members for an Cloud9 development
+    # environment.
     #
     # @option params [String] :user_arn
     #   The Amazon Resource Name (ARN) of an individual environment member to
@@ -631,11 +700,11 @@ module Aws::Cloud9
     #   The type of environment member permissions to get information about.
     #   Available values include:
     #
-    #   * `owner`\: Owns the environment.
+    #   * `owner`: Owns the environment.
     #
-    #   * `read-only`\: Has read-only access to the environment.
+    #   * `read-only`: Has read-only access to the environment.
     #
-    #   * `read-write`\: Has read-write access to the environment.
+    #   * `read-write`: Has read-write access to the environment.
     #
     #   If no value is specified, information about all environment members
     #   are returned.
@@ -662,8 +731,7 @@ module Aws::Cloud9
     #
     # @example Example: DescribeEnvironmentMemberships1
     #
-    #   # The following example gets information about all of the environment members for the specified AWS Cloud9 development
-    #   # environment.
+    #   # The following example gets information about all of the environment members for the specified development environment.
     #
     #   resp = client.describe_environment_memberships({
     #     environment_id: "8d9967e2f0624182b74e7690ad69ebEX", 
@@ -689,7 +757,7 @@ module Aws::Cloud9
     #
     # @example Example: DescribeEnvironmentMemberships2
     #
-    #   # The following example gets information about the owner of the specified AWS Cloud9 development environment.
+    #   # The following example gets information about the owner of the specified development environment.
     #
     #   resp = client.describe_environment_memberships({
     #     environment_id: "8d9967e2f0624182b74e7690ad69ebEX", 
@@ -712,7 +780,7 @@ module Aws::Cloud9
     #
     # @example Example: DescribeEnvironmentMemberships3
     #
-    #   # The following example gets AWS Cloud9 development environment membership information for the specified user.
+    #   # The following example gets development environment membership information for the specified user.
     #
     #   resp = client.describe_environment_memberships({
     #     user_arn: "arn:aws:iam::123456789012:user/MyDemoUser", 
@@ -767,7 +835,7 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Gets status information for an AWS Cloud9 development environment.
+    # Gets status information for an Cloud9 development environment.
     #
     # @option params [required, String] :environment_id
     #   The ID of the environment to get status information about.
@@ -810,7 +878,7 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Gets information about AWS Cloud9 development environments.
+    # Gets information about Cloud9 development environments.
     #
     # @option params [required, Array<String>] :environment_ids
     #   The IDs of individual environments to get information about.
@@ -887,7 +955,7 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Gets a list of AWS Cloud9 development environment identifiers.
+    # Gets a list of Cloud9 development environment identifiers.
     #
     # @option params [String] :next_token
     #   During a previous call, if there are more than 25 items in the list,
@@ -944,12 +1012,12 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Gets a list of the tags associated with an AWS Cloud9 development
+    # Gets a list of the tags associated with an Cloud9 development
     # environment.
     #
     # @option params [required, String] :resource_arn
-    #   The Amazon Resource Name (ARN) of the AWS Cloud9 development
-    #   environment to get the tags for.
+    #   The Amazon Resource Name (ARN) of the Cloud9 development environment
+    #   to get the tags for.
     #
     # @return [Types::ListTagsForResourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -976,18 +1044,17 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Adds tags to an AWS Cloud9 development environment.
+    # Adds tags to an Cloud9 development environment.
     #
-    # Tags that you add to an AWS Cloud9 environment by using this method
-    # will NOT be automatically propagated to underlying resources.
+    # Tags that you add to an Cloud9 environment by using this method will
+    # NOT be automatically propagated to underlying resources.
     #
     # @option params [required, String] :resource_arn
-    #   The Amazon Resource Name (ARN) of the AWS Cloud9 development
-    #   environment to add tags to.
+    #   The Amazon Resource Name (ARN) of the Cloud9 development environment
+    #   to add tags to.
     #
     # @option params [required, Array<Types::Tag>] :tags
-    #   The list of tags to add to the given AWS Cloud9 development
-    #   environment.
+    #   The list of tags to add to the given Cloud9 development environment.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1012,15 +1079,15 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Removes tags from an AWS Cloud9 development environment.
+    # Removes tags from an Cloud9 development environment.
     #
     # @option params [required, String] :resource_arn
-    #   The Amazon Resource Name (ARN) of the AWS Cloud9 development
-    #   environment to remove tags from.
+    #   The Amazon Resource Name (ARN) of the Cloud9 development environment
+    #   to remove tags from.
     #
     # @option params [required, Array<String>] :tag_keys
-    #   The tag names of the tags to remove from the given AWS Cloud9
-    #   development environment.
+    #   The tag names of the tags to remove from the given Cloud9 development
+    #   environment.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1040,8 +1107,7 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Changes the settings of an existing AWS Cloud9 development
-    # environment.
+    # Changes the settings of an existing Cloud9 development environment.
     #
     # @option params [required, String] :environment_id
     #   The ID of the environment to change settings.
@@ -1051,6 +1117,22 @@ module Aws::Cloud9
     #
     # @option params [String] :description
     #   Any new or replacement description for the environment.
+    #
+    # @option params [String] :managed_credentials_action
+    #   Allows the environment owner to turn on or turn off the Amazon Web
+    #   Services managed temporary credentials for an Cloud9 environment by
+    #   using one of the following values:
+    #
+    #   * `ENABLE`
+    #
+    #   * `DISABLE`
+    #
+    #   <note markdown="1"> Only the environment owner can change the status of managed temporary
+    #   credentials. An `AccessDeniedException` is thrown if an attempt to
+    #   turn on or turn off managed temporary credentials is made by an
+    #   account that's not the environment owner.
+    #
+    #    </note>
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1073,6 +1155,7 @@ module Aws::Cloud9
     #     environment_id: "EnvironmentId", # required
     #     name: "EnvironmentName",
     #     description: "EnvironmentDescription",
+    #     managed_credentials_action: "ENABLE", # accepts ENABLE, DISABLE
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/UpdateEnvironment AWS API Documentation
@@ -1084,8 +1167,8 @@ module Aws::Cloud9
       req.send_request(options)
     end
 
-    # Changes the settings of an existing environment member for an AWS
-    # Cloud9 development environment.
+    # Changes the settings of an existing environment member for an Cloud9
+    # development environment.
     #
     # @option params [required, String] :environment_id
     #   The ID of the environment for the environment member whose settings
@@ -1099,9 +1182,9 @@ module Aws::Cloud9
     #   The replacement type of environment member permissions you want to
     #   associate with this environment member. Available values include:
     #
-    #   * `read-only`\: Has read-only access to the environment.
+    #   * `read-only`: Has read-only access to the environment.
     #
-    #   * `read-write`\: Has read-write access to the environment.
+    #   * `read-write`: Has read-write access to the environment.
     #
     # @return [Types::UpdateEnvironmentMembershipResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1164,7 +1247,7 @@ module Aws::Cloud9
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-cloud9'
-      context[:gem_version] = '1.33.0'
+      context[:gem_version] = '1.53.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

@@ -64,7 +64,23 @@ module Aws
             'https://sts.us-west-2.amazonaws.com')
         end
 
+        it 'can be set from defaults_mode' do
+          allow_any_instance_of(Aws::DefaultsModeConfigResolver)
+            .to receive(:resolve)
+          allow_any_instance_of(Aws::DefaultsModeConfigResolver)
+            .to receive(:resolve).with(:sts_regional_endpoints).and_return('legacy')
+          client = Client.new(
+            stub_responses: true,
+            region: 'us-west-2',
+            retry_mode: 'standard',
+            defaults_mode: 'standard'
+          )
+          expect(client.config.sts_regional_endpoints).to eq('legacy')
+        end
+
         it 'has no effect on fips endpoint' do
+          allow(Aws::Plugins::RegionalEndpoint).to receive(:warn)
+
           client = Client.new(
             stub_responses: true,
             sts_regional_endpoints: 'legacy',
@@ -149,8 +165,9 @@ module Aws
           )
           expect(client.config.sts_regional_endpoints).to eq('legacy')
           expect(client.config.region).to eq('us-west-2')
-          expect(client.config.sigv4_region).to eq('us-east-1')
           expect(client.config.endpoint.to_s).to eq('https://sts.amazonaws.com')
+          expect_auth({ 'signingRegion' => 'us-east-1' })
+          client.get_caller_identity
 
           client = Client.new(
             stub_responses: true,
@@ -158,9 +175,10 @@ module Aws
           )
           expect(client.config.sts_regional_endpoints).to eq('regional')
           expect(client.config.region).to eq('us-west-2')
-          expect(client.config.sigv4_region).to eq('us-west-2')
           expect(client.config.endpoint.to_s).to eq(
             'https://sts.us-west-2.amazonaws.com')
+          expect_auth({ 'signingRegion' => 'us-west-2' })
+          client.get_caller_identity
         end
 
       end

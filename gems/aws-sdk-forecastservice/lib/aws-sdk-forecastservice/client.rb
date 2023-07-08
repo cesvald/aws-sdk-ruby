@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:forecastservice)
@@ -73,8 +77,13 @@ module Aws::ForecastService
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::ForecastService::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::ForecastService
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::ForecastService
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::ForecastService
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::ForecastService
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::ForecastService
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::ForecastService::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::ForecastService::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::ForecastService
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::ForecastService
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -337,6 +394,255 @@ module Aws::ForecastService
 
     # @!group API Operations
 
+    # Creates an Amazon Forecast predictor.
+    #
+    # Amazon Forecast creates predictors with AutoPredictor, which involves
+    # applying the optimal combination of algorithms to each time series in
+    # your datasets. You can use CreateAutoPredictor to create new
+    # predictors or upgrade/retrain existing predictors.
+    #
+    # **Creating new predictors**
+    #
+    # The following parameters are required when creating a new predictor:
+    #
+    # * `PredictorName` - A unique name for the predictor.
+    #
+    # * `DatasetGroupArn` - The ARN of the dataset group used to train the
+    #   predictor.
+    #
+    # * `ForecastFrequency` - The granularity of your forecasts (hourly,
+    #   daily, weekly, etc).
+    #
+    # * `ForecastHorizon` - The number of time-steps that the model
+    #   predicts. The forecast horizon is also called the prediction length.
+    #
+    # When creating a new predictor, do not specify a value for
+    # `ReferencePredictorArn`.
+    #
+    # **Upgrading and retraining predictors**
+    #
+    # The following parameters are required when retraining or upgrading a
+    # predictor:
+    #
+    # * `PredictorName` - A unique name for the predictor.
+    #
+    # * `ReferencePredictorArn` - The ARN of the predictor to retrain or
+    #   upgrade.
+    #
+    # When upgrading or retraining a predictor, only specify values for the
+    # `ReferencePredictorArn` and `PredictorName`.
+    #
+    # @option params [required, String] :predictor_name
+    #   A unique name for the predictor
+    #
+    # @option params [Integer] :forecast_horizon
+    #   The number of time-steps that the model predicts. The forecast horizon
+    #   is also called the prediction length.
+    #
+    #   The maximum forecast horizon is the lesser of 500 time-steps or 1/4 of
+    #   the TARGET\_TIME\_SERIES dataset length. If you are retraining an
+    #   existing AutoPredictor, then the maximum forecast horizon is the
+    #   lesser of 500 time-steps or 1/3 of the TARGET\_TIME\_SERIES dataset
+    #   length.
+    #
+    #   If you are upgrading to an AutoPredictor or retraining an existing
+    #   AutoPredictor, you cannot update the forecast horizon parameter. You
+    #   can meet this requirement by providing longer time-series in the
+    #   dataset.
+    #
+    # @option params [Array<String>] :forecast_types
+    #   The forecast types used to train a predictor. You can specify up to
+    #   five forecast types. Forecast types can be quantiles from 0.01 to
+    #   0.99, by increments of 0.01 or higher. You can also specify the mean
+    #   forecast with `mean`.
+    #
+    # @option params [Array<String>] :forecast_dimensions
+    #   An array of dimension (field) names that specify how to group the
+    #   generated forecast.
+    #
+    #   For example, if you are generating forecasts for item sales across all
+    #   your stores, and your dataset contains a `store_id` field, you would
+    #   specify `store_id` as a dimension to group sales forecasts for each
+    #   store.
+    #
+    # @option params [String] :forecast_frequency
+    #   The frequency of predictions in a forecast.
+    #
+    #   Valid intervals are an integer followed by Y (Year), M (Month), W
+    #   (Week), D (Day), H (Hour), and min (Minute). For example, "1D"
+    #   indicates every day and "15min" indicates every 15 minutes. You
+    #   cannot specify a value that would overlap with the next larger
+    #   frequency. That means, for example, you cannot specify a frequency of
+    #   60 minutes, because that is equivalent to 1 hour. The valid values for
+    #   each frequency are the following:
+    #
+    #   * Minute - 1-59
+    #
+    #   * Hour - 1-23
+    #
+    #   * Day - 1-6
+    #
+    #   * Week - 1-4
+    #
+    #   * Month - 1-11
+    #
+    #   * Year - 1
+    #
+    #   Thus, if you want every other week forecasts, specify "2W". Or, if
+    #   you want quarterly forecasts, you specify "3M".
+    #
+    #   The frequency must be greater than or equal to the
+    #   TARGET\_TIME\_SERIES dataset frequency.
+    #
+    #   When a RELATED\_TIME\_SERIES dataset is provided, the frequency must
+    #   be equal to the RELATED\_TIME\_SERIES dataset frequency.
+    #
+    # @option params [Types::DataConfig] :data_config
+    #   The data configuration for your dataset group and any additional
+    #   datasets.
+    #
+    # @option params [Types::EncryptionConfig] :encryption_config
+    #   An Key Management Service (KMS) key and an Identity and Access
+    #   Management (IAM) role that Amazon Forecast can assume to access the
+    #   key. You can specify this optional object in the CreateDataset and
+    #   CreatePredictor requests.
+    #
+    # @option params [String] :reference_predictor_arn
+    #   The ARN of the predictor to retrain or upgrade. This parameter is only
+    #   used when retraining or upgrading a predictor. When creating a new
+    #   predictor, do not specify a value for this parameter.
+    #
+    #   When upgrading or retraining a predictor, only specify values for the
+    #   `ReferencePredictorArn` and `PredictorName`. The value for
+    #   `PredictorName` must be a unique predictor name.
+    #
+    # @option params [String] :optimization_metric
+    #   The accuracy metric used to optimize the predictor.
+    #
+    # @option params [Boolean] :explain_predictor
+    #   Create an Explainability resource for the predictor.
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   Optional metadata to help you categorize and organize your predictors.
+    #   Each tag consists of a key and an optional value, both of which you
+    #   define. Tag keys and values are case sensitive.
+    #
+    #   The following restrictions apply to tags:
+    #
+    #   * For each resource, each tag key must be unique and each tag key must
+    #     have one value.
+    #
+    #   * Maximum number of tags per resource: 50.
+    #
+    #   * Maximum key length: 128 Unicode characters in UTF-8.
+    #
+    #   * Maximum value length: 256 Unicode characters in UTF-8.
+    #
+    #   * Accepted characters: all letters and numbers, spaces representable
+    #     in UTF-8, and + - = . \_ : / @. If your tagging schema is used
+    #     across other services and resources, the character restrictions of
+    #     those services also apply.
+    #
+    #   * Key prefixes cannot include any upper or lowercase combination of
+    #     `aws:` or `AWS:`. Values can have this prefix. If a tag value has
+    #     `aws` as its prefix but the key does not, Forecast considers it to
+    #     be a user tag and will count against the limit of 50 tags. Tags with
+    #     only the key prefix of `aws` do not count against your tags per
+    #     resource limit. You cannot edit or delete tag keys with this prefix.
+    #
+    # @option params [Types::MonitorConfig] :monitor_config
+    #   The configuration details for predictor monitoring. Provide a name for
+    #   the monitor resource to enable predictor monitoring.
+    #
+    #   Predictor monitoring allows you to see how your predictor's
+    #   performance changes over time. For more information, see [Predictor
+    #   Monitoring][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/predictor-monitoring.html
+    #
+    # @option params [Types::TimeAlignmentBoundary] :time_alignment_boundary
+    #   The time boundary Forecast uses to align and aggregate any data that
+    #   doesn't align with your forecast frequency. Provide the unit of time
+    #   and the time boundary as a key value pair. For more information on
+    #   specifying a time boundary, see [Specifying a Time Boundary][1]. If
+    #   you don't provide a time boundary, Forecast uses a set of [Default
+    #   Time Boundaries][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/data-aggregation.html#specifying-time-boundary
+    #   [2]: https://docs.aws.amazon.com/forecast/latest/dg/data-aggregation.html#default-time-boundaries
+    #
+    # @return [Types::CreateAutoPredictorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateAutoPredictorResponse#predictor_arn #predictor_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_auto_predictor({
+    #     predictor_name: "Name", # required
+    #     forecast_horizon: 1,
+    #     forecast_types: ["ForecastType"],
+    #     forecast_dimensions: ["Name"],
+    #     forecast_frequency: "Frequency",
+    #     data_config: {
+    #       dataset_group_arn: "Arn", # required
+    #       attribute_configs: [
+    #         {
+    #           attribute_name: "Name", # required
+    #           transformations: { # required
+    #             "Name" => "Value",
+    #           },
+    #         },
+    #       ],
+    #       additional_datasets: [
+    #         {
+    #           name: "Name", # required
+    #           configuration: {
+    #             "Name" => ["Value"],
+    #           },
+    #         },
+    #       ],
+    #     },
+    #     encryption_config: {
+    #       role_arn: "Arn", # required
+    #       kms_key_arn: "KMSKeyArn", # required
+    #     },
+    #     reference_predictor_arn: "Arn",
+    #     optimization_metric: "WAPE", # accepts WAPE, RMSE, AverageWeightedQuantileLoss, MASE, MAPE
+    #     explain_predictor: false,
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #     monitor_config: {
+    #       monitor_name: "Name", # required
+    #     },
+    #     time_alignment_boundary: {
+    #       month: "JANUARY", # accepts JANUARY, FEBRUARY, MARCH, APRIL, MAY, JUNE, JULY, AUGUST, SEPTEMBER, OCTOBER, NOVEMBER, DECEMBER
+    #       day_of_month: 1,
+    #       day_of_week: "MONDAY", # accepts MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+    #       hour: 1,
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.predictor_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateAutoPredictor AWS API Documentation
+    #
+    # @overload create_auto_predictor(params = {})
+    # @param [Hash] params ({})
+    def create_auto_predictor(params = {}, options = {})
+      req = build_request(:create_auto_predictor, params)
+      req.send_request(options)
+    end
+
     # Creates an Amazon Forecast dataset. The information about the dataset
     # that you provide helps Forecast understand how to consume the data for
     # model training. This includes the following:
@@ -356,22 +662,26 @@ module Aws::ForecastService
     #
     # After creating a dataset, you import your training data into it and
     # add the dataset to a dataset group. You use the dataset group to
-    # create a predictor. For more information, see
-    # howitworks-datasets-groups.
+    # create a predictor. For more information, see [Importing datasets][1].
     #
-    # To get a list of all your datasets, use the ListDatasets operation.
+    # To get a list of all your datasets, use the [ListDatasets][2]
+    # operation.
     #
     # For example Forecast datasets, see the [Amazon Forecast Sample GitHub
-    # repository][1].
+    # repository][3].
     #
     # <note markdown="1"> The `Status` of a dataset must be `ACTIVE` before you can import
-    # training data. Use the DescribeDataset operation to get the status.
+    # training data. Use the [DescribeDataset][4] operation to get the
+    # status.
     #
     #  </note>
     #
     #
     #
-    # [1]: https://github.com/aws-samples/amazon-forecast-samples
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/howitworks-datasets-groups.html
+    # [2]: https://docs.aws.amazon.com/forecast/latest/dg/API_ListDatasets.html
+    # [3]: https://github.com/aws-samples/amazon-forecast-samples
+    # [4]: https://docs.aws.amazon.com/forecast/latest/dg/API_DescribeDataset.html
     #
     # @option params [required, String] :dataset_name
     #   A name for the dataset.
@@ -379,14 +689,19 @@ module Aws::ForecastService
     # @option params [required, String] :domain
     #   The domain associated with the dataset. When you add a dataset to a
     #   dataset group, this value and the value specified for the `Domain`
-    #   parameter of the CreateDatasetGroup operation must match.
+    #   parameter of the [CreateDatasetGroup][1] operation must match.
     #
     #   The `Domain` and `DatasetType` that you choose determine the fields
     #   that must be present in the training data that you import to the
     #   dataset. For example, if you choose the `RETAIL` domain and
     #   `TARGET_TIME_SERIES` as the `DatasetType`, Amazon Forecast requires
     #   `item_id`, `timestamp`, and `demand` fields to be present in your
-    #   data. For more information, see howitworks-datasets-groups.
+    #   data. For more information, see [Importing datasets][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDatasetGroup.html
+    #   [2]: https://docs.aws.amazon.com/forecast/latest/dg/howitworks-datasets-groups.html
     #
     # @option params [required, String] :dataset_type
     #   The dataset type. Valid values depend on the chosen `Domain`.
@@ -395,22 +710,44 @@ module Aws::ForecastService
     #   The frequency of data collection. This parameter is required for
     #   RELATED\_TIME\_SERIES datasets.
     #
-    #   Valid intervals are Y (Year), M (Month), W (Week), D (Day), H (Hour),
-    #   30min (30 minutes), 15min (15 minutes), 10min (10 minutes), 5min (5
-    #   minutes), and 1min (1 minute). For example, "D" indicates every day
-    #   and "15min" indicates every 15 minutes.
+    #   Valid intervals are an integer followed by Y (Year), M (Month), W
+    #   (Week), D (Day), H (Hour), and min (Minute). For example, "1D"
+    #   indicates every day and "15min" indicates every 15 minutes. You
+    #   cannot specify a value that would overlap with the next larger
+    #   frequency. That means, for example, you cannot specify a frequency of
+    #   60 minutes, because that is equivalent to 1 hour. The valid values for
+    #   each frequency are the following:
+    #
+    #   * Minute - 1-59
+    #
+    #   * Hour - 1-23
+    #
+    #   * Day - 1-6
+    #
+    #   * Week - 1-4
+    #
+    #   * Month - 1-11
+    #
+    #   * Year - 1
+    #
+    #   Thus, if you want every other week forecasts, specify "2W". Or, if
+    #   you want quarterly forecasts, you specify "3M".
     #
     # @option params [required, Types::Schema] :schema
     #   The schema for the dataset. The schema attributes and their order must
     #   match the fields in your data. The dataset `Domain` and `DatasetType`
     #   that you choose determine the minimum required fields in your training
     #   data. For information about the required fields for a specific dataset
-    #   domain and type, see howitworks-domains-ds-types.
+    #   domain and type, see [Dataset Domains and Dataset Types][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/howitworks-domains-ds-types.html
     #
     # @option params [Types::EncryptionConfig] :encryption_config
-    #   An AWS Key Management Service (KMS) key and the AWS Identity and
-    #   Access Management (IAM) role that Amazon Forecast can assume to access
-    #   the key.
+    #   An Key Management Service (KMS) key and the Identity and Access
+    #   Management (IAM) role that Amazon Forecast can assume to access the
+    #   key.
     #
     # @option params [Array<Types::Tag>] :tags
     #   The optional metadata that you apply to the dataset to help you
@@ -437,12 +774,12 @@ module Aws::ForecastService
     #   * Tag keys and values are case sensitive.
     #
     #   * Do not use `aws:`, `AWS:`, or any upper or lowercase combination of
-    #     such as a prefix for keys as it is reserved for AWS use. You cannot
-    #     edit or delete tag keys with this prefix. Values can have this
-    #     prefix. If a tag value has `aws` as its prefix but the key does not,
-    #     then Forecast considers it to be a user tag and will count against
-    #     the limit of 50 tags. Tags with only the key prefix of `aws` do not
-    #     count against your tags per resource limit.
+    #     such as a prefix for keys as it is reserved for Amazon Web Services
+    #     use. You cannot edit or delete tag keys with this prefix. Values can
+    #     have this prefix. If a tag value has `aws` as its prefix but the key
+    #     does not, then Forecast considers it to be a user tag and will count
+    #     against the limit of 50 tags. Tags with only the key prefix of `aws`
+    #     do not count against your tags per resource limit.
     #
     # @return [Types::CreateDatasetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -490,20 +827,27 @@ module Aws::ForecastService
 
     # Creates a dataset group, which holds a collection of related datasets.
     # You can add datasets to the dataset group when you create the dataset
-    # group, or later by using the UpdateDatasetGroup operation.
+    # group, or later by using the [UpdateDatasetGroup][1] operation.
     #
     # After creating a dataset group and adding datasets, you use the
     # dataset group when you create a predictor. For more information, see
-    # howitworks-datasets-groups.
+    # [Dataset groups][2].
     #
-    # To get a list of all your datasets groups, use the ListDatasetGroups
-    # operation.
+    # To get a list of all your datasets groups, use the
+    # [ListDatasetGroups][3] operation.
     #
     # <note markdown="1"> The `Status` of a dataset group must be `ACTIVE` before you can use
     # the dataset group to create a predictor. To get the status, use the
-    # DescribeDatasetGroup operation.
+    # [DescribeDatasetGroup][4] operation.
     #
     #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_UpdateDatasetGroup.html
+    # [2]: https://docs.aws.amazon.com/forecast/latest/dg/howitworks-datasets-groups.html
+    # [3]: https://docs.aws.amazon.com/forecast/latest/dg/API_ListDatasetGroups.html
+    # [4]: https://docs.aws.amazon.com/forecast/latest/dg/API_DescribeDatasetGroup.html
     #
     # @option params [required, String] :dataset_group_name
     #   A name for the dataset group.
@@ -511,14 +855,19 @@ module Aws::ForecastService
     # @option params [required, String] :domain
     #   The domain associated with the dataset group. When you add a dataset
     #   to a dataset group, this value and the value specified for the
-    #   `Domain` parameter of the CreateDataset operation must match.
+    #   `Domain` parameter of the [CreateDataset][1] operation must match.
     #
     #   The `Domain` and `DatasetType` that you choose determine the fields
     #   that must be present in training data that you import to a dataset.
     #   For example, if you choose the `RETAIL` domain and
     #   `TARGET_TIME_SERIES` as the `DatasetType`, Amazon Forecast requires
     #   that `item_id`, `timestamp`, and `demand` fields are present in your
-    #   data. For more information, see howitworks-datasets-groups.
+    #   data. For more information, see [Dataset groups][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDataset.html
+    #   [2]: https://docs.aws.amazon.com/forecast/latest/dg/howitworks-datasets-groups.html
     #
     # @option params [Array<String>] :dataset_arns
     #   An array of Amazon Resource Names (ARNs) of the datasets that you want
@@ -549,12 +898,12 @@ module Aws::ForecastService
     #   * Tag keys and values are case sensitive.
     #
     #   * Do not use `aws:`, `AWS:`, or any upper or lowercase combination of
-    #     such as a prefix for keys as it is reserved for AWS use. You cannot
-    #     edit or delete tag keys with this prefix. Values can have this
-    #     prefix. If a tag value has `aws` as its prefix but the key does not,
-    #     then Forecast considers it to be a user tag and will count against
-    #     the limit of 50 tags. Tags with only the key prefix of `aws` do not
-    #     count against your tags per resource limit.
+    #     such as a prefix for keys as it is reserved for Amazon Web Services
+    #     use. You cannot edit or delete tag keys with this prefix. Values can
+    #     have this prefix. If a tag value has `aws` as its prefix but the key
+    #     does not, then Forecast considers it to be a user tag and will count
+    #     against the limit of 50 tags. Tags with only the key prefix of `aws`
+    #     do not count against your tags per resource limit.
     #
     # @return [Types::CreateDatasetGroupResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -592,17 +941,17 @@ module Aws::ForecastService
     # (Amazon S3) bucket and the Amazon Resource Name (ARN) of the dataset
     # that you want to import the data to.
     #
-    # You must specify a DataSource object that includes an AWS Identity and
-    # Access Management (IAM) role that Amazon Forecast can assume to access
-    # the data, as Amazon Forecast makes a copy of your data and processes
-    # it in an internal AWS system. For more information, see
-    # aws-forecast-iam-roles.
+    # You must specify a [DataSource][1] object that includes an Identity
+    # and Access Management (IAM) role that Amazon Forecast can assume to
+    # access the data, as Amazon Forecast makes a copy of your data and
+    # processes it in an internal Amazon Web Services system. For more
+    # information, see [Set up permissions][2].
     #
-    # The training data must be in CSV format. The delimiter must be a comma
-    # (,).
+    # The training data must be in CSV or Parquet format. The delimiter must
+    # be a comma (,).
     #
-    # You can specify the path to a specific CSV file, the S3 bucket, or to
-    # a folder in the S3 bucket. For the latter two cases, Amazon Forecast
+    # You can specify the path to a specific file, the S3 bucket, or to a
+    # folder in the S3 bucket. For the latter two cases, Amazon Forecast
     # imports all files up to the limit of 10,000 files.
     #
     # Because dataset imports are not aggregated, your most recent dataset
@@ -612,7 +961,13 @@ module Aws::ForecastService
     # collected since the previous import.
     #
     # To get a list of all your dataset import jobs, filtered by specified
-    # criteria, use the ListDatasetImportJobs operation.
+    # criteria, use the [ListDatasetImportJobs][3] operation.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_DataSource.html
+    # [2]: https://docs.aws.amazon.com/forecast/latest/dg/aws-forecast-iam-roles.html
+    # [3]: https://docs.aws.amazon.com/forecast/latest/dg/API_ListDatasetImportJobs.html
     #
     # @option params [required, String] :dataset_import_job_name
     #   The name for the dataset import job. We recommend including the
@@ -625,15 +980,19 @@ module Aws::ForecastService
     #   want to import data to.
     #
     # @option params [required, Types::DataSource] :data_source
-    #   The location of the training data to import and an AWS Identity and
-    #   Access Management (IAM) role that Amazon Forecast can assume to access
-    #   the data. The training data must be stored in an Amazon S3 bucket.
+    #   The location of the training data to import and an Identity and Access
+    #   Management (IAM) role that Amazon Forecast can assume to access the
+    #   data. The training data must be stored in an Amazon S3 bucket.
     #
-    #   If encryption is used, `DataSource` must include an AWS Key Management
+    #   If encryption is used, `DataSource` must include an Key Management
     #   Service (KMS) key and the IAM role must allow Amazon Forecast
     #   permission to access the key. The KMS key and IAM role must match
     #   those specified in the `EncryptionConfig` parameter of the
-    #   CreateDataset operation.
+    #   [CreateDataset][1] operation.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDataset.html
     #
     # @option params [String] :timestamp_format
     #   The format of timestamps in the dataset. The format that you specify
@@ -705,12 +1064,22 @@ module Aws::ForecastService
     #   * Tag keys and values are case sensitive.
     #
     #   * Do not use `aws:`, `AWS:`, or any upper or lowercase combination of
-    #     such as a prefix for keys as it is reserved for AWS use. You cannot
-    #     edit or delete tag keys with this prefix. Values can have this
-    #     prefix. If a tag value has `aws` as its prefix but the key does not,
-    #     then Forecast considers it to be a user tag and will count against
-    #     the limit of 50 tags. Tags with only the key prefix of `aws` do not
-    #     count against your tags per resource limit.
+    #     such as a prefix for keys as it is reserved for Amazon Web Services
+    #     use. You cannot edit or delete tag keys with this prefix. Values can
+    #     have this prefix. If a tag value has `aws` as its prefix but the key
+    #     does not, then Forecast considers it to be a user tag and will count
+    #     against the limit of 50 tags. Tags with only the key prefix of `aws`
+    #     do not count against your tags per resource limit.
+    #
+    # @option params [String] :format
+    #   The format of the imported data, CSV or PARQUET. The default value is
+    #   CSV.
+    #
+    # @option params [String] :import_mode
+    #   Specifies whether the dataset import job is a `FULL` or `INCREMENTAL`
+    #   import. A `FULL` dataset import replaces all of the existing data with
+    #   the newly imported data. An `INCREMENTAL` import appends the imported
+    #   data to the existing data.
     #
     # @return [Types::CreateDatasetImportJobResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -738,6 +1107,8 @@ module Aws::ForecastService
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     format: "Format",
+    #     import_mode: "FULL", # accepts FULL, INCREMENTAL
     #   })
     #
     # @example Response structure
@@ -750,6 +1121,301 @@ module Aws::ForecastService
     # @param [Hash] params ({})
     def create_dataset_import_job(params = {}, options = {})
       req = build_request(:create_dataset_import_job, params)
+      req.send_request(options)
+    end
+
+    # <note markdown="1"> Explainability is only available for Forecasts and Predictors
+    # generated from an AutoPredictor (CreateAutoPredictor)
+    #
+    #  </note>
+    #
+    # Creates an Amazon Forecast Explainability.
+    #
+    # Explainability helps you better understand how the attributes in your
+    # datasets impact forecast. Amazon Forecast uses a metric called Impact
+    # scores to quantify the relative impact of each attribute and determine
+    # whether they increase or decrease forecast values.
+    #
+    # To enable Forecast Explainability, your predictor must include at
+    # least one of the following: related time series, item metadata, or
+    # additional datasets like Holidays and the Weather Index.
+    #
+    # CreateExplainability accepts either a Predictor ARN or Forecast ARN.
+    # To receive aggregated Impact scores for all time series and time
+    # points in your datasets, provide a Predictor ARN. To receive Impact
+    # scores for specific time series and time points, provide a Forecast
+    # ARN.
+    #
+    # **CreateExplainability with a Predictor ARN**
+    #
+    # <note markdown="1"> You can only have one Explainability resource per predictor. If you
+    # already enabled `ExplainPredictor` in CreateAutoPredictor, that
+    # predictor already has an Explainability resource.
+    #
+    #  </note>
+    #
+    # The following parameters are required when providing a Predictor ARN:
+    #
+    # * `ExplainabilityName` - A unique name for the Explainability.
+    #
+    # * `ResourceArn` - The Arn of the predictor.
+    #
+    # * `TimePointGranularity` - Must be set to “ALL”.
+    #
+    # * `TimeSeriesGranularity` - Must be set to “ALL”.
+    #
+    # Do not specify a value for the following parameters:
+    #
+    # * `DataSource` - Only valid when TimeSeriesGranularity is “SPECIFIC”.
+    #
+    # * `Schema` - Only valid when TimeSeriesGranularity is “SPECIFIC”.
+    #
+    # * `StartDateTime` - Only valid when TimePointGranularity is
+    #   “SPECIFIC”.
+    #
+    # * `EndDateTime` - Only valid when TimePointGranularity is “SPECIFIC”.
+    #
+    # **CreateExplainability with a Forecast ARN**
+    #
+    # <note markdown="1"> You can specify a maximum of 50 time series and 500 time points.
+    #
+    #  </note>
+    #
+    # The following parameters are required when providing a Predictor ARN:
+    #
+    # * `ExplainabilityName` - A unique name for the Explainability.
+    #
+    # * `ResourceArn` - The Arn of the forecast.
+    #
+    # * `TimePointGranularity` - Either “ALL” or “SPECIFIC”.
+    #
+    # * `TimeSeriesGranularity` - Either “ALL” or “SPECIFIC”.
+    #
+    # If you set TimeSeriesGranularity to “SPECIFIC”, you must also provide
+    # the following:
+    #
+    # * `DataSource` - The S3 location of the CSV file specifying your time
+    #   series.
+    #
+    # * `Schema` - The Schema defines the attributes and attribute types
+    #   listed in the Data Source.
+    #
+    # If you set TimePointGranularity to “SPECIFIC”, you must also provide
+    # the following:
+    #
+    # * `StartDateTime` - The first timestamp in the range of time points.
+    #
+    # * `EndDateTime` - The last timestamp in the range of time points.
+    #
+    # @option params [required, String] :explainability_name
+    #   A unique name for the Explainability.
+    #
+    # @option params [required, String] :resource_arn
+    #   The Amazon Resource Name (ARN) of the Predictor or Forecast used to
+    #   create the Explainability.
+    #
+    # @option params [required, Types::ExplainabilityConfig] :explainability_config
+    #   The configuration settings that define the granularity of time series
+    #   and time points for the Explainability.
+    #
+    # @option params [Types::DataSource] :data_source
+    #   The source of your data, an Identity and Access Management (IAM) role
+    #   that allows Amazon Forecast to access the data and, optionally, an Key
+    #   Management Service (KMS) key.
+    #
+    # @option params [Types::Schema] :schema
+    #   Defines the fields of a dataset.
+    #
+    # @option params [Boolean] :enable_visualization
+    #   Create an Explainability visualization that is viewable within the
+    #   Amazon Web Services console.
+    #
+    # @option params [String] :start_date_time
+    #   If `TimePointGranularity` is set to `SPECIFIC`, define the first point
+    #   for the Explainability.
+    #
+    #   Use the following timestamp format: yyyy-MM-ddTHH:mm:ss (example:
+    #   2015-01-01T20:00:00)
+    #
+    # @option params [String] :end_date_time
+    #   If `TimePointGranularity` is set to `SPECIFIC`, define the last time
+    #   point for the Explainability.
+    #
+    #   Use the following timestamp format: yyyy-MM-ddTHH:mm:ss (example:
+    #   2015-01-01T20:00:00)
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   Optional metadata to help you categorize and organize your resources.
+    #   Each tag consists of a key and an optional value, both of which you
+    #   define. Tag keys and values are case sensitive.
+    #
+    #   The following restrictions apply to tags:
+    #
+    #   * For each resource, each tag key must be unique and each tag key must
+    #     have one value.
+    #
+    #   * Maximum number of tags per resource: 50.
+    #
+    #   * Maximum key length: 128 Unicode characters in UTF-8.
+    #
+    #   * Maximum value length: 256 Unicode characters in UTF-8.
+    #
+    #   * Accepted characters: all letters and numbers, spaces representable
+    #     in UTF-8, and + - = . \_ : / @. If your tagging schema is used
+    #     across other services and resources, the character restrictions of
+    #     those services also apply.
+    #
+    #   * Key prefixes cannot include any upper or lowercase combination of
+    #     `aws:` or `AWS:`. Values can have this prefix. If a tag value has
+    #     `aws` as its prefix but the key does not, Forecast considers it to
+    #     be a user tag and will count against the limit of 50 tags. Tags with
+    #     only the key prefix of `aws` do not count against your tags per
+    #     resource limit. You cannot edit or delete tag keys with this prefix.
+    #
+    # @return [Types::CreateExplainabilityResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateExplainabilityResponse#explainability_arn #explainability_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_explainability({
+    #     explainability_name: "Name", # required
+    #     resource_arn: "Arn", # required
+    #     explainability_config: { # required
+    #       time_series_granularity: "ALL", # required, accepts ALL, SPECIFIC
+    #       time_point_granularity: "ALL", # required, accepts ALL, SPECIFIC
+    #     },
+    #     data_source: {
+    #       s3_config: { # required
+    #         path: "S3Path", # required
+    #         role_arn: "Arn", # required
+    #         kms_key_arn: "KMSKeyArn",
+    #       },
+    #     },
+    #     schema: {
+    #       attributes: [
+    #         {
+    #           attribute_name: "Name",
+    #           attribute_type: "string", # accepts string, integer, float, timestamp, geolocation
+    #         },
+    #       ],
+    #     },
+    #     enable_visualization: false,
+    #     start_date_time: "LocalDateTime",
+    #     end_date_time: "LocalDateTime",
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.explainability_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateExplainability AWS API Documentation
+    #
+    # @overload create_explainability(params = {})
+    # @param [Hash] params ({})
+    def create_explainability(params = {}, options = {})
+      req = build_request(:create_explainability, params)
+      req.send_request(options)
+    end
+
+    # Exports an Explainability resource created by the CreateExplainability
+    # operation. Exported files are exported to an Amazon Simple Storage
+    # Service (Amazon S3) bucket.
+    #
+    # You must specify a DataDestination object that includes an Amazon S3
+    # bucket and an Identity and Access Management (IAM) role that Amazon
+    # Forecast can assume to access the Amazon S3 bucket. For more
+    # information, see aws-forecast-iam-roles.
+    #
+    # <note markdown="1"> The `Status` of the export job must be `ACTIVE` before you can access
+    # the export in your Amazon S3 bucket. To get the status, use the
+    # DescribeExplainabilityExport operation.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :explainability_export_name
+    #   A unique name for the Explainability export.
+    #
+    # @option params [required, String] :explainability_arn
+    #   The Amazon Resource Name (ARN) of the Explainability to export.
+    #
+    # @option params [required, Types::DataDestination] :destination
+    #   The destination for an export job. Provide an S3 path, an Identity and
+    #   Access Management (IAM) role that allows Amazon Forecast to access the
+    #   location, and an Key Management Service (KMS) key (optional).
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   Optional metadata to help you categorize and organize your resources.
+    #   Each tag consists of a key and an optional value, both of which you
+    #   define. Tag keys and values are case sensitive.
+    #
+    #   The following restrictions apply to tags:
+    #
+    #   * For each resource, each tag key must be unique and each tag key must
+    #     have one value.
+    #
+    #   * Maximum number of tags per resource: 50.
+    #
+    #   * Maximum key length: 128 Unicode characters in UTF-8.
+    #
+    #   * Maximum value length: 256 Unicode characters in UTF-8.
+    #
+    #   * Accepted characters: all letters and numbers, spaces representable
+    #     in UTF-8, and + - = . \_ : / @. If your tagging schema is used
+    #     across other services and resources, the character restrictions of
+    #     those services also apply.
+    #
+    #   * Key prefixes cannot include any upper or lowercase combination of
+    #     `aws:` or `AWS:`. Values can have this prefix. If a tag value has
+    #     `aws` as its prefix but the key does not, Forecast considers it to
+    #     be a user tag and will count against the limit of 50 tags. Tags with
+    #     only the key prefix of `aws` do not count against your tags per
+    #     resource limit. You cannot edit or delete tag keys with this prefix.
+    #
+    # @option params [String] :format
+    #   The format of the exported data, CSV or PARQUET.
+    #
+    # @return [Types::CreateExplainabilityExportResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateExplainabilityExportResponse#explainability_export_arn #explainability_export_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_explainability_export({
+    #     explainability_export_name: "Name", # required
+    #     explainability_arn: "Arn", # required
+    #     destination: { # required
+    #       s3_config: { # required
+    #         path: "S3Path", # required
+    #         role_arn: "Arn", # required
+    #         kms_key_arn: "KMSKeyArn",
+    #       },
+    #     },
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #     format: "Format",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.explainability_export_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateExplainabilityExport AWS API Documentation
+    #
+    # @overload create_explainability_export(params = {})
+    # @param [Hash] params ({})
+    def create_explainability_export(params = {}, options = {})
+      req = build_request(:create_explainability_export, params)
       req.send_request(options)
     end
 
@@ -780,6 +1446,14 @@ module Aws::ForecastService
     #
     #  </note>
     #
+    # By default, a forecast includes predictions for every item (`item_id`)
+    # in the dataset group that was used to train the predictor. However,
+    # you can use the `TimeSeriesSelector` object to generate a forecast on
+    # a subset of time series. Forecast creation is skipped for any time
+    # series that you specify that are not in the input dataset. The
+    # forecast export file will not contain these time series or their
+    # forecasted values.
+    #
     # @option params [required, String] :forecast_name
     #   A name for the forecast.
     #
@@ -793,7 +1467,11 @@ module Aws::ForecastService
     #   values include `0.01 to 0.99` (increments of .01 only) and `mean`. The
     #   mean forecast is different from the median (0.50) when the
     #   distribution is not symmetric (for example, Beta and Negative
-    #   Binomial). The default value is `["0.1", "0.5", "0.9"]`.
+    #   Binomial).
+    #
+    #   The default quantiles are the quantiles you specified during predictor
+    #   creation. If you didn't specify quantiles, the default values are
+    #   `["0.1", "0.5", "0.9"]`.
     #
     # @option params [Array<Types::Tag>] :tags
     #   The optional metadata that you apply to the forecast to help you
@@ -820,12 +1498,24 @@ module Aws::ForecastService
     #   * Tag keys and values are case sensitive.
     #
     #   * Do not use `aws:`, `AWS:`, or any upper or lowercase combination of
-    #     such as a prefix for keys as it is reserved for AWS use. You cannot
-    #     edit or delete tag keys with this prefix. Values can have this
-    #     prefix. If a tag value has `aws` as its prefix but the key does not,
-    #     then Forecast considers it to be a user tag and will count against
-    #     the limit of 50 tags. Tags with only the key prefix of `aws` do not
-    #     count against your tags per resource limit.
+    #     such as a prefix for keys as it is reserved for Amazon Web Services
+    #     use. You cannot edit or delete tag keys with this prefix. Values can
+    #     have this prefix. If a tag value has `aws` as its prefix but the key
+    #     does not, then Forecast considers it to be a user tag and will count
+    #     against the limit of 50 tags. Tags with only the key prefix of `aws`
+    #     do not count against your tags per resource limit.
+    #
+    # @option params [Types::TimeSeriesSelector] :time_series_selector
+    #   Defines the set of time series that are used to create the forecasts
+    #   in a `TimeSeriesIdentifiers` object.
+    #
+    #   The `TimeSeriesIdentifiers` object needs the following information:
+    #
+    #   * `DataSource`
+    #
+    #   * `Format`
+    #
+    #   * `Schema`
     #
     # @return [Types::CreateForecastResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -843,6 +1533,26 @@ module Aws::ForecastService
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     time_series_selector: {
+    #       time_series_identifiers: {
+    #         data_source: {
+    #           s3_config: { # required
+    #             path: "S3Path", # required
+    #             role_arn: "Arn", # required
+    #             kms_key_arn: "KMSKeyArn",
+    #           },
+    #         },
+    #         schema: {
+    #           attributes: [
+    #             {
+    #               attribute_name: "Name",
+    #               attribute_type: "string", # accepts string, integer, float, timestamp, geolocation
+    #             },
+    #           ],
+    #         },
+    #         format: "Format",
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -867,9 +1577,9 @@ module Aws::ForecastService
     # where the &lt;ExportTimestamp&gt; component is in Java
     # SimpleDateFormat (yyyy-MM-ddTHH-mm-ssZ).
     #
-    # You must specify a DataDestination object that includes an AWS
-    # Identity and Access Management (IAM) role that Amazon Forecast can
-    # assume to access the Amazon S3 bucket. For more information, see
+    # You must specify a DataDestination object that includes an Identity
+    # and Access Management (IAM) role that Amazon Forecast can assume to
+    # access the Amazon S3 bucket. For more information, see
     # aws-forecast-iam-roles.
     #
     # For more information, see howitworks-forecast.
@@ -891,14 +1601,13 @@ module Aws::ForecastService
     #   export.
     #
     # @option params [required, Types::DataDestination] :destination
-    #   The location where you want to save the forecast and an AWS Identity
-    #   and Access Management (IAM) role that Amazon Forecast can assume to
-    #   access the location. The forecast must be exported to an Amazon S3
-    #   bucket.
+    #   The location where you want to save the forecast and an Identity and
+    #   Access Management (IAM) role that Amazon Forecast can assume to access
+    #   the location. The forecast must be exported to an Amazon S3 bucket.
     #
-    #   If encryption is used, `Destination` must include an AWS Key
-    #   Management Service (KMS) key. The IAM role must allow Amazon Forecast
-    #   permission to access the key.
+    #   If encryption is used, `Destination` must include an Key Management
+    #   Service (KMS) key. The IAM role must allow Amazon Forecast permission
+    #   to access the key.
     #
     # @option params [Array<Types::Tag>] :tags
     #   The optional metadata that you apply to the forecast export job to
@@ -925,12 +1634,16 @@ module Aws::ForecastService
     #   * Tag keys and values are case sensitive.
     #
     #   * Do not use `aws:`, `AWS:`, or any upper or lowercase combination of
-    #     such as a prefix for keys as it is reserved for AWS use. You cannot
-    #     edit or delete tag keys with this prefix. Values can have this
-    #     prefix. If a tag value has `aws` as its prefix but the key does not,
-    #     then Forecast considers it to be a user tag and will count against
-    #     the limit of 50 tags. Tags with only the key prefix of `aws` do not
-    #     count against your tags per resource limit.
+    #     such as a prefix for keys as it is reserved for Amazon Web Services
+    #     use. You cannot edit or delete tag keys with this prefix. Values can
+    #     have this prefix. If a tag value has `aws` as its prefix but the key
+    #     does not, then Forecast considers it to be a user tag and will count
+    #     against the limit of 50 tags. Tags with only the key prefix of `aws`
+    #     do not count against your tags per resource limit.
+    #
+    # @option params [String] :format
+    #   The format of the exported data, CSV or PARQUET. The default value is
+    #   CSV.
     #
     # @return [Types::CreateForecastExportJobResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -954,6 +1667,7 @@ module Aws::ForecastService
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     format: "Format",
     #   })
     #
     # @example Response structure
@@ -969,6 +1683,65 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
+    # Creates a predictor monitor resource for an existing auto predictor.
+    # Predictor monitoring allows you to see how your predictor's
+    # performance changes over time. For more information, see [Predictor
+    # Monitoring][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/predictor-monitoring.html
+    #
+    # @option params [required, String] :monitor_name
+    #   The name of the monitor resource.
+    #
+    # @option params [required, String] :resource_arn
+    #   The Amazon Resource Name (ARN) of the predictor to monitor.
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   A list of [tags][1] to apply to the monitor resource.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/tagging-forecast-resources.html
+    #
+    # @return [Types::CreateMonitorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateMonitorResponse#monitor_arn #monitor_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_monitor({
+    #     monitor_name: "Name", # required
+    #     resource_arn: "Arn", # required
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.monitor_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateMonitor AWS API Documentation
+    #
+    # @overload create_monitor(params = {})
+    # @param [Hash] params ({})
+    def create_monitor(params = {}, options = {})
+      req = build_request(:create_monitor, params)
+      req.send_request(options)
+    end
+
+    # <note markdown="1"> This operation creates a legacy predictor that does not include all
+    # the predictor functionalities provided by Amazon Forecast. To create a
+    # predictor that is compatible with all aspects of Forecast, use
+    # CreateAutoPredictor.
+    #
+    #  </note>
+    #
     # Creates an Amazon Forecast predictor.
     #
     # In the request, provide a dataset group and either specify an
@@ -1077,6 +1850,19 @@ module Aws::ForecastService
     #   This is a good option if you aren't sure which algorithm is suitable
     #   for your training data. In this case, `PerformHPO` must be false.
     #
+    # @option params [String] :auto_ml_override_strategy
+    #   <note markdown="1"> The `LatencyOptimized` AutoML override strategy is only available in
+    #   private beta. Contact Amazon Web Services Support or your account
+    #   manager to learn more about access privileges.
+    #
+    #    </note>
+    #
+    #   Used to overide the default AutoML strategy, which is to optimize
+    #   predictor accuracy. To apply an AutoML strategy that minimizes
+    #   training time, use `LatencyOptimized`.
+    #
+    #   This parameter is only valid for predictors trained using AutoML.
+    #
     # @option params [Boolean] :perform_hpo
     #   Whether to perform hyperparameter optimization (HPO). HPO finds
     #   optimal hyperparameter values for your training data. The process of
@@ -1128,9 +1914,9 @@ module Aws::ForecastService
     #   The featurization configuration.
     #
     # @option params [Types::EncryptionConfig] :encryption_config
-    #   An AWS Key Management Service (KMS) key and the AWS Identity and
-    #   Access Management (IAM) role that Amazon Forecast can assume to access
-    #   the key.
+    #   An Key Management Service (KMS) key and the Identity and Access
+    #   Management (IAM) role that Amazon Forecast can assume to access the
+    #   key.
     #
     # @option params [Array<Types::Tag>] :tags
     #   The optional metadata that you apply to the predictor to help you
@@ -1157,12 +1943,15 @@ module Aws::ForecastService
     #   * Tag keys and values are case sensitive.
     #
     #   * Do not use `aws:`, `AWS:`, or any upper or lowercase combination of
-    #     such as a prefix for keys as it is reserved for AWS use. You cannot
-    #     edit or delete tag keys with this prefix. Values can have this
-    #     prefix. If a tag value has `aws` as its prefix but the key does not,
-    #     then Forecast considers it to be a user tag and will count against
-    #     the limit of 50 tags. Tags with only the key prefix of `aws` do not
-    #     count against your tags per resource limit.
+    #     such as a prefix for keys as it is reserved for Amazon Web Services
+    #     use. You cannot edit or delete tag keys with this prefix. Values can
+    #     have this prefix. If a tag value has `aws` as its prefix but the key
+    #     does not, then Forecast considers it to be a user tag and will count
+    #     against the limit of 50 tags. Tags with only the key prefix of `aws`
+    #     do not count against your tags per resource limit.
+    #
+    # @option params [String] :optimization_metric
+    #   The accuracy metric used to optimize the predictor.
     #
     # @return [Types::CreatePredictorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1176,6 +1965,7 @@ module Aws::ForecastService
     #     forecast_horizon: 1, # required
     #     forecast_types: ["ForecastType"],
     #     perform_auto_ml: false,
+    #     auto_ml_override_strategy: "LatencyOptimized", # accepts LatencyOptimized, AccuracyOptimized
     #     perform_hpo: false,
     #     training_parameters: {
     #       "ParameterKey" => "ParameterValue",
@@ -1246,6 +2036,7 @@ module Aws::ForecastService
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     optimization_metric: "WAPE", # accepts WAPE, RMSE, AverageWeightedQuantileLoss, MASE, MAPE
     #   })
     #
     # @example Response structure
@@ -1262,8 +2053,9 @@ module Aws::ForecastService
     end
 
     # Exports backtest forecasts and accuracy metrics generated by the
-    # CreatePredictor operation. Two folders containing CSV files are
-    # exported to your specified S3 bucket.
+    # CreateAutoPredictor or CreatePredictor operations. Two folders
+    # containing CSV or Parquet files are exported to your specified S3
+    # bucket.
     #
     # The export file names will match the following conventions:
     #
@@ -1273,8 +2065,8 @@ module Aws::ForecastService
     # (yyyy-MM-ddTHH-mm-ssZ).
     #
     # You must specify a DataDestination object that includes an Amazon S3
-    # bucket and an AWS Identity and Access Management (IAM) role that
-    # Amazon Forecast can assume to access the Amazon S3 bucket. For more
+    # bucket and an Identity and Access Management (IAM) role that Amazon
+    # Forecast can assume to access the Amazon S3 bucket. For more
     # information, see aws-forecast-iam-roles.
     #
     # <note markdown="1"> The `Status` of the export job must be `ACTIVE` before you can access
@@ -1291,9 +2083,9 @@ module Aws::ForecastService
     #   export.
     #
     # @option params [required, Types::DataDestination] :destination
-    #   The destination for an export job. Provide an S3 path, an AWS Identity
-    #   and Access Management (IAM) role that allows Amazon Forecast to access
-    #   the location, and an AWS Key Management Service (KMS) key (optional).
+    #   The destination for an export job. Provide an S3 path, an Identity and
+    #   Access Management (IAM) role that allows Amazon Forecast to access the
+    #   location, and an Key Management Service (KMS) key (optional).
     #
     # @option params [Array<Types::Tag>] :tags
     #   Optional metadata to help you categorize and organize your backtests.
@@ -1323,6 +2115,10 @@ module Aws::ForecastService
     #     only the key prefix of `aws` do not count against your tags per
     #     resource limit. You cannot edit or delete tag keys with this prefix.
     #
+    # @option params [String] :format
+    #   The format of the exported data, CSV or PARQUET. The default value is
+    #   CSV.
+    #
     # @return [Types::CreatePredictorBacktestExportJobResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreatePredictorBacktestExportJobResponse#predictor_backtest_export_job_arn #predictor_backtest_export_job_arn} => String
@@ -1345,6 +2141,7 @@ module Aws::ForecastService
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     format: "Format",
     #   })
     #
     # @example Response structure
@@ -1360,16 +2157,321 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
+    # What-if analysis is a scenario modeling technique where you make a
+    # hypothetical change to a time series and compare the forecasts
+    # generated by these changes against the baseline, unchanged time
+    # series. It is important to remember that the purpose of a what-if
+    # analysis is to understand how a forecast can change given different
+    # modifications to the baseline time series.
+    #
+    # For example, imagine you are a clothing retailer who is considering an
+    # end of season sale to clear space for new styles. After creating a
+    # baseline forecast, you can use a what-if analysis to investigate how
+    # different sales tactics might affect your goals.
+    #
+    # You could create a scenario where everything is given a 25% markdown,
+    # and another where everything is given a fixed dollar markdown. You
+    # could create a scenario where the sale lasts for one week and another
+    # where the sale lasts for one month. With a what-if analysis, you can
+    # compare many different scenarios against each other.
+    #
+    # Note that a what-if analysis is meant to display what the forecasting
+    # model has learned and how it will behave in the scenarios that you are
+    # evaluating. Do not blindly use the results of the what-if analysis to
+    # make business decisions. For instance, forecasts might not be accurate
+    # for novel scenarios where there is no reference available to determine
+    # whether a forecast is good.
+    #
+    # The TimeSeriesSelector object defines the items that you want in the
+    # what-if analysis.
+    #
+    # @option params [required, String] :what_if_analysis_name
+    #   The name of the what-if analysis. Each name must be unique.
+    #
+    # @option params [required, String] :forecast_arn
+    #   The Amazon Resource Name (ARN) of the baseline forecast.
+    #
+    # @option params [Types::TimeSeriesSelector] :time_series_selector
+    #   Defines the set of time series that are used in the what-if analysis
+    #   with a `TimeSeriesIdentifiers` object. What-if analyses are performed
+    #   only for the time series in this object.
+    #
+    #   The `TimeSeriesIdentifiers` object needs the following information:
+    #
+    #   * `DataSource`
+    #
+    #   * `Format`
+    #
+    #   * `Schema`
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   A list of [tags][1] to apply to the what if forecast.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/tagging-forecast-resources.html
+    #
+    # @return [Types::CreateWhatIfAnalysisResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateWhatIfAnalysisResponse#what_if_analysis_arn #what_if_analysis_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_what_if_analysis({
+    #     what_if_analysis_name: "Name", # required
+    #     forecast_arn: "Arn", # required
+    #     time_series_selector: {
+    #       time_series_identifiers: {
+    #         data_source: {
+    #           s3_config: { # required
+    #             path: "S3Path", # required
+    #             role_arn: "Arn", # required
+    #             kms_key_arn: "KMSKeyArn",
+    #           },
+    #         },
+    #         schema: {
+    #           attributes: [
+    #             {
+    #               attribute_name: "Name",
+    #               attribute_type: "string", # accepts string, integer, float, timestamp, geolocation
+    #             },
+    #           ],
+    #         },
+    #         format: "Format",
+    #       },
+    #     },
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.what_if_analysis_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateWhatIfAnalysis AWS API Documentation
+    #
+    # @overload create_what_if_analysis(params = {})
+    # @param [Hash] params ({})
+    def create_what_if_analysis(params = {}, options = {})
+      req = build_request(:create_what_if_analysis, params)
+      req.send_request(options)
+    end
+
+    # A what-if forecast is a forecast that is created from a modified
+    # version of the baseline forecast. Each what-if forecast incorporates
+    # either a replacement dataset or a set of transformations to the
+    # original dataset.
+    #
+    # @option params [required, String] :what_if_forecast_name
+    #   The name of the what-if forecast. Names must be unique within each
+    #   what-if analysis.
+    #
+    # @option params [required, String] :what_if_analysis_arn
+    #   The Amazon Resource Name (ARN) of the what-if analysis.
+    #
+    # @option params [Array<Types::TimeSeriesTransformation>] :time_series_transformations
+    #   The transformations that are applied to the baseline time series. Each
+    #   transformation contains an action and a set of conditions. An action
+    #   is applied only when all conditions are met. If no conditions are
+    #   provided, the action is applied to all items.
+    #
+    # @option params [Types::TimeSeriesReplacementsDataSource] :time_series_replacements_data_source
+    #   The replacement time series dataset, which contains the rows that you
+    #   want to change in the related time series dataset. A replacement time
+    #   series does not need to contain all rows that are in the baseline
+    #   related time series. Include only the rows (measure-dimension
+    #   combinations) that you want to include in the what-if forecast.
+    #
+    #   This dataset is merged with the original time series to create a
+    #   transformed dataset that is used for the what-if analysis.
+    #
+    #   This dataset should contain the items to modify (such as item\_id or
+    #   workforce\_type), any relevant dimensions, the timestamp column, and
+    #   at least one of the related time series columns. This file should not
+    #   contain duplicate timestamps for the same time series.
+    #
+    #   Timestamps and item\_ids not included in this dataset are not included
+    #   in the what-if analysis.
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   A list of [tags][1] to apply to the what if forecast.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/tagging-forecast-resources.html
+    #
+    # @return [Types::CreateWhatIfForecastResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateWhatIfForecastResponse#what_if_forecast_arn #what_if_forecast_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_what_if_forecast({
+    #     what_if_forecast_name: "Name", # required
+    #     what_if_analysis_arn: "Arn", # required
+    #     time_series_transformations: [
+    #       {
+    #         action: {
+    #           attribute_name: "Name", # required
+    #           operation: "ADD", # required, accepts ADD, SUBTRACT, MULTIPLY, DIVIDE
+    #           value: 1.0, # required
+    #         },
+    #         time_series_conditions: [
+    #           {
+    #             attribute_name: "Name", # required
+    #             attribute_value: "AttributeValue", # required
+    #             condition: "EQUALS", # required, accepts EQUALS, NOT_EQUALS, LESS_THAN, GREATER_THAN
+    #           },
+    #         ],
+    #       },
+    #     ],
+    #     time_series_replacements_data_source: {
+    #       s3_config: { # required
+    #         path: "S3Path", # required
+    #         role_arn: "Arn", # required
+    #         kms_key_arn: "KMSKeyArn",
+    #       },
+    #       schema: { # required
+    #         attributes: [
+    #           {
+    #             attribute_name: "Name",
+    #             attribute_type: "string", # accepts string, integer, float, timestamp, geolocation
+    #           },
+    #         ],
+    #       },
+    #       format: "Format",
+    #       timestamp_format: "TimestampFormat",
+    #     },
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.what_if_forecast_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateWhatIfForecast AWS API Documentation
+    #
+    # @overload create_what_if_forecast(params = {})
+    # @param [Hash] params ({})
+    def create_what_if_forecast(params = {}, options = {})
+      req = build_request(:create_what_if_forecast, params)
+      req.send_request(options)
+    end
+
+    # Exports a forecast created by the CreateWhatIfForecast operation to
+    # your Amazon Simple Storage Service (Amazon S3) bucket. The forecast
+    # file name will match the following conventions:
+    #
+    # `≈<ForecastExportJobName>_<ExportTimestamp>_<PartNumber>`
+    #
+    # The &lt;ExportTimestamp&gt; component is in Java SimpleDateFormat
+    # (yyyy-MM-ddTHH-mm-ssZ).
+    #
+    # You must specify a DataDestination object that includes an Identity
+    # and Access Management (IAM) role that Amazon Forecast can assume to
+    # access the Amazon S3 bucket. For more information, see
+    # aws-forecast-iam-roles.
+    #
+    # For more information, see howitworks-forecast.
+    #
+    # To get a list of all your what-if forecast export jobs, use the
+    # ListWhatIfForecastExports operation.
+    #
+    # <note markdown="1"> The `Status` of the forecast export job must be `ACTIVE` before you
+    # can access the forecast in your Amazon S3 bucket. To get the status,
+    # use the DescribeWhatIfForecastExport operation.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :what_if_forecast_export_name
+    #   The name of the what-if forecast to export.
+    #
+    # @option params [required, Array<String>] :what_if_forecast_arns
+    #   The list of what-if forecast Amazon Resource Names (ARNs) to export.
+    #
+    # @option params [required, Types::DataDestination] :destination
+    #   The location where you want to save the forecast and an Identity and
+    #   Access Management (IAM) role that Amazon Forecast can assume to access
+    #   the location. The forecast must be exported to an Amazon S3 bucket.
+    #
+    #   If encryption is used, `Destination` must include an Key Management
+    #   Service (KMS) key. The IAM role must allow Amazon Forecast permission
+    #   to access the key.
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   A list of [tags][1] to apply to the what if forecast.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/forecast/latest/dg/tagging-forecast-resources.html
+    #
+    # @option params [String] :format
+    #   The format of the exported data, CSV or PARQUET.
+    #
+    # @return [Types::CreateWhatIfForecastExportResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateWhatIfForecastExportResponse#what_if_forecast_export_arn #what_if_forecast_export_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_what_if_forecast_export({
+    #     what_if_forecast_export_name: "Name", # required
+    #     what_if_forecast_arns: ["LongArn"], # required
+    #     destination: { # required
+    #       s3_config: { # required
+    #         path: "S3Path", # required
+    #         role_arn: "Arn", # required
+    #         kms_key_arn: "KMSKeyArn",
+    #       },
+    #     },
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #     format: "Format",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.what_if_forecast_export_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/CreateWhatIfForecastExport AWS API Documentation
+    #
+    # @overload create_what_if_forecast_export(params = {})
+    # @param [Hash] params ({})
+    def create_what_if_forecast_export(params = {}, options = {})
+      req = build_request(:create_what_if_forecast_export, params)
+      req.send_request(options)
+    end
+
     # Deletes an Amazon Forecast dataset that was created using the
-    # CreateDataset operation. You can only delete datasets that have a
+    # [CreateDataset][1] operation. You can only delete datasets that have a
     # status of `ACTIVE` or `CREATE_FAILED`. To get the status use the
-    # DescribeDataset operation.
+    # [DescribeDataset][2] operation.
     #
     # <note markdown="1"> Forecast does not automatically update any dataset groups that contain
     # the deleted dataset. In order to update the dataset group, use the
-    # operation, omitting the deleted dataset's ARN.
+    # [UpdateDatasetGroup][3] operation, omitting the deleted dataset's
+    # ARN.
     #
     #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDataset.html
+    # [2]: https://docs.aws.amazon.com/forecast/latest/dg/API_DescribeDataset.html
+    # [3]: https://docs.aws.amazon.com/forecast/latest/dg/API_UpdateDatasetGroup.html
     #
     # @option params [required, String] :dataset_arn
     #   The Amazon Resource Name (ARN) of the dataset to delete.
@@ -1391,13 +2493,18 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
-    # Deletes a dataset group created using the CreateDatasetGroup
+    # Deletes a dataset group created using the [CreateDatasetGroup][1]
     # operation. You can only delete dataset groups that have a status of
     # `ACTIVE`, `CREATE_FAILED`, or `UPDATE_FAILED`. To get the status, use
-    # the DescribeDatasetGroup operation.
+    # the [DescribeDatasetGroup][2] operation.
     #
     # This operation deletes only the dataset group, not the datasets in the
     # group.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDatasetGroup.html
+    # [2]: https://docs.aws.amazon.com/forecast/latest/dg/API_DescribeDatasetGroup.html
     #
     # @option params [required, String] :dataset_group_arn
     #   The Amazon Resource Name (ARN) of the dataset group to delete.
@@ -1419,10 +2526,15 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
-    # Deletes a dataset import job created using the CreateDatasetImportJob
-    # operation. You can delete only dataset import jobs that have a status
-    # of `ACTIVE` or `CREATE_FAILED`. To get the status, use the
-    # DescribeDatasetImportJob operation.
+    # Deletes a dataset import job created using the
+    # [CreateDatasetImportJob][1] operation. You can delete only dataset
+    # import jobs that have a status of `ACTIVE` or `CREATE_FAILED`. To get
+    # the status, use the [DescribeDatasetImportJob][2] operation.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDatasetImportJob.html
+    # [2]: https://docs.aws.amazon.com/forecast/latest/dg/API_DescribeDatasetImportJob.html
     #
     # @option params [required, String] :dataset_import_job_arn
     #   The Amazon Resource Name (ARN) of the dataset import job to delete.
@@ -1441,6 +2553,55 @@ module Aws::ForecastService
     # @param [Hash] params ({})
     def delete_dataset_import_job(params = {}, options = {})
       req = build_request(:delete_dataset_import_job, params)
+      req.send_request(options)
+    end
+
+    # Deletes an Explainability resource.
+    #
+    # You can delete only predictor that have a status of `ACTIVE` or
+    # `CREATE_FAILED`. To get the status, use the DescribeExplainability
+    # operation.
+    #
+    # @option params [required, String] :explainability_arn
+    #   The Amazon Resource Name (ARN) of the Explainability resource to
+    #   delete.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_explainability({
+    #     explainability_arn: "Arn", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteExplainability AWS API Documentation
+    #
+    # @overload delete_explainability(params = {})
+    # @param [Hash] params ({})
+    def delete_explainability(params = {}, options = {})
+      req = build_request(:delete_explainability, params)
+      req.send_request(options)
+    end
+
+    # Deletes an Explainability export.
+    #
+    # @option params [required, String] :explainability_export_arn
+    #   The Amazon Resource Name (ARN) of the Explainability export to delete.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_explainability_export({
+    #     explainability_export_arn: "Arn", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteExplainabilityExport AWS API Documentation
+    #
+    # @overload delete_explainability_export(params = {})
+    # @param [Hash] params ({})
+    def delete_explainability_export(params = {}, options = {})
+      req = build_request(:delete_explainability_export, params)
       req.send_request(options)
     end
 
@@ -1497,10 +2658,34 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
-    # Deletes a predictor created using the CreatePredictor operation. You
-    # can delete only predictor that have a status of `ACTIVE` or
-    # `CREATE_FAILED`. To get the status, use the DescribePredictor
-    # operation.
+    # Deletes a monitor resource. You can only delete a monitor resource
+    # with a status of `ACTIVE`, `ACTIVE_STOPPED`, `CREATE_FAILED`, or
+    # `CREATE_STOPPED`.
+    #
+    # @option params [required, String] :monitor_arn
+    #   The Amazon Resource Name (ARN) of the monitor resource to delete.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_monitor({
+    #     monitor_arn: "Arn", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteMonitor AWS API Documentation
+    #
+    # @overload delete_monitor(params = {})
+    # @param [Hash] params ({})
+    def delete_monitor(params = {}, options = {})
+      req = build_request(:delete_monitor, params)
+      req.send_request(options)
+    end
+
+    # Deletes a predictor created using the DescribePredictor or
+    # CreatePredictor operations. You can delete only predictor that have a
+    # status of `ACTIVE` or `CREATE_FAILED`. To get the status, use the
+    # DescribePredictor operation.
     #
     # @option params [required, String] :predictor_arn
     #   The Amazon Resource Name (ARN) of the predictor to delete.
@@ -1556,15 +2741,15 @@ module Aws::ForecastService
     # Amazon Forecast resources possess the following parent-child resource
     # hierarchies:
     #
-    # * **Dataset Group**\: predictors, predictor backtest export jobs,
+    # * **Dataset**: dataset import jobs
+    #
+    # * **Dataset Group**: predictors, predictor backtest export jobs,
     #   forecasts, forecast export jobs
     #
-    # * **Dataset**\: dataset import jobs
-    #
-    # * **Predictor**\: predictor backtest export jobs, forecasts, forecast
+    # * **Predictor**: predictor backtest export jobs, forecasts, forecast
     #   export jobs
     #
-    # * **Forecast**\: forecast export jobs
+    # * **Forecast**: forecast export jobs
     #
     # <note markdown="1"> `DeleteResourceTree` will only delete Amazon Forecast resources, and
     # will not delete datasets or exported files stored in Amazon S3.
@@ -1592,8 +2777,176 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
-    # Describes an Amazon Forecast dataset created using the CreateDataset
-    # operation.
+    # Deletes a what-if analysis created using the CreateWhatIfAnalysis
+    # operation. You can delete only what-if analyses that have a status of
+    # `ACTIVE` or `CREATE_FAILED`. To get the status, use the
+    # DescribeWhatIfAnalysis operation.
+    #
+    # You can't delete a what-if analysis while any of its forecasts are
+    # being exported.
+    #
+    # @option params [required, String] :what_if_analysis_arn
+    #   The Amazon Resource Name (ARN) of the what-if analysis that you want
+    #   to delete.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_what_if_analysis({
+    #     what_if_analysis_arn: "Arn", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteWhatIfAnalysis AWS API Documentation
+    #
+    # @overload delete_what_if_analysis(params = {})
+    # @param [Hash] params ({})
+    def delete_what_if_analysis(params = {}, options = {})
+      req = build_request(:delete_what_if_analysis, params)
+      req.send_request(options)
+    end
+
+    # Deletes a what-if forecast created using the CreateWhatIfForecast
+    # operation. You can delete only what-if forecasts that have a status of
+    # `ACTIVE` or `CREATE_FAILED`. To get the status, use the
+    # DescribeWhatIfForecast operation.
+    #
+    # You can't delete a what-if forecast while it is being exported. After
+    # a what-if forecast is deleted, you can no longer query the what-if
+    # analysis.
+    #
+    # @option params [required, String] :what_if_forecast_arn
+    #   The Amazon Resource Name (ARN) of the what-if forecast that you want
+    #   to delete.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_what_if_forecast({
+    #     what_if_forecast_arn: "LongArn", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteWhatIfForecast AWS API Documentation
+    #
+    # @overload delete_what_if_forecast(params = {})
+    # @param [Hash] params ({})
+    def delete_what_if_forecast(params = {}, options = {})
+      req = build_request(:delete_what_if_forecast, params)
+      req.send_request(options)
+    end
+
+    # Deletes a what-if forecast export created using the
+    # CreateWhatIfForecastExport operation. You can delete only what-if
+    # forecast exports that have a status of `ACTIVE` or `CREATE_FAILED`. To
+    # get the status, use the DescribeWhatIfForecastExport operation.
+    #
+    # @option params [required, String] :what_if_forecast_export_arn
+    #   The Amazon Resource Name (ARN) of the what-if forecast export that you
+    #   want to delete.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_what_if_forecast_export({
+    #     what_if_forecast_export_arn: "LongArn", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DeleteWhatIfForecastExport AWS API Documentation
+    #
+    # @overload delete_what_if_forecast_export(params = {})
+    # @param [Hash] params ({})
+    def delete_what_if_forecast_export(params = {}, options = {})
+      req = build_request(:delete_what_if_forecast_export, params)
+      req.send_request(options)
+    end
+
+    # Describes a predictor created using the CreateAutoPredictor operation.
+    #
+    # @option params [required, String] :predictor_arn
+    #   The Amazon Resource Name (ARN) of the predictor.
+    #
+    # @return [Types::DescribeAutoPredictorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeAutoPredictorResponse#predictor_arn #predictor_arn} => String
+    #   * {Types::DescribeAutoPredictorResponse#predictor_name #predictor_name} => String
+    #   * {Types::DescribeAutoPredictorResponse#forecast_horizon #forecast_horizon} => Integer
+    #   * {Types::DescribeAutoPredictorResponse#forecast_types #forecast_types} => Array&lt;String&gt;
+    #   * {Types::DescribeAutoPredictorResponse#forecast_frequency #forecast_frequency} => String
+    #   * {Types::DescribeAutoPredictorResponse#forecast_dimensions #forecast_dimensions} => Array&lt;String&gt;
+    #   * {Types::DescribeAutoPredictorResponse#dataset_import_job_arns #dataset_import_job_arns} => Array&lt;String&gt;
+    #   * {Types::DescribeAutoPredictorResponse#data_config #data_config} => Types::DataConfig
+    #   * {Types::DescribeAutoPredictorResponse#encryption_config #encryption_config} => Types::EncryptionConfig
+    #   * {Types::DescribeAutoPredictorResponse#reference_predictor_summary #reference_predictor_summary} => Types::ReferencePredictorSummary
+    #   * {Types::DescribeAutoPredictorResponse#estimated_time_remaining_in_minutes #estimated_time_remaining_in_minutes} => Integer
+    #   * {Types::DescribeAutoPredictorResponse#status #status} => String
+    #   * {Types::DescribeAutoPredictorResponse#message #message} => String
+    #   * {Types::DescribeAutoPredictorResponse#creation_time #creation_time} => Time
+    #   * {Types::DescribeAutoPredictorResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribeAutoPredictorResponse#optimization_metric #optimization_metric} => String
+    #   * {Types::DescribeAutoPredictorResponse#explainability_info #explainability_info} => Types::ExplainabilityInfo
+    #   * {Types::DescribeAutoPredictorResponse#monitor_info #monitor_info} => Types::MonitorInfo
+    #   * {Types::DescribeAutoPredictorResponse#time_alignment_boundary #time_alignment_boundary} => Types::TimeAlignmentBoundary
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_auto_predictor({
+    #     predictor_arn: "Arn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.predictor_arn #=> String
+    #   resp.predictor_name #=> String
+    #   resp.forecast_horizon #=> Integer
+    #   resp.forecast_types #=> Array
+    #   resp.forecast_types[0] #=> String
+    #   resp.forecast_frequency #=> String
+    #   resp.forecast_dimensions #=> Array
+    #   resp.forecast_dimensions[0] #=> String
+    #   resp.dataset_import_job_arns #=> Array
+    #   resp.dataset_import_job_arns[0] #=> String
+    #   resp.data_config.dataset_group_arn #=> String
+    #   resp.data_config.attribute_configs #=> Array
+    #   resp.data_config.attribute_configs[0].attribute_name #=> String
+    #   resp.data_config.attribute_configs[0].transformations #=> Hash
+    #   resp.data_config.attribute_configs[0].transformations["Name"] #=> String
+    #   resp.data_config.additional_datasets #=> Array
+    #   resp.data_config.additional_datasets[0].name #=> String
+    #   resp.data_config.additional_datasets[0].configuration #=> Hash
+    #   resp.data_config.additional_datasets[0].configuration["Name"] #=> Array
+    #   resp.data_config.additional_datasets[0].configuration["Name"][0] #=> String
+    #   resp.encryption_config.role_arn #=> String
+    #   resp.encryption_config.kms_key_arn #=> String
+    #   resp.reference_predictor_summary.arn #=> String
+    #   resp.reference_predictor_summary.state #=> String, one of "Active", "Deleted"
+    #   resp.estimated_time_remaining_in_minutes #=> Integer
+    #   resp.status #=> String
+    #   resp.message #=> String
+    #   resp.creation_time #=> Time
+    #   resp.last_modification_time #=> Time
+    #   resp.optimization_metric #=> String, one of "WAPE", "RMSE", "AverageWeightedQuantileLoss", "MASE", "MAPE"
+    #   resp.explainability_info.explainability_arn #=> String
+    #   resp.explainability_info.status #=> String
+    #   resp.monitor_info.monitor_arn #=> String
+    #   resp.monitor_info.status #=> String
+    #   resp.time_alignment_boundary.month #=> String, one of "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+    #   resp.time_alignment_boundary.day_of_month #=> Integer
+    #   resp.time_alignment_boundary.day_of_week #=> String, one of "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"
+    #   resp.time_alignment_boundary.hour #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeAutoPredictor AWS API Documentation
+    #
+    # @overload describe_auto_predictor(params = {})
+    # @param [Hash] params ({})
+    def describe_auto_predictor(params = {}, options = {})
+      req = build_request(:describe_auto_predictor, params)
+      req.send_request(options)
+    end
+
+    # Describes an Amazon Forecast dataset created using the
+    # [CreateDataset][1] operation.
     #
     # In addition to listing the parameters specified in the `CreateDataset`
     # request, this operation includes the following dataset properties:
@@ -1603,6 +2956,10 @@ module Aws::ForecastService
     # * `LastModificationTime`
     #
     # * `Status`
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDataset.html
     #
     # @option params [required, String] :dataset_arn
     #   The Amazon Resource Name (ARN) of the dataset.
@@ -1651,7 +3008,7 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
-    # Describes a dataset group created using the CreateDatasetGroup
+    # Describes a dataset group created using the [CreateDatasetGroup][1]
     # operation.
     #
     # In addition to listing the parameters provided in the
@@ -1665,6 +3022,10 @@ module Aws::ForecastService
     # * `LastModificationTime`
     #
     # * `Status`
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDatasetGroup.html
     #
     # @option params [required, String] :dataset_group_arn
     #   The Amazon Resource Name (ARN) of the dataset group.
@@ -1706,7 +3067,7 @@ module Aws::ForecastService
     end
 
     # Describes a dataset import job created using the
-    # CreateDatasetImportJob operation.
+    # [CreateDatasetImportJob][1] operation.
     #
     # In addition to listing the parameters provided in the
     # `CreateDatasetImportJob` request, this operation includes the
@@ -1723,6 +3084,10 @@ module Aws::ForecastService
     # * `Status`
     #
     # * `Message` - If an error occurred, information about the error.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDatasetImportJob.html
     #
     # @option params [required, String] :dataset_import_job_arn
     #   The Amazon Resource Name (ARN) of the dataset import job.
@@ -1744,6 +3109,8 @@ module Aws::ForecastService
     #   * {Types::DescribeDatasetImportJobResponse#message #message} => String
     #   * {Types::DescribeDatasetImportJobResponse#creation_time #creation_time} => Time
     #   * {Types::DescribeDatasetImportJobResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribeDatasetImportJobResponse#format #format} => String
+    #   * {Types::DescribeDatasetImportJobResponse#import_mode #import_mode} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -1773,11 +3140,17 @@ module Aws::ForecastService
     #   resp.field_statistics["String"].max #=> String
     #   resp.field_statistics["String"].avg #=> Float
     #   resp.field_statistics["String"].stddev #=> Float
+    #   resp.field_statistics["String"].count_long #=> Integer
+    #   resp.field_statistics["String"].count_distinct_long #=> Integer
+    #   resp.field_statistics["String"].count_null_long #=> Integer
+    #   resp.field_statistics["String"].count_nan_long #=> Integer
     #   resp.data_size #=> Float
     #   resp.status #=> String
     #   resp.message #=> String
     #   resp.creation_time #=> Time
     #   resp.last_modification_time #=> Time
+    #   resp.format #=> String
+    #   resp.import_mode #=> String, one of "FULL", "INCREMENTAL"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeDatasetImportJob AWS API Documentation
     #
@@ -1785,6 +3158,113 @@ module Aws::ForecastService
     # @param [Hash] params ({})
     def describe_dataset_import_job(params = {}, options = {})
       req = build_request(:describe_dataset_import_job, params)
+      req.send_request(options)
+    end
+
+    # Describes an Explainability resource created using the
+    # CreateExplainability operation.
+    #
+    # @option params [required, String] :explainability_arn
+    #   The Amazon Resource Name (ARN) of the Explaianability to describe.
+    #
+    # @return [Types::DescribeExplainabilityResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeExplainabilityResponse#explainability_arn #explainability_arn} => String
+    #   * {Types::DescribeExplainabilityResponse#explainability_name #explainability_name} => String
+    #   * {Types::DescribeExplainabilityResponse#resource_arn #resource_arn} => String
+    #   * {Types::DescribeExplainabilityResponse#explainability_config #explainability_config} => Types::ExplainabilityConfig
+    #   * {Types::DescribeExplainabilityResponse#enable_visualization #enable_visualization} => Boolean
+    #   * {Types::DescribeExplainabilityResponse#data_source #data_source} => Types::DataSource
+    #   * {Types::DescribeExplainabilityResponse#schema #schema} => Types::Schema
+    #   * {Types::DescribeExplainabilityResponse#start_date_time #start_date_time} => String
+    #   * {Types::DescribeExplainabilityResponse#end_date_time #end_date_time} => String
+    #   * {Types::DescribeExplainabilityResponse#estimated_time_remaining_in_minutes #estimated_time_remaining_in_minutes} => Integer
+    #   * {Types::DescribeExplainabilityResponse#message #message} => String
+    #   * {Types::DescribeExplainabilityResponse#status #status} => String
+    #   * {Types::DescribeExplainabilityResponse#creation_time #creation_time} => Time
+    #   * {Types::DescribeExplainabilityResponse#last_modification_time #last_modification_time} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_explainability({
+    #     explainability_arn: "Arn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.explainability_arn #=> String
+    #   resp.explainability_name #=> String
+    #   resp.resource_arn #=> String
+    #   resp.explainability_config.time_series_granularity #=> String, one of "ALL", "SPECIFIC"
+    #   resp.explainability_config.time_point_granularity #=> String, one of "ALL", "SPECIFIC"
+    #   resp.enable_visualization #=> Boolean
+    #   resp.data_source.s3_config.path #=> String
+    #   resp.data_source.s3_config.role_arn #=> String
+    #   resp.data_source.s3_config.kms_key_arn #=> String
+    #   resp.schema.attributes #=> Array
+    #   resp.schema.attributes[0].attribute_name #=> String
+    #   resp.schema.attributes[0].attribute_type #=> String, one of "string", "integer", "float", "timestamp", "geolocation"
+    #   resp.start_date_time #=> String
+    #   resp.end_date_time #=> String
+    #   resp.estimated_time_remaining_in_minutes #=> Integer
+    #   resp.message #=> String
+    #   resp.status #=> String
+    #   resp.creation_time #=> Time
+    #   resp.last_modification_time #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeExplainability AWS API Documentation
+    #
+    # @overload describe_explainability(params = {})
+    # @param [Hash] params ({})
+    def describe_explainability(params = {}, options = {})
+      req = build_request(:describe_explainability, params)
+      req.send_request(options)
+    end
+
+    # Describes an Explainability export created using the
+    # CreateExplainabilityExport operation.
+    #
+    # @option params [required, String] :explainability_export_arn
+    #   The Amazon Resource Name (ARN) of the Explainability export.
+    #
+    # @return [Types::DescribeExplainabilityExportResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeExplainabilityExportResponse#explainability_export_arn #explainability_export_arn} => String
+    #   * {Types::DescribeExplainabilityExportResponse#explainability_export_name #explainability_export_name} => String
+    #   * {Types::DescribeExplainabilityExportResponse#explainability_arn #explainability_arn} => String
+    #   * {Types::DescribeExplainabilityExportResponse#destination #destination} => Types::DataDestination
+    #   * {Types::DescribeExplainabilityExportResponse#message #message} => String
+    #   * {Types::DescribeExplainabilityExportResponse#status #status} => String
+    #   * {Types::DescribeExplainabilityExportResponse#creation_time #creation_time} => Time
+    #   * {Types::DescribeExplainabilityExportResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribeExplainabilityExportResponse#format #format} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_explainability_export({
+    #     explainability_export_arn: "Arn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.explainability_export_arn #=> String
+    #   resp.explainability_export_name #=> String
+    #   resp.explainability_arn #=> String
+    #   resp.destination.s3_config.path #=> String
+    #   resp.destination.s3_config.role_arn #=> String
+    #   resp.destination.s3_config.kms_key_arn #=> String
+    #   resp.message #=> String
+    #   resp.status #=> String
+    #   resp.creation_time #=> Time
+    #   resp.last_modification_time #=> Time
+    #   resp.format #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeExplainabilityExport AWS API Documentation
+    #
+    # @overload describe_explainability_export(params = {})
+    # @param [Hash] params ({})
+    def describe_explainability_export(params = {}, options = {})
+      req = build_request(:describe_explainability_export, params)
       req.send_request(options)
     end
 
@@ -1819,6 +3299,7 @@ module Aws::ForecastService
     #   * {Types::DescribeForecastResponse#message #message} => String
     #   * {Types::DescribeForecastResponse#creation_time #creation_time} => Time
     #   * {Types::DescribeForecastResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribeForecastResponse#time_series_selector #time_series_selector} => Types::TimeSeriesSelector
     #
     # @example Request syntax with placeholder values
     #
@@ -1839,6 +3320,13 @@ module Aws::ForecastService
     #   resp.message #=> String
     #   resp.creation_time #=> Time
     #   resp.last_modification_time #=> Time
+    #   resp.time_series_selector.time_series_identifiers.data_source.s3_config.path #=> String
+    #   resp.time_series_selector.time_series_identifiers.data_source.s3_config.role_arn #=> String
+    #   resp.time_series_selector.time_series_identifiers.data_source.s3_config.kms_key_arn #=> String
+    #   resp.time_series_selector.time_series_identifiers.schema.attributes #=> Array
+    #   resp.time_series_selector.time_series_identifiers.schema.attributes[0].attribute_name #=> String
+    #   resp.time_series_selector.time_series_identifiers.schema.attributes[0].attribute_type #=> String, one of "string", "integer", "float", "timestamp", "geolocation"
+    #   resp.time_series_selector.time_series_identifiers.format #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeForecast AWS API Documentation
     #
@@ -1877,6 +3365,7 @@ module Aws::ForecastService
     #   * {Types::DescribeForecastExportJobResponse#status #status} => String
     #   * {Types::DescribeForecastExportJobResponse#creation_time #creation_time} => Time
     #   * {Types::DescribeForecastExportJobResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribeForecastExportJobResponse#format #format} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -1896,6 +3385,7 @@ module Aws::ForecastService
     #   resp.status #=> String
     #   resp.creation_time #=> Time
     #   resp.last_modification_time #=> Time
+    #   resp.format #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeForecastExportJob AWS API Documentation
     #
@@ -1906,6 +3396,78 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
+    # Describes a monitor resource. In addition to listing the properties
+    # provided in the CreateMonitor request, this operation lists the
+    # following properties:
+    #
+    # * `Baseline`
+    #
+    # * `CreationTime`
+    #
+    # * `LastEvaluationTime`
+    #
+    # * `LastEvaluationState`
+    #
+    # * `LastModificationTime`
+    #
+    # * `Message`
+    #
+    # * `Status`
+    #
+    # @option params [required, String] :monitor_arn
+    #   The Amazon Resource Name (ARN) of the monitor resource to describe.
+    #
+    # @return [Types::DescribeMonitorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeMonitorResponse#monitor_name #monitor_name} => String
+    #   * {Types::DescribeMonitorResponse#monitor_arn #monitor_arn} => String
+    #   * {Types::DescribeMonitorResponse#resource_arn #resource_arn} => String
+    #   * {Types::DescribeMonitorResponse#status #status} => String
+    #   * {Types::DescribeMonitorResponse#last_evaluation_time #last_evaluation_time} => Time
+    #   * {Types::DescribeMonitorResponse#last_evaluation_state #last_evaluation_state} => String
+    #   * {Types::DescribeMonitorResponse#baseline #baseline} => Types::Baseline
+    #   * {Types::DescribeMonitorResponse#message #message} => String
+    #   * {Types::DescribeMonitorResponse#creation_time #creation_time} => Time
+    #   * {Types::DescribeMonitorResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribeMonitorResponse#estimated_evaluation_time_remaining_in_minutes #estimated_evaluation_time_remaining_in_minutes} => Integer
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_monitor({
+    #     monitor_arn: "Arn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.monitor_name #=> String
+    #   resp.monitor_arn #=> String
+    #   resp.resource_arn #=> String
+    #   resp.status #=> String
+    #   resp.last_evaluation_time #=> Time
+    #   resp.last_evaluation_state #=> String
+    #   resp.baseline.predictor_baseline.baseline_metrics #=> Array
+    #   resp.baseline.predictor_baseline.baseline_metrics[0].name #=> String
+    #   resp.baseline.predictor_baseline.baseline_metrics[0].value #=> Float
+    #   resp.message #=> String
+    #   resp.creation_time #=> Time
+    #   resp.last_modification_time #=> Time
+    #   resp.estimated_evaluation_time_remaining_in_minutes #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeMonitor AWS API Documentation
+    #
+    # @overload describe_monitor(params = {})
+    # @param [Hash] params ({})
+    def describe_monitor(params = {}, options = {})
+      req = build_request(:describe_monitor, params)
+      req.send_request(options)
+    end
+
+    # <note markdown="1"> This operation is only valid for legacy predictors created with
+    # CreatePredictor. If you are not using a legacy predictor, use
+    # DescribeAutoPredictor.
+    #
+    #  </note>
+    #
     # Describes a predictor created using the CreatePredictor operation.
     #
     # In addition to listing the properties provided in the
@@ -1935,9 +3497,11 @@ module Aws::ForecastService
     #   * {Types::DescribePredictorResponse#predictor_arn #predictor_arn} => String
     #   * {Types::DescribePredictorResponse#predictor_name #predictor_name} => String
     #   * {Types::DescribePredictorResponse#algorithm_arn #algorithm_arn} => String
+    #   * {Types::DescribePredictorResponse#auto_ml_algorithm_arns #auto_ml_algorithm_arns} => Array&lt;String&gt;
     #   * {Types::DescribePredictorResponse#forecast_horizon #forecast_horizon} => Integer
     #   * {Types::DescribePredictorResponse#forecast_types #forecast_types} => Array&lt;String&gt;
     #   * {Types::DescribePredictorResponse#perform_auto_ml #perform_auto_ml} => Boolean
+    #   * {Types::DescribePredictorResponse#auto_ml_override_strategy #auto_ml_override_strategy} => String
     #   * {Types::DescribePredictorResponse#perform_hpo #perform_hpo} => Boolean
     #   * {Types::DescribePredictorResponse#training_parameters #training_parameters} => Hash&lt;String,String&gt;
     #   * {Types::DescribePredictorResponse#evaluation_parameters #evaluation_parameters} => Types::EvaluationParameters
@@ -1947,12 +3511,13 @@ module Aws::ForecastService
     #   * {Types::DescribePredictorResponse#encryption_config #encryption_config} => Types::EncryptionConfig
     #   * {Types::DescribePredictorResponse#predictor_execution_details #predictor_execution_details} => Types::PredictorExecutionDetails
     #   * {Types::DescribePredictorResponse#estimated_time_remaining_in_minutes #estimated_time_remaining_in_minutes} => Integer
+    #   * {Types::DescribePredictorResponse#is_auto_predictor #is_auto_predictor} => Boolean
     #   * {Types::DescribePredictorResponse#dataset_import_job_arns #dataset_import_job_arns} => Array&lt;String&gt;
-    #   * {Types::DescribePredictorResponse#auto_ml_algorithm_arns #auto_ml_algorithm_arns} => Array&lt;String&gt;
     #   * {Types::DescribePredictorResponse#status #status} => String
     #   * {Types::DescribePredictorResponse#message #message} => String
     #   * {Types::DescribePredictorResponse#creation_time #creation_time} => Time
     #   * {Types::DescribePredictorResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribePredictorResponse#optimization_metric #optimization_metric} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -1965,10 +3530,13 @@ module Aws::ForecastService
     #   resp.predictor_arn #=> String
     #   resp.predictor_name #=> String
     #   resp.algorithm_arn #=> String
+    #   resp.auto_ml_algorithm_arns #=> Array
+    #   resp.auto_ml_algorithm_arns[0] #=> String
     #   resp.forecast_horizon #=> Integer
     #   resp.forecast_types #=> Array
     #   resp.forecast_types[0] #=> String
     #   resp.perform_auto_ml #=> Boolean
+    #   resp.auto_ml_override_strategy #=> String, one of "LatencyOptimized", "AccuracyOptimized"
     #   resp.perform_hpo #=> Boolean
     #   resp.training_parameters #=> Hash
     #   resp.training_parameters["ParameterKey"] #=> String
@@ -2011,14 +3579,14 @@ module Aws::ForecastService
     #   resp.predictor_execution_details.predictor_executions[0].test_windows[0].status #=> String
     #   resp.predictor_execution_details.predictor_executions[0].test_windows[0].message #=> String
     #   resp.estimated_time_remaining_in_minutes #=> Integer
+    #   resp.is_auto_predictor #=> Boolean
     #   resp.dataset_import_job_arns #=> Array
     #   resp.dataset_import_job_arns[0] #=> String
-    #   resp.auto_ml_algorithm_arns #=> Array
-    #   resp.auto_ml_algorithm_arns[0] #=> String
     #   resp.status #=> String
     #   resp.message #=> String
     #   resp.creation_time #=> Time
     #   resp.last_modification_time #=> Time
+    #   resp.optimization_metric #=> String, one of "WAPE", "RMSE", "AverageWeightedQuantileLoss", "MASE", "MAPE"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribePredictor AWS API Documentation
     #
@@ -2057,6 +3625,7 @@ module Aws::ForecastService
     #   * {Types::DescribePredictorBacktestExportJobResponse#status #status} => String
     #   * {Types::DescribePredictorBacktestExportJobResponse#creation_time #creation_time} => Time
     #   * {Types::DescribePredictorBacktestExportJobResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribePredictorBacktestExportJobResponse#format #format} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -2076,6 +3645,7 @@ module Aws::ForecastService
     #   resp.status #=> String
     #   resp.creation_time #=> Time
     #   resp.last_modification_time #=> Time
+    #   resp.format #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribePredictorBacktestExportJob AWS API Documentation
     #
@@ -2083,6 +3653,210 @@ module Aws::ForecastService
     # @param [Hash] params ({})
     def describe_predictor_backtest_export_job(params = {}, options = {})
       req = build_request(:describe_predictor_backtest_export_job, params)
+      req.send_request(options)
+    end
+
+    # Describes the what-if analysis created using the CreateWhatIfAnalysis
+    # operation.
+    #
+    # In addition to listing the properties provided in the
+    # `CreateWhatIfAnalysis` request, this operation lists the following
+    # properties:
+    #
+    # * `CreationTime`
+    #
+    # * `LastModificationTime`
+    #
+    # * `Message` - If an error occurred, information about the error.
+    #
+    # * `Status`
+    #
+    # @option params [required, String] :what_if_analysis_arn
+    #   The Amazon Resource Name (ARN) of the what-if analysis that you are
+    #   interested in.
+    #
+    # @return [Types::DescribeWhatIfAnalysisResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeWhatIfAnalysisResponse#what_if_analysis_name #what_if_analysis_name} => String
+    #   * {Types::DescribeWhatIfAnalysisResponse#what_if_analysis_arn #what_if_analysis_arn} => String
+    #   * {Types::DescribeWhatIfAnalysisResponse#forecast_arn #forecast_arn} => String
+    #   * {Types::DescribeWhatIfAnalysisResponse#estimated_time_remaining_in_minutes #estimated_time_remaining_in_minutes} => Integer
+    #   * {Types::DescribeWhatIfAnalysisResponse#status #status} => String
+    #   * {Types::DescribeWhatIfAnalysisResponse#message #message} => String
+    #   * {Types::DescribeWhatIfAnalysisResponse#creation_time #creation_time} => Time
+    #   * {Types::DescribeWhatIfAnalysisResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribeWhatIfAnalysisResponse#time_series_selector #time_series_selector} => Types::TimeSeriesSelector
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_what_if_analysis({
+    #     what_if_analysis_arn: "Arn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.what_if_analysis_name #=> String
+    #   resp.what_if_analysis_arn #=> String
+    #   resp.forecast_arn #=> String
+    #   resp.estimated_time_remaining_in_minutes #=> Integer
+    #   resp.status #=> String
+    #   resp.message #=> String
+    #   resp.creation_time #=> Time
+    #   resp.last_modification_time #=> Time
+    #   resp.time_series_selector.time_series_identifiers.data_source.s3_config.path #=> String
+    #   resp.time_series_selector.time_series_identifiers.data_source.s3_config.role_arn #=> String
+    #   resp.time_series_selector.time_series_identifiers.data_source.s3_config.kms_key_arn #=> String
+    #   resp.time_series_selector.time_series_identifiers.schema.attributes #=> Array
+    #   resp.time_series_selector.time_series_identifiers.schema.attributes[0].attribute_name #=> String
+    #   resp.time_series_selector.time_series_identifiers.schema.attributes[0].attribute_type #=> String, one of "string", "integer", "float", "timestamp", "geolocation"
+    #   resp.time_series_selector.time_series_identifiers.format #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeWhatIfAnalysis AWS API Documentation
+    #
+    # @overload describe_what_if_analysis(params = {})
+    # @param [Hash] params ({})
+    def describe_what_if_analysis(params = {}, options = {})
+      req = build_request(:describe_what_if_analysis, params)
+      req.send_request(options)
+    end
+
+    # Describes the what-if forecast created using the CreateWhatIfForecast
+    # operation.
+    #
+    # In addition to listing the properties provided in the
+    # `CreateWhatIfForecast` request, this operation lists the following
+    # properties:
+    #
+    # * `CreationTime`
+    #
+    # * `LastModificationTime`
+    #
+    # * `Message` - If an error occurred, information about the error.
+    #
+    # * `Status`
+    #
+    # @option params [required, String] :what_if_forecast_arn
+    #   The Amazon Resource Name (ARN) of the what-if forecast that you are
+    #   interested in.
+    #
+    # @return [Types::DescribeWhatIfForecastResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeWhatIfForecastResponse#what_if_forecast_name #what_if_forecast_name} => String
+    #   * {Types::DescribeWhatIfForecastResponse#what_if_forecast_arn #what_if_forecast_arn} => String
+    #   * {Types::DescribeWhatIfForecastResponse#what_if_analysis_arn #what_if_analysis_arn} => String
+    #   * {Types::DescribeWhatIfForecastResponse#estimated_time_remaining_in_minutes #estimated_time_remaining_in_minutes} => Integer
+    #   * {Types::DescribeWhatIfForecastResponse#status #status} => String
+    #   * {Types::DescribeWhatIfForecastResponse#message #message} => String
+    #   * {Types::DescribeWhatIfForecastResponse#creation_time #creation_time} => Time
+    #   * {Types::DescribeWhatIfForecastResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribeWhatIfForecastResponse#time_series_transformations #time_series_transformations} => Array&lt;Types::TimeSeriesTransformation&gt;
+    #   * {Types::DescribeWhatIfForecastResponse#time_series_replacements_data_source #time_series_replacements_data_source} => Types::TimeSeriesReplacementsDataSource
+    #   * {Types::DescribeWhatIfForecastResponse#forecast_types #forecast_types} => Array&lt;String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_what_if_forecast({
+    #     what_if_forecast_arn: "LongArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.what_if_forecast_name #=> String
+    #   resp.what_if_forecast_arn #=> String
+    #   resp.what_if_analysis_arn #=> String
+    #   resp.estimated_time_remaining_in_minutes #=> Integer
+    #   resp.status #=> String
+    #   resp.message #=> String
+    #   resp.creation_time #=> Time
+    #   resp.last_modification_time #=> Time
+    #   resp.time_series_transformations #=> Array
+    #   resp.time_series_transformations[0].action.attribute_name #=> String
+    #   resp.time_series_transformations[0].action.operation #=> String, one of "ADD", "SUBTRACT", "MULTIPLY", "DIVIDE"
+    #   resp.time_series_transformations[0].action.value #=> Float
+    #   resp.time_series_transformations[0].time_series_conditions #=> Array
+    #   resp.time_series_transformations[0].time_series_conditions[0].attribute_name #=> String
+    #   resp.time_series_transformations[0].time_series_conditions[0].attribute_value #=> <Hash,Array,String,Numeric,Boolean,IO,Set,nil>
+    #   resp.time_series_transformations[0].time_series_conditions[0].condition #=> String, one of "EQUALS", "NOT_EQUALS", "LESS_THAN", "GREATER_THAN"
+    #   resp.time_series_replacements_data_source.s3_config.path #=> String
+    #   resp.time_series_replacements_data_source.s3_config.role_arn #=> String
+    #   resp.time_series_replacements_data_source.s3_config.kms_key_arn #=> String
+    #   resp.time_series_replacements_data_source.schema.attributes #=> Array
+    #   resp.time_series_replacements_data_source.schema.attributes[0].attribute_name #=> String
+    #   resp.time_series_replacements_data_source.schema.attributes[0].attribute_type #=> String, one of "string", "integer", "float", "timestamp", "geolocation"
+    #   resp.time_series_replacements_data_source.format #=> String
+    #   resp.time_series_replacements_data_source.timestamp_format #=> String
+    #   resp.forecast_types #=> Array
+    #   resp.forecast_types[0] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeWhatIfForecast AWS API Documentation
+    #
+    # @overload describe_what_if_forecast(params = {})
+    # @param [Hash] params ({})
+    def describe_what_if_forecast(params = {}, options = {})
+      req = build_request(:describe_what_if_forecast, params)
+      req.send_request(options)
+    end
+
+    # Describes the what-if forecast export created using the
+    # CreateWhatIfForecastExport operation.
+    #
+    # In addition to listing the properties provided in the
+    # `CreateWhatIfForecastExport` request, this operation lists the
+    # following properties:
+    #
+    # * `CreationTime`
+    #
+    # * `LastModificationTime`
+    #
+    # * `Message` - If an error occurred, information about the error.
+    #
+    # * `Status`
+    #
+    # @option params [required, String] :what_if_forecast_export_arn
+    #   The Amazon Resource Name (ARN) of the what-if forecast export that you
+    #   are interested in.
+    #
+    # @return [Types::DescribeWhatIfForecastExportResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeWhatIfForecastExportResponse#what_if_forecast_export_arn #what_if_forecast_export_arn} => String
+    #   * {Types::DescribeWhatIfForecastExportResponse#what_if_forecast_export_name #what_if_forecast_export_name} => String
+    #   * {Types::DescribeWhatIfForecastExportResponse#what_if_forecast_arns #what_if_forecast_arns} => Array&lt;String&gt;
+    #   * {Types::DescribeWhatIfForecastExportResponse#destination #destination} => Types::DataDestination
+    #   * {Types::DescribeWhatIfForecastExportResponse#message #message} => String
+    #   * {Types::DescribeWhatIfForecastExportResponse#status #status} => String
+    #   * {Types::DescribeWhatIfForecastExportResponse#creation_time #creation_time} => Time
+    #   * {Types::DescribeWhatIfForecastExportResponse#estimated_time_remaining_in_minutes #estimated_time_remaining_in_minutes} => Integer
+    #   * {Types::DescribeWhatIfForecastExportResponse#last_modification_time #last_modification_time} => Time
+    #   * {Types::DescribeWhatIfForecastExportResponse#format #format} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_what_if_forecast_export({
+    #     what_if_forecast_export_arn: "LongArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.what_if_forecast_export_arn #=> String
+    #   resp.what_if_forecast_export_name #=> String
+    #   resp.what_if_forecast_arns #=> Array
+    #   resp.what_if_forecast_arns[0] #=> String
+    #   resp.destination.s3_config.path #=> String
+    #   resp.destination.s3_config.role_arn #=> String
+    #   resp.destination.s3_config.kms_key_arn #=> String
+    #   resp.message #=> String
+    #   resp.status #=> String
+    #   resp.creation_time #=> Time
+    #   resp.estimated_time_remaining_in_minutes #=> Integer
+    #   resp.last_modification_time #=> Time
+    #   resp.format #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/DescribeWhatIfForecastExport AWS API Documentation
+    #
+    # @overload describe_what_if_forecast_export(params = {})
+    # @param [Hash] params ({})
+    def describe_what_if_forecast_export(params = {}, options = {})
+      req = build_request(:describe_what_if_forecast_export, params)
       req.send_request(options)
     end
 
@@ -2120,6 +3894,9 @@ module Aws::ForecastService
     # @return [Types::GetAccuracyMetricsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::GetAccuracyMetricsResponse#predictor_evaluation_results #predictor_evaluation_results} => Array&lt;Types::EvaluationResult&gt;
+    #   * {Types::GetAccuracyMetricsResponse#is_auto_predictor #is_auto_predictor} => Boolean
+    #   * {Types::GetAccuracyMetricsResponse#auto_ml_override_strategy #auto_ml_override_strategy} => String
+    #   * {Types::GetAccuracyMetricsResponse#optimization_metric #optimization_metric} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -2144,6 +3921,12 @@ module Aws::ForecastService
     #   resp.predictor_evaluation_results[0].test_windows[0].metrics.error_metrics[0].forecast_type #=> String
     #   resp.predictor_evaluation_results[0].test_windows[0].metrics.error_metrics[0].wape #=> Float
     #   resp.predictor_evaluation_results[0].test_windows[0].metrics.error_metrics[0].rmse #=> Float
+    #   resp.predictor_evaluation_results[0].test_windows[0].metrics.error_metrics[0].mase #=> Float
+    #   resp.predictor_evaluation_results[0].test_windows[0].metrics.error_metrics[0].mape #=> Float
+    #   resp.predictor_evaluation_results[0].test_windows[0].metrics.average_weighted_quantile_loss #=> Float
+    #   resp.is_auto_predictor #=> Boolean
+    #   resp.auto_ml_override_strategy #=> String, one of "LatencyOptimized", "AccuracyOptimized"
+    #   resp.optimization_metric #=> String, one of "WAPE", "RMSE", "AverageWeightedQuantileLoss", "MASE", "MAPE"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/GetAccuracyMetrics AWS API Documentation
     #
@@ -2154,11 +3937,17 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
-    # Returns a list of dataset groups created using the CreateDatasetGroup
-    # operation. For each dataset group, this operation returns a summary of
-    # its properties, including its Amazon Resource Name (ARN). You can
-    # retrieve the complete set of properties by using the dataset group ARN
-    # with the DescribeDatasetGroup operation.
+    # Returns a list of dataset groups created using the
+    # [CreateDatasetGroup][1] operation. For each dataset group, this
+    # operation returns a summary of its properties, including its Amazon
+    # Resource Name (ARN). You can retrieve the complete set of properties
+    # by using the dataset group ARN with the [DescribeDatasetGroup][2]
+    # operation.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDatasetGroup.html
+    # [2]: https://docs.aws.amazon.com/forecast/latest/dg/API_DescribeDatasetGroup.html
     #
     # @option params [String] :next_token
     #   If the result of the previous request was truncated, the response
@@ -2201,11 +3990,17 @@ module Aws::ForecastService
     end
 
     # Returns a list of dataset import jobs created using the
-    # CreateDatasetImportJob operation. For each import job, this operation
-    # returns a summary of its properties, including its Amazon Resource
-    # Name (ARN). You can retrieve the complete set of properties by using
-    # the ARN with the DescribeDatasetImportJob operation. You can filter
-    # the list by providing an array of Filter objects.
+    # [CreateDatasetImportJob][1] operation. For each import job, this
+    # operation returns a summary of its properties, including its Amazon
+    # Resource Name (ARN). You can retrieve the complete set of properties
+    # by using the ARN with the [DescribeDatasetImportJob][2] operation. You
+    # can filter the list by providing an array of [Filter][3] objects.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDatasetImportJob.html
+    # [2]: https://docs.aws.amazon.com/forecast/latest/dg/API_DescribeDatasetImportJob.html
+    # [3]: https://docs.aws.amazon.com/forecast/latest/dg/API_Filter.html
     #
     # @option params [String] :next_token
     #   If the result of the previous request was truncated, the response
@@ -2272,6 +4067,7 @@ module Aws::ForecastService
     #   resp.dataset_import_jobs[0].message #=> String
     #   resp.dataset_import_jobs[0].creation_time #=> Time
     #   resp.dataset_import_jobs[0].last_modification_time #=> Time
+    #   resp.dataset_import_jobs[0].import_mode #=> String, one of "FULL", "INCREMENTAL"
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListDatasetImportJobs AWS API Documentation
@@ -2283,10 +4079,16 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
-    # Returns a list of datasets created using the CreateDataset operation.
-    # For each dataset, a summary of its properties, including its Amazon
-    # Resource Name (ARN), is returned. To retrieve the complete set of
-    # properties, use the ARN with the DescribeDataset operation.
+    # Returns a list of datasets created using the [CreateDataset][1]
+    # operation. For each dataset, a summary of its properties, including
+    # its Amazon Resource Name (ARN), is returned. To retrieve the complete
+    # set of properties, use the ARN with the [DescribeDataset][2]
+    # operation.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_CreateDataset.html
+    # [2]: https://docs.aws.amazon.com/forecast/latest/dg/API_DescribeDataset.html
     #
     # @option params [String] :next_token
     #   If the result of the previous request was truncated, the response
@@ -2327,6 +4129,160 @@ module Aws::ForecastService
     # @param [Hash] params ({})
     def list_datasets(params = {}, options = {})
       req = build_request(:list_datasets, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of Explainability resources created using the
+    # CreateExplainability operation. This operation returns a summary for
+    # each Explainability. You can filter the list using an array of Filter
+    # objects.
+    #
+    # To retrieve the complete set of properties for a particular
+    # Explainability resource, use the ARN with the DescribeExplainability
+    # operation.
+    #
+    # @option params [String] :next_token
+    #   If the result of the previous request was truncated, the response
+    #   includes a NextToken. To retrieve the next set of results, use the
+    #   token in the next request. Tokens expire after 24 hours.
+    #
+    # @option params [Integer] :max_results
+    #   The number of items returned in the response.
+    #
+    # @option params [Array<Types::Filter>] :filters
+    #   An array of filters. For each filter, provide a condition and a match
+    #   statement. The condition is either `IS` or `IS_NOT`, which specifies
+    #   whether to include or exclude the resources that match the statement
+    #   from the list. The match statement consists of a key and a value.
+    #
+    #   **Filter properties**
+    #
+    #   * `Condition` - The condition to apply. Valid values are `IS` and
+    #     `IS_NOT`.
+    #
+    #   * `Key` - The name of the parameter to filter on. Valid values are
+    #     `ResourceArn` and `Status`.
+    #
+    #   * `Value` - The value to match.
+    #
+    # @return [Types::ListExplainabilitiesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListExplainabilitiesResponse#explainabilities #explainabilities} => Array&lt;Types::ExplainabilitySummary&gt;
+    #   * {Types::ListExplainabilitiesResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_explainabilities({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     filters: [
+    #       {
+    #         key: "String", # required
+    #         value: "Arn", # required
+    #         condition: "IS", # required, accepts IS, IS_NOT
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.explainabilities #=> Array
+    #   resp.explainabilities[0].explainability_arn #=> String
+    #   resp.explainabilities[0].explainability_name #=> String
+    #   resp.explainabilities[0].resource_arn #=> String
+    #   resp.explainabilities[0].explainability_config.time_series_granularity #=> String, one of "ALL", "SPECIFIC"
+    #   resp.explainabilities[0].explainability_config.time_point_granularity #=> String, one of "ALL", "SPECIFIC"
+    #   resp.explainabilities[0].status #=> String
+    #   resp.explainabilities[0].message #=> String
+    #   resp.explainabilities[0].creation_time #=> Time
+    #   resp.explainabilities[0].last_modification_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListExplainabilities AWS API Documentation
+    #
+    # @overload list_explainabilities(params = {})
+    # @param [Hash] params ({})
+    def list_explainabilities(params = {}, options = {})
+      req = build_request(:list_explainabilities, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of Explainability exports created using the
+    # CreateExplainabilityExport operation. This operation returns a summary
+    # for each Explainability export. You can filter the list using an array
+    # of Filter objects.
+    #
+    # To retrieve the complete set of properties for a particular
+    # Explainability export, use the ARN with the DescribeExplainability
+    # operation.
+    #
+    # @option params [String] :next_token
+    #   If the result of the previous request was truncated, the response
+    #   includes a NextToken. To retrieve the next set of results, use the
+    #   token in the next request. Tokens expire after 24 hours.
+    #
+    # @option params [Integer] :max_results
+    #   The number of items to return in the response.
+    #
+    # @option params [Array<Types::Filter>] :filters
+    #   An array of filters. For each filter, provide a condition and a match
+    #   statement. The condition is either `IS` or `IS_NOT`, which specifies
+    #   whether to include or exclude resources that match the statement from
+    #   the list. The match statement consists of a key and a value.
+    #
+    #   **Filter properties**
+    #
+    #   * `Condition` - The condition to apply. Valid values are `IS` and
+    #     `IS_NOT`.
+    #
+    #   * `Key` - The name of the parameter to filter on. Valid values are
+    #     `ResourceArn` and `Status`.
+    #
+    #   * `Value` - The value to match.
+    #
+    # @return [Types::ListExplainabilityExportsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListExplainabilityExportsResponse#explainability_exports #explainability_exports} => Array&lt;Types::ExplainabilityExportSummary&gt;
+    #   * {Types::ListExplainabilityExportsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_explainability_exports({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     filters: [
+    #       {
+    #         key: "String", # required
+    #         value: "Arn", # required
+    #         condition: "IS", # required, accepts IS, IS_NOT
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.explainability_exports #=> Array
+    #   resp.explainability_exports[0].explainability_export_arn #=> String
+    #   resp.explainability_exports[0].explainability_export_name #=> String
+    #   resp.explainability_exports[0].destination.s3_config.path #=> String
+    #   resp.explainability_exports[0].destination.s3_config.role_arn #=> String
+    #   resp.explainability_exports[0].destination.s3_config.kms_key_arn #=> String
+    #   resp.explainability_exports[0].status #=> String
+    #   resp.explainability_exports[0].message #=> String
+    #   resp.explainability_exports[0].creation_time #=> Time
+    #   resp.explainability_exports[0].last_modification_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListExplainabilityExports AWS API Documentation
+    #
+    # @overload list_explainability_exports(params = {})
+    # @param [Hash] params ({})
+    def list_explainability_exports(params = {}, options = {})
+      req = build_request(:list_explainability_exports, params)
       req.send_request(options)
     end
 
@@ -2480,6 +4436,7 @@ module Aws::ForecastService
     #   resp.forecasts[0].forecast_arn #=> String
     #   resp.forecasts[0].forecast_name #=> String
     #   resp.forecasts[0].predictor_arn #=> String
+    #   resp.forecasts[0].created_using_auto_predictor #=> Boolean
     #   resp.forecasts[0].dataset_group_arn #=> String
     #   resp.forecasts[0].status #=> String
     #   resp.forecasts[0].message #=> String
@@ -2493,6 +4450,183 @@ module Aws::ForecastService
     # @param [Hash] params ({})
     def list_forecasts(params = {}, options = {})
       req = build_request(:list_forecasts, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of the monitoring evaluation results and predictor
+    # events collected by the monitor resource during different windows of
+    # time.
+    #
+    # For information about monitoring see predictor-monitoring. For more
+    # information about retrieving monitoring results see [Viewing
+    # Monitoring Results][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/predictor-monitoring-results.html
+    #
+    # @option params [String] :next_token
+    #   If the result of the previous request was truncated, the response
+    #   includes a `NextToken`. To retrieve the next set of results, use the
+    #   token in the next request. Tokens expire after 24 hours.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of monitoring results to return.
+    #
+    # @option params [required, String] :monitor_arn
+    #   The Amazon Resource Name (ARN) of the monitor resource to get results
+    #   from.
+    #
+    # @option params [Array<Types::Filter>] :filters
+    #   An array of filters. For each filter, provide a condition and a match
+    #   statement. The condition is either `IS` or `IS_NOT`, which specifies
+    #   whether to include or exclude the resources that match the statement
+    #   from the list. The match statement consists of a key and a value.
+    #
+    #   **Filter properties**
+    #
+    #   * `Condition` - The condition to apply. Valid values are `IS` and
+    #     `IS_NOT`.
+    #
+    #   * `Key` - The name of the parameter to filter on. The only valid value
+    #     is `EvaluationState`.
+    #
+    #   * `Value` - The value to match. Valid values are only `SUCCESS` or
+    #     `FAILURE`.
+    #
+    #   For example, to list only successful monitor evaluations, you would
+    #   specify:
+    #
+    #   `"Filters": [ \{ "Condition": "IS", "Key": "EvaluationState", "Value":
+    #   "SUCCESS" \} ]`
+    #
+    # @return [Types::ListMonitorEvaluationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListMonitorEvaluationsResponse#next_token #next_token} => String
+    #   * {Types::ListMonitorEvaluationsResponse#predictor_monitor_evaluations #predictor_monitor_evaluations} => Array&lt;Types::PredictorMonitorEvaluation&gt;
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_monitor_evaluations({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     monitor_arn: "Arn", # required
+    #     filters: [
+    #       {
+    #         key: "String", # required
+    #         value: "Arn", # required
+    #         condition: "IS", # required, accepts IS, IS_NOT
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.next_token #=> String
+    #   resp.predictor_monitor_evaluations #=> Array
+    #   resp.predictor_monitor_evaluations[0].resource_arn #=> String
+    #   resp.predictor_monitor_evaluations[0].monitor_arn #=> String
+    #   resp.predictor_monitor_evaluations[0].evaluation_time #=> Time
+    #   resp.predictor_monitor_evaluations[0].evaluation_state #=> String
+    #   resp.predictor_monitor_evaluations[0].window_start_datetime #=> Time
+    #   resp.predictor_monitor_evaluations[0].window_end_datetime #=> Time
+    #   resp.predictor_monitor_evaluations[0].predictor_event.detail #=> String
+    #   resp.predictor_monitor_evaluations[0].predictor_event.datetime #=> Time
+    #   resp.predictor_monitor_evaluations[0].monitor_data_source.dataset_import_job_arn #=> String
+    #   resp.predictor_monitor_evaluations[0].monitor_data_source.forecast_arn #=> String
+    #   resp.predictor_monitor_evaluations[0].monitor_data_source.predictor_arn #=> String
+    #   resp.predictor_monitor_evaluations[0].metric_results #=> Array
+    #   resp.predictor_monitor_evaluations[0].metric_results[0].metric_name #=> String
+    #   resp.predictor_monitor_evaluations[0].metric_results[0].metric_value #=> Float
+    #   resp.predictor_monitor_evaluations[0].num_items_evaluated #=> Integer
+    #   resp.predictor_monitor_evaluations[0].message #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListMonitorEvaluations AWS API Documentation
+    #
+    # @overload list_monitor_evaluations(params = {})
+    # @param [Hash] params ({})
+    def list_monitor_evaluations(params = {}, options = {})
+      req = build_request(:list_monitor_evaluations, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of monitors created with the CreateMonitor operation
+    # and CreateAutoPredictor operation. For each monitor resource, this
+    # operation returns of a summary of its properties, including its Amazon
+    # Resource Name (ARN). You can retrieve a complete set of properties of
+    # a monitor resource by specify the monitor's ARN in the
+    # DescribeMonitor operation.
+    #
+    # @option params [String] :next_token
+    #   If the result of the previous request was truncated, the response
+    #   includes a `NextToken`. To retrieve the next set of results, use the
+    #   token in the next request. Tokens expire after 24 hours.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of monitors to include in the response.
+    #
+    # @option params [Array<Types::Filter>] :filters
+    #   An array of filters. For each filter, provide a condition and a match
+    #   statement. The condition is either `IS` or `IS_NOT`, which specifies
+    #   whether to include or exclude the resources that match the statement
+    #   from the list. The match statement consists of a key and a value.
+    #
+    #   **Filter properties**
+    #
+    #   * `Condition` - The condition to apply. Valid values are `IS` and
+    #     `IS_NOT`.
+    #
+    #   * `Key` - The name of the parameter to filter on. The only valid value
+    #     is `Status`.
+    #
+    #   * `Value` - The value to match.
+    #
+    #   For example, to list all monitors who's status is ACTIVE, you would
+    #   specify:
+    #
+    #   `"Filters": [ \{ "Condition": "IS", "Key": "Status", "Value": "ACTIVE"
+    #   \} ]`
+    #
+    # @return [Types::ListMonitorsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListMonitorsResponse#monitors #monitors} => Array&lt;Types::MonitorSummary&gt;
+    #   * {Types::ListMonitorsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_monitors({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     filters: [
+    #       {
+    #         key: "String", # required
+    #         value: "Arn", # required
+    #         condition: "IS", # required, accepts IS, IS_NOT
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.monitors #=> Array
+    #   resp.monitors[0].monitor_arn #=> String
+    #   resp.monitors[0].monitor_name #=> String
+    #   resp.monitors[0].resource_arn #=> String
+    #   resp.monitors[0].status #=> String
+    #   resp.monitors[0].creation_time #=> Time
+    #   resp.monitors[0].last_modification_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListMonitors AWS API Documentation
+    #
+    # @overload list_monitors(params = {})
+    # @param [Hash] params ({})
+    def list_monitors(params = {}, options = {})
+      req = build_request(:list_monitors, params)
       req.send_request(options)
     end
 
@@ -2576,12 +4710,13 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
-    # Returns a list of predictors created using the CreatePredictor
-    # operation. For each predictor, this operation returns a summary of its
-    # properties, including its Amazon Resource Name (ARN). You can retrieve
-    # the complete set of properties by using the ARN with the
-    # DescribePredictor operation. You can filter the list using an array of
-    # Filter objects.
+    # Returns a list of predictors created using the CreateAutoPredictor or
+    # CreatePredictor operations. For each predictor, this operation returns
+    # a summary of its properties, including its Amazon Resource Name (ARN).
+    #
+    # You can retrieve the complete set of properties by using the ARN with
+    # the DescribeAutoPredictor and DescribePredictor operations. You can
+    # filter the list using an array of Filter objects.
     #
     # @option params [String] :next_token
     #   If the result of the previous request was truncated, the response
@@ -2642,6 +4777,9 @@ module Aws::ForecastService
     #   resp.predictors[0].predictor_arn #=> String
     #   resp.predictors[0].predictor_name #=> String
     #   resp.predictors[0].dataset_group_arn #=> String
+    #   resp.predictors[0].is_auto_predictor #=> Boolean
+    #   resp.predictors[0].reference_predictor_summary.arn #=> String
+    #   resp.predictors[0].reference_predictor_summary.state #=> String, one of "Active", "Deleted"
     #   resp.predictors[0].status #=> String
     #   resp.predictors[0].message #=> String
     #   resp.predictors[0].creation_time #=> Time
@@ -2661,9 +4799,7 @@ module Aws::ForecastService
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) that identifies the resource for which
-    #   to list the tags. Currently, the supported resources are Forecast
-    #   dataset groups, datasets, dataset import jobs, predictors, forecasts,
-    #   and forecast export jobs.
+    #   to list the tags.
     #
     # @return [Types::ListTagsForResourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2690,6 +4826,284 @@ module Aws::ForecastService
       req.send_request(options)
     end
 
+    # Returns a list of what-if analyses created using the
+    # CreateWhatIfAnalysis operation. For each what-if analysis, this
+    # operation returns a summary of its properties, including its Amazon
+    # Resource Name (ARN). You can retrieve the complete set of properties
+    # by using the what-if analysis ARN with the DescribeWhatIfAnalysis
+    # operation.
+    #
+    # @option params [String] :next_token
+    #   If the result of the previous request was truncated, the response
+    #   includes a `NextToken`. To retrieve the next set of results, use the
+    #   token in the next request. Tokens expire after 24 hours.
+    #
+    # @option params [Integer] :max_results
+    #   The number of items to return in the response.
+    #
+    # @option params [Array<Types::Filter>] :filters
+    #   An array of filters. For each filter, you provide a condition and a
+    #   match statement. The condition is either `IS` or `IS_NOT`, which
+    #   specifies whether to include or exclude the what-if analysis jobs that
+    #   match the statement from the list, respectively. The match statement
+    #   consists of a key and a value.
+    #
+    #   **Filter properties**
+    #
+    #   * `Condition` - The condition to apply. Valid values are `IS` and
+    #     `IS_NOT`. To include the what-if analysis jobs that match the
+    #     statement, specify `IS`. To exclude matching what-if analysis jobs,
+    #     specify `IS_NOT`.
+    #
+    #   * `Key` - The name of the parameter to filter on. Valid values are
+    #     `WhatIfAnalysisArn` and `Status`.
+    #
+    #   * `Value` - The value to match.
+    #
+    #   For example, to list all jobs that export a forecast named
+    #   *electricityWhatIf*, specify the following filter:
+    #
+    #   `"Filters": [ \{ "Condition": "IS", "Key": "WhatIfAnalysisArn",
+    #   "Value":
+    #   "arn:aws:forecast:us-west-2:<acct-id>:forecast/electricityWhatIf" \}
+    #   ]`
+    #
+    # @return [Types::ListWhatIfAnalysesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListWhatIfAnalysesResponse#what_if_analyses #what_if_analyses} => Array&lt;Types::WhatIfAnalysisSummary&gt;
+    #   * {Types::ListWhatIfAnalysesResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_what_if_analyses({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     filters: [
+    #       {
+    #         key: "String", # required
+    #         value: "Arn", # required
+    #         condition: "IS", # required, accepts IS, IS_NOT
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.what_if_analyses #=> Array
+    #   resp.what_if_analyses[0].what_if_analysis_arn #=> String
+    #   resp.what_if_analyses[0].what_if_analysis_name #=> String
+    #   resp.what_if_analyses[0].forecast_arn #=> String
+    #   resp.what_if_analyses[0].status #=> String
+    #   resp.what_if_analyses[0].message #=> String
+    #   resp.what_if_analyses[0].creation_time #=> Time
+    #   resp.what_if_analyses[0].last_modification_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListWhatIfAnalyses AWS API Documentation
+    #
+    # @overload list_what_if_analyses(params = {})
+    # @param [Hash] params ({})
+    def list_what_if_analyses(params = {}, options = {})
+      req = build_request(:list_what_if_analyses, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of what-if forecast exports created using the
+    # CreateWhatIfForecastExport operation. For each what-if forecast
+    # export, this operation returns a summary of its properties, including
+    # its Amazon Resource Name (ARN). You can retrieve the complete set of
+    # properties by using the what-if forecast export ARN with the
+    # DescribeWhatIfForecastExport operation.
+    #
+    # @option params [String] :next_token
+    #   If the result of the previous request was truncated, the response
+    #   includes a `NextToken`. To retrieve the next set of results, use the
+    #   token in the next  request. Tokens expire after 24 hours.
+    #
+    # @option params [Integer] :max_results
+    #   The number of items to return in the response.
+    #
+    # @option params [Array<Types::Filter>] :filters
+    #   An array of filters. For each filter, you provide a condition and a
+    #   match statement. The condition is either `IS` or `IS_NOT`, which
+    #   specifies whether to include or exclude the what-if forecast export
+    #   jobs that match the statement from the list, respectively. The match
+    #   statement consists of a key and a value.
+    #
+    #   **Filter properties**
+    #
+    #   * `Condition` - The condition to apply. Valid values are `IS` and
+    #     `IS_NOT`. To include the forecast export jobs that match the
+    #     statement, specify `IS`. To exclude matching forecast export jobs,
+    #     specify `IS_NOT`.
+    #
+    #   * `Key` - The name of the parameter to filter on. Valid values are
+    #     `WhatIfForecastExportArn` and `Status`.
+    #
+    #   * `Value` - The value to match.
+    #
+    #   For example, to list all jobs that export a forecast named
+    #   *electricityWIFExport*, specify the following filter:
+    #
+    #   `"Filters": [ \{ "Condition": "IS", "Key": "WhatIfForecastExportArn",
+    #   "Value":
+    #   "arn:aws:forecast:us-west-2:<acct-id>:forecast/electricityWIFExport"
+    #   \} ]`
+    #
+    # @return [Types::ListWhatIfForecastExportsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListWhatIfForecastExportsResponse#what_if_forecast_exports #what_if_forecast_exports} => Array&lt;Types::WhatIfForecastExportSummary&gt;
+    #   * {Types::ListWhatIfForecastExportsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_what_if_forecast_exports({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     filters: [
+    #       {
+    #         key: "String", # required
+    #         value: "Arn", # required
+    #         condition: "IS", # required, accepts IS, IS_NOT
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.what_if_forecast_exports #=> Array
+    #   resp.what_if_forecast_exports[0].what_if_forecast_export_arn #=> String
+    #   resp.what_if_forecast_exports[0].what_if_forecast_arns #=> Array
+    #   resp.what_if_forecast_exports[0].what_if_forecast_arns[0] #=> String
+    #   resp.what_if_forecast_exports[0].what_if_forecast_export_name #=> String
+    #   resp.what_if_forecast_exports[0].destination.s3_config.path #=> String
+    #   resp.what_if_forecast_exports[0].destination.s3_config.role_arn #=> String
+    #   resp.what_if_forecast_exports[0].destination.s3_config.kms_key_arn #=> String
+    #   resp.what_if_forecast_exports[0].status #=> String
+    #   resp.what_if_forecast_exports[0].message #=> String
+    #   resp.what_if_forecast_exports[0].creation_time #=> Time
+    #   resp.what_if_forecast_exports[0].last_modification_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListWhatIfForecastExports AWS API Documentation
+    #
+    # @overload list_what_if_forecast_exports(params = {})
+    # @param [Hash] params ({})
+    def list_what_if_forecast_exports(params = {}, options = {})
+      req = build_request(:list_what_if_forecast_exports, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of what-if forecasts created using the
+    # CreateWhatIfForecast operation. For each what-if forecast, this
+    # operation returns a summary of its properties, including its Amazon
+    # Resource Name (ARN). You can retrieve the complete set of properties
+    # by using the what-if forecast ARN with the DescribeWhatIfForecast
+    # operation.
+    #
+    # @option params [String] :next_token
+    #   If the result of the previous request was truncated, the response
+    #   includes a `NextToken`. To retrieve the next set of results, use the
+    #   token in the next  request. Tokens expire after 24 hours.
+    #
+    # @option params [Integer] :max_results
+    #   The number of items to return in the response.
+    #
+    # @option params [Array<Types::Filter>] :filters
+    #   An array of filters. For each filter, you provide a condition and a
+    #   match statement. The condition is either `IS` or `IS_NOT`, which
+    #   specifies whether to include or exclude the what-if forecast export
+    #   jobs that match the statement from the list, respectively. The match
+    #   statement consists of a key and a value.
+    #
+    #   **Filter properties**
+    #
+    #   * `Condition` - The condition to apply. Valid values are `IS` and
+    #     `IS_NOT`. To include the forecast export jobs that match the
+    #     statement, specify `IS`. To exclude matching forecast export jobs,
+    #     specify `IS_NOT`.
+    #
+    #   * `Key` - The name of the parameter to filter on. Valid values are
+    #     `WhatIfForecastArn` and `Status`.
+    #
+    #   * `Value` - The value to match.
+    #
+    #   For example, to list all jobs that export a forecast named
+    #   *electricityWhatIfForecast*, specify the following filter:
+    #
+    #   `"Filters": [ \{ "Condition": "IS", "Key": "WhatIfForecastArn",
+    #   "Value":
+    #   "arn:aws:forecast:us-west-2:<acct-id>:forecast/electricityWhatIfForecast"
+    #   \} ]`
+    #
+    # @return [Types::ListWhatIfForecastsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListWhatIfForecastsResponse#what_if_forecasts #what_if_forecasts} => Array&lt;Types::WhatIfForecastSummary&gt;
+    #   * {Types::ListWhatIfForecastsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_what_if_forecasts({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     filters: [
+    #       {
+    #         key: "String", # required
+    #         value: "Arn", # required
+    #         condition: "IS", # required, accepts IS, IS_NOT
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.what_if_forecasts #=> Array
+    #   resp.what_if_forecasts[0].what_if_forecast_arn #=> String
+    #   resp.what_if_forecasts[0].what_if_forecast_name #=> String
+    #   resp.what_if_forecasts[0].what_if_analysis_arn #=> String
+    #   resp.what_if_forecasts[0].status #=> String
+    #   resp.what_if_forecasts[0].message #=> String
+    #   resp.what_if_forecasts[0].creation_time #=> Time
+    #   resp.what_if_forecasts[0].last_modification_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ListWhatIfForecasts AWS API Documentation
+    #
+    # @overload list_what_if_forecasts(params = {})
+    # @param [Hash] params ({})
+    def list_what_if_forecasts(params = {}, options = {})
+      req = build_request(:list_what_if_forecasts, params)
+      req.send_request(options)
+    end
+
+    # Resumes a stopped monitor resource.
+    #
+    # @option params [required, String] :resource_arn
+    #   The Amazon Resource Name (ARN) of the monitor resource to resume.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.resume_resource({
+    #     resource_arn: "Arn", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/forecast-2018-06-26/ResumeResource AWS API Documentation
+    #
+    # @overload resume_resource(params = {})
+    # @param [Hash] params ({})
+    def resume_resource(params = {}, options = {})
+      req = build_request(:resume_resource, params)
+      req.send_request(options)
+    end
+
     # Stops a resource.
     #
     # The resource undergoes the following states: `CREATE_STOPPING` and
@@ -2709,11 +5123,16 @@ module Aws::ForecastService
     #
     # * Predictor Backtest Export Job
     #
+    # * Explainability Job
+    #
+    # * Explainability Export Job
+    #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) that identifies the resource to stop.
     #   The supported ARNs are `DatasetImportJobArn`, `PredictorArn`,
-    #   `PredictorBacktestExportJobArn`, `ForecastArn`, and
-    #   `ForecastExportJobArn`.
+    #   `PredictorBacktestExportJobArn`, `ForecastArn`,
+    #   `ForecastExportJobArn`, `ExplainabilityArn`, and
+    #   `ExplainabilityExportArn`.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -2739,9 +5158,7 @@ module Aws::ForecastService
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) that identifies the resource for which
-    #   to list the tags. Currently, the supported resources are Forecast
-    #   dataset groups, datasets, dataset import jobs, predictors, forecasts,
-    #   and forecast export jobs.
+    #   to list the tags.
     #
     # @option params [required, Array<Types::Tag>] :tags
     #   The tags to add to the resource. A tag is an array of key-value pairs.
@@ -2766,12 +5183,12 @@ module Aws::ForecastService
     #   * Tag keys and values are case sensitive.
     #
     #   * Do not use `aws:`, `AWS:`, or any upper or lowercase combination of
-    #     such as a prefix for keys as it is reserved for AWS use. You cannot
-    #     edit or delete tag keys with this prefix. Values can have this
-    #     prefix. If a tag value has `aws` as its prefix but the key does not,
-    #     then Forecast considers it to be a user tag and will count against
-    #     the limit of 50 tags. Tags with only the key prefix of `aws` do not
-    #     count against your tags per resource limit.
+    #     such as a prefix for keys as it is reserved for Amazon Web Services
+    #     use. You cannot edit or delete tag keys with this prefix. Values can
+    #     have this prefix. If a tag value has `aws` as its prefix but the key
+    #     does not, then Forecast considers it to be a user tag and will count
+    #     against the limit of 50 tags. Tags with only the key prefix of `aws`
+    #     do not count against your tags per resource limit.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -2800,9 +5217,7 @@ module Aws::ForecastService
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) that identifies the resource for which
-    #   to list the tags. Currently, the supported resources are Forecast
-    #   dataset groups, datasets, dataset import jobs, predictors, forecasts,
-    #   and forecast exports.
+    #   to list the tags.
     #
     # @option params [required, Array<String>] :tag_keys
     #   The keys of the tags to be removed.
@@ -2828,10 +5243,14 @@ module Aws::ForecastService
     # Replaces the datasets in a dataset group with the specified datasets.
     #
     # <note markdown="1"> The `Status` of the dataset group must be `ACTIVE` before you can use
-    # the dataset group to create a predictor. Use the DescribeDatasetGroup
-    # operation to get the status.
+    # the dataset group to create a predictor. Use the
+    # [DescribeDatasetGroup][1] operation to get the status.
     #
     #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/forecast/latest/dg/API_DescribeDatasetGroup.html
     #
     # @option params [required, String] :dataset_group_arn
     #   The ARN of the dataset group.
@@ -2871,7 +5290,7 @@ module Aws::ForecastService
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-forecastservice'
-      context[:gem_version] = '1.19.0'
+      context[:gem_version] = '1.44.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

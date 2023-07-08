@@ -60,7 +60,9 @@ module Aws::S3
     #
     # @return [self]
     def load
-      resp = @client.get_bucket_acl(bucket: @bucket_name)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_bucket_acl(bucket: @bucket_name)
+      end
       @data = resp.data
       self
     end
@@ -175,7 +177,9 @@ module Aws::S3
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -203,6 +207,7 @@ module Aws::S3
     #       },
     #     },
     #     content_md5: "ContentMD5",
+    #     checksum_algorithm: "CRC32", # accepts CRC32, CRC32C, SHA1, SHA256
     #     grant_full_control: "GrantFullControl",
     #     grant_read: "GrantRead",
     #     grant_read_acp: "GrantReadACP",
@@ -221,12 +226,28 @@ module Aws::S3
     #   used as a message integrity check to verify that the request body was
     #   not corrupted in transit. For more information, go to [RFC 1864.][1]
     #
-    #   For requests made using the AWS Command Line Interface (CLI) or AWS
-    #   SDKs, this field is calculated automatically.
+    #   For requests made using the Amazon Web Services Command Line Interface
+    #   (CLI) or Amazon Web Services SDKs, this field is calculated
+    #   automatically.
     #
     #
     #
     #   [1]: http://www.ietf.org/rfc/rfc1864.txt
+    # @option options [String] :checksum_algorithm
+    #   Indicates the algorithm used to create the checksum for the object
+    #   when using the SDK. This header will not provide any additional
+    #   functionality if not using the SDK. When sending this header, there
+    #   must be a corresponding `x-amz-checksum` or `x-amz-trailer` header
+    #   sent. Otherwise, Amazon S3 fails the request with the HTTP status code
+    #   `400 Bad Request`. For more information, see [Checking object
+    #   integrity][1] in the *Amazon S3 User Guide*.
+    #
+    #   If you provide an individual checksum, Amazon S3 ignores any provided
+    #   `ChecksumAlgorithm` parameter.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html
     # @option options [String] :grant_full_control
     #   Allows grantee the read, write, read ACP, and write ACP permissions on
     #   the bucket.
@@ -235,18 +256,22 @@ module Aws::S3
     # @option options [String] :grant_read_acp
     #   Allows grantee to read the bucket ACL.
     # @option options [String] :grant_write
-    #   Allows grantee to create, overwrite, and delete any object in the
-    #   bucket.
+    #   Allows grantee to create new objects in the bucket.
+    #
+    #   For the bucket and object owners of existing objects, also allows
+    #   deletions and overwrites of those objects.
     # @option options [String] :grant_write_acp
     #   Allows grantee to write the ACL for the applicable bucket.
     # @option options [String] :expected_bucket_owner
     #   The account ID of the expected bucket owner. If the bucket is owned by
-    #   a different account, the request will fail with an HTTP `403 (Access
-    #   Denied)` error.
+    #   a different account, the request fails with the HTTP status code `403
+    #   Forbidden` (access denied).
     # @return [EmptyStructure]
     def put(options = {})
       options = options.merge(bucket: @bucket_name)
-      resp = @client.put_bucket_acl(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.put_bucket_acl(options)
+      end
       resp.data
     end
 

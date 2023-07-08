@@ -13,28 +13,55 @@ module Aws::ForecastService
 
     include Seahorse::Model
 
+    Action = Shapes::StructureShape.new(name: 'Action')
+    AdditionalDataset = Shapes::StructureShape.new(name: 'AdditionalDataset')
+    AdditionalDatasets = Shapes::ListShape.new(name: 'AdditionalDatasets')
     Arn = Shapes::StringShape.new(name: 'Arn')
     ArnList = Shapes::ListShape.new(name: 'ArnList')
+    AttributeConfig = Shapes::StructureShape.new(name: 'AttributeConfig')
+    AttributeConfigs = Shapes::ListShape.new(name: 'AttributeConfigs')
     AttributeType = Shapes::StringShape.new(name: 'AttributeType')
+    AttributeValue = Shapes::StringShape.new(name: 'AttributeValue')
+    AutoMLOverrideStrategy = Shapes::StringShape.new(name: 'AutoMLOverrideStrategy')
+    Baseline = Shapes::StructureShape.new(name: 'Baseline')
+    BaselineMetric = Shapes::StructureShape.new(name: 'BaselineMetric')
+    BaselineMetrics = Shapes::ListShape.new(name: 'BaselineMetrics')
     Boolean = Shapes::BooleanShape.new(name: 'Boolean')
     CategoricalParameterRange = Shapes::StructureShape.new(name: 'CategoricalParameterRange')
     CategoricalParameterRanges = Shapes::ListShape.new(name: 'CategoricalParameterRanges')
+    Condition = Shapes::StringShape.new(name: 'Condition')
+    Configuration = Shapes::MapShape.new(name: 'Configuration')
     ContinuousParameterRange = Shapes::StructureShape.new(name: 'ContinuousParameterRange')
     ContinuousParameterRanges = Shapes::ListShape.new(name: 'ContinuousParameterRanges')
+    CreateAutoPredictorRequest = Shapes::StructureShape.new(name: 'CreateAutoPredictorRequest')
+    CreateAutoPredictorResponse = Shapes::StructureShape.new(name: 'CreateAutoPredictorResponse')
     CreateDatasetGroupRequest = Shapes::StructureShape.new(name: 'CreateDatasetGroupRequest')
     CreateDatasetGroupResponse = Shapes::StructureShape.new(name: 'CreateDatasetGroupResponse')
     CreateDatasetImportJobRequest = Shapes::StructureShape.new(name: 'CreateDatasetImportJobRequest')
     CreateDatasetImportJobResponse = Shapes::StructureShape.new(name: 'CreateDatasetImportJobResponse')
     CreateDatasetRequest = Shapes::StructureShape.new(name: 'CreateDatasetRequest')
     CreateDatasetResponse = Shapes::StructureShape.new(name: 'CreateDatasetResponse')
+    CreateExplainabilityExportRequest = Shapes::StructureShape.new(name: 'CreateExplainabilityExportRequest')
+    CreateExplainabilityExportResponse = Shapes::StructureShape.new(name: 'CreateExplainabilityExportResponse')
+    CreateExplainabilityRequest = Shapes::StructureShape.new(name: 'CreateExplainabilityRequest')
+    CreateExplainabilityResponse = Shapes::StructureShape.new(name: 'CreateExplainabilityResponse')
     CreateForecastExportJobRequest = Shapes::StructureShape.new(name: 'CreateForecastExportJobRequest')
     CreateForecastExportJobResponse = Shapes::StructureShape.new(name: 'CreateForecastExportJobResponse')
     CreateForecastRequest = Shapes::StructureShape.new(name: 'CreateForecastRequest')
     CreateForecastResponse = Shapes::StructureShape.new(name: 'CreateForecastResponse')
+    CreateMonitorRequest = Shapes::StructureShape.new(name: 'CreateMonitorRequest')
+    CreateMonitorResponse = Shapes::StructureShape.new(name: 'CreateMonitorResponse')
     CreatePredictorBacktestExportJobRequest = Shapes::StructureShape.new(name: 'CreatePredictorBacktestExportJobRequest')
     CreatePredictorBacktestExportJobResponse = Shapes::StructureShape.new(name: 'CreatePredictorBacktestExportJobResponse')
     CreatePredictorRequest = Shapes::StructureShape.new(name: 'CreatePredictorRequest')
     CreatePredictorResponse = Shapes::StructureShape.new(name: 'CreatePredictorResponse')
+    CreateWhatIfAnalysisRequest = Shapes::StructureShape.new(name: 'CreateWhatIfAnalysisRequest')
+    CreateWhatIfAnalysisResponse = Shapes::StructureShape.new(name: 'CreateWhatIfAnalysisResponse')
+    CreateWhatIfForecastExportRequest = Shapes::StructureShape.new(name: 'CreateWhatIfForecastExportRequest')
+    CreateWhatIfForecastExportResponse = Shapes::StructureShape.new(name: 'CreateWhatIfForecastExportResponse')
+    CreateWhatIfForecastRequest = Shapes::StructureShape.new(name: 'CreateWhatIfForecastRequest')
+    CreateWhatIfForecastResponse = Shapes::StructureShape.new(name: 'CreateWhatIfForecastResponse')
+    DataConfig = Shapes::StructureShape.new(name: 'DataConfig')
     DataDestination = Shapes::StructureShape.new(name: 'DataDestination')
     DataSource = Shapes::StructureShape.new(name: 'DataSource')
     DatasetGroupSummary = Shapes::StructureShape.new(name: 'DatasetGroupSummary')
@@ -44,28 +71,51 @@ module Aws::ForecastService
     DatasetSummary = Shapes::StructureShape.new(name: 'DatasetSummary')
     DatasetType = Shapes::StringShape.new(name: 'DatasetType')
     Datasets = Shapes::ListShape.new(name: 'Datasets')
+    DayOfMonth = Shapes::IntegerShape.new(name: 'DayOfMonth')
+    DayOfWeek = Shapes::StringShape.new(name: 'DayOfWeek')
     DeleteDatasetGroupRequest = Shapes::StructureShape.new(name: 'DeleteDatasetGroupRequest')
     DeleteDatasetImportJobRequest = Shapes::StructureShape.new(name: 'DeleteDatasetImportJobRequest')
     DeleteDatasetRequest = Shapes::StructureShape.new(name: 'DeleteDatasetRequest')
+    DeleteExplainabilityExportRequest = Shapes::StructureShape.new(name: 'DeleteExplainabilityExportRequest')
+    DeleteExplainabilityRequest = Shapes::StructureShape.new(name: 'DeleteExplainabilityRequest')
     DeleteForecastExportJobRequest = Shapes::StructureShape.new(name: 'DeleteForecastExportJobRequest')
     DeleteForecastRequest = Shapes::StructureShape.new(name: 'DeleteForecastRequest')
+    DeleteMonitorRequest = Shapes::StructureShape.new(name: 'DeleteMonitorRequest')
     DeletePredictorBacktestExportJobRequest = Shapes::StructureShape.new(name: 'DeletePredictorBacktestExportJobRequest')
     DeletePredictorRequest = Shapes::StructureShape.new(name: 'DeletePredictorRequest')
     DeleteResourceTreeRequest = Shapes::StructureShape.new(name: 'DeleteResourceTreeRequest')
+    DeleteWhatIfAnalysisRequest = Shapes::StructureShape.new(name: 'DeleteWhatIfAnalysisRequest')
+    DeleteWhatIfForecastExportRequest = Shapes::StructureShape.new(name: 'DeleteWhatIfForecastExportRequest')
+    DeleteWhatIfForecastRequest = Shapes::StructureShape.new(name: 'DeleteWhatIfForecastRequest')
+    DescribeAutoPredictorRequest = Shapes::StructureShape.new(name: 'DescribeAutoPredictorRequest')
+    DescribeAutoPredictorResponse = Shapes::StructureShape.new(name: 'DescribeAutoPredictorResponse')
     DescribeDatasetGroupRequest = Shapes::StructureShape.new(name: 'DescribeDatasetGroupRequest')
     DescribeDatasetGroupResponse = Shapes::StructureShape.new(name: 'DescribeDatasetGroupResponse')
     DescribeDatasetImportJobRequest = Shapes::StructureShape.new(name: 'DescribeDatasetImportJobRequest')
     DescribeDatasetImportJobResponse = Shapes::StructureShape.new(name: 'DescribeDatasetImportJobResponse')
     DescribeDatasetRequest = Shapes::StructureShape.new(name: 'DescribeDatasetRequest')
     DescribeDatasetResponse = Shapes::StructureShape.new(name: 'DescribeDatasetResponse')
+    DescribeExplainabilityExportRequest = Shapes::StructureShape.new(name: 'DescribeExplainabilityExportRequest')
+    DescribeExplainabilityExportResponse = Shapes::StructureShape.new(name: 'DescribeExplainabilityExportResponse')
+    DescribeExplainabilityRequest = Shapes::StructureShape.new(name: 'DescribeExplainabilityRequest')
+    DescribeExplainabilityResponse = Shapes::StructureShape.new(name: 'DescribeExplainabilityResponse')
     DescribeForecastExportJobRequest = Shapes::StructureShape.new(name: 'DescribeForecastExportJobRequest')
     DescribeForecastExportJobResponse = Shapes::StructureShape.new(name: 'DescribeForecastExportJobResponse')
     DescribeForecastRequest = Shapes::StructureShape.new(name: 'DescribeForecastRequest')
     DescribeForecastResponse = Shapes::StructureShape.new(name: 'DescribeForecastResponse')
+    DescribeMonitorRequest = Shapes::StructureShape.new(name: 'DescribeMonitorRequest')
+    DescribeMonitorResponse = Shapes::StructureShape.new(name: 'DescribeMonitorResponse')
     DescribePredictorBacktestExportJobRequest = Shapes::StructureShape.new(name: 'DescribePredictorBacktestExportJobRequest')
     DescribePredictorBacktestExportJobResponse = Shapes::StructureShape.new(name: 'DescribePredictorBacktestExportJobResponse')
     DescribePredictorRequest = Shapes::StructureShape.new(name: 'DescribePredictorRequest')
     DescribePredictorResponse = Shapes::StructureShape.new(name: 'DescribePredictorResponse')
+    DescribeWhatIfAnalysisRequest = Shapes::StructureShape.new(name: 'DescribeWhatIfAnalysisRequest')
+    DescribeWhatIfAnalysisResponse = Shapes::StructureShape.new(name: 'DescribeWhatIfAnalysisResponse')
+    DescribeWhatIfForecastExportRequest = Shapes::StructureShape.new(name: 'DescribeWhatIfForecastExportRequest')
+    DescribeWhatIfForecastExportResponse = Shapes::StructureShape.new(name: 'DescribeWhatIfForecastExportResponse')
+    DescribeWhatIfForecastRequest = Shapes::StructureShape.new(name: 'DescribeWhatIfForecastRequest')
+    DescribeWhatIfForecastResponse = Shapes::StructureShape.new(name: 'DescribeWhatIfForecastResponse')
+    Detail = Shapes::StringShape.new(name: 'Detail')
     Domain = Shapes::StringShape.new(name: 'Domain')
     Double = Shapes::FloatShape.new(name: 'Double')
     EncryptionConfig = Shapes::StructureShape.new(name: 'EncryptionConfig')
@@ -74,7 +124,14 @@ module Aws::ForecastService
     ErrorMetrics = Shapes::ListShape.new(name: 'ErrorMetrics')
     EvaluationParameters = Shapes::StructureShape.new(name: 'EvaluationParameters')
     EvaluationResult = Shapes::StructureShape.new(name: 'EvaluationResult')
+    EvaluationState = Shapes::StringShape.new(name: 'EvaluationState')
     EvaluationType = Shapes::StringShape.new(name: 'EvaluationType')
+    Explainabilities = Shapes::ListShape.new(name: 'Explainabilities')
+    ExplainabilityConfig = Shapes::StructureShape.new(name: 'ExplainabilityConfig')
+    ExplainabilityExportSummary = Shapes::StructureShape.new(name: 'ExplainabilityExportSummary')
+    ExplainabilityExports = Shapes::ListShape.new(name: 'ExplainabilityExports')
+    ExplainabilityInfo = Shapes::StructureShape.new(name: 'ExplainabilityInfo')
+    ExplainabilitySummary = Shapes::StructureShape.new(name: 'ExplainabilitySummary')
     Featurization = Shapes::StructureShape.new(name: 'Featurization')
     FeaturizationConfig = Shapes::StructureShape.new(name: 'FeaturizationConfig')
     FeaturizationMethod = Shapes::StructureShape.new(name: 'FeaturizationMethod')
@@ -93,11 +150,14 @@ module Aws::ForecastService
     ForecastType = Shapes::StringShape.new(name: 'ForecastType')
     ForecastTypes = Shapes::ListShape.new(name: 'ForecastTypes')
     Forecasts = Shapes::ListShape.new(name: 'Forecasts')
+    Format = Shapes::StringShape.new(name: 'Format')
     Frequency = Shapes::StringShape.new(name: 'Frequency')
     GeolocationFormat = Shapes::StringShape.new(name: 'GeolocationFormat')
     GetAccuracyMetricsRequest = Shapes::StructureShape.new(name: 'GetAccuracyMetricsRequest')
     GetAccuracyMetricsResponse = Shapes::StructureShape.new(name: 'GetAccuracyMetricsResponse')
+    Hour = Shapes::IntegerShape.new(name: 'Hour')
     HyperParameterTuningJobConfig = Shapes::StructureShape.new(name: 'HyperParameterTuningJobConfig')
+    ImportMode = Shapes::StringShape.new(name: 'ImportMode')
     InputDataConfig = Shapes::StructureShape.new(name: 'InputDataConfig')
     Integer = Shapes::IntegerShape.new(name: 'Integer')
     IntegerParameterRange = Shapes::StructureShape.new(name: 'IntegerParameterRange')
@@ -112,42 +172,77 @@ module Aws::ForecastService
     ListDatasetImportJobsResponse = Shapes::StructureShape.new(name: 'ListDatasetImportJobsResponse')
     ListDatasetsRequest = Shapes::StructureShape.new(name: 'ListDatasetsRequest')
     ListDatasetsResponse = Shapes::StructureShape.new(name: 'ListDatasetsResponse')
+    ListExplainabilitiesRequest = Shapes::StructureShape.new(name: 'ListExplainabilitiesRequest')
+    ListExplainabilitiesResponse = Shapes::StructureShape.new(name: 'ListExplainabilitiesResponse')
+    ListExplainabilityExportsRequest = Shapes::StructureShape.new(name: 'ListExplainabilityExportsRequest')
+    ListExplainabilityExportsResponse = Shapes::StructureShape.new(name: 'ListExplainabilityExportsResponse')
     ListForecastExportJobsRequest = Shapes::StructureShape.new(name: 'ListForecastExportJobsRequest')
     ListForecastExportJobsResponse = Shapes::StructureShape.new(name: 'ListForecastExportJobsResponse')
     ListForecastsRequest = Shapes::StructureShape.new(name: 'ListForecastsRequest')
     ListForecastsResponse = Shapes::StructureShape.new(name: 'ListForecastsResponse')
+    ListMonitorEvaluationsRequest = Shapes::StructureShape.new(name: 'ListMonitorEvaluationsRequest')
+    ListMonitorEvaluationsResponse = Shapes::StructureShape.new(name: 'ListMonitorEvaluationsResponse')
+    ListMonitorsRequest = Shapes::StructureShape.new(name: 'ListMonitorsRequest')
+    ListMonitorsResponse = Shapes::StructureShape.new(name: 'ListMonitorsResponse')
     ListPredictorBacktestExportJobsRequest = Shapes::StructureShape.new(name: 'ListPredictorBacktestExportJobsRequest')
     ListPredictorBacktestExportJobsResponse = Shapes::StructureShape.new(name: 'ListPredictorBacktestExportJobsResponse')
     ListPredictorsRequest = Shapes::StructureShape.new(name: 'ListPredictorsRequest')
     ListPredictorsResponse = Shapes::StructureShape.new(name: 'ListPredictorsResponse')
     ListTagsForResourceRequest = Shapes::StructureShape.new(name: 'ListTagsForResourceRequest')
     ListTagsForResourceResponse = Shapes::StructureShape.new(name: 'ListTagsForResourceResponse')
+    ListWhatIfAnalysesRequest = Shapes::StructureShape.new(name: 'ListWhatIfAnalysesRequest')
+    ListWhatIfAnalysesResponse = Shapes::StructureShape.new(name: 'ListWhatIfAnalysesResponse')
+    ListWhatIfForecastExportsRequest = Shapes::StructureShape.new(name: 'ListWhatIfForecastExportsRequest')
+    ListWhatIfForecastExportsResponse = Shapes::StructureShape.new(name: 'ListWhatIfForecastExportsResponse')
+    ListWhatIfForecastsRequest = Shapes::StructureShape.new(name: 'ListWhatIfForecastsRequest')
+    ListWhatIfForecastsResponse = Shapes::StructureShape.new(name: 'ListWhatIfForecastsResponse')
+    LocalDateTime = Shapes::StringShape.new(name: 'LocalDateTime')
     Long = Shapes::IntegerShape.new(name: 'Long')
+    LongArn = Shapes::StringShape.new(name: 'LongArn')
+    LongArnList = Shapes::ListShape.new(name: 'LongArnList')
     MaxResults = Shapes::IntegerShape.new(name: 'MaxResults')
     Message = Shapes::StringShape.new(name: 'Message')
+    MetricName = Shapes::StringShape.new(name: 'MetricName')
+    MetricResult = Shapes::StructureShape.new(name: 'MetricResult')
+    MetricResults = Shapes::ListShape.new(name: 'MetricResults')
     Metrics = Shapes::StructureShape.new(name: 'Metrics')
+    MonitorConfig = Shapes::StructureShape.new(name: 'MonitorConfig')
+    MonitorDataSource = Shapes::StructureShape.new(name: 'MonitorDataSource')
+    MonitorInfo = Shapes::StructureShape.new(name: 'MonitorInfo')
+    MonitorSummary = Shapes::StructureShape.new(name: 'MonitorSummary')
+    Monitors = Shapes::ListShape.new(name: 'Monitors')
+    Month = Shapes::StringShape.new(name: 'Month')
     Name = Shapes::StringShape.new(name: 'Name')
     NextToken = Shapes::StringShape.new(name: 'NextToken')
+    Operation = Shapes::StringShape.new(name: 'Operation')
+    OptimizationMetric = Shapes::StringShape.new(name: 'OptimizationMetric')
     ParameterKey = Shapes::StringShape.new(name: 'ParameterKey')
     ParameterRanges = Shapes::StructureShape.new(name: 'ParameterRanges')
     ParameterValue = Shapes::StringShape.new(name: 'ParameterValue')
     PredictorBacktestExportJobSummary = Shapes::StructureShape.new(name: 'PredictorBacktestExportJobSummary')
     PredictorBacktestExportJobs = Shapes::ListShape.new(name: 'PredictorBacktestExportJobs')
+    PredictorBaseline = Shapes::StructureShape.new(name: 'PredictorBaseline')
     PredictorEvaluationResults = Shapes::ListShape.new(name: 'PredictorEvaluationResults')
+    PredictorEvent = Shapes::StructureShape.new(name: 'PredictorEvent')
     PredictorExecution = Shapes::StructureShape.new(name: 'PredictorExecution')
     PredictorExecutionDetails = Shapes::StructureShape.new(name: 'PredictorExecutionDetails')
     PredictorExecutions = Shapes::ListShape.new(name: 'PredictorExecutions')
+    PredictorMonitorEvaluation = Shapes::StructureShape.new(name: 'PredictorMonitorEvaluation')
+    PredictorMonitorEvaluations = Shapes::ListShape.new(name: 'PredictorMonitorEvaluations')
     PredictorSummary = Shapes::StructureShape.new(name: 'PredictorSummary')
     Predictors = Shapes::ListShape.new(name: 'Predictors')
+    ReferencePredictorSummary = Shapes::StructureShape.new(name: 'ReferencePredictorSummary')
     ResourceAlreadyExistsException = Shapes::StructureShape.new(name: 'ResourceAlreadyExistsException')
     ResourceInUseException = Shapes::StructureShape.new(name: 'ResourceInUseException')
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
+    ResumeResourceRequest = Shapes::StructureShape.new(name: 'ResumeResourceRequest')
     S3Config = Shapes::StructureShape.new(name: 'S3Config')
     S3Path = Shapes::StringShape.new(name: 'S3Path')
     ScalingType = Shapes::StringShape.new(name: 'ScalingType')
     Schema = Shapes::StructureShape.new(name: 'Schema')
     SchemaAttribute = Shapes::StructureShape.new(name: 'SchemaAttribute')
     SchemaAttributes = Shapes::ListShape.new(name: 'SchemaAttributes')
+    State = Shapes::StringShape.new(name: 'State')
     Statistics = Shapes::StructureShape.new(name: 'Statistics')
     Status = Shapes::StringShape.new(name: 'Status')
     StopResourceRequest = Shapes::StructureShape.new(name: 'StopResourceRequest')
@@ -164,10 +259,21 @@ module Aws::ForecastService
     TestWindowDetails = Shapes::ListShape.new(name: 'TestWindowDetails')
     TestWindowSummary = Shapes::StructureShape.new(name: 'TestWindowSummary')
     TestWindows = Shapes::ListShape.new(name: 'TestWindows')
+    TimeAlignmentBoundary = Shapes::StructureShape.new(name: 'TimeAlignmentBoundary')
+    TimePointGranularity = Shapes::StringShape.new(name: 'TimePointGranularity')
+    TimeSeriesCondition = Shapes::StructureShape.new(name: 'TimeSeriesCondition')
+    TimeSeriesConditions = Shapes::ListShape.new(name: 'TimeSeriesConditions')
+    TimeSeriesGranularity = Shapes::StringShape.new(name: 'TimeSeriesGranularity')
+    TimeSeriesIdentifiers = Shapes::StructureShape.new(name: 'TimeSeriesIdentifiers')
+    TimeSeriesReplacementsDataSource = Shapes::StructureShape.new(name: 'TimeSeriesReplacementsDataSource')
+    TimeSeriesSelector = Shapes::StructureShape.new(name: 'TimeSeriesSelector')
+    TimeSeriesTransformation = Shapes::StructureShape.new(name: 'TimeSeriesTransformation')
+    TimeSeriesTransformations = Shapes::ListShape.new(name: 'TimeSeriesTransformations')
     TimeZone = Shapes::StringShape.new(name: 'TimeZone')
     Timestamp = Shapes::TimestampShape.new(name: 'Timestamp')
     TimestampFormat = Shapes::StringShape.new(name: 'TimestampFormat')
     TrainingParameters = Shapes::MapShape.new(name: 'TrainingParameters')
+    Transformations = Shapes::MapShape.new(name: 'Transformations')
     UntagResourceRequest = Shapes::StructureShape.new(name: 'UntagResourceRequest')
     UntagResourceResponse = Shapes::StructureShape.new(name: 'UntagResourceResponse')
     UpdateDatasetGroupRequest = Shapes::StructureShape.new(name: 'UpdateDatasetGroupRequest')
@@ -177,15 +283,51 @@ module Aws::ForecastService
     Values = Shapes::ListShape.new(name: 'Values')
     WeightedQuantileLoss = Shapes::StructureShape.new(name: 'WeightedQuantileLoss')
     WeightedQuantileLosses = Shapes::ListShape.new(name: 'WeightedQuantileLosses')
+    WhatIfAnalyses = Shapes::ListShape.new(name: 'WhatIfAnalyses')
+    WhatIfAnalysisSummary = Shapes::StructureShape.new(name: 'WhatIfAnalysisSummary')
+    WhatIfForecastArnListForExport = Shapes::ListShape.new(name: 'WhatIfForecastArnListForExport')
+    WhatIfForecastExportSummary = Shapes::StructureShape.new(name: 'WhatIfForecastExportSummary')
+    WhatIfForecastExports = Shapes::ListShape.new(name: 'WhatIfForecastExports')
+    WhatIfForecastSummary = Shapes::StructureShape.new(name: 'WhatIfForecastSummary')
+    WhatIfForecasts = Shapes::ListShape.new(name: 'WhatIfForecasts')
     WindowSummary = Shapes::StructureShape.new(name: 'WindowSummary')
 
+    Action.add_member(:attribute_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "AttributeName"))
+    Action.add_member(:operation, Shapes::ShapeRef.new(shape: Operation, required: true, location_name: "Operation"))
+    Action.add_member(:value, Shapes::ShapeRef.new(shape: Double, required: true, location_name: "Value"))
+    Action.struct_class = Types::Action
+
+    AdditionalDataset.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "Name"))
+    AdditionalDataset.add_member(:configuration, Shapes::ShapeRef.new(shape: Configuration, location_name: "Configuration"))
+    AdditionalDataset.struct_class = Types::AdditionalDataset
+
+    AdditionalDatasets.member = Shapes::ShapeRef.new(shape: AdditionalDataset)
+
     ArnList.member = Shapes::ShapeRef.new(shape: Arn)
+
+    AttributeConfig.add_member(:attribute_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "AttributeName"))
+    AttributeConfig.add_member(:transformations, Shapes::ShapeRef.new(shape: Transformations, required: true, location_name: "Transformations"))
+    AttributeConfig.struct_class = Types::AttributeConfig
+
+    AttributeConfigs.member = Shapes::ShapeRef.new(shape: AttributeConfig)
+
+    Baseline.add_member(:predictor_baseline, Shapes::ShapeRef.new(shape: PredictorBaseline, location_name: "PredictorBaseline"))
+    Baseline.struct_class = Types::Baseline
+
+    BaselineMetric.add_member(:name, Shapes::ShapeRef.new(shape: Name, location_name: "Name"))
+    BaselineMetric.add_member(:value, Shapes::ShapeRef.new(shape: Double, location_name: "Value"))
+    BaselineMetric.struct_class = Types::BaselineMetric
+
+    BaselineMetrics.member = Shapes::ShapeRef.new(shape: BaselineMetric)
 
     CategoricalParameterRange.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "Name"))
     CategoricalParameterRange.add_member(:values, Shapes::ShapeRef.new(shape: Values, required: true, location_name: "Values"))
     CategoricalParameterRange.struct_class = Types::CategoricalParameterRange
 
     CategoricalParameterRanges.member = Shapes::ShapeRef.new(shape: CategoricalParameterRange)
+
+    Configuration.key = Shapes::ShapeRef.new(shape: Name)
+    Configuration.value = Shapes::ShapeRef.new(shape: Values)
 
     ContinuousParameterRange.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "Name"))
     ContinuousParameterRange.add_member(:max_value, Shapes::ShapeRef.new(shape: Double, required: true, location_name: "MaxValue"))
@@ -194,6 +336,24 @@ module Aws::ForecastService
     ContinuousParameterRange.struct_class = Types::ContinuousParameterRange
 
     ContinuousParameterRanges.member = Shapes::ShapeRef.new(shape: ContinuousParameterRange)
+
+    CreateAutoPredictorRequest.add_member(:predictor_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "PredictorName"))
+    CreateAutoPredictorRequest.add_member(:forecast_horizon, Shapes::ShapeRef.new(shape: Integer, location_name: "ForecastHorizon"))
+    CreateAutoPredictorRequest.add_member(:forecast_types, Shapes::ShapeRef.new(shape: ForecastTypes, location_name: "ForecastTypes"))
+    CreateAutoPredictorRequest.add_member(:forecast_dimensions, Shapes::ShapeRef.new(shape: ForecastDimensions, location_name: "ForecastDimensions"))
+    CreateAutoPredictorRequest.add_member(:forecast_frequency, Shapes::ShapeRef.new(shape: Frequency, location_name: "ForecastFrequency"))
+    CreateAutoPredictorRequest.add_member(:data_config, Shapes::ShapeRef.new(shape: DataConfig, location_name: "DataConfig"))
+    CreateAutoPredictorRequest.add_member(:encryption_config, Shapes::ShapeRef.new(shape: EncryptionConfig, location_name: "EncryptionConfig"))
+    CreateAutoPredictorRequest.add_member(:reference_predictor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ReferencePredictorArn"))
+    CreateAutoPredictorRequest.add_member(:optimization_metric, Shapes::ShapeRef.new(shape: OptimizationMetric, location_name: "OptimizationMetric"))
+    CreateAutoPredictorRequest.add_member(:explain_predictor, Shapes::ShapeRef.new(shape: Boolean, location_name: "ExplainPredictor"))
+    CreateAutoPredictorRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateAutoPredictorRequest.add_member(:monitor_config, Shapes::ShapeRef.new(shape: MonitorConfig, location_name: "MonitorConfig"))
+    CreateAutoPredictorRequest.add_member(:time_alignment_boundary, Shapes::ShapeRef.new(shape: TimeAlignmentBoundary, location_name: "TimeAlignmentBoundary"))
+    CreateAutoPredictorRequest.struct_class = Types::CreateAutoPredictorRequest
+
+    CreateAutoPredictorResponse.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "PredictorArn"))
+    CreateAutoPredictorResponse.struct_class = Types::CreateAutoPredictorResponse
 
     CreateDatasetGroupRequest.add_member(:dataset_group_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "DatasetGroupName"))
     CreateDatasetGroupRequest.add_member(:domain, Shapes::ShapeRef.new(shape: Domain, required: true, location_name: "Domain"))
@@ -212,6 +372,8 @@ module Aws::ForecastService
     CreateDatasetImportJobRequest.add_member(:use_geolocation_for_time_zone, Shapes::ShapeRef.new(shape: UseGeolocationForTimeZone, location_name: "UseGeolocationForTimeZone"))
     CreateDatasetImportJobRequest.add_member(:geolocation_format, Shapes::ShapeRef.new(shape: GeolocationFormat, location_name: "GeolocationFormat"))
     CreateDatasetImportJobRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateDatasetImportJobRequest.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
+    CreateDatasetImportJobRequest.add_member(:import_mode, Shapes::ShapeRef.new(shape: ImportMode, location_name: "ImportMode"))
     CreateDatasetImportJobRequest.struct_class = Types::CreateDatasetImportJobRequest
 
     CreateDatasetImportJobResponse.add_member(:dataset_import_job_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "DatasetImportJobArn"))
@@ -229,10 +391,35 @@ module Aws::ForecastService
     CreateDatasetResponse.add_member(:dataset_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "DatasetArn"))
     CreateDatasetResponse.struct_class = Types::CreateDatasetResponse
 
+    CreateExplainabilityExportRequest.add_member(:explainability_export_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "ExplainabilityExportName"))
+    CreateExplainabilityExportRequest.add_member(:explainability_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ExplainabilityArn"))
+    CreateExplainabilityExportRequest.add_member(:destination, Shapes::ShapeRef.new(shape: DataDestination, required: true, location_name: "Destination"))
+    CreateExplainabilityExportRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateExplainabilityExportRequest.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
+    CreateExplainabilityExportRequest.struct_class = Types::CreateExplainabilityExportRequest
+
+    CreateExplainabilityExportResponse.add_member(:explainability_export_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ExplainabilityExportArn"))
+    CreateExplainabilityExportResponse.struct_class = Types::CreateExplainabilityExportResponse
+
+    CreateExplainabilityRequest.add_member(:explainability_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "ExplainabilityName"))
+    CreateExplainabilityRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ResourceArn"))
+    CreateExplainabilityRequest.add_member(:explainability_config, Shapes::ShapeRef.new(shape: ExplainabilityConfig, required: true, location_name: "ExplainabilityConfig"))
+    CreateExplainabilityRequest.add_member(:data_source, Shapes::ShapeRef.new(shape: DataSource, location_name: "DataSource"))
+    CreateExplainabilityRequest.add_member(:schema, Shapes::ShapeRef.new(shape: Schema, location_name: "Schema"))
+    CreateExplainabilityRequest.add_member(:enable_visualization, Shapes::ShapeRef.new(shape: Boolean, location_name: "EnableVisualization"))
+    CreateExplainabilityRequest.add_member(:start_date_time, Shapes::ShapeRef.new(shape: LocalDateTime, location_name: "StartDateTime"))
+    CreateExplainabilityRequest.add_member(:end_date_time, Shapes::ShapeRef.new(shape: LocalDateTime, location_name: "EndDateTime"))
+    CreateExplainabilityRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateExplainabilityRequest.struct_class = Types::CreateExplainabilityRequest
+
+    CreateExplainabilityResponse.add_member(:explainability_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ExplainabilityArn"))
+    CreateExplainabilityResponse.struct_class = Types::CreateExplainabilityResponse
+
     CreateForecastExportJobRequest.add_member(:forecast_export_job_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "ForecastExportJobName"))
     CreateForecastExportJobRequest.add_member(:forecast_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ForecastArn"))
     CreateForecastExportJobRequest.add_member(:destination, Shapes::ShapeRef.new(shape: DataDestination, required: true, location_name: "Destination"))
     CreateForecastExportJobRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateForecastExportJobRequest.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
     CreateForecastExportJobRequest.struct_class = Types::CreateForecastExportJobRequest
 
     CreateForecastExportJobResponse.add_member(:forecast_export_job_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ForecastExportJobArn"))
@@ -242,15 +429,25 @@ module Aws::ForecastService
     CreateForecastRequest.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "PredictorArn"))
     CreateForecastRequest.add_member(:forecast_types, Shapes::ShapeRef.new(shape: ForecastTypes, location_name: "ForecastTypes"))
     CreateForecastRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateForecastRequest.add_member(:time_series_selector, Shapes::ShapeRef.new(shape: TimeSeriesSelector, location_name: "TimeSeriesSelector"))
     CreateForecastRequest.struct_class = Types::CreateForecastRequest
 
     CreateForecastResponse.add_member(:forecast_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ForecastArn"))
     CreateForecastResponse.struct_class = Types::CreateForecastResponse
 
+    CreateMonitorRequest.add_member(:monitor_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "MonitorName"))
+    CreateMonitorRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ResourceArn"))
+    CreateMonitorRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateMonitorRequest.struct_class = Types::CreateMonitorRequest
+
+    CreateMonitorResponse.add_member(:monitor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "MonitorArn"))
+    CreateMonitorResponse.struct_class = Types::CreateMonitorResponse
+
     CreatePredictorBacktestExportJobRequest.add_member(:predictor_backtest_export_job_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "PredictorBacktestExportJobName"))
     CreatePredictorBacktestExportJobRequest.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "PredictorArn"))
     CreatePredictorBacktestExportJobRequest.add_member(:destination, Shapes::ShapeRef.new(shape: DataDestination, required: true, location_name: "Destination"))
     CreatePredictorBacktestExportJobRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreatePredictorBacktestExportJobRequest.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
     CreatePredictorBacktestExportJobRequest.struct_class = Types::CreatePredictorBacktestExportJobRequest
 
     CreatePredictorBacktestExportJobResponse.add_member(:predictor_backtest_export_job_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "PredictorBacktestExportJobArn"))
@@ -261,6 +458,7 @@ module Aws::ForecastService
     CreatePredictorRequest.add_member(:forecast_horizon, Shapes::ShapeRef.new(shape: Integer, required: true, location_name: "ForecastHorizon"))
     CreatePredictorRequest.add_member(:forecast_types, Shapes::ShapeRef.new(shape: ForecastTypes, location_name: "ForecastTypes"))
     CreatePredictorRequest.add_member(:perform_auto_ml, Shapes::ShapeRef.new(shape: Boolean, location_name: "PerformAutoML"))
+    CreatePredictorRequest.add_member(:auto_ml_override_strategy, Shapes::ShapeRef.new(shape: AutoMLOverrideStrategy, location_name: "AutoMLOverrideStrategy"))
     CreatePredictorRequest.add_member(:perform_hpo, Shapes::ShapeRef.new(shape: Boolean, location_name: "PerformHPO"))
     CreatePredictorRequest.add_member(:training_parameters, Shapes::ShapeRef.new(shape: TrainingParameters, location_name: "TrainingParameters"))
     CreatePredictorRequest.add_member(:evaluation_parameters, Shapes::ShapeRef.new(shape: EvaluationParameters, location_name: "EvaluationParameters"))
@@ -269,10 +467,45 @@ module Aws::ForecastService
     CreatePredictorRequest.add_member(:featurization_config, Shapes::ShapeRef.new(shape: FeaturizationConfig, required: true, location_name: "FeaturizationConfig"))
     CreatePredictorRequest.add_member(:encryption_config, Shapes::ShapeRef.new(shape: EncryptionConfig, location_name: "EncryptionConfig"))
     CreatePredictorRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreatePredictorRequest.add_member(:optimization_metric, Shapes::ShapeRef.new(shape: OptimizationMetric, location_name: "OptimizationMetric"))
     CreatePredictorRequest.struct_class = Types::CreatePredictorRequest
 
     CreatePredictorResponse.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "PredictorArn"))
     CreatePredictorResponse.struct_class = Types::CreatePredictorResponse
+
+    CreateWhatIfAnalysisRequest.add_member(:what_if_analysis_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "WhatIfAnalysisName"))
+    CreateWhatIfAnalysisRequest.add_member(:forecast_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ForecastArn"))
+    CreateWhatIfAnalysisRequest.add_member(:time_series_selector, Shapes::ShapeRef.new(shape: TimeSeriesSelector, location_name: "TimeSeriesSelector"))
+    CreateWhatIfAnalysisRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateWhatIfAnalysisRequest.struct_class = Types::CreateWhatIfAnalysisRequest
+
+    CreateWhatIfAnalysisResponse.add_member(:what_if_analysis_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "WhatIfAnalysisArn"))
+    CreateWhatIfAnalysisResponse.struct_class = Types::CreateWhatIfAnalysisResponse
+
+    CreateWhatIfForecastExportRequest.add_member(:what_if_forecast_export_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "WhatIfForecastExportName"))
+    CreateWhatIfForecastExportRequest.add_member(:what_if_forecast_arns, Shapes::ShapeRef.new(shape: WhatIfForecastArnListForExport, required: true, location_name: "WhatIfForecastArns"))
+    CreateWhatIfForecastExportRequest.add_member(:destination, Shapes::ShapeRef.new(shape: DataDestination, required: true, location_name: "Destination"))
+    CreateWhatIfForecastExportRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateWhatIfForecastExportRequest.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
+    CreateWhatIfForecastExportRequest.struct_class = Types::CreateWhatIfForecastExportRequest
+
+    CreateWhatIfForecastExportResponse.add_member(:what_if_forecast_export_arn, Shapes::ShapeRef.new(shape: LongArn, location_name: "WhatIfForecastExportArn"))
+    CreateWhatIfForecastExportResponse.struct_class = Types::CreateWhatIfForecastExportResponse
+
+    CreateWhatIfForecastRequest.add_member(:what_if_forecast_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "WhatIfForecastName"))
+    CreateWhatIfForecastRequest.add_member(:what_if_analysis_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "WhatIfAnalysisArn"))
+    CreateWhatIfForecastRequest.add_member(:time_series_transformations, Shapes::ShapeRef.new(shape: TimeSeriesTransformations, location_name: "TimeSeriesTransformations"))
+    CreateWhatIfForecastRequest.add_member(:time_series_replacements_data_source, Shapes::ShapeRef.new(shape: TimeSeriesReplacementsDataSource, location_name: "TimeSeriesReplacementsDataSource"))
+    CreateWhatIfForecastRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
+    CreateWhatIfForecastRequest.struct_class = Types::CreateWhatIfForecastRequest
+
+    CreateWhatIfForecastResponse.add_member(:what_if_forecast_arn, Shapes::ShapeRef.new(shape: LongArn, location_name: "WhatIfForecastArn"))
+    CreateWhatIfForecastResponse.struct_class = Types::CreateWhatIfForecastResponse
+
+    DataConfig.add_member(:dataset_group_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "DatasetGroupArn"))
+    DataConfig.add_member(:attribute_configs, Shapes::ShapeRef.new(shape: AttributeConfigs, location_name: "AttributeConfigs"))
+    DataConfig.add_member(:additional_datasets, Shapes::ShapeRef.new(shape: AdditionalDatasets, location_name: "AdditionalDatasets"))
+    DataConfig.struct_class = Types::DataConfig
 
     DataDestination.add_member(:s3_config, Shapes::ShapeRef.new(shape: S3Config, required: true, location_name: "S3Config"))
     DataDestination.struct_class = Types::DataDestination
@@ -295,6 +528,7 @@ module Aws::ForecastService
     DatasetImportJobSummary.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     DatasetImportJobSummary.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
     DatasetImportJobSummary.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DatasetImportJobSummary.add_member(:import_mode, Shapes::ShapeRef.new(shape: ImportMode, location_name: "ImportMode"))
     DatasetImportJobSummary.struct_class = Types::DatasetImportJobSummary
 
     DatasetImportJobs.member = Shapes::ShapeRef.new(shape: DatasetImportJobSummary)
@@ -318,11 +552,20 @@ module Aws::ForecastService
     DeleteDatasetRequest.add_member(:dataset_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "DatasetArn"))
     DeleteDatasetRequest.struct_class = Types::DeleteDatasetRequest
 
+    DeleteExplainabilityExportRequest.add_member(:explainability_export_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ExplainabilityExportArn"))
+    DeleteExplainabilityExportRequest.struct_class = Types::DeleteExplainabilityExportRequest
+
+    DeleteExplainabilityRequest.add_member(:explainability_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ExplainabilityArn"))
+    DeleteExplainabilityRequest.struct_class = Types::DeleteExplainabilityRequest
+
     DeleteForecastExportJobRequest.add_member(:forecast_export_job_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ForecastExportJobArn"))
     DeleteForecastExportJobRequest.struct_class = Types::DeleteForecastExportJobRequest
 
     DeleteForecastRequest.add_member(:forecast_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ForecastArn"))
     DeleteForecastRequest.struct_class = Types::DeleteForecastRequest
+
+    DeleteMonitorRequest.add_member(:monitor_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "MonitorArn"))
+    DeleteMonitorRequest.struct_class = Types::DeleteMonitorRequest
 
     DeletePredictorBacktestExportJobRequest.add_member(:predictor_backtest_export_job_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "PredictorBacktestExportJobArn"))
     DeletePredictorBacktestExportJobRequest.struct_class = Types::DeletePredictorBacktestExportJobRequest
@@ -332,6 +575,39 @@ module Aws::ForecastService
 
     DeleteResourceTreeRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ResourceArn"))
     DeleteResourceTreeRequest.struct_class = Types::DeleteResourceTreeRequest
+
+    DeleteWhatIfAnalysisRequest.add_member(:what_if_analysis_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "WhatIfAnalysisArn"))
+    DeleteWhatIfAnalysisRequest.struct_class = Types::DeleteWhatIfAnalysisRequest
+
+    DeleteWhatIfForecastExportRequest.add_member(:what_if_forecast_export_arn, Shapes::ShapeRef.new(shape: LongArn, required: true, location_name: "WhatIfForecastExportArn"))
+    DeleteWhatIfForecastExportRequest.struct_class = Types::DeleteWhatIfForecastExportRequest
+
+    DeleteWhatIfForecastRequest.add_member(:what_if_forecast_arn, Shapes::ShapeRef.new(shape: LongArn, required: true, location_name: "WhatIfForecastArn"))
+    DeleteWhatIfForecastRequest.struct_class = Types::DeleteWhatIfForecastRequest
+
+    DescribeAutoPredictorRequest.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "PredictorArn"))
+    DescribeAutoPredictorRequest.struct_class = Types::DescribeAutoPredictorRequest
+
+    DescribeAutoPredictorResponse.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "PredictorArn"))
+    DescribeAutoPredictorResponse.add_member(:predictor_name, Shapes::ShapeRef.new(shape: Name, location_name: "PredictorName"))
+    DescribeAutoPredictorResponse.add_member(:forecast_horizon, Shapes::ShapeRef.new(shape: Integer, location_name: "ForecastHorizon"))
+    DescribeAutoPredictorResponse.add_member(:forecast_types, Shapes::ShapeRef.new(shape: ForecastTypes, location_name: "ForecastTypes"))
+    DescribeAutoPredictorResponse.add_member(:forecast_frequency, Shapes::ShapeRef.new(shape: Frequency, location_name: "ForecastFrequency"))
+    DescribeAutoPredictorResponse.add_member(:forecast_dimensions, Shapes::ShapeRef.new(shape: ForecastDimensions, location_name: "ForecastDimensions"))
+    DescribeAutoPredictorResponse.add_member(:dataset_import_job_arns, Shapes::ShapeRef.new(shape: ArnList, location_name: "DatasetImportJobArns"))
+    DescribeAutoPredictorResponse.add_member(:data_config, Shapes::ShapeRef.new(shape: DataConfig, location_name: "DataConfig"))
+    DescribeAutoPredictorResponse.add_member(:encryption_config, Shapes::ShapeRef.new(shape: EncryptionConfig, location_name: "EncryptionConfig"))
+    DescribeAutoPredictorResponse.add_member(:reference_predictor_summary, Shapes::ShapeRef.new(shape: ReferencePredictorSummary, location_name: "ReferencePredictorSummary"))
+    DescribeAutoPredictorResponse.add_member(:estimated_time_remaining_in_minutes, Shapes::ShapeRef.new(shape: Long, location_name: "EstimatedTimeRemainingInMinutes"))
+    DescribeAutoPredictorResponse.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    DescribeAutoPredictorResponse.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "Message"))
+    DescribeAutoPredictorResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    DescribeAutoPredictorResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeAutoPredictorResponse.add_member(:optimization_metric, Shapes::ShapeRef.new(shape: OptimizationMetric, location_name: "OptimizationMetric"))
+    DescribeAutoPredictorResponse.add_member(:explainability_info, Shapes::ShapeRef.new(shape: ExplainabilityInfo, location_name: "ExplainabilityInfo"))
+    DescribeAutoPredictorResponse.add_member(:monitor_info, Shapes::ShapeRef.new(shape: MonitorInfo, location_name: "MonitorInfo"))
+    DescribeAutoPredictorResponse.add_member(:time_alignment_boundary, Shapes::ShapeRef.new(shape: TimeAlignmentBoundary, location_name: "TimeAlignmentBoundary"))
+    DescribeAutoPredictorResponse.struct_class = Types::DescribeAutoPredictorResponse
 
     DescribeDatasetGroupRequest.add_member(:dataset_group_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "DatasetGroupArn"))
     DescribeDatasetGroupRequest.struct_class = Types::DescribeDatasetGroupRequest
@@ -363,6 +639,8 @@ module Aws::ForecastService
     DescribeDatasetImportJobResponse.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "Message"))
     DescribeDatasetImportJobResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
     DescribeDatasetImportJobResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeDatasetImportJobResponse.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
+    DescribeDatasetImportJobResponse.add_member(:import_mode, Shapes::ShapeRef.new(shape: ImportMode, location_name: "ImportMode"))
     DescribeDatasetImportJobResponse.struct_class = Types::DescribeDatasetImportJobResponse
 
     DescribeDatasetRequest.add_member(:dataset_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "DatasetArn"))
@@ -380,6 +658,39 @@ module Aws::ForecastService
     DescribeDatasetResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
     DescribeDatasetResponse.struct_class = Types::DescribeDatasetResponse
 
+    DescribeExplainabilityExportRequest.add_member(:explainability_export_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ExplainabilityExportArn"))
+    DescribeExplainabilityExportRequest.struct_class = Types::DescribeExplainabilityExportRequest
+
+    DescribeExplainabilityExportResponse.add_member(:explainability_export_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ExplainabilityExportArn"))
+    DescribeExplainabilityExportResponse.add_member(:explainability_export_name, Shapes::ShapeRef.new(shape: Name, location_name: "ExplainabilityExportName"))
+    DescribeExplainabilityExportResponse.add_member(:explainability_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ExplainabilityArn"))
+    DescribeExplainabilityExportResponse.add_member(:destination, Shapes::ShapeRef.new(shape: DataDestination, location_name: "Destination"))
+    DescribeExplainabilityExportResponse.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "Message"))
+    DescribeExplainabilityExportResponse.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    DescribeExplainabilityExportResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    DescribeExplainabilityExportResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeExplainabilityExportResponse.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
+    DescribeExplainabilityExportResponse.struct_class = Types::DescribeExplainabilityExportResponse
+
+    DescribeExplainabilityRequest.add_member(:explainability_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ExplainabilityArn"))
+    DescribeExplainabilityRequest.struct_class = Types::DescribeExplainabilityRequest
+
+    DescribeExplainabilityResponse.add_member(:explainability_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ExplainabilityArn"))
+    DescribeExplainabilityResponse.add_member(:explainability_name, Shapes::ShapeRef.new(shape: Name, location_name: "ExplainabilityName"))
+    DescribeExplainabilityResponse.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ResourceArn"))
+    DescribeExplainabilityResponse.add_member(:explainability_config, Shapes::ShapeRef.new(shape: ExplainabilityConfig, location_name: "ExplainabilityConfig"))
+    DescribeExplainabilityResponse.add_member(:enable_visualization, Shapes::ShapeRef.new(shape: Boolean, location_name: "EnableVisualization"))
+    DescribeExplainabilityResponse.add_member(:data_source, Shapes::ShapeRef.new(shape: DataSource, location_name: "DataSource"))
+    DescribeExplainabilityResponse.add_member(:schema, Shapes::ShapeRef.new(shape: Schema, location_name: "Schema"))
+    DescribeExplainabilityResponse.add_member(:start_date_time, Shapes::ShapeRef.new(shape: LocalDateTime, location_name: "StartDateTime"))
+    DescribeExplainabilityResponse.add_member(:end_date_time, Shapes::ShapeRef.new(shape: LocalDateTime, location_name: "EndDateTime"))
+    DescribeExplainabilityResponse.add_member(:estimated_time_remaining_in_minutes, Shapes::ShapeRef.new(shape: Long, location_name: "EstimatedTimeRemainingInMinutes"))
+    DescribeExplainabilityResponse.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "Message"))
+    DescribeExplainabilityResponse.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    DescribeExplainabilityResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    DescribeExplainabilityResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeExplainabilityResponse.struct_class = Types::DescribeExplainabilityResponse
+
     DescribeForecastExportJobRequest.add_member(:forecast_export_job_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ForecastExportJobArn"))
     DescribeForecastExportJobRequest.struct_class = Types::DescribeForecastExportJobRequest
 
@@ -391,6 +702,7 @@ module Aws::ForecastService
     DescribeForecastExportJobResponse.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
     DescribeForecastExportJobResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
     DescribeForecastExportJobResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeForecastExportJobResponse.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
     DescribeForecastExportJobResponse.struct_class = Types::DescribeForecastExportJobResponse
 
     DescribeForecastRequest.add_member(:forecast_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ForecastArn"))
@@ -406,7 +718,24 @@ module Aws::ForecastService
     DescribeForecastResponse.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     DescribeForecastResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
     DescribeForecastResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeForecastResponse.add_member(:time_series_selector, Shapes::ShapeRef.new(shape: TimeSeriesSelector, location_name: "TimeSeriesSelector"))
     DescribeForecastResponse.struct_class = Types::DescribeForecastResponse
+
+    DescribeMonitorRequest.add_member(:monitor_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "MonitorArn"))
+    DescribeMonitorRequest.struct_class = Types::DescribeMonitorRequest
+
+    DescribeMonitorResponse.add_member(:monitor_name, Shapes::ShapeRef.new(shape: Name, location_name: "MonitorName"))
+    DescribeMonitorResponse.add_member(:monitor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "MonitorArn"))
+    DescribeMonitorResponse.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ResourceArn"))
+    DescribeMonitorResponse.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    DescribeMonitorResponse.add_member(:last_evaluation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastEvaluationTime"))
+    DescribeMonitorResponse.add_member(:last_evaluation_state, Shapes::ShapeRef.new(shape: EvaluationState, location_name: "LastEvaluationState"))
+    DescribeMonitorResponse.add_member(:baseline, Shapes::ShapeRef.new(shape: Baseline, location_name: "Baseline"))
+    DescribeMonitorResponse.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "Message"))
+    DescribeMonitorResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    DescribeMonitorResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeMonitorResponse.add_member(:estimated_evaluation_time_remaining_in_minutes, Shapes::ShapeRef.new(shape: Long, location_name: "EstimatedEvaluationTimeRemainingInMinutes"))
+    DescribeMonitorResponse.struct_class = Types::DescribeMonitorResponse
 
     DescribePredictorBacktestExportJobRequest.add_member(:predictor_backtest_export_job_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "PredictorBacktestExportJobArn"))
     DescribePredictorBacktestExportJobRequest.struct_class = Types::DescribePredictorBacktestExportJobRequest
@@ -419,6 +748,7 @@ module Aws::ForecastService
     DescribePredictorBacktestExportJobResponse.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
     DescribePredictorBacktestExportJobResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
     DescribePredictorBacktestExportJobResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribePredictorBacktestExportJobResponse.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
     DescribePredictorBacktestExportJobResponse.struct_class = Types::DescribePredictorBacktestExportJobResponse
 
     DescribePredictorRequest.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "PredictorArn"))
@@ -427,9 +757,11 @@ module Aws::ForecastService
     DescribePredictorResponse.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Name, location_name: "PredictorArn"))
     DescribePredictorResponse.add_member(:predictor_name, Shapes::ShapeRef.new(shape: Name, location_name: "PredictorName"))
     DescribePredictorResponse.add_member(:algorithm_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "AlgorithmArn"))
+    DescribePredictorResponse.add_member(:auto_ml_algorithm_arns, Shapes::ShapeRef.new(shape: ArnList, location_name: "AutoMLAlgorithmArns"))
     DescribePredictorResponse.add_member(:forecast_horizon, Shapes::ShapeRef.new(shape: Integer, location_name: "ForecastHorizon"))
     DescribePredictorResponse.add_member(:forecast_types, Shapes::ShapeRef.new(shape: ForecastTypes, location_name: "ForecastTypes"))
     DescribePredictorResponse.add_member(:perform_auto_ml, Shapes::ShapeRef.new(shape: Boolean, location_name: "PerformAutoML"))
+    DescribePredictorResponse.add_member(:auto_ml_override_strategy, Shapes::ShapeRef.new(shape: AutoMLOverrideStrategy, location_name: "AutoMLOverrideStrategy"))
     DescribePredictorResponse.add_member(:perform_hpo, Shapes::ShapeRef.new(shape: Boolean, location_name: "PerformHPO"))
     DescribePredictorResponse.add_member(:training_parameters, Shapes::ShapeRef.new(shape: TrainingParameters, location_name: "TrainingParameters"))
     DescribePredictorResponse.add_member(:evaluation_parameters, Shapes::ShapeRef.new(shape: EvaluationParameters, location_name: "EvaluationParameters"))
@@ -439,13 +771,59 @@ module Aws::ForecastService
     DescribePredictorResponse.add_member(:encryption_config, Shapes::ShapeRef.new(shape: EncryptionConfig, location_name: "EncryptionConfig"))
     DescribePredictorResponse.add_member(:predictor_execution_details, Shapes::ShapeRef.new(shape: PredictorExecutionDetails, location_name: "PredictorExecutionDetails"))
     DescribePredictorResponse.add_member(:estimated_time_remaining_in_minutes, Shapes::ShapeRef.new(shape: Long, location_name: "EstimatedTimeRemainingInMinutes"))
+    DescribePredictorResponse.add_member(:is_auto_predictor, Shapes::ShapeRef.new(shape: Boolean, location_name: "IsAutoPredictor"))
     DescribePredictorResponse.add_member(:dataset_import_job_arns, Shapes::ShapeRef.new(shape: ArnList, location_name: "DatasetImportJobArns"))
-    DescribePredictorResponse.add_member(:auto_ml_algorithm_arns, Shapes::ShapeRef.new(shape: ArnList, location_name: "AutoMLAlgorithmArns"))
     DescribePredictorResponse.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
     DescribePredictorResponse.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "Message"))
     DescribePredictorResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
     DescribePredictorResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribePredictorResponse.add_member(:optimization_metric, Shapes::ShapeRef.new(shape: OptimizationMetric, location_name: "OptimizationMetric"))
     DescribePredictorResponse.struct_class = Types::DescribePredictorResponse
+
+    DescribeWhatIfAnalysisRequest.add_member(:what_if_analysis_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "WhatIfAnalysisArn"))
+    DescribeWhatIfAnalysisRequest.struct_class = Types::DescribeWhatIfAnalysisRequest
+
+    DescribeWhatIfAnalysisResponse.add_member(:what_if_analysis_name, Shapes::ShapeRef.new(shape: Name, location_name: "WhatIfAnalysisName"))
+    DescribeWhatIfAnalysisResponse.add_member(:what_if_analysis_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "WhatIfAnalysisArn"))
+    DescribeWhatIfAnalysisResponse.add_member(:forecast_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ForecastArn"))
+    DescribeWhatIfAnalysisResponse.add_member(:estimated_time_remaining_in_minutes, Shapes::ShapeRef.new(shape: Long, location_name: "EstimatedTimeRemainingInMinutes"))
+    DescribeWhatIfAnalysisResponse.add_member(:status, Shapes::ShapeRef.new(shape: String, location_name: "Status"))
+    DescribeWhatIfAnalysisResponse.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
+    DescribeWhatIfAnalysisResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    DescribeWhatIfAnalysisResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeWhatIfAnalysisResponse.add_member(:time_series_selector, Shapes::ShapeRef.new(shape: TimeSeriesSelector, location_name: "TimeSeriesSelector"))
+    DescribeWhatIfAnalysisResponse.struct_class = Types::DescribeWhatIfAnalysisResponse
+
+    DescribeWhatIfForecastExportRequest.add_member(:what_if_forecast_export_arn, Shapes::ShapeRef.new(shape: LongArn, required: true, location_name: "WhatIfForecastExportArn"))
+    DescribeWhatIfForecastExportRequest.struct_class = Types::DescribeWhatIfForecastExportRequest
+
+    DescribeWhatIfForecastExportResponse.add_member(:what_if_forecast_export_arn, Shapes::ShapeRef.new(shape: LongArn, location_name: "WhatIfForecastExportArn"))
+    DescribeWhatIfForecastExportResponse.add_member(:what_if_forecast_export_name, Shapes::ShapeRef.new(shape: Name, location_name: "WhatIfForecastExportName"))
+    DescribeWhatIfForecastExportResponse.add_member(:what_if_forecast_arns, Shapes::ShapeRef.new(shape: LongArnList, location_name: "WhatIfForecastArns"))
+    DescribeWhatIfForecastExportResponse.add_member(:destination, Shapes::ShapeRef.new(shape: DataDestination, location_name: "Destination"))
+    DescribeWhatIfForecastExportResponse.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "Message"))
+    DescribeWhatIfForecastExportResponse.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    DescribeWhatIfForecastExportResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    DescribeWhatIfForecastExportResponse.add_member(:estimated_time_remaining_in_minutes, Shapes::ShapeRef.new(shape: Long, location_name: "EstimatedTimeRemainingInMinutes"))
+    DescribeWhatIfForecastExportResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeWhatIfForecastExportResponse.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
+    DescribeWhatIfForecastExportResponse.struct_class = Types::DescribeWhatIfForecastExportResponse
+
+    DescribeWhatIfForecastRequest.add_member(:what_if_forecast_arn, Shapes::ShapeRef.new(shape: LongArn, required: true, location_name: "WhatIfForecastArn"))
+    DescribeWhatIfForecastRequest.struct_class = Types::DescribeWhatIfForecastRequest
+
+    DescribeWhatIfForecastResponse.add_member(:what_if_forecast_name, Shapes::ShapeRef.new(shape: Name, location_name: "WhatIfForecastName"))
+    DescribeWhatIfForecastResponse.add_member(:what_if_forecast_arn, Shapes::ShapeRef.new(shape: LongArn, location_name: "WhatIfForecastArn"))
+    DescribeWhatIfForecastResponse.add_member(:what_if_analysis_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "WhatIfAnalysisArn"))
+    DescribeWhatIfForecastResponse.add_member(:estimated_time_remaining_in_minutes, Shapes::ShapeRef.new(shape: Long, location_name: "EstimatedTimeRemainingInMinutes"))
+    DescribeWhatIfForecastResponse.add_member(:status, Shapes::ShapeRef.new(shape: String, location_name: "Status"))
+    DescribeWhatIfForecastResponse.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
+    DescribeWhatIfForecastResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    DescribeWhatIfForecastResponse.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    DescribeWhatIfForecastResponse.add_member(:time_series_transformations, Shapes::ShapeRef.new(shape: TimeSeriesTransformations, location_name: "TimeSeriesTransformations"))
+    DescribeWhatIfForecastResponse.add_member(:time_series_replacements_data_source, Shapes::ShapeRef.new(shape: TimeSeriesReplacementsDataSource, location_name: "TimeSeriesReplacementsDataSource"))
+    DescribeWhatIfForecastResponse.add_member(:forecast_types, Shapes::ShapeRef.new(shape: ForecastTypes, location_name: "ForecastTypes"))
+    DescribeWhatIfForecastResponse.struct_class = Types::DescribeWhatIfForecastResponse
 
     EncryptionConfig.add_member(:role_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "RoleArn"))
     EncryptionConfig.add_member(:kms_key_arn, Shapes::ShapeRef.new(shape: KMSKeyArn, required: true, location_name: "KMSKeyArn"))
@@ -454,6 +832,8 @@ module Aws::ForecastService
     ErrorMetric.add_member(:forecast_type, Shapes::ShapeRef.new(shape: ForecastType, location_name: "ForecastType"))
     ErrorMetric.add_member(:wape, Shapes::ShapeRef.new(shape: Double, location_name: "WAPE"))
     ErrorMetric.add_member(:rmse, Shapes::ShapeRef.new(shape: Double, location_name: "RMSE"))
+    ErrorMetric.add_member(:mase, Shapes::ShapeRef.new(shape: Double, location_name: "MASE"))
+    ErrorMetric.add_member(:mape, Shapes::ShapeRef.new(shape: Double, location_name: "MAPE"))
     ErrorMetric.struct_class = Types::ErrorMetric
 
     ErrorMetrics.member = Shapes::ShapeRef.new(shape: ErrorMetric)
@@ -465,6 +845,37 @@ module Aws::ForecastService
     EvaluationResult.add_member(:algorithm_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "AlgorithmArn"))
     EvaluationResult.add_member(:test_windows, Shapes::ShapeRef.new(shape: TestWindows, location_name: "TestWindows"))
     EvaluationResult.struct_class = Types::EvaluationResult
+
+    Explainabilities.member = Shapes::ShapeRef.new(shape: ExplainabilitySummary)
+
+    ExplainabilityConfig.add_member(:time_series_granularity, Shapes::ShapeRef.new(shape: TimeSeriesGranularity, required: true, location_name: "TimeSeriesGranularity"))
+    ExplainabilityConfig.add_member(:time_point_granularity, Shapes::ShapeRef.new(shape: TimePointGranularity, required: true, location_name: "TimePointGranularity"))
+    ExplainabilityConfig.struct_class = Types::ExplainabilityConfig
+
+    ExplainabilityExportSummary.add_member(:explainability_export_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ExplainabilityExportArn"))
+    ExplainabilityExportSummary.add_member(:explainability_export_name, Shapes::ShapeRef.new(shape: Name, location_name: "ExplainabilityExportName"))
+    ExplainabilityExportSummary.add_member(:destination, Shapes::ShapeRef.new(shape: DataDestination, location_name: "Destination"))
+    ExplainabilityExportSummary.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    ExplainabilityExportSummary.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
+    ExplainabilityExportSummary.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    ExplainabilityExportSummary.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    ExplainabilityExportSummary.struct_class = Types::ExplainabilityExportSummary
+
+    ExplainabilityExports.member = Shapes::ShapeRef.new(shape: ExplainabilityExportSummary)
+
+    ExplainabilityInfo.add_member(:explainability_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ExplainabilityArn"))
+    ExplainabilityInfo.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    ExplainabilityInfo.struct_class = Types::ExplainabilityInfo
+
+    ExplainabilitySummary.add_member(:explainability_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ExplainabilityArn"))
+    ExplainabilitySummary.add_member(:explainability_name, Shapes::ShapeRef.new(shape: Name, location_name: "ExplainabilityName"))
+    ExplainabilitySummary.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ResourceArn"))
+    ExplainabilitySummary.add_member(:explainability_config, Shapes::ShapeRef.new(shape: ExplainabilityConfig, location_name: "ExplainabilityConfig"))
+    ExplainabilitySummary.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    ExplainabilitySummary.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "Message"))
+    ExplainabilitySummary.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    ExplainabilitySummary.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    ExplainabilitySummary.struct_class = Types::ExplainabilitySummary
 
     Featurization.add_member(:attribute_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "AttributeName"))
     Featurization.add_member(:featurization_pipeline, Shapes::ShapeRef.new(shape: FeaturizationPipeline, location_name: "FeaturizationPipeline"))
@@ -512,6 +923,7 @@ module Aws::ForecastService
     ForecastSummary.add_member(:forecast_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ForecastArn"))
     ForecastSummary.add_member(:forecast_name, Shapes::ShapeRef.new(shape: Name, location_name: "ForecastName"))
     ForecastSummary.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: String, location_name: "PredictorArn"))
+    ForecastSummary.add_member(:created_using_auto_predictor, Shapes::ShapeRef.new(shape: Boolean, location_name: "CreatedUsingAutoPredictor"))
     ForecastSummary.add_member(:dataset_group_arn, Shapes::ShapeRef.new(shape: String, location_name: "DatasetGroupArn"))
     ForecastSummary.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
     ForecastSummary.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
@@ -527,6 +939,9 @@ module Aws::ForecastService
     GetAccuracyMetricsRequest.struct_class = Types::GetAccuracyMetricsRequest
 
     GetAccuracyMetricsResponse.add_member(:predictor_evaluation_results, Shapes::ShapeRef.new(shape: PredictorEvaluationResults, location_name: "PredictorEvaluationResults"))
+    GetAccuracyMetricsResponse.add_member(:is_auto_predictor, Shapes::ShapeRef.new(shape: Boolean, location_name: "IsAutoPredictor"))
+    GetAccuracyMetricsResponse.add_member(:auto_ml_override_strategy, Shapes::ShapeRef.new(shape: AutoMLOverrideStrategy, location_name: "AutoMLOverrideStrategy"))
+    GetAccuracyMetricsResponse.add_member(:optimization_metric, Shapes::ShapeRef.new(shape: OptimizationMetric, location_name: "OptimizationMetric"))
     GetAccuracyMetricsResponse.struct_class = Types::GetAccuracyMetricsResponse
 
     HyperParameterTuningJobConfig.add_member(:parameter_ranges, Shapes::ShapeRef.new(shape: ParameterRanges, location_name: "ParameterRanges"))
@@ -578,6 +993,24 @@ module Aws::ForecastService
     ListDatasetsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     ListDatasetsResponse.struct_class = Types::ListDatasetsResponse
 
+    ListExplainabilitiesRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListExplainabilitiesRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults"))
+    ListExplainabilitiesRequest.add_member(:filters, Shapes::ShapeRef.new(shape: Filters, location_name: "Filters"))
+    ListExplainabilitiesRequest.struct_class = Types::ListExplainabilitiesRequest
+
+    ListExplainabilitiesResponse.add_member(:explainabilities, Shapes::ShapeRef.new(shape: Explainabilities, location_name: "Explainabilities"))
+    ListExplainabilitiesResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListExplainabilitiesResponse.struct_class = Types::ListExplainabilitiesResponse
+
+    ListExplainabilityExportsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListExplainabilityExportsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults"))
+    ListExplainabilityExportsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: Filters, location_name: "Filters"))
+    ListExplainabilityExportsRequest.struct_class = Types::ListExplainabilityExportsRequest
+
+    ListExplainabilityExportsResponse.add_member(:explainability_exports, Shapes::ShapeRef.new(shape: ExplainabilityExports, location_name: "ExplainabilityExports"))
+    ListExplainabilityExportsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListExplainabilityExportsResponse.struct_class = Types::ListExplainabilityExportsResponse
+
     ListForecastExportJobsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     ListForecastExportJobsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults"))
     ListForecastExportJobsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: Filters, location_name: "Filters"))
@@ -595,6 +1028,25 @@ module Aws::ForecastService
     ListForecastsResponse.add_member(:forecasts, Shapes::ShapeRef.new(shape: Forecasts, location_name: "Forecasts"))
     ListForecastsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     ListForecastsResponse.struct_class = Types::ListForecastsResponse
+
+    ListMonitorEvaluationsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListMonitorEvaluationsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults"))
+    ListMonitorEvaluationsRequest.add_member(:monitor_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "MonitorArn"))
+    ListMonitorEvaluationsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: Filters, location_name: "Filters"))
+    ListMonitorEvaluationsRequest.struct_class = Types::ListMonitorEvaluationsRequest
+
+    ListMonitorEvaluationsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListMonitorEvaluationsResponse.add_member(:predictor_monitor_evaluations, Shapes::ShapeRef.new(shape: PredictorMonitorEvaluations, location_name: "PredictorMonitorEvaluations"))
+    ListMonitorEvaluationsResponse.struct_class = Types::ListMonitorEvaluationsResponse
+
+    ListMonitorsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListMonitorsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults"))
+    ListMonitorsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: Filters, location_name: "Filters"))
+    ListMonitorsRequest.struct_class = Types::ListMonitorsRequest
+
+    ListMonitorsResponse.add_member(:monitors, Shapes::ShapeRef.new(shape: Monitors, location_name: "Monitors"))
+    ListMonitorsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListMonitorsResponse.struct_class = Types::ListMonitorsResponse
 
     ListPredictorBacktestExportJobsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     ListPredictorBacktestExportJobsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults"))
@@ -620,10 +1072,68 @@ module Aws::ForecastService
     ListTagsForResourceResponse.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "Tags"))
     ListTagsForResourceResponse.struct_class = Types::ListTagsForResourceResponse
 
+    ListWhatIfAnalysesRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListWhatIfAnalysesRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults"))
+    ListWhatIfAnalysesRequest.add_member(:filters, Shapes::ShapeRef.new(shape: Filters, location_name: "Filters"))
+    ListWhatIfAnalysesRequest.struct_class = Types::ListWhatIfAnalysesRequest
+
+    ListWhatIfAnalysesResponse.add_member(:what_if_analyses, Shapes::ShapeRef.new(shape: WhatIfAnalyses, location_name: "WhatIfAnalyses"))
+    ListWhatIfAnalysesResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListWhatIfAnalysesResponse.struct_class = Types::ListWhatIfAnalysesResponse
+
+    ListWhatIfForecastExportsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListWhatIfForecastExportsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults"))
+    ListWhatIfForecastExportsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: Filters, location_name: "Filters"))
+    ListWhatIfForecastExportsRequest.struct_class = Types::ListWhatIfForecastExportsRequest
+
+    ListWhatIfForecastExportsResponse.add_member(:what_if_forecast_exports, Shapes::ShapeRef.new(shape: WhatIfForecastExports, location_name: "WhatIfForecastExports"))
+    ListWhatIfForecastExportsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListWhatIfForecastExportsResponse.struct_class = Types::ListWhatIfForecastExportsResponse
+
+    ListWhatIfForecastsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListWhatIfForecastsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults"))
+    ListWhatIfForecastsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: Filters, location_name: "Filters"))
+    ListWhatIfForecastsRequest.struct_class = Types::ListWhatIfForecastsRequest
+
+    ListWhatIfForecastsResponse.add_member(:what_if_forecasts, Shapes::ShapeRef.new(shape: WhatIfForecasts, location_name: "WhatIfForecasts"))
+    ListWhatIfForecastsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListWhatIfForecastsResponse.struct_class = Types::ListWhatIfForecastsResponse
+
+    LongArnList.member = Shapes::ShapeRef.new(shape: LongArn)
+
+    MetricResult.add_member(:metric_name, Shapes::ShapeRef.new(shape: MetricName, location_name: "MetricName"))
+    MetricResult.add_member(:metric_value, Shapes::ShapeRef.new(shape: Double, location_name: "MetricValue"))
+    MetricResult.struct_class = Types::MetricResult
+
+    MetricResults.member = Shapes::ShapeRef.new(shape: MetricResult)
+
     Metrics.add_member(:rmse, Shapes::ShapeRef.new(shape: Double, deprecated: true, location_name: "RMSE", metadata: {"deprecatedMessage"=>"This property is deprecated, please refer to ErrorMetrics for both RMSE and WAPE"}))
     Metrics.add_member(:weighted_quantile_losses, Shapes::ShapeRef.new(shape: WeightedQuantileLosses, location_name: "WeightedQuantileLosses"))
     Metrics.add_member(:error_metrics, Shapes::ShapeRef.new(shape: ErrorMetrics, location_name: "ErrorMetrics"))
+    Metrics.add_member(:average_weighted_quantile_loss, Shapes::ShapeRef.new(shape: Double, location_name: "AverageWeightedQuantileLoss"))
     Metrics.struct_class = Types::Metrics
+
+    MonitorConfig.add_member(:monitor_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "MonitorName"))
+    MonitorConfig.struct_class = Types::MonitorConfig
+
+    MonitorDataSource.add_member(:dataset_import_job_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "DatasetImportJobArn"))
+    MonitorDataSource.add_member(:forecast_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ForecastArn"))
+    MonitorDataSource.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "PredictorArn"))
+    MonitorDataSource.struct_class = Types::MonitorDataSource
+
+    MonitorInfo.add_member(:monitor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "MonitorArn"))
+    MonitorInfo.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    MonitorInfo.struct_class = Types::MonitorInfo
+
+    MonitorSummary.add_member(:monitor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "MonitorArn"))
+    MonitorSummary.add_member(:monitor_name, Shapes::ShapeRef.new(shape: Name, location_name: "MonitorName"))
+    MonitorSummary.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ResourceArn"))
+    MonitorSummary.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    MonitorSummary.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    MonitorSummary.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    MonitorSummary.struct_class = Types::MonitorSummary
+
+    Monitors.member = Shapes::ShapeRef.new(shape: MonitorSummary)
 
     ParameterRanges.add_member(:categorical_parameter_ranges, Shapes::ShapeRef.new(shape: CategoricalParameterRanges, location_name: "CategoricalParameterRanges"))
     ParameterRanges.add_member(:continuous_parameter_ranges, Shapes::ShapeRef.new(shape: ContinuousParameterRanges, location_name: "ContinuousParameterRanges"))
@@ -641,7 +1151,14 @@ module Aws::ForecastService
 
     PredictorBacktestExportJobs.member = Shapes::ShapeRef.new(shape: PredictorBacktestExportJobSummary)
 
+    PredictorBaseline.add_member(:baseline_metrics, Shapes::ShapeRef.new(shape: BaselineMetrics, location_name: "BaselineMetrics"))
+    PredictorBaseline.struct_class = Types::PredictorBaseline
+
     PredictorEvaluationResults.member = Shapes::ShapeRef.new(shape: EvaluationResult)
+
+    PredictorEvent.add_member(:detail, Shapes::ShapeRef.new(shape: Detail, location_name: "Detail"))
+    PredictorEvent.add_member(:datetime, Shapes::ShapeRef.new(shape: Timestamp, location_name: "Datetime"))
+    PredictorEvent.struct_class = Types::PredictorEvent
 
     PredictorExecution.add_member(:algorithm_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "AlgorithmArn"))
     PredictorExecution.add_member(:test_windows, Shapes::ShapeRef.new(shape: TestWindowDetails, location_name: "TestWindows"))
@@ -652,9 +1169,26 @@ module Aws::ForecastService
 
     PredictorExecutions.member = Shapes::ShapeRef.new(shape: PredictorExecution)
 
+    PredictorMonitorEvaluation.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ResourceArn"))
+    PredictorMonitorEvaluation.add_member(:monitor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "MonitorArn"))
+    PredictorMonitorEvaluation.add_member(:evaluation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "EvaluationTime"))
+    PredictorMonitorEvaluation.add_member(:evaluation_state, Shapes::ShapeRef.new(shape: EvaluationState, location_name: "EvaluationState"))
+    PredictorMonitorEvaluation.add_member(:window_start_datetime, Shapes::ShapeRef.new(shape: Timestamp, location_name: "WindowStartDatetime"))
+    PredictorMonitorEvaluation.add_member(:window_end_datetime, Shapes::ShapeRef.new(shape: Timestamp, location_name: "WindowEndDatetime"))
+    PredictorMonitorEvaluation.add_member(:predictor_event, Shapes::ShapeRef.new(shape: PredictorEvent, location_name: "PredictorEvent"))
+    PredictorMonitorEvaluation.add_member(:monitor_data_source, Shapes::ShapeRef.new(shape: MonitorDataSource, location_name: "MonitorDataSource"))
+    PredictorMonitorEvaluation.add_member(:metric_results, Shapes::ShapeRef.new(shape: MetricResults, location_name: "MetricResults"))
+    PredictorMonitorEvaluation.add_member(:num_items_evaluated, Shapes::ShapeRef.new(shape: Long, location_name: "NumItemsEvaluated"))
+    PredictorMonitorEvaluation.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "Message"))
+    PredictorMonitorEvaluation.struct_class = Types::PredictorMonitorEvaluation
+
+    PredictorMonitorEvaluations.member = Shapes::ShapeRef.new(shape: PredictorMonitorEvaluation)
+
     PredictorSummary.add_member(:predictor_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "PredictorArn"))
     PredictorSummary.add_member(:predictor_name, Shapes::ShapeRef.new(shape: Name, location_name: "PredictorName"))
     PredictorSummary.add_member(:dataset_group_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "DatasetGroupArn"))
+    PredictorSummary.add_member(:is_auto_predictor, Shapes::ShapeRef.new(shape: Boolean, location_name: "IsAutoPredictor"))
+    PredictorSummary.add_member(:reference_predictor_summary, Shapes::ShapeRef.new(shape: ReferencePredictorSummary, location_name: "ReferencePredictorSummary"))
     PredictorSummary.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
     PredictorSummary.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     PredictorSummary.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
@@ -662,6 +1196,10 @@ module Aws::ForecastService
     PredictorSummary.struct_class = Types::PredictorSummary
 
     Predictors.member = Shapes::ShapeRef.new(shape: PredictorSummary)
+
+    ReferencePredictorSummary.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "Arn"))
+    ReferencePredictorSummary.add_member(:state, Shapes::ShapeRef.new(shape: State, location_name: "State"))
+    ReferencePredictorSummary.struct_class = Types::ReferencePredictorSummary
 
     ResourceAlreadyExistsException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     ResourceAlreadyExistsException.struct_class = Types::ResourceAlreadyExistsException
@@ -671,6 +1209,9 @@ module Aws::ForecastService
 
     ResourceNotFoundException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     ResourceNotFoundException.struct_class = Types::ResourceNotFoundException
+
+    ResumeResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ResourceArn"))
+    ResumeResourceRequest.struct_class = Types::ResumeResourceRequest
 
     S3Config.add_member(:path, Shapes::ShapeRef.new(shape: S3Path, required: true, location_name: "Path"))
     S3Config.add_member(:role_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "RoleArn"))
@@ -694,6 +1235,10 @@ module Aws::ForecastService
     Statistics.add_member(:max, Shapes::ShapeRef.new(shape: String, location_name: "Max"))
     Statistics.add_member(:avg, Shapes::ShapeRef.new(shape: Double, location_name: "Avg"))
     Statistics.add_member(:stddev, Shapes::ShapeRef.new(shape: Double, location_name: "Stddev"))
+    Statistics.add_member(:count_long, Shapes::ShapeRef.new(shape: Long, location_name: "CountLong"))
+    Statistics.add_member(:count_distinct_long, Shapes::ShapeRef.new(shape: Long, location_name: "CountDistinctLong"))
+    Statistics.add_member(:count_null_long, Shapes::ShapeRef.new(shape: Long, location_name: "CountNullLong"))
+    Statistics.add_member(:count_nan_long, Shapes::ShapeRef.new(shape: Long, location_name: "CountNanLong"))
     Statistics.struct_class = Types::Statistics
 
     StopResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ResourceArn"))
@@ -729,8 +1274,44 @@ module Aws::ForecastService
 
     TestWindows.member = Shapes::ShapeRef.new(shape: WindowSummary)
 
+    TimeAlignmentBoundary.add_member(:month, Shapes::ShapeRef.new(shape: Month, location_name: "Month"))
+    TimeAlignmentBoundary.add_member(:day_of_month, Shapes::ShapeRef.new(shape: DayOfMonth, location_name: "DayOfMonth"))
+    TimeAlignmentBoundary.add_member(:day_of_week, Shapes::ShapeRef.new(shape: DayOfWeek, location_name: "DayOfWeek"))
+    TimeAlignmentBoundary.add_member(:hour, Shapes::ShapeRef.new(shape: Hour, location_name: "Hour"))
+    TimeAlignmentBoundary.struct_class = Types::TimeAlignmentBoundary
+
+    TimeSeriesCondition.add_member(:attribute_name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "AttributeName"))
+    TimeSeriesCondition.add_member(:attribute_value, Shapes::ShapeRef.new(shape: AttributeValue, required: true, location_name: "AttributeValue"))
+    TimeSeriesCondition.add_member(:condition, Shapes::ShapeRef.new(shape: Condition, required: true, location_name: "Condition"))
+    TimeSeriesCondition.struct_class = Types::TimeSeriesCondition
+
+    TimeSeriesConditions.member = Shapes::ShapeRef.new(shape: TimeSeriesCondition)
+
+    TimeSeriesIdentifiers.add_member(:data_source, Shapes::ShapeRef.new(shape: DataSource, location_name: "DataSource"))
+    TimeSeriesIdentifiers.add_member(:schema, Shapes::ShapeRef.new(shape: Schema, location_name: "Schema"))
+    TimeSeriesIdentifiers.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
+    TimeSeriesIdentifiers.struct_class = Types::TimeSeriesIdentifiers
+
+    TimeSeriesReplacementsDataSource.add_member(:s3_config, Shapes::ShapeRef.new(shape: S3Config, required: true, location_name: "S3Config"))
+    TimeSeriesReplacementsDataSource.add_member(:schema, Shapes::ShapeRef.new(shape: Schema, required: true, location_name: "Schema"))
+    TimeSeriesReplacementsDataSource.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "Format"))
+    TimeSeriesReplacementsDataSource.add_member(:timestamp_format, Shapes::ShapeRef.new(shape: TimestampFormat, location_name: "TimestampFormat"))
+    TimeSeriesReplacementsDataSource.struct_class = Types::TimeSeriesReplacementsDataSource
+
+    TimeSeriesSelector.add_member(:time_series_identifiers, Shapes::ShapeRef.new(shape: TimeSeriesIdentifiers, location_name: "TimeSeriesIdentifiers"))
+    TimeSeriesSelector.struct_class = Types::TimeSeriesSelector
+
+    TimeSeriesTransformation.add_member(:action, Shapes::ShapeRef.new(shape: Action, location_name: "Action"))
+    TimeSeriesTransformation.add_member(:time_series_conditions, Shapes::ShapeRef.new(shape: TimeSeriesConditions, location_name: "TimeSeriesConditions"))
+    TimeSeriesTransformation.struct_class = Types::TimeSeriesTransformation
+
+    TimeSeriesTransformations.member = Shapes::ShapeRef.new(shape: TimeSeriesTransformation)
+
     TrainingParameters.key = Shapes::ShapeRef.new(shape: ParameterKey)
     TrainingParameters.value = Shapes::ShapeRef.new(shape: ParameterValue)
+
+    Transformations.key = Shapes::ShapeRef.new(shape: Name)
+    Transformations.value = Shapes::ShapeRef.new(shape: Value)
 
     UntagResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "ResourceArn"))
     UntagResourceRequest.add_member(:tag_keys, Shapes::ShapeRef.new(shape: TagKeys, required: true, location_name: "TagKeys"))
@@ -751,6 +1332,42 @@ module Aws::ForecastService
     WeightedQuantileLoss.struct_class = Types::WeightedQuantileLoss
 
     WeightedQuantileLosses.member = Shapes::ShapeRef.new(shape: WeightedQuantileLoss)
+
+    WhatIfAnalyses.member = Shapes::ShapeRef.new(shape: WhatIfAnalysisSummary)
+
+    WhatIfAnalysisSummary.add_member(:what_if_analysis_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "WhatIfAnalysisArn"))
+    WhatIfAnalysisSummary.add_member(:what_if_analysis_name, Shapes::ShapeRef.new(shape: Name, location_name: "WhatIfAnalysisName"))
+    WhatIfAnalysisSummary.add_member(:forecast_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ForecastArn"))
+    WhatIfAnalysisSummary.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    WhatIfAnalysisSummary.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
+    WhatIfAnalysisSummary.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    WhatIfAnalysisSummary.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    WhatIfAnalysisSummary.struct_class = Types::WhatIfAnalysisSummary
+
+    WhatIfForecastArnListForExport.member = Shapes::ShapeRef.new(shape: LongArn)
+
+    WhatIfForecastExportSummary.add_member(:what_if_forecast_export_arn, Shapes::ShapeRef.new(shape: LongArn, location_name: "WhatIfForecastExportArn"))
+    WhatIfForecastExportSummary.add_member(:what_if_forecast_arns, Shapes::ShapeRef.new(shape: WhatIfForecastArnListForExport, location_name: "WhatIfForecastArns"))
+    WhatIfForecastExportSummary.add_member(:what_if_forecast_export_name, Shapes::ShapeRef.new(shape: Name, location_name: "WhatIfForecastExportName"))
+    WhatIfForecastExportSummary.add_member(:destination, Shapes::ShapeRef.new(shape: DataDestination, location_name: "Destination"))
+    WhatIfForecastExportSummary.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    WhatIfForecastExportSummary.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
+    WhatIfForecastExportSummary.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    WhatIfForecastExportSummary.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    WhatIfForecastExportSummary.struct_class = Types::WhatIfForecastExportSummary
+
+    WhatIfForecastExports.member = Shapes::ShapeRef.new(shape: WhatIfForecastExportSummary)
+
+    WhatIfForecastSummary.add_member(:what_if_forecast_arn, Shapes::ShapeRef.new(shape: LongArn, location_name: "WhatIfForecastArn"))
+    WhatIfForecastSummary.add_member(:what_if_forecast_name, Shapes::ShapeRef.new(shape: Name, location_name: "WhatIfForecastName"))
+    WhatIfForecastSummary.add_member(:what_if_analysis_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "WhatIfAnalysisArn"))
+    WhatIfForecastSummary.add_member(:status, Shapes::ShapeRef.new(shape: Status, location_name: "Status"))
+    WhatIfForecastSummary.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
+    WhatIfForecastSummary.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    WhatIfForecastSummary.add_member(:last_modification_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastModificationTime"))
+    WhatIfForecastSummary.struct_class = Types::WhatIfForecastSummary
+
+    WhatIfForecasts.member = Shapes::ShapeRef.new(shape: WhatIfForecastSummary)
 
     WindowSummary.add_member(:test_window_start, Shapes::ShapeRef.new(shape: Timestamp, location_name: "TestWindowStart"))
     WindowSummary.add_member(:test_window_end, Shapes::ShapeRef.new(shape: Timestamp, location_name: "TestWindowEnd"))
@@ -777,6 +1394,19 @@ module Aws::ForecastService
         "targetPrefix" => "AmazonForecast",
         "uid" => "forecast-2018-06-26",
       }
+
+      api.add_operation(:create_auto_predictor, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateAutoPredictor"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateAutoPredictorRequest)
+        o.output = Shapes::ShapeRef.new(shape: CreateAutoPredictorResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+      end)
 
       api.add_operation(:create_dataset, Seahorse::Model::Operation.new.tap do |o|
         o.name = "CreateDataset"
@@ -815,6 +1445,32 @@ module Aws::ForecastService
         o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
       end)
 
+      api.add_operation(:create_explainability, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateExplainability"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateExplainabilityRequest)
+        o.output = Shapes::ShapeRef.new(shape: CreateExplainabilityResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+      end)
+
+      api.add_operation(:create_explainability_export, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateExplainabilityExport"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateExplainabilityExportRequest)
+        o.output = Shapes::ShapeRef.new(shape: CreateExplainabilityExportResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+      end)
+
       api.add_operation(:create_forecast, Seahorse::Model::Operation.new.tap do |o|
         o.name = "CreateForecast"
         o.http_method = "POST"
@@ -841,6 +1497,19 @@ module Aws::ForecastService
         o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
       end)
 
+      api.add_operation(:create_monitor, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateMonitor"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateMonitorRequest)
+        o.output = Shapes::ShapeRef.new(shape: CreateMonitorResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+      end)
+
       api.add_operation(:create_predictor, Seahorse::Model::Operation.new.tap do |o|
         o.name = "CreatePredictor"
         o.http_method = "POST"
@@ -860,6 +1529,45 @@ module Aws::ForecastService
         o.http_request_uri = "/"
         o.input = Shapes::ShapeRef.new(shape: CreatePredictorBacktestExportJobRequest)
         o.output = Shapes::ShapeRef.new(shape: CreatePredictorBacktestExportJobResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+      end)
+
+      api.add_operation(:create_what_if_analysis, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateWhatIfAnalysis"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateWhatIfAnalysisRequest)
+        o.output = Shapes::ShapeRef.new(shape: CreateWhatIfAnalysisResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+      end)
+
+      api.add_operation(:create_what_if_forecast, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateWhatIfForecast"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateWhatIfForecastRequest)
+        o.output = Shapes::ShapeRef.new(shape: CreateWhatIfForecastResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+      end)
+
+      api.add_operation(:create_what_if_forecast_export, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateWhatIfForecastExport"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateWhatIfForecastExportRequest)
+        o.output = Shapes::ShapeRef.new(shape: CreateWhatIfForecastExportResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -900,6 +1608,28 @@ module Aws::ForecastService
         o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
       end)
 
+      api.add_operation(:delete_explainability, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteExplainability"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteExplainabilityRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+      end)
+
+      api.add_operation(:delete_explainability_export, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteExplainabilityExport"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteExplainabilityExportRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+      end)
+
       api.add_operation(:delete_forecast, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DeleteForecast"
         o.http_method = "POST"
@@ -916,6 +1646,17 @@ module Aws::ForecastService
         o.http_method = "POST"
         o.http_request_uri = "/"
         o.input = Shapes::ShapeRef.new(shape: DeleteForecastExportJobRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+      end)
+
+      api.add_operation(:delete_monitor, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteMonitor"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteMonitorRequest)
         o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
         o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -955,6 +1696,49 @@ module Aws::ForecastService
         o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
       end)
 
+      api.add_operation(:delete_what_if_analysis, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteWhatIfAnalysis"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteWhatIfAnalysisRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+      end)
+
+      api.add_operation(:delete_what_if_forecast, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteWhatIfForecast"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteWhatIfForecastRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+      end)
+
+      api.add_operation(:delete_what_if_forecast_export, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteWhatIfForecastExport"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteWhatIfForecastExportRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+      end)
+
+      api.add_operation(:describe_auto_predictor, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeAutoPredictor"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeAutoPredictorRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeAutoPredictorResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
       api.add_operation(:describe_dataset, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DescribeDataset"
         o.http_method = "POST"
@@ -985,6 +1769,26 @@ module Aws::ForecastService
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
       end)
 
+      api.add_operation(:describe_explainability, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeExplainability"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeExplainabilityRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeExplainabilityResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
+      api.add_operation(:describe_explainability_export, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeExplainabilityExport"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeExplainabilityExportRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeExplainabilityExportResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
       api.add_operation(:describe_forecast, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DescribeForecast"
         o.http_method = "POST"
@@ -1005,6 +1809,16 @@ module Aws::ForecastService
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
       end)
 
+      api.add_operation(:describe_monitor, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeMonitor"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeMonitorRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeMonitorResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
       api.add_operation(:describe_predictor, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DescribePredictor"
         o.http_method = "POST"
@@ -1021,6 +1835,36 @@ module Aws::ForecastService
         o.http_request_uri = "/"
         o.input = Shapes::ShapeRef.new(shape: DescribePredictorBacktestExportJobRequest)
         o.output = Shapes::ShapeRef.new(shape: DescribePredictorBacktestExportJobResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
+      api.add_operation(:describe_what_if_analysis, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeWhatIfAnalysis"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeWhatIfAnalysisRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeWhatIfAnalysisResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
+      api.add_operation(:describe_what_if_forecast, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeWhatIfForecast"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeWhatIfForecastRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeWhatIfForecastResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+      end)
+
+      api.add_operation(:describe_what_if_forecast_export, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeWhatIfForecastExport"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeWhatIfForecastExportRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeWhatIfForecastExportResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
       end)
@@ -1082,6 +1926,38 @@ module Aws::ForecastService
         )
       end)
 
+      api.add_operation(:list_explainabilities, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListExplainabilities"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListExplainabilitiesRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListExplainabilitiesResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_explainability_exports, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListExplainabilityExports"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListExplainabilityExportsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListExplainabilityExportsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
       api.add_operation(:list_forecast_export_jobs, Seahorse::Model::Operation.new.tap do |o|
         o.name = "ListForecastExportJobs"
         o.http_method = "POST"
@@ -1104,6 +1980,39 @@ module Aws::ForecastService
         o.http_request_uri = "/"
         o.input = Shapes::ShapeRef.new(shape: ListForecastsRequest)
         o.output = Shapes::ShapeRef.new(shape: ListForecastsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_monitor_evaluations, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListMonitorEvaluations"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListMonitorEvaluationsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListMonitorEvaluationsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_monitors, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListMonitors"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListMonitorsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListMonitorsResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
         o[:pager] = Aws::Pager.new(
@@ -1154,6 +2063,66 @@ module Aws::ForecastService
         o.output = Shapes::ShapeRef.new(shape: ListTagsForResourceResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+      end)
+
+      api.add_operation(:list_what_if_analyses, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListWhatIfAnalyses"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListWhatIfAnalysesRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListWhatIfAnalysesResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_what_if_forecast_exports, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListWhatIfForecastExports"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListWhatIfForecastExportsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListWhatIfForecastExportsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_what_if_forecasts, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListWhatIfForecasts"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListWhatIfForecastsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListWhatIfForecastsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:resume_resource, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ResumeResource"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ResumeResourceRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidInputException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
       end)
 
       api.add_operation(:stop_resource, Seahorse::Model::Operation.new.tap do |o|

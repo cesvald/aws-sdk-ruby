@@ -122,8 +122,8 @@ module Aws::RDS
     # The unique identifier for the lease associated with the reserved DB
     # instance.
     #
-    # <note markdown="1"> AWS Support might request the lease ID for an issue related to a
-    # reserved DB instance.
+    # <note markdown="1"> Amazon Web Services Support might request the lease ID for an issue
+    # related to a reserved DB instance.
     #
     #  </note>
     # @return [String]
@@ -145,7 +145,9 @@ module Aws::RDS
     #
     # @return [self]
     def load
-      resp = @client.describe_reserved_db_instances(reserved_db_instance_id: @id)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_reserved_db_instances(reserved_db_instance_id: @id)
+      end
       @data = resp.reserved_db_instances[0]
       self
     end
@@ -260,7 +262,9 @@ module Aws::RDS
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Associations

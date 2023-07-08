@@ -32,6 +32,7 @@ module Aws::SecretsManager
     DescribeSecretRequest = Shapes::StructureShape.new(name: 'DescribeSecretRequest')
     DescribeSecretResponse = Shapes::StructureShape.new(name: 'DescribeSecretResponse')
     DescriptionType = Shapes::StringShape.new(name: 'DescriptionType')
+    DurationType = Shapes::StringShape.new(name: 'DurationType')
     EncryptionFailure = Shapes::StructureShape.new(name: 'EncryptionFailure')
     ErrorMessage = Shapes::StringShape.new(name: 'ErrorMessage')
     ExcludeCharactersType = Shapes::StringShape.new(name: 'ExcludeCharactersType')
@@ -55,6 +56,7 @@ module Aws::SecretsManager
     InvalidNextTokenException = Shapes::StructureShape.new(name: 'InvalidNextTokenException')
     InvalidParameterException = Shapes::StructureShape.new(name: 'InvalidParameterException')
     InvalidRequestException = Shapes::StructureShape.new(name: 'InvalidRequestException')
+    KmsKeyIdListType = Shapes::ListShape.new(name: 'KmsKeyIdListType')
     KmsKeyIdType = Shapes::StringShape.new(name: 'KmsKeyIdType')
     LastAccessedDateType = Shapes::TimestampShape.new(name: 'LastAccessedDateType')
     LastChangedDateType = Shapes::TimestampShape.new(name: 'LastChangedDateType')
@@ -67,6 +69,7 @@ module Aws::SecretsManager
     MalformedPolicyDocumentException = Shapes::StructureShape.new(name: 'MalformedPolicyDocumentException')
     MaxResultsType = Shapes::IntegerShape.new(name: 'MaxResultsType')
     NameType = Shapes::StringShape.new(name: 'NameType')
+    NextRotationDateType = Shapes::TimestampShape.new(name: 'NextRotationDateType')
     NextTokenType = Shapes::StringShape.new(name: 'NextTokenType')
     NonEmptyResourcePolicyType = Shapes::StringShape.new(name: 'NonEmptyResourcePolicyType')
     OwningServiceType = Shapes::StringShape.new(name: 'OwningServiceType')
@@ -98,6 +101,7 @@ module Aws::SecretsManager
     RotationEnabledType = Shapes::BooleanShape.new(name: 'RotationEnabledType')
     RotationLambdaARNType = Shapes::StringShape.new(name: 'RotationLambdaARNType')
     RotationRulesType = Shapes::StructureShape.new(name: 'RotationRulesType')
+    ScheduleExpressionType = Shapes::StringShape.new(name: 'ScheduleExpressionType')
     SecretARNType = Shapes::StringShape.new(name: 'SecretARNType')
     SecretBinaryType = Shapes::BlobShape.new(name: 'SecretBinaryType')
     SecretIdType = Shapes::StringShape.new(name: 'SecretIdType')
@@ -194,6 +198,7 @@ module Aws::SecretsManager
     DescribeSecretResponse.add_member(:last_changed_date, Shapes::ShapeRef.new(shape: LastChangedDateType, location_name: "LastChangedDate", metadata: {"box"=>true}))
     DescribeSecretResponse.add_member(:last_accessed_date, Shapes::ShapeRef.new(shape: LastAccessedDateType, location_name: "LastAccessedDate", metadata: {"box"=>true}))
     DescribeSecretResponse.add_member(:deleted_date, Shapes::ShapeRef.new(shape: DeletedDateType, location_name: "DeletedDate", metadata: {"box"=>true}))
+    DescribeSecretResponse.add_member(:next_rotation_date, Shapes::ShapeRef.new(shape: NextRotationDateType, location_name: "NextRotationDate"))
     DescribeSecretResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagListType, location_name: "Tags"))
     DescribeSecretResponse.add_member(:version_ids_to_stages, Shapes::ShapeRef.new(shape: SecretVersionsToStagesMapType, location_name: "VersionIdsToStages"))
     DescribeSecretResponse.add_member(:owning_service, Shapes::ShapeRef.new(shape: OwningServiceType, location_name: "OwningService"))
@@ -260,6 +265,8 @@ module Aws::SecretsManager
     InvalidRequestException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     InvalidRequestException.struct_class = Types::InvalidRequestException
 
+    KmsKeyIdListType.member = Shapes::ShapeRef.new(shape: KmsKeyIdType)
+
     LimitExceededException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     LimitExceededException.struct_class = Types::LimitExceededException
 
@@ -275,6 +282,7 @@ module Aws::SecretsManager
     ListSecretVersionIdsResponse.add_member(:name, Shapes::ShapeRef.new(shape: SecretNameType, location_name: "Name"))
     ListSecretVersionIdsResponse.struct_class = Types::ListSecretVersionIdsResponse
 
+    ListSecretsRequest.add_member(:include_planned_deletion, Shapes::ShapeRef.new(shape: BooleanType, location_name: "IncludePlannedDeletion", metadata: {"box"=>true}))
     ListSecretsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResultsType, location_name: "MaxResults", metadata: {"box"=>true}))
     ListSecretsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextTokenType, location_name: "NextToken"))
     ListSecretsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: FiltersListType, location_name: "Filters"))
@@ -365,6 +373,7 @@ module Aws::SecretsManager
     RotateSecretRequest.add_member(:client_request_token, Shapes::ShapeRef.new(shape: ClientRequestTokenType, location_name: "ClientRequestToken", metadata: {"idempotencyToken"=>true}))
     RotateSecretRequest.add_member(:rotation_lambda_arn, Shapes::ShapeRef.new(shape: RotationLambdaARNType, location_name: "RotationLambdaARN"))
     RotateSecretRequest.add_member(:rotation_rules, Shapes::ShapeRef.new(shape: RotationRulesType, location_name: "RotationRules"))
+    RotateSecretRequest.add_member(:rotate_immediately, Shapes::ShapeRef.new(shape: BooleanType, location_name: "RotateImmediately", metadata: {"box"=>true}))
     RotateSecretRequest.struct_class = Types::RotateSecretRequest
 
     RotateSecretResponse.add_member(:arn, Shapes::ShapeRef.new(shape: SecretARNType, location_name: "ARN"))
@@ -373,6 +382,8 @@ module Aws::SecretsManager
     RotateSecretResponse.struct_class = Types::RotateSecretResponse
 
     RotationRulesType.add_member(:automatically_after_days, Shapes::ShapeRef.new(shape: AutomaticallyRotateAfterDaysType, location_name: "AutomaticallyAfterDays", metadata: {"box"=>true}))
+    RotationRulesType.add_member(:duration, Shapes::ShapeRef.new(shape: DurationType, location_name: "Duration"))
+    RotationRulesType.add_member(:schedule_expression, Shapes::ShapeRef.new(shape: ScheduleExpressionType, location_name: "ScheduleExpression"))
     RotationRulesType.struct_class = Types::RotationRulesType
 
     SecretListEntry.add_member(:arn, Shapes::ShapeRef.new(shape: SecretARNType, location_name: "ARN"))
@@ -386,6 +397,7 @@ module Aws::SecretsManager
     SecretListEntry.add_member(:last_changed_date, Shapes::ShapeRef.new(shape: LastChangedDateType, location_name: "LastChangedDate", metadata: {"box"=>true}))
     SecretListEntry.add_member(:last_accessed_date, Shapes::ShapeRef.new(shape: LastAccessedDateType, location_name: "LastAccessedDate", metadata: {"box"=>true}))
     SecretListEntry.add_member(:deleted_date, Shapes::ShapeRef.new(shape: DeletedDateType, location_name: "DeletedDate"))
+    SecretListEntry.add_member(:next_rotation_date, Shapes::ShapeRef.new(shape: NextRotationDateType, location_name: "NextRotationDate"))
     SecretListEntry.add_member(:tags, Shapes::ShapeRef.new(shape: TagListType, location_name: "Tags"))
     SecretListEntry.add_member(:secret_versions_to_stages, Shapes::ShapeRef.new(shape: SecretVersionsToStagesMapType, location_name: "SecretVersionsToStages"))
     SecretListEntry.add_member(:owning_service, Shapes::ShapeRef.new(shape: OwningServiceType, location_name: "OwningService"))
@@ -401,6 +413,7 @@ module Aws::SecretsManager
     SecretVersionsListEntry.add_member(:version_stages, Shapes::ShapeRef.new(shape: SecretVersionStagesType, location_name: "VersionStages"))
     SecretVersionsListEntry.add_member(:last_accessed_date, Shapes::ShapeRef.new(shape: LastAccessedDateType, location_name: "LastAccessedDate", metadata: {"box"=>true}))
     SecretVersionsListEntry.add_member(:created_date, Shapes::ShapeRef.new(shape: CreatedDateType, location_name: "CreatedDate", metadata: {"box"=>true}))
+    SecretVersionsListEntry.add_member(:kms_key_ids, Shapes::ShapeRef.new(shape: KmsKeyIdListType, location_name: "KmsKeyIds"))
     SecretVersionsListEntry.struct_class = Types::SecretVersionsListEntry
 
     SecretVersionsListType.member = Shapes::ShapeRef.new(shape: SecretVersionsListEntry)
@@ -513,6 +526,7 @@ module Aws::SecretsManager
         o.errors << Shapes::ShapeRef.new(shape: MalformedPolicyDocumentException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceError)
         o.errors << Shapes::ShapeRef.new(shape: PreconditionNotMetException)
+        o.errors << Shapes::ShapeRef.new(shape: DecryptionFailure)
       end)
 
       api.add_operation(:delete_resource_policy, Seahorse::Model::Operation.new.tap do |o|
@@ -547,6 +561,7 @@ module Aws::SecretsManager
         o.output = Shapes::ShapeRef.new(shape: DescribeSecretResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceError)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
       end)
 
       api.add_operation(:get_random_password, Seahorse::Model::Operation.new.tap do |o|
@@ -569,6 +584,7 @@ module Aws::SecretsManager
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceError)
         o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
       end)
 
       api.add_operation(:get_secret_value, Seahorse::Model::Operation.new.tap do |o|
@@ -593,6 +609,7 @@ module Aws::SecretsManager
         o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceError)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
         o[:pager] = Aws::Pager.new(
           limit_key: "max_results",
           tokens: {
@@ -645,6 +662,7 @@ module Aws::SecretsManager
         o.errors << Shapes::ShapeRef.new(shape: ResourceExistsException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceError)
+        o.errors << Shapes::ShapeRef.new(shape: DecryptionFailure)
       end)
 
       api.add_operation(:remove_regions_from_replication, Seahorse::Model::Operation.new.tap do |o|
@@ -746,6 +764,7 @@ module Aws::SecretsManager
         o.errors << Shapes::ShapeRef.new(shape: MalformedPolicyDocumentException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceError)
         o.errors << Shapes::ShapeRef.new(shape: PreconditionNotMetException)
+        o.errors << Shapes::ShapeRef.new(shape: DecryptionFailure)
       end)
 
       api.add_operation(:update_secret_version_stage, Seahorse::Model::Operation.new.tap do |o|

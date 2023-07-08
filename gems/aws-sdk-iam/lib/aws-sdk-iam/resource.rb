@@ -45,8 +45,8 @@ module Aws::IAM
     # @option options [required, String] :old_password
     #   The IAM user's current password.
     # @option options [required, String] :new_password
-    #   The new password. The new password must conform to the AWS account's
-    #   password policy, if one exists.
+    #   The new password. The new password must conform to the Amazon Web
+    #   Services account's password policy, if one exists.
     #
     #   The [regex pattern][1] that is used to validate this parameter is a
     #   string of characters. That string can include almost any printable
@@ -54,15 +54,18 @@ module Aws::IAM
     #   character range (`\u00FF`). You can also include the tab (`\u0009`),
     #   line feed (`\u000A`), and carriage return (`\u000D`) characters. Any
     #   of these characters are valid in a password. However, many tools, such
-    #   as the AWS Management Console, might restrict the ability to type
-    #   certain characters because they have special meaning within that tool.
+    #   as the Amazon Web Services Management Console, might restrict the
+    #   ability to type certain characters because they have special meaning
+    #   within that tool.
     #
     #
     #
     #   [1]: http://wikipedia.org/wiki/regex
     # @return [EmptyStructure]
     def change_password(options = {})
-      resp = @client.change_password(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.change_password(options)
+      end
       resp.data
     end
 
@@ -85,7 +88,9 @@ module Aws::IAM
     #   [1]: http://wikipedia.org/wiki/regex
     # @return [EmptyStructure]
     def create_account_alias(options = {})
-      resp = @client.create_account_alias(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_account_alias(options)
+      end
       resp.data
     end
 
@@ -139,9 +144,10 @@ module Aws::IAM
     #   uses the default value of `false`. The result is that passwords do not
     #   require at least one lowercase character.
     # @option options [Boolean] :allow_users_to_change_password
-    #   Allows all IAM users in your account to use the AWS Management Console
-    #   to change their own passwords. For more information, see [Letting IAM
-    #   users change their own passwords][1] in the *IAM User Guide*.
+    #   Allows all IAM users in your account to use the Amazon Web Services
+    #   Management Console to change their own passwords. For more
+    #   information, see [Permitting IAM users to change their own
+    #   passwords][1] in the *IAM User Guide*.
     #
     #   If you do not specify a value for this parameter, then the operation
     #   uses the default value of `false`. The result is that IAM users in the
@@ -150,7 +156,7 @@ module Aws::IAM
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/HowToPwdIAMUser.html
+    #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_enable-user-change.html
     # @option options [Integer] :max_password_age
     #   The number of days that an IAM user password is valid.
     #
@@ -165,17 +171,31 @@ module Aws::IAM
     #   uses the default value of `0`. The result is that IAM users are not
     #   prevented from reusing previous passwords.
     # @option options [Boolean] :hard_expiry
-    #   Prevents IAM users from setting a new password after their password
-    #   has expired. The IAM user cannot be accessed until an administrator
-    #   resets the password.
+    #   Prevents IAM users who are accessing the account via the Amazon Web
+    #   Services Management Console from setting a new console password after
+    #   their password has expired. The IAM user cannot access the console
+    #   until an administrator resets the password.
     #
     #   If you do not specify a value for this parameter, then the operation
     #   uses the default value of `false`. The result is that IAM users can
     #   change their passwords after they expire and continue to sign in as
     #   the user.
+    #
+    #   <note markdown="1"> In the Amazon Web Services Management Console, the custom password
+    #   policy option **Allow users to change their own password** gives IAM
+    #   users permissions to `iam:ChangePassword` for only their user and to
+    #   the `iam:GetAccountPasswordPolicy` action. This option does not attach
+    #   a permissions policy to each user, rather the permissions are applied
+    #   at the account-level for all users by IAM. IAM users with
+    #   `iam:ChangePassword` permission and active access keys can reset their
+    #   own expired console password using the CLI or API.
+    #
+    #    </note>
     # @return [AccountPasswordPolicy]
     def create_account_password_policy(options = {})
-      @client.update_account_password_policy(options)
+      Aws::Plugins::UserAgent.feature('resource') do
+        @client.update_account_password_policy(options)
+      end
       AccountPasswordPolicy.new(client: @client)
     end
 
@@ -213,7 +233,9 @@ module Aws::IAM
     #   create resources named both "MyResource" and "myresource".
     # @return [Group]
     def create_group(options = {})
-      resp = @client.create_group(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_group(options)
+      end
       Group.new(
         name: options[:group_name],
         data: resp.data.group,
@@ -280,7 +302,9 @@ module Aws::IAM
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags.html
     # @return [InstanceProfile]
     def create_instance_profile(options = {})
-      resp = @client.create_instance_profile(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_instance_profile(options)
+      end
       InstanceProfile.new(
         name: options[:instance_profile_name],
         data: resp.data.instance_profile,
@@ -325,6 +349,10 @@ module Aws::IAM
     #   character (`\u007F`), including most punctuation characters, digits,
     #   and upper and lowercased letters.
     #
+    #   <note markdown="1"> You cannot use an asterisk (*) in the path name.
+    #
+    #    </note>
+    #
     #
     #
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html
@@ -333,12 +361,20 @@ module Aws::IAM
     #   The JSON policy document that you want to use as the content for the
     #   new policy.
     #
-    #   You must provide policies in JSON format in IAM. However, for AWS
+    #   You must provide policies in JSON format in IAM. However, for
     #   CloudFormation templates formatted in YAML, you can provide the policy
-    #   in JSON or YAML format. AWS CloudFormation always converts a YAML
-    #   policy to JSON format before submitting it to IAM.
+    #   in JSON or YAML format. CloudFormation always converts a YAML policy
+    #   to JSON format before submitting it to IAM.
     #
-    #   The [regex pattern][1] used to validate this parameter is a string of
+    #   The maximum length of the policy document that you can pass in this
+    #   operation, including whitespace, is listed below. To view the maximum
+    #   character counts of a managed policy with no whitespaces, see [IAM and
+    #   STS character quotas][1].
+    #
+    #   To learn more about JSON policy grammar, see [Grammar of the IAM JSON
+    #   policy language][2] in the *IAM User Guide*.
+    #
+    #   The [regex pattern][3] used to validate this parameter is a string of
     #   characters consisting of the following:
     #
     #   * Any printable ASCII character ranging from the space character
@@ -352,7 +388,9 @@ module Aws::IAM
     #
     #
     #
-    #   [1]: http://wikipedia.org/wiki/regex
+    #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_iam-quotas.html#reference_iam-quotas-entity-length
+    #   [2]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_grammar.html
+    #   [3]: http://wikipedia.org/wiki/regex
     # @option options [String] :description
     #   A friendly description of the policy.
     #
@@ -379,7 +417,9 @@ module Aws::IAM
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags.html
     # @return [Policy]
     def create_policy(options = {})
-      resp = @client.create_policy(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_policy(options)
+      end
       Policy.new(
         arn: resp.data.policy.arn,
         client: @client
@@ -427,15 +467,23 @@ module Aws::IAM
     #   IAM user, group, role, and policy names must be unique within the
     #   account. Names are not distinguished by case. For example, you cannot
     #   create resources named both "MyResource" and "myresource".
+    #
+    #   This parameter allows (through its [regex pattern][1]) a string of
+    #   characters consisting of upper and lowercase alphanumeric characters
+    #   with no spaces. You can also include any of the following characters:
+    #   \_+=,.@-
+    #
+    #
+    #
+    #   [1]: http://wikipedia.org/wiki/regex
     # @option options [required, String] :assume_role_policy_document
     #   The trust relationship policy document that grants an entity
     #   permission to assume the role.
     #
     #   In IAM, you must provide a JSON policy that has been converted to a
-    #   string. However, for AWS CloudFormation templates formatted in YAML,
-    #   you can provide the policy in JSON or YAML format. AWS CloudFormation
-    #   always converts a YAML policy to JSON format before submitting it to
-    #   IAM.
+    #   string. However, for CloudFormation templates formatted in YAML, you
+    #   can provide the policy in JSON or YAML format. CloudFormation always
+    #   converts a YAML policy to JSON format before submitting it to IAM.
     #
     #   The [regex pattern][1] used to validate this parameter is a string of
     #   characters consisting of the following:
@@ -460,10 +508,10 @@ module Aws::IAM
     # @option options [Integer] :max_session_duration
     #   The maximum session duration (in seconds) that you want to set for the
     #   specified role. If you do not specify a value for this setting, the
-    #   default maximum of one hour is applied. This setting can have a value
+    #   default value of one hour is applied. This setting can have a value
     #   from 1 hour to 12 hours.
     #
-    #   Anyone who assumes the role from the AWS CLI or API can use the
+    #   Anyone who assumes the role from the CLI or API can use the
     #   `DurationSeconds` API parameter or the `duration-seconds` CLI
     #   parameter to request a longer session. The `MaxSessionDuration`
     #   setting determines the maximum duration that can be requested using
@@ -478,8 +526,23 @@ module Aws::IAM
     #
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html
     # @option options [String] :permissions_boundary
-    #   The ARN of the policy that is used to set the permissions boundary for
-    #   the role.
+    #   The ARN of the managed policy that is used to set the permissions
+    #   boundary for the role.
+    #
+    #   A permissions boundary policy defines the maximum permissions that
+    #   identity-based policies can grant to an entity, but does not grant
+    #   permissions. Permissions boundaries do not define the maximum
+    #   permissions that a resource-based policy can grant to an entity. To
+    #   learn more, see [Permissions boundaries for IAM entities][1] in the
+    #   *IAM User Guide*.
+    #
+    #   For more information about policy types, see [Policy types ][2] in the
+    #   *IAM User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html
+    #   [2]: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html#access_policy-types
     # @option options [Array<Types::Tag>] :tags
     #   A list of tags that you want to attach to the new role. Each tag
     #   consists of a key name and an associated value. For more information
@@ -496,7 +559,9 @@ module Aws::IAM
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags.html
     # @return [Role]
     def create_role(options = {})
-      resp = @client.create_role(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_role(options)
+      end
       Role.new(
         name: options[:role_name],
         data: resp.data.role,
@@ -559,7 +624,9 @@ module Aws::IAM
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags.html
     # @return [SamlProvider]
     def create_saml_provider(options = {})
-      resp = @client.create_saml_provider(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_saml_provider(options)
+      end
       SamlProvider.new(
         arn: resp.data.saml_provider_arn,
         client: @client
@@ -689,7 +756,9 @@ module Aws::IAM
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags.html
     # @return [ServerCertificate]
     def create_server_certificate(options = {})
-      @client.upload_server_certificate(options)
+      Aws::Plugins::UserAgent.feature('resource') do
+        @client.upload_server_certificate(options)
+      end
       ServerCertificate.new(
         name: options[:server_certificate_name],
         client: @client
@@ -734,7 +803,9 @@ module Aws::IAM
     #   [1]: http://wikipedia.org/wiki/regex
     # @return [SigningCertificate]
     def create_signing_certificate(options = {})
-      resp = @client.upload_signing_certificate(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.upload_signing_certificate(options)
+      end
       SigningCertificate.new(
         id: resp.data.certificate.certificate_id,
         data: resp.data.certificate,
@@ -781,8 +852,23 @@ module Aws::IAM
     #   account. Names are not distinguished by case. For example, you cannot
     #   create resources named both "MyResource" and "myresource".
     # @option options [String] :permissions_boundary
-    #   The ARN of the policy that is used to set the permissions boundary for
-    #   the user.
+    #   The ARN of the managed policy that is used to set the permissions
+    #   boundary for the user.
+    #
+    #   A permissions boundary policy defines the maximum permissions that
+    #   identity-based policies can grant to an entity, but does not grant
+    #   permissions. Permissions boundaries do not define the maximum
+    #   permissions that a resource-based policy can grant to an entity. To
+    #   learn more, see [Permissions boundaries for IAM entities][1] in the
+    #   *IAM User Guide*.
+    #
+    #   For more information about policy types, see [Policy types ][2] in the
+    #   *IAM User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html
+    #   [2]: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html#access_policy-types
     # @option options [Array<Types::Tag>] :tags
     #   A list of tags that you want to attach to the new user. Each tag
     #   consists of a key name and an associated value. For more information
@@ -799,7 +885,9 @@ module Aws::IAM
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags.html
     # @return [User]
     def create_user(options = {})
-      resp = @client.create_user(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_user(options)
+      end
       User.new(
         name: options[:user_name],
         data: resp.data.user,
@@ -839,8 +927,8 @@ module Aws::IAM
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html
     #   [2]: http://wikipedia.org/wiki/regex
     # @option options [required, String] :virtual_mfa_device_name
-    #   The name of the virtual MFA device. Use with path to uniquely identify
-    #   a virtual MFA device.
+    #   The name of the virtual MFA device, which must be unique. Use with
+    #   path to uniquely identify a virtual MFA device.
     #
     #   This parameter allows (through its [regex pattern][1]) a string of
     #   characters consisting of upper and lowercase alphanumeric characters
@@ -867,7 +955,9 @@ module Aws::IAM
     #   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags.html
     # @return [VirtualMfaDevice]
     def create_virtual_mfa_device(options = {})
-      resp = @client.create_virtual_mfa_device(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_virtual_mfa_device(options)
+      end
       VirtualMfaDevice.new(
         serial_number: resp.data.virtual_mfa_device.serial_number,
         data: resp.data.virtual_mfa_device,
@@ -926,7 +1016,9 @@ module Aws::IAM
     # @return [Group::Collection]
     def groups(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_groups(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_groups(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.groups.each do |g|
@@ -977,7 +1069,9 @@ module Aws::IAM
     # @return [InstanceProfile::Collection]
     def instance_profiles(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_instance_profiles(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_instance_profiles(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.instance_profiles.each do |i|
@@ -1005,9 +1099,9 @@ module Aws::IAM
     # @option options [String] :scope
     #   The scope to use for filtering the results.
     #
-    #   To list only AWS managed policies, set `Scope` to `AWS`. To list only
-    #   the customer managed policies in your AWS account, set `Scope` to
-    #   `Local`.
+    #   To list only Amazon Web Services managed policies, set `Scope` to
+    #   `AWS`. To list only the customer managed policies in your Amazon Web
+    #   Services account, set `Scope` to `Local`.
     #
     #   This parameter is optional. If it is not included, or if it is set to
     #   `All`, all policies are returned.
@@ -1044,7 +1138,9 @@ module Aws::IAM
     # @return [Policy::Collection]
     def policies(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_policies(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_policies(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.policies.each do |p|
@@ -1103,7 +1199,9 @@ module Aws::IAM
     # @return [Role::Collection]
     def roles(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_roles(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_roles(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.roles.each do |r|
@@ -1136,7 +1234,9 @@ module Aws::IAM
     def saml_providers(options = {})
       batches = Enumerator.new do |y|
         batch = []
-        resp = @client.list_saml_providers(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_saml_providers(options)
+        end
         resp.data.saml_provider_list.each do |s|
           batch << SamlProvider.new(
             arn: s.arn,
@@ -1183,7 +1283,9 @@ module Aws::IAM
     # @return [ServerCertificate::Collection]
     def server_certificates(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_server_certificates(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_server_certificates(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.server_certificate_metadata_list.each do |s|
@@ -1232,7 +1334,9 @@ module Aws::IAM
     # @return [User::Collection]
     def users(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_users(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_users(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.users.each do |u|
@@ -1270,7 +1374,9 @@ module Aws::IAM
     # @return [VirtualMfaDevice::Collection]
     def virtual_mfa_devices(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_virtual_mfa_devices(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_virtual_mfa_devices(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.virtual_mfa_devices.each do |v|

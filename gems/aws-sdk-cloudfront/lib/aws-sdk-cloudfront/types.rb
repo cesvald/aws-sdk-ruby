@@ -53,25 +53,25 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # A list of AWS accounts and the active CloudFront key pairs in each
-    # account that CloudFront can use to verify the signatures of signed
-    # URLs and signed cookies.
+    # A list of Amazon Web Services accounts and the active CloudFront key
+    # pairs in each account that CloudFront can use to verify the signatures
+    # of signed URLs and signed cookies.
     #
     # @!attribute [rw] enabled
-    #   This field is `true` if any of the AWS accounts in the list have
-    #   active CloudFront key pairs that CloudFront can use to verify the
-    #   signatures of signed URLs and signed cookies. If not, this field is
-    #   `false`.
+    #   This field is `true` if any of the Amazon Web Services accounts in
+    #   the list have active CloudFront key pairs that CloudFront can use to
+    #   verify the signatures of signed URLs and signed cookies. If not,
+    #   this field is `false`.
     #   @return [Boolean]
     #
     # @!attribute [rw] quantity
-    #   The number of AWS accounts in the list.
+    #   The number of Amazon Web Services accounts in the list.
     #   @return [Integer]
     #
     # @!attribute [rw] items
-    #   A list of AWS accounts and the identifiers of active CloudFront key
-    #   pairs in each account that CloudFront can use to verify the
-    #   signatures of signed URLs and signed cookies.
+    #   A list of Amazon Web Services accounts and the identifiers of active
+    #   CloudFront key pairs in each account that CloudFront can use to
+    #   verify the signatures of signed URLs and signed cookies.
     #   @return [Array<Types::Signer>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ActiveTrustedSigners AWS API Documentation
@@ -84,15 +84,17 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # AWS services in China customers must file for an Internet Content
-    # Provider (ICP) recordal if they want to serve content publicly on an
-    # alternate domain name, also known as a CNAME, that they've added to
-    # CloudFront. AliasICPRecordal provides the ICP recordal status for
-    # CNAMEs associated with distributions. The status is returned in the
-    # CloudFront response; you can't configure it yourself.
+    # Amazon Web Services services in China customers must file for an
+    # Internet Content Provider (ICP) recordal if they want to serve content
+    # publicly on an alternate domain name, also known as a CNAME, that
+    # they've added to CloudFront. AliasICPRecordal provides the ICP
+    # recordal status for CNAMEs associated with distributions. The status
+    # is returned in the CloudFront response; you can't configure it
+    # yourself.
     #
     # For more information about ICP recordals, see [ Signup, Accounts, and
-    # Credentials][1] in *Getting Started with AWS services in China*.
+    # Credentials][1] in *Getting Started with Amazon Web Services services
+    # in China*.
     #
     #
     #
@@ -138,14 +140,6 @@ module Aws::CloudFront
     # A complex type that contains information about CNAMEs (alternate
     # domain names), if any, for this distribution.
     #
-    # @note When making an API call, you may pass Aliases
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
-    #
     # @!attribute [rw] quantity
     #   The number of CNAME aliases, if any, that you want to associate with
     #   this distribution.
@@ -181,18 +175,6 @@ module Aws::CloudFront
     # operations that you don't want them to. For example, you might not
     # want users to have permissions to delete objects from your origin.
     #
-    # @note When making an API call, you may pass AllowedMethods
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #         cached_methods: {
-    #           quantity: 1, # required
-    #           items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #         },
-    #       }
-    #
     # @!attribute [rw] quantity
     #   The number of HTTP methods that you want CloudFront to forward to
     #   your origin. Valid values are 2 (for `GET` and `HEAD` requests), 3
@@ -226,6 +208,23 @@ module Aws::CloudFront
       :quantity,
       :items,
       :cached_methods)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] target_distribution_id
+    #   The ID of the distribution that you're associating the alias with.
+    #   @return [String]
+    #
+    # @!attribute [rw] alias
+    #   The alias (also known as a CNAME) to add to the target distribution.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/AssociateAliasRequest AWS API Documentation
+    #
+    class AssociateAliasRequest < Struct.new(
+      :target_distribution_id,
+      :alias)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -270,9 +269,9 @@ module Aws::CloudFront
     # behaviors that you can add to a distribution, see [Quotas][1] in the
     # *Amazon CloudFront Developer Guide*.
     #
-    # If you don’t want to specify any cache behaviors, include only an
-    # empty `CacheBehaviors` element. Don’t include an empty `CacheBehavior`
-    # element because this is invalid.
+    # If you don't want to specify any cache behaviors, include only an
+    # empty `CacheBehaviors` element. Don't include an empty
+    # `CacheBehavior` element because this is invalid.
     #
     # To delete all cache behaviors in an existing distribution, update the
     # distribution configuration and include only an empty `CacheBehaviors`
@@ -289,79 +288,6 @@ module Aws::CloudFront
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html
     # [2]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesCacheBehavior
-    #
-    # @note When making an API call, you may pass CacheBehavior
-    #   data as a hash:
-    #
-    #       {
-    #         path_pattern: "string", # required
-    #         target_origin_id: "string", # required
-    #         trusted_signers: {
-    #           enabled: false, # required
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #         trusted_key_groups: {
-    #           enabled: false, # required
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #         viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #         allowed_methods: {
-    #           quantity: 1, # required
-    #           items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #           cached_methods: {
-    #             quantity: 1, # required
-    #             items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #           },
-    #         },
-    #         smooth_streaming: false,
-    #         compress: false,
-    #         lambda_function_associations: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               lambda_function_arn: "LambdaFunctionARN", # required
-    #               event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #               include_body: false,
-    #             },
-    #           ],
-    #         },
-    #         function_associations: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               function_arn: "FunctionARN", # required
-    #               event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #             },
-    #           ],
-    #         },
-    #         field_level_encryption_id: "string",
-    #         realtime_log_config_arn: "string",
-    #         cache_policy_id: "string",
-    #         origin_request_policy_id: "string",
-    #         forwarded_values: {
-    #           query_string: false, # required
-    #           cookies: { # required
-    #             forward: "none", # required, accepts none, whitelist, all
-    #             whitelisted_names: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           headers: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           query_string_cache_keys: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #         min_ttl: 1,
-    #         default_ttl: 1,
-    #         max_ttl: 1,
-    #       }
     #
     # @!attribute [rw] path_pattern
     #   The pattern (for example, `images/*.jpg`) that specifies which
@@ -396,17 +322,17 @@ module Aws::CloudFront
     # @!attribute [rw] trusted_signers
     #   We recommend using `TrustedKeyGroups` instead of `TrustedSigners`.
     #
-    #   A list of AWS account IDs whose public keys CloudFront can use to
-    #   validate signed URLs or signed cookies.
+    #   A list of Amazon Web Services account IDs whose public keys
+    #   CloudFront can use to validate signed URLs or signed cookies.
     #
     #   When a cache behavior contains trusted signers, CloudFront requires
     #   signed URLs or signed cookies for all requests that match the cache
     #   behavior. The URLs or cookies must be signed with the private key of
-    #   a CloudFront key pair in the trusted signer’s AWS account. The
-    #   signed URL or cookie contains information about which public key
-    #   CloudFront should use to verify the signature. For more information,
-    #   see [Serving private content][1] in the *Amazon CloudFront Developer
-    #   Guide*.
+    #   a CloudFront key pair in the trusted signer's Amazon Web Services
+    #   account. The signed URL or cookie contains information about which
+    #   public key CloudFront should use to verify the signature. For more
+    #   information, see [Serving private content][1] in the *Amazon
+    #   CloudFront Developer Guide*.
     #
     #
     #
@@ -436,14 +362,14 @@ module Aws::CloudFront
     #   specified by `TargetOriginId` when a request matches the path
     #   pattern in `PathPattern`. You can specify the following options:
     #
-    #   * `allow-all`\: Viewers can use HTTP or HTTPS.
+    #   * `allow-all`: Viewers can use HTTP or HTTPS.
     #
-    #   * `redirect-to-https`\: If a viewer submits an HTTP request,
+    #   * `redirect-to-https`: If a viewer submits an HTTP request,
     #     CloudFront returns an HTTP status code of 301 (Moved Permanently)
     #     to the viewer along with the HTTPS URL. The viewer then resubmits
     #     the request using the new URL.
     #
-    #   * `https-only`\: If a viewer sends an HTTP request, CloudFront
+    #   * `https-only`: If a viewer sends an HTTP request, CloudFront
     #     returns an HTTP status code of 403 (Forbidden).
     #
     #   For more information about requiring the HTTPS protocol, see
@@ -453,7 +379,7 @@ module Aws::CloudFront
     #   <note markdown="1"> The only way to guarantee that viewers retrieve an object that was
     #   fetched from the origin using HTTPS is never to use any other
     #   protocol to fetch the object. If you have recently changed from HTTP
-    #   to HTTPS, we recommend that you clear your objects’ cache because
+    #   to HTTPS, we recommend that you clear your objects' cache because
     #   cached objects are protocol agnostic. That means that an edge
     #   location will return an object from the cache regardless of whether
     #   the current request protocol matches the protocol used previously.
@@ -508,7 +434,7 @@ module Aws::CloudFront
     #   @return [Boolean]
     #
     # @!attribute [rw] lambda_function_associations
-    #   A complex type that contains zero or more Lambda function
+    #   A complex type that contains zero or more Lambda@Edge function
     #   associations for a cache behavior.
     #   @return [Types::LambdaFunctionAssociations]
     #
@@ -559,6 +485,10 @@ module Aws::CloudFront
     #
     #   [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy
     #   [2]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html
+    #   @return [String]
+    #
+    # @!attribute [rw] response_headers_policy_id
+    #   The identifier for a response headers policy.
     #   @return [String]
     #
     # @!attribute [rw] forwarded_values
@@ -676,6 +606,7 @@ module Aws::CloudFront
       :realtime_log_config_arn,
       :cache_policy_id,
       :origin_request_policy_id,
+      :response_headers_policy_id,
       :forwarded_values,
       :min_ttl,
       :default_ttl,
@@ -685,84 +616,6 @@ module Aws::CloudFront
     end
 
     # A complex type that contains zero or more `CacheBehavior` elements.
-    #
-    # @note When making an API call, you may pass CacheBehaviors
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [
-    #           {
-    #             path_pattern: "string", # required
-    #             target_origin_id: "string", # required
-    #             trusted_signers: {
-    #               enabled: false, # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             trusted_key_groups: {
-    #               enabled: false, # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #             allowed_methods: {
-    #               quantity: 1, # required
-    #               items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #               cached_methods: {
-    #                 quantity: 1, # required
-    #                 items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #               },
-    #             },
-    #             smooth_streaming: false,
-    #             compress: false,
-    #             lambda_function_associations: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   lambda_function_arn: "LambdaFunctionARN", # required
-    #                   event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                   include_body: false,
-    #                 },
-    #               ],
-    #             },
-    #             function_associations: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   function_arn: "FunctionARN", # required
-    #                   event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                 },
-    #               ],
-    #             },
-    #             field_level_encryption_id: "string",
-    #             realtime_log_config_arn: "string",
-    #             cache_policy_id: "string",
-    #             origin_request_policy_id: "string",
-    #             forwarded_values: {
-    #               query_string: false, # required
-    #               cookies: { # required
-    #                 forward: "none", # required, accepts none, whitelist, all
-    #                 whitelisted_names: {
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #               },
-    #               headers: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #               query_string_cache_keys: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             min_ttl: 1,
-    #             default_ttl: 1,
-    #             max_ttl: 1,
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of cache behaviors for this distribution.
@@ -784,7 +637,7 @@ module Aws::CloudFront
 
     # A cache policy.
     #
-    # When it’s attached to a cache behavior, the cache policy determines
+    # When it's attached to a cache behavior, the cache policy determines
     # the following:
     #
     # * The values that CloudFront includes in the cache key. These values
@@ -796,11 +649,11 @@ module Aws::CloudFront
     #   want objects to stay in the CloudFront cache.
     #
     # The headers, cookies, and query strings that are included in the cache
-    # key are automatically included in requests that CloudFront sends to
-    # the origin. CloudFront sends a request when it can’t find a valid
-    # object in its cache that matches the request’s cache key. If you want
-    # to send values to the origin but *not* include them in the cache key,
-    # use `OriginRequestPolicy`.
+    # key are also included in requests that CloudFront sends to the origin.
+    # CloudFront sends a request when it can't find a valid object in its
+    # cache that matches the request's cache key. If you want to send
+    # values to the origin but *not* include them in the cache key, use
+    # `OriginRequestPolicy`.
     #
     # @!attribute [rw] id
     #   The unique identifier for the cache policy.
@@ -852,47 +705,11 @@ module Aws::CloudFront
     #   want objects to stay in the CloudFront cache.
     #
     # The headers, cookies, and query strings that are included in the cache
-    # key are automatically included in requests that CloudFront sends to
-    # the origin. CloudFront sends a request when it can’t find a valid
-    # object in its cache that matches the request’s cache key. If you want
-    # to send values to the origin but *not* include them in the cache key,
-    # use `OriginRequestPolicy`.
-    #
-    # @note When making an API call, you may pass CachePolicyConfig
-    #   data as a hash:
-    #
-    #       {
-    #         comment: "string",
-    #         name: "string", # required
-    #         default_ttl: 1,
-    #         max_ttl: 1,
-    #         min_ttl: 1, # required
-    #         parameters_in_cache_key_and_forwarded_to_origin: {
-    #           enable_accept_encoding_gzip: false, # required
-    #           enable_accept_encoding_brotli: false,
-    #           headers_config: { # required
-    #             header_behavior: "none", # required, accepts none, whitelist
-    #             headers: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           cookies_config: { # required
-    #             cookie_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #             cookies: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           query_strings_config: { # required
-    #             query_string_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #             query_strings: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #         },
-    #       }
+    # key are also included in requests that CloudFront sends to the origin.
+    # CloudFront sends a request when it can't find a valid object in its
+    # cache that matches the request's cache key. If you want to send
+    # values to the origin but *not* include them in the cache key, use
+    # `OriginRequestPolicy`.
     #
     # @!attribute [rw] comment
     #   A comment to describe the cache policy. The comment cannot be longer
@@ -907,7 +724,7 @@ module Aws::CloudFront
     #   The default amount of time, in seconds, that you want objects to
     #   stay in the CloudFront cache before CloudFront sends another request
     #   to the origin to see if the object has been updated. CloudFront uses
-    #   this value as the object’s time to live (TTL) only when the origin
+    #   this value as the object's time to live (TTL) only when the origin
     #   does *not* send `Cache-Control` or `Expires` headers with the
     #   object. For more information, see [Managing How Long Content Stays
     #   in an Edge Cache (Expiration)][1] in the *Amazon CloudFront
@@ -955,8 +772,8 @@ module Aws::CloudFront
     #
     # @!attribute [rw] parameters_in_cache_key_and_forwarded_to_origin
     #   The HTTP headers, cookies, and URL query strings to include in the
-    #   cache key. The values included in the cache key are automatically
-    #   included in requests that CloudFront sends to the origin.
+    #   cache key. The values included in the cache key are also included in
+    #   requests that CloudFront sends to the origin.
     #   @return [Types::ParametersInCacheKeyAndForwardedToOrigin]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CachePolicyConfig AWS API Documentation
@@ -973,44 +790,30 @@ module Aws::CloudFront
     end
 
     # An object that determines whether any cookies in viewer requests (and
-    # if so, which cookies) are included in the cache key and automatically
-    # included in requests that CloudFront sends to the origin.
-    #
-    # @note When making an API call, you may pass CachePolicyCookiesConfig
-    #   data as a hash:
-    #
-    #       {
-    #         cookie_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #         cookies: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
+    # if so, which cookies) are included in the cache key and in requests
+    # that CloudFront sends to the origin.
     #
     # @!attribute [rw] cookie_behavior
     #   Determines whether any cookies in viewer requests are included in
-    #   the cache key and automatically included in requests that CloudFront
-    #   sends to the origin. Valid values are:
+    #   the cache key and in requests that CloudFront sends to the origin.
+    #   Valid values are:
     #
-    #   * `none` – Cookies in viewer requests are not included in the cache
-    #     key and are not automatically included in requests that CloudFront
-    #     sends to the origin. Even when this field is set to `none`, any
-    #     cookies that are listed in an `OriginRequestPolicy` *are* included
-    #     in origin requests.
+    #   * `none` – No cookies in viewer requests are included in the cache
+    #     key or in requests that CloudFront sends to the origin. Even when
+    #     this field is set to `none`, any cookies that are listed in an
+    #     `OriginRequestPolicy` *are* included in origin requests.
     #
-    #   * `whitelist` – The cookies in viewer requests that are listed in
-    #     the `CookieNames` type are included in the cache key and
-    #     automatically included in requests that CloudFront sends to the
-    #     origin.
+    #   * `whitelist` – Only the cookies in viewer requests that are listed
+    #     in the `CookieNames` type are included in the cache key and in
+    #     requests that CloudFront sends to the origin.
     #
-    #   * `allExcept` – All cookies in viewer requests that are <i>
-    #     <b>not</b> </i> listed in the `CookieNames` type are included in
-    #     the cache key and automatically included in requests that
-    #     CloudFront sends to the origin.
+    #   * `allExcept` – All cookies in viewer requests are included in the
+    #     cache key and in requests that CloudFront sends to the origin, <i>
+    #     <b>except</b> </i> for those that are listed in the `CookieNames`
+    #     type, which are not included.
     #
     #   * `all` – All cookies in viewer requests are included in the cache
-    #     key and are automatically included in requests that CloudFront
-    #     sends to the origin.
+    #     key and in requests that CloudFront sends to the origin.
     #   @return [String]
     #
     # @!attribute [rw] cookies
@@ -1027,34 +830,22 @@ module Aws::CloudFront
     end
 
     # An object that determines whether any HTTP headers (and if so, which
-    # headers) are included in the cache key and automatically included in
-    # requests that CloudFront sends to the origin.
-    #
-    # @note When making an API call, you may pass CachePolicyHeadersConfig
-    #   data as a hash:
-    #
-    #       {
-    #         header_behavior: "none", # required, accepts none, whitelist
-    #         headers: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
+    # headers) are included in the cache key and in requests that CloudFront
+    # sends to the origin.
     #
     # @!attribute [rw] header_behavior
     #   Determines whether any HTTP headers are included in the cache key
-    #   and automatically included in requests that CloudFront sends to the
-    #   origin. Valid values are:
+    #   and in requests that CloudFront sends to the origin. Valid values
+    #   are:
     #
-    #   * `none` – HTTP headers are not included in the cache key and are
-    #     not automatically included in requests that CloudFront sends to
-    #     the origin. Even when this field is set to `none`, any headers
-    #     that are listed in an `OriginRequestPolicy` *are* included in
-    #     origin requests.
+    #   * `none` – No HTTP headers are included in the cache key or in
+    #     requests that CloudFront sends to the origin. Even when this field
+    #     is set to `none`, any headers that are listed in an
+    #     `OriginRequestPolicy` *are* included in origin requests.
     #
-    #   * `whitelist` – The HTTP headers that are listed in the `Headers`
-    #     type are included in the cache key and are automatically included
-    #     in requests that CloudFront sends to the origin.
+    #   * `whitelist` – Only the HTTP headers that are listed in the
+    #     `Headers` type are included in the cache key and in requests that
+    #     CloudFront sends to the origin.
     #   @return [String]
     #
     # @!attribute [rw] headers
@@ -1118,55 +909,41 @@ module Aws::CloudFront
 
     # An object that determines whether any URL query strings in viewer
     # requests (and if so, which query strings) are included in the cache
-    # key and automatically included in requests that CloudFront sends to
-    # the origin.
-    #
-    # @note When making an API call, you may pass CachePolicyQueryStringsConfig
-    #   data as a hash:
-    #
-    #       {
-    #         query_string_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #         query_strings: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
+    # key and in requests that CloudFront sends to the origin.
     #
     # @!attribute [rw] query_string_behavior
     #   Determines whether any URL query strings in viewer requests are
-    #   included in the cache key and automatically included in requests
-    #   that CloudFront sends to the origin. Valid values are:
+    #   included in the cache key and in requests that CloudFront sends to
+    #   the origin. Valid values are:
     #
-    #   * `none` – Query strings in viewer requests are not included in the
-    #     cache key and are not automatically included in requests that
-    #     CloudFront sends to the origin. Even when this field is set to
-    #     `none`, any query strings that are listed in an
-    #     `OriginRequestPolicy` *are* included in origin requests.
+    #   * `none` – No query strings in viewer requests are included in the
+    #     cache key or in requests that CloudFront sends to the origin. Even
+    #     when this field is set to `none`, any query strings that are
+    #     listed in an `OriginRequestPolicy` *are* included in origin
+    #     requests.
     #
-    #   * `whitelist` – The query strings in viewer requests that are listed
-    #     in the `QueryStringNames` type are included in the cache key and
-    #     automatically included in requests that CloudFront sends to the
-    #     origin.
+    #   * `whitelist` – Only the query strings in viewer requests that are
+    #     listed in the `QueryStringNames` type are included in the cache
+    #     key and in requests that CloudFront sends to the origin.
     #
-    #   * `allExcept` – All query strings in viewer requests that are <i>
-    #     <b>not</b> </i> listed in the `QueryStringNames` type are included
-    #     in the cache key and automatically included in requests that
-    #     CloudFront sends to the origin.
+    #   * `allExcept` – All query strings in viewer requests are included in
+    #     the cache key and in requests that CloudFront sends to the origin,
+    #     <i> <b>except</b> </i> those that are listed in the
+    #     `QueryStringNames` type, which are not included.
     #
     #   * `all` – All query strings in viewer requests are included in the
-    #     cache key and are automatically included in requests that
-    #     CloudFront sends to the origin.
+    #     cache key and in requests that CloudFront sends to the origin.
     #   @return [String]
     #
     # @!attribute [rw] query_strings
     #   Contains the specific query strings in viewer requests that either
     #   <i> <b>are</b> </i> or <i> <b>are not</b> </i> included in the cache
-    #   key and automatically included in requests that CloudFront sends to
-    #   the origin. The behavior depends on whether the
-    #   `QueryStringBehavior` field in the `CachePolicyQueryStringsConfig`
-    #   type is set to `whitelist` (the listed query strings <i> <b>are</b>
-    #   </i> included) or `allExcept` (the listed query strings <i> <b>are
-    #   not</b> </i> included, but all other query strings are).
+    #   key and in requests that CloudFront sends to the origin. The
+    #   behavior depends on whether the `QueryStringBehavior` field in the
+    #   `CachePolicyQueryStringsConfig` type is set to `whitelist` (the
+    #   listed query strings <i> <b>are</b> </i> included) or `allExcept`
+    #   (the listed query strings <i> <b>are not</b> </i> included, but all
+    #   other query strings are).
     #   @return [Types::QueryStringNames]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CachePolicyQueryStringsConfig AWS API Documentation
@@ -1181,8 +958,8 @@ module Aws::CloudFront
     # Contains a cache policy.
     #
     # @!attribute [rw] type
-    #   The type of cache policy, either `managed` (created by AWS) or
-    #   `custom` (created in this AWS account).
+    #   The type of cache policy, either `managed` (created by Amazon Web
+    #   Services) or `custom` (created in this Amazon Web Services account).
     #   @return [String]
     #
     # @!attribute [rw] cache_policy
@@ -1210,14 +987,6 @@ module Aws::CloudFront
     # to forward Access-Control-Request-Method,
     # Access-Control-Request-Headers, and Origin headers for the responses
     # to be cached correctly.
-    #
-    # @note When making an API call, you may pass CachedMethods
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of HTTP methods for which you want CloudFront to cache
@@ -1300,14 +1069,6 @@ module Aws::CloudFront
     # Origin access identity configuration. Send a `GET` request to the
     # `/CloudFront API version/CloudFront/identity ID/config` resource.
     #
-    # @note When making an API call, you may pass CloudFrontOriginAccessIdentityConfig
-    #   data as a hash:
-    #
-    #       {
-    #         caller_reference: "string", # required
-    #         comment: "string", # required
-    #       }
-    #
     # @!attribute [rw] caller_reference
     #   A unique value (for example, a date-time stamp) that ensures that
     #   the request can't be replayed.
@@ -1330,8 +1091,8 @@ module Aws::CloudFront
     #   @return [String]
     #
     # @!attribute [rw] comment
-    #   An optional comment to describe the origin access identity. The
-    #   comment cannot be longer than 128 characters.
+    #   A comment to describe the origin access identity. The comment cannot
+    #   be longer than 128 characters.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CloudFrontOriginAccessIdentityConfig AWS API Documentation
@@ -1393,13 +1154,14 @@ module Aws::CloudFront
     #
     # @!attribute [rw] quantity
     #   The number of CloudFront origin access identities that were created
-    #   by the current AWS account.
+    #   by the current Amazon Web Services account.
     #   @return [Integer]
     #
     # @!attribute [rw] items
     #   A complex type that contains one
     #   `CloudFrontOriginAccessIdentitySummary` element for each origin
-    #   access identity that was created by the current AWS account.
+    #   access identity that was created by the current Amazon Web Services
+    #   account.
     #   @return [Array<Types::CloudFrontOriginAccessIdentitySummary>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CloudFrontOriginAccessIdentityList AWS API Documentation
@@ -1443,16 +1205,74 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # An alias (also called a CNAME) and the CloudFront distribution and
+    # Amazon Web Services account ID that it's associated with. The
+    # distribution and account IDs are partially hidden, which allows you to
+    # identify the distributions and accounts that you own, but helps to
+    # protect the information of ones that you don't own.
+    #
+    # @!attribute [rw] alias
+    #   An alias (also called a CNAME).
+    #   @return [String]
+    #
+    # @!attribute [rw] distribution_id
+    #   The (partially hidden) ID of the CloudFront distribution associated
+    #   with the alias.
+    #   @return [String]
+    #
+    # @!attribute [rw] account_id
+    #   The (partially hidden) ID of the Amazon Web Services account that
+    #   owns the distribution that's associated with the alias.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ConflictingAlias AWS API Documentation
+    #
+    class ConflictingAlias < Struct.new(
+      :alias,
+      :distribution_id,
+      :account_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of aliases (also called CNAMEs) and the CloudFront
+    # distributions and Amazon Web Services accounts that they are
+    # associated with. In the list, the distribution and account IDs are
+    # partially hidden, which allows you to identify the distributions and
+    # accounts that you own, but helps to protect the information of ones
+    # that you don't own.
+    #
+    # @!attribute [rw] next_marker
+    #   If there are more items in the list than are in this response, this
+    #   element is present. It contains the value that you should use in the
+    #   `Marker` field of a subsequent request to continue listing
+    #   conflicting aliases where you left off.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   The maximum number of conflicting aliases requested.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] quantity
+    #   The number of conflicting aliases returned in the response.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   Contains the conflicting aliases in the list.
+    #   @return [Array<Types::ConflictingAlias>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ConflictingAliasesList AWS API Documentation
+    #
+    class ConflictingAliasesList < Struct.new(
+      :next_marker,
+      :max_items,
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A field-level encryption content type profile.
-    #
-    # @note When making an API call, you may pass ContentTypeProfile
-    #   data as a hash:
-    #
-    #       {
-    #         format: "URLEncoded", # required, accepts URLEncoded
-    #         profile_id: "string",
-    #         content_type: "string", # required
-    #       }
     #
     # @!attribute [rw] format
     #   The format for a field-level encryption content type-profile
@@ -1482,23 +1302,6 @@ module Aws::CloudFront
     # The configuration for a field-level encryption content type-profile
     # mapping.
     #
-    # @note When making an API call, you may pass ContentTypeProfileConfig
-    #   data as a hash:
-    #
-    #       {
-    #         forward_when_content_type_is_unknown: false, # required
-    #         content_type_profiles: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               format: "URLEncoded", # required, accepts URLEncoded
-    #               profile_id: "string",
-    #               content_type: "string", # required
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] forward_when_content_type_is_unknown
     #   The setting in a field-level encryption content type-profile mapping
     #   that specifies what to do when an unknown content type is provided
@@ -1522,20 +1325,6 @@ module Aws::CloudFront
 
     # Field-level encryption content type-profile.
     #
-    # @note When making an API call, you may pass ContentTypeProfiles
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [
-    #           {
-    #             format: "URLEncoded", # required, accepts URLEncoded
-    #             profile_id: "string",
-    #             content_type: "string", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] quantity
     #   The number of field-level encryption content type-profile mappings.
     #   @return [Integer]
@@ -1553,15 +1342,186 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # A continuous deployment policy.
+    #
+    # @!attribute [rw] id
+    #   The identifier of the continuous deployment policy.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_modified_time
+    #   The date and time the continuous deployment policy was last
+    #   modified.
+    #   @return [Time]
+    #
+    # @!attribute [rw] continuous_deployment_policy_config
+    #   Contains the configuration for a continuous deployment policy.
+    #   @return [Types::ContinuousDeploymentPolicyConfig]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ContinuousDeploymentPolicy AWS API Documentation
+    #
+    class ContinuousDeploymentPolicy < Struct.new(
+      :id,
+      :last_modified_time,
+      :continuous_deployment_policy_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A continuous deployment policy with this configuration already exists.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ContinuousDeploymentPolicyAlreadyExists AWS API Documentation
+    #
+    class ContinuousDeploymentPolicyAlreadyExists < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains the configuration for a continuous deployment policy.
+    #
+    # @!attribute [rw] staging_distribution_dns_names
+    #   The CloudFront domain name of the staging distribution. For example:
+    #   `d111111abcdef8.cloudfront.net`.
+    #   @return [Types::StagingDistributionDnsNames]
+    #
+    # @!attribute [rw] enabled
+    #   A Boolean that indicates whether this continuous deployment policy
+    #   is enabled (in effect). When this value is `true`, this policy is
+    #   enabled and in effect. When this value is `false`, this policy is
+    #   not enabled and has no effect.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] traffic_config
+    #   Contains the parameters for routing production traffic from your
+    #   primary to staging distributions.
+    #   @return [Types::TrafficConfig]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ContinuousDeploymentPolicyConfig AWS API Documentation
+    #
+    class ContinuousDeploymentPolicyConfig < Struct.new(
+      :staging_distribution_dns_names,
+      :enabled,
+      :traffic_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # You cannot delete a continuous deployment policy that is associated
+    # with a primary distribution.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ContinuousDeploymentPolicyInUse AWS API Documentation
+    #
+    class ContinuousDeploymentPolicyInUse < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains a list of continuous deployment policies.
+    #
+    # @!attribute [rw] next_marker
+    #   Indicates the next page of continuous deployment policies. To get
+    #   the next page of the list, use this value in the `Marker` field of
+    #   your request.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   The maximum number of continuous deployment policies that were
+    #   specified in your request.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] quantity
+    #   The total number of continuous deployment policies in your Amazon
+    #   Web Services account, regardless of the `MaxItems` value.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   A list of continuous deployment policy items.
+    #   @return [Array<Types::ContinuousDeploymentPolicySummary>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ContinuousDeploymentPolicyList AWS API Documentation
+    #
+    class ContinuousDeploymentPolicyList < Struct.new(
+      :next_marker,
+      :max_items,
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A summary of the information about your continuous deployment
+    # policies.
+    #
+    # @!attribute [rw] continuous_deployment_policy
+    #   The continuous deployment policy.
+    #   @return [Types::ContinuousDeploymentPolicy]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ContinuousDeploymentPolicySummary AWS API Documentation
+    #
+    class ContinuousDeploymentPolicySummary < Struct.new(
+      :continuous_deployment_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # This configuration determines which HTTP requests are sent to the
+    # staging distribution. If the HTTP request contains a header and value
+    # that matches what you specify here, the request is sent to the staging
+    # distribution. Otherwise the request is sent to the primary
+    # distribution.
+    #
+    # @!attribute [rw] header
+    #   The request header name that you want CloudFront to send to your
+    #   staging distribution. The header must contain the prefix
+    #   `aws-cf-cd-`.
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   The request header value.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ContinuousDeploymentSingleHeaderConfig AWS API Documentation
+    #
+    class ContinuousDeploymentSingleHeaderConfig < Struct.new(
+      :header,
+      :value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains the percentage of traffic to send to a staging distribution.
+    #
+    # @!attribute [rw] weight
+    #   The percentage of traffic to send to a staging distribution,
+    #   expressed as a decimal number between 0 and .15.
+    #   @return [Float]
+    #
+    # @!attribute [rw] session_stickiness_config
+    #   Session stickiness provides the ability to define multiple requests
+    #   from a single viewer as a single session. This prevents the
+    #   potentially inconsistent experience of sending some of a given
+    #   user's requests to your staging distribution, while others are sent
+    #   to your primary distribution. Define the session duration using TTL
+    #   values.
+    #   @return [Types::SessionStickinessConfig]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ContinuousDeploymentSingleWeightConfig AWS API Documentation
+    #
+    class ContinuousDeploymentSingleWeightConfig < Struct.new(
+      :weight,
+      :session_stickiness_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Contains a list of cookie names.
-    #
-    # @note When making an API call, you may pass CookieNames
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of cookie names in the `Items` list.
@@ -1598,17 +1558,6 @@ module Aws::CloudFront
     #
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Cookies.html
-    #
-    # @note When making an API call, you may pass CookiePreference
-    #   data as a hash:
-    #
-    #       {
-    #         forward: "none", # required, accepts none, whitelist, all
-    #         whitelisted_names: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
     #
     # @!attribute [rw] forward
     #   This field is deprecated. We recommend that you use a cache policy
@@ -1663,7 +1612,7 @@ module Aws::CloudFront
     #
     #   For the current limit on the number of cookie names that you can
     #   whitelist for each cache behavior, see [ CloudFront Limits][3] in
-    #   the *AWS General Reference*.
+    #   the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -1681,44 +1630,65 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateCachePolicyRequest
-    #   data as a hash:
+    # @!attribute [rw] primary_distribution_id
+    #   The identifier of the primary distribution whose configuration you
+    #   are copying. To get a distribution ID, use `ListDistributions`.
+    #   @return [String]
     #
-    #       {
-    #         cache_policy_config: { # required
-    #           comment: "string",
-    #           name: "string", # required
-    #           default_ttl: 1,
-    #           max_ttl: 1,
-    #           min_ttl: 1, # required
-    #           parameters_in_cache_key_and_forwarded_to_origin: {
-    #             enable_accept_encoding_gzip: false, # required
-    #             enable_accept_encoding_brotli: false,
-    #             headers_config: { # required
-    #               header_behavior: "none", # required, accepts none, whitelist
-    #               headers: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             cookies_config: { # required
-    #               cookie_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #               cookies: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             query_strings_config: { # required
-    #               query_string_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #               query_strings: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #           },
-    #         },
-    #       }
+    # @!attribute [rw] staging
+    #   The type of distribution that your primary distribution will be
+    #   copied to. The only valid value is `True`, indicating that you are
+    #   copying to a staging distribution.
+    #   @return [Boolean]
     #
+    # @!attribute [rw] if_match
+    #   The version identifier of the primary distribution whose
+    #   configuration you are copying. This is the `ETag` value returned in
+    #   the response to `GetDistribution` and `GetDistributionConfig`.
+    #   @return [String]
+    #
+    # @!attribute [rw] caller_reference
+    #   A value that uniquely identifies a request to create a resource.
+    #   This helps to prevent CloudFront from creating a duplicate resource
+    #   if you accidentally resubmit an identical request.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CopyDistributionRequest AWS API Documentation
+    #
+    class CopyDistributionRequest < Struct.new(
+      :primary_distribution_id,
+      :staging,
+      :if_match,
+      :caller_reference)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] distribution
+    #   A distribution tells CloudFront where you want content to be
+    #   delivered from, and the details about how to track and manage
+    #   content delivery.
+    #   @return [Types::Distribution]
+    #
+    # @!attribute [rw] location
+    #   The URL of the staging distribution.
+    #   @return [String]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the staging
+    #   distribution.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CopyDistributionResult AWS API Documentation
+    #
+    class CopyDistributionResult < Struct.new(
+      :distribution,
+      :location,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] cache_policy_config
     #   A cache policy configuration.
     #   @return [Types::CachePolicyConfig]
@@ -1764,16 +1734,6 @@ module Aws::CloudFront
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
     #
-    # @note When making an API call, you may pass CreateCloudFrontOriginAccessIdentityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cloud_front_origin_access_identity_config: { # required
-    #           caller_reference: "string", # required
-    #           comment: "string", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] cloud_front_origin_access_identity_config
     #   The current configuration information for the identity.
     #   @return [Types::CloudFrontOriginAccessIdentityConfig]
@@ -1811,263 +1771,42 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # @!attribute [rw] continuous_deployment_policy_config
+    #   Contains the configuration for a continuous deployment policy.
+    #   @return [Types::ContinuousDeploymentPolicyConfig]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateContinuousDeploymentPolicyRequest AWS API Documentation
+    #
+    class CreateContinuousDeploymentPolicyRequest < Struct.new(
+      :continuous_deployment_policy_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] continuous_deployment_policy
+    #   A continuous deployment policy.
+    #   @return [Types::ContinuousDeploymentPolicy]
+    #
+    # @!attribute [rw] location
+    #   The location of the continuous deployment policy.
+    #   @return [String]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the continuous
+    #   deployment policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateContinuousDeploymentPolicyResult AWS API Documentation
+    #
+    class CreateContinuousDeploymentPolicyResult < Struct.new(
+      :continuous_deployment_policy,
+      :location,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request to create a new distribution.
-    #
-    # @note When making an API call, you may pass CreateDistributionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_config: { # required
-    #           caller_reference: "string", # required
-    #           aliases: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           default_root_object: "string",
-    #           origins: { # required
-    #             quantity: 1, # required
-    #             items: [ # required
-    #               {
-    #                 id: "string", # required
-    #                 domain_name: "string", # required
-    #                 origin_path: "string",
-    #                 custom_headers: {
-    #                   quantity: 1, # required
-    #                   items: [
-    #                     {
-    #                       header_name: "string", # required
-    #                       header_value: "string", # required
-    #                     },
-    #                   ],
-    #                 },
-    #                 s3_origin_config: {
-    #                   origin_access_identity: "string", # required
-    #                 },
-    #                 custom_origin_config: {
-    #                   http_port: 1, # required
-    #                   https_port: 1, # required
-    #                   origin_protocol_policy: "http-only", # required, accepts http-only, match-viewer, https-only
-    #                   origin_ssl_protocols: {
-    #                     quantity: 1, # required
-    #                     items: ["SSLv3"], # required, accepts SSLv3, TLSv1, TLSv1.1, TLSv1.2
-    #                   },
-    #                   origin_read_timeout: 1,
-    #                   origin_keepalive_timeout: 1,
-    #                 },
-    #                 connection_attempts: 1,
-    #                 connection_timeout: 1,
-    #                 origin_shield: {
-    #                   enabled: false, # required
-    #                   origin_shield_region: "OriginShieldRegion",
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           origin_groups: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 id: "string", # required
-    #                 failover_criteria: { # required
-    #                   status_codes: { # required
-    #                     quantity: 1, # required
-    #                     items: [1], # required
-    #                   },
-    #                 },
-    #                 members: { # required
-    #                   quantity: 1, # required
-    #                   items: [ # required
-    #                     {
-    #                       origin_id: "string", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           default_cache_behavior: { # required
-    #             target_origin_id: "string", # required
-    #             trusted_signers: {
-    #               enabled: false, # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             trusted_key_groups: {
-    #               enabled: false, # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #             allowed_methods: {
-    #               quantity: 1, # required
-    #               items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #               cached_methods: {
-    #                 quantity: 1, # required
-    #                 items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #               },
-    #             },
-    #             smooth_streaming: false,
-    #             compress: false,
-    #             lambda_function_associations: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   lambda_function_arn: "LambdaFunctionARN", # required
-    #                   event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                   include_body: false,
-    #                 },
-    #               ],
-    #             },
-    #             function_associations: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   function_arn: "FunctionARN", # required
-    #                   event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                 },
-    #               ],
-    #             },
-    #             field_level_encryption_id: "string",
-    #             realtime_log_config_arn: "string",
-    #             cache_policy_id: "string",
-    #             origin_request_policy_id: "string",
-    #             forwarded_values: {
-    #               query_string: false, # required
-    #               cookies: { # required
-    #                 forward: "none", # required, accepts none, whitelist, all
-    #                 whitelisted_names: {
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #               },
-    #               headers: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #               query_string_cache_keys: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             min_ttl: 1,
-    #             default_ttl: 1,
-    #             max_ttl: 1,
-    #           },
-    #           cache_behaviors: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 path_pattern: "string", # required
-    #                 target_origin_id: "string", # required
-    #                 trusted_signers: {
-    #                   enabled: false, # required
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #                 trusted_key_groups: {
-    #                   enabled: false, # required
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #                 viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #                 allowed_methods: {
-    #                   quantity: 1, # required
-    #                   items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                   cached_methods: {
-    #                     quantity: 1, # required
-    #                     items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                   },
-    #                 },
-    #                 smooth_streaming: false,
-    #                 compress: false,
-    #                 lambda_function_associations: {
-    #                   quantity: 1, # required
-    #                   items: [
-    #                     {
-    #                       lambda_function_arn: "LambdaFunctionARN", # required
-    #                       event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                       include_body: false,
-    #                     },
-    #                   ],
-    #                 },
-    #                 function_associations: {
-    #                   quantity: 1, # required
-    #                   items: [
-    #                     {
-    #                       function_arn: "FunctionARN", # required
-    #                       event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                     },
-    #                   ],
-    #                 },
-    #                 field_level_encryption_id: "string",
-    #                 realtime_log_config_arn: "string",
-    #                 cache_policy_id: "string",
-    #                 origin_request_policy_id: "string",
-    #                 forwarded_values: {
-    #                   query_string: false, # required
-    #                   cookies: { # required
-    #                     forward: "none", # required, accepts none, whitelist, all
-    #                     whitelisted_names: {
-    #                       quantity: 1, # required
-    #                       items: ["string"],
-    #                     },
-    #                   },
-    #                   headers: {
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                   query_string_cache_keys: {
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                 },
-    #                 min_ttl: 1,
-    #                 default_ttl: 1,
-    #                 max_ttl: 1,
-    #               },
-    #             ],
-    #           },
-    #           custom_error_responses: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 error_code: 1, # required
-    #                 response_page_path: "string",
-    #                 response_code: "string",
-    #                 error_caching_min_ttl: 1,
-    #               },
-    #             ],
-    #           },
-    #           comment: "CommentType", # required
-    #           logging: {
-    #             enabled: false, # required
-    #             include_cookies: false, # required
-    #             bucket: "string", # required
-    #             prefix: "string", # required
-    #           },
-    #           price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #           enabled: false, # required
-    #           viewer_certificate: {
-    #             cloud_front_default_certificate: false,
-    #             iam_certificate_id: "string",
-    #             acm_certificate_arn: "string",
-    #             ssl_support_method: "sni-only", # accepts sni-only, vip, static-ip
-    #             minimum_protocol_version: "SSLv3", # accepts SSLv3, TLSv1, TLSv1_2016, TLSv1.1_2016, TLSv1.2_2018, TLSv1.2_2019
-    #             certificate: "string",
-    #             certificate_source: "cloudfront", # accepts cloudfront, iam, acm
-    #           },
-    #           restrictions: {
-    #             geo_restriction: { # required
-    #               restriction_type: "blacklist", # required, accepts blacklist, whitelist, none
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           web_acl_id: "string",
-    #           http_version: "http1.1", # accepts http1.1, http2
-    #           is_ipv6_enabled: false,
-    #         },
-    #       }
     #
     # @!attribute [rw] distribution_config
     #   The distribution's configuration information.
@@ -2108,272 +1847,6 @@ module Aws::CloudFront
 
     # The request to create a new distribution with tags.
     #
-    # @note When making an API call, you may pass CreateDistributionWithTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_config_with_tags: { # required
-    #           distribution_config: { # required
-    #             caller_reference: "string", # required
-    #             aliases: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             default_root_object: "string",
-    #             origins: { # required
-    #               quantity: 1, # required
-    #               items: [ # required
-    #                 {
-    #                   id: "string", # required
-    #                   domain_name: "string", # required
-    #                   origin_path: "string",
-    #                   custom_headers: {
-    #                     quantity: 1, # required
-    #                     items: [
-    #                       {
-    #                         header_name: "string", # required
-    #                         header_value: "string", # required
-    #                       },
-    #                     ],
-    #                   },
-    #                   s3_origin_config: {
-    #                     origin_access_identity: "string", # required
-    #                   },
-    #                   custom_origin_config: {
-    #                     http_port: 1, # required
-    #                     https_port: 1, # required
-    #                     origin_protocol_policy: "http-only", # required, accepts http-only, match-viewer, https-only
-    #                     origin_ssl_protocols: {
-    #                       quantity: 1, # required
-    #                       items: ["SSLv3"], # required, accepts SSLv3, TLSv1, TLSv1.1, TLSv1.2
-    #                     },
-    #                     origin_read_timeout: 1,
-    #                     origin_keepalive_timeout: 1,
-    #                   },
-    #                   connection_attempts: 1,
-    #                   connection_timeout: 1,
-    #                   origin_shield: {
-    #                     enabled: false, # required
-    #                     origin_shield_region: "OriginShieldRegion",
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #             origin_groups: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   id: "string", # required
-    #                   failover_criteria: { # required
-    #                     status_codes: { # required
-    #                       quantity: 1, # required
-    #                       items: [1], # required
-    #                     },
-    #                   },
-    #                   members: { # required
-    #                     quantity: 1, # required
-    #                     items: [ # required
-    #                       {
-    #                         origin_id: "string", # required
-    #                       },
-    #                     ],
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #             default_cache_behavior: { # required
-    #               target_origin_id: "string", # required
-    #               trusted_signers: {
-    #                 enabled: false, # required
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #               trusted_key_groups: {
-    #                 enabled: false, # required
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #               viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #               allowed_methods: {
-    #                 quantity: 1, # required
-    #                 items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                 cached_methods: {
-    #                   quantity: 1, # required
-    #                   items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                 },
-    #               },
-    #               smooth_streaming: false,
-    #               compress: false,
-    #               lambda_function_associations: {
-    #                 quantity: 1, # required
-    #                 items: [
-    #                   {
-    #                     lambda_function_arn: "LambdaFunctionARN", # required
-    #                     event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                     include_body: false,
-    #                   },
-    #                 ],
-    #               },
-    #               function_associations: {
-    #                 quantity: 1, # required
-    #                 items: [
-    #                   {
-    #                     function_arn: "FunctionARN", # required
-    #                     event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                   },
-    #                 ],
-    #               },
-    #               field_level_encryption_id: "string",
-    #               realtime_log_config_arn: "string",
-    #               cache_policy_id: "string",
-    #               origin_request_policy_id: "string",
-    #               forwarded_values: {
-    #                 query_string: false, # required
-    #                 cookies: { # required
-    #                   forward: "none", # required, accepts none, whitelist, all
-    #                   whitelisted_names: {
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                 },
-    #                 headers: {
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #                 query_string_cache_keys: {
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #               },
-    #               min_ttl: 1,
-    #               default_ttl: 1,
-    #               max_ttl: 1,
-    #             },
-    #             cache_behaviors: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   path_pattern: "string", # required
-    #                   target_origin_id: "string", # required
-    #                   trusted_signers: {
-    #                     enabled: false, # required
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                   trusted_key_groups: {
-    #                     enabled: false, # required
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                   viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #                   allowed_methods: {
-    #                     quantity: 1, # required
-    #                     items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                     cached_methods: {
-    #                       quantity: 1, # required
-    #                       items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                     },
-    #                   },
-    #                   smooth_streaming: false,
-    #                   compress: false,
-    #                   lambda_function_associations: {
-    #                     quantity: 1, # required
-    #                     items: [
-    #                       {
-    #                         lambda_function_arn: "LambdaFunctionARN", # required
-    #                         event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                         include_body: false,
-    #                       },
-    #                     ],
-    #                   },
-    #                   function_associations: {
-    #                     quantity: 1, # required
-    #                     items: [
-    #                       {
-    #                         function_arn: "FunctionARN", # required
-    #                         event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                       },
-    #                     ],
-    #                   },
-    #                   field_level_encryption_id: "string",
-    #                   realtime_log_config_arn: "string",
-    #                   cache_policy_id: "string",
-    #                   origin_request_policy_id: "string",
-    #                   forwarded_values: {
-    #                     query_string: false, # required
-    #                     cookies: { # required
-    #                       forward: "none", # required, accepts none, whitelist, all
-    #                       whitelisted_names: {
-    #                         quantity: 1, # required
-    #                         items: ["string"],
-    #                       },
-    #                     },
-    #                     headers: {
-    #                       quantity: 1, # required
-    #                       items: ["string"],
-    #                     },
-    #                     query_string_cache_keys: {
-    #                       quantity: 1, # required
-    #                       items: ["string"],
-    #                     },
-    #                   },
-    #                   min_ttl: 1,
-    #                   default_ttl: 1,
-    #                   max_ttl: 1,
-    #                 },
-    #               ],
-    #             },
-    #             custom_error_responses: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   error_code: 1, # required
-    #                   response_page_path: "string",
-    #                   response_code: "string",
-    #                   error_caching_min_ttl: 1,
-    #                 },
-    #               ],
-    #             },
-    #             comment: "CommentType", # required
-    #             logging: {
-    #               enabled: false, # required
-    #               include_cookies: false, # required
-    #               bucket: "string", # required
-    #               prefix: "string", # required
-    #             },
-    #             price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #             enabled: false, # required
-    #             viewer_certificate: {
-    #               cloud_front_default_certificate: false,
-    #               iam_certificate_id: "string",
-    #               acm_certificate_arn: "string",
-    #               ssl_support_method: "sni-only", # accepts sni-only, vip, static-ip
-    #               minimum_protocol_version: "SSLv3", # accepts SSLv3, TLSv1, TLSv1_2016, TLSv1.1_2016, TLSv1.2_2018, TLSv1.2_2019
-    #               certificate: "string",
-    #               certificate_source: "cloudfront", # accepts cloudfront, iam, acm
-    #             },
-    #             restrictions: {
-    #               geo_restriction: { # required
-    #                 restriction_type: "blacklist", # required, accepts blacklist, whitelist, none
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             web_acl_id: "string",
-    #             http_version: "http1.1", # accepts http1.1, http2
-    #             is_ipv6_enabled: false,
-    #           },
-    #           tags: { # required
-    #             items: [
-    #               {
-    #                 key: "TagKey", # required
-    #                 value: "TagValue",
-    #               },
-    #             ],
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] distribution_config_with_tags
     #   The distribution's configuration information.
     #   @return [Types::DistributionConfigWithTags]
@@ -2411,41 +1884,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateFieldLevelEncryptionConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         field_level_encryption_config: { # required
-    #           caller_reference: "string", # required
-    #           comment: "string",
-    #           query_arg_profile_config: {
-    #             forward_when_query_arg_profile_is_unknown: false, # required
-    #             query_arg_profiles: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   query_arg: "string", # required
-    #                   profile_id: "string", # required
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #           content_type_profile_config: {
-    #             forward_when_content_type_is_unknown: false, # required
-    #             content_type_profiles: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   format: "URLEncoded", # required, accepts URLEncoded
-    #                   profile_id: "string",
-    #                   content_type: "string", # required
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] field_level_encryption_config
     #   The request to create a new field-level encryption configuration.
     #   @return [Types::FieldLevelEncryptionConfig]
@@ -2482,30 +1920,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateFieldLevelEncryptionProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         field_level_encryption_profile_config: { # required
-    #           name: "string", # required
-    #           caller_reference: "string", # required
-    #           comment: "string",
-    #           encryption_entities: { # required
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 public_key_id: "string", # required
-    #                 provider_id: "string", # required
-    #                 field_patterns: { # required
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] field_level_encryption_profile_config
     #   The request to create a field-level encryption profile.
     #   @return [Types::FieldLevelEncryptionProfileConfig]
@@ -2541,25 +1955,13 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "FunctionName", # required
-    #         function_config: { # required
-    #           comment: "string", # required
-    #           runtime: "cloudfront-js-1.0", # required, accepts cloudfront-js-1.0
-    #         },
-    #         function_code: "data", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   A name to identify the function.
     #   @return [String]
     #
     # @!attribute [rw] function_config
     #   Configuration information about the function, including an optional
-    #   comment and the function’s runtime.
+    #   comment and the function's runtime.
     #   @return [Types::FunctionConfig]
     #
     # @!attribute [rw] function_code
@@ -2609,20 +2011,6 @@ module Aws::CloudFront
 
     # The request to create an invalidation.
     #
-    # @note When making an API call, you may pass CreateInvalidationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_id: "string", # required
-    #         invalidation_batch: { # required
-    #           paths: { # required
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           caller_reference: "string", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] distribution_id
     #   The distribution's id.
     #   @return [String]
@@ -2660,17 +2048,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateKeyGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         key_group_config: { # required
-    #           name: "string", # required
-    #           items: ["string"], # required
-    #           comment: "string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] key_group_config
     #   A key group configuration.
     #   @return [Types::KeyGroupConfig]
@@ -2705,18 +2082,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateMonitoringSubscriptionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_id: "string", # required
-    #         monitoring_subscription: { # required
-    #           realtime_metrics_subscription_config: {
-    #             realtime_metrics_subscription_status: "Enabled", # required, accepts Enabled, Disabled
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] distribution_id
     #   The ID of the distribution that you are enabling metrics for.
     #   @return [String]
@@ -2750,37 +2115,41 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateOriginRequestPolicyRequest
-    #   data as a hash:
+    # @!attribute [rw] origin_access_control_config
+    #   Contains the origin access control.
+    #   @return [Types::OriginAccessControlConfig]
     #
-    #       {
-    #         origin_request_policy_config: { # required
-    #           comment: "string",
-    #           name: "string", # required
-    #           headers_config: { # required
-    #             header_behavior: "none", # required, accepts none, whitelist, allViewer, allViewerAndWhitelistCloudFront
-    #             headers: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           cookies_config: { # required
-    #             cookie_behavior: "none", # required, accepts none, whitelist, all
-    #             cookies: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           query_strings_config: { # required
-    #             query_string_behavior: "none", # required, accepts none, whitelist, all
-    #             query_strings: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #         },
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateOriginAccessControlRequest AWS API Documentation
     #
+    class CreateOriginAccessControlRequest < Struct.new(
+      :origin_access_control_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] origin_access_control
+    #   Contains an origin access control.
+    #   @return [Types::OriginAccessControl]
+    #
+    # @!attribute [rw] location
+    #   The URL of the origin access control.
+    #   @return [String]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the origin access
+    #   control.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateOriginAccessControlResult AWS API Documentation
+    #
+    class CreateOriginAccessControlResult < Struct.new(
+      :origin_access_control,
+      :location,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] origin_request_policy_config
     #   An origin request policy configuration.
     #   @return [Types::OriginRequestPolicyConfig]
@@ -2815,18 +2184,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreatePublicKeyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         public_key_config: { # required
-    #           caller_reference: "string", # required
-    #           name: "string", # required
-    #           encoded_key: "string", # required
-    #           comment: "string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] public_key_config
     #   A CloudFront public key configuration.
     #   @return [Types::PublicKeyConfig]
@@ -2861,24 +2218,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateRealtimeLogConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         end_points: [ # required
-    #           {
-    #             stream_type: "string", # required
-    #             kinesis_stream_config: {
-    #               role_arn: "string", # required
-    #               stream_arn: "string", # required
-    #             },
-    #           },
-    #         ],
-    #         fields: ["string"], # required
-    #         name: "string", # required
-    #         sampling_rate: 1, # required
-    #       }
-    #
     # @!attribute [rw] end_points
     #   Contains information about the Amazon Kinesis data stream where you
     #   are sending real-time log data.
@@ -2929,37 +2268,43 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # @!attribute [rw] response_headers_policy_config
+    #   Contains metadata about the response headers policy, and a set of
+    #   configurations that specify the HTTP headers.
+    #   @return [Types::ResponseHeadersPolicyConfig]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateResponseHeadersPolicyRequest AWS API Documentation
+    #
+    class CreateResponseHeadersPolicyRequest < Struct.new(
+      :response_headers_policy_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] response_headers_policy
+    #   Contains a response headers policy.
+    #   @return [Types::ResponseHeadersPolicy]
+    #
+    # @!attribute [rw] location
+    #   The URL of the response headers policy.
+    #   @return [String]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the response
+    #   headers policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateResponseHeadersPolicyResult AWS API Documentation
+    #
+    class CreateResponseHeadersPolicyResult < Struct.new(
+      :response_headers_policy,
+      :location,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request to create a new streaming distribution.
-    #
-    # @note When making an API call, you may pass CreateStreamingDistributionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         streaming_distribution_config: { # required
-    #           caller_reference: "string", # required
-    #           s3_origin: { # required
-    #             domain_name: "string", # required
-    #             origin_access_identity: "string", # required
-    #           },
-    #           aliases: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           comment: "string", # required
-    #           logging: {
-    #             enabled: false, # required
-    #             bucket: "string", # required
-    #             prefix: "string", # required
-    #           },
-    #           trusted_signers: { # required
-    #             enabled: false, # required
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #           enabled: false, # required
-    #         },
-    #       }
     #
     # @!attribute [rw] streaming_distribution_config
     #   The streaming distribution's configuration information.
@@ -2999,46 +2344,6 @@ module Aws::CloudFront
     end
 
     # The request to create a new streaming distribution with tags.
-    #
-    # @note When making an API call, you may pass CreateStreamingDistributionWithTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         streaming_distribution_config_with_tags: { # required
-    #           streaming_distribution_config: { # required
-    #             caller_reference: "string", # required
-    #             s3_origin: { # required
-    #               domain_name: "string", # required
-    #               origin_access_identity: "string", # required
-    #             },
-    #             aliases: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             comment: "string", # required
-    #             logging: {
-    #               enabled: false, # required
-    #               bucket: "string", # required
-    #               prefix: "string", # required
-    #             },
-    #             trusted_signers: { # required
-    #               enabled: false, # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #             enabled: false, # required
-    #           },
-    #           tags: { # required
-    #             items: [
-    #               {
-    #                 key: "TagKey", # required
-    #                 value: "TagValue",
-    #               },
-    #             ],
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] streaming_distribution_config_with_tags
     #   The streaming distribution's configuration information.
@@ -3092,16 +2397,6 @@ module Aws::CloudFront
     #
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/custom-error-pages.html
-    #
-    # @note When making an API call, you may pass CustomErrorResponse
-    #   data as a hash:
-    #
-    #       {
-    #         error_code: 1, # required
-    #         response_page_path: "string",
-    #         response_code: "string",
-    #         error_caching_min_ttl: 1,
-    #       }
     #
     # @!attribute [rw] error_code
     #   The HTTP status code for which you want to specify a custom error
@@ -3201,21 +2496,6 @@ module Aws::CloudFront
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/custom-error-pages.html
     #
-    # @note When making an API call, you may pass CustomErrorResponses
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [
-    #           {
-    #             error_code: 1, # required
-    #             response_page_path: "string",
-    #             response_code: "string",
-    #             error_caching_min_ttl: 1,
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] quantity
     #   The number of HTTP status codes for which you want to specify a
     #   custom error page and/or a caching duration. If `Quantity` is `0`,
@@ -3240,25 +2520,12 @@ module Aws::CloudFront
     # A complex type that contains the list of Custom Headers for each
     # origin.
     #
-    # @note When making an API call, you may pass CustomHeaders
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [
-    #           {
-    #             header_name: "string", # required
-    #             header_value: "string", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] quantity
     #   The number of custom headers, if any, for this distribution.
     #   @return [Integer]
     #
     # @!attribute [rw] items
-    #   **Optional**\: A list that contains one `OriginCustomHeader` element
+    #   **Optional**: A list that contains one `OriginCustomHeader` element
     #   for each custom header that you want CloudFront to forward to the
     #   origin. If Quantity is `0`, omit `Items`.
     #   @return [Array<Types::OriginCustomHeader>]
@@ -3279,21 +2546,6 @@ module Aws::CloudFront
     #
     #
     # [1]: https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html
-    #
-    # @note When making an API call, you may pass CustomOriginConfig
-    #   data as a hash:
-    #
-    #       {
-    #         http_port: 1, # required
-    #         https_port: 1, # required
-    #         origin_protocol_policy: "http-only", # required, accepts http-only, match-viewer, https-only
-    #         origin_ssl_protocols: {
-    #           quantity: 1, # required
-    #           items: ["SSLv3"], # required, accepts SSLv3, TLSv1, TLSv1.1, TLSv1.2
-    #         },
-    #         origin_read_timeout: 1,
-    #         origin_keepalive_timeout: 1,
-    #       }
     #
     # @!attribute [rw] http_port
     #   The HTTP port that CloudFront uses to connect to the origin. Specify
@@ -3336,7 +2588,7 @@ module Aws::CloudFront
     #   Specifies how long, in seconds, CloudFront waits for a response from
     #   the origin. This is also known as the *origin response timeout*. The
     #   minimum timeout is 1 second, the maximum is 60 seconds, and the
-    #   default (if you don’t specify otherwise) is 30 seconds.
+    #   default (if you don't specify otherwise) is 30 seconds.
     #
     #   For more information, see [Origin Response Timeout][1] in the
     #   *Amazon CloudFront Developer Guide*.
@@ -3349,7 +2601,7 @@ module Aws::CloudFront
     # @!attribute [rw] origin_keepalive_timeout
     #   Specifies how long, in seconds, CloudFront persists its connection
     #   to the origin. The minimum timeout is 1 second, the maximum is 60
-    #   seconds, and the default (if you don’t specify otherwise) is 5
+    #   seconds, and the default (if you don't specify otherwise) is 5
     #   seconds.
     #
     #   For more information, see [Origin Keep-alive Timeout][1] in the
@@ -3373,82 +2625,10 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # A complex type that describes the default cache behavior if you don’t
-    # specify a `CacheBehavior` element or if request URLs don’t match any
+    # A complex type that describes the default cache behavior if you don't
+    # specify a `CacheBehavior` element or if request URLs don't match any
     # of the values of `PathPattern` in `CacheBehavior` elements. You must
     # create exactly one default cache behavior.
-    #
-    # @note When making an API call, you may pass DefaultCacheBehavior
-    #   data as a hash:
-    #
-    #       {
-    #         target_origin_id: "string", # required
-    #         trusted_signers: {
-    #           enabled: false, # required
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #         trusted_key_groups: {
-    #           enabled: false, # required
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #         viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #         allowed_methods: {
-    #           quantity: 1, # required
-    #           items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #           cached_methods: {
-    #             quantity: 1, # required
-    #             items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #           },
-    #         },
-    #         smooth_streaming: false,
-    #         compress: false,
-    #         lambda_function_associations: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               lambda_function_arn: "LambdaFunctionARN", # required
-    #               event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #               include_body: false,
-    #             },
-    #           ],
-    #         },
-    #         function_associations: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               function_arn: "FunctionARN", # required
-    #               event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #             },
-    #           ],
-    #         },
-    #         field_level_encryption_id: "string",
-    #         realtime_log_config_arn: "string",
-    #         cache_policy_id: "string",
-    #         origin_request_policy_id: "string",
-    #         forwarded_values: {
-    #           query_string: false, # required
-    #           cookies: { # required
-    #             forward: "none", # required, accepts none, whitelist, all
-    #             whitelisted_names: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           headers: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           query_string_cache_keys: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #         min_ttl: 1,
-    #         default_ttl: 1,
-    #         max_ttl: 1,
-    #       }
     #
     # @!attribute [rw] target_origin_id
     #   The value of `ID` for the origin that you want CloudFront to route
@@ -3458,17 +2638,17 @@ module Aws::CloudFront
     # @!attribute [rw] trusted_signers
     #   We recommend using `TrustedKeyGroups` instead of `TrustedSigners`.
     #
-    #   A list of AWS account IDs whose public keys CloudFront can use to
-    #   validate signed URLs or signed cookies.
+    #   A list of Amazon Web Services account IDs whose public keys
+    #   CloudFront can use to validate signed URLs or signed cookies.
     #
     #   When a cache behavior contains trusted signers, CloudFront requires
     #   signed URLs or signed cookies for all requests that match the cache
     #   behavior. The URLs or cookies must be signed with the private key of
-    #   a CloudFront key pair in a trusted signer’s AWS account. The signed
-    #   URL or cookie contains information about which public key CloudFront
-    #   should use to verify the signature. For more information, see
-    #   [Serving private content][1] in the *Amazon CloudFront Developer
-    #   Guide*.
+    #   a CloudFront key pair in a trusted signer's Amazon Web Services
+    #   account. The signed URL or cookie contains information about which
+    #   public key CloudFront should use to verify the signature. For more
+    #   information, see [Serving private content][1] in the *Amazon
+    #   CloudFront Developer Guide*.
     #
     #
     #
@@ -3498,14 +2678,14 @@ module Aws::CloudFront
     #   specified by `TargetOriginId` when a request matches the path
     #   pattern in `PathPattern`. You can specify the following options:
     #
-    #   * `allow-all`\: Viewers can use HTTP or HTTPS.
+    #   * `allow-all`: Viewers can use HTTP or HTTPS.
     #
-    #   * `redirect-to-https`\: If a viewer submits an HTTP request,
+    #   * `redirect-to-https`: If a viewer submits an HTTP request,
     #     CloudFront returns an HTTP status code of 301 (Moved Permanently)
     #     to the viewer along with the HTTPS URL. The viewer then resubmits
     #     the request using the new URL.
     #
-    #   * `https-only`\: If a viewer sends an HTTP request, CloudFront
+    #   * `https-only`: If a viewer sends an HTTP request, CloudFront
     #     returns an HTTP status code of 403 (Forbidden).
     #
     #   For more information about requiring the HTTPS protocol, see
@@ -3515,7 +2695,7 @@ module Aws::CloudFront
     #   <note markdown="1"> The only way to guarantee that viewers retrieve an object that was
     #   fetched from the origin using HTTPS is never to use any other
     #   protocol to fetch the object. If you have recently changed from HTTP
-    #   to HTTPS, we recommend that you clear your objects’ cache because
+    #   to HTTPS, we recommend that you clear your objects' cache because
     #   cached objects are protocol agnostic. That means that an edge
     #   location will return an object from the cache regardless of whether
     #   the current request protocol matches the protocol used previously.
@@ -3570,7 +2750,7 @@ module Aws::CloudFront
     #   @return [Boolean]
     #
     # @!attribute [rw] lambda_function_associations
-    #   A complex type that contains zero or more Lambda function
+    #   A complex type that contains zero or more Lambda@Edge function
     #   associations for a cache behavior.
     #   @return [Types::LambdaFunctionAssociations]
     #
@@ -3621,6 +2801,10 @@ module Aws::CloudFront
     #
     #   [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy
     #   [2]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html
+    #   @return [String]
+    #
+    # @!attribute [rw] response_headers_policy_id
+    #   The identifier for a response headers policy.
     #   @return [String]
     #
     # @!attribute [rw] forwarded_values
@@ -3737,6 +2921,7 @@ module Aws::CloudFront
       :realtime_log_config_arn,
       :cache_policy_id,
       :origin_request_policy_id,
+      :response_headers_policy_id,
       :forwarded_values,
       :min_ttl,
       :default_ttl,
@@ -3745,14 +2930,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteCachePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] id
     #   The unique identifier for the cache policy that you are deleting. To
     #   get the identifier, you can use `ListCachePolicies`.
@@ -3760,7 +2937,7 @@ module Aws::CloudFront
     #
     # @!attribute [rw] if_match
     #   The version of the cache policy that you are deleting. The version
-    #   is the cache policy’s `ETag` value, which you can get using
+    #   is the cache policy's `ETag` value, which you can get using
     #   `ListCachePolicies`, `GetCachePolicy`, or `GetCachePolicyConfig`.
     #   @return [String]
     #
@@ -3775,14 +2952,6 @@ module Aws::CloudFront
 
     # Deletes a origin access identity.
     #
-    # @note When making an API call, you may pass DeleteCloudFrontOriginAccessIdentityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] id
     #   The origin access identity's ID.
     #   @return [String]
@@ -3795,6 +2964,25 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteCloudFrontOriginAccessIdentityRequest AWS API Documentation
     #
     class DeleteCloudFrontOriginAccessIdentityRequest < Struct.new(
+      :id,
+      :if_match)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] id
+    #   The identifier of the continuous deployment policy that you are
+    #   deleting.
+    #   @return [String]
+    #
+    # @!attribute [rw] if_match
+    #   The current version (`ETag` value) of the continuous deployment
+    #   policy that you are deleting.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteContinuousDeploymentPolicyRequest AWS API Documentation
+    #
+    class DeleteContinuousDeploymentPolicyRequest < Struct.new(
       :id,
       :if_match)
       SENSITIVE = []
@@ -3845,14 +3033,6 @@ module Aws::CloudFront
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/HowToDeleteDistribution.html
     #
-    # @note When making an API call, you may pass DeleteDistributionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] id
     #   The distribution ID.
     #   @return [String]
@@ -3871,14 +3051,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFieldLevelEncryptionConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the configuration you want to delete from CloudFront.
     #   @return [String]
@@ -3897,14 +3069,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFieldLevelEncryptionProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] id
     #   Request the ID of the profile you want to delete from CloudFront.
     #   @return [String]
@@ -3923,14 +3087,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string", # required
-    #         if_match: "string", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the function that you are deleting.
     #   @return [String]
@@ -3949,14 +3105,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteKeyGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the key group that you are deleting. To get the
     #   identifier, use `ListKeyGroups`.
@@ -3964,7 +3112,7 @@ module Aws::CloudFront
     #
     # @!attribute [rw] if_match
     #   The version of the key group that you are deleting. The version is
-    #   the key group’s `ETag` value. To get the `ETag`, use `GetKeyGroup`
+    #   the key group's `ETag` value. To get the `ETag`, use `GetKeyGroup`
     #   or `GetKeyGroupConfig`.
     #   @return [String]
     #
@@ -3977,13 +3125,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteMonitoringSubscriptionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] distribution_id
     #   The ID of the distribution that you are disabling metrics for.
     #   @return [String]
@@ -4000,14 +3141,25 @@ module Aws::CloudFront
     #
     class DeleteMonitoringSubscriptionResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteOriginRequestPolicyRequest
-    #   data as a hash:
+    # @!attribute [rw] id
+    #   The unique identifier of the origin access control that you are
+    #   deleting.
+    #   @return [String]
     #
-    #       {
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
+    # @!attribute [rw] if_match
+    #   The current version (`ETag` value) of the origin access control that
+    #   you are deleting.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteOriginAccessControlRequest AWS API Documentation
+    #
+    class DeleteOriginAccessControlRequest < Struct.new(
+      :id,
+      :if_match)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] id
     #   The unique identifier for the origin request policy that you are
     #   deleting. To get the identifier, you can use
@@ -4016,7 +3168,7 @@ module Aws::CloudFront
     #
     # @!attribute [rw] if_match
     #   The version of the origin request policy that you are deleting. The
-    #   version is the origin request policy’s `ETag` value, which you can
+    #   version is the origin request policy's `ETag` value, which you can
     #   get using `ListOriginRequestPolicies`, `GetOriginRequestPolicy`, or
     #   `GetOriginRequestPolicyConfig`.
     #   @return [String]
@@ -4030,14 +3182,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeletePublicKeyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the public key you want to remove from CloudFront.
     #   @return [String]
@@ -4056,14 +3200,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRealtimeLogConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string",
-    #         arn: "string",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the real-time log configuration to delete.
     #   @return [String]
@@ -4082,15 +3218,31 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # @!attribute [rw] id
+    #   The identifier for the response headers policy that you are
+    #   deleting.
+    #
+    #   To get the identifier, you can use `ListResponseHeadersPolicies`.
+    #   @return [String]
+    #
+    # @!attribute [rw] if_match
+    #   The version of the response headers policy that you are deleting.
+    #
+    #   The version is the response headers policy's `ETag` value, which
+    #   you can get using `ListResponseHeadersPolicies`,
+    #   `GetResponseHeadersPolicy`, or `GetResponseHeadersPolicyConfig`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteResponseHeadersPolicyRequest AWS API Documentation
+    #
+    class DeleteResponseHeadersPolicyRequest < Struct.new(
+      :id,
+      :if_match)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request to delete a streaming distribution.
-    #
-    # @note When making an API call, you may pass DeleteStreamingDistributionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
     #
     # @!attribute [rw] id
     #   The distribution ID.
@@ -4110,20 +3262,12 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string", # required
-    #         stage: "DEVELOPMENT", # accepts DEVELOPMENT, LIVE
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the function that you are getting information about.
     #   @return [String]
     #
     # @!attribute [rw] stage
-    #   The function’s stage, either `DEVELOPMENT` or `LIVE`.
+    #   The function's stage, either `DEVELOPMENT` or `LIVE`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DescribeFunctionRequest AWS API Documentation
@@ -4158,23 +3302,21 @@ module Aws::CloudFront
     # from, and the details about how to track and manage content delivery.
     #
     # @!attribute [rw] id
-    #   The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
+    #   The distribution's identifier. For example: `E1U5RQF7T870K0`.
     #   @return [String]
     #
     # @!attribute [rw] arn
-    #   The ARN (Amazon Resource Name) for the distribution. For example:
-    #   `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`,
-    #   where `123456789012` is your AWS account ID.
+    #   The distribution's Amazon Resource Name (ARN).
     #   @return [String]
     #
     # @!attribute [rw] status
-    #   This response element indicates the current status of the
-    #   distribution. When the status is `Deployed`, the distribution's
-    #   information is fully propagated to all CloudFront edge locations.
+    #   The distribution's status. When the status is `Deployed`, the
+    #   distribution's information is fully propagated to all CloudFront
+    #   edge locations.
     #   @return [String]
     #
     # @!attribute [rw] last_modified_time
-    #   The date and time the distribution was last modified.
+    #   The date and time when the distribution was last modified.
     #   @return [Time]
     #
     # @!attribute [rw] in_progress_invalidation_batches
@@ -4182,44 +3324,38 @@ module Aws::CloudFront
     #   @return [Integer]
     #
     # @!attribute [rw] domain_name
-    #   The domain name corresponding to the distribution, for example,
+    #   The distribution's CloudFront domain name. For example:
     #   `d111111abcdef8.cloudfront.net`.
     #   @return [String]
     #
     # @!attribute [rw] active_trusted_signers
     #   We recommend using `TrustedKeyGroups` instead of `TrustedSigners`.
     #
-    #   CloudFront automatically adds this field to the response if you’ve
-    #   configured a cache behavior in this distribution to serve private
-    #   content using trusted signers. This field contains a list of AWS
-    #   account IDs and the active CloudFront key pairs in each account that
-    #   CloudFront can use to verify the signatures of signed URLs or signed
-    #   cookies.
+    #   This field contains a list of Amazon Web Services account IDs and
+    #   the active CloudFront key pairs in each account that CloudFront can
+    #   use to verify the signatures of signed URLs or signed cookies.
     #   @return [Types::ActiveTrustedSigners]
     #
     # @!attribute [rw] active_trusted_key_groups
-    #   CloudFront automatically adds this field to the response if you’ve
-    #   configured a cache behavior in this distribution to serve private
-    #   content using key groups. This field contains a list of key groups
-    #   and the public keys in each key group that CloudFront can use to
-    #   verify the signatures of signed URLs or signed cookies.
+    #   This field contains a list of key groups and the public keys in each
+    #   key group that CloudFront can use to verify the signatures of signed
+    #   URLs or signed cookies.
     #   @return [Types::ActiveTrustedKeyGroups]
     #
     # @!attribute [rw] distribution_config
-    #   The current configuration information for the distribution. Send a
-    #   `GET` request to the `/CloudFront API version/distribution
-    #   ID/config` resource.
+    #   The distribution's configuration.
     #   @return [Types::DistributionConfig]
     #
     # @!attribute [rw] alias_icp_recordals
-    #   AWS services in China customers must file for an Internet Content
-    #   Provider (ICP) recordal if they want to serve content publicly on an
-    #   alternate domain name, also known as a CNAME, that they've added to
-    #   CloudFront. AliasICPRecordal provides the ICP recordal status for
-    #   CNAMEs associated with distributions.
+    #   Amazon Web Services services in China customers must file for an
+    #   Internet Content Provider (ICP) recordal if they want to serve
+    #   content publicly on an alternate domain name, also known as a CNAME,
+    #   that they've added to CloudFront. AliasICPRecordal provides the ICP
+    #   recordal status for CNAMEs associated with distributions.
     #
     #   For more information about ICP recordals, see [ Signup, Accounts,
-    #   and Credentials][1] in *Getting Started with AWS services in China*.
+    #   and Credentials][1] in *Getting Started with Amazon Web Services
+    #   services in China*.
     #
     #
     #
@@ -4259,260 +3395,6 @@ module Aws::CloudFront
 
     # A distribution configuration.
     #
-    # @note When making an API call, you may pass DistributionConfig
-    #   data as a hash:
-    #
-    #       {
-    #         caller_reference: "string", # required
-    #         aliases: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #         default_root_object: "string",
-    #         origins: { # required
-    #           quantity: 1, # required
-    #           items: [ # required
-    #             {
-    #               id: "string", # required
-    #               domain_name: "string", # required
-    #               origin_path: "string",
-    #               custom_headers: {
-    #                 quantity: 1, # required
-    #                 items: [
-    #                   {
-    #                     header_name: "string", # required
-    #                     header_value: "string", # required
-    #                   },
-    #                 ],
-    #               },
-    #               s3_origin_config: {
-    #                 origin_access_identity: "string", # required
-    #               },
-    #               custom_origin_config: {
-    #                 http_port: 1, # required
-    #                 https_port: 1, # required
-    #                 origin_protocol_policy: "http-only", # required, accepts http-only, match-viewer, https-only
-    #                 origin_ssl_protocols: {
-    #                   quantity: 1, # required
-    #                   items: ["SSLv3"], # required, accepts SSLv3, TLSv1, TLSv1.1, TLSv1.2
-    #                 },
-    #                 origin_read_timeout: 1,
-    #                 origin_keepalive_timeout: 1,
-    #               },
-    #               connection_attempts: 1,
-    #               connection_timeout: 1,
-    #               origin_shield: {
-    #                 enabled: false, # required
-    #                 origin_shield_region: "OriginShieldRegion",
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         origin_groups: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               id: "string", # required
-    #               failover_criteria: { # required
-    #                 status_codes: { # required
-    #                   quantity: 1, # required
-    #                   items: [1], # required
-    #                 },
-    #               },
-    #               members: { # required
-    #                 quantity: 1, # required
-    #                 items: [ # required
-    #                   {
-    #                     origin_id: "string", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         default_cache_behavior: { # required
-    #           target_origin_id: "string", # required
-    #           trusted_signers: {
-    #             enabled: false, # required
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           trusted_key_groups: {
-    #             enabled: false, # required
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #           allowed_methods: {
-    #             quantity: 1, # required
-    #             items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #             cached_methods: {
-    #               quantity: 1, # required
-    #               items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #             },
-    #           },
-    #           smooth_streaming: false,
-    #           compress: false,
-    #           lambda_function_associations: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 lambda_function_arn: "LambdaFunctionARN", # required
-    #                 event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                 include_body: false,
-    #               },
-    #             ],
-    #           },
-    #           function_associations: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 function_arn: "FunctionARN", # required
-    #                 event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #               },
-    #             ],
-    #           },
-    #           field_level_encryption_id: "string",
-    #           realtime_log_config_arn: "string",
-    #           cache_policy_id: "string",
-    #           origin_request_policy_id: "string",
-    #           forwarded_values: {
-    #             query_string: false, # required
-    #             cookies: { # required
-    #               forward: "none", # required, accepts none, whitelist, all
-    #               whitelisted_names: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             headers: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             query_string_cache_keys: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           min_ttl: 1,
-    #           default_ttl: 1,
-    #           max_ttl: 1,
-    #         },
-    #         cache_behaviors: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               path_pattern: "string", # required
-    #               target_origin_id: "string", # required
-    #               trusted_signers: {
-    #                 enabled: false, # required
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #               trusted_key_groups: {
-    #                 enabled: false, # required
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #               viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #               allowed_methods: {
-    #                 quantity: 1, # required
-    #                 items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                 cached_methods: {
-    #                   quantity: 1, # required
-    #                   items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                 },
-    #               },
-    #               smooth_streaming: false,
-    #               compress: false,
-    #               lambda_function_associations: {
-    #                 quantity: 1, # required
-    #                 items: [
-    #                   {
-    #                     lambda_function_arn: "LambdaFunctionARN", # required
-    #                     event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                     include_body: false,
-    #                   },
-    #                 ],
-    #               },
-    #               function_associations: {
-    #                 quantity: 1, # required
-    #                 items: [
-    #                   {
-    #                     function_arn: "FunctionARN", # required
-    #                     event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                   },
-    #                 ],
-    #               },
-    #               field_level_encryption_id: "string",
-    #               realtime_log_config_arn: "string",
-    #               cache_policy_id: "string",
-    #               origin_request_policy_id: "string",
-    #               forwarded_values: {
-    #                 query_string: false, # required
-    #                 cookies: { # required
-    #                   forward: "none", # required, accepts none, whitelist, all
-    #                   whitelisted_names: {
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                 },
-    #                 headers: {
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #                 query_string_cache_keys: {
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #               },
-    #               min_ttl: 1,
-    #               default_ttl: 1,
-    #               max_ttl: 1,
-    #             },
-    #           ],
-    #         },
-    #         custom_error_responses: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               error_code: 1, # required
-    #               response_page_path: "string",
-    #               response_code: "string",
-    #               error_caching_min_ttl: 1,
-    #             },
-    #           ],
-    #         },
-    #         comment: "CommentType", # required
-    #         logging: {
-    #           enabled: false, # required
-    #           include_cookies: false, # required
-    #           bucket: "string", # required
-    #           prefix: "string", # required
-    #         },
-    #         price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #         enabled: false, # required
-    #         viewer_certificate: {
-    #           cloud_front_default_certificate: false,
-    #           iam_certificate_id: "string",
-    #           acm_certificate_arn: "string",
-    #           ssl_support_method: "sni-only", # accepts sni-only, vip, static-ip
-    #           minimum_protocol_version: "SSLv3", # accepts SSLv3, TLSv1, TLSv1_2016, TLSv1.1_2016, TLSv1.2_2018, TLSv1.2_2019
-    #           certificate: "string",
-    #           certificate_source: "cloudfront", # accepts cloudfront, iam, acm
-    #         },
-    #         restrictions: {
-    #           geo_restriction: { # required
-    #             restriction_type: "blacklist", # required, accepts blacklist, whitelist, none
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #         web_acl_id: "string",
-    #         http_version: "http1.1", # accepts http1.1, http2
-    #         is_ipv6_enabled: false,
-    #       }
-    #
     # @!attribute [rw] caller_reference
     #   A unique value (for example, a date-time stamp) that ensures that
     #   the request can't be replayed.
@@ -4534,10 +3416,11 @@ module Aws::CloudFront
     # @!attribute [rw] default_root_object
     #   The object that you want CloudFront to request from your origin (for
     #   example, `index.html`) when a viewer requests the root URL for your
-    #   distribution (`http://www.example.com`) instead of an object in your
-    #   distribution (`http://www.example.com/product-description.html`).
-    #   Specifying a default root object avoids exposing the contents of
-    #   your distribution.
+    #   distribution (`https://www.example.com`) instead of an object in
+    #   your distribution
+    #   (`https://www.example.com/product-description.html`). Specifying a
+    #   default root object avoids exposing the contents of your
+    #   distribution.
     #
     #   Specify only the object name, for example, `index.html`. Don't add
     #   a `/` before the object name.
@@ -4600,8 +3483,8 @@ module Aws::CloudFront
     #   @return [Types::CustomErrorResponses]
     #
     # @!attribute [rw] comment
-    #   An optional comment to describe the distribution. The comment cannot
-    #   be longer than 128 characters.
+    #   A comment to describe the distribution. The comment cannot be longer
+    #   than 128 characters.
     #   @return [String]
     #
     # @!attribute [rw] logging
@@ -4646,7 +3529,7 @@ module Aws::CloudFront
     #   @return [Boolean]
     #
     # @!attribute [rw] viewer_certificate
-    #   A complex type that determines the distribution’s SSL/TLS
+    #   A complex type that determines the distribution's SSL/TLS
     #   configuration for communicating with viewers.
     #   @return [Types::ViewerCertificate]
     #
@@ -4656,22 +3539,22 @@ module Aws::CloudFront
     #   @return [Types::Restrictions]
     #
     # @!attribute [rw] web_acl_id
-    #   A unique identifier that specifies the AWS WAF web ACL, if any, to
+    #   A unique identifier that specifies the WAF web ACL, if any, to
     #   associate with this distribution. To specify a web ACL created using
-    #   the latest version of AWS WAF, use the ACL ARN, for example
+    #   the latest version of WAF, use the ACL ARN, for example
     #   `arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a`.
-    #   To specify a web ACL created using AWS WAF Classic, use the ACL ID,
-    #   for example `473e64fd-f30b-4765-81a0-62ad96dd167a`.
+    #   To specify a web ACL created using WAF Classic, use the ACL ID, for
+    #   example `473e64fd-f30b-4765-81a0-62ad96dd167a`.
     #
-    #   AWS WAF is a web application firewall that lets you monitor the HTTP
-    #   and HTTPS requests that are forwarded to CloudFront, and lets you
+    #   WAF is a web application firewall that lets you monitor the HTTP and
+    #   HTTPS requests that are forwarded to CloudFront, and lets you
     #   control access to your content. Based on conditions that you
     #   specify, such as the IP addresses that requests originate from or
     #   the values of query strings, CloudFront responds to requests either
     #   with the requested content or with an HTTP 403 status code
     #   (Forbidden). You can also configure CloudFront to return a custom
-    #   error page when a request is blocked. For more information about AWS
-    #   WAF, see the [AWS WAF Developer Guide][1].
+    #   error page when a request is blocked. For more information about
+    #   WAF, see the [WAF Developer Guide][1].
     #
     #
     #
@@ -4679,18 +3562,26 @@ module Aws::CloudFront
     #   @return [String]
     #
     # @!attribute [rw] http_version
-    #   (Optional) Specify the maximum HTTP version that you want viewers to
-    #   use to communicate with CloudFront. The default value for new web
-    #   distributions is http2. Viewers that don't support HTTP/2
+    #   (Optional) Specify the maximum HTTP version(s) that you want viewers
+    #   to use to communicate with CloudFront. The default value for new web
+    #   distributions is `http2`. Viewers that don't support HTTP/2
     #   automatically use an earlier HTTP version.
     #
-    #   For viewers and CloudFront to use HTTP/2, viewers must support TLS
-    #   1.2 or later, and must support Server Name Identification (SNI).
+    #   For viewers and CloudFront to use HTTP/2, viewers must support
+    #   TLSv1.2 or later, and must support Server Name Indication (SNI).
     #
-    #   In general, configuring CloudFront to communicate with viewers using
-    #   HTTP/2 reduces latency. You can improve performance by optimizing
-    #   for HTTP/2. For more information, do an Internet search for "http/2
-    #   optimization."
+    #   For viewers and CloudFront to use HTTP/3, viewers must support
+    #   TLSv1.3 and Server Name Indication (SNI). CloudFront supports HTTP/3
+    #   connection migration to allow the viewer to switch networks without
+    #   losing connection. For more information about connection migration,
+    #   see [Connection Migration][1] at RFC 9000. For more information
+    #   about supported TLSv1.3 ciphers, see [Supported protocols and
+    #   ciphers between viewers and CloudFront][2].
+    #
+    #
+    #
+    #   [1]: https://www.rfc-editor.org/rfc/rfc9000.html#name-connection-migration
+    #   [2]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html
     #   @return [String]
     #
     # @!attribute [rw] is_ipv6_enabled
@@ -4712,28 +3603,40 @@ module Aws::CloudFront
     #   more information, see [Creating a Signed URL Using a Custom
     #   Policy][1] in the *Amazon CloudFront Developer Guide*.
     #
-    #   If you're using an Amazon Route 53 alias resource record set to
-    #   route traffic to your CloudFront distribution, you need to create a
-    #   second alias resource record set when both of the following are
-    #   true:
+    #   If you're using an Route 53 Amazon Web Services Integration alias
+    #   resource record set to route traffic to your CloudFront
+    #   distribution, you need to create a second alias resource record set
+    #   when both of the following are true:
     #
     #   * You enable IPv6 for the distribution
     #
     #   * You're using alternate domain names in the URLs for your objects
     #
     #   For more information, see [Routing Traffic to an Amazon CloudFront
-    #   Web Distribution by Using Your Domain Name][2] in the *Amazon Route
-    #   53 Developer Guide*.
+    #   Web Distribution by Using Your Domain Name][2] in the *Route 53
+    #   Amazon Web Services Integration Developer Guide*.
     #
-    #   If you created a CNAME resource record set, either with Amazon Route
-    #   53 or with another DNS service, you don't need to make any changes.
-    #   A CNAME record will route traffic to your distribution regardless of
-    #   the IP address format of the viewer request.
+    #   If you created a CNAME resource record set, either with Route 53
+    #   Amazon Web Services Integration or with another DNS service, you
+    #   don't need to make any changes. A CNAME record will route traffic
+    #   to your distribution regardless of the IP address format of the
+    #   viewer request.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-custom-policy.html
     #   [2]: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-cloudfront-distribution.html
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] continuous_deployment_policy_id
+    #   The identifier of a continuous deployment policy. For more
+    #   information, see `CreateContinuousDeploymentPolicy`.
+    #   @return [String]
+    #
+    # @!attribute [rw] staging
+    #   A Boolean that indicates whether this is a staging distribution.
+    #   When this value is `true`, this is a staging distribution. When this
+    #   value is `false`, this is not a staging distribution.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DistributionConfig AWS API Documentation
@@ -4755,277 +3658,15 @@ module Aws::CloudFront
       :restrictions,
       :web_acl_id,
       :http_version,
-      :is_ipv6_enabled)
+      :is_ipv6_enabled,
+      :continuous_deployment_policy_id,
+      :staging)
       SENSITIVE = [:comment]
       include Aws::Structure
     end
 
     # A distribution Configuration and a list of tags to be associated with
     # the distribution.
-    #
-    # @note When making an API call, you may pass DistributionConfigWithTags
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_config: { # required
-    #           caller_reference: "string", # required
-    #           aliases: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           default_root_object: "string",
-    #           origins: { # required
-    #             quantity: 1, # required
-    #             items: [ # required
-    #               {
-    #                 id: "string", # required
-    #                 domain_name: "string", # required
-    #                 origin_path: "string",
-    #                 custom_headers: {
-    #                   quantity: 1, # required
-    #                   items: [
-    #                     {
-    #                       header_name: "string", # required
-    #                       header_value: "string", # required
-    #                     },
-    #                   ],
-    #                 },
-    #                 s3_origin_config: {
-    #                   origin_access_identity: "string", # required
-    #                 },
-    #                 custom_origin_config: {
-    #                   http_port: 1, # required
-    #                   https_port: 1, # required
-    #                   origin_protocol_policy: "http-only", # required, accepts http-only, match-viewer, https-only
-    #                   origin_ssl_protocols: {
-    #                     quantity: 1, # required
-    #                     items: ["SSLv3"], # required, accepts SSLv3, TLSv1, TLSv1.1, TLSv1.2
-    #                   },
-    #                   origin_read_timeout: 1,
-    #                   origin_keepalive_timeout: 1,
-    #                 },
-    #                 connection_attempts: 1,
-    #                 connection_timeout: 1,
-    #                 origin_shield: {
-    #                   enabled: false, # required
-    #                   origin_shield_region: "OriginShieldRegion",
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           origin_groups: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 id: "string", # required
-    #                 failover_criteria: { # required
-    #                   status_codes: { # required
-    #                     quantity: 1, # required
-    #                     items: [1], # required
-    #                   },
-    #                 },
-    #                 members: { # required
-    #                   quantity: 1, # required
-    #                   items: [ # required
-    #                     {
-    #                       origin_id: "string", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           default_cache_behavior: { # required
-    #             target_origin_id: "string", # required
-    #             trusted_signers: {
-    #               enabled: false, # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             trusted_key_groups: {
-    #               enabled: false, # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #             allowed_methods: {
-    #               quantity: 1, # required
-    #               items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #               cached_methods: {
-    #                 quantity: 1, # required
-    #                 items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #               },
-    #             },
-    #             smooth_streaming: false,
-    #             compress: false,
-    #             lambda_function_associations: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   lambda_function_arn: "LambdaFunctionARN", # required
-    #                   event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                   include_body: false,
-    #                 },
-    #               ],
-    #             },
-    #             function_associations: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   function_arn: "FunctionARN", # required
-    #                   event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                 },
-    #               ],
-    #             },
-    #             field_level_encryption_id: "string",
-    #             realtime_log_config_arn: "string",
-    #             cache_policy_id: "string",
-    #             origin_request_policy_id: "string",
-    #             forwarded_values: {
-    #               query_string: false, # required
-    #               cookies: { # required
-    #                 forward: "none", # required, accepts none, whitelist, all
-    #                 whitelisted_names: {
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #               },
-    #               headers: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #               query_string_cache_keys: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             min_ttl: 1,
-    #             default_ttl: 1,
-    #             max_ttl: 1,
-    #           },
-    #           cache_behaviors: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 path_pattern: "string", # required
-    #                 target_origin_id: "string", # required
-    #                 trusted_signers: {
-    #                   enabled: false, # required
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #                 trusted_key_groups: {
-    #                   enabled: false, # required
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #                 viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #                 allowed_methods: {
-    #                   quantity: 1, # required
-    #                   items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                   cached_methods: {
-    #                     quantity: 1, # required
-    #                     items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                   },
-    #                 },
-    #                 smooth_streaming: false,
-    #                 compress: false,
-    #                 lambda_function_associations: {
-    #                   quantity: 1, # required
-    #                   items: [
-    #                     {
-    #                       lambda_function_arn: "LambdaFunctionARN", # required
-    #                       event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                       include_body: false,
-    #                     },
-    #                   ],
-    #                 },
-    #                 function_associations: {
-    #                   quantity: 1, # required
-    #                   items: [
-    #                     {
-    #                       function_arn: "FunctionARN", # required
-    #                       event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                     },
-    #                   ],
-    #                 },
-    #                 field_level_encryption_id: "string",
-    #                 realtime_log_config_arn: "string",
-    #                 cache_policy_id: "string",
-    #                 origin_request_policy_id: "string",
-    #                 forwarded_values: {
-    #                   query_string: false, # required
-    #                   cookies: { # required
-    #                     forward: "none", # required, accepts none, whitelist, all
-    #                     whitelisted_names: {
-    #                       quantity: 1, # required
-    #                       items: ["string"],
-    #                     },
-    #                   },
-    #                   headers: {
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                   query_string_cache_keys: {
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                 },
-    #                 min_ttl: 1,
-    #                 default_ttl: 1,
-    #                 max_ttl: 1,
-    #               },
-    #             ],
-    #           },
-    #           custom_error_responses: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 error_code: 1, # required
-    #                 response_page_path: "string",
-    #                 response_code: "string",
-    #                 error_caching_min_ttl: 1,
-    #               },
-    #             ],
-    #           },
-    #           comment: "CommentType", # required
-    #           logging: {
-    #             enabled: false, # required
-    #             include_cookies: false, # required
-    #             bucket: "string", # required
-    #             prefix: "string", # required
-    #           },
-    #           price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #           enabled: false, # required
-    #           viewer_certificate: {
-    #             cloud_front_default_certificate: false,
-    #             iam_certificate_id: "string",
-    #             acm_certificate_arn: "string",
-    #             ssl_support_method: "sni-only", # accepts sni-only, vip, static-ip
-    #             minimum_protocol_version: "SSLv3", # accepts SSLv3, TLSv1, TLSv1_2016, TLSv1.1_2016, TLSv1.2_2018, TLSv1.2_2019
-    #             certificate: "string",
-    #             certificate_source: "cloudfront", # accepts cloudfront, iam, acm
-    #           },
-    #           restrictions: {
-    #             geo_restriction: { # required
-    #               restriction_type: "blacklist", # required, accepts blacklist, whitelist, none
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           web_acl_id: "string",
-    #           http_version: "http1.1", # accepts http1.1, http2
-    #           is_ipv6_enabled: false,
-    #         },
-    #         tags: { # required
-    #           items: [
-    #             {
-    #               key: "TagKey", # required
-    #               value: "TagValue",
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] distribution_config
     #   A distribution configuration.
@@ -5112,13 +3753,14 @@ module Aws::CloudFront
     #   @return [Boolean]
     #
     # @!attribute [rw] quantity
-    #   The number of distributions that were created by the current AWS
-    #   account.
+    #   The number of distributions that were created by the current Amazon
+    #   Web Services account.
     #   @return [Integer]
     #
     # @!attribute [rw] items
     #   A complex type that contains one `DistributionSummary` element for
-    #   each distribution that was created by the current AWS account.
+    #   each distribution that was created by the current Amazon Web
+    #   Services account.
     #   @return [Array<Types::DistributionSummary>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DistributionList AWS API Documentation
@@ -5157,7 +3799,7 @@ module Aws::CloudFront
     # @!attribute [rw] arn
     #   The ARN (Amazon Resource Name) for the distribution. For example:
     #   `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`,
-    #   where `123456789012` is your AWS account ID.
+    #   where `123456789012` is your Amazon Web Services account ID.
     #   @return [String]
     #
     # @!attribute [rw] status
@@ -5221,7 +3863,7 @@ module Aws::CloudFront
     #   @return [Boolean]
     #
     # @!attribute [rw] viewer_certificate
-    #   A complex type that determines the distribution’s SSL/TLS
+    #   A complex type that determines the distribution's SSL/TLS
     #   configuration for communicating with viewers.
     #   @return [Types::ViewerCertificate]
     #
@@ -5247,19 +3889,24 @@ module Aws::CloudFront
     #   @return [Boolean]
     #
     # @!attribute [rw] alias_icp_recordals
-    #   AWS services in China customers must file for an Internet Content
-    #   Provider (ICP) recordal if they want to serve content publicly on an
-    #   alternate domain name, also known as a CNAME, that they've added to
-    #   CloudFront. AliasICPRecordal provides the ICP recordal status for
-    #   CNAMEs associated with distributions.
+    #   Amazon Web Services services in China customers must file for an
+    #   Internet Content Provider (ICP) recordal if they want to serve
+    #   content publicly on an alternate domain name, also known as a CNAME,
+    #   that they've added to CloudFront. AliasICPRecordal provides the ICP
+    #   recordal status for CNAMEs associated with distributions.
     #
     #   For more information about ICP recordals, see [ Signup, Accounts,
-    #   and Credentials][1] in *Getting Started with AWS services in China*.
+    #   and Credentials][1] in *Getting Started with Amazon Web Services
+    #   services in China*.
     #
     #
     #
     #   [1]: https://docs.amazonaws.cn/en_us/aws/latest/userguide/accounts-and-credentials.html
     #   @return [Array<Types::AliasICPRecordal>]
+    #
+    # @!attribute [rw] staging
+    #   Whether the primary distribution has a staging distribution enabled.
+    #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DistributionSummary AWS API Documentation
     #
@@ -5283,30 +3930,14 @@ module Aws::CloudFront
       :web_acl_id,
       :http_version,
       :is_ipv6_enabled,
-      :alias_icp_recordals)
+      :alias_icp_recordals,
+      :staging)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Complex data type for field-level encryption profiles that includes
     # all of the encryption entities.
-    #
-    # @note When making an API call, you may pass EncryptionEntities
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [
-    #           {
-    #             public_key_id: "string", # required
-    #             provider_id: "string", # required
-    #             field_patterns: { # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] quantity
     #   Number of field pattern items in a field-level encryption content
@@ -5329,18 +3960,6 @@ module Aws::CloudFront
 
     # Complex data type for field-level encryption profiles that includes
     # the encryption key and field pattern specifications.
-    #
-    # @note When making an API call, you may pass EncryptionEntity
-    #   data as a hash:
-    #
-    #       {
-    #         public_key_id: "string", # required
-    #         provider_id: "string", # required
-    #         field_patterns: { # required
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
     #
     # @!attribute [rw] public_key_id
     #   The public key associated with a set of field-level encryption
@@ -5375,17 +3994,6 @@ module Aws::CloudFront
 
     # Contains information about the Amazon Kinesis data stream where you
     # are sending real-time log data in a real-time log configuration.
-    #
-    # @note When making an API call, you may pass EndPoint
-    #   data as a hash:
-    #
-    #       {
-    #         stream_type: "string", # required
-    #         kinesis_stream_config: {
-    #           role_arn: "string", # required
-    #           stream_arn: "string", # required
-    #         },
-    #       }
     #
     # @!attribute [rw] stream_type
     #   The type of data stream where you are sending real-time log data.
@@ -5436,39 +4044,6 @@ module Aws::CloudFront
 
     # A complex data type that includes the profile configurations specified
     # for field-level encryption.
-    #
-    # @note When making an API call, you may pass FieldLevelEncryptionConfig
-    #   data as a hash:
-    #
-    #       {
-    #         caller_reference: "string", # required
-    #         comment: "string",
-    #         query_arg_profile_config: {
-    #           forward_when_query_arg_profile_is_unknown: false, # required
-    #           query_arg_profiles: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 query_arg: "string", # required
-    #                 profile_id: "string", # required
-    #               },
-    #             ],
-    #           },
-    #         },
-    #         content_type_profile_config: {
-    #           forward_when_content_type_is_unknown: false, # required
-    #           content_type_profiles: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 format: "URLEncoded", # required, accepts URLEncoded
-    #                 profile_id: "string",
-    #                 content_type: "string", # required
-    #               },
-    #             ],
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] caller_reference
     #   A unique number that ensures the request can't be replayed.
@@ -5601,28 +4176,6 @@ module Aws::CloudFront
     end
 
     # A complex data type of profiles for the field-level encryption.
-    #
-    # @note When making an API call, you may pass FieldLevelEncryptionProfileConfig
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string", # required
-    #         caller_reference: "string", # required
-    #         comment: "string",
-    #         encryption_entities: { # required
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               public_key_id: "string", # required
-    #               provider_id: "string", # required
-    #               field_patterns: { # required
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] name
     #   Profile name for the field-level encryption profile.
@@ -5789,14 +4342,6 @@ module Aws::CloudFront
     # A complex data type that includes the field patterns to match for
     # field-level encryption.
     #
-    # @note When making an API call, you may pass FieldPatterns
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
-    #
     # @!attribute [rw] quantity
     #   The number of field-level encryption field patterns.
     #   @return [Integer]
@@ -5833,28 +4378,6 @@ module Aws::CloudFront
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy
     # [2]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy
-    #
-    # @note When making an API call, you may pass ForwardedValues
-    #   data as a hash:
-    #
-    #       {
-    #         query_string: false, # required
-    #         cookies: { # required
-    #           forward: "none", # required, accepts none, whitelist, all
-    #           whitelisted_names: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #         headers: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #         query_string_cache_keys: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
     #
     # @!attribute [rw] query_string
     #   This field is deprecated. We recommend that you use a cache policy
@@ -5991,9 +4514,9 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # A function with the same name already exists in this AWS account. To
-    # create a function, you must provide a unique name. To update an
-    # existing function, use `UpdateFunction`.
+    # A function with the same name already exists in this Amazon Web
+    # Services account. To create a function, you must provide a unique
+    # name. To update an existing function, use `UpdateFunction`.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -6008,14 +4531,6 @@ module Aws::CloudFront
 
     # A CloudFront function that is associated with a cache behavior in a
     # CloudFront distribution.
-    #
-    # @note When making an API call, you may pass FunctionAssociation
-    #   data as a hash:
-    #
-    #       {
-    #         function_arn: "FunctionARN", # required
-    #         event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #       }
     #
     # @!attribute [rw] function_arn
     #   The Amazon Resource Name (ARN) of the function.
@@ -6040,19 +4555,6 @@ module Aws::CloudFront
     # behavior in a CloudFront distribution. CloudFront functions must be
     # published to the `LIVE` stage to associate them with a cache behavior.
     #
-    # @note When making an API call, you may pass FunctionAssociations
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [
-    #           {
-    #             function_arn: "FunctionARN", # required
-    #             event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] quantity
     #   The number of CloudFront functions in the list.
     #   @return [Integer]
@@ -6074,20 +4576,12 @@ module Aws::CloudFront
 
     # Contains configuration information about a CloudFront function.
     #
-    # @note When making an API call, you may pass FunctionConfig
-    #   data as a hash:
-    #
-    #       {
-    #         comment: "string", # required
-    #         runtime: "cloudfront-js-1.0", # required, accepts cloudfront-js-1.0
-    #       }
-    #
     # @!attribute [rw] comment
     #   A comment to describe the function.
     #   @return [String]
     #
     # @!attribute [rw] runtime
-    #   The function’s runtime environment. The only valid value is
+    #   The function's runtime environment. The only valid value is
     #   `cloudfront-js-1.0`.
     #   @return [String]
     #
@@ -6100,7 +4594,7 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # Cannot delete the function because it’s attached to one or more cache
+    # Cannot delete the function because it's attached to one or more cache
     # behaviors.
     #
     # @!attribute [rw] message
@@ -6160,7 +4654,7 @@ module Aws::CloudFront
     #   function with `TestFunction`, and update it with `UpdateFunction`.
     #
     #   When a function is in the `LIVE` stage, you can attach the function
-    #   to a distribution’s cache behavior, using the function’s ARN.
+    #   to a distribution's cache behavior, using the function's ARN.
     #   @return [String]
     #
     # @!attribute [rw] created_time
@@ -6234,26 +4728,17 @@ module Aws::CloudFront
     # distributed. CloudFront determines the location of your users using
     # `MaxMind` GeoIP databases.
     #
-    # @note When making an API call, you may pass GeoRestriction
-    #   data as a hash:
-    #
-    #       {
-    #         restriction_type: "blacklist", # required, accepts blacklist, whitelist, none
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
-    #
     # @!attribute [rw] restriction_type
     #   The method that you want to use to restrict distribution of your
     #   content by country:
     #
-    #   * `none`\: No geo restriction is enabled, meaning access to content
+    #   * `none`: No geo restriction is enabled, meaning access to content
     #     is not restricted by client geo location.
     #
-    #   * `blacklist`\: The `Location` elements specify the countries in
+    #   * `blacklist`: The `Location` elements specify the countries in
     #     which you don't want CloudFront to distribute your content.
     #
-    #   * `whitelist`\: The `Location` elements specify the countries in
+    #   * `whitelist`: The `Location` elements specify the countries in
     #     which you want CloudFront to distribute your content.
     #   @return [String]
     #
@@ -6289,17 +4774,10 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetCachePolicyConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The unique identifier for the cache policy. If the cache policy is
-    #   attached to a distribution’s cache behavior, you can get the
-    #   policy’s identifier using `ListDistributions` or `GetDistribution`.
+    #   attached to a distribution's cache behavior, you can get the
+    #   policy's identifier using `ListDistributions` or `GetDistribution`.
     #   If the cache policy is not attached to a cache behavior, you can get
     #   the identifier using `ListCachePolicies`.
     #   @return [String]
@@ -6329,17 +4807,10 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetCachePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The unique identifier for the cache policy. If the cache policy is
-    #   attached to a distribution’s cache behavior, you can get the
-    #   policy’s identifier using `ListDistributions` or `GetDistribution`.
+    #   attached to a distribution's cache behavior, you can get the
+    #   policy's identifier using `ListDistributions` or `GetDistribution`.
     #   If the cache policy is not attached to a cache behavior, you can get
     #   the identifier using `ListCachePolicies`.
     #   @return [String]
@@ -6376,13 +4847,6 @@ module Aws::CloudFront
     #
     # [1]: https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CloudFrontOriginAccessIdentityConfig.html
     #
-    # @note When making an API call, you may pass GetCloudFrontOriginAccessIdentityConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identity's ID.
     #   @return [String]
@@ -6417,13 +4881,6 @@ module Aws::CloudFront
 
     # The request to get an origin access identity's information.
     #
-    # @note When making an API call, you may pass GetCloudFrontOriginAccessIdentityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identity's ID.
     #   @return [String]
@@ -6456,14 +4913,69 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # @!attribute [rw] id
+    #   The identifier of the continuous deployment policy whose
+    #   configuration you are getting.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetContinuousDeploymentPolicyConfigRequest AWS API Documentation
+    #
+    class GetContinuousDeploymentPolicyConfigRequest < Struct.new(
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] continuous_deployment_policy_config
+    #   Contains the configuration for a continuous deployment policy.
+    #   @return [Types::ContinuousDeploymentPolicyConfig]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the continuous
+    #   deployment policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetContinuousDeploymentPolicyConfigResult AWS API Documentation
+    #
+    class GetContinuousDeploymentPolicyConfigResult < Struct.new(
+      :continuous_deployment_policy_config,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] id
+    #   The identifier of the continuous deployment policy that you are
+    #   getting.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetContinuousDeploymentPolicyRequest AWS API Documentation
+    #
+    class GetContinuousDeploymentPolicyRequest < Struct.new(
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] continuous_deployment_policy
+    #   A continuous deployment policy.
+    #   @return [Types::ContinuousDeploymentPolicy]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the continuous
+    #   deployment policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetContinuousDeploymentPolicyResult AWS API Documentation
+    #
+    class GetContinuousDeploymentPolicyResult < Struct.new(
+      :continuous_deployment_policy,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request to get a distribution configuration.
-    #
-    # @note When making an API call, you may pass GetDistributionConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
     #
     # @!attribute [rw] id
     #   The distribution's ID. If the ID is empty, an empty distribution
@@ -6500,13 +5012,6 @@ module Aws::CloudFront
 
     # The request to get a distribution's information.
     #
-    # @note When making an API call, you may pass GetDistributionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The distribution's ID. If the ID is empty, an empty distribution
     #   configuration is returned.
@@ -6540,13 +5045,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFieldLevelEncryptionConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   Request the ID for the field-level encryption configuration
     #   information.
@@ -6578,13 +5076,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFieldLevelEncryptionProfileConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   Get the ID for the field-level encryption profile configuration
     #   information.
@@ -6616,13 +5107,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFieldLevelEncryptionProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   Get the ID for the field-level encryption profile information.
     #   @return [String]
@@ -6653,13 +5137,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFieldLevelEncryptionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   Request the ID for the field-level encryption configuration
     #   information.
@@ -6691,20 +5168,12 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string", # required
-    #         stage: "DEVELOPMENT", # accepts DEVELOPMENT, LIVE
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the function whose code you are getting.
     #   @return [String]
     #
     # @!attribute [rw] stage
-    #   The function’s stage, either `DEVELOPMENT` or `LIVE`.
+    #   The function's stage, either `DEVELOPMENT` or `LIVE`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetFunctionRequest AWS API Documentation
@@ -6740,14 +5209,6 @@ module Aws::CloudFront
     end
 
     # The request to get an invalidation's information.
-    #
-    # @note When making an API call, you may pass GetInvalidationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_id: "string", # required
-    #         id: "string", # required
-    #       }
     #
     # @!attribute [rw] distribution_id
     #   The distribution's ID.
@@ -6786,13 +5247,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetKeyGroupConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the key group whose configuration you are getting.
     #   To get the identifier, use `ListKeyGroups`.
@@ -6823,13 +5277,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetKeyGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the key group that you are getting. To get the
     #   identifier, use `ListKeyGroups`.
@@ -6860,13 +5307,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetMonitoringSubscriptionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] distribution_id
     #   The ID of the distribution that you are getting metrics information
     #   for.
@@ -6894,17 +5334,70 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetOriginRequestPolicyConfigRequest
-    #   data as a hash:
+    # @!attribute [rw] id
+    #   The unique identifier of the origin access control.
+    #   @return [String]
     #
-    #       {
-    #         id: "string", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetOriginAccessControlConfigRequest AWS API Documentation
     #
+    class GetOriginAccessControlConfigRequest < Struct.new(
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] origin_access_control_config
+    #   Contains an origin access control configuration.
+    #   @return [Types::OriginAccessControlConfig]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the origin access
+    #   control.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetOriginAccessControlConfigResult AWS API Documentation
+    #
+    class GetOriginAccessControlConfigResult < Struct.new(
+      :origin_access_control_config,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] id
+    #   The unique identifier of the origin access control.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetOriginAccessControlRequest AWS API Documentation
+    #
+    class GetOriginAccessControlRequest < Struct.new(
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] origin_access_control
+    #   Contains an origin access control, including its unique identifier.
+    #   @return [Types::OriginAccessControl]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the origin access
+    #   control.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetOriginAccessControlResult AWS API Documentation
+    #
+    class GetOriginAccessControlResult < Struct.new(
+      :origin_access_control,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] id
     #   The unique identifier for the origin request policy. If the origin
-    #   request policy is attached to a distribution’s cache behavior, you
-    #   can get the policy’s identifier using `ListDistributions` or
+    #   request policy is attached to a distribution's cache behavior, you
+    #   can get the policy's identifier using `ListDistributions` or
     #   `GetDistribution`. If the origin request policy is not attached to a
     #   cache behavior, you can get the identifier using
     #   `ListOriginRequestPolicies`.
@@ -6935,17 +5428,10 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetOriginRequestPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The unique identifier for the origin request policy. If the origin
-    #   request policy is attached to a distribution’s cache behavior, you
-    #   can get the policy’s identifier using `ListDistributions` or
+    #   request policy is attached to a distribution's cache behavior, you
+    #   can get the policy's identifier using `ListDistributions` or
     #   `GetDistribution`. If the origin request policy is not attached to a
     #   cache behavior, you can get the identifier using
     #   `ListOriginRequestPolicies`.
@@ -6976,13 +5462,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetPublicKeyConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the public key whose configuration you are
     #   getting.
@@ -7013,13 +5492,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetPublicKeyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the public key you are getting.
     #   @return [String]
@@ -7049,14 +5521,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetRealtimeLogConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string",
-    #         arn: "string",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the real-time log configuration to get.
     #   @return [String]
@@ -7087,14 +5551,79 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # @!attribute [rw] id
+    #   The identifier for the response headers policy.
+    #
+    #   If the response headers policy is attached to a distribution's
+    #   cache behavior, you can get the policy's identifier using
+    #   `ListDistributions` or `GetDistribution`. If the response headers
+    #   policy is not attached to a cache behavior, you can get the
+    #   identifier using `ListResponseHeadersPolicies`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetResponseHeadersPolicyConfigRequest AWS API Documentation
+    #
+    class GetResponseHeadersPolicyConfigRequest < Struct.new(
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] response_headers_policy_config
+    #   Contains a response headers policy.
+    #   @return [Types::ResponseHeadersPolicyConfig]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the response
+    #   headers policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetResponseHeadersPolicyConfigResult AWS API Documentation
+    #
+    class GetResponseHeadersPolicyConfigResult < Struct.new(
+      :response_headers_policy_config,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] id
+    #   The identifier for the response headers policy.
+    #
+    #   If the response headers policy is attached to a distribution's
+    #   cache behavior, you can get the policy's identifier using
+    #   `ListDistributions` or `GetDistribution`. If the response headers
+    #   policy is not attached to a cache behavior, you can get the
+    #   identifier using `ListResponseHeadersPolicies`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetResponseHeadersPolicyRequest AWS API Documentation
+    #
+    class GetResponseHeadersPolicyRequest < Struct.new(
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] response_headers_policy
+    #   Contains a response headers policy.
+    #   @return [Types::ResponseHeadersPolicy]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the response
+    #   headers policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetResponseHeadersPolicyResult AWS API Documentation
+    #
+    class GetResponseHeadersPolicyResult < Struct.new(
+      :response_headers_policy,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # To request to get a streaming distribution configuration.
-    #
-    # @note When making an API call, you may pass GetStreamingDistributionConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
     #
     # @!attribute [rw] id
     #   The streaming distribution's ID.
@@ -7130,13 +5659,6 @@ module Aws::CloudFront
 
     # The request to get a streaming distribution's information.
     #
-    # @note When making an API call, you may pass GetStreamingDistributionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The streaming distribution's ID.
     #   @return [String]
@@ -7170,14 +5692,6 @@ module Aws::CloudFront
     end
 
     # Contains a list of HTTP header names.
-    #
-    # @note When making an API call, you may pass Headers
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of header names in the `Items` list.
@@ -7218,6 +5732,20 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/IllegalFieldLevelEncryptionConfigAssociationWithCacheBehavior AWS API Documentation
     #
     class IllegalFieldLevelEncryptionConfigAssociationWithCacheBehavior < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An origin cannot contain both an origin access control (OAC) and an
+    # origin access identity (OAI).
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/IllegalOriginAccessConfiguration AWS API Documentation
+    #
+    class IllegalOriginAccessConfiguration < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -7271,6 +5799,20 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/InvalidDefaultRootObject AWS API Documentation
     #
     class InvalidDefaultRootObject < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An origin access control is associated with an origin whose domain
+    # name is not supported.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/InvalidDomainNameForOriginAccessControl AWS API Documentation
+    #
+    class InvalidDomainNameForOriginAccessControl < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -7357,7 +5899,7 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # The specified Lambda function association is invalid.
+    # The specified Lambda@Edge function association is invalid.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -7405,6 +5947,19 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/InvalidOrigin AWS API Documentation
     #
     class InvalidOrigin < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The origin access control is not valid.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/InvalidOriginAccessControl AWS API Documentation
+    #
+    class InvalidOriginAccessControl < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -7559,10 +6114,10 @@ module Aws::CloudFront
     end
 
     # A web ACL ID specified is not valid. To specify a web ACL created
-    # using the latest version of AWS WAF, use the ACL ARN, for example
+    # using the latest version of WAF, use the ACL ARN, for example
     # `arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a`.
-    # To specify a web ACL created using AWS WAF Classic, use the ACL ID,
-    # for example `473e64fd-f30b-4765-81a0-62ad96dd167a`.
+    # To specify a web ACL created using WAF Classic, use the ACL ID, for
+    # example `473e64fd-f30b-4765-81a0-62ad96dd167a`.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -7607,17 +6162,6 @@ module Aws::CloudFront
     end
 
     # An invalidation batch.
-    #
-    # @note When making an API call, you may pass InvalidationBatch
-    #   data as a hash:
-    #
-    #       {
-    #         paths: { # required
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #         caller_reference: "string", # required
-    #       }
     #
     # @!attribute [rw] paths
     #   A complex type that contains information about the objects that you
@@ -7692,12 +6236,13 @@ module Aws::CloudFront
     #
     # @!attribute [rw] quantity
     #   The number of invalidation batches that were created by the current
-    #   AWS account.
+    #   Amazon Web Services account.
     #   @return [Integer]
     #
     # @!attribute [rw] items
     #   A complex type that contains one `InvalidationSummary` element for
-    #   each invalidation batch created by the current AWS account.
+    #   each invalidation batch created by the current Amazon Web Services
+    #   account.
     #   @return [Array<Types::InvalidationSummary>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/InvalidationList AWS API Documentation
@@ -7811,15 +6356,6 @@ module Aws::CloudFront
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html
     #
-    # @note When making an API call, you may pass KeyGroupConfig
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string", # required
-    #         items: ["string"], # required
-    #         comment: "string",
-    #       }
-    #
     # @!attribute [rw] name
     #   A name to identify the key group.
     #   @return [String]
@@ -7911,18 +6447,10 @@ module Aws::CloudFront
     # Contains information about the Amazon Kinesis data stream where you
     # are sending real-time log data.
     #
-    # @note When making an API call, you may pass KinesisStreamConfig
-    #   data as a hash:
-    #
-    #       {
-    #         role_arn: "string", # required
-    #         stream_arn: "string", # required
-    #       }
-    #
     # @!attribute [rw] role_arn
-    #   The Amazon Resource Name (ARN) of an AWS Identity and Access
-    #   Management (IAM) role that CloudFront can use to send real-time log
-    #   data to your Kinesis data stream.
+    #   The Amazon Resource Name (ARN) of an Identity and Access Management
+    #   (IAM) role that CloudFront can use to send real-time log data to
+    #   your Kinesis data stream.
     #
     #   For more information the IAM role, see [Real-time log configuration
     #   IAM role][1] in the *Amazon CloudFront Developer Guide*.
@@ -7946,41 +6474,32 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # A complex type that contains a Lambda function association.
-    #
-    # @note When making an API call, you may pass LambdaFunctionAssociation
-    #   data as a hash:
-    #
-    #       {
-    #         lambda_function_arn: "LambdaFunctionARN", # required
-    #         event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #         include_body: false,
-    #       }
+    # A complex type that contains a Lambda@Edge function association.
     #
     # @!attribute [rw] lambda_function_arn
-    #   The ARN of the Lambda function. You must specify the ARN of a
-    #   function version; you can't specify a Lambda alias or $LATEST.
+    #   The ARN of the Lambda@Edge function. You must specify the ARN of a
+    #   function version; you can't specify an alias or $LATEST.
     #   @return [String]
     #
     # @!attribute [rw] event_type
-    #   Specifies the event type that triggers a Lambda function invocation.
-    #   You can specify the following values:
+    #   Specifies the event type that triggers a Lambda@Edge function
+    #   invocation. You can specify the following values:
     #
-    #   * `viewer-request`\: The function executes when CloudFront receives
-    #     a request from a viewer and before it checks to see whether the
+    #   * `viewer-request`: The function executes when CloudFront receives a
+    #     request from a viewer and before it checks to see whether the
     #     requested object is in the edge cache.
     #
-    #   * `origin-request`\: The function executes only when CloudFront
-    #     sends a request to your origin. When the requested object is in
-    #     the edge cache, the function doesn't execute.
-    #
-    #   * `origin-response`\: The function executes after CloudFront
-    #     receives a response from the origin and before it caches the
-    #     object in the response. When the requested object is in the edge
+    #   * `origin-request`: The function executes only when CloudFront sends
+    #     a request to your origin. When the requested object is in the edge
     #     cache, the function doesn't execute.
     #
-    #   * `viewer-response`\: The function executes before CloudFront
-    #     returns the requested object to the viewer. The function executes
+    #   * `origin-response`: The function executes after CloudFront receives
+    #     a response from the origin and before it caches the object in the
+    #     response. When the requested object is in the edge cache, the
+    #     function doesn't execute.
+    #
+    #   * `viewer-response`: The function executes before CloudFront returns
+    #     the requested object to the viewer. The function executes
     #     regardless of whether the object was already in the edge cache.
     #
     #     If the origin returns an HTTP status code other than HTTP 200
@@ -7988,9 +6507,9 @@ module Aws::CloudFront
     #   @return [String]
     #
     # @!attribute [rw] include_body
-    #   A flag that allows a Lambda function to have read access to the body
-    #   content. For more information, see [Accessing the Request Body by
-    #   Choosing the Include Body Option][1] in the Amazon CloudFront
+    #   A flag that allows a Lambda@Edge function to have read access to the
+    #   body content. For more information, see [Accessing the Request Body
+    #   by Choosing the Include Body Option][1] in the Amazon CloudFront
     #   Developer Guide.
     #
     #
@@ -8008,39 +6527,27 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # A complex type that specifies a list of Lambda functions associations
-    # for a cache behavior.
+    # A complex type that specifies a list of Lambda@Edge functions
+    # associations for a cache behavior.
     #
-    # If you want to invoke one or more Lambda functions triggered by
+    # If you want to invoke one or more Lambda@Edge functions triggered by
     # requests that match the `PathPattern` of the cache behavior, specify
     # the applicable values for `Quantity` and `Items`. Note that there can
     # be up to 4 `LambdaFunctionAssociation` items in this list (one for
     # each possible value of `EventType`) and each `EventType` can be
-    # associated with the Lambda function only once.
+    # associated with only one function.
     #
-    # If you don't want to invoke any Lambda functions for the requests
-    # that match `PathPattern`, specify `0` for `Quantity` and omit `Items`.
-    #
-    # @note When making an API call, you may pass LambdaFunctionAssociations
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [
-    #           {
-    #             lambda_function_arn: "LambdaFunctionARN", # required
-    #             event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #             include_body: false,
-    #           },
-    #         ],
-    #       }
+    # If you don't want to invoke any Lambda@Edge functions for the
+    # requests that match `PathPattern`, specify `0` for `Quantity` and omit
+    # `Items`.
     #
     # @!attribute [rw] quantity
-    #   The number of Lambda function associations for this cache behavior.
+    #   The number of Lambda@Edge function associations for this cache
+    #   behavior.
     #   @return [Integer]
     #
     # @!attribute [rw] items
-    #   **Optional**\: A complex type that contains
+    #   **Optional**: A complex type that contains
     #   `LambdaFunctionAssociation` items for this cache behavior. If
     #   `Quantity` is `0`, you can omit `Items`.
     #   @return [Array<Types::LambdaFunctionAssociation>]
@@ -8054,31 +6561,23 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListCachePoliciesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         type: "managed", # accepts managed, custom
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] type
     #   A filter to return only the specified kinds of cache policies. Valid
     #   values are:
     #
-    #   * `managed` – Returns only the managed policies created by AWS.
+    #   * `managed` – Returns only the managed policies created by Amazon
+    #     Web Services.
     #
-    #   * `custom` – Returns only the custom policies created in your AWS
-    #     account.
+    #   * `custom` – Returns only the custom policies created in your Amazon
+    #     Web Services account.
     #   @return [String]
     #
     # @!attribute [rw] marker
     #   Use this field when paginating results to indicate where to begin in
     #   your list of cache policies. The response includes cache policies in
     #   the list that occur after the marker. To get the next page of the
-    #   list, set this field’s value to the value of `NextMarker` from the
-    #   current page’s response.
+    #   list, set this field's value to the value of `NextMarker` from the
+    #   current page's response.
     #   @return [String]
     #
     # @!attribute [rw] max_items
@@ -8108,14 +6607,6 @@ module Aws::CloudFront
     end
 
     # The request to list origin access identities.
-    #
-    # @note When making an API call, you may pass ListCloudFrontOriginAccessIdentitiesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
     #
     # @!attribute [rw] marker
     #   Use this when paginating results to indicate where to begin in your
@@ -8154,21 +6645,91 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDistributionsByCachePolicyIdRequest
-    #   data as a hash:
+    # @!attribute [rw] distribution_id
+    #   The ID of a distribution in your account that has an attached
+    #   SSL/TLS certificate that includes the provided alias.
+    #   @return [String]
     #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #         cache_policy_id: "string", # required
-    #       }
+    # @!attribute [rw] alias
+    #   The alias (also called a CNAME) to search for conflicting aliases.
+    #   @return [String]
     #
+    # @!attribute [rw] marker
+    #   Use this field when paginating results to indicate where to begin in
+    #   the list of conflicting aliases. The response includes conflicting
+    #   aliases in the list that occur after the marker. To get the next
+    #   page of the list, set this field's value to the value of
+    #   `NextMarker` from the current page's response.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   The maximum number of conflicting aliases that you want in the
+    #   response.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListConflictingAliasesRequest AWS API Documentation
+    #
+    class ListConflictingAliasesRequest < Struct.new(
+      :distribution_id,
+      :alias,
+      :marker,
+      :max_items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] conflicting_aliases_list
+    #   A list of conflicting aliases.
+    #   @return [Types::ConflictingAliasesList]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListConflictingAliasesResult AWS API Documentation
+    #
+    class ListConflictingAliasesResult < Struct.new(
+      :conflicting_aliases_list)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] marker
+    #   Use this field when paginating results to indicate where to begin in
+    #   your list of continuous deployment policies. The response includes
+    #   policies in the list that occur after the marker. To get the next
+    #   page of the list, set this field's value to the value of
+    #   `NextMarker` from the current page's response.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   The maximum number of continuous deployment policies that you want
+    #   returned in the response.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListContinuousDeploymentPoliciesRequest AWS API Documentation
+    #
+    class ListContinuousDeploymentPoliciesRequest < Struct.new(
+      :marker,
+      :max_items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] continuous_deployment_policy_list
+    #   A list of continuous deployment policies.
+    #   @return [Types::ContinuousDeploymentPolicyList]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListContinuousDeploymentPoliciesResult AWS API Documentation
+    #
+    class ListContinuousDeploymentPoliciesResult < Struct.new(
+      :continuous_deployment_policy_list)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] marker
     #   Use this field when paginating results to indicate where to begin in
     #   your list of distribution IDs. The response includes distribution
     #   IDs in the list that occur after the marker. To get the next page of
-    #   the list, set this field’s value to the value of `NextMarker` from
-    #   the current page’s response.
+    #   the list, set this field's value to the value of `NextMarker` from
+    #   the current page's response.
     #   @return [String]
     #
     # @!attribute [rw] max_items
@@ -8203,21 +6764,12 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDistributionsByKeyGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #         key_group_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] marker
     #   Use this field when paginating results to indicate where to begin in
     #   your list of distribution IDs. The response includes distribution
     #   IDs in the list that occur after the marker. To get the next page of
-    #   the list, set this field’s value to the value of `NextMarker` from
-    #   the current page’s response.
+    #   the list, set this field's value to the value of `NextMarker` from
+    #   the current page's response.
     #   @return [String]
     #
     # @!attribute [rw] max_items
@@ -8252,21 +6804,12 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDistributionsByOriginRequestPolicyIdRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #         origin_request_policy_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] marker
     #   Use this field when paginating results to indicate where to begin in
     #   your list of distribution IDs. The response includes distribution
     #   IDs in the list that occur after the marker. To get the next page of
-    #   the list, set this field’s value to the value of `NextMarker` from
-    #   the current page’s response.
+    #   the list, set this field's value to the value of `NextMarker` from
+    #   the current page's response.
     #   @return [String]
     #
     # @!attribute [rw] max_items
@@ -8301,22 +6844,12 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDistributionsByRealtimeLogConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #         realtime_log_config_name: "string",
-    #         realtime_log_config_arn: "string",
-    #       }
-    #
     # @!attribute [rw] marker
     #   Use this field when paginating results to indicate where to begin in
     #   your list of distributions. The response includes distributions in
     #   the list that occur after the marker. To get the next page of the
-    #   list, set this field’s value to the value of `NextMarker` from the
-    #   current page’s response.
+    #   list, set this field's value to the value of `NextMarker` from the
+    #   current page's response.
     #   @return [String]
     #
     # @!attribute [rw] max_items
@@ -8356,17 +6889,48 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # @!attribute [rw] marker
+    #   Use this field when paginating results to indicate where to begin in
+    #   your list of distribution IDs. The response includes distribution
+    #   IDs in the list that occur after the marker. To get the next page of
+    #   the list, set this field's value to the value of `NextMarker` from
+    #   the current page's response.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   The maximum number of distribution IDs that you want to get in the
+    #   response.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] response_headers_policy_id
+    #   The ID of the response headers policy whose associated distribution
+    #   IDs you want to list.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByResponseHeadersPolicyIdRequest AWS API Documentation
+    #
+    class ListDistributionsByResponseHeadersPolicyIdRequest < Struct.new(
+      :marker,
+      :max_items,
+      :response_headers_policy_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] distribution_id_list
+    #   A list of distribution IDs.
+    #   @return [Types::DistributionIdList]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByResponseHeadersPolicyIdResult AWS API Documentation
+    #
+    class ListDistributionsByResponseHeadersPolicyIdResult < Struct.new(
+      :distribution_id_list)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request to list distributions that are associated with a specified
-    # AWS WAF web ACL.
-    #
-    # @note When making an API call, you may pass ListDistributionsByWebACLIdRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #         web_acl_id: "string", # required
-    #       }
+    # WAF web ACL.
     #
     # @!attribute [rw] marker
     #   Use `Marker` and `MaxItems` to control pagination of results. If you
@@ -8384,7 +6948,7 @@ module Aws::CloudFront
     #   @return [Integer]
     #
     # @!attribute [rw] web_acl_id
-    #   The ID of the AWS WAF web ACL that you want to list the associated
+    #   The ID of the WAF web ACL that you want to list the associated
     #   distributions. If you specify "null" for the ID, the request
     #   returns a list of the distributions that aren't associated with a
     #   web ACL.
@@ -8401,7 +6965,7 @@ module Aws::CloudFront
     end
 
     # The response to a request to list the distributions that are
-    # associated with a specified AWS WAF web ACL.
+    # associated with a specified WAF web ACL.
     #
     # @!attribute [rw] distribution_list
     #   The `DistributionList` type.
@@ -8416,14 +6980,6 @@ module Aws::CloudFront
     end
 
     # The request to list your distributions.
-    #
-    # @note When making an API call, you may pass ListDistributionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
     #
     # @!attribute [rw] marker
     #   Use this when paginating results to indicate where to begin in your
@@ -8461,14 +7017,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFieldLevelEncryptionConfigsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] marker
     #   Use this when paginating results to indicate where to begin in your
     #   list of configurations. The results include configurations in the
@@ -8505,14 +7053,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFieldLevelEncryptionProfilesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] marker
     #   Use this when paginating results to indicate where to begin in your
     #   list of profiles. The results include profiles in the list that
@@ -8548,21 +7088,12 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFunctionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #         stage: "DEVELOPMENT", # accepts DEVELOPMENT, LIVE
-    #       }
-    #
     # @!attribute [rw] marker
     #   Use this field when paginating results to indicate where to begin in
     #   your list of functions. The response includes functions in the list
     #   that occur after the marker. To get the next page of the list, set
-    #   this field’s value to the value of `NextMarker` from the current
-    #   page’s response.
+    #   this field's value to the value of `NextMarker` from the current
+    #   page's response.
     #   @return [String]
     #
     # @!attribute [rw] max_items
@@ -8597,15 +7128,6 @@ module Aws::CloudFront
     end
 
     # The request to list invalidations.
-    #
-    # @note When making an API call, you may pass ListInvalidationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_id: "string", # required
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
     #
     # @!attribute [rw] distribution_id
     #   The distribution's ID.
@@ -8651,20 +7173,12 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListKeyGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] marker
     #   Use this field when paginating results to indicate where to begin in
     #   your list of key groups. The response includes key groups in the
     #   list that occur after the marker. To get the next page of the list,
-    #   set this field’s value to the value of `NextMarker` from the current
-    #   page’s response.
+    #   set this field's value to the value of `NextMarker` from the
+    #   current page's response.
     #   @return [String]
     #
     # @!attribute [rw] max_items
@@ -8692,31 +7206,57 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListOriginRequestPoliciesRequest
-    #   data as a hash:
+    # @!attribute [rw] marker
+    #   Use this field when paginating results to indicate where to begin in
+    #   your list of origin access controls. The response includes the items
+    #   in the list that occur after the marker. To get the next page of the
+    #   list, set this field's value to the value of `NextMarker` from the
+    #   current page's response.
+    #   @return [String]
     #
-    #       {
-    #         type: "managed", # accepts managed, custom
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
+    # @!attribute [rw] max_items
+    #   The maximum number of origin access controls that you want in the
+    #   response.
+    #   @return [Integer]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListOriginAccessControlsRequest AWS API Documentation
+    #
+    class ListOriginAccessControlsRequest < Struct.new(
+      :marker,
+      :max_items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] origin_access_control_list
+    #   A list of origin access controls.
+    #   @return [Types::OriginAccessControlList]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListOriginAccessControlsResult AWS API Documentation
+    #
+    class ListOriginAccessControlsResult < Struct.new(
+      :origin_access_control_list)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] type
     #   A filter to return only the specified kinds of origin request
     #   policies. Valid values are:
     #
-    #   * `managed` – Returns only the managed policies created by AWS.
+    #   * `managed` – Returns only the managed policies created by Amazon
+    #     Web Services.
     #
-    #   * `custom` – Returns only the custom policies created in your AWS
-    #     account.
+    #   * `custom` – Returns only the custom policies created in your Amazon
+    #     Web Services account.
     #   @return [String]
     #
     # @!attribute [rw] marker
     #   Use this field when paginating results to indicate where to begin in
     #   your list of origin request policies. The response includes origin
     #   request policies in the list that occur after the marker. To get the
-    #   next page of the list, set this field’s value to the value of
-    #   `NextMarker` from the current page’s response.
+    #   next page of the list, set this field's value to the value of
+    #   `NextMarker` from the current page's response.
     #   @return [String]
     #
     # @!attribute [rw] max_items
@@ -8746,14 +7286,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPublicKeysRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] marker
     #   Use this when paginating results to indicate where to begin in your
     #   list of public keys. The results include public keys in the list
@@ -8789,14 +7321,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRealtimeLogConfigsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_items: 1,
-    #         marker: "string",
-    #       }
-    #
     # @!attribute [rw] max_items
     #   The maximum number of real-time log configurations that you want in
     #   the response.
@@ -8806,8 +7330,8 @@ module Aws::CloudFront
     #   Use this field when paginating results to indicate where to begin in
     #   your list of real-time log configurations. The response includes
     #   real-time log configurations in the list that occur after the
-    #   marker. To get the next page of the list, set this field’s value to
-    #   the value of `NextMarker` from the current page’s response.
+    #   marker. To get the next page of the list, set this field's value to
+    #   the value of `NextMarker` from the current page's response.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListRealtimeLogConfigsRequest AWS API Documentation
@@ -8831,15 +7355,53 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # @!attribute [rw] type
+    #   A filter to get only the specified kind of response headers
+    #   policies. Valid values are:
+    #
+    #   * `managed` – Gets only the managed policies created by Amazon Web
+    #     Services.
+    #
+    #   * `custom` – Gets only the custom policies created in your Amazon
+    #     Web Services account.
+    #   @return [String]
+    #
+    # @!attribute [rw] marker
+    #   Use this field when paginating results to indicate where to begin in
+    #   your list of response headers policies. The response includes
+    #   response headers policies in the list that occur after the marker.
+    #   To get the next page of the list, set this field's value to the
+    #   value of `NextMarker` from the current page's response.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   The maximum number of response headers policies that you want to get
+    #   in the response.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListResponseHeadersPoliciesRequest AWS API Documentation
+    #
+    class ListResponseHeadersPoliciesRequest < Struct.new(
+      :type,
+      :marker,
+      :max_items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] response_headers_policy_list
+    #   A list of response headers policies.
+    #   @return [Types::ResponseHeadersPolicyList]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListResponseHeadersPoliciesResult AWS API Documentation
+    #
+    class ListResponseHeadersPoliciesResult < Struct.new(
+      :response_headers_policy_list)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request to list your streaming distributions.
-    #
-    # @note When making an API call, you may pass ListStreamingDistributionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         marker: "string",
-    #         max_items: 1,
-    #       }
     #
     # @!attribute [rw] marker
     #   The value that you provided for the `Marker` request parameter.
@@ -8874,13 +7436,6 @@ module Aws::CloudFront
 
     # The request to list tags for a CloudFront resource.
     #
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource: "ResourceARN", # required
-    #       }
-    #
     # @!attribute [rw] resource
     #   An ARN of a CloudFront resource.
     #   @return [String]
@@ -8909,16 +7464,6 @@ module Aws::CloudFront
 
     # A complex type that controls whether access logs are written for the
     # distribution.
-    #
-    # @note When making an API call, you may pass LoggingConfig
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #         include_cookies: false, # required
-    #         bucket: "string", # required
-    #         prefix: "string", # required
-    #       }
     #
     # @!attribute [rw] enabled
     #   Specifies whether you want CloudFront to save access logs to an
@@ -8982,15 +7527,6 @@ module Aws::CloudFront
     # whether additional CloudWatch metrics are enabled for a given
     # CloudFront distribution.
     #
-    # @note When making an API call, you may pass MonitoringSubscription
-    #   data as a hash:
-    #
-    #       {
-    #         realtime_metrics_subscription_config: {
-    #           realtime_metrics_subscription_status: "Enabled", # required, accepts Enabled, Disabled
-    #         },
-    #       }
-    #
     # @!attribute [rw] realtime_metrics_subscription_config
     #   A subscription configuration for additional CloudWatch metrics.
     #   @return [Types::RealtimeMetricsSubscriptionConfig]
@@ -8999,6 +7535,20 @@ module Aws::CloudFront
     #
     class MonitoringSubscription < Struct.new(
       :realtime_metrics_subscription_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A monitoring subscription already exists for the specified
+    # distribution.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/MonitoringSubscriptionAlreadyExists AWS API Documentation
+    #
+    class MonitoringSubscriptionAlreadyExists < Struct.new(
+      :message)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -9024,6 +7574,19 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/NoSuchCloudFrontOriginAccessIdentity AWS API Documentation
     #
     class NoSuchCloudFrontOriginAccessIdentity < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The continuous deployment policy doesn't exist.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/NoSuchContinuousDeploymentPolicy AWS API Documentation
+    #
+    class NoSuchContinuousDeploymentPolicy < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -9094,6 +7657,20 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # A monitoring subscription does not exist for the specified
+    # distribution.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/NoSuchMonitoringSubscription AWS API Documentation
+    #
+    class NoSuchMonitoringSubscription < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # No origin exists with the specified `Origin Id`.
     #
     # @!attribute [rw] message
@@ -9102,6 +7679,19 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/NoSuchOrigin AWS API Documentation
     #
     class NoSuchOrigin < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The origin access control does not exist.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/NoSuchOriginAccessControl AWS API Documentation
+    #
+    class NoSuchOriginAccessControl < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -9159,6 +7749,19 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # The response headers policy does not exist.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/NoSuchResponseHeadersPolicy AWS API Documentation
+    #
+    class NoSuchResponseHeadersPolicy < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The specified streaming distribution does not exist.
     #
     # @!attribute [rw] message
@@ -9202,44 +7805,6 @@ module Aws::CloudFront
     #
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-web-distributions
-    #
-    # @note When making an API call, you may pass Origin
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         domain_name: "string", # required
-    #         origin_path: "string",
-    #         custom_headers: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               header_name: "string", # required
-    #               header_value: "string", # required
-    #             },
-    #           ],
-    #         },
-    #         s3_origin_config: {
-    #           origin_access_identity: "string", # required
-    #         },
-    #         custom_origin_config: {
-    #           http_port: 1, # required
-    #           https_port: 1, # required
-    #           origin_protocol_policy: "http-only", # required, accepts http-only, match-viewer, https-only
-    #           origin_ssl_protocols: {
-    #             quantity: 1, # required
-    #             items: ["SSLv3"], # required, accepts SSLv3, TLSv1, TLSv1.1, TLSv1.2
-    #           },
-    #           origin_read_timeout: 1,
-    #           origin_keepalive_timeout: 1,
-    #         },
-    #         connection_attempts: 1,
-    #         connection_timeout: 1,
-    #         origin_shield: {
-    #           enabled: false, # required
-    #           origin_shield_region: "OriginShieldRegion",
-    #         },
-    #       }
     #
     # @!attribute [rw] id
     #   A unique identifier for the origin. This value must be unique within
@@ -9303,12 +7868,12 @@ module Aws::CloudFront
     # @!attribute [rw] connection_attempts
     #   The number of times that CloudFront attempts to connect to the
     #   origin. The minimum number is 1, the maximum is 3, and the default
-    #   (if you don’t specify otherwise) is 3.
+    #   (if you don't specify otherwise) is 3.
     #
-    #   For a custom origin (including an Amazon S3 bucket that’s configured
-    #   with static website hosting), this value also specifies the number
-    #   of times that CloudFront attempts to get a response from the origin,
-    #   in the case of an [Origin Response Timeout][1].
+    #   For a custom origin (including an Amazon S3 bucket that's
+    #   configured with static website hosting), this value also specifies
+    #   the number of times that CloudFront attempts to get a response from
+    #   the origin, in the case of an [Origin Response Timeout][1].
     #
     #   For more information, see [Origin Connection Attempts][2] in the
     #   *Amazon CloudFront Developer Guide*.
@@ -9322,7 +7887,7 @@ module Aws::CloudFront
     # @!attribute [rw] connection_timeout
     #   The number of seconds that CloudFront waits when trying to establish
     #   a connection to the origin. The minimum timeout is 1 second, the
-    #   maximum is 10 seconds, and the default (if you don’t specify
+    #   maximum is 10 seconds, and the default (if you don't specify
     #   otherwise) is 10 seconds.
     #
     #   For more information, see [Origin Connection Timeout][1] in the
@@ -9345,6 +7910,17 @@ module Aws::CloudFront
     #   [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html
     #   @return [Types::OriginShield]
     #
+    # @!attribute [rw] origin_access_control_id
+    #   The unique identifier of an origin access control for this origin.
+    #
+    #   For more information, see [Restricting access to an Amazon S3
+    #   origin][1] in the *Amazon CloudFront Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/Origin AWS API Documentation
     #
     class Origin < Struct.new(
@@ -9356,21 +7932,219 @@ module Aws::CloudFront
       :custom_origin_config,
       :connection_attempts,
       :connection_timeout,
-      :origin_shield)
+      :origin_shield,
+      :origin_access_control_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A CloudFront origin access control, including its unique identifier.
+    #
+    # @!attribute [rw] id
+    #   The unique identifier of the origin access control.
+    #   @return [String]
+    #
+    # @!attribute [rw] origin_access_control_config
+    #   The origin access control.
+    #   @return [Types::OriginAccessControlConfig]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/OriginAccessControl AWS API Documentation
+    #
+    class OriginAccessControl < Struct.new(
+      :id,
+      :origin_access_control_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An origin access control with the specified parameters already exists.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/OriginAccessControlAlreadyExists AWS API Documentation
+    #
+    class OriginAccessControlAlreadyExists < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A CloudFront origin access control configuration.
+    #
+    # @!attribute [rw] name
+    #   A name to identify the origin access control.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   A description of the origin access control.
+    #   @return [String]
+    #
+    # @!attribute [rw] signing_protocol
+    #   The signing protocol of the origin access control, which determines
+    #   how CloudFront signs (authenticates) requests. The only valid value
+    #   is `sigv4`.
+    #   @return [String]
+    #
+    # @!attribute [rw] signing_behavior
+    #   Specifies which requests CloudFront signs (adds authentication
+    #   information to). Specify `always` for the most common use case. For
+    #   more information, see [origin access control advanced settings][1]
+    #   in the *Amazon CloudFront Developer Guide*.
+    #
+    #   This field can have one of the following values:
+    #
+    #   * `always` – CloudFront signs all origin requests, overwriting the
+    #     `Authorization` header from the viewer request if one exists.
+    #
+    #   * `never` – CloudFront doesn't sign any origin requests. This value
+    #     turns off origin access control for all origins in all
+    #     distributions that use this origin access control.
+    #
+    #   * `no-override` – If the viewer request doesn't contain the
+    #     `Authorization` header, then CloudFront signs the origin request.
+    #     If the viewer request contains the `Authorization` header, then
+    #     CloudFront doesn't sign the origin request and instead passes
+    #     along the `Authorization` header from the viewer request.
+    #     **WARNING: To pass along the `Authorization` header from the
+    #     viewer request, you *must* add the `Authorization` header to a
+    #     [cache policy][2] for all cache behaviors that use origins
+    #     associated with this origin access control.**
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html#oac-advanced-settings
+    #   [2]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html
+    #   @return [String]
+    #
+    # @!attribute [rw] origin_access_control_origin_type
+    #   The type of origin that this origin access control is for.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/OriginAccessControlConfig AWS API Documentation
+    #
+    class OriginAccessControlConfig < Struct.new(
+      :name,
+      :description,
+      :signing_protocol,
+      :signing_behavior,
+      :origin_access_control_origin_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Cannot delete the origin access control because it's in use by one or
+    # more distributions.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/OriginAccessControlInUse AWS API Documentation
+    #
+    class OriginAccessControlInUse < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of CloudFront origin access controls.
+    #
+    # @!attribute [rw] marker
+    #   The value of the `Marker` field that was provided in the request.
+    #   @return [String]
+    #
+    # @!attribute [rw] next_marker
+    #   If there are more items in the list than are in this response, this
+    #   element is present. It contains the value to use in the `Marker`
+    #   field of another request to continue listing origin access controls.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   The maximum number of origin access controls requested.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] is_truncated
+    #   If there are more items in the list than are in this response, this
+    #   value is `true`.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] quantity
+    #   The number of origin access controls returned in the response.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   Contains the origin access controls in the list.
+    #   @return [Array<Types::OriginAccessControlSummary>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/OriginAccessControlList AWS API Documentation
+    #
+    class OriginAccessControlList < Struct.new(
+      :marker,
+      :next_marker,
+      :max_items,
+      :is_truncated,
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A CloudFront origin access control.
+    #
+    # @!attribute [rw] id
+    #   The unique identifier of the origin access control.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   A description of the origin access control.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   A unique name that identifies the origin access control.
+    #   @return [String]
+    #
+    # @!attribute [rw] signing_protocol
+    #   The signing protocol of the origin access control. The signing
+    #   protocol determines how CloudFront signs (authenticates) requests.
+    #   The only valid value is `sigv4`.
+    #   @return [String]
+    #
+    # @!attribute [rw] signing_behavior
+    #   A value that specifies which requests CloudFront signs (adds
+    #   authentication information to). This field can have one of the
+    #   following values:
+    #
+    #   * `never` – CloudFront doesn't sign any origin requests.
+    #
+    #   * `always` – CloudFront signs all origin requests, overwriting the
+    #     `Authorization` header from the viewer request if necessary.
+    #
+    #   * `no-override` – If the viewer request doesn't contain the
+    #     `Authorization` header, CloudFront signs the origin request. If
+    #     the viewer request contains the `Authorization` header, CloudFront
+    #     doesn't sign the origin request, but instead passes along the
+    #     `Authorization` header that it received in the viewer request.
+    #   @return [String]
+    #
+    # @!attribute [rw] origin_access_control_origin_type
+    #   The type of origin that this origin access control is for.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/OriginAccessControlSummary AWS API Documentation
+    #
+    class OriginAccessControlSummary < Struct.new(
+      :id,
+      :description,
+      :name,
+      :signing_protocol,
+      :signing_behavior,
+      :origin_access_control_origin_type)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # A complex type that contains `HeaderName` and `HeaderValue` elements,
     # if any, for this distribution.
-    #
-    # @note When making an API call, you may pass OriginCustomHeader
-    #   data as a hash:
-    #
-    #       {
-    #         header_name: "string", # required
-    #         header_value: "string", # required
-    #       }
     #
     # @!attribute [rw] header_name
     #   The name of a header that you want CloudFront to send to your
@@ -9392,7 +8166,7 @@ module Aws::CloudFront
     class OriginCustomHeader < Struct.new(
       :header_name,
       :header_value)
-      SENSITIVE = []
+      SENSITIVE = [:header_value]
       include Aws::Structure
     end
 
@@ -9403,27 +8177,6 @@ module Aws::CloudFront
     # instead of a single origin, and CloudFront will failover from the
     # primary origin to the second origin under the failover conditions that
     # you've chosen.
-    #
-    # @note When making an API call, you may pass OriginGroup
-    #   data as a hash:
-    #
-    #       {
-    #         id: "string", # required
-    #         failover_criteria: { # required
-    #           status_codes: { # required
-    #             quantity: 1, # required
-    #             items: [1], # required
-    #           },
-    #         },
-    #         members: { # required
-    #           quantity: 1, # required
-    #           items: [ # required
-    #             {
-    #               origin_id: "string", # required
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] id
     #   The origin group's ID.
@@ -9453,16 +8206,6 @@ module Aws::CloudFront
     # criteria for an origin group, including the status codes for which
     # CloudFront will failover from the primary origin to the second origin.
     #
-    # @note When making an API call, you may pass OriginGroupFailoverCriteria
-    #   data as a hash:
-    #
-    #       {
-    #         status_codes: { # required
-    #           quantity: 1, # required
-    #           items: [1], # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] status_codes
     #   The status codes that, when returned from the primary origin, will
     #   trigger CloudFront to failover to the second origin.
@@ -9478,13 +8221,6 @@ module Aws::CloudFront
 
     # An origin in an origin group.
     #
-    # @note When making an API call, you may pass OriginGroupMember
-    #   data as a hash:
-    #
-    #       {
-    #         origin_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] origin_id
     #   The ID for an origin in an origin group.
     #   @return [String]
@@ -9498,18 +8234,6 @@ module Aws::CloudFront
     end
 
     # A complex data type for the origins included in an origin group.
-    #
-    # @note When making an API call, you may pass OriginGroupMembers
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [ # required
-    #           {
-    #             origin_id: "string", # required
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of origins in an origin group.
@@ -9531,32 +8255,6 @@ module Aws::CloudFront
     # A complex data type for the origin groups specified for a
     # distribution.
     #
-    # @note When making an API call, you may pass OriginGroups
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [
-    #           {
-    #             id: "string", # required
-    #             failover_criteria: { # required
-    #               status_codes: { # required
-    #                 quantity: 1, # required
-    #                 items: [1], # required
-    #               },
-    #             },
-    #             members: { # required
-    #               quantity: 1, # required
-    #               items: [ # required
-    #                 {
-    #                   origin_id: "string", # required
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] quantity
     #   The number of origin groups.
     #   @return [Integer]
@@ -9576,7 +8274,7 @@ module Aws::CloudFront
 
     # An origin request policy.
     #
-    # When it’s attached to a cache behavior, the origin request policy
+    # When it's attached to a cache behavior, the origin request policy
     # determines the values that CloudFront includes in requests that it
     # sends to the origin. Each request that CloudFront sends to the origin
     # includes the following:
@@ -9592,7 +8290,7 @@ module Aws::CloudFront
     #   items from the viewer request and, in the case of headers,
     #   additional ones that are added by CloudFront.
     #
-    # CloudFront sends a request when it can’t find an object in its cache
+    # CloudFront sends a request when it can't find an object in its cache
     # that matches the request. If you want to send values to the origin and
     # also include them in the cache key, use `CachePolicy`.
     #
@@ -9650,38 +8348,9 @@ module Aws::CloudFront
     #   items from the viewer request and, in the case of headers,
     #   additional ones that are added by CloudFront.
     #
-    # CloudFront sends a request when it can’t find an object in its cache
+    # CloudFront sends a request when it can't find an object in its cache
     # that matches the request. If you want to send values to the origin and
     # also include them in the cache key, use `CachePolicy`.
-    #
-    # @note When making an API call, you may pass OriginRequestPolicyConfig
-    #   data as a hash:
-    #
-    #       {
-    #         comment: "string",
-    #         name: "string", # required
-    #         headers_config: { # required
-    #           header_behavior: "none", # required, accepts none, whitelist, allViewer, allViewerAndWhitelistCloudFront
-    #           headers: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #         cookies_config: { # required
-    #           cookie_behavior: "none", # required, accepts none, whitelist, all
-    #           cookies: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #         query_strings_config: { # required
-    #           query_string_behavior: "none", # required, accepts none, whitelist, all
-    #           query_strings: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] comment
     #   A comment to describe the origin request policy. The comment cannot
@@ -9723,32 +8392,26 @@ module Aws::CloudFront
     # if so, which cookies) are included in requests that CloudFront sends
     # to the origin.
     #
-    # @note When making an API call, you may pass OriginRequestPolicyCookiesConfig
-    #   data as a hash:
-    #
-    #       {
-    #         cookie_behavior: "none", # required, accepts none, whitelist, all
-    #         cookies: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
-    #
     # @!attribute [rw] cookie_behavior
     #   Determines whether cookies in viewer requests are included in
     #   requests that CloudFront sends to the origin. Valid values are:
     #
-    #   * `none` – Cookies in viewer requests are not included in requests
+    #   * `none` – No cookies in viewer requests are included in requests
     #     that CloudFront sends to the origin. Even when this field is set
     #     to `none`, any cookies that are listed in a `CachePolicy` *are*
     #     included in origin requests.
     #
-    #   * `whitelist` – The cookies in viewer requests that are listed in
-    #     the `CookieNames` type are included in requests that CloudFront
+    #   * `whitelist` – Only the cookies in viewer requests that are listed
+    #     in the `CookieNames` type are included in requests that CloudFront
     #     sends to the origin.
     #
     #   * `all` – All cookies in viewer requests are included in requests
     #     that CloudFront sends to the origin.
+    #
+    #   * `allExcept` – All cookies in viewer requests are included in
+    #     requests that CloudFront sends to the origin, <i> <b>except</b>
+    #     </i> for those listed in the `CookieNames` type, which are not
+    #     included.
     #   @return [String]
     #
     # @!attribute [rw] cookies
@@ -9767,28 +8430,18 @@ module Aws::CloudFront
     # An object that determines whether any HTTP headers (and if so, which
     # headers) are included in requests that CloudFront sends to the origin.
     #
-    # @note When making an API call, you may pass OriginRequestPolicyHeadersConfig
-    #   data as a hash:
-    #
-    #       {
-    #         header_behavior: "none", # required, accepts none, whitelist, allViewer, allViewerAndWhitelistCloudFront
-    #         headers: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
-    #
     # @!attribute [rw] header_behavior
     #   Determines whether any HTTP headers are included in requests that
     #   CloudFront sends to the origin. Valid values are:
     #
-    #   * `none` – HTTP headers are not included in requests that CloudFront
-    #     sends to the origin. Even when this field is set to `none`, any
-    #     headers that are listed in a `CachePolicy` *are* included in
-    #     origin requests.
+    #   * `none` – No HTTP headers in viewer requests are included in
+    #     requests that CloudFront sends to the origin. Even when this field
+    #     is set to `none`, any headers that are listed in a `CachePolicy`
+    #     *are* included in origin requests.
     #
-    #   * `whitelist` – The HTTP headers that are listed in the `Headers`
-    #     type are included in requests that CloudFront sends to the origin.
+    #   * `whitelist` – Only the HTTP headers that are listed in the
+    #     `Headers` type are included in requests that CloudFront sends to
+    #     the origin.
     #
     #   * `allViewer` – All HTTP headers in viewer requests are included in
     #     requests that CloudFront sends to the origin.
@@ -9797,6 +8450,11 @@ module Aws::CloudFront
     #     requests and the additional CloudFront headers that are listed in
     #     the `Headers` type are included in requests that CloudFront sends
     #     to the origin. The additional headers are added by CloudFront.
+    #
+    #   * `allExcept` – All HTTP headers in viewer requests are included in
+    #     requests that CloudFront sends to the origin, <i> <b>except</b>
+    #     </i> for those listed in the `Headers` type, which are not
+    #     included.
     #   @return [String]
     #
     # @!attribute [rw] headers
@@ -9863,38 +8521,38 @@ module Aws::CloudFront
     # requests (and if so, which query strings) are included in requests
     # that CloudFront sends to the origin.
     #
-    # @note When making an API call, you may pass OriginRequestPolicyQueryStringsConfig
-    #   data as a hash:
-    #
-    #       {
-    #         query_string_behavior: "none", # required, accepts none, whitelist, all
-    #         query_strings: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
-    #
     # @!attribute [rw] query_string_behavior
     #   Determines whether any URL query strings in viewer requests are
     #   included in requests that CloudFront sends to the origin. Valid
     #   values are:
     #
-    #   * `none` – Query strings in viewer requests are not included in
+    #   * `none` – No query strings in viewer requests are included in
     #     requests that CloudFront sends to the origin. Even when this field
     #     is set to `none`, any query strings that are listed in a
     #     `CachePolicy` *are* included in origin requests.
     #
-    #   * `whitelist` – The query strings in viewer requests that are listed
-    #     in the `QueryStringNames` type are included in requests that
-    #     CloudFront sends to the origin.
+    #   * `whitelist` – Only the query strings in viewer requests that are
+    #     listed in the `QueryStringNames` type are included in requests
+    #     that CloudFront sends to the origin.
     #
     #   * `all` – All query strings in viewer requests are included in
     #     requests that CloudFront sends to the origin.
+    #
+    #   * `allExcept` – All query strings in viewer requests are included in
+    #     requests that CloudFront sends to the origin, <i> <b>except</b>
+    #     </i> for those listed in the `QueryStringNames` type, which are
+    #     not included.
     #   @return [String]
     #
     # @!attribute [rw] query_strings
-    #   Contains a list of the query strings in viewer requests that are
-    #   included in requests that CloudFront sends to the origin.
+    #   Contains the specific query strings in viewer requests that either
+    #   <i> <b>are</b> </i> or <i> <b>are not</b> </i> included in requests
+    #   that CloudFront sends to the origin. The behavior depends on whether
+    #   the `QueryStringBehavior` field in the
+    #   `OriginRequestPolicyQueryStringsConfig` type is set to `whitelist`
+    #   (the listed query strings <i> <b>are</b> </i> included) or
+    #   `allExcept` (the listed query strings <i> <b>are not</b> </i>
+    #   included, but all other query strings are).
     #   @return [Types::QueryStringNames]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/OriginRequestPolicyQueryStringsConfig AWS API Documentation
@@ -9909,8 +8567,9 @@ module Aws::CloudFront
     # Contains an origin request policy.
     #
     # @!attribute [rw] type
-    #   The type of origin request policy, either `managed` (created by AWS)
-    #   or `custom` (created in this AWS account).
+    #   The type of origin request policy, either `managed` (created by
+    #   Amazon Web Services) or `custom` (created in this Amazon Web
+    #   Services account).
     #   @return [String]
     #
     # @!attribute [rw] origin_request_policy
@@ -9936,35 +8595,29 @@ module Aws::CloudFront
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html
     #
-    # @note When making an API call, you may pass OriginShield
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #         origin_shield_region: "OriginShieldRegion",
-    #       }
-    #
     # @!attribute [rw] enabled
     #   A flag that specifies whether Origin Shield is enabled.
     #
-    #   When it’s enabled, CloudFront routes all requests through Origin
-    #   Shield, which can help protect your origin. When it’s disabled,
+    #   When it's enabled, CloudFront routes all requests through Origin
+    #   Shield, which can help protect your origin. When it's disabled,
     #   CloudFront might send requests directly to your origin from multiple
     #   edge locations or regional edge caches.
     #   @return [Boolean]
     #
     # @!attribute [rw] origin_shield_region
-    #   The AWS Region for Origin Shield.
+    #   The Amazon Web Services Region for Origin Shield.
     #
-    #   Specify the AWS Region that has the lowest latency to your origin.
-    #   To specify a region, use the region code, not the region name. For
-    #   example, specify the US East (Ohio) region as `us-east-2`.
+    #   Specify the Amazon Web Services Region that has the lowest latency
+    #   to your origin. To specify a region, use the region code, not the
+    #   region name. For example, specify the US East (Ohio) region as
+    #   `us-east-2`.
     #
-    #   When you enable CloudFront Origin Shield, you must specify the AWS
-    #   Region for Origin Shield. For the list of AWS Regions that you can
-    #   specify, and for help choosing the best Region for your origin, see
-    #   [Choosing the AWS Region for Origin Shield][1] in the *Amazon
-    #   CloudFront Developer Guide*.
+    #   When you enable CloudFront Origin Shield, you must specify the
+    #   Amazon Web Services Region for Origin Shield. For the list of Amazon
+    #   Web Services Regions that you can specify, and for help choosing the
+    #   best Region for your origin, see [Choosing the Amazon Web Services
+    #   Region for Origin Shield][1] in the *Amazon CloudFront Developer
+    #   Guide*.
     #
     #
     #
@@ -9983,14 +8636,6 @@ module Aws::CloudFront
     # A complex type that contains information about the SSL/TLS protocols
     # that CloudFront can use when establishing an HTTPS connection with
     # your origin.
-    #
-    # @note When making an API call, you may pass OriginSslProtocols
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["SSLv3"], # required, accepts SSLv3, TLSv1, TLSv1.1, TLSv1.2
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of SSL/TLS protocols that you want to allow CloudFront to
@@ -10012,49 +8657,6 @@ module Aws::CloudFront
     end
 
     # Contains information about the origins for this distribution.
-    #
-    # @note When making an API call, you may pass Origins
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [ # required
-    #           {
-    #             id: "string", # required
-    #             domain_name: "string", # required
-    #             origin_path: "string",
-    #             custom_headers: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   header_name: "string", # required
-    #                   header_value: "string", # required
-    #                 },
-    #               ],
-    #             },
-    #             s3_origin_config: {
-    #               origin_access_identity: "string", # required
-    #             },
-    #             custom_origin_config: {
-    #               http_port: 1, # required
-    #               https_port: 1, # required
-    #               origin_protocol_policy: "http-only", # required, accepts http-only, match-viewer, https-only
-    #               origin_ssl_protocols: {
-    #                 quantity: 1, # required
-    #                 items: ["SSLv3"], # required, accepts SSLv3, TLSv1, TLSv1.1, TLSv1.2
-    #               },
-    #               origin_read_timeout: 1,
-    #               origin_keepalive_timeout: 1,
-    #             },
-    #             connection_attempts: 1,
-    #             connection_timeout: 1,
-    #             origin_shield: {
-    #               enabled: false, # required
-    #               origin_shield_region: "OriginShieldRegion",
-    #             },
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of origins for this distribution.
@@ -10079,40 +8681,11 @@ module Aws::CloudFront
     # cache that it can return to the viewer.
     #
     # The headers, cookies, and query strings that are included in the cache
-    # key are automatically included in requests that CloudFront sends to
-    # the origin. CloudFront sends a request when it can’t find an object in
-    # its cache that matches the request’s cache key. If you want to send
-    # values to the origin but *not* include them in the cache key, use
+    # key are also included in requests that CloudFront sends to the origin.
+    # CloudFront sends a request when it can't find an object in its cache
+    # that matches the request's cache key. If you want to send values to
+    # the origin but *not* include them in the cache key, use
     # `OriginRequestPolicy`.
-    #
-    # @note When making an API call, you may pass ParametersInCacheKeyAndForwardedToOrigin
-    #   data as a hash:
-    #
-    #       {
-    #         enable_accept_encoding_gzip: false, # required
-    #         enable_accept_encoding_brotli: false,
-    #         headers_config: { # required
-    #           header_behavior: "none", # required, accepts none, whitelist
-    #           headers: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #         cookies_config: { # required
-    #           cookie_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #           cookies: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #         query_strings_config: { # required
-    #           query_string_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #           query_strings: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] enable_accept_encoding_gzip
     #   A flag that can affect whether the `Accept-Encoding` HTTP header is
@@ -10124,7 +8697,7 @@ module Aws::CloudFront
     #   includes the `Accept-Encoding` header, then CloudFront does the
     #   following:
     #
-    #   * Normalizes the value of the viewer’s `Accept-Encoding` header
+    #   * Normalizes the value of the viewer's `Accept-Encoding` header
     #
     #   * Includes the normalized header in the cache key
     #
@@ -10143,10 +8716,10 @@ module Aws::CloudFront
     #
     #   If both of these fields are `false`, then CloudFront treats the
     #   `Accept-Encoding` header the same as any other HTTP header in the
-    #   viewer request. By default, it’s not included in the cache key and
-    #   it’s not included in origin requests. In this case, you can manually
-    #   add `Accept-Encoding` to the headers whitelist like any other HTTP
-    #   header.
+    #   viewer request. By default, it's not included in the cache key and
+    #   it's not included in origin requests. In this case, you can
+    #   manually add `Accept-Encoding` to the headers whitelist like any
+    #   other HTTP header.
     #
     #
     #
@@ -10163,7 +8736,7 @@ module Aws::CloudFront
     #   includes the `Accept-Encoding` header, then CloudFront does the
     #   following:
     #
-    #   * Normalizes the value of the viewer’s `Accept-Encoding` header
+    #   * Normalizes the value of the viewer's `Accept-Encoding` header
     #
     #   * Includes the normalized header in the cache key
     #
@@ -10182,10 +8755,10 @@ module Aws::CloudFront
     #
     #   If both of these fields are `false`, then CloudFront treats the
     #   `Accept-Encoding` header the same as any other HTTP header in the
-    #   viewer request. By default, it’s not included in the cache key and
-    #   it’s not included in origin requests. In this case, you can manually
-    #   add `Accept-Encoding` to the headers whitelist like any other HTTP
-    #   header.
+    #   viewer request. By default, it's not included in the cache key and
+    #   it's not included in origin requests. In this case, you can
+    #   manually add `Accept-Encoding` to the headers whitelist like any
+    #   other HTTP header.
     #
     #
     #
@@ -10194,22 +8767,20 @@ module Aws::CloudFront
     #
     # @!attribute [rw] headers_config
     #   An object that determines whether any HTTP headers (and if so, which
-    #   headers) are included in the cache key and automatically included in
-    #   requests that CloudFront sends to the origin.
+    #   headers) are included in the cache key and in requests that
+    #   CloudFront sends to the origin.
     #   @return [Types::CachePolicyHeadersConfig]
     #
     # @!attribute [rw] cookies_config
     #   An object that determines whether any cookies in viewer requests
-    #   (and if so, which cookies) are included in the cache key and
-    #   automatically included in requests that CloudFront sends to the
-    #   origin.
+    #   (and if so, which cookies) are included in the cache key and in
+    #   requests that CloudFront sends to the origin.
     #   @return [Types::CachePolicyCookiesConfig]
     #
     # @!attribute [rw] query_strings_config
     #   An object that determines whether any URL query strings in viewer
     #   requests (and if so, which query strings) are included in the cache
-    #   key and automatically included in requests that CloudFront sends to
-    #   the origin.
+    #   key and in requests that CloudFront sends to the origin.
     #   @return [Types::CachePolicyQueryStringsConfig]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ParametersInCacheKeyAndForwardedToOrigin AWS API Documentation
@@ -10231,14 +8802,6 @@ module Aws::CloudFront
     #
     #
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Invalidation.html#invalidation-specifying-objects
-    #
-    # @note When making an API call, you may pass Paths
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of invalidation paths specified for the objects that you
@@ -10332,19 +8895,9 @@ module Aws::CloudFront
     # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html
     # [2]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/field-level-encryption.html
     #
-    # @note When making an API call, you may pass PublicKeyConfig
-    #   data as a hash:
-    #
-    #       {
-    #         caller_reference: "string", # required
-    #         name: "string", # required
-    #         encoded_key: "string", # required
-    #         comment: "string",
-    #       }
-    #
     # @!attribute [rw] caller_reference
     #   A string included in the request to help make sure that the request
-    #   can’t be replayed.
+    #   can't be replayed.
     #   @return [String]
     #
     # @!attribute [rw] name
@@ -10462,14 +9015,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PublishFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string", # required
-    #         if_match: "string", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the function that you are publishing.
     #   @return [String]
@@ -10503,14 +9048,6 @@ module Aws::CloudFront
 
     # Query argument-profile mapping for field-level encryption.
     #
-    # @note When making an API call, you may pass QueryArgProfile
-    #   data as a hash:
-    #
-    #       {
-    #         query_arg: "string", # required
-    #         profile_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] query_arg
     #   Query argument for field-level encryption query argument-profile
     #   mapping.
@@ -10532,22 +9069,6 @@ module Aws::CloudFront
 
     # Configuration for query argument-profile mapping for field-level
     # encryption.
-    #
-    # @note When making an API call, you may pass QueryArgProfileConfig
-    #   data as a hash:
-    #
-    #       {
-    #         forward_when_query_arg_profile_is_unknown: false, # required
-    #         query_arg_profiles: {
-    #           quantity: 1, # required
-    #           items: [
-    #             {
-    #               query_arg: "string", # required
-    #               profile_id: "string", # required
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] forward_when_query_arg_profile_is_unknown
     #   Flag to set if you want a request to be forwarded to the origin even
@@ -10584,19 +9105,6 @@ module Aws::CloudFront
 
     # Query argument-profile mapping for field-level encryption.
     #
-    # @note When making an API call, you may pass QueryArgProfiles
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [
-    #           {
-    #             query_arg: "string", # required
-    #             profile_id: "string", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] quantity
     #   Number of profiles for query argument-profile mapping for
     #   field-level encryption.
@@ -10630,14 +9138,6 @@ module Aws::CloudFront
     # parameters that you want CloudFront to use for caching for a cache
     # behavior.
     #
-    # @note When making an API call, you may pass QueryStringCacheKeys
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
-    #
     # @!attribute [rw] quantity
     #   The number of `whitelisted` query string parameters for a cache
     #   behavior.
@@ -10659,14 +9159,6 @@ module Aws::CloudFront
     end
 
     # Contains a list of query string names.
-    #
-    # @note When making an API call, you may pass QueryStringNames
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of query string names in the `Items` list.
@@ -10761,8 +9253,8 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # The specified real-time log configuration belongs to a different AWS
-    # account.
+    # The specified real-time log configuration belongs to a different
+    # Amazon Web Services account.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -10817,13 +9309,6 @@ module Aws::CloudFront
 
     # A subscription configuration for additional CloudWatch metrics.
     #
-    # @note When making an API call, you may pass RealtimeMetricsSubscriptionConfig
-    #   data as a hash:
-    #
-    #       {
-    #         realtime_metrics_subscription_status: "Enabled", # required, accepts Enabled, Disabled
-    #       }
-    #
     # @!attribute [rw] realtime_metrics_subscription_status
     #   A flag that indicates whether additional CloudWatch metrics are
     #   enabled for a given CloudFront distribution.
@@ -10850,19 +9335,914 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # A response headers policy.
+    #
+    # A response headers policy contains information about a set of HTTP
+    # response headers.
+    #
+    # After you create a response headers policy, you can use its ID to
+    # attach it to one or more cache behaviors in a CloudFront distribution.
+    # When it's attached to a cache behavior, the response headers policy
+    # affects the HTTP headers that CloudFront includes in HTTP responses to
+    # requests that match the cache behavior. CloudFront adds or removes
+    # response headers according to the configuration of the response
+    # headers policy.
+    #
+    # For more information, see [Adding or removing HTTP headers in
+    # CloudFront responses][1] in the *Amazon CloudFront Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/modifying-response-headers.html
+    #
+    # @!attribute [rw] id
+    #   The identifier for the response headers policy.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_modified_time
+    #   The date and time when the response headers policy was last
+    #   modified.
+    #   @return [Time]
+    #
+    # @!attribute [rw] response_headers_policy_config
+    #   A response headers policy configuration.
+    #   @return [Types::ResponseHeadersPolicyConfig]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicy AWS API Documentation
+    #
+    class ResponseHeadersPolicy < Struct.new(
+      :id,
+      :last_modified_time,
+      :response_headers_policy_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of HTTP header names that CloudFront includes as values for the
+    # `Access-Control-Allow-Headers` HTTP response header.
+    #
+    # For more information about the `Access-Control-Allow-Headers` HTTP
+    # response header, see [Access-Control-Allow-Headers][1] in the MDN Web
+    # Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
+    #
+    # @!attribute [rw] quantity
+    #   The number of HTTP header names in the list.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   The list of HTTP header names. You can specify `*` to allow all
+    #   headers.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyAccessControlAllowHeaders AWS API Documentation
+    #
+    class ResponseHeadersPolicyAccessControlAllowHeaders < Struct.new(
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of HTTP methods that CloudFront includes as values for the
+    # `Access-Control-Allow-Methods` HTTP response header.
+    #
+    # For more information about the `Access-Control-Allow-Methods` HTTP
+    # response header, see [Access-Control-Allow-Methods][1] in the MDN Web
+    # Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
+    #
+    # @!attribute [rw] quantity
+    #   The number of HTTP methods in the list.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   The list of HTTP methods. Valid values are:
+    #
+    #   * `GET`
+    #
+    #   * `DELETE`
+    #
+    #   * `HEAD`
+    #
+    #   * `OPTIONS`
+    #
+    #   * `PATCH`
+    #
+    #   * `POST`
+    #
+    #   * `PUT`
+    #
+    #   * `ALL`
+    #
+    #   `ALL` is a special value that includes all of the listed HTTP
+    #   methods.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyAccessControlAllowMethods AWS API Documentation
+    #
+    class ResponseHeadersPolicyAccessControlAllowMethods < Struct.new(
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of origins (domain names) that CloudFront can use as the value
+    # for the `Access-Control-Allow-Origin` HTTP response header.
+    #
+    # For more information about the `Access-Control-Allow-Origin` HTTP
+    # response header, see [Access-Control-Allow-Origin][1] in the MDN Web
+    # Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+    #
+    # @!attribute [rw] quantity
+    #   The number of origins in the list.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   The list of origins (domain names). You can specify `*` to allow all
+    #   origins.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyAccessControlAllowOrigins AWS API Documentation
+    #
+    class ResponseHeadersPolicyAccessControlAllowOrigins < Struct.new(
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of HTTP headers that CloudFront includes as values for the
+    # `Access-Control-Expose-Headers` HTTP response header.
+    #
+    # For more information about the `Access-Control-Expose-Headers` HTTP
+    # response header, see [Access-Control-Expose-Headers][1] in the MDN Web
+    # Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
+    #
+    # @!attribute [rw] quantity
+    #   The number of HTTP headers in the list.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   The list of HTTP headers. You can specify `*` to expose all headers.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyAccessControlExposeHeaders AWS API Documentation
+    #
+    class ResponseHeadersPolicyAccessControlExposeHeaders < Struct.new(
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A response headers policy with this name already exists. You must
+    # provide a unique name. To modify an existing response headers policy,
+    # use `UpdateResponseHeadersPolicy`.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyAlreadyExists AWS API Documentation
+    #
+    class ResponseHeadersPolicyAlreadyExists < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A response headers policy configuration.
+    #
+    # A response headers policy configuration contains metadata about the
+    # response headers policy, and configurations for sets of HTTP response
+    # headers.
+    #
+    # @!attribute [rw] comment
+    #   A comment to describe the response headers policy.
+    #
+    #   The comment cannot be longer than 128 characters.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   A name to identify the response headers policy.
+    #
+    #   The name must be unique for response headers policies in this Amazon
+    #   Web Services account.
+    #   @return [String]
+    #
+    # @!attribute [rw] cors_config
+    #   A configuration for a set of HTTP response headers that are used for
+    #   cross-origin resource sharing (CORS).
+    #   @return [Types::ResponseHeadersPolicyCorsConfig]
+    #
+    # @!attribute [rw] security_headers_config
+    #   A configuration for a set of security-related HTTP response headers.
+    #   @return [Types::ResponseHeadersPolicySecurityHeadersConfig]
+    #
+    # @!attribute [rw] server_timing_headers_config
+    #   A configuration for enabling the `Server-Timing` header in HTTP
+    #   responses sent from CloudFront.
+    #   @return [Types::ResponseHeadersPolicyServerTimingHeadersConfig]
+    #
+    # @!attribute [rw] custom_headers_config
+    #   A configuration for a set of custom HTTP response headers.
+    #   @return [Types::ResponseHeadersPolicyCustomHeadersConfig]
+    #
+    # @!attribute [rw] remove_headers_config
+    #   A configuration for a set of HTTP headers to remove from the HTTP
+    #   response.
+    #   @return [Types::ResponseHeadersPolicyRemoveHeadersConfig]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyConfig AWS API Documentation
+    #
+    class ResponseHeadersPolicyConfig < Struct.new(
+      :comment,
+      :name,
+      :cors_config,
+      :security_headers_config,
+      :server_timing_headers_config,
+      :custom_headers_config,
+      :remove_headers_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The policy directives and their values that CloudFront includes as
+    # values for the `Content-Security-Policy` HTTP response header.
+    #
+    # For more information about the `Content-Security-Policy` HTTP response
+    # header, see [Content-Security-Policy][1] in the MDN Web Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
+    #
+    # @!attribute [rw] override
+    #   A Boolean that determines whether CloudFront overrides the
+    #   `Content-Security-Policy` HTTP response header received from the
+    #   origin with the one specified in this response headers policy.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] content_security_policy
+    #   The policy directives and their values that CloudFront includes as
+    #   values for the `Content-Security-Policy` HTTP response header.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyContentSecurityPolicy AWS API Documentation
+    #
+    class ResponseHeadersPolicyContentSecurityPolicy < Struct.new(
+      :override,
+      :content_security_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Determines whether CloudFront includes the `X-Content-Type-Options`
+    # HTTP response header with its value set to `nosniff`.
+    #
+    # For more information about the `X-Content-Type-Options` HTTP response
+    # header, see [X-Content-Type-Options][1] in the MDN Web Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+    #
+    # @!attribute [rw] override
+    #   A Boolean that determines whether CloudFront overrides the
+    #   `X-Content-Type-Options` HTTP response header received from the
+    #   origin with the one specified in this response headers policy.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyContentTypeOptions AWS API Documentation
+    #
+    class ResponseHeadersPolicyContentTypeOptions < Struct.new(
+      :override)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A configuration for a set of HTTP response headers that are used for
+    # cross-origin resource sharing (CORS). CloudFront adds these headers to
+    # HTTP responses that it sends for CORS requests that match a cache
+    # behavior associated with this response headers policy.
+    #
+    # For more information about CORS, see [Cross-Origin Resource Sharing
+    # (CORS)][1] in the MDN Web Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    #
+    # @!attribute [rw] access_control_allow_origins
+    #   A list of origins (domain names) that CloudFront can use as the
+    #   value for the `Access-Control-Allow-Origin` HTTP response header.
+    #
+    #   For more information about the `Access-Control-Allow-Origin` HTTP
+    #   response header, see [Access-Control-Allow-Origin][1] in the MDN Web
+    #   Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+    #   @return [Types::ResponseHeadersPolicyAccessControlAllowOrigins]
+    #
+    # @!attribute [rw] access_control_allow_headers
+    #   A list of HTTP header names that CloudFront includes as values for
+    #   the `Access-Control-Allow-Headers` HTTP response header.
+    #
+    #   For more information about the `Access-Control-Allow-Headers` HTTP
+    #   response header, see [Access-Control-Allow-Headers][1] in the MDN
+    #   Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
+    #   @return [Types::ResponseHeadersPolicyAccessControlAllowHeaders]
+    #
+    # @!attribute [rw] access_control_allow_methods
+    #   A list of HTTP methods that CloudFront includes as values for the
+    #   `Access-Control-Allow-Methods` HTTP response header.
+    #
+    #   For more information about the `Access-Control-Allow-Methods` HTTP
+    #   response header, see [Access-Control-Allow-Methods][1] in the MDN
+    #   Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
+    #   @return [Types::ResponseHeadersPolicyAccessControlAllowMethods]
+    #
+    # @!attribute [rw] access_control_allow_credentials
+    #   A Boolean that CloudFront uses as the value for the
+    #   `Access-Control-Allow-Credentials` HTTP response header.
+    #
+    #   For more information about the `Access-Control-Allow-Credentials`
+    #   HTTP response header, see [Access-Control-Allow-Credentials][1] in
+    #   the MDN Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] access_control_expose_headers
+    #   A list of HTTP headers that CloudFront includes as values for the
+    #   `Access-Control-Expose-Headers` HTTP response header.
+    #
+    #   For more information about the `Access-Control-Expose-Headers` HTTP
+    #   response header, see [Access-Control-Expose-Headers][1] in the MDN
+    #   Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
+    #   @return [Types::ResponseHeadersPolicyAccessControlExposeHeaders]
+    #
+    # @!attribute [rw] access_control_max_age_sec
+    #   A number that CloudFront uses as the value for the
+    #   `Access-Control-Max-Age` HTTP response header.
+    #
+    #   For more information about the `Access-Control-Max-Age` HTTP
+    #   response header, see [Access-Control-Max-Age][1] in the MDN Web
+    #   Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age
+    #   @return [Integer]
+    #
+    # @!attribute [rw] origin_override
+    #   A Boolean that determines whether CloudFront overrides HTTP response
+    #   headers received from the origin with the ones specified in this
+    #   response headers policy.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyCorsConfig AWS API Documentation
+    #
+    class ResponseHeadersPolicyCorsConfig < Struct.new(
+      :access_control_allow_origins,
+      :access_control_allow_headers,
+      :access_control_allow_methods,
+      :access_control_allow_credentials,
+      :access_control_expose_headers,
+      :access_control_max_age_sec,
+      :origin_override)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An HTTP response header name and its value. CloudFront includes this
+    # header in HTTP responses that it sends for requests that match a cache
+    # behavior that's associated with this response headers policy.
+    #
+    # @!attribute [rw] header
+    #   The HTTP response header name.
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   The value for the HTTP response header.
+    #   @return [String]
+    #
+    # @!attribute [rw] override
+    #   A Boolean that determines whether CloudFront overrides a response
+    #   header with the same name received from the origin with the header
+    #   specified here.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyCustomHeader AWS API Documentation
+    #
+    class ResponseHeadersPolicyCustomHeader < Struct.new(
+      :header,
+      :value,
+      :override)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of HTTP response header names and their values. CloudFront
+    # includes these headers in HTTP responses that it sends for requests
+    # that match a cache behavior that's associated with this response
+    # headers policy.
+    #
+    # @!attribute [rw] quantity
+    #   The number of HTTP response headers in the list.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   The list of HTTP response headers and their values.
+    #   @return [Array<Types::ResponseHeadersPolicyCustomHeader>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyCustomHeadersConfig AWS API Documentation
+    #
+    class ResponseHeadersPolicyCustomHeadersConfig < Struct.new(
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Determines whether CloudFront includes the `X-Frame-Options` HTTP
+    # response header and the header's value.
+    #
+    # For more information about the `X-Frame-Options` HTTP response header,
+    # see [X-Frame-Options][1] in the MDN Web Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+    #
+    # @!attribute [rw] override
+    #   A Boolean that determines whether CloudFront overrides the
+    #   `X-Frame-Options` HTTP response header received from the origin with
+    #   the one specified in this response headers policy.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] frame_option
+    #   The value of the `X-Frame-Options` HTTP response header. Valid
+    #   values are `DENY` and `SAMEORIGIN`.
+    #
+    #   For more information about these values, see [X-Frame-Options][1] in
+    #   the MDN Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyFrameOptions AWS API Documentation
+    #
+    class ResponseHeadersPolicyFrameOptions < Struct.new(
+      :override,
+      :frame_option)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Cannot delete the response headers policy because it is attached to
+    # one or more cache behaviors in a CloudFront distribution.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyInUse AWS API Documentation
+    #
+    class ResponseHeadersPolicyInUse < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of response headers policies.
+    #
+    # @!attribute [rw] next_marker
+    #   If there are more items in the list than are in this response, this
+    #   element is present. It contains the value that you should use in the
+    #   `Marker` field of a subsequent request to continue listing response
+    #   headers policies where you left off.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   The maximum number of response headers policies requested.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] quantity
+    #   The number of response headers policies returned.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   The response headers policies in the list.
+    #   @return [Array<Types::ResponseHeadersPolicySummary>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyList AWS API Documentation
+    #
+    class ResponseHeadersPolicyList < Struct.new(
+      :next_marker,
+      :max_items,
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Determines whether CloudFront includes the `Referrer-Policy` HTTP
+    # response header and the header's value.
+    #
+    # For more information about the `Referrer-Policy` HTTP response header,
+    # see [Referrer-Policy][1] in the MDN Web Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+    #
+    # @!attribute [rw] override
+    #   A Boolean that determines whether CloudFront overrides the
+    #   `Referrer-Policy` HTTP response header received from the origin with
+    #   the one specified in this response headers policy.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] referrer_policy
+    #   The value of the `Referrer-Policy` HTTP response header. Valid
+    #   values are:
+    #
+    #   * `no-referrer`
+    #
+    #   * `no-referrer-when-downgrade`
+    #
+    #   * `origin`
+    #
+    #   * `origin-when-cross-origin`
+    #
+    #   * `same-origin`
+    #
+    #   * `strict-origin`
+    #
+    #   * `strict-origin-when-cross-origin`
+    #
+    #   * `unsafe-url`
+    #
+    #   For more information about these values, see [Referrer-Policy][1] in
+    #   the MDN Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyReferrerPolicy AWS API Documentation
+    #
+    class ResponseHeadersPolicyReferrerPolicy < Struct.new(
+      :override,
+      :referrer_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The name of an HTTP header that CloudFront removes from HTTP responses
+    # to requests that match the cache behavior that this response headers
+    # policy is attached to.
+    #
+    # @!attribute [rw] header
+    #   The HTTP header name.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyRemoveHeader AWS API Documentation
+    #
+    class ResponseHeadersPolicyRemoveHeader < Struct.new(
+      :header)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of HTTP header names that CloudFront removes from HTTP
+    # responses to requests that match the cache behavior that this response
+    # headers policy is attached to.
+    #
+    # @!attribute [rw] quantity
+    #   The number of HTTP header names in the list.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   The list of HTTP header names.
+    #   @return [Array<Types::ResponseHeadersPolicyRemoveHeader>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyRemoveHeadersConfig AWS API Documentation
+    #
+    class ResponseHeadersPolicyRemoveHeadersConfig < Struct.new(
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A configuration for a set of security-related HTTP response headers.
+    # CloudFront adds these headers to HTTP responses that it sends for
+    # requests that match a cache behavior associated with this response
+    # headers policy.
+    #
+    # @!attribute [rw] xss_protection
+    #   Determines whether CloudFront includes the `X-XSS-Protection` HTTP
+    #   response header and the header's value.
+    #
+    #   For more information about the `X-XSS-Protection` HTTP response
+    #   header, see [X-XSS-Protection][1] in the MDN Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+    #   @return [Types::ResponseHeadersPolicyXSSProtection]
+    #
+    # @!attribute [rw] frame_options
+    #   Determines whether CloudFront includes the `X-Frame-Options` HTTP
+    #   response header and the header's value.
+    #
+    #   For more information about the `X-Frame-Options` HTTP response
+    #   header, see [X-Frame-Options][1] in the MDN Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+    #   @return [Types::ResponseHeadersPolicyFrameOptions]
+    #
+    # @!attribute [rw] referrer_policy
+    #   Determines whether CloudFront includes the `Referrer-Policy` HTTP
+    #   response header and the header's value.
+    #
+    #   For more information about the `Referrer-Policy` HTTP response
+    #   header, see [Referrer-Policy][1] in the MDN Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+    #   @return [Types::ResponseHeadersPolicyReferrerPolicy]
+    #
+    # @!attribute [rw] content_security_policy
+    #   The policy directives and their values that CloudFront includes as
+    #   values for the `Content-Security-Policy` HTTP response header.
+    #
+    #   For more information about the `Content-Security-Policy` HTTP
+    #   response header, see [Content-Security-Policy][1] in the MDN Web
+    #   Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
+    #   @return [Types::ResponseHeadersPolicyContentSecurityPolicy]
+    #
+    # @!attribute [rw] content_type_options
+    #   Determines whether CloudFront includes the `X-Content-Type-Options`
+    #   HTTP response header with its value set to `nosniff`.
+    #
+    #   For more information about the `X-Content-Type-Options` HTTP
+    #   response header, see [X-Content-Type-Options][1] in the MDN Web
+    #   Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+    #   @return [Types::ResponseHeadersPolicyContentTypeOptions]
+    #
+    # @!attribute [rw] strict_transport_security
+    #   Determines whether CloudFront includes the
+    #   `Strict-Transport-Security` HTTP response header and the header's
+    #   value.
+    #
+    #   For more information about the `Strict-Transport-Security` HTTP
+    #   response header, see [Strict-Transport-Security][1] in the MDN Web
+    #   Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+    #   @return [Types::ResponseHeadersPolicyStrictTransportSecurity]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicySecurityHeadersConfig AWS API Documentation
+    #
+    class ResponseHeadersPolicySecurityHeadersConfig < Struct.new(
+      :xss_protection,
+      :frame_options,
+      :referrer_policy,
+      :content_security_policy,
+      :content_type_options,
+      :strict_transport_security)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A configuration for enabling the `Server-Timing` header in HTTP
+    # responses sent from CloudFront. CloudFront adds this header to HTTP
+    # responses that it sends in response to requests that match a cache
+    # behavior that's associated with this response headers policy.
+    #
+    # You can use the `Server-Timing` header to view metrics that can help
+    # you gain insights about the behavior and performance of CloudFront.
+    # For example, you can see which cache layer served a cache hit, or the
+    # first byte latency from the origin when there was a cache miss. You
+    # can use the metrics in the `Server-Timing` header to troubleshoot
+    # issues or test the efficiency of your CloudFront configuration. For
+    # more information, see [Server-Timing header][1] in the *Amazon
+    # CloudFront Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/understanding-response-headers-policies.html#server-timing-header
+    #
+    # @!attribute [rw] enabled
+    #   A Boolean that determines whether CloudFront adds the
+    #   `Server-Timing` header to HTTP responses that it sends in response
+    #   to requests that match a cache behavior that's associated with this
+    #   response headers policy.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] sampling_rate
+    #   A number 0–100 (inclusive) that specifies the percentage of
+    #   responses that you want CloudFront to add the `Server-Timing` header
+    #   to. When you set the sampling rate to 100, CloudFront adds the
+    #   `Server-Timing` header to the HTTP response for every request that
+    #   matches the cache behavior that this response headers policy is
+    #   attached to. When you set it to 50, CloudFront adds the header to
+    #   50% of the responses for requests that match the cache behavior. You
+    #   can set the sampling rate to any number 0–100 with up to four
+    #   decimal places.
+    #   @return [Float]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyServerTimingHeadersConfig AWS API Documentation
+    #
+    class ResponseHeadersPolicyServerTimingHeadersConfig < Struct.new(
+      :enabled,
+      :sampling_rate)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Determines whether CloudFront includes the `Strict-Transport-Security`
+    # HTTP response header and the header's value.
+    #
+    # For more information about the `Strict-Transport-Security` HTTP
+    # response header, see [Strict-Transport-Security][1] in the MDN Web
+    # Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+    #
+    # @!attribute [rw] override
+    #   A Boolean that determines whether CloudFront overrides the
+    #   `Strict-Transport-Security` HTTP response header received from the
+    #   origin with the one specified in this response headers policy.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] include_subdomains
+    #   A Boolean that determines whether CloudFront includes the
+    #   `includeSubDomains` directive in the `Strict-Transport-Security`
+    #   HTTP response header.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] preload
+    #   A Boolean that determines whether CloudFront includes the `preload`
+    #   directive in the `Strict-Transport-Security` HTTP response header.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] access_control_max_age_sec
+    #   A number that CloudFront uses as the value for the `max-age`
+    #   directive in the `Strict-Transport-Security` HTTP response header.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyStrictTransportSecurity AWS API Documentation
+    #
+    class ResponseHeadersPolicyStrictTransportSecurity < Struct.new(
+      :override,
+      :include_subdomains,
+      :preload,
+      :access_control_max_age_sec)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains a response headers policy.
+    #
+    # @!attribute [rw] type
+    #   The type of response headers policy, either `managed` (created by
+    #   Amazon Web Services) or `custom` (created in this Amazon Web
+    #   Services account).
+    #   @return [String]
+    #
+    # @!attribute [rw] response_headers_policy
+    #   The response headers policy.
+    #   @return [Types::ResponseHeadersPolicy]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicySummary AWS API Documentation
+    #
+    class ResponseHeadersPolicySummary < Struct.new(
+      :type,
+      :response_headers_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Determines whether CloudFront includes the `X-XSS-Protection` HTTP
+    # response header and the header's value.
+    #
+    # For more information about the `X-XSS-Protection` HTTP response
+    # header, see [X-XSS-Protection][1] in the MDN Web Docs.
+    #
+    #
+    #
+    # [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+    #
+    # @!attribute [rw] override
+    #   A Boolean that determines whether CloudFront overrides the
+    #   `X-XSS-Protection` HTTP response header received from the origin
+    #   with the one specified in this response headers policy.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] protection
+    #   A Boolean that determines the value of the `X-XSS-Protection` HTTP
+    #   response header. When this setting is `true`, the value of the
+    #   `X-XSS-Protection` header is `1`. When this setting is `false`, the
+    #   value of the `X-XSS-Protection` header is `0`.
+    #
+    #   For more information about these settings, see [X-XSS-Protection][1]
+    #   in the MDN Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] mode_block
+    #   A Boolean that determines whether CloudFront includes the
+    #   `mode=block` directive in the `X-XSS-Protection` header.
+    #
+    #   For more information about this directive, see [X-XSS-Protection][1]
+    #   in the MDN Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] report_uri
+    #   A reporting URI, which CloudFront uses as the value of the `report`
+    #   directive in the `X-XSS-Protection` header.
+    #
+    #   You cannot specify a `ReportUri` when `ModeBlock` is `true`.
+    #
+    #   For more information about using a reporting URL, see
+    #   [X-XSS-Protection][1] in the MDN Web Docs.
+    #
+    #
+    #
+    #   [1]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ResponseHeadersPolicyXSSProtection AWS API Documentation
+    #
+    class ResponseHeadersPolicyXSSProtection < Struct.new(
+      :override,
+      :protection,
+      :mode_block,
+      :report_uri)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A complex type that identifies ways in which you want to restrict
     # distribution of your content.
-    #
-    # @note When making an API call, you may pass Restrictions
-    #   data as a hash:
-    #
-    #       {
-    #         geo_restriction: { # required
-    #           restriction_type: "blacklist", # required, accepts blacklist, whitelist, none
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #       }
     #
     # @!attribute [rw] geo_restriction
     #   A complex type that controls the countries in which your content is
@@ -10881,14 +10261,6 @@ module Aws::CloudFront
     # A complex type that contains information about the Amazon S3 bucket
     # from which you want CloudFront to get your media files for
     # distribution.
-    #
-    # @note When making an API call, you may pass S3Origin
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "string", # required
-    #         origin_access_identity: "string", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The DNS name of the Amazon S3 origin.
@@ -10933,13 +10305,6 @@ module Aws::CloudFront
     # If the origin is a custom origin or an S3 bucket that is configured as
     # a website endpoint, use the `CustomOriginConfig` element instead.
     #
-    # @note When making an API call, you may pass S3OriginConfig
-    #   data as a hash:
-    #
-    #       {
-    #         origin_access_identity: "string", # required
-    #       }
-    #
     # @!attribute [rw] origin_access_identity
     #   The CloudFront origin access identity to associate with the origin.
     #   Use an origin access identity to configure the origin so that
@@ -10980,16 +10345,47 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # A list of AWS accounts and the active CloudFront key pairs in each
-    # account that CloudFront can use to verify the signatures of signed
-    # URLs and signed cookies.
+    # Session stickiness provides the ability to define multiple requests
+    # from a single viewer as a single session. This prevents the
+    # potentially inconsistent experience of sending some of a given user's
+    # requests to your staging distribution, while others are sent to your
+    # primary distribution. Define the session duration using TTL values.
+    #
+    # @!attribute [rw] idle_ttl
+    #   The amount of time after which you want sessions to cease if no
+    #   requests are received. Allowed values are 300–3600 seconds (5–60
+    #   minutes).
+    #
+    #   The value must be less than or equal to `MaximumTTL`.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] maximum_ttl
+    #   The maximum amount of time to consider requests from the viewer as
+    #   being part of the same session. Allowed values are 300–3600 seconds
+    #   (5–60 minutes).
+    #
+    #   The value must be less than or equal to `IdleTTL`.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/SessionStickinessConfig AWS API Documentation
+    #
+    class SessionStickinessConfig < Struct.new(
+      :idle_ttl,
+      :maximum_ttl)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of Amazon Web Services accounts and the active CloudFront key
+    # pairs in each account that CloudFront can use to verify the signatures
+    # of signed URLs and signed cookies.
     #
     # @!attribute [rw] aws_account_number
-    #   An AWS account number that contains active CloudFront key pairs that
-    #   CloudFront can use to verify the signatures of signed URLs and
-    #   signed cookies. If the AWS account that owns the key pairs is the
-    #   same account that owns the CloudFront distribution, the value of
-    #   this field is `self`.
+    #   An Amazon Web Services account number that contains active
+    #   CloudFront key pairs that CloudFront can use to verify the
+    #   signatures of signed URLs and signed cookies. If the Amazon Web
+    #   Services account that owns the key pairs is the same account that
+    #   owns the CloudFront distribution, the value of this field is `self`.
     #   @return [String]
     #
     # @!attribute [rw] key_pair_ids
@@ -11005,17 +10401,42 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # The CloudFront domain name of the staging distribution.
+    #
+    # @!attribute [rw] quantity
+    #   The number of CloudFront domain names in your staging distribution.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] items
+    #   The CloudFront domain name of the staging distribution.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/StagingDistributionDnsNames AWS API Documentation
+    #
+    class StagingDistributionDnsNames < Struct.new(
+      :quantity,
+      :items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A continuous deployment policy for this staging distribution already
+    # exists.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/StagingDistributionInUse AWS API Documentation
+    #
+    class StagingDistributionInUse < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A complex data type for the status codes that you specify that, when
     # returned by a primary origin, trigger CloudFront to failover to a
     # second origin.
-    #
-    # @note When making an API call, you may pass StatusCodes
-    #   data as a hash:
-    #
-    #       {
-    #         quantity: 1, # required
-    #         items: [1], # required
-    #       }
     #
     # @!attribute [rw] quantity
     #   The number of status codes.
@@ -11046,7 +10467,7 @@ module Aws::CloudFront
     # @!attribute [rw] arn
     #   The ARN (Amazon Resource Name) for the distribution. For example:
     #   `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`,
-    #   where `123456789012` is your AWS account ID.
+    #   where `123456789012` is your Amazon Web Services account ID.
     #   @return [String]
     #
     # @!attribute [rw] status
@@ -11065,17 +10486,18 @@ module Aws::CloudFront
     #   @return [String]
     #
     # @!attribute [rw] active_trusted_signers
-    #   A complex type that lists the AWS accounts, if any, that you
-    #   included in the `TrustedSigners` complex type for this distribution.
-    #   These are the accounts that you want to allow to create signed URLs
-    #   for private content.
+    #   A complex type that lists the Amazon Web Services accounts, if any,
+    #   that you included in the `TrustedSigners` complex type for this
+    #   distribution. These are the accounts that you want to allow to
+    #   create signed URLs for private content.
     #
-    #   The `Signer` complex type lists the AWS account number of the
-    #   trusted signer or `self` if the signer is the AWS account that
-    #   created the distribution. The `Signer` element also includes the IDs
-    #   of any active CloudFront key pairs that are associated with the
-    #   trusted signer's AWS account. If no `KeyPairId` element appears for
-    #   a `Signer`, that signer can't create signed URLs.
+    #   The `Signer` complex type lists the Amazon Web Services account
+    #   number of the trusted signer or `self` if the signer is the Amazon
+    #   Web Services account that created the distribution. The `Signer`
+    #   element also includes the IDs of any active CloudFront key pairs
+    #   that are associated with the trusted signer's Amazon Web Services
+    #   account. If no `KeyPairId` element appears for a `Signer`, that
+    #   signer can't create signed URLs.
     #
     #   For more information, see [Serving Private Content through
     #   CloudFront][1] in the *Amazon CloudFront Developer Guide*.
@@ -11119,34 +10541,6 @@ module Aws::CloudFront
 
     # The RTMP distribution's configuration information.
     #
-    # @note When making an API call, you may pass StreamingDistributionConfig
-    #   data as a hash:
-    #
-    #       {
-    #         caller_reference: "string", # required
-    #         s3_origin: { # required
-    #           domain_name: "string", # required
-    #           origin_access_identity: "string", # required
-    #         },
-    #         aliases: {
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #         comment: "string", # required
-    #         logging: {
-    #           enabled: false, # required
-    #           bucket: "string", # required
-    #           prefix: "string", # required
-    #         },
-    #         trusted_signers: { # required
-    #           enabled: false, # required
-    #           quantity: 1, # required
-    #           items: ["string"],
-    #         },
-    #         price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #         enabled: false, # required
-    #       }
-    #
     # @!attribute [rw] caller_reference
     #   A unique value (for example, a date-time stamp) that ensures that
     #   the request can't be replayed.
@@ -11181,12 +10575,12 @@ module Aws::CloudFront
     #   @return [Types::StreamingLoggingConfig]
     #
     # @!attribute [rw] trusted_signers
-    #   A complex type that specifies any AWS accounts that you want to
-    #   permit to create signed URLs for private content. If you want the
-    #   distribution to use signed URLs, include this element; if you want
-    #   the distribution to use public URLs, remove this element. For more
-    #   information, see [Serving Private Content through CloudFront][1] in
-    #   the *Amazon CloudFront Developer Guide*.
+    #   A complex type that specifies any Amazon Web Services accounts that
+    #   you want to permit to create signed URLs for private content. If you
+    #   want the distribution to use signed URLs, include this element; if
+    #   you want the distribution to use public URLs, remove this element.
+    #   For more information, see [Serving Private Content through
+    #   CloudFront][1] in the *Amazon CloudFront Developer Guide*.
     #
     #
     #
@@ -11220,44 +10614,6 @@ module Aws::CloudFront
 
     # A streaming distribution Configuration and a list of tags to be
     # associated with the streaming distribution.
-    #
-    # @note When making an API call, you may pass StreamingDistributionConfigWithTags
-    #   data as a hash:
-    #
-    #       {
-    #         streaming_distribution_config: { # required
-    #           caller_reference: "string", # required
-    #           s3_origin: { # required
-    #             domain_name: "string", # required
-    #             origin_access_identity: "string", # required
-    #           },
-    #           aliases: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           comment: "string", # required
-    #           logging: {
-    #             enabled: false, # required
-    #             bucket: "string", # required
-    #             prefix: "string", # required
-    #           },
-    #           trusted_signers: { # required
-    #             enabled: false, # required
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #           enabled: false, # required
-    #         },
-    #         tags: { # required
-    #           items: [
-    #             {
-    #               key: "TagKey", # required
-    #               value: "TagValue",
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] streaming_distribution_config
     #   A streaming distribution Configuration.
@@ -11301,13 +10657,13 @@ module Aws::CloudFront
     #
     # @!attribute [rw] quantity
     #   The number of streaming distributions that were created by the
-    #   current AWS account.
+    #   current Amazon Web Services account.
     #   @return [Integer]
     #
     # @!attribute [rw] items
     #   A complex type that contains one `StreamingDistributionSummary`
-    #   element for each distribution that was created by the current AWS
-    #   account.
+    #   element for each distribution that was created by the current Amazon
+    #   Web Services account.
     #   @return [Array<Types::StreamingDistributionSummary>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/StreamingDistributionList AWS API Documentation
@@ -11347,7 +10703,7 @@ module Aws::CloudFront
     #   The ARN (Amazon Resource Name) for the streaming distribution. For
     #   example:
     #   `arn:aws:cloudfront::123456789012:streaming-distribution/EDFDVBD632BHDS5`,
-    #   where `123456789012` is your AWS account ID.
+    #   where `123456789012` is your Amazon Web Services account ID.
     #   @return [String]
     #
     # @!attribute [rw] status
@@ -11377,18 +10733,18 @@ module Aws::CloudFront
     #   @return [Types::Aliases]
     #
     # @!attribute [rw] trusted_signers
-    #   A complex type that specifies the AWS accounts, if any, that you
-    #   want to allow to create signed URLs for private content. If you want
-    #   to require signed URLs in requests for objects in the target origin
-    #   that match the `PathPattern` for this cache behavior, specify `true`
-    #   for `Enabled`, and specify the applicable values for `Quantity` and
-    #   `Items`.If you don't want to require signed URLs in requests for
-    #   objects that match `PathPattern`, specify `false` for `Enabled` and
-    #   `0` for `Quantity`. Omit `Items`. To add, change, or remove one or
-    #   more trusted signers, change `Enabled` to `true` (if it's currently
-    #   `false`), change `Quantity` as applicable, and specify all of the
-    #   trusted signers that you want to include in the updated
-    #   distribution.
+    #   A complex type that specifies the Amazon Web Services accounts, if
+    #   any, that you want to allow to create signed URLs for private
+    #   content. If you want to require signed URLs in requests for objects
+    #   in the target origin that match the `PathPattern` for this cache
+    #   behavior, specify `true` for `Enabled`, and specify the applicable
+    #   values for `Quantity` and `Items`.If you don't want to require
+    #   signed URLs in requests for objects that match `PathPattern`,
+    #   specify `false` for `Enabled` and `0` for `Quantity`. Omit `Items`.
+    #   To add, change, or remove one or more trusted signers, change
+    #   `Enabled` to `true` (if it's currently `false`), change `Quantity`
+    #   as applicable, and specify all of the trusted signers that you want
+    #   to include in the updated distribution.
     #
     #   For more information, see [Serving Private Content through
     #   CloudFront][1] in the *Amazon CloudFront Developer Guide*.
@@ -11433,15 +10789,6 @@ module Aws::CloudFront
     # A complex type that controls whether access logs are written for this
     # streaming distribution.
     #
-    # @note When making an API call, you may pass StreamingLoggingConfig
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #         bucket: "string", # required
-    #         prefix: "string", # required
-    #       }
-    #
     # @!attribute [rw] enabled
     #   Specifies whether you want CloudFront to save access logs to an
     #   Amazon S3 bucket. If you don't want to enable logging when you
@@ -11477,14 +10824,6 @@ module Aws::CloudFront
 
     # A complex type that contains `Tag` key and `Tag` value.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue",
-    #       }
-    #
     # @!attribute [rw] key
     #   A string that contains `Tag` key.
     #
@@ -11512,13 +10851,6 @@ module Aws::CloudFront
 
     # A complex type that contains zero or more `Tag` elements.
     #
-    # @note When making an API call, you may pass TagKeys
-    #   data as a hash:
-    #
-    #       {
-    #         items: ["TagKey"],
-    #       }
-    #
     # @!attribute [rw] items
     #   A complex type that contains `Tag` key elements.
     #   @return [Array<String>]
@@ -11532,21 +10864,6 @@ module Aws::CloudFront
     end
 
     # The request to add tags to a CloudFront resource.
-    #
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource: "ResourceARN", # required
-    #         tags: { # required
-    #           items: [
-    #             {
-    #               key: "TagKey", # required
-    #               value: "TagValue",
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] resource
     #   An ARN of a CloudFront resource.
@@ -11566,18 +10883,6 @@ module Aws::CloudFront
     end
 
     # A complex type that contains zero or more `Tag` elements.
-    #
-    # @note When making an API call, you may pass Tags
-    #   data as a hash:
-    #
-    #       {
-    #         items: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] items
     #   A complex type that contains `Tag` elements.
@@ -11604,16 +10909,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TestFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string", # required
-    #         if_match: "string", # required
-    #         stage: "DEVELOPMENT", # accepts DEVELOPMENT, LIVE
-    #         event_object: "data", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the function that you are testing.
     #   @return [String]
@@ -11705,6 +11000,27 @@ module Aws::CloudFront
       :function_execution_logs,
       :function_error_message,
       :function_output)
+      SENSITIVE = [:function_execution_logs, :function_error_message, :function_output]
+      include Aws::Structure
+    end
+
+    # The length of the `Content-Security-Policy` header value in the
+    # response headers policy exceeds the maximum.
+    #
+    # For more information, see [Quotas][1] (formerly known as limits) in
+    # the *Amazon CloudFront Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooLongCSPInResponseHeadersPolicy AWS API Documentation
+    #
+    class TooLongCSPInResponseHeadersPolicy < Struct.new(
+      :message)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -11722,9 +11038,9 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # You have reached the maximum number of cache policies for this AWS
-    # account. For more information, see [Quotas][1] (formerly known as
-    # limits) in the *Amazon CloudFront Developer Guide*.
+    # You have reached the maximum number of cache policies for this Amazon
+    # Web Services account. For more information, see [Quotas][1] (formerly
+    # known as limits) in the *Amazon CloudFront Developer Guide*.
     #
     #
     #
@@ -11763,6 +11079,20 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyCloudFrontOriginAccessIdentities AWS API Documentation
     #
     class TooManyCloudFrontOriginAccessIdentities < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # You have reached the maximum number of continuous deployment policies
+    # for this Amazon Web Services account.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyContinuousDeploymentPolicies AWS API Documentation
+    #
+    class TooManyContinuousDeploymentPolicies < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -11815,6 +11145,27 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyCookiesInOriginRequestPolicy AWS API Documentation
     #
     class TooManyCookiesInOriginRequestPolicy < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The number of custom headers in the response headers policy exceeds
+    # the maximum.
+    #
+    # For more information, see [Quotas][1] (formerly known as limits) in
+    # the *Amazon CloudFront Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyCustomHeadersInResponseHeadersPolicy AWS API Documentation
+    #
+    class TooManyCustomHeadersInResponseHeadersPolicy < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -11900,6 +11251,27 @@ module Aws::CloudFront
     end
 
     # The maximum number of distributions have been associated with the
+    # specified origin access control.
+    #
+    # For more information, see [Quotas][1] (formerly known as limits) in
+    # the *Amazon CloudFront Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyDistributionsAssociatedToOriginAccessControl AWS API Documentation
+    #
+    class TooManyDistributionsAssociatedToOriginAccessControl < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The maximum number of distributions have been associated with the
     # specified origin request policy. For more information, see [Quotas][1]
     # (formerly known as limits) in the *Amazon CloudFront Developer Guide*.
     #
@@ -11913,6 +11285,27 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyDistributionsAssociatedToOriginRequestPolicy AWS API Documentation
     #
     class TooManyDistributionsAssociatedToOriginRequestPolicy < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The maximum number of distributions have been associated with the
+    # specified response headers policy.
+    #
+    # For more information, see [Quotas][1] (formerly known as limits) in
+    # the *Amazon CloudFront Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyDistributionsAssociatedToResponseHeadersPolicy AWS API Documentation
+    #
+    class TooManyDistributionsAssociatedToResponseHeadersPolicy < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -11939,7 +11332,7 @@ module Aws::CloudFront
     end
 
     # Processing your request would cause the maximum number of
-    # distributions with Lambda function associations per owner to be
+    # distributions with Lambda@Edge function associations per owner to be
     # exceeded.
     #
     # @!attribute [rw] message
@@ -11954,7 +11347,7 @@ module Aws::CloudFront
     end
 
     # The maximum number of distributions have been associated with the
-    # specified Lambda function.
+    # specified Lambda@Edge function.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -12072,8 +11465,8 @@ module Aws::CloudFront
     end
 
     # You have reached the maximum number of CloudFront functions for this
-    # AWS account. For more information, see [Quotas][1] (formerly known as
-    # limits) in the *Amazon CloudFront Developer Guide*.
+    # Amazon Web Services account. For more information, see [Quotas][1]
+    # (formerly known as limits) in the *Amazon CloudFront Developer Guide*.
     #
     #
     #
@@ -12155,9 +11548,9 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # You have reached the maximum number of key groups for this AWS
-    # account. For more information, see [Quotas][1] (formerly known as
-    # limits) in the *Amazon CloudFront Developer Guide*.
+    # You have reached the maximum number of key groups for this Amazon Web
+    # Services account. For more information, see [Quotas][1] (formerly
+    # known as limits) in the *Amazon CloudFront Developer Guide*.
     #
     #
     #
@@ -12193,7 +11586,7 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # Your request contains more Lambda function associations than are
+    # Your request contains more Lambda@Edge function associations than are
     # allowed per distribution.
     #
     # @!attribute [rw] message
@@ -12202,6 +11595,27 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyLambdaFunctionAssociations AWS API Documentation
     #
     class TooManyLambdaFunctionAssociations < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The number of origin access controls in your Amazon Web Services
+    # account exceeds the maximum allowed.
+    #
+    # For more information, see [Quotas][1] (formerly known as limits) in
+    # the *Amazon CloudFront Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyOriginAccessControls AWS API Documentation
+    #
+    class TooManyOriginAccessControls < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -12235,8 +11649,9 @@ module Aws::CloudFront
     end
 
     # You have reached the maximum number of origin request policies for
-    # this AWS account. For more information, see [Quotas][1] (formerly
-    # known as limits) in the *Amazon CloudFront Developer Guide*.
+    # this Amazon Web Services account. For more information, see
+    # [Quotas][1] (formerly known as limits) in the *Amazon CloudFront
+    # Developer Guide*.
     #
     #
     #
@@ -12351,8 +11766,9 @@ module Aws::CloudFront
     end
 
     # You have reached the maximum number of real-time log configurations
-    # for this AWS account. For more information, see [Quotas][1] (formerly
-    # known as limits) in the *Amazon CloudFront Developer Guide*.
+    # for this Amazon Web Services account. For more information, see
+    # [Quotas][1] (formerly known as limits) in the *Amazon CloudFront
+    # Developer Guide*.
     #
     #
     #
@@ -12364,6 +11780,48 @@ module Aws::CloudFront
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyRealtimeLogConfigs AWS API Documentation
     #
     class TooManyRealtimeLogConfigs < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The number of headers in `RemoveHeadersConfig` in the response headers
+    # policy exceeds the maximum.
+    #
+    # For more information, see [Quotas][1] (formerly known as limits) in
+    # the *Amazon CloudFront Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyRemoveHeadersInResponseHeadersPolicy AWS API Documentation
+    #
+    class TooManyRemoveHeadersInResponseHeadersPolicy < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # You have reached the maximum number of response headers policies for
+    # this Amazon Web Services account.
+    #
+    # For more information, see [Quotas][1] (formerly known as limits) in
+    # the *Amazon CloudFront Developer Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TooManyResponseHeadersPolicies AWS API Documentation
+    #
+    class TooManyResponseHeadersPolicies < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -12410,6 +11868,31 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # The traffic configuration of your continuous deployment.
+    #
+    # @!attribute [rw] single_weight_config
+    #   Contains the percentage of traffic to send to the staging
+    #   distribution.
+    #   @return [Types::ContinuousDeploymentSingleWeightConfig]
+    #
+    # @!attribute [rw] single_header_config
+    #   Determines which HTTP requests are sent to the staging distribution.
+    #   @return [Types::ContinuousDeploymentSingleHeaderConfig]
+    #
+    # @!attribute [rw] type
+    #   The type of traffic configuration.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TrafficConfig AWS API Documentation
+    #
+    class TrafficConfig < Struct.new(
+      :single_weight_config,
+      :single_header_config,
+      :type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The specified key group does not exist.
     #
     # @!attribute [rw] message
@@ -12425,15 +11908,6 @@ module Aws::CloudFront
 
     # A list of key groups whose public keys CloudFront can use to verify
     # the signatures of signed URLs and signed cookies.
-    #
-    # @note When making an API call, you may pass TrustedKeyGroups
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
     #
     # @!attribute [rw] enabled
     #   This field is `true` if any of the key groups in the list have
@@ -12472,30 +11946,21 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # A list of AWS accounts whose public keys CloudFront can use to verify
-    # the signatures of signed URLs and signed cookies.
-    #
-    # @note When making an API call, you may pass TrustedSigners
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #         quantity: 1, # required
-    #         items: ["string"],
-    #       }
+    # A list of Amazon Web Services accounts whose public keys CloudFront
+    # can use to verify the signatures of signed URLs and signed cookies.
     #
     # @!attribute [rw] enabled
-    #   This field is `true` if any of the AWS accounts have public keys
-    #   that CloudFront can use to verify the signatures of signed URLs and
-    #   signed cookies. If not, this field is `false`.
+    #   This field is `true` if any of the Amazon Web Services accounts have
+    #   public keys that CloudFront can use to verify the signatures of
+    #   signed URLs and signed cookies. If not, this field is `false`.
     #   @return [Boolean]
     #
     # @!attribute [rw] quantity
-    #   The number of AWS accounts in the list.
+    #   The number of Amazon Web Services accounts in the list.
     #   @return [Integer]
     #
     # @!attribute [rw] items
-    #   A list of AWS account identifiers.
+    #   A list of Amazon Web Services account identifiers.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TrustedSigners AWS API Documentation
@@ -12523,16 +11988,6 @@ module Aws::CloudFront
 
     # The request to remove tags from a CloudFront resource.
     #
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource: "ResourceARN", # required
-    #         tag_keys: { # required
-    #           items: ["TagKey"],
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource
     #   An ARN of a CloudFront resource.
     #   @return [String]
@@ -12550,59 +12005,19 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateCachePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cache_policy_config: { # required
-    #           comment: "string",
-    #           name: "string", # required
-    #           default_ttl: 1,
-    #           max_ttl: 1,
-    #           min_ttl: 1, # required
-    #           parameters_in_cache_key_and_forwarded_to_origin: {
-    #             enable_accept_encoding_gzip: false, # required
-    #             enable_accept_encoding_brotli: false,
-    #             headers_config: { # required
-    #               header_behavior: "none", # required, accepts none, whitelist
-    #               headers: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             cookies_config: { # required
-    #               cookie_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #               cookies: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             query_strings_config: { # required
-    #               query_string_behavior: "none", # required, accepts none, whitelist, allExcept, all
-    #               query_strings: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #           },
-    #         },
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] cache_policy_config
     #   A cache policy configuration.
     #   @return [Types::CachePolicyConfig]
     #
     # @!attribute [rw] id
     #   The unique identifier for the cache policy that you are updating.
-    #   The identifier is returned in a cache behavior’s `CachePolicyId`
+    #   The identifier is returned in a cache behavior's `CachePolicyId`
     #   field in the response to `GetDistributionConfig`.
     #   @return [String]
     #
     # @!attribute [rw] if_match
     #   The version of the cache policy that you are updating. The version
-    #   is returned in the cache policy’s `ETag` field in the response to
+    #   is returned in the cache policy's `ETag` field in the response to
     #   `GetCachePolicyConfig`.
     #   @return [String]
     #
@@ -12634,18 +12049,6 @@ module Aws::CloudFront
     end
 
     # The request to update an origin access identity.
-    #
-    # @note When making an API call, you may pass UpdateCloudFrontOriginAccessIdentityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cloud_front_origin_access_identity_config: { # required
-    #           caller_reference: "string", # required
-    #           comment: "string", # required
-    #         },
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
     #
     # @!attribute [rw] cloud_front_origin_access_identity_config
     #   The identity's configuration information.
@@ -12690,265 +12093,49 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # @!attribute [rw] continuous_deployment_policy_config
+    #   The continuous deployment policy configuration.
+    #   @return [Types::ContinuousDeploymentPolicyConfig]
+    #
+    # @!attribute [rw] id
+    #   The identifier of the continuous deployment policy that you are
+    #   updating.
+    #   @return [String]
+    #
+    # @!attribute [rw] if_match
+    #   The current version (`ETag` value) of the continuous deployment
+    #   policy that you are updating.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateContinuousDeploymentPolicyRequest AWS API Documentation
+    #
+    class UpdateContinuousDeploymentPolicyRequest < Struct.new(
+      :continuous_deployment_policy_config,
+      :id,
+      :if_match)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] continuous_deployment_policy
+    #   A continuous deployment policy.
+    #   @return [Types::ContinuousDeploymentPolicy]
+    #
+    # @!attribute [rw] etag
+    #   The version identifier for the current version of the continuous
+    #   deployment policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateContinuousDeploymentPolicyResult AWS API Documentation
+    #
+    class UpdateContinuousDeploymentPolicyResult < Struct.new(
+      :continuous_deployment_policy,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request to update a distribution.
-    #
-    # @note When making an API call, you may pass UpdateDistributionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         distribution_config: { # required
-    #           caller_reference: "string", # required
-    #           aliases: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           default_root_object: "string",
-    #           origins: { # required
-    #             quantity: 1, # required
-    #             items: [ # required
-    #               {
-    #                 id: "string", # required
-    #                 domain_name: "string", # required
-    #                 origin_path: "string",
-    #                 custom_headers: {
-    #                   quantity: 1, # required
-    #                   items: [
-    #                     {
-    #                       header_name: "string", # required
-    #                       header_value: "string", # required
-    #                     },
-    #                   ],
-    #                 },
-    #                 s3_origin_config: {
-    #                   origin_access_identity: "string", # required
-    #                 },
-    #                 custom_origin_config: {
-    #                   http_port: 1, # required
-    #                   https_port: 1, # required
-    #                   origin_protocol_policy: "http-only", # required, accepts http-only, match-viewer, https-only
-    #                   origin_ssl_protocols: {
-    #                     quantity: 1, # required
-    #                     items: ["SSLv3"], # required, accepts SSLv3, TLSv1, TLSv1.1, TLSv1.2
-    #                   },
-    #                   origin_read_timeout: 1,
-    #                   origin_keepalive_timeout: 1,
-    #                 },
-    #                 connection_attempts: 1,
-    #                 connection_timeout: 1,
-    #                 origin_shield: {
-    #                   enabled: false, # required
-    #                   origin_shield_region: "OriginShieldRegion",
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           origin_groups: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 id: "string", # required
-    #                 failover_criteria: { # required
-    #                   status_codes: { # required
-    #                     quantity: 1, # required
-    #                     items: [1], # required
-    #                   },
-    #                 },
-    #                 members: { # required
-    #                   quantity: 1, # required
-    #                   items: [ # required
-    #                     {
-    #                       origin_id: "string", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           default_cache_behavior: { # required
-    #             target_origin_id: "string", # required
-    #             trusted_signers: {
-    #               enabled: false, # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             trusted_key_groups: {
-    #               enabled: false, # required
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #             viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #             allowed_methods: {
-    #               quantity: 1, # required
-    #               items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #               cached_methods: {
-    #                 quantity: 1, # required
-    #                 items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #               },
-    #             },
-    #             smooth_streaming: false,
-    #             compress: false,
-    #             lambda_function_associations: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   lambda_function_arn: "LambdaFunctionARN", # required
-    #                   event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                   include_body: false,
-    #                 },
-    #               ],
-    #             },
-    #             function_associations: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   function_arn: "FunctionARN", # required
-    #                   event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                 },
-    #               ],
-    #             },
-    #             field_level_encryption_id: "string",
-    #             realtime_log_config_arn: "string",
-    #             cache_policy_id: "string",
-    #             origin_request_policy_id: "string",
-    #             forwarded_values: {
-    #               query_string: false, # required
-    #               cookies: { # required
-    #                 forward: "none", # required, accepts none, whitelist, all
-    #                 whitelisted_names: {
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #               },
-    #               headers: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #               query_string_cache_keys: {
-    #                 quantity: 1, # required
-    #                 items: ["string"],
-    #               },
-    #             },
-    #             min_ttl: 1,
-    #             default_ttl: 1,
-    #             max_ttl: 1,
-    #           },
-    #           cache_behaviors: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 path_pattern: "string", # required
-    #                 target_origin_id: "string", # required
-    #                 trusted_signers: {
-    #                   enabled: false, # required
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #                 trusted_key_groups: {
-    #                   enabled: false, # required
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #                 viewer_protocol_policy: "allow-all", # required, accepts allow-all, https-only, redirect-to-https
-    #                 allowed_methods: {
-    #                   quantity: 1, # required
-    #                   items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                   cached_methods: {
-    #                     quantity: 1, # required
-    #                     items: ["GET"], # required, accepts GET, HEAD, POST, PUT, PATCH, OPTIONS, DELETE
-    #                   },
-    #                 },
-    #                 smooth_streaming: false,
-    #                 compress: false,
-    #                 lambda_function_associations: {
-    #                   quantity: 1, # required
-    #                   items: [
-    #                     {
-    #                       lambda_function_arn: "LambdaFunctionARN", # required
-    #                       event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                       include_body: false,
-    #                     },
-    #                   ],
-    #                 },
-    #                 function_associations: {
-    #                   quantity: 1, # required
-    #                   items: [
-    #                     {
-    #                       function_arn: "FunctionARN", # required
-    #                       event_type: "viewer-request", # required, accepts viewer-request, viewer-response, origin-request, origin-response
-    #                     },
-    #                   ],
-    #                 },
-    #                 field_level_encryption_id: "string",
-    #                 realtime_log_config_arn: "string",
-    #                 cache_policy_id: "string",
-    #                 origin_request_policy_id: "string",
-    #                 forwarded_values: {
-    #                   query_string: false, # required
-    #                   cookies: { # required
-    #                     forward: "none", # required, accepts none, whitelist, all
-    #                     whitelisted_names: {
-    #                       quantity: 1, # required
-    #                       items: ["string"],
-    #                     },
-    #                   },
-    #                   headers: {
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                   query_string_cache_keys: {
-    #                     quantity: 1, # required
-    #                     items: ["string"],
-    #                   },
-    #                 },
-    #                 min_ttl: 1,
-    #                 default_ttl: 1,
-    #                 max_ttl: 1,
-    #               },
-    #             ],
-    #           },
-    #           custom_error_responses: {
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 error_code: 1, # required
-    #                 response_page_path: "string",
-    #                 response_code: "string",
-    #                 error_caching_min_ttl: 1,
-    #               },
-    #             ],
-    #           },
-    #           comment: "CommentType", # required
-    #           logging: {
-    #             enabled: false, # required
-    #             include_cookies: false, # required
-    #             bucket: "string", # required
-    #             prefix: "string", # required
-    #           },
-    #           price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #           enabled: false, # required
-    #           viewer_certificate: {
-    #             cloud_front_default_certificate: false,
-    #             iam_certificate_id: "string",
-    #             acm_certificate_arn: "string",
-    #             ssl_support_method: "sni-only", # accepts sni-only, vip, static-ip
-    #             minimum_protocol_version: "SSLv3", # accepts SSLv3, TLSv1, TLSv1_2016, TLSv1.1_2016, TLSv1.2_2018, TLSv1.2_2019
-    #             certificate: "string",
-    #             certificate_source: "cloudfront", # accepts cloudfront, iam, acm
-    #           },
-    #           restrictions: {
-    #             geo_restriction: { # required
-    #               restriction_type: "blacklist", # required, accepts blacklist, whitelist, none
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           web_acl_id: "string",
-    #           http_version: "http1.1", # accepts http1.1, http2
-    #           is_ipv6_enabled: false,
-    #         },
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
     #
     # @!attribute [rw] distribution_config
     #   The distribution's configuration information.
@@ -12993,43 +12180,53 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFieldLevelEncryptionConfigRequest
-    #   data as a hash:
+    # @!attribute [rw] id
+    #   The identifier of the primary distribution to which you are copying
+    #   a staging distribution's configuration.
+    #   @return [String]
     #
-    #       {
-    #         field_level_encryption_config: { # required
-    #           caller_reference: "string", # required
-    #           comment: "string",
-    #           query_arg_profile_config: {
-    #             forward_when_query_arg_profile_is_unknown: false, # required
-    #             query_arg_profiles: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   query_arg: "string", # required
-    #                   profile_id: "string", # required
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #           content_type_profile_config: {
-    #             forward_when_content_type_is_unknown: false, # required
-    #             content_type_profiles: {
-    #               quantity: 1, # required
-    #               items: [
-    #                 {
-    #                   format: "URLEncoded", # required, accepts URLEncoded
-    #                   profile_id: "string",
-    #                   content_type: "string", # required
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         },
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
+    # @!attribute [rw] staging_distribution_id
+    #   The identifier of the staging distribution whose configuration you
+    #   are copying to the primary distribution.
+    #   @return [String]
     #
+    # @!attribute [rw] if_match
+    #   The current versions (`ETag` values) of both primary and staging
+    #   distributions. Provide these in the following format:
+    #
+    #   `<primary ETag>, <staging ETag>`
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateDistributionWithStagingConfigRequest AWS API Documentation
+    #
+    class UpdateDistributionWithStagingConfigRequest < Struct.new(
+      :id,
+      :staging_distribution_id,
+      :if_match)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] distribution
+    #   A distribution tells CloudFront where you want content to be
+    #   delivered from, and the details about how to track and manage
+    #   content delivery.
+    #   @return [Types::Distribution]
+    #
+    # @!attribute [rw] etag
+    #   The current version of the primary distribution (after it's
+    #   updated).
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateDistributionWithStagingConfigResult AWS API Documentation
+    #
+    class UpdateDistributionWithStagingConfigResult < Struct.new(
+      :distribution,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] field_level_encryption_config
     #   Request to update a field-level encryption configuration.
     #   @return [Types::FieldLevelEncryptionConfig]
@@ -13071,32 +12268,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFieldLevelEncryptionProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         field_level_encryption_profile_config: { # required
-    #           name: "string", # required
-    #           caller_reference: "string", # required
-    #           comment: "string",
-    #           encryption_entities: { # required
-    #             quantity: 1, # required
-    #             items: [
-    #               {
-    #                 public_key_id: "string", # required
-    #                 provider_id: "string", # required
-    #                 field_patterns: { # required
-    #                   quantity: 1, # required
-    #                   items: ["string"],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         },
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] field_level_encryption_profile_config
     #   Request to update a field-level encryption profile.
     #   @return [Types::FieldLevelEncryptionProfileConfig]
@@ -13137,19 +12308,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateFunctionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "string", # required
-    #         if_match: "string", # required
-    #         function_config: { # required
-    #           comment: "string", # required
-    #           runtime: "cloudfront-js-1.0", # required, accepts cloudfront-js-1.0
-    #         },
-    #         function_code: "data", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the function that you are updating.
     #   @return [String]
@@ -13203,19 +12361,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateKeyGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         key_group_config: { # required
-    #           name: "string", # required
-    #           items: ["string"], # required
-    #           comment: "string",
-    #         },
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] key_group_config
     #   The key group configuration.
     #   @return [Types::KeyGroupConfig]
@@ -13226,7 +12371,7 @@ module Aws::CloudFront
     #
     # @!attribute [rw] if_match
     #   The version of the key group that you are updating. The version is
-    #   the key group’s `ETag` value.
+    #   the key group's `ETag` value.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateKeyGroupRequest AWS API Documentation
@@ -13256,53 +12401,62 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateOriginRequestPolicyRequest
-    #   data as a hash:
+    # @!attribute [rw] origin_access_control_config
+    #   An origin access control.
+    #   @return [Types::OriginAccessControlConfig]
     #
-    #       {
-    #         origin_request_policy_config: { # required
-    #           comment: "string",
-    #           name: "string", # required
-    #           headers_config: { # required
-    #             header_behavior: "none", # required, accepts none, whitelist, allViewer, allViewerAndWhitelistCloudFront
-    #             headers: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           cookies_config: { # required
-    #             cookie_behavior: "none", # required, accepts none, whitelist, all
-    #             cookies: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #           query_strings_config: { # required
-    #             query_string_behavior: "none", # required, accepts none, whitelist, all
-    #             query_strings: {
-    #               quantity: 1, # required
-    #               items: ["string"],
-    #             },
-    #           },
-    #         },
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
+    # @!attribute [rw] id
+    #   The unique identifier of the origin access control that you are
+    #   updating.
+    #   @return [String]
     #
+    # @!attribute [rw] if_match
+    #   The current version (`ETag` value) of the origin access control that
+    #   you are updating.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateOriginAccessControlRequest AWS API Documentation
+    #
+    class UpdateOriginAccessControlRequest < Struct.new(
+      :origin_access_control_config,
+      :id,
+      :if_match)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] origin_access_control
+    #   The origin access control after it has been updated.
+    #   @return [Types::OriginAccessControl]
+    #
+    # @!attribute [rw] etag
+    #   The new version of the origin access control after it has been
+    #   updated.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateOriginAccessControlResult AWS API Documentation
+    #
+    class UpdateOriginAccessControlResult < Struct.new(
+      :origin_access_control,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] origin_request_policy_config
     #   An origin request policy configuration.
     #   @return [Types::OriginRequestPolicyConfig]
     #
     # @!attribute [rw] id
     #   The unique identifier for the origin request policy that you are
-    #   updating. The identifier is returned in a cache behavior’s
+    #   updating. The identifier is returned in a cache behavior's
     #   `OriginRequestPolicyId` field in the response to
     #   `GetDistributionConfig`.
     #   @return [String]
     #
     # @!attribute [rw] if_match
     #   The version of the origin request policy that you are updating. The
-    #   version is returned in the origin request policy’s `ETag` field in
+    #   version is returned in the origin request policy's `ETag` field in
     #   the response to `GetOriginRequestPolicyConfig`.
     #   @return [String]
     #
@@ -13333,20 +12487,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdatePublicKeyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         public_key_config: { # required
-    #           caller_reference: "string", # required
-    #           name: "string", # required
-    #           encoded_key: "string", # required
-    #           comment: "string",
-    #         },
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
-    #
     # @!attribute [rw] public_key_config
     #   A public key configuration.
     #   @return [Types::PublicKeyConfig]
@@ -13387,25 +12527,6 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateRealtimeLogConfigRequest
-    #   data as a hash:
-    #
-    #       {
-    #         end_points: [
-    #           {
-    #             stream_type: "string", # required
-    #             kinesis_stream_config: {
-    #               role_arn: "string", # required
-    #               stream_arn: "string", # required
-    #             },
-    #           },
-    #         ],
-    #         fields: ["string"],
-    #         name: "string",
-    #         arn: "string",
-    #         sampling_rate: 1,
-    #       }
-    #
     # @!attribute [rw] end_points
     #   Contains information about the Amazon Kinesis data stream where you
     #   are sending real-time log data.
@@ -13461,39 +12582,50 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
+    # @!attribute [rw] response_headers_policy_config
+    #   A response headers policy configuration.
+    #   @return [Types::ResponseHeadersPolicyConfig]
+    #
+    # @!attribute [rw] id
+    #   The identifier for the response headers policy that you are
+    #   updating.
+    #   @return [String]
+    #
+    # @!attribute [rw] if_match
+    #   The version of the response headers policy that you are updating.
+    #
+    #   The version is returned in the cache policy's `ETag` field in the
+    #   response to `GetResponseHeadersPolicyConfig`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateResponseHeadersPolicyRequest AWS API Documentation
+    #
+    class UpdateResponseHeadersPolicyRequest < Struct.new(
+      :response_headers_policy_config,
+      :id,
+      :if_match)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] response_headers_policy
+    #   A response headers policy.
+    #   @return [Types::ResponseHeadersPolicy]
+    #
+    # @!attribute [rw] etag
+    #   The current version of the response headers policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateResponseHeadersPolicyResult AWS API Documentation
+    #
+    class UpdateResponseHeadersPolicyResult < Struct.new(
+      :response_headers_policy,
+      :etag)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request to update a streaming distribution.
-    #
-    # @note When making an API call, you may pass UpdateStreamingDistributionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         streaming_distribution_config: { # required
-    #           caller_reference: "string", # required
-    #           s3_origin: { # required
-    #             domain_name: "string", # required
-    #             origin_access_identity: "string", # required
-    #           },
-    #           aliases: {
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           comment: "string", # required
-    #           logging: {
-    #             enabled: false, # required
-    #             bucket: "string", # required
-    #             prefix: "string", # required
-    #           },
-    #           trusted_signers: { # required
-    #             enabled: false, # required
-    #             quantity: 1, # required
-    #             items: ["string"],
-    #           },
-    #           price_class: "PriceClass_100", # accepts PriceClass_100, PriceClass_200, PriceClass_All
-    #           enabled: false, # required
-    #         },
-    #         id: "string", # required
-    #         if_match: "string",
-    #       }
     #
     # @!attribute [rw] streaming_distribution_config
     #   The streaming distribution's configuration information.
@@ -13539,10 +12671,10 @@ module Aws::CloudFront
       include Aws::Structure
     end
 
-    # A complex type that determines the distribution’s SSL/TLS
+    # A complex type that determines the distribution's SSL/TLS
     # configuration for communicating with viewers.
     #
-    # If the distribution doesn’t use `Aliases` (also known as alternate
+    # If the distribution doesn't use `Aliases` (also known as alternate
     # domain names or CNAMEs)—that is, if the distribution uses the
     # CloudFront domain name such as `d111111abcdef8.cloudfront.net`—set
     # `CloudFrontDefaultCertificate` to `true` and leave all other fields
@@ -13553,7 +12685,7 @@ module Aws::CloudFront
     #
     # * Which viewers the distribution accepts HTTPS connections from: only
     #   viewers that support [server name indication (SNI)][1]
-    #   (recommended), or all viewers including those that don’t support
+    #   (recommended), or all viewers including those that don't support
     #   SNI.
     #
     #   * To accept HTTPS connections from only viewers that support SNI,
@@ -13561,7 +12693,7 @@ module Aws::CloudFront
     #     browsers and clients support SNI.
     #
     #   * To accept HTTPS connections from all viewers, including those that
-    #     don’t support SNI, set `SSLSupportMethod` to `vip`. This is not
+    #     don't support SNI, set `SSLSupportMethod` to `vip`. This is not
     #     recommended, and results in additional monthly charges from
     #     CloudFront.
     #
@@ -13570,9 +12702,9 @@ module Aws::CloudFront
     #   value for `MinimumProtocolVersion`. For more information, see
     #   [Security Policy][2] in the *Amazon CloudFront Developer Guide*.
     #
-    # * The location of the SSL/TLS certificate, [AWS Certificate Manager
-    #   (ACM)][3] (recommended) or [AWS Identity and Access Management (AWS
-    #   IAM)][4]. You specify the location by setting a value in one of the
+    # * The location of the SSL/TLS certificate, [Certificate Manager
+    #   (ACM)][3] (recommended) or [Identity and Access Management
+    #   (IAM)][4]. You specify the location by setting a value in one of the
     #   following fields (not both):
     #
     #   * `ACMCertificateArn`
@@ -13598,19 +12730,6 @@ module Aws::CloudFront
     # [5]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https.html
     # [6]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-alternate-domain-names.html
     #
-    # @note When making an API call, you may pass ViewerCertificate
-    #   data as a hash:
-    #
-    #       {
-    #         cloud_front_default_certificate: false,
-    #         iam_certificate_id: "string",
-    #         acm_certificate_arn: "string",
-    #         ssl_support_method: "sni-only", # accepts sni-only, vip, static-ip
-    #         minimum_protocol_version: "SSLv3", # accepts SSLv3, TLSv1, TLSv1_2016, TLSv1.1_2016, TLSv1.2_2018, TLSv1.2_2019
-    #         certificate: "string",
-    #         certificate_source: "cloudfront", # accepts cloudfront, iam, acm
-    #       }
-    #
     # @!attribute [rw] cloud_front_default_certificate
     #   If the distribution uses the CloudFront domain name such as
     #   `d111111abcdef8.cloudfront.net`, set this field to `true`.
@@ -13629,9 +12748,8 @@ module Aws::CloudFront
     #
     # @!attribute [rw] iam_certificate_id
     #   If the distribution uses `Aliases` (alternate domain names or
-    #   CNAMEs) and the SSL/TLS certificate is stored in [AWS Identity and
-    #   Access Management (AWS IAM)][1], provide the ID of the IAM
-    #   certificate.
+    #   CNAMEs) and the SSL/TLS certificate is stored in [Identity and
+    #   Access Management (IAM)][1], provide the ID of the IAM certificate.
     #
     #   If you specify an IAM certificate ID, you must also specify values
     #   for `MinimumProtocolVersion` and `SSLSupportMethod`.
@@ -13643,7 +12761,7 @@ module Aws::CloudFront
     #
     # @!attribute [rw] acm_certificate_arn
     #   If the distribution uses `Aliases` (alternate domain names or
-    #   CNAMEs) and the SSL/TLS certificate is stored in [AWS Certificate
+    #   CNAMEs) and the SSL/TLS certificate is stored in [Certificate
     #   Manager (ACM)][1], provide the Amazon Resource Name (ARN) of the ACM
     #   certificate. CloudFront only supports ACM certificates in the US
     #   East (N. Virginia) Region (`us-east-1`).
@@ -13666,18 +12784,18 @@ module Aws::CloudFront
     #     recommended. Most browsers and clients support SNI.
     #
     #   * `vip` – The distribution accepts HTTPS connections from all
-    #     viewers including those that don’t support SNI. This is not
+    #     viewers including those that don't support SNI. This is not
     #     recommended, and results in additional monthly charges from
     #     CloudFront.
     #
     #   * `static-ip` - Do not specify this value unless your distribution
     #     has been enabled for this feature by the CloudFront team. If you
     #     have a use case that requires static IP addresses for a
-    #     distribution, contact CloudFront through the [AWS Support
-    #     Center][2].
+    #     distribution, contact CloudFront through the [Amazon Web Services
+    #     Support Center][2].
     #
     #   If the distribution uses the CloudFront domain name such as
-    #   `d111111abcdef8.cloudfront.net`, don’t set a value for this field.
+    #   `d111111abcdef8.cloudfront.net`, don't set a value for this field.
     #
     #
     #
@@ -13706,7 +12824,7 @@ module Aws::CloudFront
     #
     #    </note>
     #
-    #   When you’re using SNI only (you set `SSLSupportMethod` to
+    #   When you're using SNI only (you set `SSLSupportMethod` to
     #   `sni-only`), you must specify `TLSv1` or higher.
     #
     #   If the distribution uses the CloudFront domain name such as

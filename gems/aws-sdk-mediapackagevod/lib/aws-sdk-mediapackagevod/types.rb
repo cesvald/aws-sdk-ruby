@@ -174,14 +174,6 @@ module Aws::MediaPackageVod
 
     # CDN Authorization credentials
     #
-    # @note When making an API call, you may pass Authorization
-    #   data as a hash:
-    #
-    #       {
-    #         cdn_identifier_secret: "__string", # required
-    #         secrets_role_arn: "__string", # required
-    #       }
-    #
     # @!attribute [rw] cdn_identifier_secret
     #   The Amazon Resource Name (ARN) for the secret in AWS Secrets Manager
     #   that is used for CDN authorization.
@@ -203,16 +195,12 @@ module Aws::MediaPackageVod
 
     # A CMAF encryption configuration.
     #
-    # @note When making an API call, you may pass CmafEncryption
-    #   data as a hash:
-    #
-    #       {
-    #         speke_key_provider: { # required
-    #           role_arn: "__string", # required
-    #           system_ids: ["__string"], # required
-    #           url: "__string", # required
-    #         },
-    #       }
+    # @!attribute [rw] constant_initialization_vector
+    #   An optional 128-bit, 16-byte hex value represented by a 32-character
+    #   string, used in conjunction with the key for encrypting blocks. If
+    #   you don't specify a value, then MediaPackage creates the constant
+    #   initialization vector (IV).
+    #   @return [String]
     #
     # @!attribute [rw] speke_key_provider
     #   A configuration for accessing an external Secure Packager and
@@ -223,41 +211,13 @@ module Aws::MediaPackageVod
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod-2018-11-07/CmafEncryption AWS API Documentation
     #
     class CmafEncryption < Struct.new(
+      :constant_initialization_vector,
       :speke_key_provider)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # A CMAF packaging configuration.
-    #
-    # @note When making an API call, you may pass CmafPackage
-    #   data as a hash:
-    #
-    #       {
-    #         encryption: {
-    #           speke_key_provider: { # required
-    #             role_arn: "__string", # required
-    #             system_ids: ["__string"], # required
-    #             url: "__string", # required
-    #           },
-    #         },
-    #         hls_manifests: [ # required
-    #           {
-    #             ad_markers: "NONE", # accepts NONE, SCTE35_ENHANCED, PASSTHROUGH
-    #             include_iframe_only_stream: false,
-    #             manifest_name: "__string",
-    #             program_date_time_interval_seconds: 1,
-    #             repeat_ext_x_key: false,
-    #             stream_selection: {
-    #               max_video_bits_per_second: 1,
-    #               min_video_bits_per_second: 1,
-    #               stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #             },
-    #           },
-    #         ],
-    #         include_encoder_configuration_in_segments: false,
-    #         segment_duration_seconds: 1,
-    #       }
     #
     # @!attribute [rw] encryption
     #   A CMAF encryption configuration.
@@ -306,16 +266,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ConfigureLogsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         egress_access_logs: {
-    #           log_group_name: "__string",
-    #         },
-    #         id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] egress_access_logs
     #   Configure egress access logging.
     #   @return [Types::EgressAccessLogs]
@@ -339,6 +289,9 @@ module Aws::MediaPackageVod
     #   CDN Authorization credentials
     #   @return [Types::Authorization]
     #
+    # @!attribute [rw] created_at
+    #   @return [String]
+    #
     # @!attribute [rw] domain_name
     #   @return [String]
     #
@@ -358,6 +311,7 @@ module Aws::MediaPackageVod
     class ConfigureLogsResponse < Struct.new(
       :arn,
       :authorization,
+      :created_at,
       :domain_name,
       :egress_access_logs,
       :id,
@@ -366,20 +320,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateAssetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "__string", # required
-    #         packaging_group_id: "__string", # required
-    #         resource_id: "__string",
-    #         source_arn: "__string", # required
-    #         source_role_arn: "__string", # required
-    #         tags: {
-    #           "__string" => "__string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] id
     #   @return [String]
     #
@@ -456,115 +396,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreatePackagingConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         cmaf_package: {
-    #           encryption: {
-    #             speke_key_provider: { # required
-    #               role_arn: "__string", # required
-    #               system_ids: ["__string"], # required
-    #               url: "__string", # required
-    #             },
-    #           },
-    #           hls_manifests: [ # required
-    #             {
-    #               ad_markers: "NONE", # accepts NONE, SCTE35_ENHANCED, PASSTHROUGH
-    #               include_iframe_only_stream: false,
-    #               manifest_name: "__string",
-    #               program_date_time_interval_seconds: 1,
-    #               repeat_ext_x_key: false,
-    #               stream_selection: {
-    #                 max_video_bits_per_second: 1,
-    #                 min_video_bits_per_second: 1,
-    #                 stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #               },
-    #             },
-    #           ],
-    #           include_encoder_configuration_in_segments: false,
-    #           segment_duration_seconds: 1,
-    #         },
-    #         dash_package: {
-    #           dash_manifests: [ # required
-    #             {
-    #               manifest_layout: "FULL", # accepts FULL, COMPACT
-    #               manifest_name: "__string",
-    #               min_buffer_time_seconds: 1,
-    #               profile: "NONE", # accepts NONE, HBBTV_1_5
-    #               stream_selection: {
-    #                 max_video_bits_per_second: 1,
-    #                 min_video_bits_per_second: 1,
-    #                 stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #               },
-    #             },
-    #           ],
-    #           encryption: {
-    #             speke_key_provider: { # required
-    #               role_arn: "__string", # required
-    #               system_ids: ["__string"], # required
-    #               url: "__string", # required
-    #             },
-    #           },
-    #           include_encoder_configuration_in_segments: false,
-    #           period_triggers: ["ADS"], # accepts ADS
-    #           segment_duration_seconds: 1,
-    #           segment_template_format: "NUMBER_WITH_TIMELINE", # accepts NUMBER_WITH_TIMELINE, TIME_WITH_TIMELINE, NUMBER_WITH_DURATION
-    #         },
-    #         hls_package: {
-    #           encryption: {
-    #             constant_initialization_vector: "__string",
-    #             encryption_method: "AES_128", # accepts AES_128, SAMPLE_AES
-    #             speke_key_provider: { # required
-    #               role_arn: "__string", # required
-    #               system_ids: ["__string"], # required
-    #               url: "__string", # required
-    #             },
-    #           },
-    #           hls_manifests: [ # required
-    #             {
-    #               ad_markers: "NONE", # accepts NONE, SCTE35_ENHANCED, PASSTHROUGH
-    #               include_iframe_only_stream: false,
-    #               manifest_name: "__string",
-    #               program_date_time_interval_seconds: 1,
-    #               repeat_ext_x_key: false,
-    #               stream_selection: {
-    #                 max_video_bits_per_second: 1,
-    #                 min_video_bits_per_second: 1,
-    #                 stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #               },
-    #             },
-    #           ],
-    #           segment_duration_seconds: 1,
-    #           use_audio_rendition_group: false,
-    #         },
-    #         id: "__string", # required
-    #         mss_package: {
-    #           encryption: {
-    #             speke_key_provider: { # required
-    #               role_arn: "__string", # required
-    #               system_ids: ["__string"], # required
-    #               url: "__string", # required
-    #             },
-    #           },
-    #           mss_manifests: [ # required
-    #             {
-    #               manifest_name: "__string",
-    #               stream_selection: {
-    #                 max_video_bits_per_second: 1,
-    #                 min_video_bits_per_second: 1,
-    #                 stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #               },
-    #             },
-    #           ],
-    #           segment_duration_seconds: 1,
-    #         },
-    #         packaging_group_id: "__string", # required
-    #         tags: {
-    #           "__string" => "__string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] cmaf_package
     #   A CMAF packaging configuration.
     #   @return [Types::CmafPackage]
@@ -613,6 +444,9 @@ module Aws::MediaPackageVod
     #   A CMAF packaging configuration.
     #   @return [Types::CmafPackage]
     #
+    # @!attribute [rw] created_at
+    #   @return [String]
+    #
     # @!attribute [rw] dash_package
     #   A Dynamic Adaptive Streaming over HTTP (DASH) packaging
     #   configuration.
@@ -641,6 +475,7 @@ module Aws::MediaPackageVod
     class CreatePackagingConfigurationResponse < Struct.new(
       :arn,
       :cmaf_package,
+      :created_at,
       :dash_package,
       :hls_package,
       :id,
@@ -651,23 +486,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreatePackagingGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         authorization: {
-    #           cdn_identifier_secret: "__string", # required
-    #           secrets_role_arn: "__string", # required
-    #         },
-    #         egress_access_logs: {
-    #           log_group_name: "__string",
-    #         },
-    #         id: "__string", # required
-    #         tags: {
-    #           "__string" => "__string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] authorization
     #   CDN Authorization credentials
     #   @return [Types::Authorization]
@@ -701,6 +519,9 @@ module Aws::MediaPackageVod
     #   CDN Authorization credentials
     #   @return [Types::Authorization]
     #
+    # @!attribute [rw] created_at
+    #   @return [String]
+    #
     # @!attribute [rw] domain_name
     #   @return [String]
     #
@@ -720,6 +541,7 @@ module Aws::MediaPackageVod
     class CreatePackagingGroupResponse < Struct.new(
       :arn,
       :authorization,
+      :created_at,
       :domain_name,
       :egress_access_logs,
       :id,
@@ -730,17 +552,6 @@ module Aws::MediaPackageVod
 
     # A Dynamic Adaptive Streaming over HTTP (DASH) encryption
     # configuration.
-    #
-    # @note When making an API call, you may pass DashEncryption
-    #   data as a hash:
-    #
-    #       {
-    #         speke_key_provider: { # required
-    #           role_arn: "__string", # required
-    #           system_ids: ["__string"], # required
-    #           url: "__string", # required
-    #         },
-    #       }
     #
     # @!attribute [rw] speke_key_provider
     #   A configuration for accessing an external Secure Packager and
@@ -757,21 +568,6 @@ module Aws::MediaPackageVod
     end
 
     # A DASH manifest configuration.
-    #
-    # @note When making an API call, you may pass DashManifest
-    #   data as a hash:
-    #
-    #       {
-    #         manifest_layout: "FULL", # accepts FULL, COMPACT
-    #         manifest_name: "__string",
-    #         min_buffer_time_seconds: 1,
-    #         profile: "NONE", # accepts NONE, HBBTV_1_5
-    #         stream_selection: {
-    #           max_video_bits_per_second: 1,
-    #           min_video_bits_per_second: 1,
-    #           stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #         },
-    #       }
     #
     # @!attribute [rw] manifest_layout
     #   Determines the position of some tags in the Media Presentation
@@ -795,6 +591,13 @@ module Aws::MediaPackageVod
     #   set to "HBBTV\_1\_5", HbbTV 1.5 compliant output is enabled.
     #   @return [String]
     #
+    # @!attribute [rw] scte_markers_source
+    #   The source of scte markers used. When set to SEGMENTS, the scte
+    #   markers are sourced from the segments of the ingested content. When
+    #   set to MANIFEST, the scte markers are sourced from the manifest of
+    #   the ingested content.
+    #   @return [String]
+    #
     # @!attribute [rw] stream_selection
     #   A StreamSelection configuration.
     #   @return [Types::StreamSelection]
@@ -806,42 +609,13 @@ module Aws::MediaPackageVod
       :manifest_name,
       :min_buffer_time_seconds,
       :profile,
+      :scte_markers_source,
       :stream_selection)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # A Dynamic Adaptive Streaming over HTTP (DASH) packaging configuration.
-    #
-    # @note When making an API call, you may pass DashPackage
-    #   data as a hash:
-    #
-    #       {
-    #         dash_manifests: [ # required
-    #           {
-    #             manifest_layout: "FULL", # accepts FULL, COMPACT
-    #             manifest_name: "__string",
-    #             min_buffer_time_seconds: 1,
-    #             profile: "NONE", # accepts NONE, HBBTV_1_5
-    #             stream_selection: {
-    #               max_video_bits_per_second: 1,
-    #               min_video_bits_per_second: 1,
-    #               stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #             },
-    #           },
-    #         ],
-    #         encryption: {
-    #           speke_key_provider: { # required
-    #             role_arn: "__string", # required
-    #             system_ids: ["__string"], # required
-    #             url: "__string", # required
-    #           },
-    #         },
-    #         include_encoder_configuration_in_segments: false,
-    #         period_triggers: ["ADS"], # accepts ADS
-    #         segment_duration_seconds: 1,
-    #         segment_template_format: "NUMBER_WITH_TIMELINE", # accepts NUMBER_WITH_TIMELINE, TIME_WITH_TIMELINE, NUMBER_WITH_DURATION
-    #       }
     #
     # @!attribute [rw] dash_manifests
     #   A list of DASH manifest configurations.
@@ -859,6 +633,10 @@ module Aws::MediaPackageVod
     #   in every video segment instead of in the init fragment. This lets
     #   you use different SPS/PPS/VPS settings for your assets during
     #   content playback.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] include_iframe_only_stream
+    #   When enabled, an I-Frame only stream will be included in the output.
     #   @return [Boolean]
     #
     # @!attribute [rw] period_triggers
@@ -891,6 +669,7 @@ module Aws::MediaPackageVod
       :dash_manifests,
       :encryption,
       :include_encoder_configuration_in_segments,
+      :include_iframe_only_stream,
       :period_triggers,
       :segment_duration_seconds,
       :segment_template_format)
@@ -898,13 +677,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteAssetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   @return [String]
     #
@@ -920,13 +692,6 @@ module Aws::MediaPackageVod
     #
     class DeleteAssetResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeletePackagingConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   @return [String]
     #
@@ -942,13 +707,6 @@ module Aws::MediaPackageVod
     #
     class DeletePackagingConfigurationResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeletePackagingGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   @return [String]
     #
@@ -964,13 +722,6 @@ module Aws::MediaPackageVod
     #
     class DeletePackagingGroupResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeAssetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   @return [String]
     #
@@ -1026,13 +777,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribePackagingConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   @return [String]
     #
@@ -1050,6 +794,9 @@ module Aws::MediaPackageVod
     # @!attribute [rw] cmaf_package
     #   A CMAF packaging configuration.
     #   @return [Types::CmafPackage]
+    #
+    # @!attribute [rw] created_at
+    #   @return [String]
     #
     # @!attribute [rw] dash_package
     #   A Dynamic Adaptive Streaming over HTTP (DASH) packaging
@@ -1079,6 +826,7 @@ module Aws::MediaPackageVod
     class DescribePackagingConfigurationResponse < Struct.new(
       :arn,
       :cmaf_package,
+      :created_at,
       :dash_package,
       :hls_package,
       :id,
@@ -1089,13 +837,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribePackagingGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   @return [String]
     #
@@ -1107,12 +848,18 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
+    # @!attribute [rw] approximate_asset_count
+    #   @return [Integer]
+    #
     # @!attribute [rw] arn
     #   @return [String]
     #
     # @!attribute [rw] authorization
     #   CDN Authorization credentials
     #   @return [Types::Authorization]
+    #
+    # @!attribute [rw] created_at
+    #   @return [String]
     #
     # @!attribute [rw] domain_name
     #   @return [String]
@@ -1131,8 +878,10 @@ module Aws::MediaPackageVod
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod-2018-11-07/DescribePackagingGroupResponse AWS API Documentation
     #
     class DescribePackagingGroupResponse < Struct.new(
+      :approximate_asset_count,
       :arn,
       :authorization,
+      :created_at,
       :domain_name,
       :egress_access_logs,
       :id,
@@ -1142,13 +891,6 @@ module Aws::MediaPackageVod
     end
 
     # Configure egress access logging.
-    #
-    # @note When making an API call, you may pass EgressAccessLogs
-    #   data as a hash:
-    #
-    #       {
-    #         log_group_name: "__string",
-    #       }
     #
     # @!attribute [rw] log_group_name
     #   Customize the log group name.
@@ -1169,6 +911,13 @@ module Aws::MediaPackageVod
     #   The ID of the PackagingConfiguration being applied to the Asset.
     #   @return [String]
     #
+    # @!attribute [rw] status
+    #   The current processing status of the asset used for the packaging
+    #   configuration. The status can be either QUEUED, PROCESSING,
+    #   PLAYABLE, or FAILED. Status information won't be available for most
+    #   assets ingested before 2021-09-30.
+    #   @return [String]
+    #
     # @!attribute [rw] url
     #   The URL of the parent manifest for the repackaged Asset.
     #   @return [String]
@@ -1177,7 +926,36 @@ module Aws::MediaPackageVod
     #
     class EgressEndpoint < Struct.new(
       :packaging_configuration_id,
+      :status,
       :url)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Use encryptionContractConfiguration to configure one or more content
+    # encryption keys for your endpoints that use SPEKE 2.0. The encryption
+    # contract defines which content keys are used to encrypt the audio and
+    # video tracks in your stream. To configure the encryption contract,
+    # specify which audio and video encryption presets to use. Note the
+    # following considerations when using encryptionContractConfiguration:
+    # encryptionContractConfiguration can be used for DASH endpoints that
+    # use SPEKE 2.0. SPEKE 2.0 relies on the CPIX 2.3 specification. You
+    # must disable key rotation for this endpoint by setting
+    # keyRotationIntervalSeconds to 0.
+    #
+    # @!attribute [rw] preset_speke_20_audio
+    #   A collection of audio encryption presets.
+    #   @return [String]
+    #
+    # @!attribute [rw] preset_speke_20_video
+    #   A collection of video encryption presets.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod-2018-11-07/EncryptionContractConfiguration AWS API Documentation
+    #
+    class EncryptionContractConfiguration < Struct.new(
+      :preset_speke_20_audio,
+      :preset_speke_20_video)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1194,19 +972,6 @@ module Aws::MediaPackageVod
     end
 
     # An HTTP Live Streaming (HLS) encryption configuration.
-    #
-    # @note When making an API call, you may pass HlsEncryption
-    #   data as a hash:
-    #
-    #       {
-    #         constant_initialization_vector: "__string",
-    #         encryption_method: "AES_128", # accepts AES_128, SAMPLE_AES
-    #         speke_key_provider: { # required
-    #           role_arn: "__string", # required
-    #           system_ids: ["__string"], # required
-    #           url: "__string", # required
-    #         },
-    #       }
     #
     # @!attribute [rw] constant_initialization_vector
     #   A constant initialization vector for encryption (optional). When not
@@ -1234,22 +999,6 @@ module Aws::MediaPackageVod
     end
 
     # An HTTP Live Streaming (HLS) manifest configuration.
-    #
-    # @note When making an API call, you may pass HlsManifest
-    #   data as a hash:
-    #
-    #       {
-    #         ad_markers: "NONE", # accepts NONE, SCTE35_ENHANCED, PASSTHROUGH
-    #         include_iframe_only_stream: false,
-    #         manifest_name: "__string",
-    #         program_date_time_interval_seconds: 1,
-    #         repeat_ext_x_key: false,
-    #         stream_selection: {
-    #           max_video_bits_per_second: 1,
-    #           min_video_bits_per_second: 1,
-    #           stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #         },
-    #       }
     #
     # @!attribute [rw] ad_markers
     #   This setting controls how ad markers are included in the packaged
@@ -1305,37 +1054,6 @@ module Aws::MediaPackageVod
 
     # An HTTP Live Streaming (HLS) packaging configuration.
     #
-    # @note When making an API call, you may pass HlsPackage
-    #   data as a hash:
-    #
-    #       {
-    #         encryption: {
-    #           constant_initialization_vector: "__string",
-    #           encryption_method: "AES_128", # accepts AES_128, SAMPLE_AES
-    #           speke_key_provider: { # required
-    #             role_arn: "__string", # required
-    #             system_ids: ["__string"], # required
-    #             url: "__string", # required
-    #           },
-    #         },
-    #         hls_manifests: [ # required
-    #           {
-    #             ad_markers: "NONE", # accepts NONE, SCTE35_ENHANCED, PASSTHROUGH
-    #             include_iframe_only_stream: false,
-    #             manifest_name: "__string",
-    #             program_date_time_interval_seconds: 1,
-    #             repeat_ext_x_key: false,
-    #             stream_selection: {
-    #               max_video_bits_per_second: 1,
-    #               min_video_bits_per_second: 1,
-    #               stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #             },
-    #           },
-    #         ],
-    #         segment_duration_seconds: 1,
-    #         use_audio_rendition_group: false,
-    #       }
-    #
     # @!attribute [rw] encryption
     #   An HTTP Live Streaming (HLS) encryption configuration.
     #   @return [Types::HlsEncryption]
@@ -1343,6 +1061,11 @@ module Aws::MediaPackageVod
     # @!attribute [rw] hls_manifests
     #   A list of HLS manifest configurations.
     #   @return [Array<Types::HlsManifest>]
+    #
+    # @!attribute [rw] include_dvb_subtitles
+    #   When enabled, MediaPackage passes through digital video broadcasting
+    #   (DVB) subtitles into the output.
+    #   @return [Boolean]
     #
     # @!attribute [rw] segment_duration_seconds
     #   Duration (in seconds) of each fragment. Actual fragments will be
@@ -1359,6 +1082,7 @@ module Aws::MediaPackageVod
     class HlsPackage < Struct.new(
       :encryption,
       :hls_manifests,
+      :include_dvb_subtitles,
       :segment_duration_seconds,
       :use_audio_rendition_group)
       SENSITIVE = []
@@ -1376,15 +1100,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAssetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "__string",
-    #         packaging_group_id: "__string",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   @return [Integer]
     #
@@ -1419,15 +1134,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPackagingConfigurationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "__string",
-    #         packaging_group_id: "__string",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   @return [Integer]
     #
@@ -1462,14 +1168,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPackagingGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "__string",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   @return [Integer]
     #
@@ -1500,13 +1198,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "__string", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   @return [String]
     #
@@ -1531,17 +1222,6 @@ module Aws::MediaPackageVod
 
     # A Microsoft Smooth Streaming (MSS) encryption configuration.
     #
-    # @note When making an API call, you may pass MssEncryption
-    #   data as a hash:
-    #
-    #       {
-    #         speke_key_provider: { # required
-    #           role_arn: "__string", # required
-    #           system_ids: ["__string"], # required
-    #           url: "__string", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] speke_key_provider
     #   A configuration for accessing an external Secure Packager and
     #   Encoder Key Exchange (SPEKE) service that will provide encryption
@@ -1557,18 +1237,6 @@ module Aws::MediaPackageVod
     end
 
     # A Microsoft Smooth Streaming (MSS) manifest configuration.
-    #
-    # @note When making an API call, you may pass MssManifest
-    #   data as a hash:
-    #
-    #       {
-    #         manifest_name: "__string",
-    #         stream_selection: {
-    #           max_video_bits_per_second: 1,
-    #           min_video_bits_per_second: 1,
-    #           stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #         },
-    #       }
     #
     # @!attribute [rw] manifest_name
     #   An optional string to include in the name of the manifest.
@@ -1588,30 +1256,6 @@ module Aws::MediaPackageVod
     end
 
     # A Microsoft Smooth Streaming (MSS) PackagingConfiguration.
-    #
-    # @note When making an API call, you may pass MssPackage
-    #   data as a hash:
-    #
-    #       {
-    #         encryption: {
-    #           speke_key_provider: { # required
-    #             role_arn: "__string", # required
-    #             system_ids: ["__string"], # required
-    #             url: "__string", # required
-    #           },
-    #         },
-    #         mss_manifests: [ # required
-    #           {
-    #             manifest_name: "__string",
-    #             stream_selection: {
-    #               max_video_bits_per_second: 1,
-    #               min_video_bits_per_second: 1,
-    #               stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #             },
-    #           },
-    #         ],
-    #         segment_duration_seconds: 1,
-    #       }
     #
     # @!attribute [rw] encryption
     #   A Microsoft Smooth Streaming (MSS) encryption configuration.
@@ -1656,6 +1300,10 @@ module Aws::MediaPackageVod
     #   A CMAF packaging configuration.
     #   @return [Types::CmafPackage]
     #
+    # @!attribute [rw] created_at
+    #   The time the PackagingConfiguration was created.
+    #   @return [String]
+    #
     # @!attribute [rw] dash_package
     #   A Dynamic Adaptive Streaming over HTTP (DASH) packaging
     #   configuration.
@@ -1686,6 +1334,7 @@ module Aws::MediaPackageVod
     class PackagingConfiguration < Struct.new(
       :arn,
       :cmaf_package,
+      :created_at,
       :dash_package,
       :hls_package,
       :id,
@@ -1764,6 +1413,10 @@ module Aws::MediaPackageVod
 
     # A MediaPackage VOD PackagingGroup resource.
     #
+    # @!attribute [rw] approximate_asset_count
+    #   The approximate asset count of the PackagingGroup.
+    #   @return [Integer]
+    #
     # @!attribute [rw] arn
     #   The ARN of the PackagingGroup.
     #   @return [String]
@@ -1771,6 +1424,10 @@ module Aws::MediaPackageVod
     # @!attribute [rw] authorization
     #   CDN Authorization credentials
     #   @return [Types::Authorization]
+    #
+    # @!attribute [rw] created_at
+    #   The time the PackagingGroup was created.
+    #   @return [String]
     #
     # @!attribute [rw] domain_name
     #   The fully qualified domain name for Assets in the PackagingGroup.
@@ -1791,8 +1448,10 @@ module Aws::MediaPackageVod
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod-2018-11-07/PackagingGroup AWS API Documentation
     #
     class PackagingGroup < Struct.new(
+      :approximate_asset_count,
       :arn,
       :authorization,
+      :created_at,
       :domain_name,
       :egress_access_logs,
       :id,
@@ -1879,14 +1538,18 @@ module Aws::MediaPackageVod
     # A configuration for accessing an external Secure Packager and Encoder
     # Key Exchange (SPEKE) service that will provide encryption keys.
     #
-    # @note When making an API call, you may pass SpekeKeyProvider
-    #   data as a hash:
-    #
-    #       {
-    #         role_arn: "__string", # required
-    #         system_ids: ["__string"], # required
-    #         url: "__string", # required
-    #       }
+    # @!attribute [rw] encryption_contract_configuration
+    #   Use encryptionContractConfiguration to configure one or more content
+    #   encryption keys for your endpoints that use SPEKE 2.0. The
+    #   encryption contract defines which content keys are used to encrypt
+    #   the audio and video tracks in your stream. To configure the
+    #   encryption contract, specify which audio and video encryption
+    #   presets to use. Note the following considerations when using
+    #   encryptionContractConfiguration: encryptionContractConfiguration can
+    #   be used for DASH endpoints that use SPEKE 2.0. SPEKE 2.0 relies on
+    #   the CPIX 2.3 specification. You must disable key rotation for this
+    #   endpoint by setting keyRotationIntervalSeconds to 0.
+    #   @return [Types::EncryptionContractConfiguration]
     #
     # @!attribute [rw] role_arn
     #   An Amazon Resource Name (ARN) of an IAM role that AWS Elemental
@@ -1904,6 +1567,7 @@ module Aws::MediaPackageVod
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod-2018-11-07/SpekeKeyProvider AWS API Documentation
     #
     class SpekeKeyProvider < Struct.new(
+      :encryption_contract_configuration,
       :role_arn,
       :system_ids,
       :url)
@@ -1912,15 +1576,6 @@ module Aws::MediaPackageVod
     end
 
     # A StreamSelection configuration.
-    #
-    # @note When making an API call, you may pass StreamSelection
-    #   data as a hash:
-    #
-    #       {
-    #         max_video_bits_per_second: 1,
-    #         min_video_bits_per_second: 1,
-    #         stream_order: "ORIGINAL", # accepts ORIGINAL, VIDEO_BITRATE_ASCENDING, VIDEO_BITRATE_DESCENDING
-    #       }
     #
     # @!attribute [rw] max_video_bits_per_second
     #   The maximum video bitrate (bps) to include in output.
@@ -1944,16 +1599,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "__string", # required
-    #         tags: { # required
-    #           "__string" => "__string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   @return [String]
     #
@@ -2003,14 +1648,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "__string", # required
-    #         tag_keys: ["__string"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   @return [String]
     #
@@ -2026,17 +1663,6 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdatePackagingGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         authorization: {
-    #           cdn_identifier_secret: "__string", # required
-    #           secrets_role_arn: "__string", # required
-    #         },
-    #         id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] authorization
     #   CDN Authorization credentials
     #   @return [Types::Authorization]
@@ -2053,12 +1679,18 @@ module Aws::MediaPackageVod
       include Aws::Structure
     end
 
+    # @!attribute [rw] approximate_asset_count
+    #   @return [Integer]
+    #
     # @!attribute [rw] arn
     #   @return [String]
     #
     # @!attribute [rw] authorization
     #   CDN Authorization credentials
     #   @return [Types::Authorization]
+    #
+    # @!attribute [rw] created_at
+    #   @return [String]
     #
     # @!attribute [rw] domain_name
     #   @return [String]
@@ -2077,8 +1709,10 @@ module Aws::MediaPackageVod
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediapackage-vod-2018-11-07/UpdatePackagingGroupResponse AWS API Documentation
     #
     class UpdatePackagingGroupResponse < Struct.new(
+      :approximate_asset_count,
       :arn,
       :authorization,
+      :created_at,
       :domain_name,
       :egress_access_logs,
       :id,

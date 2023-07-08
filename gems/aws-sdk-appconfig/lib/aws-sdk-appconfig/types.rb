@@ -10,6 +10,111 @@
 module Aws::AppConfig
   module Types
 
+    # An action defines the tasks that the extension performs during the
+    # AppConfig workflow. Each action includes an action point such as
+    # `ON_CREATE_HOSTED_CONFIGURATION`, `PRE_DEPLOYMENT`, or
+    # `ON_DEPLOYMENT`. Each action also includes a name, a URI to an Lambda
+    # function, and an Amazon Resource Name (ARN) for an Identity and Access
+    # Management assume role. You specify the name, URI, and ARN for each
+    # *action point* defined in the extension. You can specify the following
+    # actions for an extension:
+    #
+    # * `PRE_CREATE_HOSTED_CONFIGURATION_VERSION`
+    #
+    # * `PRE_START_DEPLOYMENT`
+    #
+    # * `ON_DEPLOYMENT_START`
+    #
+    # * `ON_DEPLOYMENT_STEP`
+    #
+    # * `ON_DEPLOYMENT_BAKING`
+    #
+    # * `ON_DEPLOYMENT_COMPLETE`
+    #
+    # * `ON_DEPLOYMENT_ROLLED_BACK`
+    #
+    # @!attribute [rw] name
+    #   The action name.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Information about the action.
+    #   @return [String]
+    #
+    # @!attribute [rw] uri
+    #   The extension URI associated to the action point in the extension
+    #   definition. The URI can be an Amazon Resource Name (ARN) for one of
+    #   the following: an Lambda function, an Amazon Simple Queue Service
+    #   queue, an Amazon Simple Notification Service topic, or the Amazon
+    #   EventBridge default event bus.
+    #   @return [String]
+    #
+    # @!attribute [rw] role_arn
+    #   An Amazon Resource Name (ARN) for an Identity and Access Management
+    #   assume role.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/Action AWS API Documentation
+    #
+    class Action < Struct.new(
+      :name,
+      :description,
+      :uri,
+      :role_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An extension that was invoked as part of a deployment event.
+    #
+    # @!attribute [rw] extension_identifier
+    #   The name, the ID, or the Amazon Resource Name (ARN) of the
+    #   extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] action_name
+    #   The name of the action.
+    #   @return [String]
+    #
+    # @!attribute [rw] uri
+    #   The extension URI associated to the action point in the extension
+    #   definition. The URI can be an Amazon Resource Name (ARN) for one of
+    #   the following: an Lambda function, an Amazon Simple Queue Service
+    #   queue, an Amazon Simple Notification Service topic, or the Amazon
+    #   EventBridge default event bus.
+    #   @return [String]
+    #
+    # @!attribute [rw] role_arn
+    #   An Amazon Resource Name (ARN) for an Identity and Access Management
+    #   assume role.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_message
+    #   The error message when an extension invocation fails.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_code
+    #   The error code when an extension invocation fails.
+    #   @return [String]
+    #
+    # @!attribute [rw] invocation_id
+    #   A system-generated ID for this invocation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ActionInvocation AWS API Documentation
+    #
+    class ActionInvocation < Struct.new(
+      :extension_identifier,
+      :action_name,
+      :uri,
+      :role_arn,
+      :error_message,
+      :error_code,
+      :invocation_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] id
     #   The application ID.
     #   @return [String]
@@ -50,22 +155,88 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # The input fails to satisfy the constraints specified by an AWS
-    # service.
+    # An extension that was invoked during a deployment.
+    #
+    # @!attribute [rw] extension_id
+    #   The system-generated ID of the extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] extension_association_id
+    #   The system-generated ID for the association.
+    #   @return [String]
+    #
+    # @!attribute [rw] version_number
+    #   The extension version number.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] parameters
+    #   One or more parameters for the actions called by the extension.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/AppliedExtension AWS API Documentation
+    #
+    class AppliedExtension < Struct.new(
+      :extension_id,
+      :extension_association_id,
+      :version_number,
+      :parameters)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Detailed information about the input that failed to satisfy the
+    # constraints specified by a call.
+    #
+    # @!attribute [rw] invalid_configuration
+    #   Detailed information about the bad request exception error when
+    #   creating a hosted configuration version.
+    #   @return [Array<Types::InvalidConfigurationDetail>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/BadRequestDetails AWS API Documentation
+    #
+    class BadRequestDetails < Struct.new(
+      :invalid_configuration,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class InvalidConfiguration < BadRequestDetails; end
+      class Unknown < BadRequestDetails; end
+    end
+
+    # The input fails to satisfy the constraints specified by an Amazon Web
+    # Services service.
     #
     # @!attribute [rw] message
     #   @return [String]
     #
+    # @!attribute [rw] reason
+    #   @return [String]
+    #
+    # @!attribute [rw] details
+    #   Detailed information about the input that failed to satisfy the
+    #   constraints specified by a call.
+    #   @return [Types::BadRequestDetails]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/BadRequestException AWS API Documentation
     #
     class BadRequestException < Struct.new(
-      :message)
+      :message,
+      :reason,
+      :details)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # @!attribute [rw] content
     #   The content of the configuration or the configuration data.
+    #
+    #   The `Content` attribute only contains data if the system finds new
+    #   or updated configuration data. If there is no new or updated data
+    #   and `ClientConfigurationVersion` matches the version of the current
+    #   configuration, AppConfig returns a `204 No Content` HTTP response
+    #   code and the `Content` value will be empty.
     #   @return [String]
     #
     # @!attribute [rw] configuration_version
@@ -113,12 +284,25 @@ module Aws::AppConfig
     #
     # @!attribute [rw] retrieval_role_arn
     #   The ARN of an IAM role with permission to access the configuration
-    #   at the specified LocationUri.
+    #   at the specified `LocationUri`.
     #   @return [String]
     #
     # @!attribute [rw] validators
     #   A list of methods for validating the configuration.
     #   @return [Array<Types::Validator>]
+    #
+    # @!attribute [rw] type
+    #   The type of configurations contained in the profile. AppConfig
+    #   supports `feature flags` and `freeform` configurations. We recommend
+    #   you create feature flag configurations to enable or disable new
+    #   features and freeform configurations to distribute configurations to
+    #   an application. When calling this API, enter one of the following
+    #   values for `Type`:
+    #
+    #   `AWS.AppConfig.FeatureFlags`
+    #
+    #   `AWS.Freeform`
+    #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ConfigurationProfile AWS API Documentation
     #
@@ -129,7 +313,8 @@ module Aws::AppConfig
       :description,
       :location_uri,
       :retrieval_role_arn,
-      :validators)
+      :validators,
+      :type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -156,6 +341,19 @@ module Aws::AppConfig
     #   The types of validators in the configuration profile.
     #   @return [Array<String>]
     #
+    # @!attribute [rw] type
+    #   The type of configurations contained in the profile. AppConfig
+    #   supports `feature flags` and `freeform` configurations. We recommend
+    #   you create feature flag configurations to enable or disable new
+    #   features and freeform configurations to distribute configurations to
+    #   an application. When calling this API, enter one of the following
+    #   values for `Type`:
+    #
+    #   `AWS.AppConfig.FeatureFlags`
+    #
+    #   `AWS.Freeform`
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ConfigurationProfileSummary AWS API Documentation
     #
     class ConfigurationProfileSummary < Struct.new(
@@ -163,7 +361,8 @@ module Aws::AppConfig
       :id,
       :name,
       :location_uri,
-      :validator_types)
+      :validator_types,
+      :type)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -200,17 +399,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         description: "Description",
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   A name for the application.
     #   @return [String]
@@ -235,26 +423,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateConfigurationProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         name: "Name", # required
-    #         description: "Description",
-    #         location_uri: "Uri", # required
-    #         retrieval_role_arn: "RoleArn",
-    #         validators: [
-    #           {
-    #             type: "JSON_SCHEMA", # required, accepts JSON_SCHEMA, LAMBDA
-    #             content: "StringWithLengthBetween0And32768", # required
-    #           },
-    #         ],
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -268,20 +436,34 @@ module Aws::AppConfig
     #   @return [String]
     #
     # @!attribute [rw] location_uri
-    #   A URI to locate the configuration. You can specify a Systems Manager
-    #   (SSM) document, an SSM Parameter Store parameter, or an Amazon S3
-    #   object. For an SSM document, specify either the document name in the
-    #   format `ssm-document://<Document_name>` or the Amazon Resource Name
-    #   (ARN). For a parameter, specify either the parameter name in the
-    #   format `ssm-parameter://<Parameter_name>` or the ARN. For an Amazon
-    #   S3 object, specify the URI in the following format:
-    #   `s3://<bucket>/<objectKey> `. Here is an example:
-    #   s3://my-bucket/my-app/us-east-1/my-config.json
+    #   A URI to locate the configuration. You can specify the following:
+    #
+    #   * For the AppConfig hosted configuration store and for feature
+    #     flags, specify `hosted`.
+    #
+    #   * For an Amazon Web Services Systems Manager Parameter Store
+    #     parameter, specify either the parameter name in the format
+    #     `ssm-parameter://<parameter name>` or the ARN.
+    #
+    #   * For an Secrets Manager secret, specify the URI in the following
+    #     format: `secrets-manager`://&lt;secret name&gt;.
+    #
+    #   * For an Amazon S3 object, specify the URI in the following format:
+    #     `s3://<bucket>/<objectKey> `. Here is an example:
+    #     `s3://my-bucket/my-app/us-east-1/my-config.json`
+    #
+    #   * For an SSM document, specify either the document name in the
+    #     format `ssm-document://<document name>` or the Amazon Resource
+    #     Name (ARN).
     #   @return [String]
     #
     # @!attribute [rw] retrieval_role_arn
     #   The ARN of an IAM role with permission to access the configuration
-    #   at the specified LocationUri.
+    #   at the specified `LocationUri`.
+    #
+    #   A retrieval role ARN is not required for configurations stored in
+    #   the AppConfig hosted configuration store. It is required for all
+    #   other sources that store your configuration.
     #   @return [String]
     #
     # @!attribute [rw] validators
@@ -294,6 +476,19 @@ module Aws::AppConfig
     #   and an optional value, both of which you define.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] type
+    #   The type of configurations contained in the profile. AppConfig
+    #   supports `feature flags` and `freeform` configurations. We recommend
+    #   you create feature flag configurations to enable or disable new
+    #   features and freeform configurations to distribute configurations to
+    #   an application. When calling this API, enter one of the following
+    #   values for `Type`:
+    #
+    #   `AWS.AppConfig.FeatureFlags`
+    #
+    #   `AWS.Freeform`
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/CreateConfigurationProfileRequest AWS API Documentation
     #
     class CreateConfigurationProfileRequest < Struct.new(
@@ -303,27 +498,12 @@ module Aws::AppConfig
       :location_uri,
       :retrieval_role_arn,
       :validators,
-      :tags)
+      :tags,
+      :type)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDeploymentStrategyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         description: "Description",
-    #         deployment_duration_in_minutes: 1, # required
-    #         final_bake_time_in_minutes: 1,
-    #         growth_factor: 1.0, # required
-    #         growth_type: "LINEAR", # accepts LINEAR, EXPONENTIAL
-    #         replicate_to: "NONE", # required, accepts NONE, SSM_DOCUMENT
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   A name for the deployment strategy.
     #   @return [String]
@@ -337,9 +517,18 @@ module Aws::AppConfig
     #   @return [Integer]
     #
     # @!attribute [rw] final_bake_time_in_minutes
-    #   The amount of time AppConfig monitors for alarms before considering
-    #   the deployment to be complete and no longer eligible for automatic
-    #   roll back.
+    #   Specifies the amount of time AppConfig monitors for Amazon
+    #   CloudWatch alarms after the configuration has been deployed to 100%
+    #   of its targets, before considering the deployment to be complete. If
+    #   an alarm is triggered during this time, AppConfig rolls back the
+    #   deployment. You must configure permissions for AppConfig to roll
+    #   back based on CloudWatch alarms. For more information, see
+    #   [Configuring permissions for rollback based on Amazon CloudWatch
+    #   alarms][1] in the *AppConfig User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/appconfig/latest/userguide/getting-started-with-appconfig-cloudwatch-alarms-permissions.html
     #   @return [Integer]
     #
     # @!attribute [rw] growth_factor
@@ -348,10 +537,10 @@ module Aws::AppConfig
     #   @return [Float]
     #
     # @!attribute [rw] growth_type
-    #   The algorithm used to define how percentage grows over time. AWS
+    #   The algorithm used to define how percentage grows over time.
     #   AppConfig supports the following growth types:
     #
-    #   **Linear**\: For this type, AppConfig processes the deployment by
+    #   **Linear**: For this type, AppConfig processes the deployment by
     #   dividing the total number of targets by the value specified for
     #   `Step percentage`. For example, a linear deployment that uses a
     #   `Step percentage` of 10 deploys the configuration to 10 percent of
@@ -359,7 +548,7 @@ module Aws::AppConfig
     #   the configuration to the next 10 percent. This continues until 100%
     #   of the targets have successfully received the configuration.
     #
-    #   **Exponential**\: For this type, AppConfig processes the deployment
+    #   **Exponential**: For this type, AppConfig processes the deployment
     #   exponentially using the following formula: `G*(2^N)`. In this
     #   formula, `G` is the growth factor specified by the user and `N` is
     #   the number of steps until the configuration is deployed to all
@@ -402,24 +591,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateEnvironmentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         name: "Name", # required
-    #         description: "Description",
-    #         monitors: [
-    #           {
-    #             alarm_arn: "Arn",
-    #             alarm_role_arn: "RoleArn",
-    #           },
-    #         ],
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -454,18 +625,91 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateHostedConfigurationVersionRequest
-    #   data as a hash:
+    # @!attribute [rw] extension_identifier
+    #   The name, the ID, or the Amazon Resource Name (ARN) of the
+    #   extension.
+    #   @return [String]
     #
-    #       {
-    #         application_id: "Id", # required
-    #         configuration_profile_id: "Id", # required
-    #         description: "Description",
-    #         content: "data", # required
-    #         content_type: "StringWithLengthBetween1And255", # required
-    #         latest_version_number: 1,
-    #       }
+    # @!attribute [rw] extension_version_number
+    #   The version number of the extension. If not specified, AppConfig
+    #   uses the maximum version of the extension.
+    #   @return [Integer]
     #
+    # @!attribute [rw] resource_identifier
+    #   The ARN of an application, configuration profile, or environment.
+    #   @return [String]
+    #
+    # @!attribute [rw] parameters
+    #   The parameter names and values defined in the extensions. Extension
+    #   parameters marked `Required` must be entered for this field.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] tags
+    #   Adds one or more tags for the specified extension association. Tags
+    #   are metadata that help you categorize resources in different ways,
+    #   for example, by purpose, owner, or environment. Each tag consists of
+    #   a key and an optional value, both of which you define.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/CreateExtensionAssociationRequest AWS API Documentation
+    #
+    class CreateExtensionAssociationRequest < Struct.new(
+      :extension_identifier,
+      :extension_version_number,
+      :resource_identifier,
+      :parameters,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] name
+    #   A name for the extension. Each extension name in your account must
+    #   be unique. Extension versions use the same name.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Information about the extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] actions
+    #   The actions defined in the extension.
+    #   @return [Hash<String,Array<Types::Action>>]
+    #
+    # @!attribute [rw] parameters
+    #   The parameters accepted by the extension. You specify parameter
+    #   values when you associate the extension to an AppConfig resource by
+    #   using the `CreateExtensionAssociation` API action. For Lambda
+    #   extension actions, these parameters are included in the Lambda
+    #   request object.
+    #   @return [Hash<String,Types::Parameter>]
+    #
+    # @!attribute [rw] tags
+    #   Adds one or more tags for the specified extension. Tags are metadata
+    #   that help you categorize resources in different ways, for example,
+    #   by purpose, owner, or environment. Each tag consists of a key and an
+    #   optional value, both of which you define.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] latest_version_number
+    #   You can omit this field when you create an extension. When you
+    #   create a new version, specify the most recent current version
+    #   number. For example, you create version 3, enter 2 for this field.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/CreateExtensionRequest AWS API Documentation
+    #
+    class CreateExtensionRequest < Struct.new(
+      :name,
+      :description,
+      :actions,
+      :parameters,
+      :tags,
+      :latest_version_number)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -488,16 +732,22 @@ module Aws::AppConfig
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/https:/www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17
+    #   [1]: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17
     #   @return [String]
     #
     # @!attribute [rw] latest_version_number
     #   An optional locking token used to prevent race conditions from
     #   overwriting configuration updates when creating a new version. To
     #   ensure your data is not overwritten when creating multiple hosted
-    #   configuration versions in rapid succession, specify the version of
-    #   the latest hosted configuration version.
+    #   configuration versions in rapid succession, specify the version
+    #   number of the latest hosted configuration version.
     #   @return [Integer]
+    #
+    # @!attribute [rw] version_label
+    #   An optional, user-defined label for the AppConfig hosted
+    #   configuration version. This value must contain at least one
+    #   non-numeric character. For example, "v2.2.0".
+    #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/CreateHostedConfigurationVersionRequest AWS API Documentation
     #
@@ -507,18 +757,12 @@ module Aws::AppConfig
       :description,
       :content,
       :content_type,
-      :latest_version_number)
+      :latest_version_number,
+      :version_label)
       SENSITIVE = [:content]
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The ID of the application to delete.
     #   @return [String]
@@ -531,14 +775,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteConfigurationProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         configuration_profile_id: "Id", # required
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID that includes the configuration profile you want
     #   to delete.
@@ -557,13 +793,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDeploymentStrategyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         deployment_strategy_id: "DeploymentStrategyId", # required
-    #       }
-    #
     # @!attribute [rw] deployment_strategy_id
     #   The ID of the deployment strategy you want to delete.
     #   @return [String]
@@ -576,20 +805,13 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteEnvironmentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         environment_id: "Id", # required
-    #       }
-    #
     # @!attribute [rw] application_id
-    #   The application ID that includes the environment you want to delete.
+    #   The application ID that includes the environment that you want to
+    #   delete.
     #   @return [String]
     #
     # @!attribute [rw] environment_id
-    #   The ID of the environment you want to delete.
+    #   The ID of the environment that you want to delete.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/DeleteEnvironmentRequest AWS API Documentation
@@ -601,15 +823,37 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteHostedConfigurationVersionRequest
-    #   data as a hash:
+    # @!attribute [rw] extension_association_id
+    #   The ID of the extension association to delete.
+    #   @return [String]
     #
-    #       {
-    #         application_id: "Id", # required
-    #         configuration_profile_id: "Id", # required
-    #         version_number: 1, # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/DeleteExtensionAssociationRequest AWS API Documentation
     #
+    class DeleteExtensionAssociationRequest < Struct.new(
+      :extension_association_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] extension_identifier
+    #   The name, ID, or Amazon Resource Name (ARN) of the extension you
+    #   want to delete.
+    #   @return [String]
+    #
+    # @!attribute [rw] version_number
+    #   A specific version of an extension to delete. If omitted, the
+    #   highest version is deleted.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/DeleteExtensionRequest AWS API Documentation
+    #
+    class DeleteExtensionRequest < Struct.new(
+      :extension_identifier,
+      :version_number)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -682,9 +926,9 @@ module Aws::AppConfig
     #   @return [Float]
     #
     # @!attribute [rw] final_bake_time_in_minutes
-    #   The amount of time AppConfig monitored for alarms before considering
-    #   the deployment to be complete and no longer eligible for automatic
-    #   roll back.
+    #   The amount of time that AppConfig monitored for alarms before
+    #   considering the deployment to be complete and no longer eligible for
+    #   automatic rollback.
     #   @return [Integer]
     #
     # @!attribute [rw] state
@@ -708,6 +952,27 @@ module Aws::AppConfig
     #   The time the deployment completed.
     #   @return [Time]
     #
+    # @!attribute [rw] applied_extensions
+    #   A list of extensions that were processed as part of the deployment.
+    #   The extensions that were previously associated to the configuration
+    #   profile, environment, or the application when `StartDeployment` was
+    #   called.
+    #   @return [Array<Types::AppliedExtension>]
+    #
+    # @!attribute [rw] kms_key_arn
+    #   The Amazon Resource Name of the Key Management Service key used to
+    #   encrypt configuration data. You can encrypt secrets stored in
+    #   Secrets Manager, Amazon Simple Storage Service (Amazon S3) objects
+    #   encrypted with SSE-KMS, or secure string parameters stored in Amazon
+    #   Web Services Systems Manager Parameter Store.
+    #   @return [String]
+    #
+    # @!attribute [rw] kms_key_identifier
+    #   The KMS key identifier (key ID, key alias, or key ARN). AppConfig
+    #   uses this ID to encrypt the configuration data using a customer
+    #   managed key.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/Deployment AWS API Documentation
     #
     class Deployment < Struct.new(
@@ -728,7 +993,10 @@ module Aws::AppConfig
       :event_log,
       :percentage_complete,
       :started_at,
-      :completed_at)
+      :completed_at,
+      :applied_extensions,
+      :kms_key_arn,
+      :kms_key_identifier)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -738,23 +1006,27 @@ module Aws::AppConfig
     # @!attribute [rw] event_type
     #   The type of deployment event. Deployment event types include the
     #   start, stop, or completion of a deployment; a percentage update; the
-    #   start or stop of a bake period; the start or completion of a
+    #   start or stop of a bake period; and the start or completion of a
     #   rollback.
     #   @return [String]
     #
     # @!attribute [rw] triggered_by
     #   The entity that triggered the deployment event. Events can be
-    #   triggered by a user, AWS AppConfig, an Amazon CloudWatch alarm, or
-    #   an internal error.
+    #   triggered by a user, AppConfig, an Amazon CloudWatch alarm, or an
+    #   internal error.
     #   @return [String]
     #
     # @!attribute [rw] description
     #   A description of the deployment event. Descriptions include, but are
-    #   not limited to, the user account or the CloudWatch alarm ARN that
-    #   initiated a rollback, the percentage of hosts that received the
+    #   not limited to, the user account or the Amazon CloudWatch alarm ARN
+    #   that initiated a rollback, the percentage of hosts that received the
     #   deployment, or in the case of an internal error, a recommendation to
     #   attempt a new deployment.
     #   @return [String]
+    #
+    # @!attribute [rw] action_invocations
+    #   The list of extensions that were invoked as part of the deployment.
+    #   @return [Array<Types::ActionInvocation>]
     #
     # @!attribute [rw] occurred_at
     #   The date and time the event occurred.
@@ -766,6 +1038,7 @@ module Aws::AppConfig
       :event_type,
       :triggered_by,
       :description,
+      :action_invocations,
       :occurred_at)
       SENSITIVE = []
       include Aws::Structure
@@ -815,9 +1088,9 @@ module Aws::AppConfig
     #   @return [Float]
     #
     # @!attribute [rw] final_bake_time_in_minutes
-    #   The amount of time AppConfig monitored for alarms before considering
-    #   the deployment to be complete and no longer eligible for automatic
-    #   roll back.
+    #   The amount of time that AppConfig monitored for alarms before
+    #   considering the deployment to be complete and no longer eligible for
+    #   automatic rollback.
     #   @return [Integer]
     #
     # @!attribute [rw] replicate_to
@@ -867,9 +1140,9 @@ module Aws::AppConfig
     #   @return [Float]
     #
     # @!attribute [rw] final_bake_time_in_minutes
-    #   The amount of time AppConfig monitors for alarms before considering
-    #   the deployment to be complete and no longer eligible for automatic
-    #   roll back.
+    #   The amount of time that AppConfig monitors for alarms before
+    #   considering the deployment to be complete and no longer eligible for
+    #   automatic rollback.
     #   @return [Integer]
     #
     # @!attribute [rw] state
@@ -981,13 +1254,194 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetApplicationRequest
-    #   data as a hash:
+    # @!attribute [rw] id
+    #   The system-generated ID of the extension.
+    #   @return [String]
     #
-    #       {
-    #         application_id: "Id", # required
-    #       }
+    # @!attribute [rw] name
+    #   The extension name.
+    #   @return [String]
     #
+    # @!attribute [rw] version_number
+    #   The extension version number.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] arn
+    #   The system-generated Amazon Resource Name (ARN) for the extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Information about the extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] actions
+    #   The actions defined in the extension.
+    #   @return [Hash<String,Array<Types::Action>>]
+    #
+    # @!attribute [rw] parameters
+    #   The parameters accepted by the extension. You specify parameter
+    #   values when you associate the extension to an AppConfig resource by
+    #   using the `CreateExtensionAssociation` API action. For Lambda
+    #   extension actions, these parameters are included in the Lambda
+    #   request object.
+    #   @return [Hash<String,Types::Parameter>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/Extension AWS API Documentation
+    #
+    class Extension < Struct.new(
+      :id,
+      :name,
+      :version_number,
+      :arn,
+      :description,
+      :actions,
+      :parameters)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] id
+    #   The system-generated ID for the association.
+    #   @return [String]
+    #
+    # @!attribute [rw] extension_arn
+    #   The ARN of the extension defined in the association.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_arn
+    #   The ARNs of applications, configuration profiles, or environments
+    #   defined in the association.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   The system-generated Amazon Resource Name (ARN) for the extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] parameters
+    #   The parameter names and values defined in the association.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] extension_version_number
+    #   The version number for the extension defined in the association.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ExtensionAssociation AWS API Documentation
+    #
+    class ExtensionAssociation < Struct.new(
+      :id,
+      :extension_arn,
+      :resource_arn,
+      :arn,
+      :parameters,
+      :extension_version_number)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about an association between an extension and an AppConfig
+    # resource such as an application, environment, or configuration
+    # profile. Call `GetExtensionAssociation` to get more information about
+    # an association.
+    #
+    # @!attribute [rw] id
+    #   The extension association ID. This ID is used to call other
+    #   `ExtensionAssociation` API actions such as `GetExtensionAssociation`
+    #   or `DeleteExtensionAssociation`.
+    #   @return [String]
+    #
+    # @!attribute [rw] extension_arn
+    #   The system-generated Amazon Resource Name (ARN) for the extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_arn
+    #   The ARNs of applications, configuration profiles, or environments
+    #   defined in the association.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ExtensionAssociationSummary AWS API Documentation
+    #
+    class ExtensionAssociationSummary < Struct.new(
+      :id,
+      :extension_arn,
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] items
+    #   The list of extension associations. Each item represents an
+    #   extension association to an application, environment, or
+    #   configuration profile.
+    #   @return [Array<Types::ExtensionAssociationSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   The token for the next set of items to return. Use this token to get
+    #   the next set of results.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ExtensionAssociations AWS API Documentation
+    #
+    class ExtensionAssociations < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about an extension. Call `GetExtension` to get more
+    # information about an extension.
+    #
+    # @!attribute [rw] id
+    #   The system-generated ID of the extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The extension name.
+    #   @return [String]
+    #
+    # @!attribute [rw] version_number
+    #   The extension version number.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] arn
+    #   The system-generated Amazon Resource Name (ARN) for the extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Information about the extension.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ExtensionSummary AWS API Documentation
+    #
+    class ExtensionSummary < Struct.new(
+      :id,
+      :name,
+      :version_number,
+      :arn,
+      :description)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] items
+    #   The list of available extensions. The list includes Amazon Web
+    #   Services authored and user-created extensions.
+    #   @return [Array<Types::ExtensionSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   The token for the next set of items to return. Use this token to get
+    #   the next set of results.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/Extensions AWS API Documentation
+    #
+    class Extensions < Struct.new(
+      :items,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] application_id
     #   The ID of the application you want to get.
     #   @return [String]
@@ -1000,21 +1454,13 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetConfigurationProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         configuration_profile_id: "Id", # required
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The ID of the application that includes the configuration profile
     #   you want to get.
     #   @return [String]
     #
     # @!attribute [rw] configuration_profile_id
-    #   The ID of the configuration profile you want to get.
+    #   The ID of the configuration profile that you want to get.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/GetConfigurationProfileRequest AWS API Documentation
@@ -1026,17 +1472,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetConfigurationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "StringWithLengthBetween1And64", # required
-    #         environment: "StringWithLengthBetween1And64", # required
-    #         configuration: "StringWithLengthBetween1And64", # required
-    #         client_id: "StringWithLengthBetween1And64", # required
-    #         client_configuration_version: "Version",
-    #       }
-    #
     # @!attribute [rw] application
     #   The application to get. Specify either the application name or the
     #   application ID.
@@ -1053,8 +1488,9 @@ module Aws::AppConfig
     #   @return [String]
     #
     # @!attribute [rw] client_id
-    #   A unique ID to identify the client for the configuration. This ID
-    #   enables AppConfig to deploy the configuration in intervals, as
+    #   The clientId parameter in the following command is a unique,
+    #   user-specified ID to identify the client for the configuration. This
+    #   ID enables AppConfig to deploy the configuration in intervals, as
     #   defined in the deployment strategy.
     #   @return [String]
     #
@@ -1062,24 +1498,31 @@ module Aws::AppConfig
     #   The configuration version returned in the most recent
     #   `GetConfiguration` response.
     #
-    #   AWS AppConfig uses the value of the `ClientConfigurationVersion`
+    #   AppConfig uses the value of the `ClientConfigurationVersion`
     #   parameter to identify the configuration version on your clients. If
     #   you don’t send `ClientConfigurationVersion` with each call to
     #   `GetConfiguration`, your clients receive the current configuration.
     #   You are charged each time your clients receive a configuration.
     #
-    #    To avoid excess charges, we recommend that you include the
-    #   `ClientConfigurationVersion` value with every call to
-    #   `GetConfiguration`. This value must be saved on your client.
-    #   Subsequent calls to `GetConfiguration` must pass this value by using
-    #   the `ClientConfigurationVersion` parameter.
+    #    To avoid excess charges, we recommend you use the
+    #   [StartConfigurationSession][1] and [GetLatestConfiguration][2] APIs,
+    #   which track the client configuration version on your behalf. If you
+    #   choose to continue using `GetConfiguration`, we recommend that you
+    #   include the `ClientConfigurationVersion` value with every call to
+    #   `GetConfiguration`. The value to use for
+    #   `ClientConfigurationVersion` comes from the `ConfigurationVersion`
+    #   attribute returned by `GetConfiguration` when there is new or
+    #   updated data, and should be saved for subsequent calls to
+    #   `GetConfiguration`.
     #
     #   For more information about working with configurations, see
-    #   [Retrieving the Configuration][1] in the *AWS AppConfig User Guide*.
+    #   [Retrieving the Configuration][3] in the *AppConfig User Guide*.
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/systems-manager/latest/userguide/appconfig-retrieving-the-configuration.html
+    #   [1]: https://docs.aws.amazon.com/appconfig/2019-10-09/APIReference/StartConfigurationSession.html
+    #   [2]: https://docs.aws.amazon.com/appconfig/2019-10-09/APIReference/GetLatestConfiguration.html
+    #   [3]: http://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-retrieving-the-configuration.html
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/GetConfigurationRequest AWS API Documentation
@@ -1094,15 +1537,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDeploymentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         environment_id: "Id", # required
-    #         deployment_number: 1, # required
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The ID of the application that includes the deployment you want to
     #   get.
@@ -1127,13 +1561,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDeploymentStrategyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         deployment_strategy_id: "DeploymentStrategyId", # required
-    #       }
-    #
     # @!attribute [rw] deployment_strategy_id
     #   The ID of the deployment strategy to get.
     #   @return [String]
@@ -1146,21 +1573,13 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetEnvironmentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         environment_id: "Id", # required
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The ID of the application that includes the environment you want to
     #   get.
     #   @return [String]
     #
     # @!attribute [rw] environment_id
-    #   The ID of the environment you wnat to get.
+    #   The ID of the environment that you want to get.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/GetEnvironmentRequest AWS API Documentation
@@ -1172,15 +1591,37 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetHostedConfigurationVersionRequest
-    #   data as a hash:
+    # @!attribute [rw] extension_association_id
+    #   The extension association ID to get.
+    #   @return [String]
     #
-    #       {
-    #         application_id: "Id", # required
-    #         configuration_profile_id: "Id", # required
-    #         version_number: 1, # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/GetExtensionAssociationRequest AWS API Documentation
     #
+    class GetExtensionAssociationRequest < Struct.new(
+      :extension_association_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] extension_identifier
+    #   The name, the ID, or the Amazon Resource Name (ARN) of the
+    #   extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] version_number
+    #   The extension version number. If no version number was defined,
+    #   AppConfig uses the highest version.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/GetExtensionRequest AWS API Documentation
+    #
+    class GetExtensionRequest < Struct.new(
+      :extension_identifier,
+      :version_number)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1229,7 +1670,11 @@ module Aws::AppConfig
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/https:/www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17
+    #   [1]: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17
+    #   @return [String]
+    #
+    # @!attribute [rw] version_label
+    #   A user-defined label for an AppConfig hosted configuration version.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/HostedConfigurationVersion AWS API Documentation
@@ -1240,7 +1685,8 @@ module Aws::AppConfig
       :version_number,
       :description,
       :content,
-      :content_type)
+      :content_type,
+      :version_label)
       SENSITIVE = [:content]
       include Aws::Structure
     end
@@ -1269,7 +1715,11 @@ module Aws::AppConfig
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/https:/www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17
+    #   [1]: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17
+    #   @return [String]
+    #
+    # @!attribute [rw] version_label
+    #   A user-defined label for an AppConfig hosted configuration version.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/HostedConfigurationVersionSummary AWS API Documentation
@@ -1279,7 +1729,8 @@ module Aws::AppConfig
       :configuration_profile_id,
       :version_number,
       :description,
-      :content_type)
+      :content_type,
+      :version_label)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1315,14 +1766,44 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListApplicationsRequest
-    #   data as a hash:
+    # Detailed information about the bad request exception error when
+    # creating a hosted configuration version.
     #
-    #       {
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
+    # @!attribute [rw] constraint
+    #   The invalid or out-of-range validation constraint in your JSON
+    #   schema that failed validation.
+    #   @return [String]
     #
+    # @!attribute [rw] location
+    #   Location of the validation constraint in the configuration JSON
+    #   schema that failed validation.
+    #   @return [String]
+    #
+    # @!attribute [rw] reason
+    #   The reason for an invalid configuration error.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   The type of error for an invalid configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   Details about an error with Lambda when a synchronous extension
+    #   experiences an error during an invocation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/InvalidConfigurationDetail AWS API Documentation
+    #
+    class InvalidConfigurationDetail < Struct.new(
+      :constraint,
+      :location,
+      :reason,
+      :type,
+      :value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] max_results
     #   The maximum number of items to return for this call. The call also
     #   returns a token that you can specify in a subsequent call to get the
@@ -1330,8 +1811,12 @@ module Aws::AppConfig
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
-    #   A token to start the list. Use this token to get the next set of
-    #   results.
+    #   A token to start the list. Next token is a pagination token
+    #   generated by AppConfig to describe what page the previous List call
+    #   ended on. For the first List request, the nextToken should not be
+    #   set. On subsequent calls, the nextToken parameter should be set to
+    #   the previous responses nextToken value. Use this token to get the
+    #   next set of results.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ListApplicationsRequest AWS API Documentation
@@ -1343,15 +1828,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListConfigurationProfilesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1367,24 +1843,23 @@ module Aws::AppConfig
     #   results.
     #   @return [String]
     #
+    # @!attribute [rw] type
+    #   A filter based on the type of configurations that the configuration
+    #   profile contains. A configuration can be a feature flag or a
+    #   freeform configuration.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ListConfigurationProfilesRequest AWS API Documentation
     #
     class ListConfigurationProfilesRequest < Struct.new(
       :application_id,
       :max_results,
-      :next_token)
+      :next_token,
+      :type)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDeploymentStrategiesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   The maximum number of items to return for this call. The call also
     #   returns a token that you can specify in a subsequent call to get the
@@ -1405,16 +1880,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDeploymentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         environment_id: "Id", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1424,14 +1889,16 @@ module Aws::AppConfig
     #   @return [String]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of items to return for this call. The call also
-    #   returns a token that you can specify in a subsequent call to get the
-    #   next set of results.
+    #   The maximum number of items that may be returned for this call. If
+    #   there are items that have not yet been returned, the response will
+    #   include a non-null `NextToken` that you can provide in a subsequent
+    #   call to get the next set of results.
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
-    #   A token to start the list. Use this token to get the next set of
-    #   results.
+    #   The token returned by a prior call to this operation indicating the
+    #   next set of results to be returned. If not specified, the operation
+    #   will return the first set of results.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ListDeploymentsRequest AWS API Documentation
@@ -1445,15 +1912,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListEnvironmentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1479,16 +1937,67 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListHostedConfigurationVersionsRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_identifier
+    #   The ARN of an application, configuration profile, or environment.
+    #   @return [String]
     #
-    #       {
-    #         application_id: "Id", # required
-    #         configuration_profile_id: "Id", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
+    # @!attribute [rw] extension_identifier
+    #   The name, the ID, or the Amazon Resource Name (ARN) of the
+    #   extension.
+    #   @return [String]
     #
+    # @!attribute [rw] extension_version_number
+    #   The version number for the extension defined in the association.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that you can specify in a subsequent call to get the
+    #   next set of results.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results or pass null to get the first set of results.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ListExtensionAssociationsRequest AWS API Documentation
+    #
+    class ListExtensionAssociationsRequest < Struct.new(
+      :resource_identifier,
+      :extension_identifier,
+      :extension_version_number,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that you can specify in a subsequent call to get the
+    #   next set of results.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The extension name.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ListExtensionsRequest AWS API Documentation
+    #
+    class ListExtensionsRequest < Struct.new(
+      :max_results,
+      :next_token,
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1508,24 +2017,26 @@ module Aws::AppConfig
     #   results.
     #   @return [String]
     #
+    # @!attribute [rw] version_label
+    #   An optional filter that can be used to specify the version label of
+    #   an AppConfig hosted configuration version. This parameter supports
+    #   filtering by prefix using a wildcard, for example "v2*". If you
+    #   don't specify an asterisk at the end of the value, only an exact
+    #   match is returned.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/ListHostedConfigurationVersionsRequest AWS API Documentation
     #
     class ListHostedConfigurationVersionsRequest < Struct.new(
       :application_id,
       :configuration_profile_id,
       :max_results,
-      :next_token)
+      :next_token,
+      :version_label)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The resource ARN.
     #   @return [String]
@@ -1540,20 +2051,13 @@ module Aws::AppConfig
 
     # Amazon CloudWatch alarms to monitor during the deployment process.
     #
-    # @note When making an API call, you may pass Monitor
-    #   data as a hash:
-    #
-    #       {
-    #         alarm_arn: "Arn",
-    #         alarm_role_arn: "RoleArn",
-    #       }
-    #
     # @!attribute [rw] alarm_arn
-    #   ARN of the Amazon CloudWatch alarm.
+    #   Amazon Resource Name (ARN) of the Amazon CloudWatch alarm.
     #   @return [String]
     #
     # @!attribute [rw] alarm_role_arn
-    #   ARN of an IAM role for AppConfig to monitor `AlarmArn`.
+    #   ARN of an Identity and Access Management (IAM) role for AppConfig to
+    #   monitor `AlarmArn`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/Monitor AWS API Documentation
@@ -1561,6 +2065,33 @@ module Aws::AppConfig
     class Monitor < Struct.new(
       :alarm_arn,
       :alarm_role_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A value such as an Amazon Resource Name (ARN) or an Amazon Simple
+    # Notification Service topic entered in an extension when invoked.
+    # Parameter values are specified in an extension association. For more
+    # information about extensions, see [Working with AppConfig
+    # extensions][1] in the *AppConfig User Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/appconfig/latest/userguide/working-with-appconfig-extensions.html
+    #
+    # @!attribute [rw] description
+    #   Information about the parameter.
+    #   @return [String]
+    #
+    # @!attribute [rw] required
+    #   A parameter value must be specified in the extension association.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/Parameter AWS API Documentation
+    #
+    class Parameter < Struct.new(
+      :description,
+      :required)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1622,8 +2153,8 @@ module Aws::AppConfig
     end
 
     # The number of hosted configuration versions exceeds the limit for the
-    # AppConfig configuration store. Delete one or more versions and try
-    # again.
+    # AppConfig hosted configuration store. Delete one or more versions and
+    # try again.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1636,21 +2167,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartDeploymentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         environment_id: "Id", # required
-    #         deployment_strategy_id: "DeploymentStrategyId", # required
-    #         configuration_profile_id: "Id", # required
-    #         configuration_version: "Version", # required
-    #         description: "Description",
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1668,7 +2184,9 @@ module Aws::AppConfig
     #   @return [String]
     #
     # @!attribute [rw] configuration_version
-    #   The configuration version to deploy.
+    #   The configuration version to deploy. If deploying an AppConfig
+    #   hosted configuration version, you can specify either the version
+    #   number or version label.
     #   @return [String]
     #
     # @!attribute [rw] description
@@ -1681,6 +2199,12 @@ module Aws::AppConfig
     #   an optional value, both of which you define.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] kms_key_identifier
+    #   The KMS key identifier (key ID, key alias, or key ARN). AppConfig
+    #   uses this ID to encrypt the configuration data using a customer
+    #   managed key.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/StartDeploymentRequest AWS API Documentation
     #
     class StartDeploymentRequest < Struct.new(
@@ -1690,20 +2214,12 @@ module Aws::AppConfig
       :configuration_profile_id,
       :configuration_version,
       :description,
-      :tags)
+      :tags,
+      :kms_key_identifier)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopDeploymentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         environment_id: "Id", # required
-    #         deployment_number: 1, # required
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1726,16 +2242,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the resource for which to retrieve tags.
     #   @return [String]
@@ -1755,14 +2261,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the resource for which to remove tags.
     #   @return [String]
@@ -1780,15 +2278,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         name: "Name",
-    #         description: "Description",
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1811,23 +2300,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateConfigurationProfileRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         configuration_profile_id: "Id", # required
-    #         name: "Name",
-    #         description: "Description",
-    #         retrieval_role_arn: "RoleArn",
-    #         validators: [
-    #           {
-    #             type: "JSON_SCHEMA", # required, accepts JSON_SCHEMA, LAMBDA
-    #             content: "StringWithLengthBetween0And32768", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1846,7 +2318,7 @@ module Aws::AppConfig
     #
     # @!attribute [rw] retrieval_role_arn
     #   The ARN of an IAM role with permission to access the configuration
-    #   at the specified LocationUri.
+    #   at the specified `LocationUri`.
     #   @return [String]
     #
     # @!attribute [rw] validators
@@ -1866,18 +2338,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateDeploymentStrategyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         deployment_strategy_id: "DeploymentStrategyId", # required
-    #         description: "Description",
-    #         deployment_duration_in_minutes: 1,
-    #         final_bake_time_in_minutes: 1,
-    #         growth_factor: 1.0,
-    #         growth_type: "LINEAR", # accepts LINEAR, EXPONENTIAL
-    #       }
-    #
     # @!attribute [rw] deployment_strategy_id
     #   The deployment strategy ID.
     #   @return [String]
@@ -1891,9 +2351,9 @@ module Aws::AppConfig
     #   @return [Integer]
     #
     # @!attribute [rw] final_bake_time_in_minutes
-    #   The amount of time AppConfig monitors for alarms before considering
-    #   the deployment to be complete and no longer eligible for automatic
-    #   roll back.
+    #   The amount of time that AppConfig monitors for alarms before
+    #   considering the deployment to be complete and no longer eligible for
+    #   automatic rollback.
     #   @return [Integer]
     #
     # @!attribute [rw] growth_factor
@@ -1902,10 +2362,10 @@ module Aws::AppConfig
     #   @return [Float]
     #
     # @!attribute [rw] growth_type
-    #   The algorithm used to define how percentage grows over time. AWS
+    #   The algorithm used to define how percentage grows over time.
     #   AppConfig supports the following growth types:
     #
-    #   **Linear**\: For this type, AppConfig processes the deployment by
+    #   **Linear**: For this type, AppConfig processes the deployment by
     #   increments of the growth factor evenly distributed over the
     #   deployment time. For example, a linear deployment that uses a growth
     #   factor of 20 initially makes the configuration available to 20
@@ -1914,7 +2374,7 @@ module Aws::AppConfig
     #   continues until 100% of the targets are set to receive the deployed
     #   configuration.
     #
-    #   **Exponential**\: For this type, AppConfig processes the deployment
+    #   **Exponential**: For this type, AppConfig processes the deployment
     #   exponentially using the following formula: `G*(2^N)`. In this
     #   formula, `G` is the growth factor specified by the user and `N` is
     #   the number of steps until the configuration is deployed to all
@@ -1945,22 +2405,6 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateEnvironmentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application_id: "Id", # required
-    #         environment_id: "Id", # required
-    #         name: "Name",
-    #         description: "Description",
-    #         monitors: [
-    #           {
-    #             alarm_arn: "Arn",
-    #             alarm_role_arn: "RoleArn",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -1993,15 +2437,56 @@ module Aws::AppConfig
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ValidateConfigurationRequest
-    #   data as a hash:
+    # @!attribute [rw] extension_association_id
+    #   The system-generated ID for the association.
+    #   @return [String]
     #
-    #       {
-    #         application_id: "Id", # required
-    #         configuration_profile_id: "Id", # required
-    #         configuration_version: "Version", # required
-    #       }
+    # @!attribute [rw] parameters
+    #   The parameter names and values defined in the extension.
+    #   @return [Hash<String,String>]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/UpdateExtensionAssociationRequest AWS API Documentation
+    #
+    class UpdateExtensionAssociationRequest < Struct.new(
+      :extension_association_id,
+      :parameters)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] extension_identifier
+    #   The name, the ID, or the Amazon Resource Name (ARN) of the
+    #   extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   Information about the extension.
+    #   @return [String]
+    #
+    # @!attribute [rw] actions
+    #   The actions defined in the extension.
+    #   @return [Hash<String,Array<Types::Action>>]
+    #
+    # @!attribute [rw] parameters
+    #   One or more parameters for the actions called by the extension.
+    #   @return [Hash<String,Types::Parameter>]
+    #
+    # @!attribute [rw] version_number
+    #   The extension version number.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/UpdateExtensionRequest AWS API Documentation
+    #
+    class UpdateExtensionRequest < Struct.new(
+      :extension_identifier,
+      :description,
+      :actions,
+      :parameters,
+      :version_number)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] application_id
     #   The application ID.
     #   @return [String]
@@ -2025,19 +2510,11 @@ module Aws::AppConfig
     end
 
     # A validator provides a syntactic or semantic check to ensure the
-    # configuration you want to deploy functions as intended. To validate
-    # your application configuration data, you provide a schema or a Lambda
-    # function that runs against the configuration. The configuration
-    # deployment or update can only proceed when the configuration data is
-    # valid.
-    #
-    # @note When making an API call, you may pass Validator
-    #   data as a hash:
-    #
-    #       {
-    #         type: "JSON_SCHEMA", # required, accepts JSON_SCHEMA, LAMBDA
-    #         content: "StringWithLengthBetween0And32768", # required
-    #       }
+    # configuration that you want to deploy functions as intended. To
+    # validate your application configuration data, you provide a schema or
+    # an Amazon Web Services Lambda function that runs against the
+    # configuration. The configuration deployment or update can only proceed
+    # when the configuration data is valid.
     #
     # @!attribute [rw] type
     #   AppConfig supports validators of type `JSON_SCHEMA` and `LAMBDA`
@@ -2045,7 +2522,7 @@ module Aws::AppConfig
     #
     # @!attribute [rw] content
     #   Either the JSON Schema content or the Amazon Resource Name (ARN) of
-    #   an AWS Lambda function.
+    #   an Lambda function.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appconfig-2019-10-09/Validator AWS API Documentation

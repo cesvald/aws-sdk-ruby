@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-if RUBY_VERSION >= '2.1'
-  begin
-    require 'http/2'
-  rescue LoadError; end
-end
+begin
+  require 'http/2'
+rescue LoadError; end
 require 'openssl'
 require 'socket'
 
@@ -45,7 +43,9 @@ module Seahorse
           @h2_client = HTTP2::Client.new(
             settings_max_concurrent_streams: max_concurrent_streams
           )
-          @logger = options[:logger] || Logger.new($stdout) if @http_wire_trace
+          @logger = if @http_wire_trace
+            options[:logger] || Logger.new($stdout)
+          end
           @chunk_size = options[:read_chunk_size] || CHUNKSIZE
           @errors = []
           @status = :ready
@@ -80,13 +80,18 @@ module Seahorse
               _nonblocking_connect(tcp, addr)
               debug_output('opened')
 
-              @socket = OpenSSL::SSL::SSLSocket.new(tcp, _tls_context)
-              @socket.sync_close = true
-              @socket.hostname = endpoint.host
+              if endpoint.scheme == 'https'
+                @socket = OpenSSL::SSL::SSLSocket.new(tcp, _tls_context)
+                @socket.sync_close = true
+                @socket.hostname = endpoint.host
 
-              debug_output("starting TLS for #{endpoint.host}:#{endpoint.port} ...")
-              @socket.connect
-              debug_output('TLS established')
+                debug_output("starting TLS for #{endpoint.host}:#{endpoint.port} ...")
+                @socket.connect
+                debug_output('TLS established')
+              else
+                @socket = tcp
+              end
+
               _register_h2_callbacks
               @status = :active
             elsif @status == :closed
@@ -101,7 +106,7 @@ module Seahorse
           @mutex.synchronize {
             return if @socket_thread
             @socket_thread = Thread.new do
-              while !@socket.closed?
+              while @socket && !@socket.closed?
                 begin
                   data = @socket.read_nonblock(@chunk_size)
                   @h2_client << data
@@ -127,6 +132,7 @@ module Seahorse
                   self.close!
                 end
               end
+              @socket_thread = nil
             end
             @socket_thread.abort_on_exception = true
           }
@@ -138,10 +144,6 @@ module Seahorse
             if @socket
               @socket.close
               @socket = nil
-            end
-            if @socket_thread
-              Thread.kill(@socket_thread)
-              @socket_thread = nil
             end
             @status = :closed
           }
@@ -180,11 +182,13 @@ module Seahorse
               @socket.flush
             end
           end
-          @h2_client.on(:frame_sent) do |frame|
-            debug_output("frame: #{frame.inspect}", :send)
-          end
-          @h2_client.on(:frame_received) do |frame|
-            debug_output("frame: #{frame.inspect}", :receive)
+          if @http_wire_trace
+            @h2_client.on(:frame_sent) do |frame|
+              debug_output("frame: #{frame.inspect}", :send)
+            end
+            @h2_client.on(:frame_received) do |frame|
+              debug_output("frame: #{frame.inspect}", :receive)
+            end
           end
         end
 

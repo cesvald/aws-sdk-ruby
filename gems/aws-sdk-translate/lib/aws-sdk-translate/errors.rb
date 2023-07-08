@@ -39,6 +39,8 @@ module Aws::Translate
   # * {ServiceUnavailableException}
   # * {TextSizeLimitExceededException}
   # * {TooManyRequestsException}
+  # * {TooManyTagsException}
+  # * {UnsupportedDisplayLanguageCodeException}
   # * {UnsupportedLanguagePairException}
   #
   # Additionally, error classes are dynamically generated for service errors based on the error code
@@ -229,6 +231,46 @@ module Aws::Translate
       # @return [String]
       def message
         @message || @data[:message]
+      end
+    end
+
+    class TooManyTagsException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Translate::Types::TooManyTagsException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+
+      # @return [String]
+      def resource_arn
+        @data[:resource_arn]
+      end
+    end
+
+    class UnsupportedDisplayLanguageCodeException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Translate::Types::UnsupportedDisplayLanguageCodeException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+
+      # @return [String]
+      def display_language_code
+        @data[:display_language_code]
       end
     end
 

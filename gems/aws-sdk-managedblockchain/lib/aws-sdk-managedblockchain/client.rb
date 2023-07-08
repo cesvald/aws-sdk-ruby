@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:managedblockchain)
@@ -73,8 +77,13 @@ module Aws::ManagedBlockchain
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::ManagedBlockchain::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::ManagedBlockchain
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::ManagedBlockchain
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::ManagedBlockchain
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::ManagedBlockchain
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::ManagedBlockchain
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::ManagedBlockchain::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::ManagedBlockchain::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::ManagedBlockchain
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::ManagedBlockchain
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -327,6 +384,73 @@ module Aws::ManagedBlockchain
 
     # @!group API Operations
 
+    # Creates a new accessor for use with Managed Blockchain Ethereum nodes.
+    # An accessor contains information required for token based access to
+    # your Ethereum nodes.
+    #
+    # @option params [required, String] :client_request_token
+    #   This is a unique, case-sensitive identifier that you provide to ensure
+    #   the idempotency of the operation. An idempotent operation completes no
+    #   more than once. This identifier is required only if you make a service
+    #   request directly using an HTTP client. It is generated automatically
+    #   if you use an Amazon Web Services SDK or the Amazon Web Services CLI.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @option params [required, String] :accessor_type
+    #   The type of accessor.
+    #
+    #   <note markdown="1"> Currently, accessor type is restricted to `BILLING_TOKEN`.
+    #
+    #    </note>
+    #
+    # @option params [Hash<String,String>] :tags
+    #   Tags to assign to the Accessor.
+    #
+    #   Each tag consists of a key and an optional value. You can specify
+    #   multiple key-value pairs in a single request with an overall maximum
+    #   of 50 tags allowed per resource.
+    #
+    #   For more information about tags, see [Tagging Resources][1] in the
+    #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
+    #   Resources][2] in the *Amazon Managed Blockchain Hyperledger Fabric
+    #   Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/ethereum-dev/tagging-resources.html
+    #   [2]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/tagging-resources.html
+    #
+    # @return [Types::CreateAccessorOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateAccessorOutput#accessor_id #accessor_id} => String
+    #   * {Types::CreateAccessorOutput#billing_token #billing_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_accessor({
+    #     client_request_token: "ClientRequestTokenString", # required
+    #     accessor_type: "BILLING_TOKEN", # required, accepts BILLING_TOKEN
+    #     tags: {
+    #       "TagKey" => "TagValue",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.accessor_id #=> String
+    #   resp.billing_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/CreateAccessor AWS API Documentation
+    #
+    # @overload create_accessor(params = {})
+    # @param [Hash] params ({})
+    def create_accessor(params = {}, options = {})
+      req = build_request(:create_accessor, params)
+      req.send_request(options)
+    end
+
     # Creates a member within a Managed Blockchain network.
     #
     # Applies only to Hyperledger Fabric.
@@ -336,7 +460,7 @@ module Aws::ManagedBlockchain
     #   idempotency of the operation. An idempotent operation completes no
     #   more than one time. This identifier is required only if you make a
     #   service request directly using an HTTP client. It is generated
-    #   automatically if you use an AWS SDK or the AWS CLI.
+    #   automatically if you use an Amazon Web Services SDK or the CLI.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
@@ -382,6 +506,7 @@ module Aws::ManagedBlockchain
     #       tags: {
     #         "TagKey" => "TagValue",
     #       },
+    #       kms_key_arn: "ArnString",
     #     },
     #   })
     #
@@ -403,11 +528,11 @@ module Aws::ManagedBlockchain
     # Applies only to Hyperledger Fabric.
     #
     # @option params [required, String] :client_request_token
-    #   A unique, case-sensitive identifier that you provide to ensure the
-    #   idempotency of the operation. An idempotent operation completes no
-    #   more than one time. This identifier is required only if you make a
-    #   service request directly using an HTTP client. It is generated
-    #   automatically if you use an AWS SDK or the AWS CLI.
+    #   This is a unique, case-sensitive identifier that you provide to ensure
+    #   the idempotency of the operation. An idempotent operation completes no
+    #   more than once. This identifier is required only if you make a service
+    #   request directly using an HTTP client. It is generated automatically
+    #   if you use an Amazon Web Services SDK or the Amazon Web Services CLI.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
@@ -436,12 +561,11 @@ module Aws::ManagedBlockchain
     #   Configuration properties for the first member within the network.
     #
     # @option params [Hash<String,String>] :tags
-    #   Tags to assign to the network. Each tag consists of a key and optional
-    #   value.
+    #   Tags to assign to the network.
     #
-    #   When specifying tags during creation, you can specify multiple
-    #   key-value pairs in a single request, with an overall maximum of 50
-    #   tags added to each resource.
+    #   Each tag consists of a key and an optional value. You can specify
+    #   multiple key-value pairs in a single request with an overall maximum
+    #   of 50 tags allowed per resource.
     #
     #   For more information about tags, see [Tagging Resources][1] in the
     #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
@@ -499,6 +623,7 @@ module Aws::ManagedBlockchain
     #       tags: {
     #         "TagKey" => "TagValue",
     #       },
+    #       kms_key_arn: "ArnString",
     #     },
     #     tags: {
     #       "TagKey" => "TagValue",
@@ -528,7 +653,7 @@ module Aws::ManagedBlockchain
     #   idempotency of the operation. An idempotent operation completes no
     #   more than one time. This identifier is required only if you make a
     #   service request directly using an HTTP client. It is generated
-    #   automatically if you use an AWS SDK or the AWS CLI.
+    #   automatically if you use an Amazon Web Services SDK or the CLI.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
@@ -540,9 +665,9 @@ module Aws::ManagedBlockchain
     #
     #   * `n-ethereum-mainnet`
     #
-    #   * `n-ethereum-rinkeby`
+    #   * `n-ethereum-goerli`
     #
-    #   * `n-ethereum-ropsten`
+    #   * `n-ethereum-rinkeby`
     #
     # @option params [String] :member_id
     #   The unique identifier of the member that owns this node.
@@ -553,12 +678,11 @@ module Aws::ManagedBlockchain
     #   The properties of a node configuration.
     #
     # @option params [Hash<String,String>] :tags
-    #   Tags to assign to the node. Each tag consists of a key and optional
-    #   value.
+    #   Tags to assign to the node.
     #
-    #   When specifying tags during creation, you can specify multiple
-    #   key-value pairs in a single request, with an overall maximum of 50
-    #   tags added to each resource.
+    #   Each tag consists of a key and an optional value. You can specify
+    #   multiple key-value pairs in a single request with an overall maximum
+    #   of 50 tags allowed per resource.
     #
     #   For more information about tags, see [Tagging Resources][1] in the
     #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
@@ -628,7 +752,7 @@ module Aws::ManagedBlockchain
     #   idempotency of the operation. An idempotent operation completes no
     #   more than one time. This identifier is required only if you make a
     #   service request directly using an HTTP client. It is generated
-    #   automatically if you use an AWS SDK or the AWS CLI.
+    #   automatically if you use an Amazon Web Services SDK or the CLI.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
@@ -639,7 +763,8 @@ module Aws::ManagedBlockchain
     # @option params [required, String] :member_id
     #   The unique identifier of the member that is creating the proposal.
     #   This identifier is especially useful for identifying the member making
-    #   the proposal when multiple members exist in a single AWS account.
+    #   the proposal when multiple members exist in a single Amazon Web
+    #   Services account.
     #
     # @option params [required, Types::ProposalActions] :actions
     #   The type of actions proposed, such as inviting a member or removing a
@@ -652,13 +777,11 @@ module Aws::ManagedBlockchain
     #   example, "Proposal to add Example Corp. as member."
     #
     # @option params [Hash<String,String>] :tags
-    #   Tags to assign to the proposal. Each tag consists of a key and
-    #   optional value.
+    #   Tags to assign to the proposal.
     #
-    #   When specifying tags during creation, you can specify multiple
-    #   key-value pairs in a single request, with an overall maximum of 50
-    #   tags added to each resource. If the proposal is for a network
-    #   invitation, the invitation inherits the tags added to the proposal.
+    #   Each tag consists of a key and an optional value. You can specify
+    #   multiple key-value pairs in a single request with an overall maximum
+    #   of 50 tags allowed per resource.
     #
     #   For more information about tags, see [Tagging Resources][1] in the
     #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
@@ -711,14 +834,44 @@ module Aws::ManagedBlockchain
       req.send_request(options)
     end
 
+    # Deletes an accessor that your Amazon Web Services account owns. An
+    # accessor object is a container that has the information required for
+    # token based access to your Ethereum nodes including, the
+    # `BILLING_TOKEN`. After an accessor is deleted, the status of the
+    # accessor changes from `AVAILABLE` to `PENDING_DELETION`. An accessor
+    # in the `PENDING_DELETION` state can’t be used for new WebSocket
+    # requests or HTTP requests. However, WebSocket connections that were
+    # initiated while the accessor was in the `AVAILABLE` state remain open
+    # until they expire (up to 2 hours).
+    #
+    # @option params [required, String] :accessor_id
+    #   The unique identifier of the accessor.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_accessor({
+    #     accessor_id: "ResourceIdString", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/DeleteAccessor AWS API Documentation
+    #
+    # @overload delete_accessor(params = {})
+    # @param [Hash] params ({})
+    def delete_accessor(params = {}, options = {})
+      req = build_request(:delete_accessor, params)
+      req.send_request(options)
+    end
+
     # Deletes a member. Deleting a member removes the member and all
     # associated resources from the network. `DeleteMember` can only be
     # called for a specified `MemberId` if the principal performing the
-    # action is associated with the AWS account that owns the member. In all
-    # other cases, the `DeleteMember` action is carried out as the result of
-    # an approved proposal to remove a member. If `MemberId` is the last
-    # member in a network specified by the last AWS account, the network is
-    # deleted also.
+    # action is associated with the Amazon Web Services account that owns
+    # the member. In all other cases, the `DeleteMember` action is carried
+    # out as the result of an approved proposal to remove a member. If
+    # `MemberId` is the last member in a network specified by the last
+    # Amazon Web Services account, the network is deleted also.
     #
     # Applies only to Hyperledger Fabric.
     #
@@ -746,8 +899,8 @@ module Aws::ManagedBlockchain
       req.send_request(options)
     end
 
-    # Deletes a node that your AWS account owns. All data on the node is
-    # lost and cannot be recovered.
+    # Deletes a node that your Amazon Web Services account owns. All data on
+    # the node is lost and cannot be recovered.
     #
     # Applies to Hyperledger Fabric and Ethereum.
     #
@@ -758,9 +911,9 @@ module Aws::ManagedBlockchain
     #
     #   * `n-ethereum-mainnet`
     #
-    #   * `n-ethereum-rinkeby`
+    #   * `n-ethereum-goerli`
     #
-    #   * `n-ethereum-ropsten`
+    #   * `n-ethereum-rinkeby`
     #
     # @option params [String] :member_id
     #   The unique identifier of the member that owns this node.
@@ -787,6 +940,43 @@ module Aws::ManagedBlockchain
     # @param [Hash] params ({})
     def delete_node(params = {}, options = {})
       req = build_request(:delete_node, params)
+      req.send_request(options)
+    end
+
+    # Returns detailed information about an accessor. An accessor object is
+    # a container that has the information required for token based access
+    # to your Ethereum nodes.
+    #
+    # @option params [required, String] :accessor_id
+    #   The unique identifier of the accessor.
+    #
+    # @return [Types::GetAccessorOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetAccessorOutput#accessor #accessor} => Types::Accessor
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_accessor({
+    #     accessor_id: "ResourceIdString", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.accessor.id #=> String
+    #   resp.accessor.type #=> String, one of "BILLING_TOKEN"
+    #   resp.accessor.billing_token #=> String
+    #   resp.accessor.status #=> String, one of "AVAILABLE", "PENDING_DELETION", "DELETED"
+    #   resp.accessor.creation_date #=> Time
+    #   resp.accessor.arn #=> String
+    #   resp.accessor.tags #=> Hash
+    #   resp.accessor.tags["TagKey"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/GetAccessor AWS API Documentation
+    #
+    # @overload get_accessor(params = {})
+    # @param [Hash] params ({})
+    def get_accessor(params = {}, options = {})
+      req = build_request(:get_accessor, params)
       req.send_request(options)
     end
 
@@ -820,11 +1010,12 @@ module Aws::ManagedBlockchain
     #   resp.member.framework_attributes.fabric.admin_username #=> String
     #   resp.member.framework_attributes.fabric.ca_endpoint #=> String
     #   resp.member.log_publishing_configuration.fabric.ca_logs.cloudwatch.enabled #=> Boolean
-    #   resp.member.status #=> String, one of "CREATING", "AVAILABLE", "CREATE_FAILED", "UPDATING", "DELETING", "DELETED"
+    #   resp.member.status #=> String, one of "CREATING", "AVAILABLE", "CREATE_FAILED", "UPDATING", "DELETING", "DELETED", "INACCESSIBLE_ENCRYPTION_KEY"
     #   resp.member.creation_date #=> Time
     #   resp.member.tags #=> Hash
     #   resp.member.tags["TagKey"] #=> String
     #   resp.member.arn #=> String
+    #   resp.member.kms_key_arn #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/GetMember AWS API Documentation
     #
@@ -923,11 +1114,12 @@ module Aws::ManagedBlockchain
     #   resp.node.log_publishing_configuration.fabric.chaincode_logs.cloudwatch.enabled #=> Boolean
     #   resp.node.log_publishing_configuration.fabric.peer_logs.cloudwatch.enabled #=> Boolean
     #   resp.node.state_db #=> String, one of "LevelDB", "CouchDB"
-    #   resp.node.status #=> String, one of "CREATING", "AVAILABLE", "UNHEALTHY", "CREATE_FAILED", "UPDATING", "DELETING", "DELETED", "FAILED"
+    #   resp.node.status #=> String, one of "CREATING", "AVAILABLE", "UNHEALTHY", "CREATE_FAILED", "UPDATING", "DELETING", "DELETED", "FAILED", "INACCESSIBLE_ENCRYPTION_KEY"
     #   resp.node.creation_date #=> Time
     #   resp.node.tags #=> Hash
     #   resp.node.tags["TagKey"] #=> String
     #   resp.node.arn #=> String
+    #   resp.node.kms_key_arn #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/GetNode AWS API Documentation
     #
@@ -989,7 +1181,52 @@ module Aws::ManagedBlockchain
       req.send_request(options)
     end
 
-    # Returns a list of all invitations for the current AWS account.
+    # Returns a list of the accessors and their properties. Accessor objects
+    # are containers that have the information required for token based
+    # access to your Ethereum nodes.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of accessors to list.
+    #
+    # @option params [String] :next_token
+    #   The pagination token that indicates the next set of results to
+    #   retrieve.
+    #
+    # @return [Types::ListAccessorsOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListAccessorsOutput#accessors #accessors} => Array&lt;Types::AccessorSummary&gt;
+    #   * {Types::ListAccessorsOutput#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_accessors({
+    #     max_results: 1,
+    #     next_token: "PaginationToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.accessors #=> Array
+    #   resp.accessors[0].id #=> String
+    #   resp.accessors[0].type #=> String, one of "BILLING_TOKEN"
+    #   resp.accessors[0].status #=> String, one of "AVAILABLE", "PENDING_DELETION", "DELETED"
+    #   resp.accessors[0].creation_date #=> Time
+    #   resp.accessors[0].arn #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/ListAccessors AWS API Documentation
+    #
+    # @overload list_accessors(params = {})
+    # @param [Hash] params ({})
+    def list_accessors(params = {}, options = {})
+      req = build_request(:list_accessors, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of all invitations for the current Amazon Web Services
+    # account.
     #
     # Applies only to Hyperledger Fabric.
     #
@@ -1058,8 +1295,9 @@ module Aws::ManagedBlockchain
     #
     # @option params [Boolean] :is_owned
     #   An optional Boolean value. If provided, the request is limited either
-    #   to members that the current AWS account owns (`true`) or that other
-    #   AWS accounts own (`false`). If omitted, all members are listed.
+    #   to members that the current Amazon Web Services account owns (`true`)
+    #   or that other Amazon Web Services accountsn own (`false`). If omitted,
+    #   all members are listed.
     #
     # @option params [Integer] :max_results
     #   The maximum number of members to return in the request.
@@ -1080,7 +1318,7 @@ module Aws::ManagedBlockchain
     #   resp = client.list_members({
     #     network_id: "ResourceIdString", # required
     #     name: "String",
-    #     status: "CREATING", # accepts CREATING, AVAILABLE, CREATE_FAILED, UPDATING, DELETING, DELETED
+    #     status: "CREATING", # accepts CREATING, AVAILABLE, CREATE_FAILED, UPDATING, DELETING, DELETED, INACCESSIBLE_ENCRYPTION_KEY
     #     is_owned: false,
     #     max_results: 1,
     #     next_token: "PaginationToken",
@@ -1092,7 +1330,7 @@ module Aws::ManagedBlockchain
     #   resp.members[0].id #=> String
     #   resp.members[0].name #=> String
     #   resp.members[0].description #=> String
-    #   resp.members[0].status #=> String, one of "CREATING", "AVAILABLE", "CREATE_FAILED", "UPDATING", "DELETING", "DELETED"
+    #   resp.members[0].status #=> String, one of "CREATING", "AVAILABLE", "CREATE_FAILED", "UPDATING", "DELETING", "DELETED", "INACCESSIBLE_ENCRYPTION_KEY"
     #   resp.members[0].creation_date #=> Time
     #   resp.members[0].is_owned #=> Boolean
     #   resp.members[0].arn #=> String
@@ -1107,8 +1345,8 @@ module Aws::ManagedBlockchain
       req.send_request(options)
     end
 
-    # Returns information about the networks in which the current AWS
-    # account participates.
+    # Returns information about the networks in which the current Amazon Web
+    # Services account participates.
     #
     # Applies to Hyperledger Fabric and Ethereum.
     #
@@ -1207,7 +1445,7 @@ module Aws::ManagedBlockchain
     #   resp = client.list_nodes({
     #     network_id: "ResourceIdString", # required
     #     member_id: "ResourceIdString",
-    #     status: "CREATING", # accepts CREATING, AVAILABLE, UNHEALTHY, CREATE_FAILED, UPDATING, DELETING, DELETED, FAILED
+    #     status: "CREATING", # accepts CREATING, AVAILABLE, UNHEALTHY, CREATE_FAILED, UPDATING, DELETING, DELETED, FAILED, INACCESSIBLE_ENCRYPTION_KEY
     #     max_results: 1,
     #     next_token: "PaginationToken",
     #   })
@@ -1216,7 +1454,7 @@ module Aws::ManagedBlockchain
     #
     #   resp.nodes #=> Array
     #   resp.nodes[0].id #=> String
-    #   resp.nodes[0].status #=> String, one of "CREATING", "AVAILABLE", "UNHEALTHY", "CREATE_FAILED", "UPDATING", "DELETING", "DELETED", "FAILED"
+    #   resp.nodes[0].status #=> String, one of "CREATING", "AVAILABLE", "UNHEALTHY", "CREATE_FAILED", "UPDATING", "DELETING", "DELETED", "FAILED", "INACCESSIBLE_ENCRYPTION_KEY"
     #   resp.nodes[0].creation_date #=> Time
     #   resp.nodes[0].availability_zone #=> String
     #   resp.nodes[0].instance_type #=> String
@@ -1351,7 +1589,7 @@ module Aws::ManagedBlockchain
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) of the resource. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1] in
-    #   the *AWS General Reference*.
+    #   the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -1382,8 +1620,8 @@ module Aws::ManagedBlockchain
     end
 
     # Rejects an invitation to join a network. This action can be called by
-    # a principal in an AWS account that has received an invitation to
-    # create a member and join a network.
+    # a principal in an Amazon Web Services account that has received an
+    # invitation to create a member and join a network.
     #
     # Applies only to Hyperledger Fabric.
     #
@@ -1430,7 +1668,7 @@ module Aws::ManagedBlockchain
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) of the resource. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1] in
-    #   the *AWS General Reference*.
+    #   the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -1478,7 +1716,7 @@ module Aws::ManagedBlockchain
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) of the resource. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1] in
-    #   the *AWS General Reference*.
+    #   the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -1599,7 +1837,7 @@ module Aws::ManagedBlockchain
 
     # Casts a vote for a specified `ProposalId` on behalf of a member. The
     # member to vote as, specified by `VoterMemberId`, must be in the same
-    # AWS account as the principal that calls the action.
+    # Amazon Web Services account as the principal that calls the action.
     #
     # Applies only to Hyperledger Fabric.
     #
@@ -1648,7 +1886,7 @@ module Aws::ManagedBlockchain
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-managedblockchain'
-      context[:gem_version] = '1.22.0'
+      context[:gem_version] = '1.42.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

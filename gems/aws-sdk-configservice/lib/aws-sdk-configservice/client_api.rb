@@ -59,6 +59,7 @@ module Aws::ConfigService
     Boolean = Shapes::BooleanShape.new(name: 'Boolean')
     ChannelName = Shapes::StringShape.new(name: 'ChannelName')
     ChronologicalOrder = Shapes::StringShape.new(name: 'ChronologicalOrder')
+    ClientToken = Shapes::StringShape.new(name: 'ClientToken')
     Compliance = Shapes::StructureShape.new(name: 'Compliance')
     ComplianceByConfigRule = Shapes::StructureShape.new(name: 'ComplianceByConfigRule')
     ComplianceByConfigRules = Shapes::ListShape.new(name: 'ComplianceByConfigRules')
@@ -66,6 +67,7 @@ module Aws::ConfigService
     ComplianceByResources = Shapes::ListShape.new(name: 'ComplianceByResources')
     ComplianceContributorCount = Shapes::StructureShape.new(name: 'ComplianceContributorCount')
     ComplianceResourceTypes = Shapes::ListShape.new(name: 'ComplianceResourceTypes')
+    ComplianceScore = Shapes::StringShape.new(name: 'ComplianceScore')
     ComplianceSummariesByResourceType = Shapes::ListShape.new(name: 'ComplianceSummariesByResourceType')
     ComplianceSummary = Shapes::StructureShape.new(name: 'ComplianceSummary')
     ComplianceSummaryByResourceType = Shapes::StructureShape.new(name: 'ComplianceSummaryByResourceType')
@@ -104,6 +106,9 @@ module Aws::ConfigService
     ConformancePackArn = Shapes::StringShape.new(name: 'ConformancePackArn')
     ConformancePackComplianceFilters = Shapes::StructureShape.new(name: 'ConformancePackComplianceFilters')
     ConformancePackComplianceResourceIds = Shapes::ListShape.new(name: 'ConformancePackComplianceResourceIds')
+    ConformancePackComplianceScore = Shapes::StructureShape.new(name: 'ConformancePackComplianceScore')
+    ConformancePackComplianceScores = Shapes::ListShape.new(name: 'ConformancePackComplianceScores')
+    ConformancePackComplianceScoresFilters = Shapes::StructureShape.new(name: 'ConformancePackComplianceScoresFilters')
     ConformancePackComplianceSummary = Shapes::StructureShape.new(name: 'ConformancePackComplianceSummary')
     ConformancePackComplianceSummaryList = Shapes::ListShape.new(name: 'ConformancePackComplianceSummaryList')
     ConformancePackComplianceType = Shapes::StringShape.new(name: 'ConformancePackComplianceType')
@@ -116,6 +121,7 @@ module Aws::ConfigService
     ConformancePackInputParameter = Shapes::StructureShape.new(name: 'ConformancePackInputParameter')
     ConformancePackInputParameters = Shapes::ListShape.new(name: 'ConformancePackInputParameters')
     ConformancePackName = Shapes::StringShape.new(name: 'ConformancePackName')
+    ConformancePackNameFilter = Shapes::ListShape.new(name: 'ConformancePackNameFilter')
     ConformancePackNamesList = Shapes::ListShape.new(name: 'ConformancePackNamesList')
     ConformancePackNamesToSummarizeList = Shapes::ListShape.new(name: 'ConformancePackNamesToSummarizeList')
     ConformancePackRuleCompliance = Shapes::StructureShape.new(name: 'ConformancePackRuleCompliance')
@@ -128,7 +134,9 @@ module Aws::ConfigService
     ConformancePackTemplateValidationException = Shapes::StructureShape.new(name: 'ConformancePackTemplateValidationException')
     ControlsList = Shapes::ListShape.new(name: 'ControlsList')
     CosmosPageLimit = Shapes::IntegerShape.new(name: 'CosmosPageLimit')
+    CustomPolicyDetails = Shapes::StructureShape.new(name: 'CustomPolicyDetails')
     Date = Shapes::TimestampShape.new(name: 'Date')
+    DebugLogDeliveryAccounts = Shapes::ListShape.new(name: 'DebugLogDeliveryAccounts')
     DeleteAggregationAuthorizationRequest = Shapes::StructureShape.new(name: 'DeleteAggregationAuthorizationRequest')
     DeleteConfigRuleRequest = Shapes::StructureShape.new(name: 'DeleteConfigRuleRequest')
     DeleteConfigurationAggregatorRequest = Shapes::StructureShape.new(name: 'DeleteConfigurationAggregatorRequest')
@@ -170,6 +178,7 @@ module Aws::ConfigService
     DescribeComplianceByResourceResponse = Shapes::StructureShape.new(name: 'DescribeComplianceByResourceResponse')
     DescribeConfigRuleEvaluationStatusRequest = Shapes::StructureShape.new(name: 'DescribeConfigRuleEvaluationStatusRequest')
     DescribeConfigRuleEvaluationStatusResponse = Shapes::StructureShape.new(name: 'DescribeConfigRuleEvaluationStatusResponse')
+    DescribeConfigRulesFilters = Shapes::StructureShape.new(name: 'DescribeConfigRulesFilters')
     DescribeConfigRulesRequest = Shapes::StructureShape.new(name: 'DescribeConfigRulesRequest')
     DescribeConfigRulesResponse = Shapes::StructureShape.new(name: 'DescribeConfigRulesResponse')
     DescribeConfigurationAggregatorSourcesStatusRequest = Shapes::StructureShape.new(name: 'DescribeConfigurationAggregatorSourcesStatusRequest')
@@ -215,13 +224,21 @@ module Aws::ConfigService
     EmptiableStringWithCharLimit256 = Shapes::StringShape.new(name: 'EmptiableStringWithCharLimit256')
     ErrorMessage = Shapes::StringShape.new(name: 'ErrorMessage')
     Evaluation = Shapes::StructureShape.new(name: 'Evaluation')
+    EvaluationContext = Shapes::StructureShape.new(name: 'EvaluationContext')
+    EvaluationContextIdentifier = Shapes::StringShape.new(name: 'EvaluationContextIdentifier')
+    EvaluationMode = Shapes::StringShape.new(name: 'EvaluationMode')
+    EvaluationModeConfiguration = Shapes::StructureShape.new(name: 'EvaluationModeConfiguration')
+    EvaluationModes = Shapes::ListShape.new(name: 'EvaluationModes')
     EvaluationResult = Shapes::StructureShape.new(name: 'EvaluationResult')
     EvaluationResultIdentifier = Shapes::StructureShape.new(name: 'EvaluationResultIdentifier')
     EvaluationResultQualifier = Shapes::StructureShape.new(name: 'EvaluationResultQualifier')
     EvaluationResults = Shapes::ListShape.new(name: 'EvaluationResults')
+    EvaluationStatus = Shapes::StructureShape.new(name: 'EvaluationStatus')
+    EvaluationTimeout = Shapes::IntegerShape.new(name: 'EvaluationTimeout')
     Evaluations = Shapes::ListShape.new(name: 'Evaluations')
     EventSource = Shapes::StringShape.new(name: 'EventSource')
     ExcludedAccounts = Shapes::ListShape.new(name: 'ExcludedAccounts')
+    ExclusionByResourceTypes = Shapes::StructureShape.new(name: 'ExclusionByResourceTypes')
     ExecutionControls = Shapes::StructureShape.new(name: 'ExecutionControls')
     Expression = Shapes::StringShape.new(name: 'Expression')
     ExternalEvaluation = Shapes::StructureShape.new(name: 'ExternalEvaluation')
@@ -256,19 +273,26 @@ module Aws::ConfigService
     GetConformancePackComplianceDetailsResponse = Shapes::StructureShape.new(name: 'GetConformancePackComplianceDetailsResponse')
     GetConformancePackComplianceSummaryRequest = Shapes::StructureShape.new(name: 'GetConformancePackComplianceSummaryRequest')
     GetConformancePackComplianceSummaryResponse = Shapes::StructureShape.new(name: 'GetConformancePackComplianceSummaryResponse')
+    GetCustomRulePolicyRequest = Shapes::StructureShape.new(name: 'GetCustomRulePolicyRequest')
+    GetCustomRulePolicyResponse = Shapes::StructureShape.new(name: 'GetCustomRulePolicyResponse')
     GetDiscoveredResourceCountsRequest = Shapes::StructureShape.new(name: 'GetDiscoveredResourceCountsRequest')
     GetDiscoveredResourceCountsResponse = Shapes::StructureShape.new(name: 'GetDiscoveredResourceCountsResponse')
     GetOrganizationConfigRuleDetailedStatusRequest = Shapes::StructureShape.new(name: 'GetOrganizationConfigRuleDetailedStatusRequest')
     GetOrganizationConfigRuleDetailedStatusResponse = Shapes::StructureShape.new(name: 'GetOrganizationConfigRuleDetailedStatusResponse')
     GetOrganizationConformancePackDetailedStatusRequest = Shapes::StructureShape.new(name: 'GetOrganizationConformancePackDetailedStatusRequest')
     GetOrganizationConformancePackDetailedStatusResponse = Shapes::StructureShape.new(name: 'GetOrganizationConformancePackDetailedStatusResponse')
+    GetOrganizationCustomRulePolicyRequest = Shapes::StructureShape.new(name: 'GetOrganizationCustomRulePolicyRequest')
+    GetOrganizationCustomRulePolicyResponse = Shapes::StructureShape.new(name: 'GetOrganizationCustomRulePolicyResponse')
     GetResourceConfigHistoryRequest = Shapes::StructureShape.new(name: 'GetResourceConfigHistoryRequest')
     GetResourceConfigHistoryResponse = Shapes::StructureShape.new(name: 'GetResourceConfigHistoryResponse')
+    GetResourceEvaluationSummaryRequest = Shapes::StructureShape.new(name: 'GetResourceEvaluationSummaryRequest')
+    GetResourceEvaluationSummaryResponse = Shapes::StructureShape.new(name: 'GetResourceEvaluationSummaryResponse')
     GetStoredQueryRequest = Shapes::StructureShape.new(name: 'GetStoredQueryRequest')
     GetStoredQueryResponse = Shapes::StructureShape.new(name: 'GetStoredQueryResponse')
     GroupByAPILimit = Shapes::IntegerShape.new(name: 'GroupByAPILimit')
     GroupedResourceCount = Shapes::StructureShape.new(name: 'GroupedResourceCount')
     GroupedResourceCountList = Shapes::ListShape.new(name: 'GroupedResourceCountList')
+    IdempotentParameterMismatch = Shapes::StructureShape.new(name: 'IdempotentParameterMismatch')
     IncludeGlobalResourceTypes = Shapes::BooleanShape.new(name: 'IncludeGlobalResourceTypes')
     InsufficientDeliveryPolicyException = Shapes::StructureShape.new(name: 'InsufficientDeliveryPolicyException')
     InsufficientPermissionsException = Shapes::StructureShape.new(name: 'InsufficientPermissionsException')
@@ -287,13 +311,19 @@ module Aws::ConfigService
     InvalidSNSTopicARNException = Shapes::StructureShape.new(name: 'InvalidSNSTopicARNException')
     InvalidTimeRangeException = Shapes::StructureShape.new(name: 'InvalidTimeRangeException')
     LastDeliveryChannelDeleteFailedException = Shapes::StructureShape.new(name: 'LastDeliveryChannelDeleteFailedException')
+    LastUpdatedTime = Shapes::TimestampShape.new(name: 'LastUpdatedTime')
     LaterTime = Shapes::TimestampShape.new(name: 'LaterTime')
     Limit = Shapes::IntegerShape.new(name: 'Limit')
     LimitExceededException = Shapes::StructureShape.new(name: 'LimitExceededException')
     ListAggregateDiscoveredResourcesRequest = Shapes::StructureShape.new(name: 'ListAggregateDiscoveredResourcesRequest')
     ListAggregateDiscoveredResourcesResponse = Shapes::StructureShape.new(name: 'ListAggregateDiscoveredResourcesResponse')
+    ListConformancePackComplianceScoresRequest = Shapes::StructureShape.new(name: 'ListConformancePackComplianceScoresRequest')
+    ListConformancePackComplianceScoresResponse = Shapes::StructureShape.new(name: 'ListConformancePackComplianceScoresResponse')
     ListDiscoveredResourcesRequest = Shapes::StructureShape.new(name: 'ListDiscoveredResourcesRequest')
     ListDiscoveredResourcesResponse = Shapes::StructureShape.new(name: 'ListDiscoveredResourcesResponse')
+    ListResourceEvaluationsPageItemLimit = Shapes::IntegerShape.new(name: 'ListResourceEvaluationsPageItemLimit')
+    ListResourceEvaluationsRequest = Shapes::StructureShape.new(name: 'ListResourceEvaluationsRequest')
+    ListResourceEvaluationsResponse = Shapes::StructureShape.new(name: 'ListResourceEvaluationsResponse')
     ListStoredQueriesRequest = Shapes::StructureShape.new(name: 'ListStoredQueriesRequest')
     ListStoredQueriesResponse = Shapes::StructureShape.new(name: 'ListStoredQueriesResponse')
     ListTagsForResourceRequest = Shapes::StructureShape.new(name: 'ListTagsForResourceRequest')
@@ -340,6 +370,8 @@ module Aws::ConfigService
     OrganizationConfigRuleStatus = Shapes::StructureShape.new(name: 'OrganizationConfigRuleStatus')
     OrganizationConfigRuleStatuses = Shapes::ListShape.new(name: 'OrganizationConfigRuleStatuses')
     OrganizationConfigRuleTriggerType = Shapes::StringShape.new(name: 'OrganizationConfigRuleTriggerType')
+    OrganizationConfigRuleTriggerTypeNoSN = Shapes::StringShape.new(name: 'OrganizationConfigRuleTriggerTypeNoSN')
+    OrganizationConfigRuleTriggerTypeNoSNs = Shapes::ListShape.new(name: 'OrganizationConfigRuleTriggerTypeNoSNs')
     OrganizationConfigRuleTriggerTypes = Shapes::ListShape.new(name: 'OrganizationConfigRuleTriggerTypes')
     OrganizationConfigRules = Shapes::ListShape.new(name: 'OrganizationConfigRules')
     OrganizationConformancePack = Shapes::StructureShape.new(name: 'OrganizationConformancePack')
@@ -351,6 +383,8 @@ module Aws::ConfigService
     OrganizationConformancePackStatuses = Shapes::ListShape.new(name: 'OrganizationConformancePackStatuses')
     OrganizationConformancePackTemplateValidationException = Shapes::StructureShape.new(name: 'OrganizationConformancePackTemplateValidationException')
     OrganizationConformancePacks = Shapes::ListShape.new(name: 'OrganizationConformancePacks')
+    OrganizationCustomPolicyRuleMetadata = Shapes::StructureShape.new(name: 'OrganizationCustomPolicyRuleMetadata')
+    OrganizationCustomPolicyRuleMetadataNoPolicy = Shapes::StructureShape.new(name: 'OrganizationCustomPolicyRuleMetadataNoPolicy')
     OrganizationCustomRuleMetadata = Shapes::StructureShape.new(name: 'OrganizationCustomRuleMetadata')
     OrganizationManagedRuleMetadata = Shapes::StructureShape.new(name: 'OrganizationManagedRuleMetadata')
     OrganizationResourceDetailedStatus = Shapes::StringShape.new(name: 'OrganizationResourceDetailedStatus')
@@ -365,6 +399,8 @@ module Aws::ConfigService
     PendingAggregationRequest = Shapes::StructureShape.new(name: 'PendingAggregationRequest')
     PendingAggregationRequestList = Shapes::ListShape.new(name: 'PendingAggregationRequestList')
     Percentage = Shapes::IntegerShape.new(name: 'Percentage')
+    PolicyRuntime = Shapes::StringShape.new(name: 'PolicyRuntime')
+    PolicyText = Shapes::StringShape.new(name: 'PolicyText')
     PutAggregationAuthorizationRequest = Shapes::StructureShape.new(name: 'PutAggregationAuthorizationRequest')
     PutAggregationAuthorizationResponse = Shapes::StructureShape.new(name: 'PutAggregationAuthorizationResponse')
     PutConfigRuleRequest = Shapes::StructureShape.new(name: 'PutConfigRuleRequest')
@@ -400,6 +436,8 @@ module Aws::ConfigService
     RecorderName = Shapes::StringShape.new(name: 'RecorderName')
     RecorderStatus = Shapes::StringShape.new(name: 'RecorderStatus')
     RecordingGroup = Shapes::StructureShape.new(name: 'RecordingGroup')
+    RecordingStrategy = Shapes::StructureShape.new(name: 'RecordingStrategy')
+    RecordingStrategyType = Shapes::StringShape.new(name: 'RecordingStrategyType')
     ReevaluateConfigRuleNames = Shapes::ListShape.new(name: 'ReevaluateConfigRuleNames')
     RelatedEvent = Shapes::StringShape.new(name: 'RelatedEvent')
     RelatedEventList = Shapes::ListShape.new(name: 'RelatedEventList')
@@ -423,12 +461,20 @@ module Aws::ConfigService
     RemediationParameters = Shapes::MapShape.new(name: 'RemediationParameters')
     RemediationTargetType = Shapes::StringShape.new(name: 'RemediationTargetType')
     ResourceConcurrentModificationException = Shapes::StructureShape.new(name: 'ResourceConcurrentModificationException')
+    ResourceConfiguration = Shapes::StringShape.new(name: 'ResourceConfiguration')
+    ResourceConfigurationSchemaType = Shapes::StringShape.new(name: 'ResourceConfigurationSchemaType')
     ResourceCount = Shapes::StructureShape.new(name: 'ResourceCount')
     ResourceCountFilters = Shapes::StructureShape.new(name: 'ResourceCountFilters')
     ResourceCountGroupKey = Shapes::StringShape.new(name: 'ResourceCountGroupKey')
     ResourceCounts = Shapes::ListShape.new(name: 'ResourceCounts')
     ResourceCreationTime = Shapes::TimestampShape.new(name: 'ResourceCreationTime')
     ResourceDeletionTime = Shapes::TimestampShape.new(name: 'ResourceDeletionTime')
+    ResourceDetails = Shapes::StructureShape.new(name: 'ResourceDetails')
+    ResourceEvaluation = Shapes::StructureShape.new(name: 'ResourceEvaluation')
+    ResourceEvaluationFilters = Shapes::StructureShape.new(name: 'ResourceEvaluationFilters')
+    ResourceEvaluationId = Shapes::StringShape.new(name: 'ResourceEvaluationId')
+    ResourceEvaluationStatus = Shapes::StringShape.new(name: 'ResourceEvaluationStatus')
+    ResourceEvaluations = Shapes::ListShape.new(name: 'ResourceEvaluations')
     ResourceFilters = Shapes::StructureShape.new(name: 'ResourceFilters')
     ResourceId = Shapes::StringShape.new(name: 'ResourceId')
     ResourceIdList = Shapes::ListShape.new(name: 'ResourceIdList')
@@ -455,12 +501,16 @@ module Aws::ConfigService
     RetentionConfigurationNameList = Shapes::ListShape.new(name: 'RetentionConfigurationNameList')
     RetentionPeriodInDays = Shapes::IntegerShape.new(name: 'RetentionPeriodInDays')
     RuleLimit = Shapes::IntegerShape.new(name: 'RuleLimit')
+    SSMDocumentName = Shapes::StringShape.new(name: 'SSMDocumentName')
+    SSMDocumentVersion = Shapes::StringShape.new(name: 'SSMDocumentVersion')
     SchemaVersionId = Shapes::StringShape.new(name: 'SchemaVersionId')
     Scope = Shapes::StructureShape.new(name: 'Scope')
     SelectAggregateResourceConfigRequest = Shapes::StructureShape.new(name: 'SelectAggregateResourceConfigRequest')
     SelectAggregateResourceConfigResponse = Shapes::StructureShape.new(name: 'SelectAggregateResourceConfigResponse')
     SelectResourceConfigRequest = Shapes::StructureShape.new(name: 'SelectResourceConfigRequest')
     SelectResourceConfigResponse = Shapes::StructureShape.new(name: 'SelectResourceConfigResponse')
+    SortBy = Shapes::StringShape.new(name: 'SortBy')
+    SortOrder = Shapes::StringShape.new(name: 'SortOrder')
     Source = Shapes::StructureShape.new(name: 'Source')
     SourceDetail = Shapes::StructureShape.new(name: 'SourceDetail')
     SourceDetails = Shapes::ListShape.new(name: 'SourceDetails')
@@ -471,6 +521,8 @@ module Aws::ConfigService
     StartConfigurationRecorderRequest = Shapes::StructureShape.new(name: 'StartConfigurationRecorderRequest')
     StartRemediationExecutionRequest = Shapes::StructureShape.new(name: 'StartRemediationExecutionRequest')
     StartRemediationExecutionResponse = Shapes::StructureShape.new(name: 'StartRemediationExecutionResponse')
+    StartResourceEvaluationRequest = Shapes::StructureShape.new(name: 'StartResourceEvaluationRequest')
+    StartResourceEvaluationResponse = Shapes::StructureShape.new(name: 'StartResourceEvaluationResponse')
     StaticParameterValues = Shapes::ListShape.new(name: 'StaticParameterValues')
     StaticValue = Shapes::StructureShape.new(name: 'StaticValue')
     StatusDetailFilters = Shapes::StructureShape.new(name: 'StatusDetailFilters')
@@ -499,6 +551,8 @@ module Aws::ConfigService
     TagsList = Shapes::ListShape.new(name: 'TagsList')
     TemplateBody = Shapes::StringShape.new(name: 'TemplateBody')
     TemplateS3Uri = Shapes::StringShape.new(name: 'TemplateS3Uri')
+    TemplateSSMDocumentDetails = Shapes::StructureShape.new(name: 'TemplateSSMDocumentDetails')
+    TimeWindow = Shapes::StructureShape.new(name: 'TimeWindow')
     TooManyTagsException = Shapes::StructureShape.new(name: 'TooManyTagsException')
     UnprocessedResourceIdentifierList = Shapes::ListShape.new(name: 'UnprocessedResourceIdentifierList')
     UntagResourceRequest = Shapes::StructureShape.new(name: 'UntagResourceRequest')
@@ -691,6 +745,7 @@ module Aws::ConfigService
     ConfigRule.add_member(:maximum_execution_frequency, Shapes::ShapeRef.new(shape: MaximumExecutionFrequency, location_name: "MaximumExecutionFrequency"))
     ConfigRule.add_member(:config_rule_state, Shapes::ShapeRef.new(shape: ConfigRuleState, location_name: "ConfigRuleState"))
     ConfigRule.add_member(:created_by, Shapes::ShapeRef.new(shape: StringWithCharLimit256, location_name: "CreatedBy"))
+    ConfigRule.add_member(:evaluation_modes, Shapes::ShapeRef.new(shape: EvaluationModes, location_name: "EvaluationModes"))
     ConfigRule.struct_class = Types::ConfigRule
 
     ConfigRuleComplianceFilters.add_member(:config_rule_name, Shapes::ShapeRef.new(shape: ConfigRuleName, location_name: "ConfigRuleName"))
@@ -715,6 +770,9 @@ module Aws::ConfigService
     ConfigRuleEvaluationStatus.add_member(:last_error_code, Shapes::ShapeRef.new(shape: String, location_name: "LastErrorCode"))
     ConfigRuleEvaluationStatus.add_member(:last_error_message, Shapes::ShapeRef.new(shape: String, location_name: "LastErrorMessage"))
     ConfigRuleEvaluationStatus.add_member(:first_evaluation_started, Shapes::ShapeRef.new(shape: Boolean, location_name: "FirstEvaluationStarted"))
+    ConfigRuleEvaluationStatus.add_member(:last_debug_log_delivery_status, Shapes::ShapeRef.new(shape: String, location_name: "LastDebugLogDeliveryStatus"))
+    ConfigRuleEvaluationStatus.add_member(:last_debug_log_delivery_status_reason, Shapes::ShapeRef.new(shape: String, location_name: "LastDebugLogDeliveryStatusReason"))
+    ConfigRuleEvaluationStatus.add_member(:last_debug_log_delivery_time, Shapes::ShapeRef.new(shape: Date, location_name: "LastDebugLogDeliveryTime"))
     ConfigRuleEvaluationStatus.struct_class = Types::ConfigRuleEvaluationStatus
 
     ConfigRuleEvaluationStatusList.member = Shapes::ShapeRef.new(shape: ConfigRuleEvaluationStatus)
@@ -794,6 +852,16 @@ module Aws::ConfigService
 
     ConformancePackComplianceResourceIds.member = Shapes::ShapeRef.new(shape: StringWithCharLimit256)
 
+    ConformancePackComplianceScore.add_member(:score, Shapes::ShapeRef.new(shape: ComplianceScore, location_name: "Score"))
+    ConformancePackComplianceScore.add_member(:conformance_pack_name, Shapes::ShapeRef.new(shape: ConformancePackName, location_name: "ConformancePackName"))
+    ConformancePackComplianceScore.add_member(:last_updated_time, Shapes::ShapeRef.new(shape: LastUpdatedTime, location_name: "LastUpdatedTime"))
+    ConformancePackComplianceScore.struct_class = Types::ConformancePackComplianceScore
+
+    ConformancePackComplianceScores.member = Shapes::ShapeRef.new(shape: ConformancePackComplianceScore)
+
+    ConformancePackComplianceScoresFilters.add_member(:conformance_pack_names, Shapes::ShapeRef.new(shape: ConformancePackNameFilter, required: true, location_name: "ConformancePackNames"))
+    ConformancePackComplianceScoresFilters.struct_class = Types::ConformancePackComplianceScoresFilters
+
     ConformancePackComplianceSummary.add_member(:conformance_pack_name, Shapes::ShapeRef.new(shape: ConformancePackName, required: true, location_name: "ConformancePackName"))
     ConformancePackComplianceSummary.add_member(:conformance_pack_compliance_status, Shapes::ShapeRef.new(shape: ConformancePackComplianceType, required: true, location_name: "ConformancePackComplianceStatus"))
     ConformancePackComplianceSummary.struct_class = Types::ConformancePackComplianceSummary
@@ -810,6 +878,7 @@ module Aws::ConfigService
     ConformancePackDetail.add_member(:conformance_pack_input_parameters, Shapes::ShapeRef.new(shape: ConformancePackInputParameters, location_name: "ConformancePackInputParameters"))
     ConformancePackDetail.add_member(:last_update_requested_time, Shapes::ShapeRef.new(shape: Date, location_name: "LastUpdateRequestedTime"))
     ConformancePackDetail.add_member(:created_by, Shapes::ShapeRef.new(shape: StringWithCharLimit256, location_name: "CreatedBy"))
+    ConformancePackDetail.add_member(:template_ssm_document_details, Shapes::ShapeRef.new(shape: TemplateSSMDocumentDetails, location_name: "TemplateSSMDocumentDetails"))
     ConformancePackDetail.struct_class = Types::ConformancePackDetail
 
     ConformancePackDetailList.member = Shapes::ShapeRef.new(shape: ConformancePackDetail)
@@ -832,6 +901,8 @@ module Aws::ConfigService
     ConformancePackInputParameter.struct_class = Types::ConformancePackInputParameter
 
     ConformancePackInputParameters.member = Shapes::ShapeRef.new(shape: ConformancePackInputParameter)
+
+    ConformancePackNameFilter.member = Shapes::ShapeRef.new(shape: ConformancePackName)
 
     ConformancePackNamesList.member = Shapes::ShapeRef.new(shape: ConformancePackName)
 
@@ -861,6 +932,13 @@ module Aws::ConfigService
     ConformancePackTemplateValidationException.struct_class = Types::ConformancePackTemplateValidationException
 
     ControlsList.member = Shapes::ShapeRef.new(shape: StringWithCharLimit128)
+
+    CustomPolicyDetails.add_member(:policy_runtime, Shapes::ShapeRef.new(shape: PolicyRuntime, required: true, location_name: "PolicyRuntime"))
+    CustomPolicyDetails.add_member(:policy_text, Shapes::ShapeRef.new(shape: PolicyText, required: true, location_name: "PolicyText"))
+    CustomPolicyDetails.add_member(:enable_debug_log_delivery, Shapes::ShapeRef.new(shape: Boolean, location_name: "EnableDebugLogDelivery"))
+    CustomPolicyDetails.struct_class = Types::CustomPolicyDetails
+
+    DebugLogDeliveryAccounts.member = Shapes::ShapeRef.new(shape: AccountId)
 
     DeleteAggregationAuthorizationRequest.add_member(:authorized_account_id, Shapes::ShapeRef.new(shape: AccountId, required: true, location_name: "AuthorizedAccountId"))
     DeleteAggregationAuthorizationRequest.add_member(:authorized_aws_region, Shapes::ShapeRef.new(shape: AwsRegion, required: true, location_name: "AuthorizedAwsRegion"))
@@ -1004,8 +1082,12 @@ module Aws::ConfigService
     DescribeConfigRuleEvaluationStatusResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
     DescribeConfigRuleEvaluationStatusResponse.struct_class = Types::DescribeConfigRuleEvaluationStatusResponse
 
+    DescribeConfigRulesFilters.add_member(:evaluation_mode, Shapes::ShapeRef.new(shape: EvaluationMode, location_name: "EvaluationMode"))
+    DescribeConfigRulesFilters.struct_class = Types::DescribeConfigRulesFilters
+
     DescribeConfigRulesRequest.add_member(:config_rule_names, Shapes::ShapeRef.new(shape: ConfigRuleNames, location_name: "ConfigRuleNames"))
     DescribeConfigRulesRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeConfigRulesRequest.add_member(:filters, Shapes::ShapeRef.new(shape: DescribeConfigRulesFilters, location_name: "Filters"))
     DescribeConfigRulesRequest.struct_class = Types::DescribeConfigRulesRequest
 
     DescribeConfigRulesResponse.add_member(:config_rules, Shapes::ShapeRef.new(shape: ConfigRules, location_name: "ConfigRules"))
@@ -1171,6 +1253,14 @@ module Aws::ConfigService
     Evaluation.add_member(:ordering_timestamp, Shapes::ShapeRef.new(shape: OrderingTimestamp, required: true, location_name: "OrderingTimestamp"))
     Evaluation.struct_class = Types::Evaluation
 
+    EvaluationContext.add_member(:evaluation_context_identifier, Shapes::ShapeRef.new(shape: EvaluationContextIdentifier, location_name: "EvaluationContextIdentifier"))
+    EvaluationContext.struct_class = Types::EvaluationContext
+
+    EvaluationModeConfiguration.add_member(:mode, Shapes::ShapeRef.new(shape: EvaluationMode, location_name: "Mode"))
+    EvaluationModeConfiguration.struct_class = Types::EvaluationModeConfiguration
+
+    EvaluationModes.member = Shapes::ShapeRef.new(shape: EvaluationModeConfiguration)
+
     EvaluationResult.add_member(:evaluation_result_identifier, Shapes::ShapeRef.new(shape: EvaluationResultIdentifier, location_name: "EvaluationResultIdentifier"))
     EvaluationResult.add_member(:compliance_type, Shapes::ShapeRef.new(shape: ComplianceType, location_name: "ComplianceType"))
     EvaluationResult.add_member(:result_recorded_time, Shapes::ShapeRef.new(shape: Date, location_name: "ResultRecordedTime"))
@@ -1181,18 +1271,27 @@ module Aws::ConfigService
 
     EvaluationResultIdentifier.add_member(:evaluation_result_qualifier, Shapes::ShapeRef.new(shape: EvaluationResultQualifier, location_name: "EvaluationResultQualifier"))
     EvaluationResultIdentifier.add_member(:ordering_timestamp, Shapes::ShapeRef.new(shape: Date, location_name: "OrderingTimestamp"))
+    EvaluationResultIdentifier.add_member(:resource_evaluation_id, Shapes::ShapeRef.new(shape: ResourceEvaluationId, location_name: "ResourceEvaluationId"))
     EvaluationResultIdentifier.struct_class = Types::EvaluationResultIdentifier
 
     EvaluationResultQualifier.add_member(:config_rule_name, Shapes::ShapeRef.new(shape: ConfigRuleName, location_name: "ConfigRuleName"))
     EvaluationResultQualifier.add_member(:resource_type, Shapes::ShapeRef.new(shape: StringWithCharLimit256, location_name: "ResourceType"))
     EvaluationResultQualifier.add_member(:resource_id, Shapes::ShapeRef.new(shape: BaseResourceId, location_name: "ResourceId"))
+    EvaluationResultQualifier.add_member(:evaluation_mode, Shapes::ShapeRef.new(shape: EvaluationMode, location_name: "EvaluationMode"))
     EvaluationResultQualifier.struct_class = Types::EvaluationResultQualifier
 
     EvaluationResults.member = Shapes::ShapeRef.new(shape: EvaluationResult)
 
+    EvaluationStatus.add_member(:status, Shapes::ShapeRef.new(shape: ResourceEvaluationStatus, required: true, location_name: "Status"))
+    EvaluationStatus.add_member(:failure_reason, Shapes::ShapeRef.new(shape: StringWithCharLimit1024, location_name: "FailureReason"))
+    EvaluationStatus.struct_class = Types::EvaluationStatus
+
     Evaluations.member = Shapes::ShapeRef.new(shape: Evaluation)
 
     ExcludedAccounts.member = Shapes::ShapeRef.new(shape: AccountId)
+
+    ExclusionByResourceTypes.add_member(:resource_types, Shapes::ShapeRef.new(shape: ResourceTypeList, location_name: "resourceTypes"))
+    ExclusionByResourceTypes.struct_class = Types::ExclusionByResourceTypes
 
     ExecutionControls.add_member(:ssm_controls, Shapes::ShapeRef.new(shape: SsmControls, location_name: "SsmControls"))
     ExecutionControls.struct_class = Types::ExecutionControls
@@ -1294,10 +1393,11 @@ module Aws::ConfigService
     GetComplianceDetailsByConfigRuleResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     GetComplianceDetailsByConfigRuleResponse.struct_class = Types::GetComplianceDetailsByConfigRuleResponse
 
-    GetComplianceDetailsByResourceRequest.add_member(:resource_type, Shapes::ShapeRef.new(shape: StringWithCharLimit256, required: true, location_name: "ResourceType"))
-    GetComplianceDetailsByResourceRequest.add_member(:resource_id, Shapes::ShapeRef.new(shape: BaseResourceId, required: true, location_name: "ResourceId"))
+    GetComplianceDetailsByResourceRequest.add_member(:resource_type, Shapes::ShapeRef.new(shape: StringWithCharLimit256, location_name: "ResourceType"))
+    GetComplianceDetailsByResourceRequest.add_member(:resource_id, Shapes::ShapeRef.new(shape: BaseResourceId, location_name: "ResourceId"))
     GetComplianceDetailsByResourceRequest.add_member(:compliance_types, Shapes::ShapeRef.new(shape: ComplianceTypes, location_name: "ComplianceTypes"))
     GetComplianceDetailsByResourceRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    GetComplianceDetailsByResourceRequest.add_member(:resource_evaluation_id, Shapes::ShapeRef.new(shape: ResourceEvaluationId, location_name: "ResourceEvaluationId"))
     GetComplianceDetailsByResourceRequest.struct_class = Types::GetComplianceDetailsByResourceRequest
 
     GetComplianceDetailsByResourceResponse.add_member(:evaluation_results, Shapes::ShapeRef.new(shape: EvaluationResults, location_name: "EvaluationResults"))
@@ -1333,6 +1433,12 @@ module Aws::ConfigService
     GetConformancePackComplianceSummaryResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     GetConformancePackComplianceSummaryResponse.struct_class = Types::GetConformancePackComplianceSummaryResponse
 
+    GetCustomRulePolicyRequest.add_member(:config_rule_name, Shapes::ShapeRef.new(shape: ConfigRuleName, location_name: "ConfigRuleName"))
+    GetCustomRulePolicyRequest.struct_class = Types::GetCustomRulePolicyRequest
+
+    GetCustomRulePolicyResponse.add_member(:policy_text, Shapes::ShapeRef.new(shape: PolicyText, location_name: "PolicyText"))
+    GetCustomRulePolicyResponse.struct_class = Types::GetCustomRulePolicyResponse
+
     GetDiscoveredResourceCountsRequest.add_member(:resource_types, Shapes::ShapeRef.new(shape: ResourceTypes, location_name: "resourceTypes"))
     GetDiscoveredResourceCountsRequest.add_member(:limit, Shapes::ShapeRef.new(shape: Limit, location_name: "limit"))
     GetDiscoveredResourceCountsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "nextToken"))
@@ -1363,6 +1469,12 @@ module Aws::ConfigService
     GetOrganizationConformancePackDetailedStatusResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
     GetOrganizationConformancePackDetailedStatusResponse.struct_class = Types::GetOrganizationConformancePackDetailedStatusResponse
 
+    GetOrganizationCustomRulePolicyRequest.add_member(:organization_config_rule_name, Shapes::ShapeRef.new(shape: OrganizationConfigRuleName, required: true, location_name: "OrganizationConfigRuleName"))
+    GetOrganizationCustomRulePolicyRequest.struct_class = Types::GetOrganizationCustomRulePolicyRequest
+
+    GetOrganizationCustomRulePolicyResponse.add_member(:policy_text, Shapes::ShapeRef.new(shape: PolicyText, location_name: "PolicyText"))
+    GetOrganizationCustomRulePolicyResponse.struct_class = Types::GetOrganizationCustomRulePolicyResponse
+
     GetResourceConfigHistoryRequest.add_member(:resource_type, Shapes::ShapeRef.new(shape: ResourceType, required: true, location_name: "resourceType"))
     GetResourceConfigHistoryRequest.add_member(:resource_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location_name: "resourceId"))
     GetResourceConfigHistoryRequest.add_member(:later_time, Shapes::ShapeRef.new(shape: LaterTime, location_name: "laterTime"))
@@ -1376,6 +1488,18 @@ module Aws::ConfigService
     GetResourceConfigHistoryResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "nextToken"))
     GetResourceConfigHistoryResponse.struct_class = Types::GetResourceConfigHistoryResponse
 
+    GetResourceEvaluationSummaryRequest.add_member(:resource_evaluation_id, Shapes::ShapeRef.new(shape: ResourceEvaluationId, required: true, location_name: "ResourceEvaluationId"))
+    GetResourceEvaluationSummaryRequest.struct_class = Types::GetResourceEvaluationSummaryRequest
+
+    GetResourceEvaluationSummaryResponse.add_member(:resource_evaluation_id, Shapes::ShapeRef.new(shape: ResourceEvaluationId, location_name: "ResourceEvaluationId"))
+    GetResourceEvaluationSummaryResponse.add_member(:evaluation_mode, Shapes::ShapeRef.new(shape: EvaluationMode, location_name: "EvaluationMode"))
+    GetResourceEvaluationSummaryResponse.add_member(:evaluation_status, Shapes::ShapeRef.new(shape: EvaluationStatus, location_name: "EvaluationStatus"))
+    GetResourceEvaluationSummaryResponse.add_member(:evaluation_start_timestamp, Shapes::ShapeRef.new(shape: Date, location_name: "EvaluationStartTimestamp"))
+    GetResourceEvaluationSummaryResponse.add_member(:compliance, Shapes::ShapeRef.new(shape: ComplianceType, location_name: "Compliance"))
+    GetResourceEvaluationSummaryResponse.add_member(:evaluation_context, Shapes::ShapeRef.new(shape: EvaluationContext, location_name: "EvaluationContext"))
+    GetResourceEvaluationSummaryResponse.add_member(:resource_details, Shapes::ShapeRef.new(shape: ResourceDetails, location_name: "ResourceDetails"))
+    GetResourceEvaluationSummaryResponse.struct_class = Types::GetResourceEvaluationSummaryResponse
+
     GetStoredQueryRequest.add_member(:query_name, Shapes::ShapeRef.new(shape: QueryName, required: true, location_name: "QueryName"))
     GetStoredQueryRequest.struct_class = Types::GetStoredQueryRequest
 
@@ -1387,6 +1511,9 @@ module Aws::ConfigService
     GroupedResourceCount.struct_class = Types::GroupedResourceCount
 
     GroupedResourceCountList.member = Shapes::ShapeRef.new(shape: GroupedResourceCount)
+
+    IdempotentParameterMismatch.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "message"))
+    IdempotentParameterMismatch.struct_class = Types::IdempotentParameterMismatch
 
     InsufficientDeliveryPolicyException.struct_class = Types::InsufficientDeliveryPolicyException
 
@@ -1433,6 +1560,17 @@ module Aws::ConfigService
     ListAggregateDiscoveredResourcesResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     ListAggregateDiscoveredResourcesResponse.struct_class = Types::ListAggregateDiscoveredResourcesResponse
 
+    ListConformancePackComplianceScoresRequest.add_member(:filters, Shapes::ShapeRef.new(shape: ConformancePackComplianceScoresFilters, location_name: "Filters"))
+    ListConformancePackComplianceScoresRequest.add_member(:sort_order, Shapes::ShapeRef.new(shape: SortOrder, location_name: "SortOrder"))
+    ListConformancePackComplianceScoresRequest.add_member(:sort_by, Shapes::ShapeRef.new(shape: SortBy, location_name: "SortBy"))
+    ListConformancePackComplianceScoresRequest.add_member(:limit, Shapes::ShapeRef.new(shape: PageSizeLimit, location_name: "Limit"))
+    ListConformancePackComplianceScoresRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListConformancePackComplianceScoresRequest.struct_class = Types::ListConformancePackComplianceScoresRequest
+
+    ListConformancePackComplianceScoresResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListConformancePackComplianceScoresResponse.add_member(:conformance_pack_compliance_scores, Shapes::ShapeRef.new(shape: ConformancePackComplianceScores, required: true, location_name: "ConformancePackComplianceScores"))
+    ListConformancePackComplianceScoresResponse.struct_class = Types::ListConformancePackComplianceScoresResponse
+
     ListDiscoveredResourcesRequest.add_member(:resource_type, Shapes::ShapeRef.new(shape: ResourceType, required: true, location_name: "resourceType"))
     ListDiscoveredResourcesRequest.add_member(:resource_ids, Shapes::ShapeRef.new(shape: ResourceIdList, location_name: "resourceIds"))
     ListDiscoveredResourcesRequest.add_member(:resource_name, Shapes::ShapeRef.new(shape: ResourceName, location_name: "resourceName"))
@@ -1444,6 +1582,15 @@ module Aws::ConfigService
     ListDiscoveredResourcesResponse.add_member(:resource_identifiers, Shapes::ShapeRef.new(shape: ResourceIdentifierList, location_name: "resourceIdentifiers"))
     ListDiscoveredResourcesResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "nextToken"))
     ListDiscoveredResourcesResponse.struct_class = Types::ListDiscoveredResourcesResponse
+
+    ListResourceEvaluationsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: ResourceEvaluationFilters, location_name: "Filters"))
+    ListResourceEvaluationsRequest.add_member(:limit, Shapes::ShapeRef.new(shape: ListResourceEvaluationsPageItemLimit, location_name: "Limit"))
+    ListResourceEvaluationsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    ListResourceEvaluationsRequest.struct_class = Types::ListResourceEvaluationsRequest
+
+    ListResourceEvaluationsResponse.add_member(:resource_evaluations, Shapes::ShapeRef.new(shape: ResourceEvaluations, location_name: "ResourceEvaluations"))
+    ListResourceEvaluationsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    ListResourceEvaluationsResponse.struct_class = Types::ListResourceEvaluationsResponse
 
     ListStoredQueriesRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken", metadata: {"box"=>true}))
     ListStoredQueriesRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: Limit, location_name: "MaxResults", metadata: {"box"=>true}))
@@ -1533,6 +1680,7 @@ module Aws::ConfigService
     OrganizationConfigRule.add_member(:organization_custom_rule_metadata, Shapes::ShapeRef.new(shape: OrganizationCustomRuleMetadata, location_name: "OrganizationCustomRuleMetadata"))
     OrganizationConfigRule.add_member(:excluded_accounts, Shapes::ShapeRef.new(shape: ExcludedAccounts, location_name: "ExcludedAccounts"))
     OrganizationConfigRule.add_member(:last_update_time, Shapes::ShapeRef.new(shape: Date, location_name: "LastUpdateTime"))
+    OrganizationConfigRule.add_member(:organization_custom_policy_rule_metadata, Shapes::ShapeRef.new(shape: OrganizationCustomPolicyRuleMetadataNoPolicy, location_name: "OrganizationCustomPolicyRuleMetadata"))
     OrganizationConfigRule.struct_class = Types::OrganizationConfigRule
 
     OrganizationConfigRuleDetailedStatus.member = Shapes::ShapeRef.new(shape: MemberAccountStatus)
@@ -1547,6 +1695,8 @@ module Aws::ConfigService
     OrganizationConfigRuleStatus.struct_class = Types::OrganizationConfigRuleStatus
 
     OrganizationConfigRuleStatuses.member = Shapes::ShapeRef.new(shape: OrganizationConfigRuleStatus)
+
+    OrganizationConfigRuleTriggerTypeNoSNs.member = Shapes::ShapeRef.new(shape: OrganizationConfigRuleTriggerTypeNoSN)
 
     OrganizationConfigRuleTriggerTypes.member = Shapes::ShapeRef.new(shape: OrganizationConfigRuleTriggerType)
 
@@ -1585,6 +1735,31 @@ module Aws::ConfigService
     OrganizationConformancePackTemplateValidationException.struct_class = Types::OrganizationConformancePackTemplateValidationException
 
     OrganizationConformancePacks.member = Shapes::ShapeRef.new(shape: OrganizationConformancePack)
+
+    OrganizationCustomPolicyRuleMetadata.add_member(:description, Shapes::ShapeRef.new(shape: StringWithCharLimit256Min0, location_name: "Description"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:organization_config_rule_trigger_types, Shapes::ShapeRef.new(shape: OrganizationConfigRuleTriggerTypeNoSNs, location_name: "OrganizationConfigRuleTriggerTypes"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:input_parameters, Shapes::ShapeRef.new(shape: StringWithCharLimit2048, location_name: "InputParameters"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:maximum_execution_frequency, Shapes::ShapeRef.new(shape: MaximumExecutionFrequency, location_name: "MaximumExecutionFrequency"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:resource_types_scope, Shapes::ShapeRef.new(shape: ResourceTypesScope, location_name: "ResourceTypesScope"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:resource_id_scope, Shapes::ShapeRef.new(shape: StringWithCharLimit768, location_name: "ResourceIdScope"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:tag_key_scope, Shapes::ShapeRef.new(shape: StringWithCharLimit128, location_name: "TagKeyScope"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:tag_value_scope, Shapes::ShapeRef.new(shape: StringWithCharLimit256, location_name: "TagValueScope"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:policy_runtime, Shapes::ShapeRef.new(shape: PolicyRuntime, required: true, location_name: "PolicyRuntime"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:policy_text, Shapes::ShapeRef.new(shape: PolicyText, required: true, location_name: "PolicyText"))
+    OrganizationCustomPolicyRuleMetadata.add_member(:debug_log_delivery_accounts, Shapes::ShapeRef.new(shape: DebugLogDeliveryAccounts, location_name: "DebugLogDeliveryAccounts"))
+    OrganizationCustomPolicyRuleMetadata.struct_class = Types::OrganizationCustomPolicyRuleMetadata
+
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:description, Shapes::ShapeRef.new(shape: StringWithCharLimit256Min0, location_name: "Description"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:organization_config_rule_trigger_types, Shapes::ShapeRef.new(shape: OrganizationConfigRuleTriggerTypeNoSNs, location_name: "OrganizationConfigRuleTriggerTypes"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:input_parameters, Shapes::ShapeRef.new(shape: StringWithCharLimit2048, location_name: "InputParameters"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:maximum_execution_frequency, Shapes::ShapeRef.new(shape: MaximumExecutionFrequency, location_name: "MaximumExecutionFrequency"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:resource_types_scope, Shapes::ShapeRef.new(shape: ResourceTypesScope, location_name: "ResourceTypesScope"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:resource_id_scope, Shapes::ShapeRef.new(shape: StringWithCharLimit768, location_name: "ResourceIdScope"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:tag_key_scope, Shapes::ShapeRef.new(shape: StringWithCharLimit128, location_name: "TagKeyScope"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:tag_value_scope, Shapes::ShapeRef.new(shape: StringWithCharLimit256, location_name: "TagValueScope"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:policy_runtime, Shapes::ShapeRef.new(shape: PolicyRuntime, location_name: "PolicyRuntime"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.add_member(:debug_log_delivery_accounts, Shapes::ShapeRef.new(shape: DebugLogDeliveryAccounts, location_name: "DebugLogDeliveryAccounts"))
+    OrganizationCustomPolicyRuleMetadataNoPolicy.struct_class = Types::OrganizationCustomPolicyRuleMetadataNoPolicy
 
     OrganizationCustomRuleMetadata.add_member(:description, Shapes::ShapeRef.new(shape: StringWithCharLimit256Min0, location_name: "Description"))
     OrganizationCustomRuleMetadata.add_member(:lambda_function_arn, Shapes::ShapeRef.new(shape: StringWithCharLimit256, required: true, location_name: "LambdaFunctionArn"))
@@ -1649,6 +1824,7 @@ module Aws::ConfigService
     PutConformancePackRequest.add_member(:delivery_s3_bucket, Shapes::ShapeRef.new(shape: DeliveryS3Bucket, location_name: "DeliveryS3Bucket"))
     PutConformancePackRequest.add_member(:delivery_s3_key_prefix, Shapes::ShapeRef.new(shape: DeliveryS3KeyPrefix, location_name: "DeliveryS3KeyPrefix"))
     PutConformancePackRequest.add_member(:conformance_pack_input_parameters, Shapes::ShapeRef.new(shape: ConformancePackInputParameters, location_name: "ConformancePackInputParameters"))
+    PutConformancePackRequest.add_member(:template_ssm_document_details, Shapes::ShapeRef.new(shape: TemplateSSMDocumentDetails, location_name: "TemplateSSMDocumentDetails"))
     PutConformancePackRequest.struct_class = Types::PutConformancePackRequest
 
     PutConformancePackResponse.add_member(:conformance_pack_arn, Shapes::ShapeRef.new(shape: ConformancePackArn, location_name: "ConformancePackArn"))
@@ -1675,6 +1851,7 @@ module Aws::ConfigService
     PutOrganizationConfigRuleRequest.add_member(:organization_managed_rule_metadata, Shapes::ShapeRef.new(shape: OrganizationManagedRuleMetadata, location_name: "OrganizationManagedRuleMetadata"))
     PutOrganizationConfigRuleRequest.add_member(:organization_custom_rule_metadata, Shapes::ShapeRef.new(shape: OrganizationCustomRuleMetadata, location_name: "OrganizationCustomRuleMetadata"))
     PutOrganizationConfigRuleRequest.add_member(:excluded_accounts, Shapes::ShapeRef.new(shape: ExcludedAccounts, location_name: "ExcludedAccounts"))
+    PutOrganizationConfigRuleRequest.add_member(:organization_custom_policy_rule_metadata, Shapes::ShapeRef.new(shape: OrganizationCustomPolicyRuleMetadata, location_name: "OrganizationCustomPolicyRuleMetadata"))
     PutOrganizationConfigRuleRequest.struct_class = Types::PutOrganizationConfigRuleRequest
 
     PutOrganizationConfigRuleResponse.add_member(:organization_config_rule_arn, Shapes::ShapeRef.new(shape: StringWithCharLimit256, location_name: "OrganizationConfigRuleArn"))
@@ -1734,7 +1911,12 @@ module Aws::ConfigService
     RecordingGroup.add_member(:all_supported, Shapes::ShapeRef.new(shape: AllSupported, location_name: "allSupported"))
     RecordingGroup.add_member(:include_global_resource_types, Shapes::ShapeRef.new(shape: IncludeGlobalResourceTypes, location_name: "includeGlobalResourceTypes"))
     RecordingGroup.add_member(:resource_types, Shapes::ShapeRef.new(shape: ResourceTypeList, location_name: "resourceTypes"))
+    RecordingGroup.add_member(:exclusion_by_resource_types, Shapes::ShapeRef.new(shape: ExclusionByResourceTypes, location_name: "exclusionByResourceTypes"))
+    RecordingGroup.add_member(:recording_strategy, Shapes::ShapeRef.new(shape: RecordingStrategy, location_name: "recordingStrategy"))
     RecordingGroup.struct_class = Types::RecordingGroup
+
+    RecordingStrategy.add_member(:use_only, Shapes::ShapeRef.new(shape: RecordingStrategyType, location_name: "useOnly"))
+    RecordingStrategy.struct_class = Types::RecordingStrategy
 
     ReevaluateConfigRuleNames.member = Shapes::ShapeRef.new(shape: ConfigRuleName)
 
@@ -1820,6 +2002,24 @@ module Aws::ConfigService
 
     ResourceCounts.member = Shapes::ShapeRef.new(shape: ResourceCount)
 
+    ResourceDetails.add_member(:resource_id, Shapes::ShapeRef.new(shape: BaseResourceId, required: true, location_name: "ResourceId"))
+    ResourceDetails.add_member(:resource_type, Shapes::ShapeRef.new(shape: StringWithCharLimit256, required: true, location_name: "ResourceType"))
+    ResourceDetails.add_member(:resource_configuration, Shapes::ShapeRef.new(shape: ResourceConfiguration, required: true, location_name: "ResourceConfiguration"))
+    ResourceDetails.add_member(:resource_configuration_schema_type, Shapes::ShapeRef.new(shape: ResourceConfigurationSchemaType, location_name: "ResourceConfigurationSchemaType"))
+    ResourceDetails.struct_class = Types::ResourceDetails
+
+    ResourceEvaluation.add_member(:resource_evaluation_id, Shapes::ShapeRef.new(shape: ResourceEvaluationId, location_name: "ResourceEvaluationId"))
+    ResourceEvaluation.add_member(:evaluation_mode, Shapes::ShapeRef.new(shape: EvaluationMode, location_name: "EvaluationMode"))
+    ResourceEvaluation.add_member(:evaluation_start_timestamp, Shapes::ShapeRef.new(shape: Date, location_name: "EvaluationStartTimestamp"))
+    ResourceEvaluation.struct_class = Types::ResourceEvaluation
+
+    ResourceEvaluationFilters.add_member(:evaluation_mode, Shapes::ShapeRef.new(shape: EvaluationMode, location_name: "EvaluationMode"))
+    ResourceEvaluationFilters.add_member(:time_window, Shapes::ShapeRef.new(shape: TimeWindow, location_name: "TimeWindow"))
+    ResourceEvaluationFilters.add_member(:evaluation_context_identifier, Shapes::ShapeRef.new(shape: EvaluationContextIdentifier, location_name: "EvaluationContextIdentifier"))
+    ResourceEvaluationFilters.struct_class = Types::ResourceEvaluationFilters
+
+    ResourceEvaluations.member = Shapes::ShapeRef.new(shape: ResourceEvaluation)
+
     ResourceFilters.add_member(:account_id, Shapes::ShapeRef.new(shape: AccountId, location_name: "AccountId"))
     ResourceFilters.add_member(:resource_id, Shapes::ShapeRef.new(shape: ResourceId, location_name: "ResourceId"))
     ResourceFilters.add_member(:resource_name, Shapes::ShapeRef.new(shape: ResourceName, location_name: "ResourceName"))
@@ -1898,8 +2098,9 @@ module Aws::ConfigService
     SelectResourceConfigResponse.struct_class = Types::SelectResourceConfigResponse
 
     Source.add_member(:owner, Shapes::ShapeRef.new(shape: Owner, required: true, location_name: "Owner"))
-    Source.add_member(:source_identifier, Shapes::ShapeRef.new(shape: StringWithCharLimit256, required: true, location_name: "SourceIdentifier"))
+    Source.add_member(:source_identifier, Shapes::ShapeRef.new(shape: StringWithCharLimit256, location_name: "SourceIdentifier"))
     Source.add_member(:source_details, Shapes::ShapeRef.new(shape: SourceDetails, location_name: "SourceDetails"))
+    Source.add_member(:custom_policy_details, Shapes::ShapeRef.new(shape: CustomPolicyDetails, location_name: "CustomPolicyDetails"))
     Source.struct_class = Types::Source
 
     SourceDetail.add_member(:event_source, Shapes::ShapeRef.new(shape: EventSource, location_name: "EventSource"))
@@ -1928,6 +2129,16 @@ module Aws::ConfigService
     StartRemediationExecutionResponse.add_member(:failure_message, Shapes::ShapeRef.new(shape: String, location_name: "FailureMessage"))
     StartRemediationExecutionResponse.add_member(:failed_items, Shapes::ShapeRef.new(shape: ResourceKeys, location_name: "FailedItems"))
     StartRemediationExecutionResponse.struct_class = Types::StartRemediationExecutionResponse
+
+    StartResourceEvaluationRequest.add_member(:resource_details, Shapes::ShapeRef.new(shape: ResourceDetails, required: true, location_name: "ResourceDetails"))
+    StartResourceEvaluationRequest.add_member(:evaluation_context, Shapes::ShapeRef.new(shape: EvaluationContext, location_name: "EvaluationContext"))
+    StartResourceEvaluationRequest.add_member(:evaluation_mode, Shapes::ShapeRef.new(shape: EvaluationMode, required: true, location_name: "EvaluationMode"))
+    StartResourceEvaluationRequest.add_member(:evaluation_timeout, Shapes::ShapeRef.new(shape: EvaluationTimeout, location_name: "EvaluationTimeout"))
+    StartResourceEvaluationRequest.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, location_name: "ClientToken"))
+    StartResourceEvaluationRequest.struct_class = Types::StartResourceEvaluationRequest
+
+    StartResourceEvaluationResponse.add_member(:resource_evaluation_id, Shapes::ShapeRef.new(shape: ResourceEvaluationId, location_name: "ResourceEvaluationId"))
+    StartResourceEvaluationResponse.struct_class = Types::StartResourceEvaluationResponse
 
     StaticParameterValues.member = Shapes::ShapeRef.new(shape: StringWithCharLimit256)
 
@@ -1975,6 +2186,14 @@ module Aws::ConfigService
     Tags.value = Shapes::ShapeRef.new(shape: Value)
 
     TagsList.member = Shapes::ShapeRef.new(shape: Tag)
+
+    TemplateSSMDocumentDetails.add_member(:document_name, Shapes::ShapeRef.new(shape: SSMDocumentName, required: true, location_name: "DocumentName"))
+    TemplateSSMDocumentDetails.add_member(:document_version, Shapes::ShapeRef.new(shape: SSMDocumentVersion, location_name: "DocumentVersion"))
+    TemplateSSMDocumentDetails.struct_class = Types::TemplateSSMDocumentDetails
+
+    TimeWindow.add_member(:start_time, Shapes::ShapeRef.new(shape: Date, location_name: "StartTime"))
+    TimeWindow.add_member(:end_time, Shapes::ShapeRef.new(shape: Date, location_name: "EndTime"))
+    TimeWindow.struct_class = Types::TimeWindow
 
     TooManyTagsException.struct_class = Types::TooManyTagsException
 
@@ -2295,6 +2514,7 @@ module Aws::ConfigService
         o.output = Shapes::ShapeRef.new(shape: DescribeConfigRulesResponse)
         o.errors << Shapes::ShapeRef.new(shape: NoSuchConfigRuleException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
         o[:pager] = Aws::Pager.new(
           tokens: {
             "next_token" => "next_token"
@@ -2742,6 +2962,15 @@ module Aws::ConfigService
         )
       end)
 
+      api.add_operation(:get_custom_rule_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetCustomRulePolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: GetCustomRulePolicyRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetCustomRulePolicyResponse)
+        o.errors << Shapes::ShapeRef.new(shape: NoSuchConfigRuleException)
+      end)
+
       api.add_operation(:get_discovered_resource_counts, Seahorse::Model::Operation.new.tap do |o|
         o.name = "GetDiscoveredResourceCounts"
         o.http_method = "POST"
@@ -2795,6 +3024,16 @@ module Aws::ConfigService
         )
       end)
 
+      api.add_operation(:get_organization_custom_rule_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetOrganizationCustomRulePolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: GetOrganizationCustomRulePolicyRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetOrganizationCustomRulePolicyResponse)
+        o.errors << Shapes::ShapeRef.new(shape: NoSuchOrganizationConfigRuleException)
+        o.errors << Shapes::ShapeRef.new(shape: OrganizationAccessDeniedException)
+      end)
+
       api.add_operation(:get_resource_config_history, Seahorse::Model::Operation.new.tap do |o|
         o.name = "GetResourceConfigHistory"
         o.http_method = "POST"
@@ -2813,6 +3052,15 @@ module Aws::ConfigService
             "next_token" => "next_token"
           }
         )
+      end)
+
+      api.add_operation(:get_resource_evaluation_summary, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetResourceEvaluationSummary"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: GetResourceEvaluationSummaryRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetResourceEvaluationSummaryResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
       end)
 
       api.add_operation(:get_stored_query, Seahorse::Model::Operation.new.tap do |o|
@@ -2843,6 +3091,23 @@ module Aws::ConfigService
         )
       end)
 
+      api.add_operation(:list_conformance_pack_compliance_scores, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListConformancePackComplianceScores"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListConformancePackComplianceScoresRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListConformancePackComplianceScoresResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidLimitException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "limit",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
       api.add_operation(:list_discovered_resources, Seahorse::Model::Operation.new.tap do |o|
         o.name = "ListDiscoveredResources"
         o.http_method = "POST"
@@ -2853,6 +3118,23 @@ module Aws::ConfigService
         o.errors << Shapes::ShapeRef.new(shape: InvalidLimitException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
         o.errors << Shapes::ShapeRef.new(shape: NoAvailableConfigurationRecorderException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "limit",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_resource_evaluations, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListResourceEvaluations"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListResourceEvaluationsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListResourceEvaluationsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidTimeRangeException)
         o[:pager] = Aws::Pager.new(
           limit_key: "limit",
           tokens: {
@@ -3144,6 +3426,16 @@ module Aws::ConfigService
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
         o.errors << Shapes::ShapeRef.new(shape: InsufficientPermissionsException)
         o.errors << Shapes::ShapeRef.new(shape: NoSuchRemediationConfigurationException)
+      end)
+
+      api.add_operation(:start_resource_evaluation, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "StartResourceEvaluation"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: StartResourceEvaluationRequest)
+        o.output = Shapes::ShapeRef.new(shape: StartResourceEvaluationResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: IdempotentParameterMismatch)
       end)
 
       api.add_operation(:stop_configuration_recorder, Seahorse::Model::Operation.new.tap do |o|

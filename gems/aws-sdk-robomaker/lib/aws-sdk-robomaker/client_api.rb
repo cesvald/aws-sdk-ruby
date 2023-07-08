@@ -36,8 +36,10 @@ module Aws::RoboMaker
     CancelWorldGenerationJobResponse = Shapes::StructureShape.new(name: 'CancelWorldGenerationJobResponse')
     ClientRequestToken = Shapes::StringShape.new(name: 'ClientRequestToken')
     Command = Shapes::StringShape.new(name: 'Command')
+    CommandList = Shapes::ListShape.new(name: 'CommandList')
     Compute = Shapes::StructureShape.new(name: 'Compute')
     ComputeResponse = Shapes::StructureShape.new(name: 'ComputeResponse')
+    ComputeType = Shapes::StringShape.new(name: 'ComputeType')
     ConcurrentDeploymentException = Shapes::StructureShape.new(name: 'ConcurrentDeploymentException')
     CreateDeploymentJobRequest = Shapes::StructureShape.new(name: 'CreateDeploymentJobRequest')
     CreateDeploymentJobResponse = Shapes::StructureShape.new(name: 'CreateDeploymentJobResponse')
@@ -67,6 +69,7 @@ module Aws::RoboMaker
     DataSourceConfig = Shapes::StructureShape.new(name: 'DataSourceConfig')
     DataSourceConfigs = Shapes::ListShape.new(name: 'DataSourceConfigs')
     DataSourceNames = Shapes::ListShape.new(name: 'DataSourceNames')
+    DataSourceType = Shapes::StringShape.new(name: 'DataSourceType')
     DataSources = Shapes::ListShape.new(name: 'DataSources')
     DeleteFleetRequest = Shapes::StructureShape.new(name: 'DeleteFleetRequest')
     DeleteFleetResponse = Shapes::StructureShape.new(name: 'DeleteFleetResponse')
@@ -112,6 +115,7 @@ module Aws::RoboMaker
     DescribeWorldResponse = Shapes::StructureShape.new(name: 'DescribeWorldResponse')
     DescribeWorldTemplateRequest = Shapes::StructureShape.new(name: 'DescribeWorldTemplateRequest')
     DescribeWorldTemplateResponse = Shapes::StructureShape.new(name: 'DescribeWorldTemplateResponse')
+    Environment = Shapes::StructureShape.new(name: 'Environment')
     EnvironmentVariableKey = Shapes::StringShape.new(name: 'EnvironmentVariableKey')
     EnvironmentVariableMap = Shapes::MapShape.new(name: 'EnvironmentVariableMap')
     EnvironmentVariableValue = Shapes::StringShape.new(name: 'EnvironmentVariableValue')
@@ -128,6 +132,7 @@ module Aws::RoboMaker
     Fleet = Shapes::StructureShape.new(name: 'Fleet')
     Fleets = Shapes::ListShape.new(name: 'Fleets')
     FloorplanCount = Shapes::IntegerShape.new(name: 'FloorplanCount')
+    GPUUnit = Shapes::IntegerShape.new(name: 'GPUUnit')
     GenericInteger = Shapes::IntegerShape.new(name: 'GenericInteger')
     GenericString = Shapes::StringShape.new(name: 'GenericString')
     GetWorldTemplateBodyRequest = Shapes::StructureShape.new(name: 'GetWorldTemplateBodyRequest')
@@ -135,6 +140,7 @@ module Aws::RoboMaker
     IamRole = Shapes::StringShape.new(name: 'IamRole')
     Id = Shapes::StringShape.new(name: 'Id')
     IdempotentParameterMismatchException = Shapes::StructureShape.new(name: 'IdempotentParameterMismatchException')
+    ImageDigest = Shapes::StringShape.new(name: 'ImageDigest')
     Integer = Shapes::IntegerShape.new(name: 'Integer')
     InteriorCountPerFloorplan = Shapes::IntegerShape.new(name: 'InteriorCountPerFloorplan')
     InternalServerException = Shapes::StructureShape.new(name: 'InternalServerException')
@@ -191,6 +197,7 @@ module Aws::RoboMaker
     RenderingEngine = Shapes::StructureShape.new(name: 'RenderingEngine')
     RenderingEngineType = Shapes::StringShape.new(name: 'RenderingEngineType')
     RenderingEngineVersionType = Shapes::StringShape.new(name: 'RenderingEngineVersionType')
+    RepositoryUrl = Shapes::StringShape.new(name: 'RepositoryUrl')
     ResourceAlreadyExistsException = Shapes::StructureShape.new(name: 'ResourceAlreadyExistsException')
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
     RestartSimulationJobRequest = Shapes::StructureShape.new(name: 'RestartSimulationJobRequest')
@@ -212,10 +219,12 @@ module Aws::RoboMaker
     Robots = Shapes::ListShape.new(name: 'Robots')
     S3Bucket = Shapes::StringShape.new(name: 'S3Bucket')
     S3Etag = Shapes::StringShape.new(name: 'S3Etag')
+    S3Etags = Shapes::ListShape.new(name: 'S3Etags')
     S3Key = Shapes::StringShape.new(name: 'S3Key')
+    S3KeyOrPrefix = Shapes::StringShape.new(name: 'S3KeyOrPrefix')
     S3KeyOutput = Shapes::StructureShape.new(name: 'S3KeyOutput')
     S3KeyOutputs = Shapes::ListShape.new(name: 'S3KeyOutputs')
-    S3Keys = Shapes::ListShape.new(name: 'S3Keys')
+    S3KeysOrPrefixes = Shapes::ListShape.new(name: 'S3KeysOrPrefixes')
     S3Object = Shapes::StructureShape.new(name: 'S3Object')
     SecurityGroups = Shapes::ListShape.new(name: 'SecurityGroups')
     ServiceUnavailableException = Shapes::StructureShape.new(name: 'ServiceUnavailableException')
@@ -339,10 +348,16 @@ module Aws::RoboMaker
 
     CancelWorldGenerationJobResponse.struct_class = Types::CancelWorldGenerationJobResponse
 
+    CommandList.member = Shapes::ShapeRef.new(shape: NonEmptyString)
+
     Compute.add_member(:simulation_unit_limit, Shapes::ShapeRef.new(shape: SimulationUnit, location_name: "simulationUnitLimit"))
+    Compute.add_member(:compute_type, Shapes::ShapeRef.new(shape: ComputeType, location_name: "computeType"))
+    Compute.add_member(:gpu_unit_limit, Shapes::ShapeRef.new(shape: GPUUnit, location_name: "gpuUnitLimit"))
     Compute.struct_class = Types::Compute
 
     ComputeResponse.add_member(:simulation_unit_limit, Shapes::ShapeRef.new(shape: SimulationUnit, location_name: "simulationUnitLimit"))
+    ComputeResponse.add_member(:compute_type, Shapes::ShapeRef.new(shape: ComputeType, location_name: "computeType"))
+    ComputeResponse.add_member(:gpu_unit_limit, Shapes::ShapeRef.new(shape: GPUUnit, location_name: "gpuUnitLimit"))
     ComputeResponse.struct_class = Types::ComputeResponse
 
     ConcurrentDeploymentException.add_member(:message, Shapes::ShapeRef.new(shape: errorMessage, location_name: "message"))
@@ -377,9 +392,10 @@ module Aws::RoboMaker
     CreateFleetResponse.struct_class = Types::CreateFleetResponse
 
     CreateRobotApplicationRequest.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "name"))
-    CreateRobotApplicationRequest.add_member(:sources, Shapes::ShapeRef.new(shape: SourceConfigs, required: true, location_name: "sources"))
+    CreateRobotApplicationRequest.add_member(:sources, Shapes::ShapeRef.new(shape: SourceConfigs, location_name: "sources"))
     CreateRobotApplicationRequest.add_member(:robot_software_suite, Shapes::ShapeRef.new(shape: RobotSoftwareSuite, required: true, location_name: "robotSoftwareSuite"))
     CreateRobotApplicationRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    CreateRobotApplicationRequest.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     CreateRobotApplicationRequest.struct_class = Types::CreateRobotApplicationRequest
 
     CreateRobotApplicationResponse.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "arn"))
@@ -390,10 +406,13 @@ module Aws::RoboMaker
     CreateRobotApplicationResponse.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     CreateRobotApplicationResponse.add_member(:revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "revisionId"))
     CreateRobotApplicationResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    CreateRobotApplicationResponse.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     CreateRobotApplicationResponse.struct_class = Types::CreateRobotApplicationResponse
 
     CreateRobotApplicationVersionRequest.add_member(:application, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "application"))
     CreateRobotApplicationVersionRequest.add_member(:current_revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "currentRevisionId"))
+    CreateRobotApplicationVersionRequest.add_member(:s3_etags, Shapes::ShapeRef.new(shape: S3Etags, location_name: "s3Etags"))
+    CreateRobotApplicationVersionRequest.add_member(:image_digest, Shapes::ShapeRef.new(shape: ImageDigest, location_name: "imageDigest"))
     CreateRobotApplicationVersionRequest.struct_class = Types::CreateRobotApplicationVersionRequest
 
     CreateRobotApplicationVersionResponse.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "arn"))
@@ -403,6 +422,7 @@ module Aws::RoboMaker
     CreateRobotApplicationVersionResponse.add_member(:robot_software_suite, Shapes::ShapeRef.new(shape: RobotSoftwareSuite, location_name: "robotSoftwareSuite"))
     CreateRobotApplicationVersionResponse.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     CreateRobotApplicationVersionResponse.add_member(:revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "revisionId"))
+    CreateRobotApplicationVersionResponse.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     CreateRobotApplicationVersionResponse.struct_class = Types::CreateRobotApplicationVersionResponse
 
     CreateRobotRequest.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "name"))
@@ -420,11 +440,12 @@ module Aws::RoboMaker
     CreateRobotResponse.struct_class = Types::CreateRobotResponse
 
     CreateSimulationApplicationRequest.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "name"))
-    CreateSimulationApplicationRequest.add_member(:sources, Shapes::ShapeRef.new(shape: SourceConfigs, required: true, location_name: "sources"))
+    CreateSimulationApplicationRequest.add_member(:sources, Shapes::ShapeRef.new(shape: SourceConfigs, location_name: "sources"))
     CreateSimulationApplicationRequest.add_member(:simulation_software_suite, Shapes::ShapeRef.new(shape: SimulationSoftwareSuite, required: true, location_name: "simulationSoftwareSuite"))
     CreateSimulationApplicationRequest.add_member(:robot_software_suite, Shapes::ShapeRef.new(shape: RobotSoftwareSuite, required: true, location_name: "robotSoftwareSuite"))
     CreateSimulationApplicationRequest.add_member(:rendering_engine, Shapes::ShapeRef.new(shape: RenderingEngine, location_name: "renderingEngine"))
     CreateSimulationApplicationRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    CreateSimulationApplicationRequest.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     CreateSimulationApplicationRequest.struct_class = Types::CreateSimulationApplicationRequest
 
     CreateSimulationApplicationResponse.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "arn"))
@@ -437,10 +458,13 @@ module Aws::RoboMaker
     CreateSimulationApplicationResponse.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     CreateSimulationApplicationResponse.add_member(:revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "revisionId"))
     CreateSimulationApplicationResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    CreateSimulationApplicationResponse.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     CreateSimulationApplicationResponse.struct_class = Types::CreateSimulationApplicationResponse
 
     CreateSimulationApplicationVersionRequest.add_member(:application, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "application"))
     CreateSimulationApplicationVersionRequest.add_member(:current_revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "currentRevisionId"))
+    CreateSimulationApplicationVersionRequest.add_member(:s3_etags, Shapes::ShapeRef.new(shape: S3Etags, location_name: "s3Etags"))
+    CreateSimulationApplicationVersionRequest.add_member(:image_digest, Shapes::ShapeRef.new(shape: ImageDigest, location_name: "imageDigest"))
     CreateSimulationApplicationVersionRequest.struct_class = Types::CreateSimulationApplicationVersionRequest
 
     CreateSimulationApplicationVersionResponse.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "arn"))
@@ -452,6 +476,7 @@ module Aws::RoboMaker
     CreateSimulationApplicationVersionResponse.add_member(:rendering_engine, Shapes::ShapeRef.new(shape: RenderingEngine, location_name: "renderingEngine"))
     CreateSimulationApplicationVersionResponse.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     CreateSimulationApplicationVersionResponse.add_member(:revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "revisionId"))
+    CreateSimulationApplicationVersionResponse.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     CreateSimulationApplicationVersionResponse.struct_class = Types::CreateSimulationApplicationVersionResponse
 
     CreateSimulationJobRequest.add_member(:client_request_token, Shapes::ShapeRef.new(shape: ClientRequestToken, location_name: "clientRequestToken", metadata: {"idempotencyToken"=>true}))
@@ -542,11 +567,15 @@ module Aws::RoboMaker
     DataSource.add_member(:name, Shapes::ShapeRef.new(shape: Name, location_name: "name"))
     DataSource.add_member(:s3_bucket, Shapes::ShapeRef.new(shape: S3Bucket, location_name: "s3Bucket"))
     DataSource.add_member(:s3_keys, Shapes::ShapeRef.new(shape: S3KeyOutputs, location_name: "s3Keys"))
+    DataSource.add_member(:type, Shapes::ShapeRef.new(shape: DataSourceType, location_name: "type"))
+    DataSource.add_member(:destination, Shapes::ShapeRef.new(shape: Path, location_name: "destination"))
     DataSource.struct_class = Types::DataSource
 
     DataSourceConfig.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "name"))
     DataSourceConfig.add_member(:s3_bucket, Shapes::ShapeRef.new(shape: S3Bucket, required: true, location_name: "s3Bucket"))
-    DataSourceConfig.add_member(:s3_keys, Shapes::ShapeRef.new(shape: S3Keys, required: true, location_name: "s3Keys"))
+    DataSourceConfig.add_member(:s3_keys, Shapes::ShapeRef.new(shape: S3KeysOrPrefixes, required: true, location_name: "s3Keys"))
+    DataSourceConfig.add_member(:type, Shapes::ShapeRef.new(shape: DataSourceType, location_name: "type"))
+    DataSourceConfig.add_member(:destination, Shapes::ShapeRef.new(shape: Path, location_name: "destination"))
     DataSourceConfig.struct_class = Types::DataSourceConfig
 
     DataSourceConfigs.member = Shapes::ShapeRef.new(shape: DataSourceConfig)
@@ -662,6 +691,8 @@ module Aws::RoboMaker
     DescribeRobotApplicationResponse.add_member(:revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "revisionId"))
     DescribeRobotApplicationResponse.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     DescribeRobotApplicationResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    DescribeRobotApplicationResponse.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
+    DescribeRobotApplicationResponse.add_member(:image_digest, Shapes::ShapeRef.new(shape: ImageDigest, location_name: "imageDigest"))
     DescribeRobotApplicationResponse.struct_class = Types::DescribeRobotApplicationResponse
 
     DescribeRobotRequest.add_member(:robot, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "robot"))
@@ -693,6 +724,8 @@ module Aws::RoboMaker
     DescribeSimulationApplicationResponse.add_member(:revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "revisionId"))
     DescribeSimulationApplicationResponse.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     DescribeSimulationApplicationResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    DescribeSimulationApplicationResponse.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
+    DescribeSimulationApplicationResponse.add_member(:image_digest, Shapes::ShapeRef.new(shape: ImageDigest, location_name: "imageDigest"))
     DescribeSimulationApplicationResponse.struct_class = Types::DescribeSimulationApplicationResponse
 
     DescribeSimulationJobBatchRequest.add_member(:batch, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "batch"))
@@ -777,6 +810,7 @@ module Aws::RoboMaker
     DescribeWorldResponse.add_member(:template, Shapes::ShapeRef.new(shape: Arn, location_name: "template"))
     DescribeWorldResponse.add_member(:created_at, Shapes::ShapeRef.new(shape: CreatedAt, location_name: "createdAt"))
     DescribeWorldResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    DescribeWorldResponse.add_member(:world_description_body, Shapes::ShapeRef.new(shape: Json, location_name: "worldDescriptionBody"))
     DescribeWorldResponse.struct_class = Types::DescribeWorldResponse
 
     DescribeWorldTemplateRequest.add_member(:template, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "template"))
@@ -788,7 +822,11 @@ module Aws::RoboMaker
     DescribeWorldTemplateResponse.add_member(:created_at, Shapes::ShapeRef.new(shape: CreatedAt, location_name: "createdAt"))
     DescribeWorldTemplateResponse.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     DescribeWorldTemplateResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
+    DescribeWorldTemplateResponse.add_member(:version, Shapes::ShapeRef.new(shape: GenericString, location_name: "version"))
     DescribeWorldTemplateResponse.struct_class = Types::DescribeWorldTemplateResponse
+
+    Environment.add_member(:uri, Shapes::ShapeRef.new(shape: RepositoryUrl, location_name: "uri"))
+    Environment.struct_class = Types::Environment
 
     EnvironmentVariableMap.key = Shapes::ShapeRef.new(shape: EnvironmentVariableKey)
     EnvironmentVariableMap.value = Shapes::ShapeRef.new(shape: EnvironmentVariableValue)
@@ -844,11 +882,12 @@ module Aws::RoboMaker
     InvalidParameterException.add_member(:message, Shapes::ShapeRef.new(shape: errorMessage, location_name: "message"))
     InvalidParameterException.struct_class = Types::InvalidParameterException
 
-    LaunchConfig.add_member(:package_name, Shapes::ShapeRef.new(shape: Command, required: true, location_name: "packageName"))
-    LaunchConfig.add_member(:launch_file, Shapes::ShapeRef.new(shape: Command, required: true, location_name: "launchFile"))
+    LaunchConfig.add_member(:package_name, Shapes::ShapeRef.new(shape: Command, location_name: "packageName"))
+    LaunchConfig.add_member(:launch_file, Shapes::ShapeRef.new(shape: Command, location_name: "launchFile"))
     LaunchConfig.add_member(:environment_variables, Shapes::ShapeRef.new(shape: EnvironmentVariableMap, location_name: "environmentVariables"))
     LaunchConfig.add_member(:port_forwarding_config, Shapes::ShapeRef.new(shape: PortForwardingConfig, location_name: "portForwardingConfig"))
     LaunchConfig.add_member(:stream_ui, Shapes::ShapeRef.new(shape: Boolean, location_name: "streamUI"))
+    LaunchConfig.add_member(:command, Shapes::ShapeRef.new(shape: CommandList, location_name: "command"))
     LaunchConfig.struct_class = Types::LaunchConfig
 
     LimitExceededException.add_member(:message, Shapes::ShapeRef.new(shape: errorMessage, location_name: "message"))
@@ -960,7 +999,7 @@ module Aws::RoboMaker
     ListWorldsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
     ListWorldsResponse.struct_class = Types::ListWorldsResponse
 
-    LoggingConfig.add_member(:record_all_ros_topics, Shapes::ShapeRef.new(shape: BoxedBoolean, required: true, location_name: "recordAllRosTopics"))
+    LoggingConfig.add_member(:record_all_ros_topics, Shapes::ShapeRef.new(shape: BoxedBoolean, deprecated: true, location_name: "recordAllRosTopics", metadata: {"deprecatedMessage"=>"AWS RoboMaker is ending support for ROS software suite. For additional information, see https://docs.aws.amazon.com/robomaker/latest/dg/software-support-policy.html."}))
     LoggingConfig.struct_class = Types::LoggingConfig
 
     NetworkInterface.add_member(:network_interface_id, Shapes::ShapeRef.new(shape: GenericString, location_name: "networkInterfaceId"))
@@ -1026,9 +1065,9 @@ module Aws::RoboMaker
     RobotApplicationConfig.add_member(:application_version, Shapes::ShapeRef.new(shape: Version, location_name: "applicationVersion"))
     RobotApplicationConfig.add_member(:launch_config, Shapes::ShapeRef.new(shape: LaunchConfig, required: true, location_name: "launchConfig"))
     RobotApplicationConfig.add_member(:upload_configurations, Shapes::ShapeRef.new(shape: UploadConfigurations, location_name: "uploadConfigurations"))
-    RobotApplicationConfig.add_member(:use_default_upload_configurations, Shapes::ShapeRef.new(shape: BoxedBoolean, location_name: "useDefaultUploadConfigurations"))
+    RobotApplicationConfig.add_member(:use_default_upload_configurations, Shapes::ShapeRef.new(shape: BoxedBoolean, deprecated: true, location_name: "useDefaultUploadConfigurations", metadata: {"deprecatedMessage"=>"AWS RoboMaker is ending support for ROS software suite. For additional information, see https://docs.aws.amazon.com/robomaker/latest/dg/software-support-policy.html."}))
     RobotApplicationConfig.add_member(:tools, Shapes::ShapeRef.new(shape: Tools, location_name: "tools"))
-    RobotApplicationConfig.add_member(:use_default_tools, Shapes::ShapeRef.new(shape: BoxedBoolean, location_name: "useDefaultTools"))
+    RobotApplicationConfig.add_member(:use_default_tools, Shapes::ShapeRef.new(shape: BoxedBoolean, deprecated: true, location_name: "useDefaultTools", metadata: {"deprecatedMessage"=>"AWS RoboMaker is ending support for ROS software suite. For additional information, see https://docs.aws.amazon.com/robomaker/latest/dg/software-support-policy.html."}))
     RobotApplicationConfig.struct_class = Types::RobotApplicationConfig
 
     RobotApplicationConfigs.member = Shapes::ShapeRef.new(shape: RobotApplicationConfig)
@@ -1061,13 +1100,15 @@ module Aws::RoboMaker
 
     Robots.member = Shapes::ShapeRef.new(shape: Robot)
 
-    S3KeyOutput.add_member(:s3_key, Shapes::ShapeRef.new(shape: S3Key, location_name: "s3Key"))
+    S3Etags.member = Shapes::ShapeRef.new(shape: S3Etag)
+
+    S3KeyOutput.add_member(:s3_key, Shapes::ShapeRef.new(shape: S3KeyOrPrefix, location_name: "s3Key"))
     S3KeyOutput.add_member(:etag, Shapes::ShapeRef.new(shape: S3Etag, location_name: "etag"))
     S3KeyOutput.struct_class = Types::S3KeyOutput
 
     S3KeyOutputs.member = Shapes::ShapeRef.new(shape: S3KeyOutput)
 
-    S3Keys.member = Shapes::ShapeRef.new(shape: S3Key)
+    S3KeysOrPrefixes.member = Shapes::ShapeRef.new(shape: S3KeyOrPrefix)
 
     S3Object.add_member(:bucket, Shapes::ShapeRef.new(shape: S3Bucket, required: true, location_name: "bucket"))
     S3Object.add_member(:key, Shapes::ShapeRef.new(shape: S3Key, required: true, location_name: "key"))
@@ -1084,9 +1125,9 @@ module Aws::RoboMaker
     SimulationApplicationConfig.add_member(:launch_config, Shapes::ShapeRef.new(shape: LaunchConfig, required: true, location_name: "launchConfig"))
     SimulationApplicationConfig.add_member(:upload_configurations, Shapes::ShapeRef.new(shape: UploadConfigurations, location_name: "uploadConfigurations"))
     SimulationApplicationConfig.add_member(:world_configs, Shapes::ShapeRef.new(shape: WorldConfigs, location_name: "worldConfigs"))
-    SimulationApplicationConfig.add_member(:use_default_upload_configurations, Shapes::ShapeRef.new(shape: BoxedBoolean, location_name: "useDefaultUploadConfigurations"))
+    SimulationApplicationConfig.add_member(:use_default_upload_configurations, Shapes::ShapeRef.new(shape: BoxedBoolean, deprecated: true, location_name: "useDefaultUploadConfigurations", metadata: {"deprecatedMessage"=>"AWS RoboMaker is ending support for ROS software suite. For additional information, see https://docs.aws.amazon.com/robomaker/latest/dg/software-support-policy.html."}))
     SimulationApplicationConfig.add_member(:tools, Shapes::ShapeRef.new(shape: Tools, location_name: "tools"))
-    SimulationApplicationConfig.add_member(:use_default_tools, Shapes::ShapeRef.new(shape: BoxedBoolean, location_name: "useDefaultTools"))
+    SimulationApplicationConfig.add_member(:use_default_tools, Shapes::ShapeRef.new(shape: BoxedBoolean, deprecated: true, location_name: "useDefaultTools", metadata: {"deprecatedMessage"=>"AWS RoboMaker is ending support for ROS software suite. For additional information, see https://docs.aws.amazon.com/robomaker/latest/dg/software-support-policy.html."}))
     SimulationApplicationConfig.struct_class = Types::SimulationApplicationConfig
 
     SimulationApplicationConfigs.member = Shapes::ShapeRef.new(shape: SimulationApplicationConfig)
@@ -1160,6 +1201,7 @@ module Aws::RoboMaker
     SimulationJobSummary.add_member(:simulation_application_names, Shapes::ShapeRef.new(shape: SimulationApplicationNames, location_name: "simulationApplicationNames"))
     SimulationJobSummary.add_member(:robot_application_names, Shapes::ShapeRef.new(shape: RobotApplicationNames, location_name: "robotApplicationNames"))
     SimulationJobSummary.add_member(:data_source_names, Shapes::ShapeRef.new(shape: DataSourceNames, location_name: "dataSourceNames"))
+    SimulationJobSummary.add_member(:compute_type, Shapes::ShapeRef.new(shape: ComputeType, location_name: "computeType"))
     SimulationJobSummary.struct_class = Types::SimulationJobSummary
 
     SimulationJobs.member = Shapes::ShapeRef.new(shape: SimulationJob)
@@ -1239,6 +1281,7 @@ module Aws::RoboMaker
     TemplateSummary.add_member(:created_at, Shapes::ShapeRef.new(shape: CreatedAt, location_name: "createdAt"))
     TemplateSummary.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     TemplateSummary.add_member(:name, Shapes::ShapeRef.new(shape: TemplateName, location_name: "name"))
+    TemplateSummary.add_member(:version, Shapes::ShapeRef.new(shape: GenericString, location_name: "version"))
     TemplateSummary.struct_class = Types::TemplateSummary
 
     ThrottlingException.add_member(:message, Shapes::ShapeRef.new(shape: errorMessage, location_name: "message"))
@@ -1260,9 +1303,10 @@ module Aws::RoboMaker
     UntagResourceResponse.struct_class = Types::UntagResourceResponse
 
     UpdateRobotApplicationRequest.add_member(:application, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "application"))
-    UpdateRobotApplicationRequest.add_member(:sources, Shapes::ShapeRef.new(shape: SourceConfigs, required: true, location_name: "sources"))
+    UpdateRobotApplicationRequest.add_member(:sources, Shapes::ShapeRef.new(shape: SourceConfigs, location_name: "sources"))
     UpdateRobotApplicationRequest.add_member(:robot_software_suite, Shapes::ShapeRef.new(shape: RobotSoftwareSuite, required: true, location_name: "robotSoftwareSuite"))
     UpdateRobotApplicationRequest.add_member(:current_revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "currentRevisionId"))
+    UpdateRobotApplicationRequest.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     UpdateRobotApplicationRequest.struct_class = Types::UpdateRobotApplicationRequest
 
     UpdateRobotApplicationResponse.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "arn"))
@@ -1272,14 +1316,16 @@ module Aws::RoboMaker
     UpdateRobotApplicationResponse.add_member(:robot_software_suite, Shapes::ShapeRef.new(shape: RobotSoftwareSuite, location_name: "robotSoftwareSuite"))
     UpdateRobotApplicationResponse.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     UpdateRobotApplicationResponse.add_member(:revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "revisionId"))
+    UpdateRobotApplicationResponse.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     UpdateRobotApplicationResponse.struct_class = Types::UpdateRobotApplicationResponse
 
     UpdateSimulationApplicationRequest.add_member(:application, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "application"))
-    UpdateSimulationApplicationRequest.add_member(:sources, Shapes::ShapeRef.new(shape: SourceConfigs, required: true, location_name: "sources"))
+    UpdateSimulationApplicationRequest.add_member(:sources, Shapes::ShapeRef.new(shape: SourceConfigs, location_name: "sources"))
     UpdateSimulationApplicationRequest.add_member(:simulation_software_suite, Shapes::ShapeRef.new(shape: SimulationSoftwareSuite, required: true, location_name: "simulationSoftwareSuite"))
     UpdateSimulationApplicationRequest.add_member(:robot_software_suite, Shapes::ShapeRef.new(shape: RobotSoftwareSuite, required: true, location_name: "robotSoftwareSuite"))
     UpdateSimulationApplicationRequest.add_member(:rendering_engine, Shapes::ShapeRef.new(shape: RenderingEngine, location_name: "renderingEngine"))
     UpdateSimulationApplicationRequest.add_member(:current_revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "currentRevisionId"))
+    UpdateSimulationApplicationRequest.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     UpdateSimulationApplicationRequest.struct_class = Types::UpdateSimulationApplicationRequest
 
     UpdateSimulationApplicationResponse.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "arn"))
@@ -1291,6 +1337,7 @@ module Aws::RoboMaker
     UpdateSimulationApplicationResponse.add_member(:rendering_engine, Shapes::ShapeRef.new(shape: RenderingEngine, location_name: "renderingEngine"))
     UpdateSimulationApplicationResponse.add_member(:last_updated_at, Shapes::ShapeRef.new(shape: LastUpdatedAt, location_name: "lastUpdatedAt"))
     UpdateSimulationApplicationResponse.add_member(:revision_id, Shapes::ShapeRef.new(shape: RevisionId, location_name: "revisionId"))
+    UpdateSimulationApplicationResponse.add_member(:environment, Shapes::ShapeRef.new(shape: Environment, location_name: "environment"))
     UpdateSimulationApplicationResponse.struct_class = Types::UpdateSimulationApplicationResponse
 
     UpdateWorldTemplateRequest.add_member(:template, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "template"))
@@ -1338,6 +1385,7 @@ module Aws::RoboMaker
     WorldExportJobSummary.add_member(:status, Shapes::ShapeRef.new(shape: WorldExportJobStatus, location_name: "status"))
     WorldExportJobSummary.add_member(:created_at, Shapes::ShapeRef.new(shape: CreatedAt, location_name: "createdAt"))
     WorldExportJobSummary.add_member(:worlds, Shapes::ShapeRef.new(shape: Arns, location_name: "worlds"))
+    WorldExportJobSummary.add_member(:output_location, Shapes::ShapeRef.new(shape: OutputLocation, location_name: "outputLocation"))
     WorldExportJobSummary.struct_class = Types::WorldExportJobSummary
 
     WorldFailure.add_member(:failure_code, Shapes::ShapeRef.new(shape: WorldGenerationJobErrorCode, location_name: "failureCode"))
@@ -1412,6 +1460,7 @@ module Aws::RoboMaker
         o.name = "CancelDeploymentJob"
         o.http_method = "POST"
         o.http_request_uri = "/cancelDeploymentJob"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: CancelDeploymentJobRequest)
         o.output = Shapes::ShapeRef.new(shape: CancelDeploymentJobResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -1472,6 +1521,7 @@ module Aws::RoboMaker
         o.name = "CreateDeploymentJob"
         o.http_method = "POST"
         o.http_request_uri = "/createDeploymentJob"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: CreateDeploymentJobRequest)
         o.output = Shapes::ShapeRef.new(shape: CreateDeploymentJobResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -1487,6 +1537,7 @@ module Aws::RoboMaker
         o.name = "CreateFleet"
         o.http_method = "POST"
         o.http_request_uri = "/createFleet"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: CreateFleetRequest)
         o.output = Shapes::ShapeRef.new(shape: CreateFleetResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
@@ -1499,6 +1550,7 @@ module Aws::RoboMaker
         o.name = "CreateRobot"
         o.http_method = "POST"
         o.http_request_uri = "/createRobot"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: CreateRobotRequest)
         o.output = Shapes::ShapeRef.new(shape: CreateRobotResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
@@ -1624,6 +1676,7 @@ module Aws::RoboMaker
         o.name = "DeleteFleet"
         o.http_method = "POST"
         o.http_request_uri = "/deleteFleet"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: DeleteFleetRequest)
         o.output = Shapes::ShapeRef.new(shape: DeleteFleetResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
@@ -1635,6 +1688,7 @@ module Aws::RoboMaker
         o.name = "DeleteRobot"
         o.http_method = "POST"
         o.http_request_uri = "/deleteRobot"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: DeleteRobotRequest)
         o.output = Shapes::ShapeRef.new(shape: DeleteRobotResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
@@ -1680,6 +1734,7 @@ module Aws::RoboMaker
         o.name = "DeregisterRobot"
         o.http_method = "POST"
         o.http_request_uri = "/deregisterRobot"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: DeregisterRobotRequest)
         o.output = Shapes::ShapeRef.new(shape: DeregisterRobotResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
@@ -1692,6 +1747,7 @@ module Aws::RoboMaker
         o.name = "DescribeDeploymentJob"
         o.http_method = "POST"
         o.http_request_uri = "/describeDeploymentJob"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: DescribeDeploymentJobRequest)
         o.output = Shapes::ShapeRef.new(shape: DescribeDeploymentJobResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -1704,6 +1760,7 @@ module Aws::RoboMaker
         o.name = "DescribeFleet"
         o.http_method = "POST"
         o.http_request_uri = "/describeFleet"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: DescribeFleetRequest)
         o.output = Shapes::ShapeRef.new(shape: DescribeFleetResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -1716,6 +1773,7 @@ module Aws::RoboMaker
         o.name = "DescribeRobot"
         o.http_method = "POST"
         o.http_request_uri = "/describeRobot"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: DescribeRobotRequest)
         o.output = Shapes::ShapeRef.new(shape: DescribeRobotResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -1835,6 +1893,7 @@ module Aws::RoboMaker
         o.name = "ListDeploymentJobs"
         o.http_method = "POST"
         o.http_request_uri = "/listDeploymentJobs"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: ListDeploymentJobsRequest)
         o.output = Shapes::ShapeRef.new(shape: ListDeploymentJobsResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -1853,6 +1912,7 @@ module Aws::RoboMaker
         o.name = "ListFleets"
         o.http_method = "POST"
         o.http_request_uri = "/listFleets"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: ListFleetsRequest)
         o.output = Shapes::ShapeRef.new(shape: ListFleetsResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -1888,6 +1948,7 @@ module Aws::RoboMaker
         o.name = "ListRobots"
         o.http_method = "POST"
         o.http_request_uri = "/listRobots"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: ListRobotsRequest)
         o.output = Shapes::ShapeRef.new(shape: ListRobotsResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -2036,6 +2097,7 @@ module Aws::RoboMaker
         o.name = "RegisterRobot"
         o.http_method = "POST"
         o.http_request_uri = "/registerRobot"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: RegisterRobotRequest)
         o.output = Shapes::ShapeRef.new(shape: RegisterRobotResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
@@ -2075,6 +2137,7 @@ module Aws::RoboMaker
         o.name = "SyncDeploymentJob"
         o.http_method = "POST"
         o.http_request_uri = "/syncDeploymentJob"
+        o.deprecated = true
         o.input = Shapes::ShapeRef.new(shape: SyncDeploymentJobRequest)
         o.output = Shapes::ShapeRef.new(shape: SyncDeploymentJobResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)

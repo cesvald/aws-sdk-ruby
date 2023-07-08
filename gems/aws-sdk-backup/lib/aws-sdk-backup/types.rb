@@ -12,21 +12,12 @@ module Aws::Backup
 
     # A list of backup options for each resource type.
     #
-    # @note When making an API call, you may pass AdvancedBackupSetting
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "ResourceType",
-    #         backup_options: {
-    #           "BackupOptionKey" => "BackupOptionValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_type
     #   Specifies an object containing resource type and backup options. The
     #   only supported resource type is Amazon EC2 instances with Windows
-    #   VSS. For an CloudFormation example, see the [sample CloudFormation
-    #   template to enable Windows VSS][1] in the *AWS Backup User Guide*.
+    #   Volume Shadow Copy Service (VSS). For a CloudFormation example, see
+    #   the [sample CloudFormation template to enable Windows VSS][1] in the
+    #   *Backup User Guide*.
     #
     #   Valid values: `EC2`.
     #
@@ -41,11 +32,11 @@ module Aws::Backup
     #
     #   Valid values:
     #
-    #   Set to `"WindowsVSS":"enabled"` to enable the WindowsVSS backup
-    #   option and create a VSS Windows backup.
+    #   Set to `"WindowsVSS":"enabled"` to enable the `WindowsVSS` backup
+    #   option and create a Windows VSS backup.
     #
     #   Set to `"WindowsVSS":"disabled"` to create a regular backup. The
-    #   WindowsVSS option is not enabled by default.
+    #   `WindowsVSS` option is not enabled by default.
     #
     #   If you specify an invalid option, you get an
     #   `InvalidParameterValueException` exception.
@@ -107,14 +98,14 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] backup_job_id
-    #   Uniquely identifies a request to AWS Backup to back up a resource.
+    #   Uniquely identifies a request to Backup to back up a resource.
     #   @return [String]
     #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] backup_vault_arn
@@ -199,10 +190,11 @@ module Aws::Backup
     #   @return [Time]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource to be backed up; for example, an Amazon
-    #   Elastic Block Store (Amazon EBS) volume or an Amazon Relational
-    #   Database Service (Amazon RDS) database. For VSS Windows backups, the
-    #   only supported resource type is Amazon EC2.
+    #   The type of Amazon Web Services resource to be backed up; for
+    #   example, an Amazon Elastic Block Store (Amazon EBS) volume or an
+    #   Amazon Relational Database Service (Amazon RDS) database. For
+    #   Windows Volume Shadow Copy Service (VSS) backups, the only supported
+    #   resource type is Amazon EC2.
     #   @return [String]
     #
     # @!attribute [rw] bytes_transferred
@@ -212,17 +204,33 @@ module Aws::Backup
     #
     # @!attribute [rw] backup_options
     #   Specifies the backup option for a selected resource. This option is
-    #   only available for Windows VSS backup jobs.
+    #   only available for Windows Volume Shadow Copy Service (VSS) backup
+    #   jobs.
     #
-    #   Valid values: Set to `"WindowsVSS”:“enabled"` to enable WindowsVSS
-    #   backup option and create a VSS Windows backup. Set to
-    #   “WindowsVSS”:”disabled” to create a regular backup. If you specify
+    #   Valid values: Set to `"WindowsVSS":"enabled"` to enable the
+    #   `WindowsVSS` backup option and create a Windows VSS backup. Set to
+    #   `"WindowsVSS":"disabled"` to create a regular backup. If you specify
     #   an invalid option, you get an `InvalidParameterValueException`
     #   exception.
     #   @return [Hash<String,String>]
     #
     # @!attribute [rw] backup_type
     #   Represents the type of backup for a backup job.
+    #   @return [String]
+    #
+    # @!attribute [rw] parent_job_id
+    #   This uniquely identifies a request to Backup to back up a resource.
+    #   The return will be the parent (composite) job ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] is_parent
+    #   This is a boolean value indicating this is a parent (composite)
+    #   backup job.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] resource_name
+    #   This is the non-unique name of the resource that belongs to the
+    #   specified backup.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/BackupJob AWS API Documentation
@@ -247,7 +255,10 @@ module Aws::Backup
       :resource_type,
       :bytes_transferred,
       :backup_options,
-      :backup_type)
+      :backup_type,
+      :parent_job_id,
+      :is_parent,
+      :resource_name)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -255,10 +266,11 @@ module Aws::Backup
     # Contains an optional backup plan display name and an array of
     # `BackupRule` objects, each of which specifies a backup rule. Each rule
     # in a backup plan is a separate scheduled task and can back up a
-    # different selection of AWS resources.
+    # different selection of Amazon Web Services resources.
     #
     # @!attribute [rw] backup_plan_name
-    #   The display name of a backup plan.
+    #   The display name of a backup plan. Must contain 1 to 50 alphanumeric
+    #   or '-\_.' characters.
     #   @return [String]
     #
     # @!attribute [rw] rules
@@ -282,52 +294,11 @@ module Aws::Backup
 
     # Contains an optional backup plan display name and an array of
     # `BackupRule` objects, each of which specifies a backup rule. Each rule
-    # in a backup plan is a separate scheduled task and can back up a
-    # different selection of AWS resources.
-    #
-    # @note When making an API call, you may pass BackupPlanInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_name: "BackupPlanName", # required
-    #         rules: [ # required
-    #           {
-    #             rule_name: "BackupRuleName", # required
-    #             target_backup_vault_name: "BackupVaultName", # required
-    #             schedule_expression: "CronExpression",
-    #             start_window_minutes: 1,
-    #             completion_window_minutes: 1,
-    #             lifecycle: {
-    #               move_to_cold_storage_after_days: 1,
-    #               delete_after_days: 1,
-    #             },
-    #             recovery_point_tags: {
-    #               "TagKey" => "TagValue",
-    #             },
-    #             copy_actions: [
-    #               {
-    #                 lifecycle: {
-    #                   move_to_cold_storage_after_days: 1,
-    #                   delete_after_days: 1,
-    #                 },
-    #                 destination_backup_vault_arn: "ARN", # required
-    #               },
-    #             ],
-    #             enable_continuous_backup: false,
-    #           },
-    #         ],
-    #         advanced_backup_settings: [
-    #           {
-    #             resource_type: "ResourceType",
-    #             backup_options: {
-    #               "BackupOptionKey" => "BackupOptionValue",
-    #             },
-    #           },
-    #         ],
-    #       }
+    # in a backup plan is a separate scheduled task.
     #
     # @!attribute [rw] backup_plan_name
-    #   The optional display name of a backup plan.
+    #   The display name of a backup plan. Must contain 1 to 50 alphanumeric
+    #   or '-\_.' characters.
     #   @return [String]
     #
     # @!attribute [rw] rules
@@ -337,7 +308,8 @@ module Aws::Backup
     #
     # @!attribute [rw] advanced_backup_settings
     #   Specifies a list of `BackupOptions` for each resource type. These
-    #   settings are only available for Windows VSS backup jobs.
+    #   settings are only available for Windows Volume Shadow Copy Service
+    #   (VSS) backup jobs.
     #   @return [Array<Types::AdvancedBackupSetting>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/BackupPlanInput AWS API Documentation
@@ -407,7 +379,10 @@ module Aws::Backup
     # @!attribute [rw] creator_request_id
     #   A unique string that identifies the request and allows failed
     #   requests to be retried without the risk of running the operation
-    #   twice.
+    #   twice. This parameter is optional.
+    #
+    #   If used, this parameter must contain 1 to 50 alphanumeric or
+    #   '-\_.' characters.
     #   @return [String]
     #
     # @!attribute [rw] last_execution_date
@@ -441,23 +416,26 @@ module Aws::Backup
     # Specifies a scheduled task used to back up a selection of resources.
     #
     # @!attribute [rw] rule_name
-    #   An optional display name for a backup rule.
+    #   A display name for a backup rule. Must contain 1 to 50 alphanumeric
+    #   or '-\_.' characters.
     #   @return [String]
     #
     # @!attribute [rw] target_backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] schedule_expression
-    #   A CRON expression specifying when AWS Backup initiates a backup job.
-    #   For more information about cron expressions, see [Schedule
-    #   Expressions for Rules][1] in the *Amazon CloudWatch Events User
-    #   Guide.*. Prior to specifying a value for this parameter, we
-    #   recommend testing your cron expression using one of the many
-    #   available cron generator and testing tools.
+    #   A cron expression in UTC specifying when Backup initiates a backup
+    #   job. For more information about Amazon Web Services cron
+    #   expressions, see [Schedule Expressions for Rules][1] in the *Amazon
+    #   CloudWatch Events User Guide.*. Two examples of Amazon Web Services
+    #   cron expressions are ` 15 * ? * * *` (take a backup every hour at 15
+    #   minutes past the hour) and `0 12 * * ? *` (take a backup every day
+    #   at 12 noon UTC). For a table of examples, click the preceding link
+    #   and scroll down the page.
     #
     #
     #
@@ -467,27 +445,44 @@ module Aws::Backup
     # @!attribute [rw] start_window_minutes
     #   A value in minutes after a backup is scheduled before a job will be
     #   canceled if it doesn't start successfully. This value is optional.
+    #   If this value is included, it must be at least 60 minutes to avoid
+    #   errors.
+    #
+    #   During the start window, the backup job status remains in `CREATED`
+    #   status until it has successfully begun or until the start window
+    #   time has run out. If within the start window time Backup receives an
+    #   error that allows the job to be retried, Backup will automatically
+    #   retry to begin the job at least every 10 minutes until the backup
+    #   successfully begins (the job status changes to `RUNNING`) or until
+    #   the job status changes to `EXPIRED` (which is expected to occur when
+    #   the start window time is over).
     #   @return [Integer]
     #
     # @!attribute [rw] completion_window_minutes
     #   A value in minutes after a backup job is successfully started before
-    #   it must be completed or it will be canceled by AWS Backup. This
-    #   value is optional.
+    #   it must be completed or it will be canceled by Backup. This value is
+    #   optional.
     #   @return [Integer]
     #
     # @!attribute [rw] lifecycle
     #   The lifecycle defines when a protected resource is transitioned to
-    #   cold storage and when it expires. AWS Backup transitions and expires
+    #   cold storage and when it expires. Backup transitions and expires
     #   backups automatically according to the lifecycle that you define.
     #
     #   Backups transitioned to cold storage must be stored in cold storage
-    #   for a minimum of 90 days. Therefore, the “expire after days” setting
-    #   must be 90 days greater than the “transition to cold after days”
-    #   setting. The “transition to cold after days” setting cannot be
-    #   changed after a backup has been transitioned to cold.
+    #   for a minimum of 90 days. Therefore, the “retention” setting must be
+    #   90 days greater than the “transition to cold after days” setting.
+    #   The “transition to cold after days” setting cannot be changed after
+    #   a backup has been transitioned to cold.
     #
-    #   Only Amazon EFS file system backups can be transitioned to cold
-    #   storage.
+    #   Resource types that are able to be transitioned to cold storage are
+    #   listed in the "Lifecycle to cold storage" section of the [ Feature
+    #   availability by resource][1] table. Backup ignores this expression
+    #   for other resource types.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #   @return [Types::Lifecycle]
     #
     # @!attribute [rw] recovery_point_tags
@@ -506,10 +501,10 @@ module Aws::Backup
     #   @return [Array<Types::CopyAction>]
     #
     # @!attribute [rw] enable_continuous_backup
-    #   Specifies whether AWS Backup creates continuous backups. True causes
-    #   AWS Backup to create continuous backups capable of point-in-time
-    #   restore (PITR). False (or not specified) causes AWS Backup to create
-    #   snapshot backups.
+    #   Specifies whether Backup creates continuous backups. True causes
+    #   Backup to create continuous backups capable of point-in-time restore
+    #   (PITR). False (or not specified) causes Backup to create snapshot
+    #   backups.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/BackupRule AWS API Documentation
@@ -531,74 +526,64 @@ module Aws::Backup
 
     # Specifies a scheduled task used to back up a selection of resources.
     #
-    # @note When making an API call, you may pass BackupRuleInput
-    #   data as a hash:
-    #
-    #       {
-    #         rule_name: "BackupRuleName", # required
-    #         target_backup_vault_name: "BackupVaultName", # required
-    #         schedule_expression: "CronExpression",
-    #         start_window_minutes: 1,
-    #         completion_window_minutes: 1,
-    #         lifecycle: {
-    #           move_to_cold_storage_after_days: 1,
-    #           delete_after_days: 1,
-    #         },
-    #         recovery_point_tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         copy_actions: [
-    #           {
-    #             lifecycle: {
-    #               move_to_cold_storage_after_days: 1,
-    #               delete_after_days: 1,
-    #             },
-    #             destination_backup_vault_arn: "ARN", # required
-    #           },
-    #         ],
-    #         enable_continuous_backup: false,
-    #       }
-    #
     # @!attribute [rw] rule_name
-    #   An optional display name for a backup rule.
+    #   A display name for a backup rule. Must contain 1 to 50 alphanumeric
+    #   or '-\_.' characters.
     #   @return [String]
     #
     # @!attribute [rw] target_backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] schedule_expression
-    #   A CRON expression specifying when AWS Backup initiates a backup job.
+    #   A CRON expression in UTC specifying when Backup initiates a backup
+    #   job.
     #   @return [String]
     #
     # @!attribute [rw] start_window_minutes
     #   A value in minutes after a backup is scheduled before a job will be
     #   canceled if it doesn't start successfully. This value is optional.
+    #   If this value is included, it must be at least 60 minutes to avoid
+    #   errors.
+    #
+    #   During the start window, the backup job status remains in `CREATED`
+    #   status until it has successfully begun or until the start window
+    #   time has run out. If within the start window time Backup receives an
+    #   error that allows the job to be retried, Backup will automatically
+    #   retry to begin the job at least every 10 minutes until the backup
+    #   successfully begins (the job status changes to `RUNNING`) or until
+    #   the job status changes to `EXPIRED` (which is expected to occur when
+    #   the start window time is over).
     #   @return [Integer]
     #
     # @!attribute [rw] completion_window_minutes
     #   A value in minutes after a backup job is successfully started before
-    #   it must be completed or it will be canceled by AWS Backup. This
-    #   value is optional.
+    #   it must be completed or it will be canceled by Backup. This value is
+    #   optional.
     #   @return [Integer]
     #
     # @!attribute [rw] lifecycle
     #   The lifecycle defines when a protected resource is transitioned to
-    #   cold storage and when it expires. AWS Backup will transition and
-    #   expire backups automatically according to the lifecycle that you
-    #   define.
+    #   cold storage and when it expires. Backup will transition and expire
+    #   backups automatically according to the lifecycle that you define.
     #
     #   Backups transitioned to cold storage must be stored in cold storage
-    #   for a minimum of 90 days. Therefore, the “expire after days” setting
-    #   must be 90 days greater than the “transition to cold after days”
-    #   setting. The “transition to cold after days” setting cannot be
-    #   changed after a backup has been transitioned to cold.
+    #   for a minimum of 90 days. Therefore, the “retention” setting must be
+    #   90 days greater than the “transition to cold after days” setting.
+    #   The “transition to cold after days” setting cannot be changed after
+    #   a backup has been transitioned to cold.
     #
-    #   Only Amazon EFS file system backups can be transitioned to cold
-    #   storage.
+    #   Resource types that are able to be transitioned to cold storage are
+    #   listed in the "Lifecycle to cold storage" section of the [ Feature
+    #   availability by resource][1] table. Backup ignores this expression
+    #   for other resource types.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #   @return [Types::Lifecycle]
     #
     # @!attribute [rw] recovery_point_tags
@@ -612,10 +597,10 @@ module Aws::Backup
     #   @return [Array<Types::CopyAction>]
     #
     # @!attribute [rw] enable_continuous_backup
-    #   Specifies whether AWS Backup creates continuous backups. True causes
-    #   AWS Backup to create continuous backups capable of point-in-time
-    #   restore (PITR). False (or not specified) causes AWS Backup to create
-    #   snapshot backups.
+    #   Specifies whether Backup creates continuous backups. True causes
+    #   Backup to create continuous backups capable of point-in-time restore
+    #   (PITR). False (or not specified) causes Backup to create snapshot
+    #   backups.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/BackupRuleInput AWS API Documentation
@@ -636,43 +621,74 @@ module Aws::Backup
 
     # Used to specify a set of resources to a backup plan.
     #
-    # @note When making an API call, you may pass BackupSelection
-    #   data as a hash:
-    #
-    #       {
-    #         selection_name: "BackupSelectionName", # required
-    #         iam_role_arn: "IAMRoleArn", # required
-    #         resources: ["ARN"],
-    #         list_of_tags: [
-    #           {
-    #             condition_type: "STRINGEQUALS", # required, accepts STRINGEQUALS
-    #             condition_key: "ConditionKey", # required
-    #             condition_value: "ConditionValue", # required
-    #           },
-    #         ],
-    #       }
+    # Specifying your desired `Conditions`, `ListOfTags`, `NotResources`,
+    # and/or `Resources` is recommended. If none of these are specified,
+    # Backup will attempt to select all supported and opted-in storage
+    # resources, which could have unintended cost implications.
     #
     # @!attribute [rw] selection_name
-    #   The display name of a resource selection document.
+    #   The display name of a resource selection document. Must contain 1 to
+    #   50 alphanumeric or '-\_.' characters.
     #   @return [String]
     #
     # @!attribute [rw] iam_role_arn
-    #   The ARN of the IAM role that AWS Backup uses to authenticate when
+    #   The ARN of the IAM role that Backup uses to authenticate when
     #   backing up the target resource; for example,
     #   `arn:aws:iam::123456789012:role/S3Access`.
     #   @return [String]
     #
     # @!attribute [rw] resources
-    #   An array of strings that contain Amazon Resource Names (ARNs) of
-    #   resources to assign to a backup plan.
+    #   A list of Amazon Resource Names (ARNs) to assign to a backup plan.
+    #   The maximum number of ARNs is 500 without wildcards, or 30 ARNs with
+    #   wildcards.
+    #
+    #   If you need to assign many resources to a backup plan, consider a
+    #   different resource selection strategy, such as assigning all
+    #   resources of a resource type or refining your resource selection
+    #   using tags.
     #   @return [Array<String>]
     #
     # @!attribute [rw] list_of_tags
-    #   An array of conditions used to specify a set of resources to assign
-    #   to a backup plan; for example, `"StringEquals":
-    #   \{"ec2:ResourceTag/Department": "accounting"`. Assigns the backup
-    #   plan to every resource with at least one matching tag.
+    #   A list of conditions that you define to assign resources to your
+    #   backup plans using tags. For example, `"StringEquals": \{
+    #   "ConditionKey": "aws:ResourceTag/CreatedByCryo", "ConditionValue":
+    #   "true" \},`. Condition operators are case sensitive.
+    #
+    #   `ListOfTags` differs from `Conditions` as follows:
+    #
+    #   * When you specify more than one condition, you assign all resources
+    #     that match AT LEAST ONE condition (using OR logic).
+    #
+    #   * `ListOfTags` only supports `StringEquals`. `Conditions` supports
+    #     `StringEquals`, `StringLike`, `StringNotEquals`, and
+    #     `StringNotLike`.
     #   @return [Array<Types::Condition>]
+    #
+    # @!attribute [rw] not_resources
+    #   A list of Amazon Resource Names (ARNs) to exclude from a backup
+    #   plan. The maximum number of ARNs is 500 without wildcards, or 30
+    #   ARNs with wildcards.
+    #
+    #   If you need to exclude many resources from a backup plan, consider a
+    #   different resource selection strategy, such as assigning only one or
+    #   a few resource types or refining your resource selection using tags.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] conditions
+    #   A list of conditions that you define to assign resources to your
+    #   backup plans using tags. For example, `"StringEquals": \{
+    #   "ConditionKey": "aws:ResourceTag/CreatedByCryo", "ConditionValue":
+    #   "true" \},`. Condition operators are case sensitive.
+    #
+    #   `Conditions` differs from `ListOfTags` as follows:
+    #
+    #   * When you specify more than one condition, you only assign the
+    #     resources that match ALL conditions (using AND logic).
+    #
+    #   * `Conditions` supports `StringEquals`, `StringLike`,
+    #     `StringNotEquals`, and `StringNotLike`. `ListOfTags` only supports
+    #     `StringEquals`.
+    #   @return [Types::Conditions]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/BackupSelection AWS API Documentation
     #
@@ -680,7 +696,9 @@ module Aws::Backup
       :selection_name,
       :iam_role_arn,
       :resources,
-      :list_of_tags)
+      :list_of_tags,
+      :not_resources,
+      :conditions)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -710,7 +728,10 @@ module Aws::Backup
     # @!attribute [rw] creator_request_id
     #   A unique string that identifies the request and allows failed
     #   requests to be retried without the risk of running the operation
-    #   twice.
+    #   twice. This parameter is optional.
+    #
+    #   If used, this parameter must contain 1 to 50 alphanumeric or
+    #   '-\_.' characters.
     #   @return [String]
     #
     # @!attribute [rw] iam_role_arn
@@ -737,8 +758,8 @@ module Aws::Backup
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] backup_vault_arn
@@ -755,20 +776,84 @@ module Aws::Backup
     #   @return [Time]
     #
     # @!attribute [rw] encryption_key_arn
-    #   The server-side encryption key that is used to protect your backups;
-    #   for example,
+    #   A server-side encryption key you can specify to encrypt your backups
+    #   from services that support full Backup management; for example,
     #   `arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`.
+    #   If you specify a key, you must specify its ARN, not its alias. If
+    #   you do not specify a key, Backup creates a KMS key for you by
+    #   default.
+    #
+    #   To learn which Backup services support full Backup management and
+    #   how Backup handles encryption for backups from services that do not
+    #   yet support full Backup, see [ Encryption for backups in Backup][1]
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/encryption.html
     #   @return [String]
     #
     # @!attribute [rw] creator_request_id
     #   A unique string that identifies the request and allows failed
     #   requests to be retried without the risk of running the operation
-    #   twice.
+    #   twice. This parameter is optional.
+    #
+    #   If used, this parameter must contain 1 to 50 alphanumeric or
+    #   '-\_.' characters.
     #   @return [String]
     #
     # @!attribute [rw] number_of_recovery_points
     #   The number of recovery points that are stored in a backup vault.
     #   @return [Integer]
+    #
+    # @!attribute [rw] locked
+    #   A Boolean value that indicates whether Backup Vault Lock applies to
+    #   the selected backup vault. If `true`, Vault Lock prevents delete and
+    #   update operations on the recovery points in the selected vault.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] min_retention_days
+    #   The Backup Vault Lock setting that specifies the minimum retention
+    #   period that the vault retains its recovery points. If this parameter
+    #   is not specified, Vault Lock does not enforce a minimum retention
+    #   period.
+    #
+    #   If specified, any backup or copy job to the vault must have a
+    #   lifecycle policy with a retention period equal to or longer than the
+    #   minimum retention period. If the job's retention period is shorter
+    #   than that minimum retention period, then the vault fails the backup
+    #   or copy job, and you should either modify your lifecycle settings or
+    #   use a different vault. Recovery points already stored in the vault
+    #   prior to Vault Lock are not affected.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] max_retention_days
+    #   The Backup Vault Lock setting that specifies the maximum retention
+    #   period that the vault retains its recovery points. If this parameter
+    #   is not specified, Vault Lock does not enforce a maximum retention
+    #   period on the recovery points in the vault (allowing indefinite
+    #   storage).
+    #
+    #   If specified, any backup or copy job to the vault must have a
+    #   lifecycle policy with a retention period equal to or shorter than
+    #   the maximum retention period. If the job's retention period is
+    #   longer than that maximum retention period, then the vault fails the
+    #   backup or copy job, and you should either modify your lifecycle
+    #   settings or use a different vault. Recovery points already stored in
+    #   the vault prior to Vault Lock are not affected.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] lock_date
+    #   The date and time when Backup Vault Lock configuration becomes
+    #   immutable, meaning it cannot be changed or deleted.
+    #
+    #   If you applied Vault Lock to your vault without specifying a lock
+    #   date, you can change your Vault Lock settings, or delete Vault Lock
+    #   from the vault entirely, at any time.
+    #
+    #   This value is in Unix format, Coordinated Universal Time (UTC), and
+    #   accurate to milliseconds. For example, the value 1516925490.087
+    #   represents Friday, January 26, 2018 12:11:30.087 AM.
+    #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/BackupVaultListMember AWS API Documentation
     #
@@ -778,7 +863,11 @@ module Aws::Backup
       :creation_date,
       :encryption_key_arn,
       :creator_request_id,
-      :number_of_recovery_points)
+      :number_of_recovery_points,
+      :locked,
+      :min_retention_days,
+      :max_retention_days,
+      :lock_date)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -787,17 +876,23 @@ module Aws::Backup
     # used to specify a lifecycle for a recovery point.
     #
     # The lifecycle defines when a protected resource is transitioned to
-    # cold storage and when it expires. AWS Backup transitions and expires
+    # cold storage and when it expires. Backup transitions and expires
     # backups automatically according to the lifecycle that you define.
     #
     # Backups transitioned to cold storage must be stored in cold storage
-    # for a minimum of 90 days. Therefore, the “expire after days” setting
-    # must be 90 days greater than the “transition to cold after days”
-    # setting. The “transition to cold after days” setting cannot be changed
-    # after a backup has been transitioned to cold.
+    # for a minimum of 90 days. Therefore, the “retention” setting must be
+    # 90 days greater than the “transition to cold after days” setting. The
+    # “transition to cold after days” setting cannot be changed after a
+    # backup has been transitioned to cold.
     #
-    # Only Amazon EFS file system backups can be transitioned to cold
-    # storage.
+    # Resource types that are able to be transitioned to cold storage are
+    # listed in the "Lifecycle to cold storage" section of the [ Feature
+    # availability by resource][1] table. Backup ignores this expression for
+    # other resource types.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #
     # @!attribute [rw] move_to_cold_storage_at
     #   A timestamp that specifies when to transition a recovery point to
@@ -817,34 +912,58 @@ module Aws::Backup
       include Aws::Structure
     end
 
+    # @!attribute [rw] legal_hold_id
+    #   Legal hold ID required to remove the specified legal hold on a
+    #   recovery point.
+    #   @return [String]
+    #
+    # @!attribute [rw] cancel_description
+    #   String describing the reason for removing the legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] retain_record_in_days
+    #   The integer amount in days specifying amount of days after this API
+    #   operation to remove legal hold.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CancelLegalHoldInput AWS API Documentation
+    #
+    class CancelLegalHoldInput < Struct.new(
+      :legal_hold_id,
+      :cancel_description,
+      :retain_record_in_days)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CancelLegalHoldOutput AWS API Documentation
+    #
+    class CancelLegalHoldOutput < Aws::EmptyStructure; end
+
     # Contains an array of triplets made up of a condition type (such as
-    # `StringEquals`), a key, and a value. Conditions are used to filter
-    # resources in a selection that is assigned to a backup plan.
-    #
-    # @note When making an API call, you may pass Condition
-    #   data as a hash:
-    #
-    #       {
-    #         condition_type: "STRINGEQUALS", # required, accepts STRINGEQUALS
-    #         condition_key: "ConditionKey", # required
-    #         condition_value: "ConditionValue", # required
-    #       }
+    # `StringEquals`), a key, and a value. Used to filter resources using
+    # their tags and assign them to a backup plan. Case sensitive.
     #
     # @!attribute [rw] condition_type
-    #   An operation, such as `StringEquals`, that is applied to a key-value
-    #   pair used to filter resources in a selection.
+    #   An operation applied to a key-value pair used to assign resources to
+    #   your backup plan. Condition only supports `StringEquals`. For more
+    #   flexible assignment options, including `StringLike` and the ability
+    #   to exclude resources from your backup plan, use `Conditions` (with
+    #   an "s" on the end) for your [ `BackupSelection` ][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/API_BackupSelection.html
     #   @return [String]
     #
     # @!attribute [rw] condition_key
-    #   The key in a key-value pair. For example, in
-    #   `"ec2:ResourceTag/Department": "accounting"`,
-    #   `"ec2:ResourceTag/Department"` is the key.
+    #   The key in a key-value pair. For example, in the tag `Department:
+    #   Accounting`, `Department` is the key.
     #   @return [String]
     #
     # @!attribute [rw] condition_value
-    #   The value in a key-value pair. For example, in
-    #   `"ec2:ResourceTag/Department": "accounting"`, `"accounting"` is the
-    #   value.
+    #   The value in a key-value pair. For example, in the tag `Department:
+    #   Accounting`, `Accounting` is the value.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/Condition AWS API Documentation
@@ -857,18 +976,157 @@ module Aws::Backup
       include Aws::Structure
     end
 
+    # Includes information about tags you define to assign tagged resources
+    # to a backup plan.
+    #
+    # @!attribute [rw] condition_key
+    #   The key in a key-value pair. For example, in the tag `Department:
+    #   Accounting`, `Department` is the key.
+    #   @return [String]
+    #
+    # @!attribute [rw] condition_value
+    #   The value in a key-value pair. For example, in the tag `Department:
+    #   Accounting`, `Accounting` is the value.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ConditionParameter AWS API Documentation
+    #
+    class ConditionParameter < Struct.new(
+      :condition_key,
+      :condition_value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains information about which resources to include or exclude from
+    # a backup plan using their tags. Conditions are case sensitive.
+    #
+    # @!attribute [rw] string_equals
+    #   Filters the values of your tagged resources for only those resources
+    #   that you tagged with the same value. Also called "exact matching."
+    #   @return [Array<Types::ConditionParameter>]
+    #
+    # @!attribute [rw] string_not_equals
+    #   Filters the values of your tagged resources for only those resources
+    #   that you tagged that do not have the same value. Also called
+    #   "negated matching."
+    #   @return [Array<Types::ConditionParameter>]
+    #
+    # @!attribute [rw] string_like
+    #   Filters the values of your tagged resources for matching tag values
+    #   with the use of a wildcard character (*) anywhere in the string.
+    #   For example, "prod*" or "*rod*" matches the tag value
+    #   "production".
+    #   @return [Array<Types::ConditionParameter>]
+    #
+    # @!attribute [rw] string_not_like
+    #   Filters the values of your tagged resources for non-matching tag
+    #   values with the use of a wildcard character (*) anywhere in the
+    #   string.
+    #   @return [Array<Types::ConditionParameter>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/Conditions AWS API Documentation
+    #
+    class Conditions < Struct.new(
+      :string_equals,
+      :string_not_equals,
+      :string_like,
+      :string_not_like)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Backup can't perform the action that you requested until it finishes
+    # performing a previous action. Try again later.
+    #
+    # @!attribute [rw] code
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   @return [String]
+    #
+    # @!attribute [rw] context
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ConflictException AWS API Documentation
+    #
+    class ConflictException < Struct.new(
+      :code,
+      :message,
+      :type,
+      :context)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A list of parameters for a control. A control can have zero, one, or
+    # more than one parameter. An example of a control with two parameters
+    # is: "backup plan frequency is at least `daily` and the retention
+    # period is at least `1 year`". The first parameter is `daily`. The
+    # second parameter is `1 year`.
+    #
+    # @!attribute [rw] parameter_name
+    #   The name of a parameter, for example, `BackupPlanFrequency`.
+    #   @return [String]
+    #
+    # @!attribute [rw] parameter_value
+    #   The value of parameter, for example, `hourly`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ControlInputParameter AWS API Documentation
+    #
+    class ControlInputParameter < Struct.new(
+      :parameter_name,
+      :parameter_value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A framework consists of one or more controls. Each control has its own
+    # control scope. The control scope can include one or more resource
+    # types, a combination of a tag key and value, or a combination of one
+    # resource type and one resource ID. If no scope is specified,
+    # evaluations for the rule are triggered when any resource in your
+    # recording group changes in configuration.
+    #
+    # <note markdown="1"> To set a control scope that includes all of a particular resource,
+    # leave the `ControlScope` empty or do not pass it when calling
+    # `CreateFramework`.
+    #
+    #  </note>
+    #
+    # @!attribute [rw] compliance_resource_ids
+    #   The ID of the only Amazon Web Services resource that you want your
+    #   control scope to contain.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] compliance_resource_types
+    #   Describes whether the control scope includes one or more types of
+    #   resources, such as `EFS` or `RDS`.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] tags
+    #   The tag key-value pair applied to those Amazon Web Services
+    #   resources that you want to trigger an evaluation for a rule. A
+    #   maximum of one key-value pair can be provided. The tag value is
+    #   optional, but it cannot be an empty string. The structure to assign
+    #   a tag is: `[\{"Key":"string","Value":"string"\}]`.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ControlScope AWS API Documentation
+    #
+    class ControlScope < Struct.new(
+      :compliance_resource_ids,
+      :compliance_resource_types,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The details of the copy operation.
-    #
-    # @note When making an API call, you may pass CopyAction
-    #   data as a hash:
-    #
-    #       {
-    #         lifecycle: {
-    #           move_to_cold_storage_after_days: 1,
-    #           delete_after_days: 1,
-    #         },
-    #         destination_backup_vault_arn: "ARN", # required
-    #       }
     #
     # @!attribute [rw] lifecycle
     #   Contains an array of `Transition` objects specifying how long in
@@ -876,14 +1134,19 @@ module Aws::Backup
     #   deleted.
     #
     #   Backups transitioned to cold storage must be stored in cold storage
-    #   for a minimum of 90 days. Therefore, on the console, the “expire
-    #   after days” setting must be 90 days greater than the “transition to
-    #   cold after days” setting. The “transition to cold after days”
-    #   setting cannot be changed after a backup has been transitioned to
-    #   cold.
+    #   for a minimum of 90 days. Therefore, on the console, the “retention”
+    #   setting must be 90 days greater than the “transition to cold after
+    #   days” setting. The “transition to cold after days” setting cannot be
+    #   changed after a backup has been transitioned to cold.
     #
-    #   Only Amazon EFS file system backups can be transitioned to cold
-    #   storage.
+    #   Resource types that are able to be transitioned to cold storage are
+    #   listed in the "Lifecycle to cold storage" section of the [ Feature
+    #   availability by resource][1] table. Backup ignores this expression
+    #   for other resource types.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #   @return [Types::Lifecycle]
     #
     # @!attribute [rw] destination_backup_vault_arn
@@ -936,9 +1199,9 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] resource_arn
-    #   The AWS resource to be copied; for example, an Amazon Elastic Block
-    #   Store (Amazon EBS) volume or an Amazon Relational Database Service
-    #   (Amazon RDS) database.
+    #   The Amazon Web Services resource to be copied; for example, an
+    #   Amazon Elastic Block Store (Amazon EBS) volume or an Amazon
+    #   Relational Database Service (Amazon RDS) database.
     #   @return [String]
     #
     # @!attribute [rw] creation_date
@@ -974,14 +1237,49 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] created_by
-    #   Contains information about the backup plan and rule that AWS Backup
-    #   used to initiate the recovery point backup.
+    #   Contains information about the backup plan and rule that Backup used
+    #   to initiate the recovery point backup.
     #   @return [Types::RecoveryPointCreator]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource to be copied; for example, an Amazon
-    #   Elastic Block Store (Amazon EBS) volume or an Amazon Relational
-    #   Database Service (Amazon RDS) database.
+    #   The type of Amazon Web Services resource to be copied; for example,
+    #   an Amazon Elastic Block Store (Amazon EBS) volume or an Amazon
+    #   Relational Database Service (Amazon RDS) database.
+    #   @return [String]
+    #
+    # @!attribute [rw] parent_job_id
+    #   This uniquely identifies a request to Backup to copy a resource. The
+    #   return will be the parent (composite) job ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] is_parent
+    #   This is a boolean value indicating this is a parent (composite) copy
+    #   job.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] composite_member_identifier
+    #   This is the identifier of a resource within a composite group, such
+    #   as nested (child) recovery point belonging to a composite (parent)
+    #   stack. The ID is transferred from the [ logical ID][1] within a
+    #   stack.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html#resources-section-structure-syntax
+    #   @return [String]
+    #
+    # @!attribute [rw] number_of_child_jobs
+    #   This is the number of child (nested) copy jobs.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] child_jobs_in_state
+    #   This returns the statistics of the included child (nested) copy
+    #   jobs.
+    #   @return [Hash<String,Integer>]
+    #
+    # @!attribute [rw] resource_name
+    #   This is the non-unique name of the resource that belongs to the
+    #   specified backup.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CopyJob AWS API Documentation
@@ -1001,58 +1299,17 @@ module Aws::Backup
       :backup_size_in_bytes,
       :iam_role_arn,
       :created_by,
-      :resource_type)
+      :resource_type,
+      :parent_job_id,
+      :is_parent,
+      :composite_member_identifier,
+      :number_of_child_jobs,
+      :child_jobs_in_state,
+      :resource_name)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBackupPlanInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan: { # required
-    #           backup_plan_name: "BackupPlanName", # required
-    #           rules: [ # required
-    #             {
-    #               rule_name: "BackupRuleName", # required
-    #               target_backup_vault_name: "BackupVaultName", # required
-    #               schedule_expression: "CronExpression",
-    #               start_window_minutes: 1,
-    #               completion_window_minutes: 1,
-    #               lifecycle: {
-    #                 move_to_cold_storage_after_days: 1,
-    #                 delete_after_days: 1,
-    #               },
-    #               recovery_point_tags: {
-    #                 "TagKey" => "TagValue",
-    #               },
-    #               copy_actions: [
-    #                 {
-    #                   lifecycle: {
-    #                     move_to_cold_storage_after_days: 1,
-    #                     delete_after_days: 1,
-    #                   },
-    #                   destination_backup_vault_arn: "ARN", # required
-    #                 },
-    #               ],
-    #               enable_continuous_backup: false,
-    #             },
-    #           ],
-    #           advanced_backup_settings: [
-    #             {
-    #               resource_type: "ResourceType",
-    #               backup_options: {
-    #                 "BackupOptionKey" => "BackupOptionValue",
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         backup_plan_tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         creator_request_id: "string",
-    #       }
-    #
     # @!attribute [rw] backup_plan
     #   Specifies the body of a backup plan. Includes a `BackupPlanName` and
     #   one or more sets of `Rules`.
@@ -1069,6 +1326,9 @@ module Aws::Backup
     #   without the risk of running the operation twice. If the request
     #   includes a `CreatorRequestId` that matches an existing backup plan,
     #   that plan is returned. This parameter is optional.
+    #
+    #   If used, this parameter must contain 1 to 50 alphanumeric or
+    #   '-\_.' characters.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateBackupPlanInput AWS API Documentation
@@ -1105,7 +1365,8 @@ module Aws::Backup
     #
     # @!attribute [rw] advanced_backup_settings
     #   A list of `BackupOptions` settings for a resource type. This option
-    #   is only available for Windows VSS backup jobs.
+    #   is only available for Windows Volume Shadow Copy Service (VSS)
+    #   backup jobs.
     #   @return [Array<Types::AdvancedBackupSetting>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateBackupPlanOutput AWS API Documentation
@@ -1120,26 +1381,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBackupSelectionInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_id: "string", # required
-    #         backup_selection: { # required
-    #           selection_name: "BackupSelectionName", # required
-    #           iam_role_arn: "IAMRoleArn", # required
-    #           resources: ["ARN"],
-    #           list_of_tags: [
-    #             {
-    #               condition_type: "STRINGEQUALS", # required, accepts STRINGEQUALS
-    #               condition_key: "ConditionKey", # required
-    #               condition_value: "ConditionValue", # required
-    #             },
-    #           ],
-    #         },
-    #         creator_request_id: "string",
-    #       }
-    #
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies the backup plan to be associated with the
     #   selection of resources.
@@ -1153,7 +1394,10 @@ module Aws::Backup
     # @!attribute [rw] creator_request_id
     #   A unique string that identifies the request and allows failed
     #   requests to be retried without the risk of running the operation
-    #   twice.
+    #   twice. This parameter is optional.
+    #
+    #   If used, this parameter must contain 1 to 50 alphanumeric or
+    #   '-\_.' characters.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateBackupSelectionInput AWS API Documentation
@@ -1192,23 +1436,11 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBackupVaultInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         backup_vault_tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         encryption_key_arn: "ARN",
-    #         creator_request_id: "string",
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] backup_vault_tags
@@ -1225,7 +1457,10 @@ module Aws::Backup
     # @!attribute [rw] creator_request_id
     #   A unique string that identifies the request and allows failed
     #   requests to be retried without the risk of running the operation
-    #   twice.
+    #   twice. This parameter is optional.
+    #
+    #   If used, this parameter must contain 1 to 50 alphanumeric or
+    #   '-\_.' characters.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateBackupVaultInput AWS API Documentation
@@ -1269,13 +1504,271 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBackupPlanInput
-    #   data as a hash:
+    # @!attribute [rw] framework_name
+    #   The unique name of the framework. The name must be between 1 and 256
+    #   characters, starting with a letter, and consisting of letters (a-z,
+    #   A-Z), numbers (0-9), and underscores (\_).
+    #   @return [String]
     #
-    #       {
-    #         backup_plan_id: "string", # required
-    #       }
+    # @!attribute [rw] framework_description
+    #   An optional description of the framework with a maximum of 1,024
+    #   characters.
+    #   @return [String]
     #
+    # @!attribute [rw] framework_controls
+    #   A list of the controls that make up the framework. Each control in
+    #   the list has a name, input parameters, and scope.
+    #   @return [Array<Types::FrameworkControl>]
+    #
+    # @!attribute [rw] idempotency_token
+    #   A customer-chosen string that you can use to distinguish between
+    #   otherwise identical calls to `CreateFrameworkInput`. Retrying a
+    #   successful request with the same idempotency token results in a
+    #   success message with no action taken.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @!attribute [rw] framework_tags
+    #   Metadata that you can assign to help organize the frameworks that
+    #   you create. Each tag is a key-value pair.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateFrameworkInput AWS API Documentation
+    #
+    class CreateFrameworkInput < Struct.new(
+      :framework_name,
+      :framework_description,
+      :framework_controls,
+      :idempotency_token,
+      :framework_tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] framework_name
+    #   The unique name of the framework. The name must be between 1 and 256
+    #   characters, starting with a letter, and consisting of letters (a-z,
+    #   A-Z), numbers (0-9), and underscores (\_).
+    #   @return [String]
+    #
+    # @!attribute [rw] framework_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
+    #   The format of the ARN depends on the resource type.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateFrameworkOutput AWS API Documentation
+    #
+    class CreateFrameworkOutput < Struct.new(
+      :framework_name,
+      :framework_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] title
+    #   This is the string title of the legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   This is the string description of the legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] idempotency_token
+    #   This is a user-chosen string used to distinguish between otherwise
+    #   identical calls. Retrying a successful request with the same
+    #   idempotency token results in a success message with no action taken.
+    #   @return [String]
+    #
+    # @!attribute [rw] recovery_point_selection
+    #   This specifies criteria to assign a set of resources, such as
+    #   resource types or backup vaults.
+    #   @return [Types::RecoveryPointSelection]
+    #
+    # @!attribute [rw] tags
+    #   Optional tags to include. A tag is a key-value pair you can use to
+    #   manage, filter, and search for your resources. Allowed characters
+    #   include UTF-8 letters, numbers, spaces, and the following
+    #   characters: + - = . \_ : /.
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateLegalHoldInput AWS API Documentation
+    #
+    class CreateLegalHoldInput < Struct.new(
+      :title,
+      :description,
+      :idempotency_token,
+      :recovery_point_selection,
+      :tags)
+      SENSITIVE = [:tags]
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] title
+    #   This is the string title of the legal hold returned after creating
+    #   the legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   This displays the status of the legal hold returned after creating
+    #   the legal hold. Statuses can be `ACTIVE`, `PENDING`, `CANCELED`,
+    #   `CANCELING`, or `FAILED`.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   This is the returned string description of the legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] legal_hold_id
+    #   Legal hold ID returned for the specified legal hold on a recovery
+    #   point.
+    #   @return [String]
+    #
+    # @!attribute [rw] legal_hold_arn
+    #   This is the ARN (Amazon Resource Number) of the created legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_date
+    #   Time in number format when legal hold was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] recovery_point_selection
+    #   This specifies criteria to assign a set of resources, such as
+    #   resource types or backup vaults.
+    #   @return [Types::RecoveryPointSelection]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateLegalHoldOutput AWS API Documentation
+    #
+    class CreateLegalHoldOutput < Struct.new(
+      :title,
+      :status,
+      :description,
+      :legal_hold_id,
+      :legal_hold_arn,
+      :creation_date,
+      :recovery_point_selection)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_plan_name
+    #   The unique name of the report plan. The name must be between 1 and
+    #   256 characters, starting with a letter, and consisting of letters
+    #   (a-z, A-Z), numbers (0-9), and underscores (\_).
+    #   @return [String]
+    #
+    # @!attribute [rw] report_plan_description
+    #   An optional description of the report plan with a maximum of 1,024
+    #   characters.
+    #   @return [String]
+    #
+    # @!attribute [rw] report_delivery_channel
+    #   A structure that contains information about where and how to deliver
+    #   your reports, specifically your Amazon S3 bucket name, S3 key
+    #   prefix, and the formats of your reports.
+    #   @return [Types::ReportDeliveryChannel]
+    #
+    # @!attribute [rw] report_setting
+    #   Identifies the report template for the report. Reports are built
+    #   using a report template. The report templates are:
+    #
+    #   `RESOURCE_COMPLIANCE_REPORT | CONTROL_COMPLIANCE_REPORT |
+    #   BACKUP_JOB_REPORT | COPY_JOB_REPORT | RESTORE_JOB_REPORT`
+    #
+    #   If the report template is `RESOURCE_COMPLIANCE_REPORT` or
+    #   `CONTROL_COMPLIANCE_REPORT`, this API resource also describes the
+    #   report coverage by Amazon Web Services Regions and frameworks.
+    #   @return [Types::ReportSetting]
+    #
+    # @!attribute [rw] report_plan_tags
+    #   Metadata that you can assign to help organize the report plans that
+    #   you create. Each tag is a key-value pair.
+    #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] idempotency_token
+    #   A customer-chosen string that you can use to distinguish between
+    #   otherwise identical calls to `CreateReportPlanInput`. Retrying a
+    #   successful request with the same idempotency token results in a
+    #   success message with no action taken.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateReportPlanInput AWS API Documentation
+    #
+    class CreateReportPlanInput < Struct.new(
+      :report_plan_name,
+      :report_plan_description,
+      :report_delivery_channel,
+      :report_setting,
+      :report_plan_tags,
+      :idempotency_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_plan_name
+    #   The unique name of the report plan.
+    #   @return [String]
+    #
+    # @!attribute [rw] report_plan_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
+    #   The format of the ARN depends on the resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_time
+    #   The date and time a backup vault is created, in Unix format and
+    #   Coordinated Universal Time (UTC). The value of `CreationTime` is
+    #   accurate to milliseconds. For example, the value 1516925490.087
+    #   represents Friday, January 26, 2018 12:11:30.087 AM.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/CreateReportPlanOutput AWS API Documentation
+    #
+    class CreateReportPlanOutput < Struct.new(
+      :report_plan_name,
+      :report_plan_arn,
+      :creation_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # This is a resource filter containing FromDate: DateTime and ToDate:
+    # DateTime. Both values are required. Future DateTime values are not
+    # permitted.
+    #
+    # The date and time are in Unix format and Coordinated Universal Time
+    # (UTC), and it is accurate to milliseconds ((milliseconds are
+    # optional). For example, the value 1516925490.087 represents Friday,
+    # January 26, 2018 12:11:30.087 AM.
+    #
+    # @!attribute [rw] from_date
+    #   This value is the beginning date, inclusive.
+    #
+    #   The date and time are in Unix format and Coordinated Universal Time
+    #   (UTC), and it is accurate to milliseconds (milliseconds are
+    #   optional).
+    #   @return [Time]
+    #
+    # @!attribute [rw] to_date
+    #   This value is the end date, inclusive.
+    #
+    #   The date and time are in Unix format and Coordinated Universal Time
+    #   (UTC), and it is accurate to milliseconds (milliseconds are
+    #   optional).
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DateRange AWS API Documentation
+    #
+    class DateRange < Struct.new(
+      :from_date,
+      :to_date)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies a backup plan.
     #   @return [String]
@@ -1321,14 +1814,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBackupSelectionInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_id: "string", # required
-    #         selection_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies a backup plan.
     #   @return [String]
@@ -1347,18 +1832,11 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBackupVaultAccessPolicyInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DeleteBackupVaultAccessPolicyInput AWS API Documentation
@@ -1369,18 +1847,11 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBackupVaultInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "string", # required
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DeleteBackupVaultInput AWS API Documentation
@@ -1391,13 +1862,18 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBackupVaultNotificationsInput
-    #   data as a hash:
+    # @!attribute [rw] backup_vault_name
+    #   The name of the backup vault from which to delete Backup Vault Lock.
+    #   @return [String]
     #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DeleteBackupVaultLockConfigurationInput AWS API Documentation
     #
+    class DeleteBackupVaultLockConfigurationInput < Struct.new(
+      :backup_vault_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
@@ -1413,19 +1889,23 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRecoveryPointInput
-    #   data as a hash:
+    # @!attribute [rw] framework_name
+    #   The unique name of a framework.
+    #   @return [String]
     #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         recovery_point_arn: "ARN", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DeleteFrameworkInput AWS API Documentation
     #
+    class DeleteFrameworkInput < Struct.new(
+      :framework_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] recovery_point_arn
@@ -1443,8 +1923,20 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # A dependent AWS service or resource returned an error to the AWS
-    # Backup service, and the action cannot be completed.
+    # @!attribute [rw] report_plan_name
+    #   The unique name of a report plan.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DeleteReportPlanInput AWS API Documentation
+    #
+    class DeleteReportPlanInput < Struct.new(
+      :report_plan_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A dependent Amazon Web Services service or resource returned an error
+    # to the Backup service, and the action cannot be completed.
     #
     # @!attribute [rw] code
     #   @return [String]
@@ -1469,15 +1961,8 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeBackupJobInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_job_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] backup_job_id
-    #   Uniquely identifies a request to AWS Backup to back up a resource.
+    #   Uniquely identifies a request to Backup to back up a resource.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeBackupJobInput AWS API Documentation
@@ -1493,14 +1978,14 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] backup_job_id
-    #   Uniquely identifies a request to AWS Backup to back up a resource.
+    #   Uniquely identifies a request to Backup to back up a resource.
     #   @return [String]
     #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] backup_vault_arn
@@ -1563,9 +2048,9 @@ module Aws::Backup
     #   @return [Types::RecoveryPointCreator]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource to be backed up; for example, an Amazon
-    #   Elastic Block Store (Amazon EBS) volume or an Amazon Relational
-    #   Database Service (Amazon RDS) database.
+    #   The type of Amazon Web Services resource to be backed up; for
+    #   example, an Amazon Elastic Block Store (Amazon EBS) volume or an
+    #   Amazon Relational Database Service (Amazon RDS) database.
     #   @return [String]
     #
     # @!attribute [rw] bytes_transferred
@@ -1599,9 +2084,32 @@ module Aws::Backup
     #
     # @!attribute [rw] backup_type
     #   Represents the actual backup type selected for a backup job. For
-    #   example, if a successful WindowsVSS backup was taken, `BackupType`
-    #   returns "WindowsVSS". If `BackupType` is empty, then the backup
-    #   type that was is a regular backup.
+    #   example, if a successful Windows Volume Shadow Copy Service (VSS)
+    #   backup was taken, `BackupType` returns `"WindowsVSS"`. If
+    #   `BackupType` is empty, then the backup type was a regular backup.
+    #   @return [String]
+    #
+    # @!attribute [rw] parent_job_id
+    #   This returns the parent (composite) resource backup job ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] is_parent
+    #   This returns the boolean value that a backup job is a parent
+    #   (composite) job.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] number_of_child_jobs
+    #   This returns the number of child (nested) backup jobs.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] child_jobs_in_state
+    #   This returns the statistics of the included child (nested) backup
+    #   jobs.
+    #   @return [Hash<String,Integer>]
+    #
+    # @!attribute [rw] resource_name
+    #   This is the non-unique name of the resource that belongs to the
+    #   specified backup.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeBackupJobOutput AWS API Documentation
@@ -1626,23 +2134,21 @@ module Aws::Backup
       :expected_completion_date,
       :start_by,
       :backup_options,
-      :backup_type)
+      :backup_type,
+      :parent_job_id,
+      :is_parent,
+      :number_of_child_jobs,
+      :child_jobs_in_state,
+      :resource_name)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeBackupVaultInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "string", # required
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeBackupVaultInput AWS API Documentation
@@ -1689,6 +2195,57 @@ module Aws::Backup
     #   The number of recovery points that are stored in a backup vault.
     #   @return [Integer]
     #
+    # @!attribute [rw] locked
+    #   A Boolean that indicates whether Backup Vault Lock is currently
+    #   protecting the backup vault. `True` means that Vault Lock causes
+    #   delete or update operations on the recovery points stored in the
+    #   vault to fail.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] min_retention_days
+    #   The Backup Vault Lock setting that specifies the minimum retention
+    #   period that the vault retains its recovery points. If this parameter
+    #   is not specified, Vault Lock does not enforce a minimum retention
+    #   period.
+    #
+    #   If specified, any backup or copy job to the vault must have a
+    #   lifecycle policy with a retention period equal to or longer than the
+    #   minimum retention period. If the job's retention period is shorter
+    #   than that minimum retention period, then the vault fails the backup
+    #   or copy job, and you should either modify your lifecycle settings or
+    #   use a different vault. Recovery points already stored in the vault
+    #   prior to Vault Lock are not affected.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] max_retention_days
+    #   The Backup Vault Lock setting that specifies the maximum retention
+    #   period that the vault retains its recovery points. If this parameter
+    #   is not specified, Vault Lock does not enforce a maximum retention
+    #   period on the recovery points in the vault (allowing indefinite
+    #   storage).
+    #
+    #   If specified, any backup or copy job to the vault must have a
+    #   lifecycle policy with a retention period equal to or shorter than
+    #   the maximum retention period. If the job's retention period is
+    #   longer than that maximum retention period, then the vault fails the
+    #   backup or copy job, and you should either modify your lifecycle
+    #   settings or use a different vault. Recovery points already stored in
+    #   the vault prior to Vault Lock are not affected.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] lock_date
+    #   The date and time when Backup Vault Lock configuration cannot be
+    #   changed or deleted.
+    #
+    #   If you applied Vault Lock to your vault without specifying a lock
+    #   date, you can change any of your Vault Lock settings, or delete
+    #   Vault Lock from the vault entirely, at any time.
+    #
+    #   This value is in Unix format, Coordinated Universal Time (UTC), and
+    #   accurate to milliseconds. For example, the value 1516925490.087
+    #   represents Friday, January 26, 2018 12:11:30.087 AM.
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeBackupVaultOutput AWS API Documentation
     #
     class DescribeBackupVaultOutput < Struct.new(
@@ -1697,18 +2254,15 @@ module Aws::Backup
       :encryption_key_arn,
       :creation_date,
       :creator_request_id,
-      :number_of_recovery_points)
+      :number_of_recovery_points,
+      :locked,
+      :min_retention_days,
+      :max_retention_days,
+      :lock_date)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeCopyJobInput
-    #   data as a hash:
-    #
-    #       {
-    #         copy_job_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] copy_job_id
     #   Uniquely identifies a copy job.
     #   @return [String]
@@ -1733,6 +2287,91 @@ module Aws::Backup
       include Aws::Structure
     end
 
+    # @!attribute [rw] framework_name
+    #   The unique name of a framework.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeFrameworkInput AWS API Documentation
+    #
+    class DescribeFrameworkInput < Struct.new(
+      :framework_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] framework_name
+    #   The unique name of a framework.
+    #   @return [String]
+    #
+    # @!attribute [rw] framework_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
+    #   The format of the ARN depends on the resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] framework_description
+    #   An optional description of the framework.
+    #   @return [String]
+    #
+    # @!attribute [rw] framework_controls
+    #   A list of the controls that make up the framework. Each control in
+    #   the list has a name, input parameters, and scope.
+    #   @return [Array<Types::FrameworkControl>]
+    #
+    # @!attribute [rw] creation_time
+    #   The date and time that a framework is created, in ISO 8601
+    #   representation. The value of `CreationTime` is accurate to
+    #   milliseconds. For example, 2020-07-10T15:00:00.000-08:00 represents
+    #   the 10th of July 2020 at 3:00 PM 8 hours behind UTC.
+    #   @return [Time]
+    #
+    # @!attribute [rw] deployment_status
+    #   The deployment status of a framework. The statuses are:
+    #
+    #   `CREATE_IN_PROGRESS | UPDATE_IN_PROGRESS | DELETE_IN_PROGRESS |
+    #   COMPLETED | FAILED`
+    #   @return [String]
+    #
+    # @!attribute [rw] framework_status
+    #   A framework consists of one or more controls. Each control governs a
+    #   resource, such as backup plans, backup selections, backup vaults, or
+    #   recovery points. You can also turn Config recording on or off for
+    #   each resource. The statuses are:
+    #
+    #   * `ACTIVE` when recording is turned on for all resources governed by
+    #     the framework.
+    #
+    #   * `PARTIALLY_ACTIVE` when recording is turned off for at least one
+    #     resource governed by the framework.
+    #
+    #   * `INACTIVE` when recording is turned off for all resources governed
+    #     by the framework.
+    #
+    #   * `UNAVAILABLE` when Backup is unable to validate recording status
+    #     at this time.
+    #   @return [String]
+    #
+    # @!attribute [rw] idempotency_token
+    #   A customer-chosen string that you can use to distinguish between
+    #   otherwise identical calls to `DescribeFrameworkOutput`. Retrying a
+    #   successful request with the same idempotency token results in a
+    #   success message with no action taken.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeFrameworkOutput AWS API Documentation
+    #
+    class DescribeFrameworkOutput < Struct.new(
+      :framework_name,
+      :framework_arn,
+      :framework_description,
+      :framework_controls,
+      :creation_time,
+      :deployment_status,
+      :framework_status,
+      :idempotency_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @api private
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeGlobalSettingsInput AWS API Documentation
@@ -1740,16 +2379,15 @@ module Aws::Backup
     class DescribeGlobalSettingsInput < Aws::EmptyStructure; end
 
     # @!attribute [rw] global_settings
-    #   A list of resources along with the opt-in preferences for the
-    #   account.
+    #   The status of the flag `isCrossAccountBackupEnabled`.
     #   @return [Hash<String,String>]
     #
     # @!attribute [rw] last_update_time
-    #   The date and time that the global settings were last updated. This
-    #   update is in Unix format and Coordinated Universal Time (UTC). The
-    #   value of `LastUpdateTime` is accurate to milliseconds. For example,
-    #   the value 1516925490.087 represents Friday, January 26, 2018
-    #   12:11:30.087 AM.
+    #   The date and time that the flag `isCrossAccountBackupEnabled` was
+    #   last updated. This update is in Unix format and Coordinated
+    #   Universal Time (UTC). The value of `LastUpdateTime` is accurate to
+    #   milliseconds. For example, the value 1516925490.087 represents
+    #   Friday, January 26, 2018 12:11:30.087 AM.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeGlobalSettingsOutput AWS API Documentation
@@ -1761,13 +2399,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeProtectedResourceInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ARN", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
     #   The format of the ARN depends on the resource type.
@@ -1787,8 +2418,8 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource saved as a recovery point; for example, an
-    #   EBS volume or an Amazon RDS database.
+    #   The type of Amazon Web Services resource saved as a recovery point;
+    #   for example, an Amazon EBS volume or an Amazon RDS database.
     #   @return [String]
     #
     # @!attribute [rw] last_backup_time
@@ -1798,29 +2429,27 @@ module Aws::Backup
     #   represents Friday, January 26, 2018 12:11:30.087 AM.
     #   @return [Time]
     #
+    # @!attribute [rw] resource_name
+    #   This is the non-unique name of the resource that belongs to the
+    #   specified backup.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeProtectedResourceOutput AWS API Documentation
     #
     class DescribeProtectedResourceOutput < Struct.new(
       :resource_arn,
       :resource_type,
-      :last_backup_time)
+      :last_backup_time,
+      :resource_name)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRecoveryPointInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         recovery_point_arn: "ARN", # required
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] recovery_point_arn
@@ -1859,8 +2488,8 @@ module Aws::Backup
     #   An Amazon Resource Name (ARN) that uniquely identifies the source
     #   vault where the resource was originally backed up in; for example,
     #   `arn:aws:backup:us-east-1:123456789012:vault:BackupVault`. If the
-    #   recovery is restored to the same AWS account or Region, this value
-    #   will be `null`.
+    #   recovery is restored to the same Amazon Web Services account or
+    #   Region, this value will be `null`.
     #   @return [String]
     #
     # @!attribute [rw] resource_arn
@@ -1869,9 +2498,10 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource to save as a recovery point; for example,
-    #   an Amazon Elastic Block Store (Amazon EBS) volume or an Amazon
-    #   Relational Database Service (Amazon RDS) database.
+    #   The type of Amazon Web Services resource to save as a recovery
+    #   point; for example, an Amazon Elastic Block Store (Amazon EBS)
+    #   volume or an Amazon Relational Database Service (Amazon RDS)
+    #   database.
     #   @return [String]
     #
     # @!attribute [rw] created_by
@@ -1889,10 +2519,43 @@ module Aws::Backup
     # @!attribute [rw] status
     #   A status code specifying the state of the recovery point.
     #
-    #   <note markdown="1"> A partial status indicates that the recovery point was not
-    #   successfully re-created and must be retried.
+    #   `PARTIAL` status indicates Backup could not create the recovery
+    #   point before the backup window closed. To increase your backup plan
+    #   window using the API, see [UpdateBackupPlan][1]. You can also
+    #   increase your backup plan window using the Console by choosing and
+    #   editing your backup plan.
     #
-    #    </note>
+    #   `EXPIRED` status indicates that the recovery point has exceeded its
+    #   retention period, but Backup lacks permission or is otherwise unable
+    #   to delete it. To manually delete these recovery points, see [ Step
+    #   3: Delete the recovery points][2] in the *Clean up resources*
+    #   section of *Getting started*.
+    #
+    #   `STOPPED` status occurs on a continuous backup where a user has
+    #   taken some action that causes the continuous backup to be disabled.
+    #   This can be caused by the removal of permissions, turning off
+    #   versioning, turning off events being sent to EventBridge, or
+    #   disabling the EventBridge rules that are put in place by Backup.
+    #
+    #   To resolve `STOPPED` status, ensure that all requested permissions
+    #   are in place and that versioning is enabled on the S3 bucket. Once
+    #   these conditions are met, the next instance of a backup rule running
+    #   will result in a new continuous recovery point being created. The
+    #   recovery points with STOPPED status do not need to be deleted.
+    #
+    #   For SAP HANA on Amazon EC2 `STOPPED` status occurs due to user
+    #   action, application misconfiguration, or backup failure. To ensure
+    #   that future continuous backups succeed, refer to the recovery point
+    #   status and check SAP HANA for details.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/API_UpdateBackupPlan.html
+    #   [2]: https://docs.aws.amazon.com/aws-backup/latest/devguide/gs-cleanup-resources.html#cleanup-backups
+    #   @return [String]
+    #
+    # @!attribute [rw] status_message
+    #   A status message explaining the status of the recovery point.
     #   @return [String]
     #
     # @!attribute [rw] creation_date
@@ -1921,17 +2584,23 @@ module Aws::Backup
     #
     # @!attribute [rw] lifecycle
     #   The lifecycle defines when a protected resource is transitioned to
-    #   cold storage and when it expires. AWS Backup transitions and expires
+    #   cold storage and when it expires. Backup transitions and expires
     #   backups automatically according to the lifecycle that you define.
     #
     #   Backups that are transitioned to cold storage must be stored in cold
-    #   storage for a minimum of 90 days. Therefore, the “expire after days”
-    #   setting must be 90 days greater than the “transition to cold after
-    #   days” setting. The “transition to cold after days” setting cannot be
+    #   storage for a minimum of 90 days. Therefore, the “retention” setting
+    #   must be 90 days greater than the “transition to cold after days”
+    #   setting. The “transition to cold after days” setting cannot be
     #   changed after a backup has been transitioned to cold.
     #
-    #   Only Amazon EFS file system backups can be transitioned to cold
-    #   storage.
+    #   Resource types that are able to be transitioned to cold storage are
+    #   listed in the "Lifecycle to cold storage" section of the [ Feature
+    #   availability by resource][1] table. Backup ignores this expression
+    #   for other resource types.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #   @return [Types::Lifecycle]
     #
     # @!attribute [rw] encryption_key_arn
@@ -1959,6 +2628,33 @@ module Aws::Backup
     #   12:11:30.087 AM.
     #   @return [Time]
     #
+    # @!attribute [rw] parent_recovery_point_arn
+    #   This is an ARN that uniquely identifies a parent (composite)
+    #   recovery point; for example,
+    #   `arn:aws:backup:us-east-1:123456789012:recovery-point:1EB3B5E7-9EB0-435A-A80B-108B488B0D45`.
+    #   @return [String]
+    #
+    # @!attribute [rw] composite_member_identifier
+    #   This is the identifier of a resource within a composite group, such
+    #   as nested (child) recovery point belonging to a composite (parent)
+    #   stack. The ID is transferred from the [ logical ID][1] within a
+    #   stack.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html#resources-section-structure-syntax
+    #   @return [String]
+    #
+    # @!attribute [rw] is_parent
+    #   This returns the boolean value that a recovery point is a parent
+    #   (composite) job.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] resource_name
+    #   This is the non-unique name of the resource that belongs to the
+    #   specified backup.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeRecoveryPointOutput AWS API Documentation
     #
     class DescribeRecoveryPointOutput < Struct.new(
@@ -1971,6 +2667,7 @@ module Aws::Backup
       :created_by,
       :iam_role_arn,
       :status,
+      :status_message,
       :creation_date,
       :completion_date,
       :backup_size_in_bytes,
@@ -1979,7 +2676,11 @@ module Aws::Backup
       :encryption_key_arn,
       :is_encrypted,
       :storage_class,
-      :last_restore_time)
+      :last_restore_time,
+      :parent_recovery_point_arn,
+      :composite_member_identifier,
+      :is_parent,
+      :resource_name)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1995,21 +2696,91 @@ module Aws::Backup
     #   the Region.
     #   @return [Hash<String,Boolean>]
     #
+    # @!attribute [rw] resource_type_management_preference
+    #   Returns whether Backup fully manages the backups for a resource
+    #   type.
+    #
+    #   For the benefits of full Backup management, see [ Full Backup
+    #   management][1].
+    #
+    #   For a list of resource types and whether each supports full Backup
+    #   management, see the [ Feature availability by resource][2] table.
+    #
+    #   If `"DynamoDB":false`, you can enable full Backup management for
+    #   DynamoDB backup by enabling [ Backup's advanced DynamoDB backup
+    #   features][3].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#full-management
+    #   [2]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
+    #   [3]: https://docs.aws.amazon.com/aws-backup/latest/devguide/advanced-ddb-backup.html#advanced-ddb-backup-enable-cli
+    #   @return [Hash<String,Boolean>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeRegionSettingsOutput AWS API Documentation
     #
     class DescribeRegionSettingsOutput < Struct.new(
-      :resource_type_opt_in_preference)
+      :resource_type_opt_in_preference,
+      :resource_type_management_preference)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRestoreJobInput
-    #   data as a hash:
+    # @!attribute [rw] report_job_id
+    #   The identifier of the report job. A unique, randomly generated,
+    #   Unicode, UTF-8 encoded string that is at most 1,024 bytes long. The
+    #   report job ID cannot be edited.
+    #   @return [String]
     #
-    #       {
-    #         restore_job_id: "RestoreJobId", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeReportJobInput AWS API Documentation
     #
+    class DescribeReportJobInput < Struct.new(
+      :report_job_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_job
+    #   A list of information about a report job, including its completion
+    #   and creation times, report destination, unique report job ID, Amazon
+    #   Resource Name (ARN), report template, status, and status message.
+    #   @return [Types::ReportJob]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeReportJobOutput AWS API Documentation
+    #
+    class DescribeReportJobOutput < Struct.new(
+      :report_job)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_plan_name
+    #   The unique name of a report plan.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeReportPlanInput AWS API Documentation
+    #
+    class DescribeReportPlanInput < Struct.new(
+      :report_plan_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_plan
+    #   Returns details about the report plan that is specified by its name.
+    #   These details include the report plan's Amazon Resource Name (ARN),
+    #   description, settings, delivery channel, deployment status, creation
+    #   time, and last attempted and successful run times.
+    #   @return [Types::ReportPlan]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DescribeReportPlanOutput AWS API Documentation
+    #
+    class DescribeReportPlanOutput < Struct.new(
+      :report_plan)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] restore_job_id
     #   Uniquely identifies the job that restores a recovery point.
     #   @return [String]
@@ -2051,7 +2822,7 @@ module Aws::Backup
     #   @return [Time]
     #
     # @!attribute [rw] status
-    #   Status code specifying the state of the job that is initiated by AWS
+    #   Status code specifying the state of the job that is initiated by
     #   Backup to restore a recovery point.
     #   @return [String]
     #
@@ -2109,21 +2880,36 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateRecoveryPointInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         recovery_point_arn: "ARN", # required
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
-    #   The unique name of an AWS Backup vault. Required.
+    #   This is the name of a logical container where the child (nested)
+    #   recovery point is stored. Backup vaults are identified by names that
+    #   are unique to the account used to create them and the Amazon Web
+    #   Services Region where they are created. They consist of lowercase
+    #   letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] recovery_point_arn
-    #   An Amazon Resource Name (ARN) that uniquely identifies an AWS Backup
-    #   recovery point. Required.
+    #   This is the Amazon Resource Name (ARN) that uniquely identifies the
+    #   child (nested) recovery point; for example,
+    #   `arn:aws:backup:us-east-1:123456789012:recovery-point:1EB3B5E7-9EB0-435A-A80B-108B488B0D45.`
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DisassociateRecoveryPointFromParentInput AWS API Documentation
+    #
+    class DisassociateRecoveryPointFromParentInput < Struct.new(
+      :backup_vault_name,
+      :recovery_point_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] backup_vault_name
+    #   The unique name of an Backup vault.
+    #   @return [String]
+    #
+    # @!attribute [rw] recovery_point_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies an Backup
+    #   recovery point.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/DisassociateRecoveryPointInput AWS API Documentation
@@ -2135,13 +2921,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ExportBackupPlanTemplateInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies a backup plan.
     #   @return [String]
@@ -2171,13 +2950,86 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackupPlanFromJSONInput
-    #   data as a hash:
+    # Contains detailed information about a framework. Frameworks contain
+    # controls, which evaluate and report on your backup events and
+    # resources. Frameworks generate daily compliance results.
     #
-    #       {
-    #         backup_plan_template_json: "string", # required
-    #       }
+    # @!attribute [rw] framework_name
+    #   The unique name of a framework. This name is between 1 and 256
+    #   characters, starting with a letter, and consisting of letters (a-z,
+    #   A-Z), numbers (0-9), and underscores (\_).
+    #   @return [String]
     #
+    # @!attribute [rw] framework_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
+    #   The format of the ARN depends on the resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] framework_description
+    #   An optional description of the framework with a maximum 1,024
+    #   characters.
+    #   @return [String]
+    #
+    # @!attribute [rw] number_of_controls
+    #   The number of controls contained by the framework.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] creation_time
+    #   The date and time that a framework is created, in ISO 8601
+    #   representation. The value of `CreationTime` is accurate to
+    #   milliseconds. For example, 2020-07-10T15:00:00.000-08:00 represents
+    #   the 10th of July 2020 at 3:00 PM 8 hours behind UTC.
+    #   @return [Time]
+    #
+    # @!attribute [rw] deployment_status
+    #   The deployment status of a framework. The statuses are:
+    #
+    #   `CREATE_IN_PROGRESS | UPDATE_IN_PROGRESS | DELETE_IN_PROGRESS |
+    #   COMPLETED | FAILED`
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/Framework AWS API Documentation
+    #
+    class Framework < Struct.new(
+      :framework_name,
+      :framework_arn,
+      :framework_description,
+      :number_of_controls,
+      :creation_time,
+      :deployment_status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains detailed information about all of the controls of a
+    # framework. Each framework must contain at least one control.
+    #
+    # @!attribute [rw] control_name
+    #   The name of a control. This name is between 1 and 256 characters.
+    #   @return [String]
+    #
+    # @!attribute [rw] control_input_parameters
+    #   A list of `ParameterName` and `ParameterValue` pairs.
+    #   @return [Array<Types::ControlInputParameter>]
+    #
+    # @!attribute [rw] control_scope
+    #   The scope of a control. The control scope defines what the control
+    #   will evaluate. Three examples of control scopes are: a specific
+    #   backup plan, all backup plans with a specific tag, or all backup
+    #   plans. For more information, see [
+    #   `ControlScope`.](aws-backup/latest/devguide/API_ControlScope.html)
+    #   @return [Types::ControlScope]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/FrameworkControl AWS API Documentation
+    #
+    class FrameworkControl < Struct.new(
+      :control_name,
+      :control_input_parameters,
+      :control_scope)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] backup_plan_template_json
     #   A customer-supplied backup plan document in JSON format.
     #   @return [String]
@@ -2203,13 +3055,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackupPlanFromTemplateInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_template_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] backup_plan_template_id
     #   Uniquely identifies a stored backup plan template.
     #   @return [String]
@@ -2235,14 +3080,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackupPlanInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_id: "string", # required
-    #         version_id: "string",
-    #       }
-    #
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies a backup plan.
     #   @return [String]
@@ -2330,14 +3167,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackupSelectionInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_id: "string", # required
-    #         selection_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies a backup plan.
     #   @return [String]
@@ -2395,18 +3224,11 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackupVaultAccessPolicyInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/GetBackupVaultAccessPolicyInput AWS API Documentation
@@ -2444,18 +3266,11 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBackupVaultNotificationsInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/GetBackupVaultNotificationsInput AWS API Documentation
@@ -2501,19 +3316,86 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetRecoveryPointRestoreMetadataInput
-    #   data as a hash:
+    # @!attribute [rw] legal_hold_id
+    #   This is the ID required to use `GetLegalHold`. This unique ID is
+    #   associated with a specific legal hold.
+    #   @return [String]
     #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         recovery_point_arn: "ARN", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/GetLegalHoldInput AWS API Documentation
     #
+    class GetLegalHoldInput < Struct.new(
+      :legal_hold_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] title
+    #   This is the string title of the legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   This is the status of the legal hold. Statuses can be `ACTIVE`,
+    #   `CREATING`, `CANCELED`, and `CANCELING`.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   This is the returned string description of the legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] cancel_description
+    #   String describing the reason for removing the legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] legal_hold_id
+    #   This is the returned ID associated with a specified legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] legal_hold_arn
+    #   This is the returned framework ARN for the specified legal hold. An
+    #   Amazon Resource Name (ARN) uniquely identifies a resource. The
+    #   format of the ARN depends on the resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_date
+    #   Time in number format when legal hold was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] cancellation_date
+    #   Time in number when legal hold was cancelled.
+    #   @return [Time]
+    #
+    # @!attribute [rw] retain_record_until
+    #   This is the date and time until which the legal hold record will be
+    #   retained.
+    #   @return [Time]
+    #
+    # @!attribute [rw] recovery_point_selection
+    #   This specifies criteria to assign a set of resources, such as
+    #   resource types or backup vaults.
+    #   @return [Types::RecoveryPointSelection]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/GetLegalHoldOutput AWS API Documentation
+    #
+    class GetLegalHoldOutput < Struct.new(
+      :title,
+      :status,
+      :description,
+      :cancel_description,
+      :legal_hold_id,
+      :legal_hold_arn,
+      :creation_date,
+      :cancellation_date,
+      :retain_record_until,
+      :recovery_point_selection)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] recovery_point_arn
@@ -2558,7 +3440,10 @@ module Aws::Backup
     end
 
     # @!attribute [rw] resource_types
-    #   Contains a string with the supported AWS resource types:
+    #   Contains a string with the supported Amazon Web Services resource
+    #   types:
+    #
+    #   * `Aurora` for Amazon Aurora
     #
     #   * `DynamoDB` for Amazon DynamoDB
     #
@@ -2568,11 +3453,15 @@ module Aws::Backup
     #
     #   * `EFS` for Amazon Elastic File System
     #
+    #   * `FSX` for Amazon FSx
+    #
     #   * `RDS` for Amazon Relational Database Service
     #
-    #   * `Aurora` for Amazon Aurora
+    #   * `Storage Gateway` for Storage Gateway
     #
-    #   * `Storage Gateway` for AWS Storage Gateway
+    #   * `DocDB` for Amazon DocumentDB (with MongoDB compatibility)
+    #
+    #   * `Neptune` for Amazon Neptune
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/GetSupportedResourceTypesOutput AWS API Documentation
@@ -2635,7 +3524,7 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # AWS Backup is already performing an action on this recovery point. It
+    # Backup is already performing an action on this recovery point. It
     # can't perform the action you requested until the first action
     # finishes. Try again later.
     #
@@ -2662,25 +3551,77 @@ module Aws::Backup
       include Aws::Structure
     end
 
+    # A legal hold is an administrative tool that helps prevent backups from
+    # being deleted while under a hold. While the hold is in place, backups
+    # under a hold cannot be deleted and lifecycle policies that would alter
+    # the backup status (such as transition to cold storage) are delayed
+    # until the legal hold is removed. A backup can have more than one legal
+    # hold. Legal holds are applied to one or more backups (also known as
+    # recovery points). These backups can be filtered by resource types and
+    # by resource IDs.
+    #
+    # @!attribute [rw] title
+    #   This is the title of a legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   This is the status of the legal hold. Statuses can be `ACTIVE`,
+    #   `CREATING`, `CANCELED`, and `CANCELING`.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   This is the description of a legal hold.
+    #   @return [String]
+    #
+    # @!attribute [rw] legal_hold_id
+    #   ID of specific legal hold on one or more recovery points.
+    #   @return [String]
+    #
+    # @!attribute [rw] legal_hold_arn
+    #   This is an Amazon Resource Number (ARN) that uniquely identifies the
+    #   legal hold; for example,
+    #   `arn:aws:backup:us-east-1:123456789012:recovery-point:1EB3B5E7-9EB0-435A-A80B-108B488B0D45`.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_date
+    #   This is the time in number format when legal hold was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] cancellation_date
+    #   This is the time in number format when legal hold was cancelled.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/LegalHold AWS API Documentation
+    #
+    class LegalHold < Struct.new(
+      :title,
+      :status,
+      :description,
+      :legal_hold_id,
+      :legal_hold_arn,
+      :creation_date,
+      :cancellation_date)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Contains an array of `Transition` objects specifying how long in days
     # before a recovery point transitions to cold storage or is deleted.
     #
     # Backups transitioned to cold storage must be stored in cold storage
-    # for a minimum of 90 days. Therefore, on the console, the “expire after
-    # days” setting must be 90 days greater than the “transition to cold
-    # after days” setting. The “transition to cold after days” setting
-    # cannot be changed after a backup has been transitioned to cold.
+    # for a minimum of 90 days. Therefore, on the console, the “retention”
+    # setting must be 90 days greater than the “transition to cold after
+    # days” setting. The “transition to cold after days” setting cannot be
+    # changed after a backup has been transitioned to cold.
     #
-    # Only Amazon EFS file system backups can be transitioned to cold
-    # storage.
+    # Resource types that are able to be transitioned to cold storage are
+    # listed in the "Lifecycle to cold storage" section of the [ Feature
+    # availability by resource][1] table. Backup ignores this expression for
+    # other resource types.
     #
-    # @note When making an API call, you may pass Lifecycle
-    #   data as a hash:
     #
-    #       {
-    #         move_to_cold_storage_after_days: 1,
-    #         delete_after_days: 1,
-    #       }
+    #
+    # [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #
     # @!attribute [rw] move_to_cold_storage_after_days
     #   Specifies the number of days after creation that a recovery point is
@@ -2728,21 +3669,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBackupJobsInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "string",
-    #         max_results: 1,
-    #         by_resource_arn: "ARN",
-    #         by_state: "CREATED", # accepts CREATED, PENDING, RUNNING, ABORTING, ABORTED, COMPLETED, FAILED, EXPIRED
-    #         by_backup_vault_name: "BackupVaultName",
-    #         by_created_before: Time.now,
-    #         by_created_after: Time.now,
-    #         by_resource_type: "ResourceType",
-    #         by_account_id: "AccountId",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The next item following a partial list of returned items. For
     #   example, if a request is made to return `maxResults` number of
@@ -2766,8 +3692,9 @@ module Aws::Backup
     # @!attribute [rw] by_backup_vault_name
     #   Returns only backup jobs that will be stored in the specified backup
     #   vault. Backup vaults are identified by names that are unique to the
-    #   account used to create them and the AWS Region where they are
-    #   created. They consist of lowercase letters, numbers, and hyphens.
+    #   account used to create them and the Amazon Web Services Region where
+    #   they are created. They consist of lowercase letters, numbers, and
+    #   hyphens.
     #   @return [String]
     #
     # @!attribute [rw] by_created_before
@@ -2782,6 +3709,10 @@ module Aws::Backup
     # @!attribute [rw] by_resource_type
     #   Returns only backup jobs for the specified resources:
     #
+    #   * `Aurora` for Amazon Aurora
+    #
+    #   * `DocumentDB` for Amazon DocumentDB (with MongoDB compatibility)
+    #
     #   * `DynamoDB` for Amazon DynamoDB
     #
     #   * `EBS` for Amazon Elastic Block Store
@@ -2790,19 +3721,39 @@ module Aws::Backup
     #
     #   * `EFS` for Amazon Elastic File System
     #
+    #   * `FSx` for Amazon FSx
+    #
+    #   * `Neptune` for Amazon Neptune
+    #
     #   * `RDS` for Amazon Relational Database Service
     #
-    #   * `Aurora` for Amazon Aurora
+    #   * `Storage Gateway` for Storage Gateway
     #
-    #   * `Storage Gateway` for AWS Storage Gateway
+    #   * `S3` for Amazon S3
+    #
+    #   * `VirtualMachine` for virtual machines
     #   @return [String]
     #
     # @!attribute [rw] by_account_id
     #   The account ID to list the jobs from. Returns only backup jobs
     #   associated with the specified account ID.
     #
-    #   If used from an AWS Organizations management account, passing `*`
+    #   If used from an Organizations management account, passing `*`
     #   returns all jobs across the organization.
+    #   @return [String]
+    #
+    # @!attribute [rw] by_complete_after
+    #   Returns only backup jobs completed after a date expressed in Unix
+    #   format and Coordinated Universal Time (UTC).
+    #   @return [Time]
+    #
+    # @!attribute [rw] by_complete_before
+    #   Returns only backup jobs completed before a date expressed in Unix
+    #   format and Coordinated Universal Time (UTC).
+    #   @return [Time]
+    #
+    # @!attribute [rw] by_parent_job_id
+    #   This is a filter to list child (nested) jobs based on parent job ID.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListBackupJobsInput AWS API Documentation
@@ -2816,7 +3767,10 @@ module Aws::Backup
       :by_created_before,
       :by_created_after,
       :by_resource_type,
-      :by_account_id)
+      :by_account_id,
+      :by_complete_after,
+      :by_complete_before,
+      :by_parent_job_id)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2842,14 +3796,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBackupPlanTemplatesInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "string",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The next item following a partial list of returned items. For
     #   example, if a request is made to return `maxResults` number of
@@ -2891,15 +3837,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBackupPlanVersionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_id: "string", # required
-    #         next_token: "string",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies a backup plan.
     #   @return [String]
@@ -2946,15 +3883,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBackupPlansInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "string",
-    #         max_results: 1,
-    #         include_deleted: false,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The next item following a partial list of returned items. For
     #   example, if a request is made to return `maxResults` number of
@@ -3002,15 +3930,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBackupSelectionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_id: "string", # required
-    #         next_token: "string",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies a backup plan.
     #   @return [String]
@@ -3057,14 +3976,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBackupVaultsInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "string",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The next item following a partial list of returned items. For
     #   example, if a request is made to return `maxResults` number of
@@ -3108,21 +4019,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListCopyJobsInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "string",
-    #         max_results: 1,
-    #         by_resource_arn: "ARN",
-    #         by_state: "CREATED", # accepts CREATED, RUNNING, COMPLETED, FAILED
-    #         by_created_before: Time.now,
-    #         by_created_after: Time.now,
-    #         by_resource_type: "ResourceType",
-    #         by_destination_vault_arn: "string",
-    #         by_account_id: "AccountId",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The next item following a partial list of returned items. For
     #   example, if a request is made to return maxResults number of items,
@@ -3154,6 +4050,10 @@ module Aws::Backup
     # @!attribute [rw] by_resource_type
     #   Returns only backup jobs for the specified resources:
     #
+    #   * `Aurora` for Amazon Aurora
+    #
+    #   * `DocumentDB` for Amazon DocumentDB (with MongoDB compatibility)
+    #
     #   * `DynamoDB` for Amazon DynamoDB
     #
     #   * `EBS` for Amazon Elastic Block Store
@@ -3162,11 +4062,17 @@ module Aws::Backup
     #
     #   * `EFS` for Amazon Elastic File System
     #
+    #   * `FSx` for Amazon FSx
+    #
+    #   * `Neptune` for Amazon Neptune
+    #
     #   * `RDS` for Amazon Relational Database Service
     #
-    #   * `Aurora` for Amazon Aurora
+    #   * `Storage Gateway` for Storage Gateway
     #
-    #   * `Storage Gateway` for AWS Storage Gateway
+    #   * `S3` for Amazon S3
+    #
+    #   * `VirtualMachine` for virtual machines
     #   @return [String]
     #
     # @!attribute [rw] by_destination_vault_arn
@@ -3180,6 +4086,20 @@ module Aws::Backup
     #   associated with the specified account ID.
     #   @return [String]
     #
+    # @!attribute [rw] by_complete_before
+    #   Returns only copy jobs completed before a date expressed in Unix
+    #   format and Coordinated Universal Time (UTC).
+    #   @return [Time]
+    #
+    # @!attribute [rw] by_complete_after
+    #   Returns only copy jobs completed after a date expressed in Unix
+    #   format and Coordinated Universal Time (UTC).
+    #   @return [Time]
+    #
+    # @!attribute [rw] by_parent_job_id
+    #   This is a filter to list child (nested) jobs based on parent job ID.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListCopyJobsInput AWS API Documentation
     #
     class ListCopyJobsInput < Struct.new(
@@ -3191,7 +4111,10 @@ module Aws::Backup
       :by_created_after,
       :by_resource_type,
       :by_destination_vault_arn,
-      :by_account_id)
+      :by_account_id,
+      :by_complete_before,
+      :by_complete_after,
+      :by_parent_job_id)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3217,14 +4140,87 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListProtectedResourcesInput
-    #   data as a hash:
+    # @!attribute [rw] max_results
+    #   The number of desired results from 1 to 1000. Optional. If
+    #   unspecified, the query will return 1 MB of data.
+    #   @return [Integer]
     #
-    #       {
-    #         next_token: "string",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] next_token
+    #   An identifier that was returned from the previous call to this
+    #   operation, which can be used to return the next set of items in the
+    #   list.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListFrameworksInput AWS API Documentation
+    #
+    class ListFrameworksInput < Struct.new(
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] frameworks
+    #   A list of frameworks with details for each framework, including the
+    #   framework name, Amazon Resource Name (ARN), description, number of
+    #   controls, creation time, and deployment status.
+    #   @return [Array<Types::Framework>]
+    #
+    # @!attribute [rw] next_token
+    #   An identifier that was returned from the previous call to this
+    #   operation, which can be used to return the next set of items in the
+    #   list.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListFrameworksOutput AWS API Documentation
+    #
+    class ListFrameworksOutput < Struct.new(
+      :frameworks,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   The next item following a partial list of returned resources. For
+    #   example, if a request is made to return `maxResults` number of
+    #   resources, `NextToken` allows you to return more items in your list
+    #   starting at the location pointed to by the next token.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of resource list items to be returned.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListLegalHoldsInput AWS API Documentation
+    #
+    class ListLegalHoldsInput < Struct.new(
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   The next item following a partial list of returned resources. For
+    #   example, if a request is made to return `maxResults` number of
+    #   resources, `NextToken` allows you to return more items in your list
+    #   starting at the location pointed to by the next token.
+    #   @return [String]
+    #
+    # @!attribute [rw] legal_holds
+    #   This is an array of returned legal holds, both active and previous.
+    #   @return [Array<Types::LegalHold>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListLegalHoldsOutput AWS API Documentation
+    #
+    class ListLegalHoldsOutput < Struct.new(
+      :next_token,
+      :legal_holds)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   The next item following a partial list of returned items. For
     #   example, if a request is made to return `maxResults` number of
@@ -3246,9 +4242,9 @@ module Aws::Backup
     end
 
     # @!attribute [rw] results
-    #   An array of resources successfully backed up by AWS Backup including
-    #   the time the resource was saved, an Amazon Resource Name (ARN) of
-    #   the resource, and a resource type.
+    #   An array of resources successfully backed up by Backup including the
+    #   time the resource was saved, an Amazon Resource Name (ARN) of the
+    #   resource, and a resource type.
     #   @return [Array<Types::ProtectedResource>]
     #
     # @!attribute [rw] next_token
@@ -3267,25 +4263,16 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRecoveryPointsByBackupVaultInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         next_token: "string",
-    #         max_results: 1,
-    #         by_resource_arn: "ARN",
-    #         by_resource_type: "ResourceType",
-    #         by_backup_plan_id: "string",
-    #         by_created_before: Time.now,
-    #         by_created_after: Time.now,
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
+    #
+    #   <note markdown="1"> Backup vault name might not be available when a supported service
+    #   creates the backup.
+    #
+    #    </note>
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -3323,6 +4310,11 @@ module Aws::Backup
     #   timestamp.
     #   @return [Time]
     #
+    # @!attribute [rw] by_parent_recovery_point_arn
+    #   This returns only recovery points that match the specified parent
+    #   (composite) recovery point Amazon Resource Name (ARN).
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListRecoveryPointsByBackupVaultInput AWS API Documentation
     #
     class ListRecoveryPointsByBackupVaultInput < Struct.new(
@@ -3333,7 +4325,8 @@ module Aws::Backup
       :by_resource_type,
       :by_backup_plan_id,
       :by_created_before,
-      :by_created_after)
+      :by_created_after,
+      :by_parent_recovery_point_arn)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3359,15 +4352,50 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRecoveryPointsByResourceInput
-    #   data as a hash:
+    # @!attribute [rw] legal_hold_id
+    #   This is the ID of the legal hold.
+    #   @return [String]
     #
-    #       {
-    #         resource_arn: "ARN", # required
-    #         next_token: "string",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] next_token
+    #   This is the next item following a partial list of returned
+    #   resources. For example, if a request is made to return `maxResults`
+    #   number of resources, `NextToken` allows you to return more items in
+    #   your list starting at the location pointed to by the next token.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   This is the maximum number of resource list items to be returned.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListRecoveryPointsByLegalHoldInput AWS API Documentation
+    #
+    class ListRecoveryPointsByLegalHoldInput < Struct.new(
+      :legal_hold_id,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] recovery_points
+    #   This is a list of the recovery points returned by
+    #   `ListRecoveryPointsByLegalHold`.
+    #   @return [Array<Types::RecoveryPointMember>]
+    #
+    # @!attribute [rw] next_token
+    #   This return is the next item following a partial list of returned
+    #   resources.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListRecoveryPointsByLegalHoldOutput AWS API Documentation
+    #
+    class ListRecoveryPointsByLegalHoldOutput < Struct.new(
+      :recovery_points,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   An ARN that uniquely identifies a resource. The format of the ARN
     #   depends on the resource type.
@@ -3382,6 +4410,10 @@ module Aws::Backup
     #
     # @!attribute [rw] max_results
     #   The maximum number of items to be returned.
+    #
+    #   <note markdown="1"> Amazon RDS requires a value of at least 20.
+    #
+    #    </note>
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListRecoveryPointsByResourceInput AWS API Documentation
@@ -3404,6 +4436,11 @@ module Aws::Backup
     # @!attribute [rw] recovery_points
     #   An array of objects that contain detailed information about recovery
     #   points of the specified resource type.
+    #
+    #   <note markdown="1"> Only Amazon EFS and Amazon EC2 recovery points return
+    #   BackupVaultName.
+    #
+    #    </note>
     #   @return [Array<Types::RecoveryPointByResource>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListRecoveryPointsByResourceOutput AWS API Documentation
@@ -3415,18 +4452,117 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRestoreJobsInput
-    #   data as a hash:
+    # @!attribute [rw] by_report_plan_name
+    #   Returns only report jobs with the specified report plan name.
+    #   @return [String]
     #
-    #       {
-    #         next_token: "string",
-    #         max_results: 1,
-    #         by_account_id: "AccountId",
-    #         by_created_before: Time.now,
-    #         by_created_after: Time.now,
-    #         by_status: "PENDING", # accepts PENDING, RUNNING, COMPLETED, ABORTED, FAILED
-    #       }
+    # @!attribute [rw] by_creation_before
+    #   Returns only report jobs that were created before the date and time
+    #   specified in Unix format and Coordinated Universal Time (UTC). For
+    #   example, the value 1516925490 represents Friday, January 26, 2018
+    #   12:11:30 AM.
+    #   @return [Time]
     #
+    # @!attribute [rw] by_creation_after
+    #   Returns only report jobs that were created after the date and time
+    #   specified in Unix format and Coordinated Universal Time (UTC). For
+    #   example, the value 1516925490 represents Friday, January 26, 2018
+    #   12:11:30 AM.
+    #   @return [Time]
+    #
+    # @!attribute [rw] by_status
+    #   Returns only report jobs that are in the specified status. The
+    #   statuses are:
+    #
+    #   `CREATED | RUNNING | COMPLETED | FAILED`
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The number of desired results from 1 to 1000. Optional. If
+    #   unspecified, the query will return 1 MB of data.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   An identifier that was returned from the previous call to this
+    #   operation, which can be used to return the next set of items in the
+    #   list.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListReportJobsInput AWS API Documentation
+    #
+    class ListReportJobsInput < Struct.new(
+      :by_report_plan_name,
+      :by_creation_before,
+      :by_creation_after,
+      :by_status,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_jobs
+    #   Details about your report jobs in JSON format.
+    #   @return [Array<Types::ReportJob>]
+    #
+    # @!attribute [rw] next_token
+    #   An identifier that was returned from the previous call to this
+    #   operation, which can be used to return the next set of items in the
+    #   list.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListReportJobsOutput AWS API Documentation
+    #
+    class ListReportJobsOutput < Struct.new(
+      :report_jobs,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] max_results
+    #   The number of desired results from 1 to 1000. Optional. If
+    #   unspecified, the query will return 1 MB of data.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   An identifier that was returned from the previous call to this
+    #   operation, which can be used to return the next set of items in the
+    #   list.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListReportPlansInput AWS API Documentation
+    #
+    class ListReportPlansInput < Struct.new(
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_plans
+    #   A list of your report plans with detailed information for each plan.
+    #   This information includes the Amazon Resource Name (ARN), report
+    #   plan name, description, settings, delivery channel, deployment
+    #   status, creation time, and last times the report plan attempted to
+    #   and successfully ran.
+    #   @return [Array<Types::ReportPlan>]
+    #
+    # @!attribute [rw] next_token
+    #   An identifier that was returned from the previous call to this
+    #   operation, which can be used to return the next set of items in the
+    #   list.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListReportPlansOutput AWS API Documentation
+    #
+    class ListReportPlansOutput < Struct.new(
+      :report_plans,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   The next item following a partial list of returned items. For
     #   example, if a request is made to return `maxResults` number of
@@ -3457,6 +4593,16 @@ module Aws::Backup
     #   Returns only restore jobs associated with the specified job status.
     #   @return [String]
     #
+    # @!attribute [rw] by_complete_before
+    #   Returns only copy jobs completed before a date expressed in Unix
+    #   format and Coordinated Universal Time (UTC).
+    #   @return [Time]
+    #
+    # @!attribute [rw] by_complete_after
+    #   Returns only copy jobs completed after a date expressed in Unix
+    #   format and Coordinated Universal Time (UTC).
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ListRestoreJobsInput AWS API Documentation
     #
     class ListRestoreJobsInput < Struct.new(
@@ -3465,7 +4611,9 @@ module Aws::Backup
       :by_account_id,
       :by_created_before,
       :by_created_after,
-      :by_status)
+      :by_status,
+      :by_complete_before,
+      :by_complete_after)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3491,15 +4639,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ARN", # required
-    #         next_token: "string",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
     #   The format of the ARN depends on the type of resource. Valid targets
@@ -3581,10 +4720,11 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource; for example, an Amazon Elastic Block Store
-    #   (Amazon EBS) volume or an Amazon Relational Database Service (Amazon
-    #   RDS) database. For VSS Windows backups, the only supported resource
-    #   type is Amazon EC2.
+    #   The type of Amazon Web Services resource; for example, an Amazon
+    #   Elastic Block Store (Amazon EBS) volume or an Amazon Relational
+    #   Database Service (Amazon RDS) database. For Windows Volume Shadow
+    #   Copy Service (VSS) backups, the only supported resource type is
+    #   Amazon EC2.
     #   @return [String]
     #
     # @!attribute [rw] last_backup_time
@@ -3594,29 +4734,27 @@ module Aws::Backup
     #   represents Friday, January 26, 2018 12:11:30.087 AM.
     #   @return [Time]
     #
+    # @!attribute [rw] resource_name
+    #   This is the non-unique name of the resource that belongs to the
+    #   specified backup.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ProtectedResource AWS API Documentation
     #
     class ProtectedResource < Struct.new(
       :resource_arn,
       :resource_type,
-      :last_backup_time)
+      :last_backup_time,
+      :resource_name)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutBackupVaultAccessPolicyInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         policy: "IAMPolicy",
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] policy
@@ -3632,20 +4770,92 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutBackupVaultNotificationsInput
-    #   data as a hash:
+    # @!attribute [rw] backup_vault_name
+    #   The Backup Vault Lock configuration that specifies the name of the
+    #   backup vault it protects.
+    #   @return [String]
     #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         sns_topic_arn: "ARN", # required
-    #         backup_vault_events: ["BACKUP_JOB_STARTED"], # required, accepts BACKUP_JOB_STARTED, BACKUP_JOB_COMPLETED, BACKUP_JOB_SUCCESSFUL, BACKUP_JOB_FAILED, BACKUP_JOB_EXPIRED, RESTORE_JOB_STARTED, RESTORE_JOB_COMPLETED, RESTORE_JOB_SUCCESSFUL, RESTORE_JOB_FAILED, COPY_JOB_STARTED, COPY_JOB_SUCCESSFUL, COPY_JOB_FAILED, RECOVERY_POINT_MODIFIED, BACKUP_PLAN_CREATED, BACKUP_PLAN_MODIFIED
-    #       }
+    # @!attribute [rw] min_retention_days
+    #   The Backup Vault Lock configuration that specifies the minimum
+    #   retention period that the vault retains its recovery points. This
+    #   setting can be useful if, for example, your organization's policies
+    #   require you to retain certain data for at least seven years (2555
+    #   days).
     #
+    #   If this parameter is not specified, Vault Lock will not enforce a
+    #   minimum retention period.
+    #
+    #   If this parameter is specified, any backup or copy job to the vault
+    #   must have a lifecycle policy with a retention period equal to or
+    #   longer than the minimum retention period. If the job's retention
+    #   period is shorter than that minimum retention period, then the vault
+    #   fails that backup or copy job, and you should either modify your
+    #   lifecycle settings or use a different vault. The shortest minimum
+    #   retention period you can specify is 1 day. Recovery points already
+    #   saved in the vault prior to Vault Lock are not affected.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] max_retention_days
+    #   The Backup Vault Lock configuration that specifies the maximum
+    #   retention period that the vault retains its recovery points. This
+    #   setting can be useful if, for example, your organization's policies
+    #   require you to destroy certain data after retaining it for four
+    #   years (1460 days).
+    #
+    #   If this parameter is not included, Vault Lock does not enforce a
+    #   maximum retention period on the recovery points in the vault. If
+    #   this parameter is included without a value, Vault Lock will not
+    #   enforce a maximum retention period.
+    #
+    #   If this parameter is specified, any backup or copy job to the vault
+    #   must have a lifecycle policy with a retention period equal to or
+    #   shorter than the maximum retention period. If the job's retention
+    #   period is longer than that maximum retention period, then the vault
+    #   fails the backup or copy job, and you should either modify your
+    #   lifecycle settings or use a different vault. The longest maximum
+    #   retention period you can specify is 36500 days (approximately 100
+    #   years). Recovery points already saved in the vault prior to Vault
+    #   Lock are not affected.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] changeable_for_days
+    #   The Backup Vault Lock configuration that specifies the number of
+    #   days before the lock date. For example, setting `ChangeableForDays`
+    #   to 30 on Jan. 1, 2022 at 8pm UTC will set the lock date to Jan. 31,
+    #   2022 at 8pm UTC.
+    #
+    #   Backup enforces a 72-hour cooling-off period before Vault Lock takes
+    #   effect and becomes immutable. Therefore, you must set
+    #   `ChangeableForDays` to 3 or greater.
+    #
+    #   Before the lock date, you can delete Vault Lock from the vault using
+    #   `DeleteBackupVaultLockConfiguration` or change the Vault Lock
+    #   configuration using `PutBackupVaultLockConfiguration`. On and after
+    #   the lock date, the Vault Lock becomes immutable and cannot be
+    #   changed or deleted.
+    #
+    #   If this parameter is not specified, you can delete Vault Lock from
+    #   the vault using `DeleteBackupVaultLockConfiguration` or change the
+    #   Vault Lock configuration using `PutBackupVaultLockConfiguration` at
+    #   any time.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/PutBackupVaultLockConfigurationInput AWS API Documentation
+    #
+    class PutBackupVaultLockConfigurationInput < Struct.new(
+      :backup_vault_name,
+      :min_retention_days,
+      :max_retention_days,
+      :changeable_for_days)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] sns_topic_arn
@@ -3657,6 +4867,31 @@ module Aws::Backup
     # @!attribute [rw] backup_vault_events
     #   An array of events that indicate the status of jobs to back up
     #   resources to the backup vault.
+    #
+    #   For common use cases and code samples, see [Using Amazon SNS to
+    #   track Backup events][1].
+    #
+    #   The following events are supported:
+    #
+    #   * `BACKUP_JOB_STARTED` \| `BACKUP_JOB_COMPLETED`
+    #
+    #   * `COPY_JOB_STARTED` \| `COPY_JOB_SUCCESSFUL` \| `COPY_JOB_FAILED`
+    #
+    #   * `RESTORE_JOB_STARTED` \| `RESTORE_JOB_COMPLETED` \|
+    #     `RECOVERY_POINT_MODIFIED`
+    #
+    #   * `S3_BACKUP_OBJECT_FAILED` \| `S3_RESTORE_OBJECT_FAILED`
+    #
+    #   <note markdown="1"> The list below shows items that are deprecated events (for
+    #   reference) and are no longer in use. They are no longer supported
+    #   and will not return statuses or notifications. Refer to the list
+    #   above for current supported events.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/sns-notifications.html
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/PutBackupVaultNotificationsInput AWS API Documentation
@@ -3681,8 +4916,8 @@ module Aws::Backup
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] backup_vault_arn
@@ -3702,10 +4937,11 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   The type of AWS resource saved as a recovery point; for example, an
-    #   Amazon Elastic Block Store (Amazon EBS) volume or an Amazon
-    #   Relational Database Service (Amazon RDS) database. For VSS Windows
-    #   backups, the only supported resource type is Amazon EC2.
+    #   The type of Amazon Web Services resource saved as a recovery point;
+    #   for example, an Amazon Elastic Block Store (Amazon EBS) volume or an
+    #   Amazon Relational Database Service (Amazon RDS) database. For
+    #   Windows Volume Shadow Copy Service (VSS) backups, the only supported
+    #   resource type is Amazon EC2.
     #   @return [String]
     #
     # @!attribute [rw] created_by
@@ -3722,6 +4958,11 @@ module Aws::Backup
     #
     # @!attribute [rw] status
     #   A status code specifying the state of the recovery point.
+    #   @return [String]
+    #
+    # @!attribute [rw] status_message
+    #   A message explaining the reason of the recovery point deletion
+    #   failure.
     #   @return [String]
     #
     # @!attribute [rw] creation_date
@@ -3749,17 +4990,23 @@ module Aws::Backup
     #
     # @!attribute [rw] lifecycle
     #   The lifecycle defines when a protected resource is transitioned to
-    #   cold storage and when it expires. AWS Backup transitions and expires
+    #   cold storage and when it expires. Backup transitions and expires
     #   backups automatically according to the lifecycle that you define.
     #
     #   Backups transitioned to cold storage must be stored in cold storage
-    #   for a minimum of 90 days. Therefore, the “expire after days” setting
-    #   must be 90 days greater than the “transition to cold after days”
-    #   setting. The “transition to cold after days” setting cannot be
-    #   changed after a backup has been transitioned to cold.
+    #   for a minimum of 90 days. Therefore, the “retention” setting must be
+    #   90 days greater than the “transition to cold after days” setting.
+    #   The “transition to cold after days” setting cannot be changed after
+    #   a backup has been transitioned to cold.
     #
-    #   Only Amazon EFS file system backups can be transitioned to cold
-    #   storage.
+    #   Resource types that are able to be transitioned to cold storage are
+    #   listed in the "Lifecycle to cold storage" section of the [ Feature
+    #   availability by resource][1] table. Backup ignores this expression
+    #   for other resource types.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #   @return [Types::Lifecycle]
     #
     # @!attribute [rw] encryption_key_arn
@@ -3781,6 +5028,32 @@ module Aws::Backup
     #   represents Friday, January 26, 2018 12:11:30.087 AM.
     #   @return [Time]
     #
+    # @!attribute [rw] parent_recovery_point_arn
+    #   This is the Amazon Resource Name (ARN) of the parent (composite)
+    #   recovery point.
+    #   @return [String]
+    #
+    # @!attribute [rw] composite_member_identifier
+    #   This is the identifier of a resource within a composite group, such
+    #   as nested (child) recovery point belonging to a composite (parent)
+    #   stack. The ID is transferred from the [ logical ID][1] within a
+    #   stack.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html#resources-section-structure-syntax
+    #   @return [String]
+    #
+    # @!attribute [rw] is_parent
+    #   This is a boolean value indicating this is a parent (composite)
+    #   recovery point.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] resource_name
+    #   This is the non-unique name of the resource that belongs to the
+    #   specified backup.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/RecoveryPointByBackupVault AWS API Documentation
     #
     class RecoveryPointByBackupVault < Struct.new(
@@ -3793,6 +5066,7 @@ module Aws::Backup
       :created_by,
       :iam_role_arn,
       :status,
+      :status_message,
       :creation_date,
       :completion_date,
       :backup_size_in_bytes,
@@ -3800,7 +5074,11 @@ module Aws::Backup
       :lifecycle,
       :encryption_key_arn,
       :is_encrypted,
-      :last_restore_time)
+      :last_restore_time,
+      :parent_recovery_point_arn,
+      :composite_member_identifier,
+      :is_parent,
+      :resource_name)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3824,6 +5102,11 @@ module Aws::Backup
     #   A status code specifying the state of the recovery point.
     #   @return [String]
     #
+    # @!attribute [rw] status_message
+    #   A message explaining the reason of the recovery point deletion
+    #   failure.
+    #   @return [String]
+    #
     # @!attribute [rw] encryption_key_arn
     #   The server-side encryption key that is used to protect your backups;
     #   for example,
@@ -3837,8 +5120,23 @@ module Aws::Backup
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
+    #   @return [String]
+    #
+    # @!attribute [rw] is_parent
+    #   This is a boolean value indicating this is a parent (composite)
+    #   recovery point.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] parent_recovery_point_arn
+    #   This is the Amazon Resource Name (ARN) of the parent (composite)
+    #   recovery point.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_name
+    #   This is the non-unique name of the resource that belongs to the
+    #   specified backup.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/RecoveryPointByResource AWS API Documentation
@@ -3847,15 +5145,19 @@ module Aws::Backup
       :recovery_point_arn,
       :creation_date,
       :status,
+      :status_message,
       :encryption_key_arn,
       :backup_size_bytes,
-      :backup_vault_name)
+      :backup_vault_name,
+      :is_parent,
+      :parent_recovery_point_arn,
+      :resource_name)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Contains information about the backup plan and rule that AWS Backup
-    # used to initiate the recovery point backup.
+    # Contains information about the backup plan and rule that Backup used
+    # to initiate the recovery point backup.
     #
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies a backup plan.
@@ -3884,6 +5186,323 @@ module Aws::Backup
       :backup_plan_arn,
       :backup_plan_version,
       :backup_rule_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # This is a recovery point which is a child (nested) recovery point of a
+    # parent (composite) recovery point. These recovery points can be
+    # disassociated from their parent (composite) recovery point, in which
+    # case they will no longer be a member.
+    #
+    # @!attribute [rw] recovery_point_arn
+    #   This is the Amazon Resource Name (ARN) of the parent (composite)
+    #   recovery point.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_arn
+    #   This is the Amazon Resource Name (ARN) that uniquely identifies a
+    #   saved resource.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_type
+    #   This is the Amazon Web Services resource type that is saved as a
+    #   recovery point.
+    #   @return [String]
+    #
+    # @!attribute [rw] backup_vault_name
+    #   This is the name of the backup vault (the logical container in which
+    #   backups are stored).
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/RecoveryPointMember AWS API Documentation
+    #
+    class RecoveryPointMember < Struct.new(
+      :recovery_point_arn,
+      :resource_arn,
+      :resource_type,
+      :backup_vault_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # This specifies criteria to assign a set of resources, such as resource
+    # types or backup vaults.
+    #
+    # @!attribute [rw] vault_names
+    #   These are the names of the vaults in which the selected recovery
+    #   points are contained.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] resource_identifiers
+    #   These are the resources included in the resource selection
+    #   (including type of resources and vaults).
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] date_range
+    #   This is a resource filter containing FromDate: DateTime and ToDate:
+    #   DateTime. Both values are required. Future DateTime values are not
+    #   permitted.
+    #
+    #   The date and time are in Unix format and Coordinated Universal Time
+    #   (UTC), and it is accurate to milliseconds ((milliseconds are
+    #   optional). For example, the value 1516925490.087 represents Friday,
+    #   January 26, 2018 12:11:30.087 AM.
+    #   @return [Types::DateRange]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/RecoveryPointSelection AWS API Documentation
+    #
+    class RecoveryPointSelection < Struct.new(
+      :vault_names,
+      :resource_identifiers,
+      :date_range)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains information from your report plan about where to deliver your
+    # reports, specifically your Amazon S3 bucket name, S3 key prefix, and
+    # the formats of your reports.
+    #
+    # @!attribute [rw] s3_bucket_name
+    #   The unique name of the S3 bucket that receives your reports.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_key_prefix
+    #   The prefix for where Backup Audit Manager delivers your reports to
+    #   Amazon S3. The prefix is this part of the following path:
+    #   s3://your-bucket-name/`prefix`/Backup/us-west-2/year/month/day/report-name.
+    #   If not specified, there is no prefix.
+    #   @return [String]
+    #
+    # @!attribute [rw] formats
+    #   A list of the format of your reports: `CSV`, `JSON`, or both. If not
+    #   specified, the default format is `CSV`.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ReportDeliveryChannel AWS API Documentation
+    #
+    class ReportDeliveryChannel < Struct.new(
+      :s3_bucket_name,
+      :s3_key_prefix,
+      :formats)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains information from your report job about your report
+    # destination.
+    #
+    # @!attribute [rw] s3_bucket_name
+    #   The unique name of the Amazon S3 bucket that receives your reports.
+    #   @return [String]
+    #
+    # @!attribute [rw] s3_keys
+    #   The object key that uniquely identifies your reports in your S3
+    #   bucket.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ReportDestination AWS API Documentation
+    #
+    class ReportDestination < Struct.new(
+      :s3_bucket_name,
+      :s3_keys)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains detailed information about a report job. A report job
+    # compiles a report based on a report plan and publishes it to Amazon
+    # S3.
+    #
+    # @!attribute [rw] report_job_id
+    #   The identifier for a report job. A unique, randomly generated,
+    #   Unicode, UTF-8 encoded string that is at most 1,024 bytes long.
+    #   Report job IDs cannot be edited.
+    #   @return [String]
+    #
+    # @!attribute [rw] report_plan_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
+    #   The format of the ARN depends on the resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] report_template
+    #   Identifies the report template for the report. Reports are built
+    #   using a report template. The report templates are:
+    #
+    #   `RESOURCE_COMPLIANCE_REPORT | CONTROL_COMPLIANCE_REPORT |
+    #   BACKUP_JOB_REPORT | COPY_JOB_REPORT | RESTORE_JOB_REPORT`
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_time
+    #   The date and time that a report job is created, in Unix format and
+    #   Coordinated Universal Time (UTC). The value of `CreationTime` is
+    #   accurate to milliseconds. For example, the value 1516925490.087
+    #   represents Friday, January 26, 2018 12:11:30.087 AM.
+    #   @return [Time]
+    #
+    # @!attribute [rw] completion_time
+    #   The date and time that a report job is completed, in Unix format and
+    #   Coordinated Universal Time (UTC). The value of `CompletionTime` is
+    #   accurate to milliseconds. For example, the value 1516925490.087
+    #   represents Friday, January 26, 2018 12:11:30.087 AM.
+    #   @return [Time]
+    #
+    # @!attribute [rw] status
+    #   The status of a report job. The statuses are:
+    #
+    #   `CREATED | RUNNING | COMPLETED | FAILED`
+    #
+    #   `COMPLETED` means that the report is available for your review at
+    #   your designated destination. If the status is `FAILED`, review the
+    #   `StatusMessage` for the reason.
+    #   @return [String]
+    #
+    # @!attribute [rw] status_message
+    #   A message explaining the status of the report job.
+    #   @return [String]
+    #
+    # @!attribute [rw] report_destination
+    #   The S3 bucket name and S3 keys for the destination where the report
+    #   job publishes the report.
+    #   @return [Types::ReportDestination]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ReportJob AWS API Documentation
+    #
+    class ReportJob < Struct.new(
+      :report_job_id,
+      :report_plan_arn,
+      :report_template,
+      :creation_time,
+      :completion_time,
+      :status,
+      :status_message,
+      :report_destination)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains detailed information about a report plan.
+    #
+    # @!attribute [rw] report_plan_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
+    #   The format of the ARN depends on the resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] report_plan_name
+    #   The unique name of the report plan. This name is between 1 and 256
+    #   characters starting with a letter, and consisting of letters (a-z,
+    #   A-Z), numbers (0-9), and underscores (\_).
+    #   @return [String]
+    #
+    # @!attribute [rw] report_plan_description
+    #   An optional description of the report plan with a maximum 1,024
+    #   characters.
+    #   @return [String]
+    #
+    # @!attribute [rw] report_setting
+    #   Identifies the report template for the report. Reports are built
+    #   using a report template. The report templates are:
+    #
+    #   `RESOURCE_COMPLIANCE_REPORT | CONTROL_COMPLIANCE_REPORT |
+    #   BACKUP_JOB_REPORT | COPY_JOB_REPORT | RESTORE_JOB_REPORT`
+    #
+    #   If the report template is `RESOURCE_COMPLIANCE_REPORT` or
+    #   `CONTROL_COMPLIANCE_REPORT`, this API resource also describes the
+    #   report coverage by Amazon Web Services Regions and frameworks.
+    #   @return [Types::ReportSetting]
+    #
+    # @!attribute [rw] report_delivery_channel
+    #   Contains information about where and how to deliver your reports,
+    #   specifically your Amazon S3 bucket name, S3 key prefix, and the
+    #   formats of your reports.
+    #   @return [Types::ReportDeliveryChannel]
+    #
+    # @!attribute [rw] deployment_status
+    #   The deployment status of a report plan. The statuses are:
+    #
+    #   `CREATE_IN_PROGRESS | UPDATE_IN_PROGRESS | DELETE_IN_PROGRESS |
+    #   COMPLETED`
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_time
+    #   The date and time that a report plan is created, in Unix format and
+    #   Coordinated Universal Time (UTC). The value of `CreationTime` is
+    #   accurate to milliseconds. For example, the value 1516925490.087
+    #   represents Friday, January 26, 2018 12:11:30.087 AM.
+    #   @return [Time]
+    #
+    # @!attribute [rw] last_attempted_execution_time
+    #   The date and time that a report job associated with this report plan
+    #   last attempted to run, in Unix format and Coordinated Universal Time
+    #   (UTC). The value of `LastAttemptedExecutionTime` is accurate to
+    #   milliseconds. For example, the value 1516925490.087 represents
+    #   Friday, January 26, 2018 12:11:30.087 AM.
+    #   @return [Time]
+    #
+    # @!attribute [rw] last_successful_execution_time
+    #   The date and time that a report job associated with this report plan
+    #   last successfully ran, in Unix format and Coordinated Universal Time
+    #   (UTC). The value of `LastSuccessfulExecutionTime` is accurate to
+    #   milliseconds. For example, the value 1516925490.087 represents
+    #   Friday, January 26, 2018 12:11:30.087 AM.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ReportPlan AWS API Documentation
+    #
+    class ReportPlan < Struct.new(
+      :report_plan_arn,
+      :report_plan_name,
+      :report_plan_description,
+      :report_setting,
+      :report_delivery_channel,
+      :deployment_status,
+      :creation_time,
+      :last_attempted_execution_time,
+      :last_successful_execution_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains detailed information about a report setting.
+    #
+    # @!attribute [rw] report_template
+    #   Identifies the report template for the report. Reports are built
+    #   using a report template. The report templates are:
+    #
+    #   `RESOURCE_COMPLIANCE_REPORT | CONTROL_COMPLIANCE_REPORT |
+    #   BACKUP_JOB_REPORT | COPY_JOB_REPORT | RESTORE_JOB_REPORT`
+    #   @return [String]
+    #
+    # @!attribute [rw] framework_arns
+    #   The Amazon Resource Names (ARNs) of the frameworks a report covers.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] number_of_frameworks
+    #   The number of frameworks a report covers.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] accounts
+    #   These are the accounts to be included in the report.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] organization_units
+    #   These are the Organizational Units to be included in the report.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] regions
+    #   These are the Regions to be included in the report.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/ReportSetting AWS API Documentation
+    #
+    class ReportSetting < Struct.new(
+      :report_template,
+      :framework_arns,
+      :number_of_frameworks,
+      :accounts,
+      :organization_units,
+      :regions)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3943,8 +5562,8 @@ module Aws::Backup
     #   @return [Time]
     #
     # @!attribute [rw] status
-    #   A status code specifying the state of the job initiated by AWS
-    #   Backup to restore a recovery point.
+    #   A status code specifying the state of the job initiated by Backup to
+    #   restore a recovery point.
     #   @return [String]
     #
     # @!attribute [rw] status_message
@@ -3979,8 +5598,9 @@ module Aws::Backup
     # @!attribute [rw] resource_type
     #   The resource type of the listed restore jobs; for example, an Amazon
     #   Elastic Block Store (Amazon EBS) volume or an Amazon Relational
-    #   Database Service (Amazon RDS) database. For VSS Windows backups, the
-    #   only supported resource type is Amazon EC2.
+    #   Database Service (Amazon RDS) database. For Windows Volume Shadow
+    #   Copy Service (VSS) backups, the only supported resource type is
+    #   Amazon EC2.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/RestoreJobsListMember AWS API Documentation
@@ -4028,33 +5648,11 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartBackupJobInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         resource_arn: "ARN", # required
-    #         iam_role_arn: "IAMRoleArn", # required
-    #         idempotency_token: "string",
-    #         start_window_minutes: 1,
-    #         complete_window_minutes: 1,
-    #         lifecycle: {
-    #           move_to_cold_storage_after_days: 1,
-    #           delete_after_days: 1,
-    #         },
-    #         recovery_point_tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         backup_options: {
-    #           "BackupOptionKey" => "BackupOptionValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] resource_arn
@@ -4068,19 +5666,31 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] idempotency_token
-    #   A customer chosen string that can be used to distinguish between
-    #   calls to `StartBackupJob`.
+    #   A customer-chosen string that you can use to distinguish between
+    #   otherwise identical calls to `StartBackupJob`. Retrying a successful
+    #   request with the same idempotency token results in a success message
+    #   with no action taken.
     #   @return [String]
     #
     # @!attribute [rw] start_window_minutes
     #   A value in minutes after a backup is scheduled before a job will be
     #   canceled if it doesn't start successfully. This value is optional,
-    #   and the default is 8 hours.
+    #   and the default is 8 hours. If this value is included, it must be at
+    #   least 60 minutes to avoid errors.
+    #
+    #   During the start window, the backup job status remains in `CREATED`
+    #   status until it has successfully begun or until the start window
+    #   time has run out. If within the start window time Backup receives an
+    #   error that allows the job to be retried, Backup will automatically
+    #   retry to begin the job at least every 10 minutes until the backup
+    #   successfully begins (the job status changes to `RUNNING`) or until
+    #   the job status changes to `EXPIRED` (which is expected to occur when
+    #   the start window time is over).
     #   @return [Integer]
     #
     # @!attribute [rw] complete_window_minutes
     #   A value in minutes during which a successfully started backup must
-    #   complete, or else AWS Backup will cancel the job. This value is
+    #   complete, or else Backup will cancel the job. This value is
     #   optional. This value begins counting down from when the backup was
     #   scheduled. It does not add additional time for `StartWindowMinutes`,
     #   or if the backup started later than scheduled.
@@ -4088,18 +5698,23 @@ module Aws::Backup
     #
     # @!attribute [rw] lifecycle
     #   The lifecycle defines when a protected resource is transitioned to
-    #   cold storage and when it expires. AWS Backup will transition and
-    #   expire backups automatically according to the lifecycle that you
-    #   define.
+    #   cold storage and when it expires. Backup will transition and expire
+    #   backups automatically according to the lifecycle that you define.
     #
     #   Backups transitioned to cold storage must be stored in cold storage
-    #   for a minimum of 90 days. Therefore, the “expire after days” setting
-    #   must be 90 days greater than the “transition to cold after days”
-    #   setting. The “transition to cold after days” setting cannot be
-    #   changed after a backup has been transitioned to cold.
+    #   for a minimum of 90 days. Therefore, the “retention” setting must be
+    #   90 days greater than the “transition to cold after days” setting.
+    #   The “transition to cold after days” setting cannot be changed after
+    #   a backup has been transitioned to cold.
     #
-    #   Only Amazon EFS file system backups can be transitioned to cold
-    #   storage.
+    #   Resource types that are able to be transitioned to cold storage are
+    #   listed in the "Lifecycle to cold storage" section of the [ Feature
+    #   availability by resource][1] table. Backup ignores this expression
+    #   for other resource types.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #   @return [Types::Lifecycle]
     #
     # @!attribute [rw] recovery_point_tags
@@ -4109,12 +5724,13 @@ module Aws::Backup
     #
     # @!attribute [rw] backup_options
     #   Specifies the backup option for a selected resource. This option is
-    #   only available for Windows VSS backup jobs.
+    #   only available for Windows Volume Shadow Copy Service (VSS) backup
+    #   jobs.
     #
-    #   Valid values: Set to `"WindowsVSS”:“enabled"` to enable WindowsVSS
-    #   backup option and create a VSS Windows backup. Set to
-    #   “WindowsVSS”:”disabled” to create a regular backup. The WindowsVSS
-    #   option is not enabled by default.
+    #   Valid values: Set to `"WindowsVSS":"enabled"` to enable the
+    #   `WindowsVSS` backup option and create a Windows VSS backup. Set to
+    #   `"WindowsVSS""disabled"` to create a regular backup. The
+    #   `WindowsVSS` option is not enabled by default.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/StartBackupJobInput AWS API Documentation
@@ -4134,10 +5750,13 @@ module Aws::Backup
     end
 
     # @!attribute [rw] backup_job_id
-    #   Uniquely identifies a request to AWS Backup to back up a resource.
+    #   Uniquely identifies a request to Backup to back up a resource.
     #   @return [String]
     #
     # @!attribute [rw] recovery_point_arn
+    #   *Note: This field is only returned for Amazon EFS and Advanced
+    #   DynamoDB resources.*
+    #
     #   An ARN that uniquely identifies a recovery point; for example,
     #   `arn:aws:backup:us-east-1:123456789012:recovery-point:1EB3B5E7-9EB0-435A-A80B-108B488B0D45`.
     #   @return [String]
@@ -4149,31 +5768,22 @@ module Aws::Backup
     #   represents Friday, January 26, 2018 12:11:30.087 AM.
     #   @return [Time]
     #
+    # @!attribute [rw] is_parent
+    #   This is a returned boolean value indicating this is a parent
+    #   (composite) backup job.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/StartBackupJobOutput AWS API Documentation
     #
     class StartBackupJobOutput < Struct.new(
       :backup_job_id,
       :recovery_point_arn,
-      :creation_date)
+      :creation_date,
+      :is_parent)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartCopyJobInput
-    #   data as a hash:
-    #
-    #       {
-    #         recovery_point_arn: "ARN", # required
-    #         source_backup_vault_name: "BackupVaultName", # required
-    #         destination_backup_vault_arn: "ARN", # required
-    #         iam_role_arn: "IAMRoleArn", # required
-    #         idempotency_token: "string",
-    #         lifecycle: {
-    #           move_to_cold_storage_after_days: 1,
-    #           delete_after_days: 1,
-    #         },
-    #       }
-    #
     # @!attribute [rw] recovery_point_arn
     #   An ARN that uniquely identifies a recovery point to use for the copy
     #   job; for example,
@@ -4183,8 +5793,9 @@ module Aws::Backup
     # @!attribute [rw] source_backup_vault_name
     #   The name of a logical source container where backups are stored.
     #   Backup vaults are identified by names that are unique to the account
-    #   used to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   used to create them and the Amazon Web Services Region where they
+    #   are created. They consist of lowercase letters, numbers, and
+    #   hyphens.
     #   @return [String]
     #
     # @!attribute [rw] destination_backup_vault_arn
@@ -4199,8 +5810,10 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] idempotency_token
-    #   A customer chosen string that can be used to distinguish between
-    #   calls to `StartCopyJob`.
+    #   A customer-chosen string that you can use to distinguish between
+    #   otherwise identical calls to `StartCopyJob`. Retrying a successful
+    #   request with the same idempotency token results in a success message
+    #   with no action taken.
     #   @return [String]
     #
     # @!attribute [rw] lifecycle
@@ -4209,14 +5822,19 @@ module Aws::Backup
     #   deleted.
     #
     #   Backups transitioned to cold storage must be stored in cold storage
-    #   for a minimum of 90 days. Therefore, on the console, the “expire
-    #   after days” setting must be 90 days greater than the “transition to
-    #   cold after days” setting. The “transition to cold after days”
-    #   setting cannot be changed after a backup has been transitioned to
-    #   cold.
+    #   for a minimum of 90 days. Therefore, on the console, the “retention”
+    #   setting must be 90 days greater than the “transition to cold after
+    #   days” setting. The “transition to cold after days” setting cannot be
+    #   changed after a backup has been transitioned to cold.
     #
-    #   Only Amazon EFS file system backups can be transitioned to cold
-    #   storage.
+    #   Resource types that are able to be transitioned to cold storage are
+    #   listed in the "Lifecycle to cold storage" section of the [ Feature
+    #   availability by resource][1] table. Backup ignores this expression
+    #   for other resource types.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #   @return [Types::Lifecycle]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/StartCopyJobInput AWS API Documentation
@@ -4243,28 +5861,58 @@ module Aws::Backup
     #   represents Friday, January 26, 2018 12:11:30.087 AM.
     #   @return [Time]
     #
+    # @!attribute [rw] is_parent
+    #   This is a returned boolean value indicating this is a parent
+    #   (composite) copy job.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/StartCopyJobOutput AWS API Documentation
     #
     class StartCopyJobOutput < Struct.new(
       :copy_job_id,
-      :creation_date)
+      :creation_date,
+      :is_parent)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartRestoreJobInput
-    #   data as a hash:
+    # @!attribute [rw] report_plan_name
+    #   The unique name of a report plan.
+    #   @return [String]
     #
-    #       {
-    #         recovery_point_arn: "ARN", # required
-    #         metadata: { # required
-    #           "MetadataKey" => "MetadataValue",
-    #         },
-    #         iam_role_arn: "IAMRoleArn", # required
-    #         idempotency_token: "string",
-    #         resource_type: "ResourceType",
-    #       }
+    # @!attribute [rw] idempotency_token
+    #   A customer-chosen string that you can use to distinguish between
+    #   otherwise identical calls to `StartReportJobInput`. Retrying a
+    #   successful request with the same idempotency token results in a
+    #   success message with no action taken.
     #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/StartReportJobInput AWS API Documentation
+    #
+    class StartReportJobInput < Struct.new(
+      :report_plan_name,
+      :idempotency_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_job_id
+    #   The identifier of the report job. A unique, randomly generated,
+    #   Unicode, UTF-8 encoded string that is at most 1,024 bytes long. The
+    #   report job ID cannot be edited.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/StartReportJobOutput AWS API Documentation
+    #
+    class StartReportJobOutput < Struct.new(
+      :report_job_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] recovery_point_arn
     #   An ARN that uniquely identifies a recovery point; for example,
     #   `arn:aws:backup:us-east-1:123456789012:recovery-point:1EB3B5E7-9EB0-435A-A80B-108B488B0D45`.
@@ -4284,29 +5932,29 @@ module Aws::Backup
     #   You need to specify specific metadata to restore an Amazon Elastic
     #   File System (Amazon EFS) instance:
     #
-    #   * `file-system-id`\: The ID of the Amazon EFS file system that is
-    #     backed up by AWS Backup. Returned in
+    #   * `file-system-id`: The ID of the Amazon EFS file system that is
+    #     backed up by Backup. Returned in
     #     `GetRecoveryPointRestoreMetadata`.
     #
-    #   * `Encrypted`\: A Boolean value that, if true, specifies that the
+    #   * `Encrypted`: A Boolean value that, if true, specifies that the
     #     file system is encrypted. If `KmsKeyId` is specified, `Encrypted`
     #     must be set to `true`.
     #
-    #   * `KmsKeyId`\: Specifies the AWS KMS key that is used to encrypt the
-    #     restored file system. You can specify a key from another AWS
-    #     account provided that key it is properly shared with your account
-    #     via AWS KMS.
+    #   * `KmsKeyId`: Specifies the Amazon Web Services KMS key that is used
+    #     to encrypt the restored file system. You can specify a key from
+    #     another Amazon Web Services account provided that key it is
+    #     properly shared with your account via Amazon Web Services KMS.
     #
-    #   * `PerformanceMode`\: Specifies the throughput mode of the file
+    #   * `PerformanceMode`: Specifies the throughput mode of the file
     #     system.
     #
-    #   * `CreationToken`\: A user-supplied value that ensures the
-    #     uniqueness (idempotency) of the request.
+    #   * `CreationToken`: A user-supplied value that ensures the uniqueness
+    #     (idempotency) of the request.
     #
-    #   * `newFileSystem`\: A Boolean value that, if true, specifies that
-    #     the recovery point is restored to a new Amazon EFS file system.
+    #   * `newFileSystem`: A Boolean value that, if true, specifies that the
+    #     recovery point is restored to a new Amazon EFS file system.
     #
-    #   * `ItemsToRestore `\: An array of one to five strings where each
+    #   * `ItemsToRestore`: An array of one to five strings where each
     #     string is a file path. Use `ItemsToRestore` to restore specific
     #     files or directories rather than the entire file system. This
     #     parameter is optional. For example,
@@ -4314,19 +5962,27 @@ module Aws::Backup
     #   @return [Hash<String,String>]
     #
     # @!attribute [rw] iam_role_arn
-    #   The Amazon Resource Name (ARN) of the IAM role that AWS Backup uses
-    #   to create the target recovery point; for example,
+    #   The Amazon Resource Name (ARN) of the IAM role that Backup uses to
+    #   create the target resource; for example:
     #   `arn:aws:iam::123456789012:role/S3Access`.
     #   @return [String]
     #
     # @!attribute [rw] idempotency_token
-    #   A customer chosen string that can be used to distinguish between
-    #   calls to `StartRestoreJob`.
+    #   A customer-chosen string that you can use to distinguish between
+    #   otherwise identical calls to `StartRestoreJob`. Retrying a
+    #   successful request with the same idempotency token results in a
+    #   success message with no action taken.
     #   @return [String]
     #
     # @!attribute [rw] resource_type
     #   Starts a job to restore a recovery point for one of the following
     #   resources:
+    #
+    #   * `Aurora` for Amazon Aurora
+    #
+    #   * `DocumentDB` for Amazon DocumentDB (with MongoDB compatibility)
+    #
+    #   * `CloudFormation` for CloudFormation
     #
     #   * `DynamoDB` for Amazon DynamoDB
     #
@@ -4336,12 +5992,29 @@ module Aws::Backup
     #
     #   * `EFS` for Amazon Elastic File System
     #
+    #   * `FSx` for Amazon FSx
+    #
+    #   * `Neptune` for Amazon Neptune
+    #
     #   * `RDS` for Amazon Relational Database Service
     #
-    #   * `Aurora` for Amazon Aurora
+    #   * `Redshift` for Amazon Redshift
     #
-    #   * `Storage Gateway` for AWS Storage Gateway
+    #   * `Storage Gateway` for Storage Gateway
+    #
+    #   * `S3` for Amazon S3
+    #
+    #   * `Timestream` for Amazon Timestream
+    #
+    #   * `VirtualMachine` for virtual machines
     #   @return [String]
+    #
+    # @!attribute [rw] copy_source_tags_to_restored_resource
+    #   This is an optional parameter. If this equals `True`, tags included
+    #   in the backup will be copied to the restored resource.
+    #
+    #   This can only be applied to backups created through Backup.
+    #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/StartRestoreJobInput AWS API Documentation
     #
@@ -4350,7 +6023,8 @@ module Aws::Backup
       :metadata,
       :iam_role_arn,
       :idempotency_token,
-      :resource_type)
+      :resource_type,
+      :copy_source_tags_to_restored_resource)
       SENSITIVE = [:metadata]
       include Aws::Structure
     end
@@ -4367,15 +6041,8 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopBackupJobInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_job_id: "string", # required
-    #       }
-    #
     # @!attribute [rw] backup_job_id
-    #   Uniquely identifies a request to AWS Backup to back up a resource.
+    #   Uniquely identifies a request to Backup to back up a resource.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/StopBackupJobInput AWS API Documentation
@@ -4386,16 +6053,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ARN", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   An ARN that uniquely identifies a resource. The format of the ARN
     #   depends on the type of the tagged resource.
@@ -4403,7 +6060,9 @@ module Aws::Backup
     #
     # @!attribute [rw] tags
     #   Key-value pairs that are used to help organize your resources. You
-    #   can assign your own metadata to the resources you create.
+    #   can assign your own metadata to the resources you create. For
+    #   clarity, this is the structure to assign tags:
+    #   `[\{"Key":"string","Value":"string"\}]`.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/TagResourceInput AWS API Documentation
@@ -4415,14 +6074,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ARN", # required
-    #         tag_key_list: ["string"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   An ARN that uniquely identifies a resource. The format of the ARN
     #   depends on the type of the tagged resource.
@@ -4442,50 +6093,6 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateBackupPlanInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_plan_id: "string", # required
-    #         backup_plan: { # required
-    #           backup_plan_name: "BackupPlanName", # required
-    #           rules: [ # required
-    #             {
-    #               rule_name: "BackupRuleName", # required
-    #               target_backup_vault_name: "BackupVaultName", # required
-    #               schedule_expression: "CronExpression",
-    #               start_window_minutes: 1,
-    #               completion_window_minutes: 1,
-    #               lifecycle: {
-    #                 move_to_cold_storage_after_days: 1,
-    #                 delete_after_days: 1,
-    #               },
-    #               recovery_point_tags: {
-    #                 "TagKey" => "TagValue",
-    #               },
-    #               copy_actions: [
-    #                 {
-    #                   lifecycle: {
-    #                     move_to_cold_storage_after_days: 1,
-    #                     delete_after_days: 1,
-    #                   },
-    #                   destination_backup_vault_arn: "ARN", # required
-    #                 },
-    #               ],
-    #               enable_continuous_backup: false,
-    #             },
-    #           ],
-    #           advanced_backup_settings: [
-    #             {
-    #               resource_type: "ResourceType",
-    #               backup_options: {
-    #                 "BackupOptionKey" => "BackupOptionValue",
-    #               },
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] backup_plan_id
     #   Uniquely identifies a backup plan.
     #   @return [String]
@@ -4515,7 +6122,7 @@ module Aws::Backup
     #   @return [String]
     #
     # @!attribute [rw] creation_date
-    #   The date and time a backup plan is updated, in Unix format and
+    #   The date and time a backup plan is created, in Unix format and
     #   Coordinated Universal Time (UTC). The value of `CreationDate` is
     #   accurate to milliseconds. For example, the value 1516925490.087
     #   represents Friday, January 26, 2018 12:11:30.087 AM.
@@ -4542,18 +6149,75 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateGlobalSettingsInput
-    #   data as a hash:
+    # @!attribute [rw] framework_name
+    #   The unique name of a framework. This name is between 1 and 256
+    #   characters, starting with a letter, and consisting of letters (a-z,
+    #   A-Z), numbers (0-9), and underscores (\_).
+    #   @return [String]
     #
-    #       {
-    #         global_settings: {
-    #           "GlobalSettingsName" => "GlobalSettingsValue",
-    #         },
-    #       }
+    # @!attribute [rw] framework_description
+    #   An optional description of the framework with a maximum 1,024
+    #   characters.
+    #   @return [String]
     #
+    # @!attribute [rw] framework_controls
+    #   A list of the controls that make up the framework. Each control in
+    #   the list has a name, input parameters, and scope.
+    #   @return [Array<Types::FrameworkControl>]
+    #
+    # @!attribute [rw] idempotency_token
+    #   A customer-chosen string that you can use to distinguish between
+    #   otherwise identical calls to `UpdateFrameworkInput`. Retrying a
+    #   successful request with the same idempotency token results in a
+    #   success message with no action taken.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/UpdateFrameworkInput AWS API Documentation
+    #
+    class UpdateFrameworkInput < Struct.new(
+      :framework_name,
+      :framework_description,
+      :framework_controls,
+      :idempotency_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] framework_name
+    #   The unique name of a framework. This name is between 1 and 256
+    #   characters, starting with a letter, and consisting of letters (a-z,
+    #   A-Z), numbers (0-9), and underscores (\_).
+    #   @return [String]
+    #
+    # @!attribute [rw] framework_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
+    #   The format of the ARN depends on the resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_time
+    #   The date and time that a framework is created, in ISO 8601
+    #   representation. The value of `CreationTime` is accurate to
+    #   milliseconds. For example, 2020-07-10T15:00:00.000-08:00 represents
+    #   the 10th of July 2020 at 3:00 PM 8 hours behind UTC.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/UpdateFrameworkOutput AWS API Documentation
+    #
+    class UpdateFrameworkOutput < Struct.new(
+      :framework_name,
+      :framework_arn,
+      :creation_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] global_settings
-    #   A list of resources along with the opt-in preferences for the
-    #   account.
+    #   A value for `isCrossAccountBackupEnabled` and a Region. Example:
+    #   `update-global-settings --global-settings
+    #   isCrossAccountBackupEnabled=false --region us-west-2`.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/UpdateGlobalSettingsInput AWS API Documentation
@@ -4564,23 +6228,11 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateRecoveryPointLifecycleInput
-    #   data as a hash:
-    #
-    #       {
-    #         backup_vault_name: "BackupVaultName", # required
-    #         recovery_point_arn: "ARN", # required
-    #         lifecycle: {
-    #           move_to_cold_storage_after_days: 1,
-    #           delete_after_days: 1,
-    #         },
-    #       }
-    #
     # @!attribute [rw] backup_vault_name
     #   The name of a logical container where backups are stored. Backup
     #   vaults are identified by names that are unique to the account used
-    #   to create them and the AWS Region where they are created. They
-    #   consist of lowercase letters, numbers, and hyphens.
+    #   to create them and the Amazon Web Services Region where they are
+    #   created. They consist of lowercase letters, numbers, and hyphens.
     #   @return [String]
     #
     # @!attribute [rw] recovery_point_arn
@@ -4591,14 +6243,14 @@ module Aws::Backup
     #
     # @!attribute [rw] lifecycle
     #   The lifecycle defines when a protected resource is transitioned to
-    #   cold storage and when it expires. AWS Backup transitions and expires
+    #   cold storage and when it expires. Backup transitions and expires
     #   backups automatically according to the lifecycle that you define.
     #
     #   Backups transitioned to cold storage must be stored in cold storage
-    #   for a minimum of 90 days. Therefore, the “expire after days” setting
-    #   must be 90 days greater than the “transition to cold after days”
-    #   setting. The “transition to cold after days” setting cannot be
-    #   changed after a backup has been transitioned to cold.
+    #   for a minimum of 90 days. Therefore, the “retention” setting must be
+    #   90 days greater than the “transition to cold after days” setting.
+    #   The “transition to cold after days” setting cannot be changed after
+    #   a backup has been transitioned to cold.
     #   @return [Types::Lifecycle]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/UpdateRecoveryPointLifecycleInput AWS API Documentation
@@ -4624,17 +6276,23 @@ module Aws::Backup
     #
     # @!attribute [rw] lifecycle
     #   The lifecycle defines when a protected resource is transitioned to
-    #   cold storage and when it expires. AWS Backup transitions and expires
+    #   cold storage and when it expires. Backup transitions and expires
     #   backups automatically according to the lifecycle that you define.
     #
     #   Backups transitioned to cold storage must be stored in cold storage
-    #   for a minimum of 90 days. Therefore, the “expire after days” setting
-    #   must be 90 days greater than the “transition to cold after days”
-    #   setting. The “transition to cold after days” setting cannot be
-    #   changed after a backup has been transitioned to cold.
+    #   for a minimum of 90 days. Therefore, the “retention” setting must be
+    #   90 days greater than the “transition to cold after days” setting.
+    #   The “transition to cold after days” setting cannot be changed after
+    #   a backup has been transitioned to cold.
     #
-    #   Only Amazon EFS file system backups can be transitioned to cold
-    #   storage.
+    #   Resource types that are able to be transitioned to cold storage are
+    #   listed in the "Lifecycle to cold storage" section of the [ Feature
+    #   availability by resource][1] table. Backup ignores this expression
+    #   for other resource types.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#features-by-resource
     #   @return [Types::Lifecycle]
     #
     # @!attribute [rw] calculated_lifecycle
@@ -4653,24 +6311,105 @@ module Aws::Backup
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateRegionSettingsInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type_opt_in_preference: {
-    #           "ResourceType" => false,
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_type_opt_in_preference
     #   Updates the list of services along with the opt-in preferences for
     #   the Region.
     #   @return [Hash<String,Boolean>]
     #
+    # @!attribute [rw] resource_type_management_preference
+    #   Enables or disables full Backup management of backups for a resource
+    #   type. To enable full Backup management for DynamoDB along with [
+    #   Backup's advanced DynamoDB backup features][1], follow the
+    #   procedure to [ enable advanced DynamoDB backup programmatically][2].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-backup/latest/devguide/advanced-ddb-backup.html
+    #   [2]: https://docs.aws.amazon.com/aws-backup/latest/devguide/advanced-ddb-backup.html#advanced-ddb-backup-enable-cli
+    #   @return [Hash<String,Boolean>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/UpdateRegionSettingsInput AWS API Documentation
     #
     class UpdateRegionSettingsInput < Struct.new(
-      :resource_type_opt_in_preference)
+      :resource_type_opt_in_preference,
+      :resource_type_management_preference)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_plan_name
+    #   The unique name of the report plan. This name is between 1 and 256
+    #   characters, starting with a letter, and consisting of letters (a-z,
+    #   A-Z), numbers (0-9), and underscores (\_).
+    #   @return [String]
+    #
+    # @!attribute [rw] report_plan_description
+    #   An optional description of the report plan with a maximum 1,024
+    #   characters.
+    #   @return [String]
+    #
+    # @!attribute [rw] report_delivery_channel
+    #   A structure that contains information about where to deliver your
+    #   reports, specifically your Amazon S3 bucket name, S3 key prefix, and
+    #   the formats of your reports.
+    #   @return [Types::ReportDeliveryChannel]
+    #
+    # @!attribute [rw] report_setting
+    #   Identifies the report template for the report. Reports are built
+    #   using a report template. The report templates are:
+    #
+    #   `RESOURCE_COMPLIANCE_REPORT | CONTROL_COMPLIANCE_REPORT |
+    #   BACKUP_JOB_REPORT | COPY_JOB_REPORT | RESTORE_JOB_REPORT`
+    #
+    #   If the report template is `RESOURCE_COMPLIANCE_REPORT` or
+    #   `CONTROL_COMPLIANCE_REPORT`, this API resource also describes the
+    #   report coverage by Amazon Web Services Regions and frameworks.
+    #   @return [Types::ReportSetting]
+    #
+    # @!attribute [rw] idempotency_token
+    #   A customer-chosen string that you can use to distinguish between
+    #   otherwise identical calls to `UpdateReportPlanInput`. Retrying a
+    #   successful request with the same idempotency token results in a
+    #   success message with no action taken.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/UpdateReportPlanInput AWS API Documentation
+    #
+    class UpdateReportPlanInput < Struct.new(
+      :report_plan_name,
+      :report_plan_description,
+      :report_delivery_channel,
+      :report_setting,
+      :idempotency_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] report_plan_name
+    #   The unique name of the report plan.
+    #   @return [String]
+    #
+    # @!attribute [rw] report_plan_arn
+    #   An Amazon Resource Name (ARN) that uniquely identifies a resource.
+    #   The format of the ARN depends on the resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_time
+    #   The date and time that a report plan is created, in Unix format and
+    #   Coordinated Universal Time (UTC). The value of `CreationTime` is
+    #   accurate to milliseconds. For example, the value 1516925490.087
+    #   represents Friday, January 26, 2018 12:11:30.087 AM.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/backup-2018-11-15/UpdateReportPlanOutput AWS API Documentation
+    #
+    class UpdateReportPlanOutput < Struct.new(
+      :report_plan_name,
+      :report_plan_arn,
+      :creation_time)
       SENSITIVE = []
       include Aws::Structure
     end

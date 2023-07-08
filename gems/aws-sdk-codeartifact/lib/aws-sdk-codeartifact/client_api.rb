@@ -15,6 +15,8 @@ module Aws::CodeArtifact
 
     AccessDeniedException = Shapes::StructureShape.new(name: 'AccessDeniedException')
     AccountId = Shapes::StringShape.new(name: 'AccountId')
+    AllowPublish = Shapes::StringShape.new(name: 'AllowPublish')
+    AllowUpstream = Shapes::StringShape.new(name: 'AllowUpstream')
     Arn = Shapes::StringShape.new(name: 'Arn')
     Asset = Shapes::BlobShape.new(name: 'Asset', streaming: true)
     AssetHashes = Shapes::MapShape.new(name: 'AssetHashes')
@@ -36,6 +38,8 @@ module Aws::CodeArtifact
     DeleteDomainPermissionsPolicyResult = Shapes::StructureShape.new(name: 'DeleteDomainPermissionsPolicyResult')
     DeleteDomainRequest = Shapes::StructureShape.new(name: 'DeleteDomainRequest')
     DeleteDomainResult = Shapes::StructureShape.new(name: 'DeleteDomainResult')
+    DeletePackageRequest = Shapes::StructureShape.new(name: 'DeletePackageRequest')
+    DeletePackageResult = Shapes::StructureShape.new(name: 'DeletePackageResult')
     DeletePackageVersionsRequest = Shapes::StructureShape.new(name: 'DeletePackageVersionsRequest')
     DeletePackageVersionsResult = Shapes::StructureShape.new(name: 'DeletePackageVersionsResult')
     DeleteRepositoryPermissionsPolicyRequest = Shapes::StructureShape.new(name: 'DeleteRepositoryPermissionsPolicyRequest')
@@ -44,6 +48,8 @@ module Aws::CodeArtifact
     DeleteRepositoryResult = Shapes::StructureShape.new(name: 'DeleteRepositoryResult')
     DescribeDomainRequest = Shapes::StructureShape.new(name: 'DescribeDomainRequest')
     DescribeDomainResult = Shapes::StructureShape.new(name: 'DescribeDomainResult')
+    DescribePackageRequest = Shapes::StructureShape.new(name: 'DescribePackageRequest')
+    DescribePackageResult = Shapes::StructureShape.new(name: 'DescribePackageResult')
     DescribePackageVersionRequest = Shapes::StructureShape.new(name: 'DescribePackageVersionRequest')
     DescribePackageVersionResult = Shapes::StructureShape.new(name: 'DescribePackageVersionResult')
     DescribeRepositoryRequest = Shapes::StructureShape.new(name: 'DescribeRepositoryRequest')
@@ -54,6 +60,7 @@ module Aws::CodeArtifact
     DisposePackageVersionsRequest = Shapes::StructureShape.new(name: 'DisposePackageVersionsRequest')
     DisposePackageVersionsResult = Shapes::StructureShape.new(name: 'DisposePackageVersionsResult')
     DomainDescription = Shapes::StructureShape.new(name: 'DomainDescription')
+    DomainEntryPoint = Shapes::StructureShape.new(name: 'DomainEntryPoint')
     DomainName = Shapes::StringShape.new(name: 'DomainName')
     DomainStatus = Shapes::StringShape.new(name: 'DomainStatus')
     DomainSummary = Shapes::StructureShape.new(name: 'DomainSummary')
@@ -105,9 +112,12 @@ module Aws::CodeArtifact
     LongOptional = Shapes::IntegerShape.new(name: 'LongOptional')
     PackageDependency = Shapes::StructureShape.new(name: 'PackageDependency')
     PackageDependencyList = Shapes::ListShape.new(name: 'PackageDependencyList')
+    PackageDescription = Shapes::StructureShape.new(name: 'PackageDescription')
     PackageFormat = Shapes::StringShape.new(name: 'PackageFormat')
     PackageName = Shapes::StringShape.new(name: 'PackageName')
     PackageNamespace = Shapes::StringShape.new(name: 'PackageNamespace')
+    PackageOriginConfiguration = Shapes::StructureShape.new(name: 'PackageOriginConfiguration')
+    PackageOriginRestrictions = Shapes::StructureShape.new(name: 'PackageOriginRestrictions')
     PackageSummary = Shapes::StructureShape.new(name: 'PackageSummary')
     PackageSummaryList = Shapes::ListShape.new(name: 'PackageSummaryList')
     PackageVersion = Shapes::StringShape.new(name: 'PackageVersion')
@@ -116,6 +126,8 @@ module Aws::CodeArtifact
     PackageVersionErrorCode = Shapes::StringShape.new(name: 'PackageVersionErrorCode')
     PackageVersionErrorMap = Shapes::MapShape.new(name: 'PackageVersionErrorMap')
     PackageVersionList = Shapes::ListShape.new(name: 'PackageVersionList')
+    PackageVersionOrigin = Shapes::StructureShape.new(name: 'PackageVersionOrigin')
+    PackageVersionOriginType = Shapes::StringShape.new(name: 'PackageVersionOriginType')
     PackageVersionRevision = Shapes::StringShape.new(name: 'PackageVersionRevision')
     PackageVersionRevisionMap = Shapes::MapShape.new(name: 'PackageVersionRevisionMap')
     PackageVersionSortType = Shapes::StringShape.new(name: 'PackageVersionSortType')
@@ -125,8 +137,12 @@ module Aws::CodeArtifact
     PaginationToken = Shapes::StringShape.new(name: 'PaginationToken')
     PolicyDocument = Shapes::StringShape.new(name: 'PolicyDocument')
     PolicyRevision = Shapes::StringShape.new(name: 'PolicyRevision')
+    PublishPackageVersionRequest = Shapes::StructureShape.new(name: 'PublishPackageVersionRequest')
+    PublishPackageVersionResult = Shapes::StructureShape.new(name: 'PublishPackageVersionResult')
     PutDomainPermissionsPolicyRequest = Shapes::StructureShape.new(name: 'PutDomainPermissionsPolicyRequest')
     PutDomainPermissionsPolicyResult = Shapes::StructureShape.new(name: 'PutDomainPermissionsPolicyResult')
+    PutPackageOriginConfigurationRequest = Shapes::StructureShape.new(name: 'PutPackageOriginConfigurationRequest')
+    PutPackageOriginConfigurationResult = Shapes::StructureShape.new(name: 'PutPackageOriginConfigurationResult')
     PutRepositoryPermissionsPolicyRequest = Shapes::StructureShape.new(name: 'PutRepositoryPermissionsPolicyRequest')
     PutRepositoryPermissionsPolicyResult = Shapes::StructureShape.new(name: 'PutRepositoryPermissionsPolicyResult')
     RepositoryDescription = Shapes::StructureShape.new(name: 'RepositoryDescription')
@@ -139,6 +155,7 @@ module Aws::CodeArtifact
     ResourcePolicy = Shapes::StructureShape.new(name: 'ResourcePolicy')
     ResourceType = Shapes::StringShape.new(name: 'ResourceType')
     RetryAfterSeconds = Shapes::IntegerShape.new(name: 'RetryAfterSeconds')
+    SHA256 = Shapes::StringShape.new(name: 'SHA256')
     ServiceQuotaExceededException = Shapes::StructureShape.new(name: 'ServiceQuotaExceededException')
     String = Shapes::StringShape.new(name: 'String')
     String255 = Shapes::StringShape.new(name: 'String255')
@@ -244,6 +261,17 @@ module Aws::CodeArtifact
     DeleteDomainResult.add_member(:domain, Shapes::ShapeRef.new(shape: DomainDescription, location_name: "domain"))
     DeleteDomainResult.struct_class = Types::DeleteDomainResult
 
+    DeletePackageRequest.add_member(:domain, Shapes::ShapeRef.new(shape: DomainName, required: true, location: "querystring", location_name: "domain"))
+    DeletePackageRequest.add_member(:domain_owner, Shapes::ShapeRef.new(shape: AccountId, location: "querystring", location_name: "domain-owner"))
+    DeletePackageRequest.add_member(:repository, Shapes::ShapeRef.new(shape: RepositoryName, required: true, location: "querystring", location_name: "repository"))
+    DeletePackageRequest.add_member(:format, Shapes::ShapeRef.new(shape: PackageFormat, required: true, location: "querystring", location_name: "format"))
+    DeletePackageRequest.add_member(:namespace, Shapes::ShapeRef.new(shape: PackageNamespace, location: "querystring", location_name: "namespace"))
+    DeletePackageRequest.add_member(:package, Shapes::ShapeRef.new(shape: PackageName, required: true, location: "querystring", location_name: "package"))
+    DeletePackageRequest.struct_class = Types::DeletePackageRequest
+
+    DeletePackageResult.add_member(:deleted_package, Shapes::ShapeRef.new(shape: PackageSummary, location_name: "deletedPackage"))
+    DeletePackageResult.struct_class = Types::DeletePackageResult
+
     DeletePackageVersionsRequest.add_member(:domain, Shapes::ShapeRef.new(shape: DomainName, required: true, location: "querystring", location_name: "domain"))
     DeletePackageVersionsRequest.add_member(:domain_owner, Shapes::ShapeRef.new(shape: AccountId, location: "querystring", location_name: "domain-owner"))
     DeletePackageVersionsRequest.add_member(:repository, Shapes::ShapeRef.new(shape: RepositoryName, required: true, location: "querystring", location_name: "repository"))
@@ -281,6 +309,17 @@ module Aws::CodeArtifact
 
     DescribeDomainResult.add_member(:domain, Shapes::ShapeRef.new(shape: DomainDescription, location_name: "domain"))
     DescribeDomainResult.struct_class = Types::DescribeDomainResult
+
+    DescribePackageRequest.add_member(:domain, Shapes::ShapeRef.new(shape: DomainName, required: true, location: "querystring", location_name: "domain"))
+    DescribePackageRequest.add_member(:domain_owner, Shapes::ShapeRef.new(shape: AccountId, location: "querystring", location_name: "domain-owner"))
+    DescribePackageRequest.add_member(:repository, Shapes::ShapeRef.new(shape: RepositoryName, required: true, location: "querystring", location_name: "repository"))
+    DescribePackageRequest.add_member(:format, Shapes::ShapeRef.new(shape: PackageFormat, required: true, location: "querystring", location_name: "format"))
+    DescribePackageRequest.add_member(:namespace, Shapes::ShapeRef.new(shape: PackageNamespace, location: "querystring", location_name: "namespace"))
+    DescribePackageRequest.add_member(:package, Shapes::ShapeRef.new(shape: PackageName, required: true, location: "querystring", location_name: "package"))
+    DescribePackageRequest.struct_class = Types::DescribePackageRequest
+
+    DescribePackageResult.add_member(:package, Shapes::ShapeRef.new(shape: PackageDescription, required: true, location_name: "package"))
+    DescribePackageResult.struct_class = Types::DescribePackageResult
 
     DescribePackageVersionRequest.add_member(:domain, Shapes::ShapeRef.new(shape: DomainName, required: true, location: "querystring", location_name: "domain"))
     DescribePackageVersionRequest.add_member(:domain_owner, Shapes::ShapeRef.new(shape: AccountId, location: "querystring", location_name: "domain-owner"))
@@ -336,6 +375,10 @@ module Aws::CodeArtifact
     DomainDescription.add_member(:asset_size_bytes, Shapes::ShapeRef.new(shape: Long, location_name: "assetSizeBytes"))
     DomainDescription.add_member(:s3_bucket_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "s3BucketArn"))
     DomainDescription.struct_class = Types::DomainDescription
+
+    DomainEntryPoint.add_member(:repository_name, Shapes::ShapeRef.new(shape: RepositoryName, location_name: "repositoryName"))
+    DomainEntryPoint.add_member(:external_connection_name, Shapes::ShapeRef.new(shape: ExternalConnectionName, location_name: "externalConnectionName"))
+    DomainEntryPoint.struct_class = Types::DomainEntryPoint
 
     DomainSummary.add_member(:name, Shapes::ShapeRef.new(shape: DomainName, location_name: "name"))
     DomainSummary.add_member(:owner, Shapes::ShapeRef.new(shape: AccountId, location_name: "owner"))
@@ -482,6 +525,7 @@ module Aws::CodeArtifact
     ListPackageVersionsRequest.add_member(:sort_by, Shapes::ShapeRef.new(shape: PackageVersionSortType, location: "querystring", location_name: "sortBy"))
     ListPackageVersionsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: ListPackageVersionsMaxResults, location: "querystring", location_name: "max-results"))
     ListPackageVersionsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location: "querystring", location_name: "next-token"))
+    ListPackageVersionsRequest.add_member(:origin_type, Shapes::ShapeRef.new(shape: PackageVersionOriginType, location: "querystring", location_name: "originType"))
     ListPackageVersionsRequest.struct_class = Types::ListPackageVersionsRequest
 
     ListPackageVersionsResult.add_member(:default_display_version, Shapes::ShapeRef.new(shape: PackageVersion, location_name: "defaultDisplayVersion"))
@@ -500,6 +544,8 @@ module Aws::CodeArtifact
     ListPackagesRequest.add_member(:package_prefix, Shapes::ShapeRef.new(shape: PackageName, location: "querystring", location_name: "package-prefix"))
     ListPackagesRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: ListPackagesMaxResults, location: "querystring", location_name: "max-results"))
     ListPackagesRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location: "querystring", location_name: "next-token"))
+    ListPackagesRequest.add_member(:publish, Shapes::ShapeRef.new(shape: AllowPublish, location: "querystring", location_name: "publish"))
+    ListPackagesRequest.add_member(:upstream, Shapes::ShapeRef.new(shape: AllowUpstream, location: "querystring", location_name: "upstream"))
     ListPackagesRequest.struct_class = Types::ListPackagesRequest
 
     ListPackagesResult.add_member(:packages, Shapes::ShapeRef.new(shape: PackageSummaryList, location_name: "packages"))
@@ -541,9 +587,23 @@ module Aws::CodeArtifact
 
     PackageDependencyList.member = Shapes::ShapeRef.new(shape: PackageDependency)
 
+    PackageDescription.add_member(:format, Shapes::ShapeRef.new(shape: PackageFormat, location_name: "format"))
+    PackageDescription.add_member(:namespace, Shapes::ShapeRef.new(shape: PackageNamespace, location_name: "namespace"))
+    PackageDescription.add_member(:name, Shapes::ShapeRef.new(shape: PackageName, location_name: "name"))
+    PackageDescription.add_member(:origin_configuration, Shapes::ShapeRef.new(shape: PackageOriginConfiguration, location_name: "originConfiguration"))
+    PackageDescription.struct_class = Types::PackageDescription
+
+    PackageOriginConfiguration.add_member(:restrictions, Shapes::ShapeRef.new(shape: PackageOriginRestrictions, location_name: "restrictions"))
+    PackageOriginConfiguration.struct_class = Types::PackageOriginConfiguration
+
+    PackageOriginRestrictions.add_member(:publish, Shapes::ShapeRef.new(shape: AllowPublish, required: true, location_name: "publish"))
+    PackageOriginRestrictions.add_member(:upstream, Shapes::ShapeRef.new(shape: AllowUpstream, required: true, location_name: "upstream"))
+    PackageOriginRestrictions.struct_class = Types::PackageOriginRestrictions
+
     PackageSummary.add_member(:format, Shapes::ShapeRef.new(shape: PackageFormat, location_name: "format"))
     PackageSummary.add_member(:namespace, Shapes::ShapeRef.new(shape: PackageNamespace, location_name: "namespace"))
     PackageSummary.add_member(:package, Shapes::ShapeRef.new(shape: PackageName, location_name: "package"))
+    PackageSummary.add_member(:origin_configuration, Shapes::ShapeRef.new(shape: PackageOriginConfiguration, location_name: "originConfiguration"))
     PackageSummary.struct_class = Types::PackageSummary
 
     PackageSummaryList.member = Shapes::ShapeRef.new(shape: PackageSummary)
@@ -560,6 +620,7 @@ module Aws::CodeArtifact
     PackageVersionDescription.add_member(:licenses, Shapes::ShapeRef.new(shape: LicenseInfoList, location_name: "licenses"))
     PackageVersionDescription.add_member(:revision, Shapes::ShapeRef.new(shape: PackageVersionRevision, location_name: "revision"))
     PackageVersionDescription.add_member(:status, Shapes::ShapeRef.new(shape: PackageVersionStatus, location_name: "status"))
+    PackageVersionDescription.add_member(:origin, Shapes::ShapeRef.new(shape: PackageVersionOrigin, location_name: "origin"))
     PackageVersionDescription.struct_class = Types::PackageVersionDescription
 
     PackageVersionError.add_member(:error_code, Shapes::ShapeRef.new(shape: PackageVersionErrorCode, location_name: "errorCode"))
@@ -571,15 +632,44 @@ module Aws::CodeArtifact
 
     PackageVersionList.member = Shapes::ShapeRef.new(shape: PackageVersion)
 
+    PackageVersionOrigin.add_member(:domain_entry_point, Shapes::ShapeRef.new(shape: DomainEntryPoint, location_name: "domainEntryPoint"))
+    PackageVersionOrigin.add_member(:origin_type, Shapes::ShapeRef.new(shape: PackageVersionOriginType, location_name: "originType"))
+    PackageVersionOrigin.struct_class = Types::PackageVersionOrigin
+
     PackageVersionRevisionMap.key = Shapes::ShapeRef.new(shape: PackageVersion)
     PackageVersionRevisionMap.value = Shapes::ShapeRef.new(shape: PackageVersionRevision)
 
     PackageVersionSummary.add_member(:version, Shapes::ShapeRef.new(shape: PackageVersion, required: true, location_name: "version"))
     PackageVersionSummary.add_member(:revision, Shapes::ShapeRef.new(shape: PackageVersionRevision, location_name: "revision"))
     PackageVersionSummary.add_member(:status, Shapes::ShapeRef.new(shape: PackageVersionStatus, required: true, location_name: "status"))
+    PackageVersionSummary.add_member(:origin, Shapes::ShapeRef.new(shape: PackageVersionOrigin, location_name: "origin"))
     PackageVersionSummary.struct_class = Types::PackageVersionSummary
 
     PackageVersionSummaryList.member = Shapes::ShapeRef.new(shape: PackageVersionSummary)
+
+    PublishPackageVersionRequest.add_member(:domain, Shapes::ShapeRef.new(shape: DomainName, required: true, location: "querystring", location_name: "domain"))
+    PublishPackageVersionRequest.add_member(:domain_owner, Shapes::ShapeRef.new(shape: AccountId, location: "querystring", location_name: "domain-owner"))
+    PublishPackageVersionRequest.add_member(:repository, Shapes::ShapeRef.new(shape: RepositoryName, required: true, location: "querystring", location_name: "repository"))
+    PublishPackageVersionRequest.add_member(:format, Shapes::ShapeRef.new(shape: PackageFormat, required: true, location: "querystring", location_name: "format"))
+    PublishPackageVersionRequest.add_member(:namespace, Shapes::ShapeRef.new(shape: PackageNamespace, location: "querystring", location_name: "namespace"))
+    PublishPackageVersionRequest.add_member(:package, Shapes::ShapeRef.new(shape: PackageName, required: true, location: "querystring", location_name: "package"))
+    PublishPackageVersionRequest.add_member(:package_version, Shapes::ShapeRef.new(shape: PackageVersion, required: true, location: "querystring", location_name: "version"))
+    PublishPackageVersionRequest.add_member(:asset_content, Shapes::ShapeRef.new(shape: Asset, required: true, location_name: "assetContent"))
+    PublishPackageVersionRequest.add_member(:asset_name, Shapes::ShapeRef.new(shape: AssetName, required: true, location: "querystring", location_name: "asset"))
+    PublishPackageVersionRequest.add_member(:asset_sha256, Shapes::ShapeRef.new(shape: SHA256, required: true, location: "header", location_name: "x-amz-content-sha256"))
+    PublishPackageVersionRequest.add_member(:unfinished, Shapes::ShapeRef.new(shape: BooleanOptional, location: "querystring", location_name: "unfinished"))
+    PublishPackageVersionRequest.struct_class = Types::PublishPackageVersionRequest
+    PublishPackageVersionRequest[:payload] = :asset_content
+    PublishPackageVersionRequest[:payload_member] = PublishPackageVersionRequest.member(:asset_content)
+
+    PublishPackageVersionResult.add_member(:format, Shapes::ShapeRef.new(shape: PackageFormat, location_name: "format"))
+    PublishPackageVersionResult.add_member(:namespace, Shapes::ShapeRef.new(shape: PackageNamespace, location_name: "namespace"))
+    PublishPackageVersionResult.add_member(:package, Shapes::ShapeRef.new(shape: PackageName, location_name: "package"))
+    PublishPackageVersionResult.add_member(:version, Shapes::ShapeRef.new(shape: PackageVersion, location_name: "version"))
+    PublishPackageVersionResult.add_member(:version_revision, Shapes::ShapeRef.new(shape: PackageVersionRevision, location_name: "versionRevision"))
+    PublishPackageVersionResult.add_member(:status, Shapes::ShapeRef.new(shape: PackageVersionStatus, location_name: "status"))
+    PublishPackageVersionResult.add_member(:asset, Shapes::ShapeRef.new(shape: AssetSummary, location_name: "asset"))
+    PublishPackageVersionResult.struct_class = Types::PublishPackageVersionResult
 
     PutDomainPermissionsPolicyRequest.add_member(:domain, Shapes::ShapeRef.new(shape: DomainName, required: true, location_name: "domain"))
     PutDomainPermissionsPolicyRequest.add_member(:domain_owner, Shapes::ShapeRef.new(shape: AccountId, location_name: "domainOwner"))
@@ -589,6 +679,18 @@ module Aws::CodeArtifact
 
     PutDomainPermissionsPolicyResult.add_member(:policy, Shapes::ShapeRef.new(shape: ResourcePolicy, location_name: "policy"))
     PutDomainPermissionsPolicyResult.struct_class = Types::PutDomainPermissionsPolicyResult
+
+    PutPackageOriginConfigurationRequest.add_member(:domain, Shapes::ShapeRef.new(shape: DomainName, required: true, location: "querystring", location_name: "domain"))
+    PutPackageOriginConfigurationRequest.add_member(:domain_owner, Shapes::ShapeRef.new(shape: AccountId, location: "querystring", location_name: "domain-owner"))
+    PutPackageOriginConfigurationRequest.add_member(:repository, Shapes::ShapeRef.new(shape: RepositoryName, required: true, location: "querystring", location_name: "repository"))
+    PutPackageOriginConfigurationRequest.add_member(:format, Shapes::ShapeRef.new(shape: PackageFormat, required: true, location: "querystring", location_name: "format"))
+    PutPackageOriginConfigurationRequest.add_member(:namespace, Shapes::ShapeRef.new(shape: PackageNamespace, location: "querystring", location_name: "namespace"))
+    PutPackageOriginConfigurationRequest.add_member(:package, Shapes::ShapeRef.new(shape: PackageName, required: true, location: "querystring", location_name: "package"))
+    PutPackageOriginConfigurationRequest.add_member(:restrictions, Shapes::ShapeRef.new(shape: PackageOriginRestrictions, required: true, location_name: "restrictions"))
+    PutPackageOriginConfigurationRequest.struct_class = Types::PutPackageOriginConfigurationRequest
+
+    PutPackageOriginConfigurationResult.add_member(:origin_configuration, Shapes::ShapeRef.new(shape: PackageOriginConfiguration, location_name: "originConfiguration"))
+    PutPackageOriginConfigurationResult.struct_class = Types::PutPackageOriginConfigurationResult
 
     PutRepositoryPermissionsPolicyRequest.add_member(:domain, Shapes::ShapeRef.new(shape: DomainName, required: true, location: "querystring", location_name: "domain"))
     PutRepositoryPermissionsPolicyRequest.add_member(:domain_owner, Shapes::ShapeRef.new(shape: AccountId, location: "querystring", location_name: "domain-owner"))
@@ -608,6 +710,7 @@ module Aws::CodeArtifact
     RepositoryDescription.add_member(:description, Shapes::ShapeRef.new(shape: Description, location_name: "description"))
     RepositoryDescription.add_member(:upstreams, Shapes::ShapeRef.new(shape: UpstreamRepositoryInfoList, location_name: "upstreams"))
     RepositoryDescription.add_member(:external_connections, Shapes::ShapeRef.new(shape: RepositoryExternalConnectionInfoList, location_name: "externalConnections"))
+    RepositoryDescription.add_member(:created_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "createdTime"))
     RepositoryDescription.struct_class = Types::RepositoryDescription
 
     RepositoryExternalConnectionInfo.add_member(:external_connection_name, Shapes::ShapeRef.new(shape: ExternalConnectionName, location_name: "externalConnectionName"))
@@ -623,6 +726,7 @@ module Aws::CodeArtifact
     RepositorySummary.add_member(:domain_owner, Shapes::ShapeRef.new(shape: AccountId, location_name: "domainOwner"))
     RepositorySummary.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "arn"))
     RepositorySummary.add_member(:description, Shapes::ShapeRef.new(shape: Description, location_name: "description"))
+    RepositorySummary.add_member(:created_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "createdTime"))
     RepositorySummary.struct_class = Types::RepositorySummary
 
     RepositorySummaryList.member = Shapes::ShapeRef.new(shape: RepositorySummary)
@@ -818,6 +922,20 @@ module Aws::CodeArtifact
         o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
+      api.add_operation(:delete_package, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeletePackage"
+        o.http_method = "DELETE"
+        o.http_request_uri = "/v1/package"
+        o.input = Shapes::ShapeRef.new(shape: DeletePackageRequest)
+        o.output = Shapes::ShapeRef.new(shape: DeletePackageResult)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+      end)
+
       api.add_operation(:delete_package_versions, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DeletePackageVersions"
         o.http_method = "POST"
@@ -866,6 +984,19 @@ module Aws::CodeArtifact
         o.http_request_uri = "/v1/domain"
         o.input = Shapes::ShapeRef.new(shape: DescribeDomainRequest)
         o.output = Shapes::ShapeRef.new(shape: DescribeDomainResult)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+      end)
+
+      api.add_operation(:describe_package, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribePackage"
+        o.http_method = "GET"
+        o.http_request_uri = "/v1/package"
+        o.input = Shapes::ShapeRef.new(shape: DescribePackageRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribePackageResult)
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
@@ -1145,6 +1276,21 @@ module Aws::CodeArtifact
         o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
+      api.add_operation(:publish_package_version, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "PublishPackageVersion"
+        o.http_method = "POST"
+        o.http_request_uri = "/v1/package/version/publish"
+        o.input = Shapes::ShapeRef.new(shape: PublishPackageVersionRequest)
+        o.output = Shapes::ShapeRef.new(shape: PublishPackageVersionResult)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ConflictException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceQuotaExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+      end)
+
       api.add_operation(:put_domain_permissions_policy, Seahorse::Model::Operation.new.tap do |o|
         o.name = "PutDomainPermissionsPolicy"
         o.http_method = "PUT"
@@ -1156,6 +1302,19 @@ module Aws::CodeArtifact
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: ServiceQuotaExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+      end)
+
+      api.add_operation(:put_package_origin_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "PutPackageOriginConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/v1/package"
+        o.input = Shapes::ShapeRef.new(shape: PutPackageOriginConfigurationRequest)
+        o.output = Shapes::ShapeRef.new(shape: PutPackageOriginConfigurationResult)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
         o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)

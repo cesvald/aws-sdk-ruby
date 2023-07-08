@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:resourcegroupstaggingapi)
@@ -73,8 +77,13 @@ module Aws::ResourceGroupsTaggingAPI
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::ResourceGroupsTaggingAPI::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::ResourceGroupsTaggingAPI
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::ResourceGroupsTaggingAPI
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::ResourceGroupsTaggingAPI
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::ResourceGroupsTaggingAPI
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::ResourceGroupsTaggingAPI
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::ResourceGroupsTaggingAPI::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::ResourceGroupsTaggingAPI::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::ResourceGroupsTaggingAPI
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::ResourceGroupsTaggingAPI
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -367,7 +424,7 @@ module Aws::ResourceGroupsTaggingAPI
     # with their tag policies.
     #
     # For more information on tag policies, see [Tag Policies][1] in the
-    # *AWS Organizations User Guide.*
+    # *Organizations User Guide.*
     #
     # You can call this operation only from the organization's management
     # account and from the us-east-1 Region.
@@ -391,9 +448,9 @@ module Aws::ResourceGroupsTaggingAPI
     #   target IDs.
     #
     # @option params [Array<String>] :region_filters
-    #   Specifies a list of AWS Regions to limit the output by. If you use
-    #   this parameter, the count of returned noncompliant resources includes
-    #   only resources in the specified Regions.
+    #   Specifies a list of Amazon Web Services Regions to limit the output
+    #   to. If you use this parameter, the count of returned noncompliant
+    #   resources includes only resources in the specified Regions.
     #
     # @option params [Array<String>] :resource_type_filters
     #   Specifies that you want the response to include information for only
@@ -404,15 +461,17 @@ module Aws::ResourceGroupsTaggingAPI
     #   instances.
     #
     #   The string for each service name and resource type is the same as that
-    #   embedded in a resource's Amazon Resource Name (ARN). Consult the *AWS
-    #   General Reference* for the following:
+    #   embedded in a resource's Amazon Resource Name (ARN). Consult the <i>
+    #   <a href="https://docs.aws.amazon.com/general/latest/gr/">Amazon Web
+    #   Services General Reference</a> </i> for the following:
     #
-    #   * For a list of service name strings, see [AWS Service Namespaces][1].
+    #   * For a list of service name strings, see [Amazon Web Services Service
+    #     Namespaces][1].
     #
     #   * For resource type strings, see [Example ARNs][2].
     #
     #   * For more information about ARNs, see [Amazon Resource Names (ARNs)
-    #     and AWS Service Namespaces][3].
+    #     and Amazon Web Services Service Namespaces][3].
     #
     #   You can specify multiple resource types by using a comma separated
     #   array. The array can include up to 100 items. Note that the length
@@ -486,7 +545,7 @@ module Aws::ResourceGroupsTaggingAPI
     end
 
     # Returns all the tagged or previously tagged resources that are located
-    # in the specified Region for the AWS account.
+    # in the specified Amazon Web Services Region for the account.
     #
     # Depending on what information you want returned, you can also specify
     # the following:
@@ -497,7 +556,7 @@ module Aws::ResourceGroupsTaggingAPI
     #
     # * Information about compliance with the account's effective tag
     #   policy. For more information on tag policies, see [Tag Policies][1]
-    #   in the *AWS Organizations User Guide.*
+    #   in the *Organizations User Guide.*
     #
     # This operation supports pagination, where the response can be sent in
     # multiple pages. You should check the `PaginationToken` response
@@ -518,10 +577,10 @@ module Aws::ResourceGroupsTaggingAPI
     #
     # @option params [Array<Types::TagFilter>] :tag_filters
     #   Specifies a list of TagFilters (keys and values) to restrict the
-    #   output to only those resources that have the specified tag and, if
-    #   included, the specified value. Each `TagFilter` must contain a key
-    #   with values optional. A request can include up to 50 keys, and each
-    #   key can include up to 20 values.
+    #   output to only those resources that have tags with the specified keys
+    #   and, if included, the specified values. Each `TagFilter` must contain
+    #   a key with values optional. A request can include up to 50 keys, and
+    #   each key can include up to 20 values.
     #
     #   Note the following when deciding how to use TagFilters:
     #
@@ -534,15 +593,15 @@ module Aws::ResourceGroupsTaggingAPI
     #     response returns only those resources that satisfy all filters.
     #
     #   * If you specify a filter that contains more than one value for a key,
-    #     the response returns resources that match any of the specified
+    #     the response returns resources that match *any* of the specified
     #     values for that key.
     #
-    #   * If you don't specify any values for a key, the response returns
-    #     resources that are tagged with that key and any or no value.
+    #   * If you don't specify a value for a key, the response returns all
+    #     resources that are tagged with that key, with any or no value.
     #
     #     For example, for the following filters: `filter1=
     #     \{keyA,\{value1\}\}`, `filter2=\{keyB,\{value2,value3,value4\}\}`,
-    #     `filter3= \{keyC\}`\:
+    #     `filter3= \{keyC\}`:
     #
     #     * `GetResources(\{filter1\})` returns resources tagged with
     #       `key1=value1`
@@ -565,7 +624,8 @@ module Aws::ResourceGroupsTaggingAPI
     #   minimum of 1 and a maximum value of 100.
     #
     # @option params [Integer] :tags_per_page
-    #   AWS recommends using `ResourcesPerPage` instead of this parameter.
+    #   Amazon Web Services recommends using `ResourcesPerPage` instead of
+    #   this parameter.
     #
     #   A limit that restricts the number of tags (key and value pairs)
     #   returned by `GetResources` in paginated output. A resource with no
@@ -593,19 +653,21 @@ module Aws::ResourceGroupsTaggingAPI
     #   of `ec2:instance` returns only EC2 instances.
     #
     #   The string for each service name and resource type is the same as that
-    #   embedded in a resource's Amazon Resource Name (ARN). Consult the *AWS
-    #   General Reference* for the following:
-    #
-    #   For more information about ARNs, see [Amazon Resource Names (ARNs) and
-    #   AWS Service Namespaces][1].
+    #   embedded in a resource's Amazon Resource Name (ARN). For the list of
+    #   services whose resources you can use in this parameter, see [Services
+    #   that support the Resource Groups Tagging API][1].
     #
     #   You can specify multiple resource types by using an array. The array
     #   can include up to 100 items. Note that the length constraint
-    #   requirement applies to each resource type filter.
+    #   requirement applies to each resource type filter. For example, the
+    #   following string would limit the response to only Amazon EC2
+    #   instances, Amazon S3 buckets, or any Audit Manager resource:
+    #
+    #   `ec2:instance,s3:bucket,auditmanager`
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   [1]: https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/supported-services.html
     #
     # @option params [Boolean] :include_compliance_details
     #   Specifies whether to include details regarding the compliance with the
@@ -631,12 +693,12 @@ module Aws::ResourceGroupsTaggingAPI
     #   generate an error; it simply isn't included in the response.
     #
     #   An ARN (Amazon Resource Name) uniquely identifies a resource. For more
-    #   information, see [Amazon Resource Names (ARNs) and AWS Service
-    #   Namespaces][1] in the *AWS General Reference*.
+    #   information, see [Amazon Resource Names (ARNs) and Amazon Web Services
+    #   Service Namespaces][1] in the *Amazon Web Services General Reference*.
     #
     #
     #
-    #   [1]: http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
     #
     # @return [Types::GetResourcesOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -686,8 +748,8 @@ module Aws::ResourceGroupsTaggingAPI
       req.send_request(options)
     end
 
-    # Returns all tag keys currently in use in the specified Region for the
-    # calling AWS account.
+    # Returns all tag keys currently in use in the specified Amazon Web
+    # Services Region for the calling account.
     #
     # This operation supports pagination, where the response can be sent in
     # multiple pages. You should check the `PaginationToken` response
@@ -731,7 +793,7 @@ module Aws::ResourceGroupsTaggingAPI
     end
 
     # Returns all tag values for the specified key that are used in the
-    # specified AWS Region for the calling AWS account.
+    # specified Amazon Web Services Region for the calling account.
     #
     # This operation supports pagination, where the response can be sent in
     # multiple pages. You should check the `PaginationToken` response
@@ -748,8 +810,8 @@ module Aws::ResourceGroupsTaggingAPI
     #
     # @option params [required, String] :key
     #   Specifies the tag key for which you want to list all existing values
-    #   that are currently used in the specified AWS Region for the calling
-    #   AWS account.
+    #   that are currently used in the specified Amazon Web Services Region
+    #   for the calling account.
     #
     # @return [Types::GetTagValuesOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -823,13 +885,17 @@ module Aws::ResourceGroupsTaggingAPI
     #
     # * Not all resources can have tags. For a list of services with
     #   resources that support tagging using this operation, see [Services
-    #   that support the Resource Groups Tagging API][1].
+    #   that support the Resource Groups Tagging API][1]. If the resource
+    #   doesn't yet support this operation, the resource's service might
+    #   support tagging using its own API operations. For more information,
+    #   refer to the documentation for that service.
     #
     # * Each resource can have up to 50 tags. For other limits, see [Tag
-    #   Naming and Usage Conventions][2] in the *AWS General Reference.*
+    #   Naming and Usage Conventions][2] in the *Amazon Web Services General
+    #   Reference.*
     #
-    # * You can only tag resources that are located in the specified AWS
-    #   Region for the AWS account.
+    # * You can only tag resources that are located in the specified Amazon
+    #   Web Services Region for the Amazon Web Services account.
     #
     # * To add tags to a resource, you need the necessary permissions for
     #   the service that the resource belongs to as well as permissions for
@@ -841,6 +907,18 @@ module Aws::ResourceGroupsTaggingAPI
     # you with billing and administration services. Tags are not intended to
     # be used for private or sensitive data.
     #
+    # **Minimum permissions**
+    #
+    # In addition to the `tag:TagResources` permission required by this
+    # operation, you must also have the tagging permission defined by the
+    # service that created the resource. For example, to tag an Amazon EC2
+    # instance using the `TagResources` operation, you must have both of the
+    # following permissions:
+    #
+    # * `tag:TagResource`
+    #
+    # * `ec2:CreateTags`
+    #
     #
     #
     # [1]: https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/supported-services.html
@@ -851,12 +929,12 @@ module Aws::ResourceGroupsTaggingAPI
     #   tags to.
     #
     #   An ARN (Amazon Resource Name) uniquely identifies a resource. For more
-    #   information, see [Amazon Resource Names (ARNs) and AWS Service
-    #   Namespaces][1] in the *AWS General Reference*.
+    #   information, see [Amazon Resource Names (ARNs) and Amazon Web Services
+    #   Service Namespaces][1] in the *Amazon Web Services General Reference*.
     #
     #
     #
-    #   [1]: http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
     #
     # @option params [required, Hash<String,String>] :tags
     #   Specifies a list of tags that you want to add to the specified
@@ -901,20 +979,32 @@ module Aws::ResourceGroupsTaggingAPI
     #   for removing tags. For more information, see the documentation for
     #   the service whose resource you want to untag.
     #
-    # * You can only tag resources that are located in the specified AWS
-    #   Region for the calling AWS account.
+    # * You can only tag resources that are located in the specified Amazon
+    #   Web Services Region for the calling Amazon Web Services account.
+    #
+    # **Minimum permissions**
+    #
+    # In addition to the `tag:UntagResources` permission required by this
+    # operation, you must also have the remove tags permission defined by
+    # the service that created the resource. For example, to remove the tags
+    # from an Amazon EC2 instance using the `UntagResources` operation, you
+    # must have both of the following permissions:
+    #
+    # * `tag:UntagResource`
+    #
+    # * `ec2:DeleteTags`
     #
     # @option params [required, Array<String>] :resource_arn_list
     #   Specifies a list of ARNs of the resources that you want to remove tags
     #   from.
     #
     #   An ARN (Amazon Resource Name) uniquely identifies a resource. For more
-    #   information, see [Amazon Resource Names (ARNs) and AWS Service
-    #   Namespaces][1] in the *AWS General Reference*.
+    #   information, see [Amazon Resource Names (ARNs) and Amazon Web Services
+    #   Service Namespaces][1] in the *Amazon Web Services General Reference*.
     #
     #
     #
-    #   [1]: http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
     #
     # @option params [required, Array<String>] :tag_keys
     #   Specifies a list of tag keys that you want to remove from the
@@ -960,7 +1050,7 @@ module Aws::ResourceGroupsTaggingAPI
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-resourcegroupstaggingapi'
-      context[:gem_version] = '1.37.0'
+      context[:gem_version] = '1.53.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

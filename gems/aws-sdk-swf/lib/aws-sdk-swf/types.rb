@@ -324,14 +324,6 @@ module Aws::SWF
 
     # Represents an activity type.
     #
-    # @note When making an API call, you may pass ActivityType
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         version: "Version", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of this activity.
     #
@@ -553,13 +545,6 @@ module Aws::SWF
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
     #
-    # @note When making an API call, you may pass CancelTimerDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         timer_id: "TimerId", # required
-    #       }
-    #
     # @!attribute [rw] timer_id
     #   The unique ID of the timer to cancel.
     #   @return [String]
@@ -632,13 +617,6 @@ module Aws::SWF
     #
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
-    #
-    # @note When making an API call, you may pass CancelWorkflowExecutionDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         details: "Data",
-    #       }
     #
     # @!attribute [rw] details
     #   Details of the cancellation.
@@ -908,13 +886,6 @@ module Aws::SWF
     # Used to filter the closed workflow executions in visibility APIs by
     # their close status.
     #
-    # @note When making an API call, you may pass CloseStatusFilter
-    #   data as a hash:
-    #
-    #       {
-    #         status: "COMPLETED", # required, accepts COMPLETED, FAILED, CANCELED, TERMINATED, CONTINUED_AS_NEW, TIMED_OUT
-    #       }
-    #
     # @!attribute [rw] status
     #   The close status that must match the close status of an execution
     #   for it to meet the criteria of this filter.
@@ -951,13 +922,6 @@ module Aws::SWF
     #
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
-    #
-    # @note When making an API call, you may pass CompleteWorkflowExecutionDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         result: "Data",
-    #       }
     #
     # @!attribute [rw] result
     #   The result of the workflow execution. The form of the result is
@@ -1036,23 +1000,6 @@ module Aws::SWF
     #
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
-    #
-    # @note When making an API call, you may pass ContinueAsNewWorkflowExecutionDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         input: "Data",
-    #         execution_start_to_close_timeout: "DurationInSecondsOptional",
-    #         task_list: {
-    #           name: "Name", # required
-    #         },
-    #         task_priority: "TaskPriority",
-    #         task_start_to_close_timeout: "DurationInSecondsOptional",
-    #         child_policy: "TERMINATE", # accepts TERMINATE, REQUEST_CANCEL, ABANDON
-    #         tag_list: ["Tag"],
-    #         workflow_type_version: "Version",
-    #         lambda_role: "Arn",
-    #       }
     #
     # @!attribute [rw] input
     #   The input provided to the new workflow execution.
@@ -1204,34 +1151,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CountClosedWorkflowExecutionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         start_time_filter: {
-    #           oldest_date: Time.now, # required
-    #           latest_date: Time.now,
-    #         },
-    #         close_time_filter: {
-    #           oldest_date: Time.now, # required
-    #           latest_date: Time.now,
-    #         },
-    #         execution_filter: {
-    #           workflow_id: "WorkflowId", # required
-    #         },
-    #         type_filter: {
-    #           name: "Name", # required
-    #           version: "VersionOptional",
-    #         },
-    #         tag_filter: {
-    #           tag: "Tag", # required
-    #         },
-    #         close_status_filter: {
-    #           status: "COMPLETED", # required, accepts COMPLETED, FAILED, CANCELED, TERMINATED, CONTINUED_AS_NEW, TIMED_OUT
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain containing the workflow executions to count.
     #   @return [String]
@@ -1313,27 +1232,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CountOpenWorkflowExecutionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         start_time_filter: { # required
-    #           oldest_date: Time.now, # required
-    #           latest_date: Time.now,
-    #         },
-    #         type_filter: {
-    #           name: "Name", # required
-    #           version: "VersionOptional",
-    #         },
-    #         tag_filter: {
-    #           tag: "Tag", # required
-    #         },
-    #         execution_filter: {
-    #           workflow_id: "WorkflowId", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain containing the workflow executions to count.
     #   @return [String]
@@ -1382,16 +1280,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CountPendingActivityTasksInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         task_list: { # required
-    #           name: "Name", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain that contains the task list.
     #   @return [String]
@@ -1407,16 +1295,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CountPendingDecisionTasksInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         task_list: { # required
-    #           name: "Name", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain that contains the task list.
     #   @return [String]
@@ -1614,105 +1492,6 @@ module Aws::SWF
     #
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
-    #
-    # @note When making an API call, you may pass Decision
-    #   data as a hash:
-    #
-    #       {
-    #         decision_type: "ScheduleActivityTask", # required, accepts ScheduleActivityTask, RequestCancelActivityTask, CompleteWorkflowExecution, FailWorkflowExecution, CancelWorkflowExecution, ContinueAsNewWorkflowExecution, RecordMarker, StartTimer, CancelTimer, SignalExternalWorkflowExecution, RequestCancelExternalWorkflowExecution, StartChildWorkflowExecution, ScheduleLambdaFunction
-    #         schedule_activity_task_decision_attributes: {
-    #           activity_type: { # required
-    #             name: "Name", # required
-    #             version: "Version", # required
-    #           },
-    #           activity_id: "ActivityId", # required
-    #           control: "Data",
-    #           input: "Data",
-    #           schedule_to_close_timeout: "DurationInSecondsOptional",
-    #           task_list: {
-    #             name: "Name", # required
-    #           },
-    #           task_priority: "TaskPriority",
-    #           schedule_to_start_timeout: "DurationInSecondsOptional",
-    #           start_to_close_timeout: "DurationInSecondsOptional",
-    #           heartbeat_timeout: "DurationInSecondsOptional",
-    #         },
-    #         request_cancel_activity_task_decision_attributes: {
-    #           activity_id: "ActivityId", # required
-    #         },
-    #         complete_workflow_execution_decision_attributes: {
-    #           result: "Data",
-    #         },
-    #         fail_workflow_execution_decision_attributes: {
-    #           reason: "FailureReason",
-    #           details: "Data",
-    #         },
-    #         cancel_workflow_execution_decision_attributes: {
-    #           details: "Data",
-    #         },
-    #         continue_as_new_workflow_execution_decision_attributes: {
-    #           input: "Data",
-    #           execution_start_to_close_timeout: "DurationInSecondsOptional",
-    #           task_list: {
-    #             name: "Name", # required
-    #           },
-    #           task_priority: "TaskPriority",
-    #           task_start_to_close_timeout: "DurationInSecondsOptional",
-    #           child_policy: "TERMINATE", # accepts TERMINATE, REQUEST_CANCEL, ABANDON
-    #           tag_list: ["Tag"],
-    #           workflow_type_version: "Version",
-    #           lambda_role: "Arn",
-    #         },
-    #         record_marker_decision_attributes: {
-    #           marker_name: "MarkerName", # required
-    #           details: "Data",
-    #         },
-    #         start_timer_decision_attributes: {
-    #           timer_id: "TimerId", # required
-    #           control: "Data",
-    #           start_to_fire_timeout: "DurationInSeconds", # required
-    #         },
-    #         cancel_timer_decision_attributes: {
-    #           timer_id: "TimerId", # required
-    #         },
-    #         signal_external_workflow_execution_decision_attributes: {
-    #           workflow_id: "WorkflowId", # required
-    #           run_id: "WorkflowRunIdOptional",
-    #           signal_name: "SignalName", # required
-    #           input: "Data",
-    #           control: "Data",
-    #         },
-    #         request_cancel_external_workflow_execution_decision_attributes: {
-    #           workflow_id: "WorkflowId", # required
-    #           run_id: "WorkflowRunIdOptional",
-    #           control: "Data",
-    #         },
-    #         start_child_workflow_execution_decision_attributes: {
-    #           workflow_type: { # required
-    #             name: "Name", # required
-    #             version: "Version", # required
-    #           },
-    #           workflow_id: "WorkflowId", # required
-    #           control: "Data",
-    #           input: "Data",
-    #           execution_start_to_close_timeout: "DurationInSecondsOptional",
-    #           task_list: {
-    #             name: "Name", # required
-    #           },
-    #           task_priority: "TaskPriority",
-    #           task_start_to_close_timeout: "DurationInSecondsOptional",
-    #           child_policy: "TERMINATE", # accepts TERMINATE, REQUEST_CANCEL, ABANDON
-    #           tag_list: ["Tag"],
-    #           lambda_role: "Arn",
-    #         },
-    #         schedule_lambda_function_decision_attributes: {
-    #           id: "FunctionId", # required
-    #           name: "FunctionName", # required
-    #           control: "Data",
-    #           input: "FunctionInput",
-    #           start_to_close_timeout: "DurationInSecondsOptional",
-    #         },
-    #       }
     #
     # @!attribute [rw] decision_type
     #   Specifies the type of the decision.
@@ -1997,17 +1776,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeprecateActivityTypeInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         activity_type: { # required
-    #           name: "Name", # required
-    #           version: "Version", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain in which the activity type is registered.
     #   @return [String]
@@ -2023,13 +1791,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeprecateDomainInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the domain to deprecate.
     #   @return [String]
@@ -2040,17 +1801,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeprecateWorkflowTypeInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         workflow_type: { # required
-    #           name: "Name", # required
-    #           version: "Version", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain in which the workflow type is registered.
     #   @return [String]
@@ -2066,17 +1816,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeActivityTypeInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         activity_type: { # required
-    #           name: "Name", # required
-    #           version: "Version", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain in which the activity type is registered.
     #   @return [String]
@@ -2094,13 +1833,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDomainInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the domain to describe.
     #   @return [String]
@@ -2111,17 +1843,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeWorkflowExecutionInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         execution: { # required
-    #           workflow_id: "WorkflowId", # required
-    #           run_id: "WorkflowRunId", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain containing the workflow execution.
     #   @return [String]
@@ -2137,17 +1858,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeWorkflowTypeInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         workflow_type: { # required
-    #           name: "Name", # required
-    #           version: "Version", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain in which this workflow type is registered.
     #   @return [String]
@@ -2289,14 +1999,6 @@ module Aws::SWF
     #
     # [1]: https://en.wikipedia.org/wiki/Unix_time
     #
-    # @note When making an API call, you may pass ExecutionTimeFilter
-    #   data as a hash:
-    #
-    #       {
-    #         oldest_date: Time.now, # required
-    #         latest_date: Time.now,
-    #       }
-    #
     # @!attribute [rw] oldest_date
     #   Specifies the oldest start or close date and time to return.
     #   @return [Time]
@@ -2382,14 +2084,6 @@ module Aws::SWF
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
     #
-    # @note When making an API call, you may pass FailWorkflowExecutionDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         reason: "FailureReason",
-    #         details: "Data",
-    #       }
-    #
     # @!attribute [rw] reason
     #   A descriptive reason for the failure that may help in diagnostics.
     #   @return [String]
@@ -2438,20 +2132,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetWorkflowExecutionHistoryInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         execution: { # required
-    #           workflow_id: "WorkflowId", # required
-    #           run_id: "WorkflowRunId", # required
-    #         },
-    #         next_page_token: "PageToken",
-    #         maximum_page_size: 1,
-    #         reverse_order: false,
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain containing the workflow execution.
     #   @return [String]
@@ -2465,7 +2145,7 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
+    #   expires after 24 hours. Using an expired pagination token will
     #   return a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
@@ -3233,18 +2913,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListActivityTypesInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         name: "Name",
-    #         registration_status: "REGISTERED", # required, accepts REGISTERED, DEPRECATED
-    #         next_page_token: "PageToken",
-    #         maximum_page_size: 1,
-    #         reverse_order: false,
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain in which the activity types have been
     #   registered.
@@ -3263,7 +2931,7 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
+    #   expires after 24 hours. Using an expired pagination token will
     #   return a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
@@ -3293,37 +2961,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListClosedWorkflowExecutionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         start_time_filter: {
-    #           oldest_date: Time.now, # required
-    #           latest_date: Time.now,
-    #         },
-    #         close_time_filter: {
-    #           oldest_date: Time.now, # required
-    #           latest_date: Time.now,
-    #         },
-    #         execution_filter: {
-    #           workflow_id: "WorkflowId", # required
-    #         },
-    #         close_status_filter: {
-    #           status: "COMPLETED", # required, accepts COMPLETED, FAILED, CANCELED, TERMINATED, CONTINUED_AS_NEW, TIMED_OUT
-    #         },
-    #         type_filter: {
-    #           name: "Name", # required
-    #           version: "VersionOptional",
-    #         },
-    #         tag_filter: {
-    #           tag: "Tag", # required
-    #         },
-    #         next_page_token: "PageToken",
-    #         maximum_page_size: 1,
-    #         reverse_order: false,
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain that contains the workflow executions to
     #   list.
@@ -3402,7 +3039,7 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
+    #   expires after 24 hours. Using an expired pagination token will
     #   return a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
@@ -3436,22 +3073,12 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDomainsInput
-    #   data as a hash:
-    #
-    #       {
-    #         next_page_token: "PageToken",
-    #         registration_status: "REGISTERED", # required, accepts REGISTERED, DEPRECATED
-    #         maximum_page_size: 1,
-    #         reverse_order: false,
-    #       }
-    #
     # @!attribute [rw] next_page_token
     #   If `NextPageToken` is returned there are more results available. The
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
+    #   expires after 24 hours. Using an expired pagination token will
     #   return a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
@@ -3483,30 +3110,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListOpenWorkflowExecutionsInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         start_time_filter: { # required
-    #           oldest_date: Time.now, # required
-    #           latest_date: Time.now,
-    #         },
-    #         type_filter: {
-    #           name: "Name", # required
-    #           version: "VersionOptional",
-    #         },
-    #         tag_filter: {
-    #           tag: "Tag", # required
-    #         },
-    #         next_page_token: "PageToken",
-    #         maximum_page_size: 1,
-    #         reverse_order: false,
-    #         execution_filter: {
-    #           workflow_id: "WorkflowId", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain that contains the workflow executions to
     #   list.
@@ -3542,7 +3145,7 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
+    #   expires after 24 hours. Using an expired pagination token will
     #   return a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
@@ -3584,13 +3187,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) for the Amazon SWF domain.
     #   @return [String]
@@ -3611,18 +3207,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListWorkflowTypesInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         name: "Name",
-    #         registration_status: "REGISTERED", # required, accepts REGISTERED, DEPRECATED
-    #         next_page_token: "PageToken",
-    #         maximum_page_size: 1,
-    #         reverse_order: false,
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain in which the workflow types have been
     #   registered.
@@ -3641,7 +3225,7 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
+    #   expires after 24 hours. Using an expired pagination token will
     #   return a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
@@ -3729,17 +3313,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PollForActivityTaskInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         task_list: { # required
-    #           name: "Name", # required
-    #         },
-    #         identity: "Identity",
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain that contains the task lists being polled.
     #   @return [String]
@@ -3750,7 +3323,7 @@ module Aws::SWF
     #   The specified string must not start or end with whitespace. It must
     #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
     #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not *be* the literal string `arn`.
+    #   must *not* be the literal string `arn`.
     #   @return [Types::TaskList]
     #
     # @!attribute [rw] identity
@@ -3768,20 +3341,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PollForDecisionTaskInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         task_list: { # required
-    #           name: "Name", # required
-    #         },
-    #         identity: "Identity",
-    #         next_page_token: "PageToken",
-    #         maximum_page_size: 1,
-    #         reverse_order: false,
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain containing the task lists to poll.
     #   @return [String]
@@ -3789,10 +3348,9 @@ module Aws::SWF
     # @!attribute [rw] task_list
     #   Specifies the task list to poll for decision tasks.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [Types::TaskList]
     #
     # @!attribute [rw] identity
@@ -3807,7 +3365,7 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
+    #   expires after 24 hours. Using an expired pagination token will
     #   return a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
@@ -3837,25 +3395,25 @@ module Aws::SWF
     #   of the events.
     #   @return [Boolean]
     #
+    # @!attribute [rw] start_at_previous_started_event
+    #   When set to `true`, returns the events with `eventTimestamp` greater
+    #   than or equal to `eventTimestamp` of the most recent
+    #   `DecisionTaskStarted` event. By default, this parameter is set to
+    #   `false`.
+    #   @return [Boolean]
+    #
     class PollForDecisionTaskInput < Struct.new(
       :domain,
       :task_list,
       :identity,
       :next_page_token,
       :maximum_page_size,
-      :reverse_order)
+      :reverse_order,
+      :start_at_previous_started_event)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RecordActivityTaskHeartbeatInput
-    #   data as a hash:
-    #
-    #       {
-    #         task_token: "TaskToken", # required
-    #         details: "LimitedData",
-    #       }
-    #
     # @!attribute [rw] task_token
     #   The `taskToken` of the ActivityTask.
     #
@@ -3901,14 +3459,6 @@ module Aws::SWF
     #
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
-    #
-    # @note When making an API call, you may pass RecordMarkerDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         marker_name: "MarkerName", # required
-    #         details: "Data",
-    #       }
     #
     # @!attribute [rw] marker_name
     #   The name of the marker.
@@ -3963,24 +3513,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RegisterActivityTypeInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         name: "Name", # required
-    #         version: "Version", # required
-    #         description: "Description",
-    #         default_task_start_to_close_timeout: "DurationInSecondsOptional",
-    #         default_task_heartbeat_timeout: "DurationInSecondsOptional",
-    #         default_task_list: {
-    #           name: "Name", # required
-    #         },
-    #         default_task_priority: "TaskPriority",
-    #         default_task_schedule_to_start_timeout: "DurationInSecondsOptional",
-    #         default_task_schedule_to_close_timeout: "DurationInSecondsOptional",
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain in which this activity is to be registered.
     #   @return [String]
@@ -3988,10 +3520,9 @@ module Aws::SWF
     # @!attribute [rw] name
     #   The name of the activity type within the domain.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] version
@@ -4002,10 +3533,9 @@ module Aws::SWF
     #
     #    </note>
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] description
@@ -4094,21 +3624,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RegisterDomainInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "DomainName", # required
-    #         description: "Description",
-    #         workflow_execution_retention_period_in_days: "DurationInDays", # required
-    #         tags: [
-    #           {
-    #             key: "ResourceTagKey", # required
-    #             value: "ResourceTagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   Name of the domain to register. The name must be unique in the
     #   region that the domain is registered in.
@@ -4116,7 +3631,7 @@ module Aws::SWF
     #   The specified string must not start or end with whitespace. It must
     #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
     #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not *be* the literal string `arn`.
+    #   must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] description
@@ -4158,24 +3673,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RegisterWorkflowTypeInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         name: "Name", # required
-    #         version: "Version", # required
-    #         description: "Description",
-    #         default_task_start_to_close_timeout: "DurationInSecondsOptional",
-    #         default_execution_start_to_close_timeout: "DurationInSecondsOptional",
-    #         default_task_list: {
-    #           name: "Name", # required
-    #         },
-    #         default_task_priority: "TaskPriority",
-    #         default_child_policy: "TERMINATE", # accepts TERMINATE, REQUEST_CANCEL, ABANDON
-    #         default_lambda_role: "Arn",
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain in which to register the workflow type.
     #   @return [String]
@@ -4183,10 +3680,9 @@ module Aws::SWF
     # @!attribute [rw] name
     #   The name of the workflow type.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] version
@@ -4199,10 +3695,9 @@ module Aws::SWF
     #
     #    </note>
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] description
@@ -4335,13 +3830,6 @@ module Aws::SWF
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
     #
-    # @note When making an API call, you may pass RequestCancelActivityTaskDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         activity_id: "ActivityId", # required
-    #       }
-    #
     # @!attribute [rw] activity_id
     #   The `activityId` of the activity task to be canceled.
     #   @return [String]
@@ -4417,15 +3905,6 @@ module Aws::SWF
     #
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
-    #
-    # @note When making an API call, you may pass RequestCancelExternalWorkflowExecutionDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         workflow_id: "WorkflowId", # required
-    #         run_id: "WorkflowRunIdOptional",
-    #         control: "Data",
-    #       }
     #
     # @!attribute [rw] workflow_id
     #   The `workflowId` of the external workflow execution to cancel.
@@ -4544,15 +4023,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RequestCancelWorkflowExecutionInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         workflow_id: "WorkflowId", # required
-    #         run_id: "WorkflowRunIdOptional",
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain containing the workflow execution to cancel.
     #   @return [String]
@@ -4579,14 +4049,6 @@ module Aws::SWF
     # Tags may only contain unicode letters, digits, whitespace, or these
     # symbols: `_ . : / = + - @`.
     #
-    # @note When making an API call, you may pass ResourceTag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "ResourceTagKey", # required
-    #         value: "ResourceTagValue",
-    #       }
-    #
     # @!attribute [rw] key
     #   The key of a tag.
     #   @return [String]
@@ -4602,14 +4064,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RespondActivityTaskCanceledInput
-    #   data as a hash:
-    #
-    #       {
-    #         task_token: "TaskToken", # required
-    #         details: "Data",
-    #       }
-    #
     # @!attribute [rw] task_token
     #   The `taskToken` of the ActivityTask.
     #
@@ -4630,14 +4084,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RespondActivityTaskCompletedInput
-    #   data as a hash:
-    #
-    #       {
-    #         task_token: "TaskToken", # required
-    #         result: "Data",
-    #       }
-    #
     # @!attribute [rw] task_token
     #   The `taskToken` of the ActivityTask.
     #
@@ -4659,15 +4105,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RespondActivityTaskFailedInput
-    #   data as a hash:
-    #
-    #       {
-    #         task_token: "TaskToken", # required
-    #         reason: "FailureReason",
-    #         details: "Data",
-    #       }
-    #
     # @!attribute [rw] task_token
     #   The `taskToken` of the ActivityTask.
     #
@@ -4694,111 +4131,6 @@ module Aws::SWF
     end
 
     # Input data for a TaskCompleted response to a decision task.
-    #
-    # @note When making an API call, you may pass RespondDecisionTaskCompletedInput
-    #   data as a hash:
-    #
-    #       {
-    #         task_token: "TaskToken", # required
-    #         decisions: [
-    #           {
-    #             decision_type: "ScheduleActivityTask", # required, accepts ScheduleActivityTask, RequestCancelActivityTask, CompleteWorkflowExecution, FailWorkflowExecution, CancelWorkflowExecution, ContinueAsNewWorkflowExecution, RecordMarker, StartTimer, CancelTimer, SignalExternalWorkflowExecution, RequestCancelExternalWorkflowExecution, StartChildWorkflowExecution, ScheduleLambdaFunction
-    #             schedule_activity_task_decision_attributes: {
-    #               activity_type: { # required
-    #                 name: "Name", # required
-    #                 version: "Version", # required
-    #               },
-    #               activity_id: "ActivityId", # required
-    #               control: "Data",
-    #               input: "Data",
-    #               schedule_to_close_timeout: "DurationInSecondsOptional",
-    #               task_list: {
-    #                 name: "Name", # required
-    #               },
-    #               task_priority: "TaskPriority",
-    #               schedule_to_start_timeout: "DurationInSecondsOptional",
-    #               start_to_close_timeout: "DurationInSecondsOptional",
-    #               heartbeat_timeout: "DurationInSecondsOptional",
-    #             },
-    #             request_cancel_activity_task_decision_attributes: {
-    #               activity_id: "ActivityId", # required
-    #             },
-    #             complete_workflow_execution_decision_attributes: {
-    #               result: "Data",
-    #             },
-    #             fail_workflow_execution_decision_attributes: {
-    #               reason: "FailureReason",
-    #               details: "Data",
-    #             },
-    #             cancel_workflow_execution_decision_attributes: {
-    #               details: "Data",
-    #             },
-    #             continue_as_new_workflow_execution_decision_attributes: {
-    #               input: "Data",
-    #               execution_start_to_close_timeout: "DurationInSecondsOptional",
-    #               task_list: {
-    #                 name: "Name", # required
-    #               },
-    #               task_priority: "TaskPriority",
-    #               task_start_to_close_timeout: "DurationInSecondsOptional",
-    #               child_policy: "TERMINATE", # accepts TERMINATE, REQUEST_CANCEL, ABANDON
-    #               tag_list: ["Tag"],
-    #               workflow_type_version: "Version",
-    #               lambda_role: "Arn",
-    #             },
-    #             record_marker_decision_attributes: {
-    #               marker_name: "MarkerName", # required
-    #               details: "Data",
-    #             },
-    #             start_timer_decision_attributes: {
-    #               timer_id: "TimerId", # required
-    #               control: "Data",
-    #               start_to_fire_timeout: "DurationInSeconds", # required
-    #             },
-    #             cancel_timer_decision_attributes: {
-    #               timer_id: "TimerId", # required
-    #             },
-    #             signal_external_workflow_execution_decision_attributes: {
-    #               workflow_id: "WorkflowId", # required
-    #               run_id: "WorkflowRunIdOptional",
-    #               signal_name: "SignalName", # required
-    #               input: "Data",
-    #               control: "Data",
-    #             },
-    #             request_cancel_external_workflow_execution_decision_attributes: {
-    #               workflow_id: "WorkflowId", # required
-    #               run_id: "WorkflowRunIdOptional",
-    #               control: "Data",
-    #             },
-    #             start_child_workflow_execution_decision_attributes: {
-    #               workflow_type: { # required
-    #                 name: "Name", # required
-    #                 version: "Version", # required
-    #               },
-    #               workflow_id: "WorkflowId", # required
-    #               control: "Data",
-    #               input: "Data",
-    #               execution_start_to_close_timeout: "DurationInSecondsOptional",
-    #               task_list: {
-    #                 name: "Name", # required
-    #               },
-    #               task_priority: "TaskPriority",
-    #               task_start_to_close_timeout: "DurationInSecondsOptional",
-    #               child_policy: "TERMINATE", # accepts TERMINATE, REQUEST_CANCEL, ABANDON
-    #               tag_list: ["Tag"],
-    #               lambda_role: "Arn",
-    #             },
-    #             schedule_lambda_function_decision_attributes: {
-    #               id: "FunctionId", # required
-    #               name: "FunctionName", # required
-    #               control: "Data",
-    #               input: "FunctionInput",
-    #               start_to_close_timeout: "DurationInSecondsOptional",
-    #             },
-    #           },
-    #         ],
-    #         execution_context: "Data",
-    #       }
     #
     # @!attribute [rw] task_token
     #   The `taskToken` from the DecisionTask.
@@ -4876,27 +4208,6 @@ module Aws::SWF
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
     #
-    # @note When making an API call, you may pass ScheduleActivityTaskDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         activity_type: { # required
-    #           name: "Name", # required
-    #           version: "Version", # required
-    #         },
-    #         activity_id: "ActivityId", # required
-    #         control: "Data",
-    #         input: "Data",
-    #         schedule_to_close_timeout: "DurationInSecondsOptional",
-    #         task_list: {
-    #           name: "Name", # required
-    #         },
-    #         task_priority: "TaskPriority",
-    #         schedule_to_start_timeout: "DurationInSecondsOptional",
-    #         start_to_close_timeout: "DurationInSecondsOptional",
-    #         heartbeat_timeout: "DurationInSecondsOptional",
-    #       }
-    #
     # @!attribute [rw] activity_type
     #   The type of the activity task to schedule.
     #   @return [Types::ActivityType]
@@ -4904,10 +4215,9 @@ module Aws::SWF
     # @!attribute [rw] activity_id
     #   The `activityId` of the activity task.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not contain the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] control
@@ -4945,10 +4255,9 @@ module Aws::SWF
     #
     #    </note>
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not contain the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [Types::TaskList]
     #
     # @!attribute [rw] task_priority
@@ -5077,17 +4386,6 @@ module Aws::SWF
     # `scheduleLambdaFunctionDecisionAttributes` within the list of
     # decisions `decisions` passed to RespondDecisionTaskCompleted.
     #
-    # @note When making an API call, you may pass ScheduleLambdaFunctionDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         id: "FunctionId", # required
-    #         name: "FunctionName", # required
-    #         control: "Data",
-    #         input: "FunctionInput",
-    #         start_to_close_timeout: "DurationInSecondsOptional",
-    #       }
-    #
     # @!attribute [rw] id
     #   A string that identifies the Lambda function execution in the event
     #   history.
@@ -5109,8 +4407,9 @@ module Aws::SWF
     # @!attribute [rw] start_to_close_timeout
     #   The timeout value, in seconds, after which the Lambda function is
     #   considered to be failed once it has started. This can be any integer
-    #   from 1-300 (1s-5m). If no value is supplied, than a default value of
-    #   300s is assumed.
+    #   from 1-900 (1s-15m).
+    #
+    #   If no value is supplied, then a default value of 900s is assumed.
     #   @return [String]
     #
     class ScheduleLambdaFunctionDecisionAttributes < Struct.new(
@@ -5194,17 +4493,6 @@ module Aws::SWF
     #
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
-    #
-    # @note When making an API call, you may pass SignalExternalWorkflowExecutionDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         workflow_id: "WorkflowId", # required
-    #         run_id: "WorkflowRunIdOptional",
-    #         signal_name: "SignalName", # required
-    #         input: "Data",
-    #         control: "Data",
-    #       }
     #
     # @!attribute [rw] workflow_id
     #   The `workflowId` of the workflow execution to be signaled.
@@ -5345,17 +4633,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SignalWorkflowExecutionInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         workflow_id: "WorkflowId", # required
-    #         run_id: "WorkflowRunIdOptional",
-    #         signal_name: "SignalName", # required
-    #         input: "Data",
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain containing the workflow execution to signal.
     #   @return [String]
@@ -5426,28 +4703,6 @@ module Aws::SWF
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
     #
-    # @note When making an API call, you may pass StartChildWorkflowExecutionDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         workflow_type: { # required
-    #           name: "Name", # required
-    #           version: "Version", # required
-    #         },
-    #         workflow_id: "WorkflowId", # required
-    #         control: "Data",
-    #         input: "Data",
-    #         execution_start_to_close_timeout: "DurationInSecondsOptional",
-    #         task_list: {
-    #           name: "Name", # required
-    #         },
-    #         task_priority: "TaskPriority",
-    #         task_start_to_close_timeout: "DurationInSecondsOptional",
-    #         child_policy: "TERMINATE", # accepts TERMINATE, REQUEST_CANCEL, ABANDON
-    #         tag_list: ["Tag"],
-    #         lambda_role: "Arn",
-    #       }
-    #
     # @!attribute [rw] workflow_type
     #   The type of the workflow execution to be started.
     #   @return [Types::WorkflowType]
@@ -5455,10 +4710,9 @@ module Aws::SWF
     # @!attribute [rw] workflow_id
     #   The `workflowId` of the workflow execution.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not contain the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] control
@@ -5502,7 +4756,7 @@ module Aws::SWF
     #   The specified string must not start or end with whitespace. It must
     #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
     #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not contain the literal string `arn`.
+    #   must *not* be the literal string `arn`.
     #   @return [Types::TaskList]
     #
     # @!attribute [rw] task_priority
@@ -5831,22 +5085,12 @@ module Aws::SWF
     #
     # [1]: https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html
     #
-    # @note When making an API call, you may pass StartTimerDecisionAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         timer_id: "TimerId", # required
-    #         control: "Data",
-    #         start_to_fire_timeout: "DurationInSeconds", # required
-    #       }
-    #
     # @!attribute [rw] timer_id
     #   The unique ID of the timer.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not contain the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] control
@@ -5907,30 +5151,12 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartWorkflowExecutionInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         workflow_id: "WorkflowId", # required
-    #         workflow_type: { # required
-    #           name: "Name", # required
-    #           version: "Version", # required
-    #         },
-    #         task_list: {
-    #           name: "Name", # required
-    #         },
-    #         task_priority: "TaskPriority",
-    #         input: "Data",
-    #         execution_start_to_close_timeout: "DurationInSecondsOptional",
-    #         tag_list: ["Tag"],
-    #         task_start_to_close_timeout: "DurationInSecondsOptional",
-    #         child_policy: "TERMINATE", # accepts TERMINATE, REQUEST_CANCEL, ABANDON
-    #         lambda_role: "Arn",
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain in which the workflow execution is created.
+    #
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] workflow_id
@@ -5941,10 +5167,9 @@ module Aws::SWF
     #   cannot have two open workflow executions with the same `workflowId`
     #   at the same time within the same domain.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [String]
     #
     # @!attribute [rw] workflow_type
@@ -5963,10 +5188,9 @@ module Aws::SWF
     #
     #    </note>
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it
-    #   must not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash),
+    #   `|` (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #   @return [Types::TaskList]
     #
     # @!attribute [rw] task_priority
@@ -6101,13 +5325,6 @@ module Aws::SWF
     # Used to filter the workflow executions in visibility APIs based on a
     # tag.
     #
-    # @note When making an API call, you may pass TagFilter
-    #   data as a hash:
-    #
-    #       {
-    #         tag: "Tag", # required
-    #       }
-    #
     # @!attribute [rw] tag
     #   Specifies the tag that must be associated with the execution for it
     #   to meet the filter criteria.
@@ -6122,19 +5339,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "ResourceTagKey", # required
-    #             value: "ResourceTagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) for the Amazon SWF domain.
     #   @return [String]
@@ -6155,13 +5359,6 @@ module Aws::SWF
 
     # Represents a task list.
     #
-    # @note When making an API call, you may pass TaskList
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the task list.
     #   @return [String]
@@ -6172,18 +5369,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TerminateWorkflowExecutionInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         workflow_id: "WorkflowId", # required
-    #         run_id: "WorkflowRunIdOptional",
-    #         reason: "TerminateReason",
-    #         details: "Data",
-    #         child_policy: "TERMINATE", # accepts TERMINATE, REQUEST_CANCEL, ABANDON
-    #       }
-    #
     # @!attribute [rw] domain
     #   The domain of the workflow execution to terminate.
     #   @return [String]
@@ -6361,17 +5546,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UndeprecateActivityTypeInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         activity_type: { # required
-    #           name: "Name", # required
-    #           version: "Version", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain of the deprecated activity type.
     #   @return [String]
@@ -6387,13 +5561,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UndeprecateDomainInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the domain of the deprecated workflow type.
     #   @return [String]
@@ -6404,17 +5571,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UndeprecateWorkflowTypeInput
-    #   data as a hash:
-    #
-    #       {
-    #         domain: "DomainName", # required
-    #         workflow_type: { # required
-    #           name: "Name", # required
-    #           version: "Version", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain
     #   The name of the domain of the deprecated workflow type.
     #   @return [String]
@@ -6445,14 +5601,6 @@ module Aws::SWF
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tag_keys: ["ResourceTagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) for the Amazon SWF domain.
     #   @return [String]
@@ -6469,14 +5617,6 @@ module Aws::SWF
     end
 
     # Represents a workflow execution.
-    #
-    # @note When making an API call, you may pass WorkflowExecution
-    #   data as a hash:
-    #
-    #       {
-    #         workflow_id: "WorkflowId", # required
-    #         run_id: "WorkflowRunId", # required
-    #       }
     #
     # @!attribute [rw] workflow_id
     #   The user defined identifier associated with the workflow execution.
@@ -6830,13 +5970,6 @@ module Aws::SWF
 
     # Used to filter the workflow executions in visibility APIs by their
     # `workflowId`.
-    #
-    # @note When making an API call, you may pass WorkflowExecutionFilter
-    #   data as a hash:
-    #
-    #       {
-    #         workflow_id: "WorkflowId", # required
-    #       }
     #
     # @!attribute [rw] workflow_id
     #   The workflowId to pass of match the criteria of this filter.
@@ -7192,14 +6325,6 @@ module Aws::SWF
 
     # Represents a workflow type.
     #
-    # @note When making an API call, you may pass WorkflowType
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         version: "Version", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the workflow type.
     #
@@ -7361,14 +6486,6 @@ module Aws::SWF
     # Used to filter workflow execution query results by type. Each
     # parameter, if specified, defines a rule that must be satisfied by each
     # returned result.
-    #
-    # @note When making an API call, you may pass WorkflowTypeFilter
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         version: "VersionOptional",
-    #       }
     #
     # @!attribute [rw] name
     #   Name of the workflow type.

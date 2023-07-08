@@ -24,6 +24,26 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
+    # Entity that comprises information on categorical values in data.
+    #
+    # @!attribute [rw] status
+    #   Indicates whether there is a potential data issue related to
+    #   categorical values.
+    #   @return [String]
+    #
+    # @!attribute [rw] number_of_category
+    #   Indicates the number of categories in the data.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/CategoricalValues AWS API Documentation
+    #
+    class CategoricalValues < Struct.new(
+      :status,
+      :number_of_category)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request could not be completed due to a conflict with the current
     # state of the target resource.
     #
@@ -38,24 +58,25 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDatasetRequest
-    #   data as a hash:
+    # Entity that comprises information of count and percentage.
     #
-    #       {
-    #         dataset_name: "DatasetName", # required
-    #         dataset_schema: { # required
-    #           inline_data_schema: "InlineDataSchema",
-    #         },
-    #         server_side_kms_key_id: "NameOrArn",
-    #         client_token: "IdempotenceToken", # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
+    # @!attribute [rw] count
+    #   Indicates the count of occurences of the given statistic.
+    #   @return [Integer]
     #
+    # @!attribute [rw] percentage
+    #   Indicates the percentage of occurances of the given statistic.
+    #   @return [Float]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/CountPercent AWS API Documentation
+    #
+    class CountPercent < Struct.new(
+      :count,
+      :percentage)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] dataset_name
     #   The name of the dataset being created.
     #   @return [String]
@@ -66,8 +87,8 @@ module Aws::LookoutEquipment
     #   @return [Types::DatasetSchema]
     #
     # @!attribute [rw] server_side_kms_key_id
-    #   Provides the identifier of the AWS KMS customer master key (CMK)
-    #   used to encrypt dataset data by Amazon Lookout for Equipment.
+    #   Provides the identifier of the KMS key used to encrypt dataset data
+    #   by Amazon Lookout for Equipment.
     #   @return [String]
     #
     # @!attribute [rw] client_token
@@ -116,43 +137,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateInferenceSchedulerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         model_name: "ModelName", # required
-    #         inference_scheduler_name: "InferenceSchedulerName", # required
-    #         data_delay_offset_in_minutes: 1,
-    #         data_upload_frequency: "PT5M", # required, accepts PT5M, PT10M, PT15M, PT30M, PT1H
-    #         data_input_configuration: { # required
-    #           s3_input_configuration: {
-    #             bucket: "S3Bucket", # required
-    #             prefix: "S3Prefix",
-    #           },
-    #           input_time_zone_offset: "TimeZoneOffset",
-    #           inference_input_name_configuration: {
-    #             timestamp_format: "FileNameTimestampFormat",
-    #             component_timestamp_delimiter: "ComponentTimestampDelimiter",
-    #           },
-    #         },
-    #         data_output_configuration: { # required
-    #           s3_output_configuration: { # required
-    #             bucket: "S3Bucket", # required
-    #             prefix: "S3Prefix",
-    #           },
-    #           kms_key_id: "NameOrArn",
-    #         },
-    #         role_arn: "IamRoleArn", # required
-    #         server_side_kms_key_id: "NameOrArn",
-    #         client_token: "IdempotenceToken", # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] model_name
     #   The name of the previously trained ML model being used to create the
     #   inference scheduler.
@@ -163,25 +147,36 @@ module Aws::LookoutEquipment
     #   @return [String]
     #
     # @!attribute [rw] data_delay_offset_in_minutes
-    #   A period of time (in minutes) by which inference on the data is
-    #   delayed after the data starts. For instance, if you select an offset
-    #   delay time of five minutes, inference will not begin on the data
-    #   until the first data measurement after the five minute mark. For
-    #   example, if five minutes is selected, the inference scheduler will
-    #   wake up at the configured frequency with the additional five minute
-    #   delay time to check the customer S3 bucket. The customer can upload
-    #   data at the same frequency and they don't need to stop and restart
-    #   the scheduler when uploading new data.
+    #   The interval (in minutes) of planned delay at the start of each
+    #   inference segment. For example, if inference is set to run every ten
+    #   minutes, the delay is set to five minutes and the time is 09:08. The
+    #   inference scheduler will wake up at the configured interval (which,
+    #   without a delay configured, would be 09:10) plus the additional five
+    #   minute delay time (so 09:15) to check your Amazon S3 bucket. The
+    #   delay provides a buffer for you to upload data at the same
+    #   frequency, so that you don't have to stop and restart the scheduler
+    #   when uploading new data.
+    #
+    #   For more information, see [Understanding the inference process][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lookout-for-equipment/latest/ug/understanding-inference-process.html
     #   @return [Integer]
     #
     # @!attribute [rw] data_upload_frequency
-    #   How often data is uploaded to the source S3 bucket for the input
-    #   data. The value chosen is the length of time between data uploads.
-    #   For instance, if you select 5 minutes, Amazon Lookout for Equipment
-    #   will upload the real-time data to the source bucket once every 5
-    #   minutes. This frequency also determines how often Amazon Lookout for
-    #   Equipment starts a scheduled inference on your data. In this
-    #   example, it starts once every 5 minutes.
+    #   How often data is uploaded to the source Amazon S3 bucket for the
+    #   input data. The value chosen is the length of time between data
+    #   uploads. For instance, if you select 5 minutes, Amazon Lookout for
+    #   Equipment will upload the real-time data to the source bucket once
+    #   every 5 minutes. This frequency also determines how often Amazon
+    #   Lookout for Equipment runs inference on your data.
+    #
+    #   For more information, see [Understanding the inference process][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lookout-for-equipment/latest/ug/understanding-inference-process.html
     #   @return [String]
     #
     # @!attribute [rw] data_input_configuration
@@ -201,9 +196,8 @@ module Aws::LookoutEquipment
     #   @return [String]
     #
     # @!attribute [rw] server_side_kms_key_id
-    #   Provides the identifier of the AWS KMS customer master key (CMK)
-    #   used to encrypt inference scheduler data by Amazon Lookout for
-    #   Equipment.
+    #   Provides the identifier of the KMS key used to encrypt inference
+    #   scheduler data by Amazon Lookout for Equipment.
     #   @return [String]
     #
     # @!attribute [rw] client_token
@@ -258,39 +252,143 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateModelRequest
-    #   data as a hash:
+    # @!attribute [rw] label_group_name
+    #   Names a group of labels.
     #
-    #       {
-    #         model_name: "ModelName", # required
-    #         dataset_name: "DatasetIdentifier", # required
-    #         dataset_schema: {
-    #           inline_data_schema: "InlineDataSchema",
-    #         },
-    #         labels_input_configuration: {
-    #           s3_input_configuration: { # required
-    #             bucket: "S3Bucket", # required
-    #             prefix: "S3Prefix",
-    #           },
-    #         },
-    #         client_token: "IdempotenceToken", # required
-    #         training_data_start_time: Time.now,
-    #         training_data_end_time: Time.now,
-    #         evaluation_data_start_time: Time.now,
-    #         evaluation_data_end_time: Time.now,
-    #         role_arn: "IamRoleArn",
-    #         data_pre_processing_configuration: {
-    #           target_sampling_rate: "PT1S", # accepts PT1S, PT5S, PT10S, PT15S, PT30S, PT1M, PT5M, PT10M, PT15M, PT30M, PT1H
-    #         },
-    #         server_side_kms_key_id: "NameOrArn",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [String]
     #
+    # @!attribute [rw] fault_codes
+    #   The acceptable fault codes (indicating the type of anomaly
+    #   associated with the label) that can be used with this label group.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] client_token
+    #   A unique identifier for the request to create a label group. If you
+    #   do not set the client request token, Lookout for Equipment generates
+    #   one.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   Tags that provide metadata about the label group you are creating.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/CreateLabelGroupRequest AWS API Documentation
+    #
+    class CreateLabelGroupRequest < Struct.new(
+      :label_group_name,
+      :fault_codes,
+      :client_token,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] label_group_name
+    #   The name of the label group that you have created. Data in this
+    #   field will be retained for service usage. Follow best practices for
+    #   the security of your data.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_group_arn
+    #   The ARN of the label group that you have created.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/CreateLabelGroupResponse AWS API Documentation
+    #
+    class CreateLabelGroupResponse < Struct.new(
+      :label_group_name,
+      :label_group_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] label_group_name
+    #   The name of a group of labels.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [String]
+    #
+    # @!attribute [rw] start_time
+    #   The start time of the labeled event.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The end time of the labeled event.
+    #   @return [Time]
+    #
+    # @!attribute [rw] rating
+    #   Indicates whether a labeled event represents an anomaly.
+    #   @return [String]
+    #
+    # @!attribute [rw] fault_code
+    #   Provides additional information about the label. The fault code must
+    #   be defined in the FaultCodes attribute of the label group.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [String]
+    #
+    # @!attribute [rw] notes
+    #   Metadata providing additional information about the label.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [String]
+    #
+    # @!attribute [rw] equipment
+    #   Indicates that a label pertains to a particular piece of equipment.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [String]
+    #
+    # @!attribute [rw] client_token
+    #   A unique identifier for the request to create a label. If you do not
+    #   set the client request token, Lookout for Equipment generates one.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/CreateLabelRequest AWS API Documentation
+    #
+    class CreateLabelRequest < Struct.new(
+      :label_group_name,
+      :start_time,
+      :end_time,
+      :rating,
+      :fault_code,
+      :notes,
+      :equipment,
+      :client_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] label_id
+    #   The ID of the label that you have created.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/CreateLabelResponse AWS API Documentation
+    #
+    class CreateLabelResponse < Struct.new(
+      :label_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] model_name
     #   The name for the ML model to be created.
     #   @return [String]
@@ -356,13 +454,19 @@ module Aws::LookoutEquipment
     #   @return [Types::DataPreProcessingConfiguration]
     #
     # @!attribute [rw] server_side_kms_key_id
-    #   Provides the identifier of the AWS KMS customer master key (CMK)
-    #   used to encrypt model data by Amazon Lookout for Equipment.
+    #   Provides the identifier of the KMS key used to encrypt model data by
+    #   Amazon Lookout for Equipment.
     #   @return [String]
     #
     # @!attribute [rw] tags
     #   Any tags associated with the ML model being created.
     #   @return [Array<Types::Tag>]
+    #
+    # @!attribute [rw] off_condition
+    #   Indicates that the asset associated with this sensor has been shut
+    #   off. As long as this condition is met, Lookout for Equipment will
+    #   not use data from this asset for training, evaluation, or inference.
+    #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/CreateModelRequest AWS API Documentation
     #
@@ -379,7 +483,8 @@ module Aws::LookoutEquipment
       :role_arn,
       :data_pre_processing_configuration,
       :server_side_kms_key_id,
-      :tags)
+      :tags,
+      :off_condition)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -419,7 +524,7 @@ module Aws::LookoutEquipment
     #
     # @!attribute [rw] ingestion_input_configuration
     #   Specifies information for the input data for the data inference job,
-    #   including data S3 location parameters.
+    #   including data Amazon S3 location parameters.
     #   @return [Types::IngestionInputConfiguration]
     #
     # @!attribute [rw] status
@@ -449,13 +554,6 @@ module Aws::LookoutEquipment
     # is therefore *PT1S*, the value for a 15 minute rate is *PT15M*, and
     # the value for a 1 hour rate is *PT1H*
     #
-    # @note When making an API call, you may pass DataPreProcessingConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         target_sampling_rate: "PT1S", # accepts PT1S, PT5S, PT10S, PT15S, PT30S, PT1M, PT5M, PT10M, PT15M, PT30M, PT1H
-    #       }
-    #
     # @!attribute [rw] target_sampling_rate
     #   The sampling rate of the data after post processing by Amazon
     #   Lookout for Equipment. For example, if you provide data that has
@@ -477,15 +575,52 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
+    # DataQualitySummary gives aggregated statistics over all the sensors
+    # about a completed ingestion job. It primarily gives more information
+    # about statistics over different incorrect data like
+    # MissingCompleteSensorData, MissingSensorData, UnsupportedDateFormats,
+    # InsufficientSensorData, DuplicateTimeStamps.
+    #
+    # @!attribute [rw] insufficient_sensor_data
+    #   Parameter that gives information about insufficient data for sensors
+    #   in the dataset. This includes information about those sensors that
+    #   have complete data missing and those with a short date range.
+    #   @return [Types::InsufficientSensorData]
+    #
+    # @!attribute [rw] missing_sensor_data
+    #   Parameter that gives information about data that is missing over all
+    #   the sensors in the input data.
+    #   @return [Types::MissingSensorData]
+    #
+    # @!attribute [rw] invalid_sensor_data
+    #   Parameter that gives information about data that is invalid over all
+    #   the sensors in the input data.
+    #   @return [Types::InvalidSensorData]
+    #
+    # @!attribute [rw] unsupported_timestamps
+    #   Parameter that gives information about unsupported timestamps in the
+    #   input data.
+    #   @return [Types::UnsupportedTimestamps]
+    #
+    # @!attribute [rw] duplicate_timestamps
+    #   Parameter that gives information about duplicate timestamps in the
+    #   input data.
+    #   @return [Types::DuplicateTimestamps]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DataQualitySummary AWS API Documentation
+    #
+    class DataQualitySummary < Struct.new(
+      :insufficient_sensor_data,
+      :missing_sensor_data,
+      :invalid_sensor_data,
+      :unsupported_timestamps,
+      :duplicate_timestamps)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Provides information about the data schema used with the given
     # dataset.
-    #
-    # @note When making an API call, you may pass DatasetSchema
-    #   data as a hash:
-    #
-    #       {
-    #         inline_data_schema: "InlineDataSchema",
-    #       }
     #
     # @!attribute [rw] inline_data_schema
     #   @return [String]
@@ -529,13 +664,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDatasetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] dataset_name
     #   The name of the dataset to be deleted.
     #   @return [String]
@@ -548,13 +676,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteInferenceSchedulerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         inference_scheduler_name: "InferenceSchedulerIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] inference_scheduler_name
     #   The name of the inference scheduler to be deleted.
     #   @return [String]
@@ -567,13 +688,39 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteModelRequest
-    #   data as a hash:
+    # @!attribute [rw] label_group_name
+    #   The name of the label group that you want to delete. Data in this
+    #   field will be retained for service usage. Follow best practices for
+    #   the security of your data.
+    #   @return [String]
     #
-    #       {
-    #         model_name: "ModelName", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DeleteLabelGroupRequest AWS API Documentation
     #
+    class DeleteLabelGroupRequest < Struct.new(
+      :label_group_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] label_group_name
+    #   The name of the label group that contains the label that you want to
+    #   delete. Data in this field will be retained for service usage.
+    #   Follow best practices for the security of your data.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_id
+    #   The ID of the label that you want to delete.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DeleteLabelRequest AWS API Documentation
+    #
+    class DeleteLabelRequest < Struct.new(
+      :label_group_name,
+      :label_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] model_name
     #   The name of the ML model to be deleted.
     #   @return [String]
@@ -586,13 +733,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDataIngestionJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         job_id: "IngestionJobId", # required
-    #       }
-    #
     # @!attribute [rw] job_id
     #   The job ID of the data ingestion job.
     #   @return [String]
@@ -637,6 +777,38 @@ module Aws::LookoutEquipment
     #   failed.
     #   @return [String]
     #
+    # @!attribute [rw] data_quality_summary
+    #   Gives statistics about a completed ingestion job. These statistics
+    #   primarily relate to quantifying incorrect data such as
+    #   MissingCompleteSensorData, MissingSensorData,
+    #   UnsupportedDateFormats, InsufficientSensorData, and
+    #   DuplicateTimeStamps.
+    #   @return [Types::DataQualitySummary]
+    #
+    # @!attribute [rw] ingested_files_summary
+    #   Gives statistics about how many files have been ingested, and which
+    #   files have not been ingested, for a particular ingestion job.
+    #   @return [Types::IngestedFilesSummary]
+    #
+    # @!attribute [rw] status_detail
+    #   Provides details about status of the ingestion job that is currently
+    #   in progress.
+    #   @return [String]
+    #
+    # @!attribute [rw] ingested_data_size
+    #   Indicates the size of the ingested dataset.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] data_start_time
+    #   Indicates the earliest timestamp corresponding to data that was
+    #   successfully ingested during this specific ingestion job.
+    #   @return [Time]
+    #
+    # @!attribute [rw] data_end_time
+    #   Indicates the latest timestamp corresponding to data that was
+    #   successfully ingested during this specific ingestion job.
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeDataIngestionJobResponse AWS API Documentation
     #
     class DescribeDataIngestionJobResponse < Struct.new(
@@ -646,18 +818,17 @@ module Aws::LookoutEquipment
       :role_arn,
       :created_at,
       :status,
-      :failed_reason)
+      :failed_reason,
+      :data_quality_summary,
+      :ingested_files_summary,
+      :status_detail,
+      :ingested_data_size,
+      :data_start_time,
+      :data_end_time)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDatasetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] dataset_name
     #   The name of the dataset to be described.
     #   @return [String]
@@ -679,8 +850,7 @@ module Aws::LookoutEquipment
     #   @return [String]
     #
     # @!attribute [rw] created_at
-    #   Specifies the time the dataset was created in Amazon Lookout for
-    #   Equipment.
+    #   Specifies the time the dataset was created in Lookout for Equipment.
     #   @return [Time]
     #
     # @!attribute [rw] last_updated_at
@@ -697,14 +867,45 @@ module Aws::LookoutEquipment
     #   @return [String]
     #
     # @!attribute [rw] server_side_kms_key_id
-    #   Provides the identifier of the AWS KMS customer master key (CMK)
-    #   used to encrypt dataset data by Amazon Lookout for Equipment.
+    #   Provides the identifier of the KMS key used to encrypt dataset data
+    #   by Amazon Lookout for Equipment.
     #   @return [String]
     #
     # @!attribute [rw] ingestion_input_configuration
     #   Specifies the S3 location configuration for the data input for the
     #   data ingestion job.
     #   @return [Types::IngestionInputConfiguration]
+    #
+    # @!attribute [rw] data_quality_summary
+    #   Gives statistics associated with the given dataset for the latest
+    #   successful associated ingestion job id. These statistics primarily
+    #   relate to quantifying incorrect data such as
+    #   MissingCompleteSensorData, MissingSensorData,
+    #   UnsupportedDateFormats, InsufficientSensorData, and
+    #   DuplicateTimeStamps.
+    #   @return [Types::DataQualitySummary]
+    #
+    # @!attribute [rw] ingested_files_summary
+    #   IngestedFilesSummary associated with the given dataset for the
+    #   latest successful associated ingestion job id.
+    #   @return [Types::IngestedFilesSummary]
+    #
+    # @!attribute [rw] role_arn
+    #   The Amazon Resource Name (ARN) of the IAM role that you are using
+    #   for this the data ingestion job.
+    #   @return [String]
+    #
+    # @!attribute [rw] data_start_time
+    #   Indicates the earliest timestamp corresponding to data that was
+    #   successfully ingested during the most recent ingestion of this
+    #   particular dataset.
+    #   @return [Time]
+    #
+    # @!attribute [rw] data_end_time
+    #   Indicates the latest timestamp corresponding to data that was
+    #   successfully ingested during the most recent ingestion of this
+    #   particular dataset.
+    #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeDatasetResponse AWS API Documentation
     #
@@ -716,18 +917,16 @@ module Aws::LookoutEquipment
       :status,
       :schema,
       :server_side_kms_key_id,
-      :ingestion_input_configuration)
+      :ingestion_input_configuration,
+      :data_quality_summary,
+      :ingested_files_summary,
+      :role_arn,
+      :data_start_time,
+      :data_end_time)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeInferenceSchedulerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         inference_scheduler_name: "InferenceSchedulerIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] inference_scheduler_name
     #   The name of the inference scheduler being described.
     #   @return [String]
@@ -810,9 +1009,14 @@ module Aws::LookoutEquipment
     #   @return [String]
     #
     # @!attribute [rw] server_side_kms_key_id
-    #   Provides the identifier of the AWS KMS customer master key (CMK)
-    #   used to encrypt inference scheduler data by Amazon Lookout for
-    #   Equipment.
+    #   Provides the identifier of the KMS key used to encrypt inference
+    #   scheduler data by Amazon Lookout for Equipment.
+    #   @return [String]
+    #
+    # @!attribute [rw] latest_inference_result
+    #   Indicates whether the latest execution for the inference scheduler
+    #   was Anomalous (anomalous events found) or Normal (no anomalous
+    #   events found).
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeInferenceSchedulerResponse AWS API Documentation
@@ -830,18 +1034,137 @@ module Aws::LookoutEquipment
       :data_input_configuration,
       :data_output_configuration,
       :role_arn,
-      :server_side_kms_key_id)
+      :server_side_kms_key_id,
+      :latest_inference_result)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeModelRequest
-    #   data as a hash:
+    # @!attribute [rw] label_group_name
+    #   Returns the name of the label group.
+    #   @return [String]
     #
-    #       {
-    #         model_name: "ModelName", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeLabelGroupRequest AWS API Documentation
     #
+    class DescribeLabelGroupRequest < Struct.new(
+      :label_group_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] label_group_name
+    #   The name of the label group.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_group_arn
+    #   The ARN of the label group.
+    #   @return [String]
+    #
+    # @!attribute [rw] fault_codes
+    #   Codes indicating the type of anomaly associated with the labels in
+    #   the lagbel group.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] created_at
+    #   The time at which the label group was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] updated_at
+    #   The time at which the label group was updated.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeLabelGroupResponse AWS API Documentation
+    #
+    class DescribeLabelGroupResponse < Struct.new(
+      :label_group_name,
+      :label_group_arn,
+      :fault_codes,
+      :created_at,
+      :updated_at)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] label_group_name
+    #   Returns the name of the group containing the label.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_id
+    #   Returns the ID of the label.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeLabelRequest AWS API Documentation
+    #
+    class DescribeLabelRequest < Struct.new(
+      :label_group_name,
+      :label_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] label_group_name
+    #   The name of the requested label group.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_group_arn
+    #   The ARN of the requested label group.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_id
+    #   The ID of the requested label.
+    #   @return [String]
+    #
+    # @!attribute [rw] start_time
+    #   The start time of the requested label.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The end time of the requested label.
+    #   @return [Time]
+    #
+    # @!attribute [rw] rating
+    #   Indicates whether a labeled event represents an anomaly.
+    #   @return [String]
+    #
+    # @!attribute [rw] fault_code
+    #   Indicates the type of anomaly associated with the label.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [String]
+    #
+    # @!attribute [rw] notes
+    #   Metadata providing additional information about the label.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [String]
+    #
+    # @!attribute [rw] equipment
+    #   Indicates that a label pertains to a particular piece of equipment.
+    #   @return [String]
+    #
+    # @!attribute [rw] created_at
+    #   The time at which the label was created.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeLabelResponse AWS API Documentation
+    #
+    class DescribeLabelResponse < Struct.new(
+      :label_group_name,
+      :label_group_arn,
+      :label_id,
+      :start_time,
+      :end_time,
+      :rating,
+      :fault_code,
+      :notes,
+      :equipment,
+      :created_at)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] model_name
     #   The name of the ML model to be described.
     #   @return [String]
@@ -955,8 +1278,14 @@ module Aws::LookoutEquipment
     #   @return [Time]
     #
     # @!attribute [rw] server_side_kms_key_id
-    #   Provides the identifier of the AWS KMS customer master key (CMK)
-    #   used to encrypt model data by Amazon Lookout for Equipment.
+    #   Provides the identifier of the KMS key used to encrypt model data by
+    #   Amazon Lookout for Equipment.
+    #   @return [String]
+    #
+    # @!attribute [rw] off_condition
+    #   Indicates that the asset associated with this sensor has been shut
+    #   off. As long as this condition is met, Lookout for Equipment will
+    #   not use data from this asset for training, evaluation, or inference.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeModelResponse AWS API Documentation
@@ -981,7 +1310,66 @@ module Aws::LookoutEquipment
       :model_metrics,
       :last_updated_time,
       :created_at,
-      :server_side_kms_key_id)
+      :server_side_kms_key_id,
+      :off_condition)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Entity that comprises information abount duplicate timestamps in the
+    # dataset.
+    #
+    # @!attribute [rw] total_number_of_duplicate_timestamps
+    #   Indicates the total number of duplicate timestamps.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DuplicateTimestamps AWS API Documentation
+    #
+    class DuplicateTimestamps < Struct.new(
+      :total_number_of_duplicate_timestamps)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains information about the specific inference event, including
+    # start and end time, diagnostics information, event duration and so on.
+    #
+    # @!attribute [rw] inference_scheduler_arn
+    #   The Amazon Resource Name (ARN) of the inference scheduler being used
+    #   for the inference event.
+    #   @return [String]
+    #
+    # @!attribute [rw] inference_scheduler_name
+    #   The name of the inference scheduler being used for the inference
+    #   events.
+    #   @return [String]
+    #
+    # @!attribute [rw] event_start_time
+    #   Indicates the starting time of an inference event.
+    #   @return [Time]
+    #
+    # @!attribute [rw] event_end_time
+    #   Indicates the ending time of an inference event.
+    #   @return [Time]
+    #
+    # @!attribute [rw] diagnostics
+    #   An array which specifies the names and values of all sensors
+    #   contributing to an inference event.
+    #   @return [String]
+    #
+    # @!attribute [rw] event_duration_in_seconds
+    #   Indicates the size of an inference event in seconds.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/InferenceEventSummary AWS API Documentation
+    #
+    class InferenceEventSummary < Struct.new(
+      :inference_scheduler_arn,
+      :inference_scheduler_name,
+      :event_start_time,
+      :event_end_time,
+      :diagnostics,
+      :event_duration_in_seconds)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1032,7 +1420,7 @@ module Aws::LookoutEquipment
     #
     # @!attribute [rw] data_output_configuration
     #   Specifies configuration information for the output results from for
-    #   the inference execution, including the output S3 location.
+    #   the inference execution, including the output Amazon S3 location.
     #   @return [Types::InferenceOutputConfiguration]
     #
     # @!attribute [rw] customer_result_object
@@ -1066,36 +1454,21 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # &gt; Specifies configuration information for the input data for the
-    # inference, including S3 location of input data..
-    #
-    # @note When making an API call, you may pass InferenceInputConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         s3_input_configuration: {
-    #           bucket: "S3Bucket", # required
-    #           prefix: "S3Prefix",
-    #         },
-    #         input_time_zone_offset: "TimeZoneOffset",
-    #         inference_input_name_configuration: {
-    #           timestamp_format: "FileNameTimestampFormat",
-    #           component_timestamp_delimiter: "ComponentTimestampDelimiter",
-    #         },
-    #       }
+    # Specifies configuration information for the input data for the
+    # inference, including Amazon S3 location of input data..
     #
     # @!attribute [rw] s3_input_configuration
     #   Specifies configuration information for the input data for the
-    #   inference, including S3 location of input data..
+    #   inference, including Amazon S3 location of input data.
     #   @return [Types::InferenceS3InputConfiguration]
     #
     # @!attribute [rw] input_time_zone_offset
-    #   Indicates the difference between your time zone and Greenwich Mean
-    #   Time (GMT).
+    #   Indicates the difference between your time zone and Coordinated
+    #   Universal Time (UTC).
     #   @return [String]
     #
     # @!attribute [rw] inference_input_name_configuration
-    #   &gt; Specifies configuration information for the input data for the
+    #   Specifies configuration information for the input data for the
     #   inference, including timestamp format and delimiter.
     #   @return [Types::InferenceInputNameConfiguration]
     #
@@ -1109,16 +1482,8 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # &gt;&gt; Specifies configuration information for the input data for
-    # the inference, including timestamp format and delimiter.
-    #
-    # @note When making an API call, you may pass InferenceInputNameConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         timestamp_format: "FileNameTimestampFormat",
-    #         component_timestamp_delimiter: "ComponentTimestampDelimiter",
-    #       }
+    # Specifies configuration information for the input data for the
+    # inference, including timestamp format and delimiter.
     #
     # @!attribute [rw] timestamp_format
     #   The format of the timestamp, whether Epoch time, or standard, with
@@ -1140,17 +1505,6 @@ module Aws::LookoutEquipment
 
     # Specifies configuration information for the output results from for
     # the inference, including KMS key ID and output S3 location.
-    #
-    # @note When making an API call, you may pass InferenceOutputConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         s3_output_configuration: { # required
-    #           bucket: "S3Bucket", # required
-    #           prefix: "S3Prefix",
-    #         },
-    #         kms_key_id: "NameOrArn",
-    #       }
     #
     # @!attribute [rw] s3_output_configuration
     #   Specifies configuration information for the output results from for
@@ -1174,14 +1528,6 @@ module Aws::LookoutEquipment
     # Specifies configuration information for the input data for the
     # inference, including input data S3 location.
     #
-    # @note When making an API call, you may pass InferenceS3InputConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         bucket: "S3Bucket", # required
-    #         prefix: "S3Prefix",
-    #       }
-    #
     # @!attribute [rw] bucket
     #   The bucket containing the input dataset for the inference.
     #   @return [String]
@@ -1202,14 +1548,6 @@ module Aws::LookoutEquipment
 
     # Specifies configuration information for the output results from the
     # inference, including output S3 location.
-    #
-    # @note When making an API call, you may pass InferenceS3OutputConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         bucket: "S3Bucket", # required
-    #         prefix: "S3Prefix",
-    #       }
     #
     # @!attribute [rw] bucket
     #   The bucket containing the output results from the inference
@@ -1254,7 +1592,7 @@ module Aws::LookoutEquipment
     #   @return [String]
     #
     # @!attribute [rw] data_delay_offset_in_minutes
-    #   &gt; A period of time (in minutes) by which inference on the data is
+    #   A period of time (in minutes) by which inference on the data is
     #   delayed after the data starts. For instance, if an offset delay time
     #   of five minutes was selected, inference will not begin on the data
     #   until the first data measurement after the five minute mark. For
@@ -1275,6 +1613,12 @@ module Aws::LookoutEquipment
     #   example, it starts once every 5 minutes.
     #   @return [String]
     #
+    # @!attribute [rw] latest_inference_result
+    #   Indicates whether the latest execution for the inference scheduler
+    #   was Anomalous (anomalous events found) or Normal (no anomalous
+    #   events found).
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/InferenceSchedulerSummary AWS API Documentation
     #
     class InferenceSchedulerSummary < Struct.new(
@@ -1284,23 +1628,42 @@ module Aws::LookoutEquipment
       :inference_scheduler_arn,
       :status,
       :data_delay_offset_in_minutes,
-      :data_upload_frequency)
+      :data_upload_frequency,
+      :latest_inference_result)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Gives statistics about how many files have been ingested, and which
+    # files have not been ingested, for a particular ingestion job.
+    #
+    # @!attribute [rw] total_number_of_files
+    #   Indicates the total number of files that were submitted for
+    #   ingestion.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] ingested_number_of_files
+    #   Indicates the number of files that were successfully ingested.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] discarded_files
+    #   Indicates the number of files that were discarded. A file could be
+    #   discarded because its format is invalid (for example, a jpg or pdf)
+    #   or not readable.
+    #   @return [Array<Types::S3Object>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/IngestedFilesSummary AWS API Documentation
+    #
+    class IngestedFilesSummary < Struct.new(
+      :total_number_of_files,
+      :ingested_number_of_files,
+      :discarded_files)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Specifies configuration information for the input data for the data
     # ingestion job, including input data S3 location.
-    #
-    # @note When making an API call, you may pass IngestionInputConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         s3_input_configuration: { # required
-    #           bucket: "S3Bucket", # required
-    #           prefix: "S3Prefix",
-    #         },
-    #       }
     #
     # @!attribute [rw] s3_input_configuration
     #   The location information for the S3 bucket used for input data for
@@ -1318,14 +1681,6 @@ module Aws::LookoutEquipment
     # Specifies S3 configuration information for the input data for the data
     # ingestion job.
     #
-    # @note When making an API call, you may pass IngestionS3InputConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         bucket: "S3Bucket", # required
-    #         prefix: "S3Prefix",
-    #       }
-    #
     # @!attribute [rw] bucket
     #   The name of the S3 bucket used for the input data for the data
     #   ingestion.
@@ -1336,11 +1691,41 @@ module Aws::LookoutEquipment
     #   data ingestion.
     #   @return [String]
     #
+    # @!attribute [rw] key_pattern
+    #   Pattern for matching the Amazon S3 files which will be used for
+    #   ingestion. If no KeyPattern is provided, we will use the default
+    #   hierarchy file structure, which is same as KeyPattern
+    #   \\\{prefix\\}/\\\{component\_name\\}/*
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/IngestionS3InputConfiguration AWS API Documentation
     #
     class IngestionS3InputConfiguration < Struct.new(
       :bucket,
-      :prefix)
+      :prefix,
+      :key_pattern)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Entity that comprises aggregated information on sensors having
+    # insufficient data.
+    #
+    # @!attribute [rw] missing_complete_sensor_data
+    #   Parameter that describes the total number of sensors that have data
+    #   completely missing for it.
+    #   @return [Types::MissingCompleteSensorData]
+    #
+    # @!attribute [rw] sensors_with_short_date_range
+    #   Parameter that describes the total number of sensors that have a
+    #   short date range of less than 90 days of data overall.
+    #   @return [Types::SensorsWithShortDateRange]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/InsufficientSensorData AWS API Documentation
+    #
+    class InsufficientSensorData < Struct.new(
+      :missing_complete_sensor_data,
+      :sensors_with_short_date_range)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1359,42 +1744,136 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
+    # Entity that comprises aggregated information on sensors having
+    # insufficient data.
+    #
+    # @!attribute [rw] affected_sensor_count
+    #   Indicates the number of sensors that have at least some invalid
+    #   values.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] total_number_of_invalid_values
+    #   Indicates the total number of invalid values across all the sensors.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/InvalidSensorData AWS API Documentation
+    #
+    class InvalidSensorData < Struct.new(
+      :affected_sensor_count,
+      :total_number_of_invalid_values)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Contains information about the label group.
+    #
+    # @!attribute [rw] label_group_name
+    #   The name of the label group.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_group_arn
+    #   The ARN of the label group.
+    #   @return [String]
+    #
+    # @!attribute [rw] created_at
+    #   The time at which the label group was created.
+    #   @return [Time]
+    #
+    # @!attribute [rw] updated_at
+    #   The time at which the label group was updated.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/LabelGroupSummary AWS API Documentation
+    #
+    class LabelGroupSummary < Struct.new(
+      :label_group_name,
+      :label_group_arn,
+      :created_at,
+      :updated_at)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about the label.
+    #
+    # @!attribute [rw] label_group_name
+    #   The name of the label group.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_id
+    #   The ID of the label.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_group_arn
+    #   The ARN of the label group.
+    #   @return [String]
+    #
+    # @!attribute [rw] start_time
+    #   The timestamp indicating the start of the label.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The timestamp indicating the end of the label.
+    #   @return [Time]
+    #
+    # @!attribute [rw] rating
+    #   Indicates whether a labeled event represents an anomaly.
+    #   @return [String]
+    #
+    # @!attribute [rw] fault_code
+    #   Indicates the type of anomaly associated with the label.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [String]
+    #
+    # @!attribute [rw] equipment
+    #   Indicates that a label pertains to a particular piece of equipment.
+    #   @return [String]
+    #
+    # @!attribute [rw] created_at
+    #   The time at which the label was created.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/LabelSummary AWS API Documentation
+    #
+    class LabelSummary < Struct.new(
+      :label_group_name,
+      :label_id,
+      :label_group_arn,
+      :start_time,
+      :end_time,
+      :rating,
+      :fault_code,
+      :equipment,
+      :created_at)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Contains the configuration information for the S3 location being used
     # to hold label data.
-    #
-    # @note When making an API call, you may pass LabelsInputConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         s3_input_configuration: { # required
-    #           bucket: "S3Bucket", # required
-    #           prefix: "S3Prefix",
-    #         },
-    #       }
     #
     # @!attribute [rw] s3_input_configuration
     #   Contains location information for the S3 location being used for
     #   label data.
     #   @return [Types::LabelsS3InputConfiguration]
     #
+    # @!attribute [rw] label_group_name
+    #   The name of the label group to be used for label data.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/LabelsInputConfiguration AWS API Documentation
     #
     class LabelsInputConfiguration < Struct.new(
-      :s3_input_configuration)
+      :s3_input_configuration,
+      :label_group_name)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # The location information (prefix and bucket name) for the s3 location
     # being used for label data.
-    #
-    # @note When making an API call, you may pass LabelsS3InputConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         bucket: "S3Bucket", # required
-    #         prefix: "S3Prefix",
-    #       }
     #
     # @!attribute [rw] bucket
     #   The name of the S3 bucket holding the label data.
@@ -1413,16 +1892,32 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDataIngestionJobsRequest
-    #   data as a hash:
+    # Entity that comprises information on large gaps between consecutive
+    # timestamps in data.
     #
-    #       {
-    #         dataset_name: "DatasetName",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         status: "IN_PROGRESS", # accepts IN_PROGRESS, SUCCESS, FAILED
-    #       }
+    # @!attribute [rw] status
+    #   Indicates whether there is a potential data issue related to large
+    #   gaps in timestamps.
+    #   @return [String]
     #
+    # @!attribute [rw] number_of_large_timestamp_gaps
+    #   Indicates the number of large timestamp gaps, if there are any.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] max_timestamp_gap_in_days
+    #   Indicates the size of the largest timestamp gap, in days.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/LargeTimestampGaps AWS API Documentation
+    #
+    class LargeTimestampGaps < Struct.new(
+      :status,
+      :number_of_large_timestamp_gaps,
+      :max_timestamp_gap_in_days)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] dataset_name
     #   The name of the dataset being used for the data ingestion job.
     #   @return [String]
@@ -1470,15 +1965,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDatasetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         dataset_name_begins_with: "DatasetName",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   An opaque pagination token indicating where to continue the listing
     #   of datasets.
@@ -1521,18 +2007,62 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListInferenceExecutionsRequest
-    #   data as a hash:
+    # @!attribute [rw] next_token
+    #   An opaque pagination token indicating where to continue the listing
+    #   of inference events.
+    #   @return [String]
     #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         inference_scheduler_name: "InferenceSchedulerIdentifier", # required
-    #         data_start_time_after: Time.now,
-    #         data_end_time_before: Time.now,
-    #         status: "IN_PROGRESS", # accepts IN_PROGRESS, SUCCESS, FAILED
-    #       }
+    # @!attribute [rw] max_results
+    #   Specifies the maximum number of inference events to list.
+    #   @return [Integer]
     #
+    # @!attribute [rw] inference_scheduler_name
+    #   The name of the inference scheduler for the inference events listed.
+    #   @return [String]
+    #
+    # @!attribute [rw] interval_start_time
+    #   Lookout for Equipment will return all the inference events with an
+    #   end time equal to or greater than the start time given.
+    #   @return [Time]
+    #
+    # @!attribute [rw] interval_end_time
+    #   Returns all the inference events with an end start time equal to or
+    #   greater than less than the end time given
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListInferenceEventsRequest AWS API Documentation
+    #
+    class ListInferenceEventsRequest < Struct.new(
+      :next_token,
+      :max_results,
+      :inference_scheduler_name,
+      :interval_start_time,
+      :interval_end_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   An opaque pagination token indicating where to continue the listing
+    #   of inference executions.
+    #   @return [String]
+    #
+    # @!attribute [rw] inference_event_summaries
+    #   Provides an array of information about the individual inference
+    #   events returned from the `ListInferenceEvents` operation, including
+    #   scheduler used, event start time, event end time, diagnostics, and
+    #   so on.
+    #   @return [Array<Types::InferenceEventSummary>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListInferenceEventsResponse AWS API Documentation
+    #
+    class ListInferenceEventsResponse < Struct.new(
+      :next_token,
+      :inference_event_summaries)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   An opaque pagination token indicating where to continue the listing
     #   of inference executions.
@@ -1595,16 +2125,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListInferenceSchedulersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         inference_scheduler_name_begins_with: "InferenceSchedulerIdentifier",
-    #         model_name: "ModelName",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   An opaque pagination token indicating where to continue the listing
     #   of inference schedulers.
@@ -1623,13 +2143,18 @@ module Aws::LookoutEquipment
     #   listed.
     #   @return [String]
     #
+    # @!attribute [rw] status
+    #   Specifies the current status of the inference schedulers to list.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListInferenceSchedulersRequest AWS API Documentation
     #
     class ListInferenceSchedulersRequest < Struct.new(
       :next_token,
       :max_results,
       :inference_scheduler_name_begins_with,
-      :model_name)
+      :model_name,
+      :status)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1653,17 +2178,110 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListModelsRequest
-    #   data as a hash:
+    # @!attribute [rw] label_group_name_begins_with
+    #   The beginning of the name of the label groups to be listed.
+    #   @return [String]
     #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         status: "IN_PROGRESS", # accepts IN_PROGRESS, SUCCESS, FAILED
-    #         model_name_begins_with: "ModelName",
-    #         dataset_name_begins_with: "DatasetName",
-    #       }
+    # @!attribute [rw] next_token
+    #   An opaque pagination token indicating where to continue the listing
+    #   of label groups.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   Specifies the maximum number of label groups to list.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListLabelGroupsRequest AWS API Documentation
+    #
+    class ListLabelGroupsRequest < Struct.new(
+      :label_group_name_begins_with,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   An opaque pagination token indicating where to continue the listing
+    #   of label groups.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_group_summaries
+    #   A summary of the label groups.
+    #   @return [Array<Types::LabelGroupSummary>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListLabelGroupsResponse AWS API Documentation
+    #
+    class ListLabelGroupsResponse < Struct.new(
+      :next_token,
+      :label_group_summaries)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] label_group_name
+    #   Retruns the name of the label group.
+    #   @return [String]
+    #
+    # @!attribute [rw] interval_start_time
+    #   Returns all the labels with a end time equal to or later than the
+    #   start time given.
+    #   @return [Time]
+    #
+    # @!attribute [rw] interval_end_time
+    #   Returns all labels with a start time earlier than the end time
+    #   given.
+    #   @return [Time]
+    #
+    # @!attribute [rw] fault_code
+    #   Returns labels with a particular fault code.
+    #   @return [String]
+    #
+    # @!attribute [rw] equipment
+    #   Lists the labels that pertain to a particular piece of equipment.
+    #   @return [String]
+    #
+    # @!attribute [rw] next_token
+    #   An opaque pagination token indicating where to continue the listing
+    #   of label groups.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   Specifies the maximum number of labels to list.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListLabelsRequest AWS API Documentation
+    #
+    class ListLabelsRequest < Struct.new(
+      :label_group_name,
+      :interval_start_time,
+      :interval_end_time,
+      :fault_code,
+      :equipment,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   An opaque pagination token indicating where to continue the listing
+    #   of datasets.
+    #   @return [String]
+    #
+    # @!attribute [rw] label_summaries
+    #   A summary of the items in the label group.
+    #   @return [Array<Types::LabelSummary>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListLabelsResponse AWS API Documentation
+    #
+    class ListLabelsResponse < Struct.new(
+      :next_token,
+      :label_summaries)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   An opaque pagination token indicating where to continue the listing
     #   of ML models.
@@ -1717,13 +2335,59 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
+    # @!attribute [rw] dataset_name
+    #   The name of the dataset associated with the list of Sensor
+    #   Statistics.
+    #   @return [String]
     #
-    #       {
-    #         resource_arn: "AmazonResourceArn", # required
-    #       }
+    # @!attribute [rw] ingestion_job_id
+    #   The ingestion job id associated with the list of Sensor Statistics.
+    #   To get sensor statistics for a particular ingestion job id, both
+    #   dataset name and ingestion job id must be submitted as inputs.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   Specifies the maximum number of sensors for which to retrieve
+    #   statistics.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   An opaque pagination token indicating where to continue the listing
+    #   of sensor statistics.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListSensorStatisticsRequest AWS API Documentation
+    #
+    class ListSensorStatisticsRequest < Struct.new(
+      :dataset_name,
+      :ingestion_job_id,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] sensor_statistics_summaries
+    #   Provides ingestion-based statistics regarding the specified sensor
+    #   with respect to various validation types, such as whether data
+    #   exists, the number and percentage of missing values, and the number
+    #   and percentage of duplicate timestamps.
+    #   @return [Array<Types::SensorStatisticsSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   An opaque pagination token indicating where to continue the listing
+    #   of sensor statistics.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListSensorStatisticsResponse AWS API Documentation
+    #
+    class ListSensorStatisticsResponse < Struct.new(
+      :sensor_statistics_summaries,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource (such as the dataset
     #   or model) that is the focus of the `ListTagsForResource` operation.
@@ -1745,6 +2409,41 @@ module Aws::LookoutEquipment
     #
     class ListTagsForResourceResponse < Struct.new(
       :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Entity that comprises information on sensors that have sensor data
+    # completely missing.
+    #
+    # @!attribute [rw] affected_sensor_count
+    #   Indicates the number of sensors that have data missing completely.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/MissingCompleteSensorData AWS API Documentation
+    #
+    class MissingCompleteSensorData < Struct.new(
+      :affected_sensor_count)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Entity that comprises aggregated information on sensors having missing
+    # data.
+    #
+    # @!attribute [rw] affected_sensor_count
+    #   Indicates the number of sensors that have atleast some data missing.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] total_number_of_missing_values
+    #   Indicates the total number of missing values across all the sensors.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/MissingSensorData AWS API Documentation
+    #
+    class MissingSensorData < Struct.new(
+      :affected_sensor_count,
+      :total_number_of_missing_values)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1790,6 +2489,42 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
+    # Entity that comprises information on monotonic values in the data.
+    #
+    # @!attribute [rw] status
+    #   Indicates whether there is a potential data issue related to having
+    #   monotonic values.
+    #   @return [String]
+    #
+    # @!attribute [rw] monotonicity
+    #   Indicates the monotonicity of values. Can be INCREASING, DECREASING,
+    #   or STATIC.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/MonotonicValues AWS API Documentation
+    #
+    class MonotonicValues < Struct.new(
+      :status,
+      :monotonicity)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Entity that comprises information on operating modes in data.
+    #
+    # @!attribute [rw] status
+    #   Indicates whether there is a potential data issue related to having
+    #   multiple operating modes.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/MultipleOperatingModes AWS API Documentation
+    #
+    class MultipleOperatingModes < Struct.new(
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The resource requested could not be found. Verify the resource ID and
     # retry your request.
     #
@@ -1825,6 +2560,112 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
+    # Summary of ingestion statistics like whether data exists, number of
+    # missing values, number of invalid values and so on related to the
+    # particular sensor.
+    #
+    # @!attribute [rw] component_name
+    #   Name of the component to which the particular sensor belongs for
+    #   which the statistics belong to.
+    #   @return [String]
+    #
+    # @!attribute [rw] sensor_name
+    #   Name of the sensor that the statistics belong to.
+    #   @return [String]
+    #
+    # @!attribute [rw] data_exists
+    #   Parameter that indicates whether data exists for the sensor that the
+    #   statistics belong to.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] missing_values
+    #   Parameter that describes the total number of, and percentage of,
+    #   values that are missing for the sensor that the statistics belong
+    #   to.
+    #   @return [Types::CountPercent]
+    #
+    # @!attribute [rw] invalid_values
+    #   Parameter that describes the total number of, and percentage of,
+    #   values that are invalid for the sensor that the statistics belong
+    #   to.
+    #   @return [Types::CountPercent]
+    #
+    # @!attribute [rw] invalid_date_entries
+    #   Parameter that describes the total number of invalid date entries
+    #   associated with the sensor that the statistics belong to.
+    #   @return [Types::CountPercent]
+    #
+    # @!attribute [rw] duplicate_timestamps
+    #   Parameter that describes the total number of duplicate timestamp
+    #   records associated with the sensor that the statistics belong to.
+    #   @return [Types::CountPercent]
+    #
+    # @!attribute [rw] categorical_values
+    #   Parameter that describes potential risk about whether data
+    #   associated with the sensor is categorical.
+    #   @return [Types::CategoricalValues]
+    #
+    # @!attribute [rw] multiple_operating_modes
+    #   Parameter that describes potential risk about whether data
+    #   associated with the sensor has more than one operating mode.
+    #   @return [Types::MultipleOperatingModes]
+    #
+    # @!attribute [rw] large_timestamp_gaps
+    #   Parameter that describes potential risk about whether data
+    #   associated with the sensor contains one or more large gaps between
+    #   consecutive timestamps.
+    #   @return [Types::LargeTimestampGaps]
+    #
+    # @!attribute [rw] monotonic_values
+    #   Parameter that describes potential risk about whether data
+    #   associated with the sensor is mostly monotonic.
+    #   @return [Types::MonotonicValues]
+    #
+    # @!attribute [rw] data_start_time
+    #   Indicates the time reference to indicate the beginning of valid data
+    #   associated with the sensor that the statistics belong to.
+    #   @return [Time]
+    #
+    # @!attribute [rw] data_end_time
+    #   Indicates the time reference to indicate the end of valid data
+    #   associated with the sensor that the statistics belong to.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/SensorStatisticsSummary AWS API Documentation
+    #
+    class SensorStatisticsSummary < Struct.new(
+      :component_name,
+      :sensor_name,
+      :data_exists,
+      :missing_values,
+      :invalid_values,
+      :invalid_date_entries,
+      :duplicate_timestamps,
+      :categorical_values,
+      :multiple_operating_modes,
+      :large_timestamp_gaps,
+      :monotonic_values,
+      :data_start_time,
+      :data_end_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Entity that comprises information on sensors that have shorter date
+    # range.
+    #
+    # @!attribute [rw] affected_sensor_count
+    #   Indicates the number of sensors that have less than 90 days of data.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/SensorsWithShortDateRange AWS API Documentation
+    #
+    class SensorsWithShortDateRange < Struct.new(
+      :affected_sensor_count)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Resource limitations have been exceeded.
     #
     # @!attribute [rw] message
@@ -1838,21 +2679,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartDataIngestionJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         dataset_name: "DatasetIdentifier", # required
-    #         ingestion_input_configuration: { # required
-    #           s3_input_configuration: { # required
-    #             bucket: "S3Bucket", # required
-    #             prefix: "S3Prefix",
-    #           },
-    #         },
-    #         role_arn: "IamRoleArn", # required
-    #         client_token: "IdempotenceToken", # required
-    #       }
-    #
     # @!attribute [rw] dataset_name
     #   The name of the dataset being used by the data ingestion job.
     #   @return [String]
@@ -1903,13 +2729,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartInferenceSchedulerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         inference_scheduler_name: "InferenceSchedulerIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] inference_scheduler_name
     #   The name of the inference scheduler to be started.
     #   @return [String]
@@ -1956,13 +2775,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopInferenceSchedulerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         inference_scheduler_name: "InferenceSchedulerIdentifier", # required
-    #       }
-    #
     # @!attribute [rw] inference_scheduler_name
     #   The name of the inference scheduler to be stopped.
     #   @return [String]
@@ -2012,14 +2824,6 @@ module Aws::LookoutEquipment
 
     # A tag is a key-value pair that can be added to a resource as metadata.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
-    #
     # @!attribute [rw] key
     #   The key for the specified tag.
     #   @return [String]
@@ -2037,19 +2841,6 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceArn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the specific resource to which the
     #   tag should be associated.
@@ -2086,14 +2877,22 @@ module Aws::LookoutEquipment
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
+    # Entity that comprises information abount unsupported timestamps in the
+    # dataset.
     #
-    #       {
-    #         resource_arn: "AmazonResourceArn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
+    # @!attribute [rw] total_number_of_unsupported_timestamps
+    #   Indicates the total number of unsupported timestamps across the
+    #   ingested data.
+    #   @return [Integer]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/UnsupportedTimestamps AWS API Documentation
+    #
+    class UnsupportedTimestamps < Struct.new(
+      :total_number_of_unsupported_timestamps)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource to which the tag is
     #   currently associated.
@@ -2117,40 +2916,12 @@ module Aws::LookoutEquipment
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateInferenceSchedulerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         inference_scheduler_name: "InferenceSchedulerIdentifier", # required
-    #         data_delay_offset_in_minutes: 1,
-    #         data_upload_frequency: "PT5M", # accepts PT5M, PT10M, PT15M, PT30M, PT1H
-    #         data_input_configuration: {
-    #           s3_input_configuration: {
-    #             bucket: "S3Bucket", # required
-    #             prefix: "S3Prefix",
-    #           },
-    #           input_time_zone_offset: "TimeZoneOffset",
-    #           inference_input_name_configuration: {
-    #             timestamp_format: "FileNameTimestampFormat",
-    #             component_timestamp_delimiter: "ComponentTimestampDelimiter",
-    #           },
-    #         },
-    #         data_output_configuration: {
-    #           s3_output_configuration: { # required
-    #             bucket: "S3Bucket", # required
-    #             prefix: "S3Prefix",
-    #           },
-    #           kms_key_id: "NameOrArn",
-    #         },
-    #         role_arn: "IamRoleArn",
-    #       }
-    #
     # @!attribute [rw] inference_scheduler_name
     #   The name of the inference scheduler to be updated.
     #   @return [String]
     #
     # @!attribute [rw] data_delay_offset_in_minutes
-    #   &gt; A period of time (in minutes) by which inference on the data is
+    #   A period of time (in minutes) by which inference on the data is
     #   delayed after the data starts. For instance, if you select an offset
     #   delay time of five minutes, inference will not begin on the data
     #   until the first data measurement after the five minute mark. For
@@ -2195,6 +2966,27 @@ module Aws::LookoutEquipment
       :data_input_configuration,
       :data_output_configuration,
       :role_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] label_group_name
+    #   The name of the label group to be updated.
+    #   @return [String]
+    #
+    # @!attribute [rw] fault_codes
+    #   Updates the code indicating the type of anomaly associated with the
+    #   label.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/UpdateLabelGroupRequest AWS API Documentation
+    #
+    class UpdateLabelGroupRequest < Struct.new(
+      :label_group_name,
+      :fault_codes)
       SENSITIVE = []
       include Aws::Structure
     end

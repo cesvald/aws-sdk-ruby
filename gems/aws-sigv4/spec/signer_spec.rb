@@ -269,7 +269,17 @@ module Aws
           expect(signature.headers['x-amz-content-sha256']).to eq(Digest::SHA256.hexdigest('abc'))
         end
 
-        it 'can omit the X-Amz-Content-Sha256 header' do
+        it 'adds the X-Amz-Content-Sha256 header if :apply_checksum_header is true' do
+          options[:apply_checksum_header] = true
+          signature = Signer.new(options).sign_request(
+            http_method: 'GET',
+            url: 'https://domain.com',
+            body: 'abc'
+          )
+          expect(signature.headers['x-amz-content-sha256']).to eq(Digest::SHA256.hexdigest('abc'))
+        end
+
+        it 'can omit the X-Amz-Content-Sha256 header if :apply_checksum_header is false' do
           options[:apply_checksum_header] = false
           signature = Signer.new(options).sign_request(
             http_method: 'GET',
@@ -337,13 +347,45 @@ module Aws
             headers: {
               'Foo' => 'foo',
               'Bar' => 'bar  bar',
-              'Bar2' => '"bar  bar"',
+              'Bar2' => '"bar bar"',
               'Content-Length' => 9,
               'X-Amz-Date' => '20120101T112233Z',
             },
             body: StringIO.new('http-body')
           )
-          expect(signature.headers['authorization']).to eq('AWS4-HMAC-SHA256 Credential=akid/20120101/REGION/SERVICE/aws4_request, SignedHeaders=bar;bar2;foo;host;x-amz-content-sha256;x-amz-date, Signature=4a7d3e06d1950eb64a3daa1becaa8ba030d9099858516cb2fa4533fab4e8937d')
+          expect(signature.headers['authorization']).to eq('AWS4-HMAC-SHA256 Credential=akid/20120101/REGION/SERVICE/aws4_request, SignedHeaders=bar;bar2;foo;host;x-amz-content-sha256;x-amz-date, Signature=4bae5054b2e035212a0eb42339a957809a8c9428e628fd4b92e5a295d0fa6e5b')
+        end
+
+        it 'escapes path for the canonical request by default' do
+          skip("CRT does not provide canonical request") if Signer.use_crt?
+
+          signature = Signer.new(options).sign_request(
+            http_method: 'GET',
+            url: 'https://domain.com/foo%bar'
+          )
+          expect(signature.canonical_request.lines.to_a[1]).to eq "/foo%25bar\n"
+        end
+
+        it 'escapes path for the canonical request if :uri_escape_path is true' do
+          skip("CRT does not provide canonical request") if Signer.use_crt?
+
+          options[:uri_escape_path] = true
+          signature = Signer.new(options).sign_request(
+            http_method: 'GET',
+            url: 'https://domain.com/foo%bar'
+          )
+          expect(signature.canonical_request.lines.to_a[1]).to eq "/foo%25bar\n"
+        end
+
+        it 'does not escape path for the canonical request if :uri_escape_path is false' do
+          skip("CRT does not provide canonical request") if Signer.use_crt?
+
+          options[:uri_escape_path] = false
+          signature = Signer.new(options).sign_request(
+            http_method: 'GET',
+            url: 'https://domain.com/foo%bar'
+          )
+          expect(signature.canonical_request.lines.to_a[1]).to eq "/foo%bar\n"
         end
 
       end
@@ -372,6 +414,8 @@ module Aws
       end
 
       context ':canonical_request' do
+
+        before { skip("CRT Signer does not expose canonical request") if Signer.use_crt? }
 
         it 'lower-cases and sort all header keys except authorization' do
           signature = Signer.new(options).sign_request(
@@ -474,29 +518,6 @@ PUT
 /
 
 abc:a b c
-host:domain.com
-x-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-x-amz-date:20160101T112233Z
-
-abc;host;x-amz-content-sha256;x-amz-date
-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-          EOF
-        end
-
-        it 'leaves whitespace in quoted values in-tact' do
-          signature = Signer.new(options).sign_request(
-            http_method: 'PUT',
-            url: 'http://domain.com',
-            headers: {
-              'Abc' => '"a  b  c"', # quoted header values preserve spaces
-              'X-Amz-Date' => '20160101T112233Z',
-            }
-          )
-          expect(signature.canonical_request).to eq(<<-EOF.strip)
-PUT
-/
-
-abc:"a  b  c"
 host:domain.com
 x-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 x-amz-date:20160101T112233Z

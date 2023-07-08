@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-redshiftdataapiservice/types'
 require_relative 'aws-sdk-redshiftdataapiservice/client_api'
+require_relative 'aws-sdk-redshiftdataapiservice/plugins/endpoints.rb'
 require_relative 'aws-sdk-redshiftdataapiservice/client'
 require_relative 'aws-sdk-redshiftdataapiservice/errors'
 require_relative 'aws-sdk-redshiftdataapiservice/resource'
+require_relative 'aws-sdk-redshiftdataapiservice/endpoint_parameters'
+require_relative 'aws-sdk-redshiftdataapiservice/endpoint_provider'
+require_relative 'aws-sdk-redshiftdataapiservice/endpoints'
 require_relative 'aws-sdk-redshiftdataapiservice/customizations'
 
 # This module provides support for Redshift Data API Service. This module is available in the
@@ -28,7 +32,7 @@ require_relative 'aws-sdk-redshiftdataapiservice/customizations'
 # structure.
 #
 #     redshift_data_api_service = Aws::RedshiftDataAPIService::Client.new
-#     resp = redshift_data_api_service.cancel_statement(params)
+#     resp = redshift_data_api_service.batch_execute_statement(params)
 #
 # See {Client} for more information.
 #
@@ -48,6 +52,6 @@ require_relative 'aws-sdk-redshiftdataapiservice/customizations'
 # @!group service
 module Aws::RedshiftDataAPIService
 
-  GEM_VERSION = '1.6.0'
+  GEM_VERSION = '1.30.0'
 
 end

@@ -10,20 +10,6 @@
 module Aws::DirectConnect
   module Types
 
-    # @note When making an API call, you may pass AcceptDirectConnectGatewayAssociationProposalRequest
-    #   data as a hash:
-    #
-    #       {
-    #         direct_connect_gateway_id: "DirectConnectGatewayId", # required
-    #         proposal_id: "DirectConnectGatewayAssociationProposalId", # required
-    #         associated_gateway_owner_account: "OwnerAccount", # required
-    #         override_allowed_prefixes_to_direct_connect_gateway: [
-    #           {
-    #             cidr: "CIDR",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] direct_connect_gateway_id
     #   The ID of the Direct Connect gateway.
     #   @return [String]
@@ -33,8 +19,8 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] associated_gateway_owner_account
-    #   The ID of the AWS account that owns the virtual private gateway or
-    #   transit gateway.
+    #   The ID of the Amazon Web Services account that owns the virtual
+    #   private gateway or transit gateway.
     #   @return [String]
     #
     # @!attribute [rw] override_allowed_prefixes_to_direct_connect_gateway
@@ -42,7 +28,7 @@ module Aws::DirectConnect
     #   gateway.
     #
     #   For information about how to set the prefixes, see [Allowed
-    #   Prefixes][1] in the *AWS Direct Connect User Guide*.
+    #   Prefixes][1] in the *Direct Connect User Guide*.
     #
     #
     #
@@ -73,22 +59,11 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AllocateConnectionOnInterconnectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         bandwidth: "Bandwidth", # required
-    #         connection_name: "ConnectionName", # required
-    #         owner_account: "OwnerAccount", # required
-    #         interconnect_id: "InterconnectId", # required
-    #         vlan: 1, # required
-    #       }
-    #
     # @!attribute [rw] bandwidth
     #   The bandwidth of the connection. The possible values are 50Mbps,
     #   100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps,
-    #   and 10Gbps. Note that only those AWS Direct Connect Partners who
-    #   have met specific requirements are allowed to create a 1Gbps, 2Gbps,
+    #   and 10Gbps. Note that only those Direct Connect Partners who have
+    #   met specific requirements are allowed to create a 1Gbps, 2Gbps,
     #   5Gbps or 10Gbps hosted connection.
     #   @return [String]
     #
@@ -97,8 +72,8 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account of the customer for whom the connection
-    #   will be provisioned.
+    #   The ID of the Amazon Web Services account of the customer for whom
+    #   the connection will be provisioned.
     #   @return [String]
     #
     # @!attribute [rw] interconnect_id
@@ -122,36 +97,20 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AllocateHostedConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         owner_account: "OwnerAccount", # required
-    #         bandwidth: "Bandwidth", # required
-    #         connection_name: "ConnectionName", # required
-    #         vlan: 1, # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the interconnect or LAG.
     #   @return [String]
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account ID of the customer for the connection.
+    #   The ID of the Amazon Web Services account ID of the customer for the
+    #   connection.
     #   @return [String]
     #
     # @!attribute [rw] bandwidth
     #   The bandwidth of the connection. The possible values are 50Mbps,
     #   100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps,
-    #   and 10Gbps. Note that only those AWS Direct Connect Partners who
-    #   have met specific requirements are allowed to create a 1Gbps, 2Gbps,
+    #   and 10Gbps. Note that only those Direct Connect Partners who have
+    #   met specific requirements are allowed to create a 1Gbps, 2Gbps,
     #   5Gbps or 10Gbps hosted connection.
     #   @return [String]
     #
@@ -180,37 +139,14 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AllocatePrivateVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         owner_account: "OwnerAccount", # required
-    #         new_private_virtual_interface_allocation: { # required
-    #           virtual_interface_name: "VirtualInterfaceName", # required
-    #           vlan: 1, # required
-    #           asn: 1, # required
-    #           mtu: 1,
-    #           auth_key: "BGPAuthKey",
-    #           amazon_address: "AmazonAddress",
-    #           address_family: "ipv4", # accepts ipv4, ipv6
-    #           customer_address: "CustomerAddress",
-    #           tags: [
-    #             {
-    #               key: "TagKey", # required
-    #               value: "TagValue",
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection on which the private virtual interface is
     #   provisioned.
     #   @return [String]
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account that owns the virtual private interface.
+    #   The ID of the Amazon Web Services account that owns the virtual
+    #   private interface.
     #   @return [String]
     #
     # @!attribute [rw] new_private_virtual_interface_allocation
@@ -227,41 +163,14 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AllocatePublicVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         owner_account: "OwnerAccount", # required
-    #         new_public_virtual_interface_allocation: { # required
-    #           virtual_interface_name: "VirtualInterfaceName", # required
-    #           vlan: 1, # required
-    #           asn: 1, # required
-    #           auth_key: "BGPAuthKey",
-    #           amazon_address: "AmazonAddress",
-    #           customer_address: "CustomerAddress",
-    #           address_family: "ipv4", # accepts ipv4, ipv6
-    #           route_filter_prefixes: [
-    #             {
-    #               cidr: "CIDR",
-    #             },
-    #           ],
-    #           tags: [
-    #             {
-    #               key: "TagKey", # required
-    #               value: "TagValue",
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection on which the public virtual interface is
     #   provisioned.
     #   @return [String]
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account that owns the public virtual interface.
+    #   The ID of the Amazon Web Services account that owns the public
+    #   virtual interface.
     #   @return [String]
     #
     # @!attribute [rw] new_public_virtual_interface_allocation
@@ -278,37 +187,14 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AllocateTransitVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         owner_account: "OwnerAccount", # required
-    #         new_transit_virtual_interface_allocation: { # required
-    #           virtual_interface_name: "VirtualInterfaceName",
-    #           vlan: 1,
-    #           asn: 1,
-    #           mtu: 1,
-    #           auth_key: "BGPAuthKey",
-    #           amazon_address: "AmazonAddress",
-    #           customer_address: "CustomerAddress",
-    #           address_family: "ipv4", # accepts ipv4, ipv6
-    #           tags: [
-    #             {
-    #               key: "TagKey", # required
-    #               value: "TagValue",
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection on which the transit virtual interface is
     #   provisioned.
     #   @return [String]
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account that owns the transit virtual interface.
+    #   The ID of the Amazon Web Services account that owns the transit
+    #   virtual interface.
     #   @return [String]
     #
     # @!attribute [rw] new_transit_virtual_interface_allocation
@@ -337,14 +223,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateConnectionWithLagRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         lag_id: "LagId", # required
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection.
     #   @return [String]
@@ -362,14 +240,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateHostedConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         parent_connection_id: "ConnectionId", # required
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the hosted connection.
     #   @return [String]
@@ -387,16 +257,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateMacSecKeyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         secret_arn: "SecretARN",
-    #         ckn: "Ckn",
-    #         cak: "Cak",
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the dedicated connection (dxcon-xxxx), or the ID of the
     #   LAG (dxlag-xxxx).
@@ -470,14 +330,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId", # required
-    #         connection_id: "ConnectionId", # required
-    #       }
-    #
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual interface.
     #   @return [String]
@@ -506,8 +358,8 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account that owns the associated virtual private
-    #   gateway or transit gateway.
+    #   The ID of the Amazon Web Services account that owns the associated
+    #   virtual private gateway or transit gateway.
     #   @return [String]
     #
     # @!attribute [rw] region
@@ -557,34 +409,40 @@ module Aws::DirectConnect
     # @!attribute [rw] bgp_peer_state
     #   The state of the BGP peer. The following are the possible values:
     #
-    #   * `verifying`\: The BGP peering addresses or ASN require validation
+    #   * `verifying`: The BGP peering addresses or ASN require validation
     #     before the BGP peer can be created. This state applies only to
     #     public virtual interfaces.
     #
-    #   * `pending`\: The BGP peer is created, and remains in this state
+    #   * `pending`: The BGP peer is created, and remains in this state
     #     until it is ready to be established.
     #
-    #   * `available`\: The BGP peer is ready to be established.
+    #   * `available`: The BGP peer is ready to be established.
     #
-    #   * `deleting`\: The BGP peer is being deleted.
+    #   * `deleting`: The BGP peer is being deleted.
     #
-    #   * `deleted`\: The BGP peer is deleted and cannot be established.
+    #   * `deleted`: The BGP peer is deleted and cannot be established.
     #   @return [String]
     #
     # @!attribute [rw] bgp_status
     #   The status of the BGP peer. The following are the possible values:
     #
-    #   * `up`\: The BGP peer is established. This state does not indicate
+    #   * `up`: The BGP peer is established. This state does not indicate
     #     the state of the routing function. Ensure that you are receiving
     #     routes over the BGP session.
     #
-    #   * `down`\: The BGP peer is down.
+    #   * `down`: The BGP peer is down.
     #
-    #   * `unknown`\: The BGP peer status is not available.
+    #   * `unknown`: The BGP peer status is not available.
     #   @return [String]
     #
     # @!attribute [rw] aws_device_v2
-    #   The Direct Connect endpoint on which the BGP peer terminates.
+    #   The Direct Connect endpoint that terminates the BGP peer.
+    #   @return [String]
+    #
+    # @!attribute [rw] aws_logical_device_id
+    #   The Direct Connect endpoint that terminates the logical connection.
+    #   This device might be different than the device that terminates the
+    #   physical connection.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/BGPPeer AWS API Documentation
@@ -598,18 +456,12 @@ module Aws::DirectConnect
       :customer_address,
       :bgp_peer_state,
       :bgp_status,
-      :aws_device_v2)
+      :aws_device_v2,
+      :aws_logical_device_id)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ConfirmConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the hosted connection.
     #   @return [String]
@@ -625,31 +477,31 @@ module Aws::DirectConnect
     # @!attribute [rw] connection_state
     #   The state of the connection. The following are the possible values:
     #
-    #   * `ordering`\: The initial state of a hosted connection provisioned
+    #   * `ordering`: The initial state of a hosted connection provisioned
     #     on an interconnect. The connection stays in the ordering state
     #     until the owner of the hosted connection confirms or declines the
     #     connection order.
     #
-    #   * `requested`\: The initial state of a standard connection. The
+    #   * `requested`: The initial state of a standard connection. The
     #     connection stays in the requested state until the Letter of
     #     Authorization (LOA) is sent to the customer.
     #
-    #   * `pending`\: The connection has been approved and is being
+    #   * `pending`: The connection has been approved and is being
     #     initialized.
     #
-    #   * `available`\: The network link is up and the connection is ready
+    #   * `available`: The network link is up and the connection is ready
     #     for use.
     #
-    #   * `down`\: The network link is down.
+    #   * `down`: The network link is down.
     #
-    #   * `deleting`\: The connection is being deleted.
+    #   * `deleting`: The connection is being deleted.
     #
-    #   * `deleted`\: The connection has been deleted.
+    #   * `deleted`: The connection has been deleted.
     #
-    #   * `rejected`\: A hosted connection in the `ordering` state enters
-    #     the `rejected` state if it is deleted by the customer.
+    #   * `rejected`: A hosted connection in the `ordering` state enters the
+    #     `rejected` state if it is deleted by the customer.
     #
-    #   * `unknown`\: The state of the connection is not available.
+    #   * `unknown`: The state of the connection is not available.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/ConfirmConnectionResponse AWS API Documentation
@@ -660,15 +512,31 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ConfirmPrivateVirtualInterfaceRequest
-    #   data as a hash:
+    # @!attribute [rw] agreement_name
+    #   The name of the customer agreement.
+    #   @return [String]
     #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId", # required
-    #         virtual_gateway_id: "VirtualGatewayId",
-    #         direct_connect_gateway_id: "DirectConnectGatewayId",
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/ConfirmCustomerAgreementRequest AWS API Documentation
     #
+    class ConfirmCustomerAgreementRequest < Struct.new(
+      :agreement_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] status
+    #   The status of the customer agreement when the connection was
+    #   created. This will be either `signed` or `unsigned`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/ConfirmCustomerAgreementResponse AWS API Documentation
+    #
+    class ConfirmCustomerAgreementResponse < Struct.new(
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual interface.
     #   @return [String]
@@ -695,36 +563,36 @@ module Aws::DirectConnect
     #   The state of the virtual interface. The following are the possible
     #   values:
     #
-    #   * `confirming`\: The creation of the virtual interface is pending
+    #   * `confirming`: The creation of the virtual interface is pending
     #     confirmation from the virtual interface owner. If the owner of the
     #     virtual interface is different from the owner of the connection on
     #     which it is provisioned, then the virtual interface will remain in
     #     this state until it is confirmed by the virtual interface owner.
     #
-    #   * `verifying`\: This state only applies to public virtual
-    #     interfaces. Each public virtual interface needs validation before
-    #     the virtual interface can be created.
+    #   * `verifying`: This state only applies to public virtual interfaces.
+    #     Each public virtual interface needs validation before the virtual
+    #     interface can be created.
     #
-    #   * `pending`\: A virtual interface is in this state from the time
-    #     that it is created until the virtual interface is ready to forward
+    #   * `pending`: A virtual interface is in this state from the time that
+    #     it is created until the virtual interface is ready to forward
     #     traffic.
     #
-    #   * `available`\: A virtual interface that is able to forward traffic.
+    #   * `available`: A virtual interface that is able to forward traffic.
     #
-    #   * `down`\: A virtual interface that is BGP down.
+    #   * `down`: A virtual interface that is BGP down.
     #
-    #   * `deleting`\: A virtual interface is in this state immediately
-    #     after calling DeleteVirtualInterface until it can no longer
-    #     forward traffic.
+    #   * `deleting`: A virtual interface is in this state immediately after
+    #     calling DeleteVirtualInterface until it can no longer forward
+    #     traffic.
     #
-    #   * `deleted`\: A virtual interface that cannot forward traffic.
+    #   * `deleted`: A virtual interface that cannot forward traffic.
     #
-    #   * `rejected`\: The virtual interface owner has declined creation of
+    #   * `rejected`: The virtual interface owner has declined creation of
     #     the virtual interface. If a virtual interface in the `Confirming`
     #     state is deleted by the virtual interface owner, the virtual
     #     interface enters the `Rejected` state.
     #
-    #   * `unknown`\: The state of the virtual interface is not available.
+    #   * `unknown`: The state of the virtual interface is not available.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/ConfirmPrivateVirtualInterfaceResponse AWS API Documentation
@@ -735,13 +603,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ConfirmPublicVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId", # required
-    #       }
-    #
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual interface.
     #   @return [String]
@@ -758,36 +619,36 @@ module Aws::DirectConnect
     #   The state of the virtual interface. The following are the possible
     #   values:
     #
-    #   * `confirming`\: The creation of the virtual interface is pending
+    #   * `confirming`: The creation of the virtual interface is pending
     #     confirmation from the virtual interface owner. If the owner of the
     #     virtual interface is different from the owner of the connection on
     #     which it is provisioned, then the virtual interface will remain in
     #     this state until it is confirmed by the virtual interface owner.
     #
-    #   * `verifying`\: This state only applies to public virtual
-    #     interfaces. Each public virtual interface needs validation before
-    #     the virtual interface can be created.
+    #   * `verifying`: This state only applies to public virtual interfaces.
+    #     Each public virtual interface needs validation before the virtual
+    #     interface can be created.
     #
-    #   * `pending`\: A virtual interface is in this state from the time
-    #     that it is created until the virtual interface is ready to forward
+    #   * `pending`: A virtual interface is in this state from the time that
+    #     it is created until the virtual interface is ready to forward
     #     traffic.
     #
-    #   * `available`\: A virtual interface that is able to forward traffic.
+    #   * `available`: A virtual interface that is able to forward traffic.
     #
-    #   * `down`\: A virtual interface that is BGP down.
+    #   * `down`: A virtual interface that is BGP down.
     #
-    #   * `deleting`\: A virtual interface is in this state immediately
-    #     after calling DeleteVirtualInterface until it can no longer
-    #     forward traffic.
+    #   * `deleting`: A virtual interface is in this state immediately after
+    #     calling DeleteVirtualInterface until it can no longer forward
+    #     traffic.
     #
-    #   * `deleted`\: A virtual interface that cannot forward traffic.
+    #   * `deleted`: A virtual interface that cannot forward traffic.
     #
-    #   * `rejected`\: The virtual interface owner has declined creation of
+    #   * `rejected`: The virtual interface owner has declined creation of
     #     the virtual interface. If a virtual interface in the `Confirming`
     #     state is deleted by the virtual interface owner, the virtual
     #     interface enters the `Rejected` state.
     #
-    #   * `unknown`\: The state of the virtual interface is not available.
+    #   * `unknown`: The state of the virtual interface is not available.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/ConfirmPublicVirtualInterfaceResponse AWS API Documentation
@@ -798,14 +659,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ConfirmTransitVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId", # required
-    #         direct_connect_gateway_id: "DirectConnectGatewayId", # required
-    #       }
-    #
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual interface.
     #   @return [String]
@@ -827,36 +680,36 @@ module Aws::DirectConnect
     #   The state of the virtual interface. The following are the possible
     #   values:
     #
-    #   * `confirming`\: The creation of the virtual interface is pending
+    #   * `confirming`: The creation of the virtual interface is pending
     #     confirmation from the virtual interface owner. If the owner of the
     #     virtual interface is different from the owner of the connection on
     #     which it is provisioned, then the virtual interface will remain in
     #     this state until it is confirmed by the virtual interface owner.
     #
-    #   * `verifying`\: This state only applies to public virtual
-    #     interfaces. Each public virtual interface needs validation before
-    #     the virtual interface can be created.
+    #   * `verifying`: This state only applies to public virtual interfaces.
+    #     Each public virtual interface needs validation before the virtual
+    #     interface can be created.
     #
-    #   * `pending`\: A virtual interface is in this state from the time
-    #     that it is created until the virtual interface is ready to forward
+    #   * `pending`: A virtual interface is in this state from the time that
+    #     it is created until the virtual interface is ready to forward
     #     traffic.
     #
-    #   * `available`\: A virtual interface that is able to forward traffic.
+    #   * `available`: A virtual interface that is able to forward traffic.
     #
-    #   * `down`\: A virtual interface that is BGP down.
+    #   * `down`: A virtual interface that is BGP down.
     #
-    #   * `deleting`\: A virtual interface is in this state immediately
-    #     after calling DeleteVirtualInterface until it can no longer
-    #     forward traffic.
+    #   * `deleting`: A virtual interface is in this state immediately after
+    #     calling DeleteVirtualInterface until it can no longer forward
+    #     traffic.
     #
-    #   * `deleted`\: A virtual interface that cannot forward traffic.
+    #   * `deleted`: A virtual interface that cannot forward traffic.
     #
-    #   * `rejected`\: The virtual interface owner has declined creation of
+    #   * `rejected`: The virtual interface owner has declined creation of
     #     the virtual interface. If a virtual interface in the `Confirming`
     #     state is deleted by the virtual interface owner, the virtual
     #     interface enters the `Rejected` state.
     #
-    #   * `unknown`\: The state of the virtual interface is not available.
+    #   * `unknown`: The state of the virtual interface is not available.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/ConfirmTransitVirtualInterfaceResponse AWS API Documentation
@@ -867,10 +720,10 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # Information about an AWS Direct Connect connection.
+    # Information about an Direct Connect connection.
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account that owns the connection.
+    #   The ID of the Amazon Web Services account that owns the connection.
     #   @return [String]
     #
     # @!attribute [rw] connection_id
@@ -884,35 +737,35 @@ module Aws::DirectConnect
     # @!attribute [rw] connection_state
     #   The state of the connection. The following are the possible values:
     #
-    #   * `ordering`\: The initial state of a hosted connection provisioned
+    #   * `ordering`: The initial state of a hosted connection provisioned
     #     on an interconnect. The connection stays in the ordering state
     #     until the owner of the hosted connection confirms or declines the
     #     connection order.
     #
-    #   * `requested`\: The initial state of a standard connection. The
+    #   * `requested`: The initial state of a standard connection. The
     #     connection stays in the requested state until the Letter of
     #     Authorization (LOA) is sent to the customer.
     #
-    #   * `pending`\: The connection has been approved and is being
+    #   * `pending`: The connection has been approved and is being
     #     initialized.
     #
-    #   * `available`\: The network link is up and the connection is ready
+    #   * `available`: The network link is up and the connection is ready
     #     for use.
     #
-    #   * `down`\: The network link is down.
+    #   * `down`: The network link is down.
     #
-    #   * `deleting`\: The connection is being deleted.
+    #   * `deleting`: The connection is being deleted.
     #
-    #   * `deleted`\: The connection has been deleted.
+    #   * `deleted`: The connection has been deleted.
     #
-    #   * `rejected`\: A hosted connection in the `ordering` state enters
-    #     the `rejected` state if it is deleted by the customer.
+    #   * `rejected`: A hosted connection in the `ordering` state enters the
+    #     `rejected` state if it is deleted by the customer.
     #
-    #   * `unknown`\: The state of the connection is not available.
+    #   * `unknown`: The state of the connection is not available.
     #   @return [String]
     #
     # @!attribute [rw] region
-    #   The AWS Region where the connection is located.
+    #   The Amazon Web Services Region where the connection is located.
     #   @return [String]
     #
     # @!attribute [rw] location
@@ -928,8 +781,8 @@ module Aws::DirectConnect
     #   @return [Integer]
     #
     # @!attribute [rw] partner_name
-    #   The name of the AWS Direct Connect service provider associated with
-    #   the connection.
+    #   The name of the Direct Connect service provider associated with the
+    #   connection.
     #   @return [String]
     #
     # @!attribute [rw] loa_issue_time
@@ -946,12 +799,17 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] jumbo_frame_capable
-    #   Indicates whether jumbo frames (9001 MTU) are supported.
+    #   Indicates whether jumbo frames are supported.
     #   @return [Boolean]
     #
     # @!attribute [rw] aws_device_v2
-    #   The Direct Connect endpoint on which the physical connection
-    #   terminates.
+    #   The Direct Connect endpoint that terminates the physical connection.
+    #   @return [String]
+    #
+    # @!attribute [rw] aws_logical_device_id
+    #   The Direct Connect endpoint that terminates the logical connection.
+    #   This device might be different than the device that terminates the
+    #   physical connection.
     #   @return [String]
     #
     # @!attribute [rw] has_logical_redundancy
@@ -1007,6 +865,7 @@ module Aws::DirectConnect
       :aws_device,
       :jumbo_frame_capable,
       :aws_device_v2,
+      :aws_logical_device_id,
       :has_logical_redundancy,
       :tags,
       :provider_name,
@@ -1030,20 +889,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBGPPeerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId",
-    #         new_bgp_peer: {
-    #           asn: 1,
-    #           auth_key: "BGPAuthKey",
-    #           address_family: "ipv4", # accepts ipv4, ipv6
-    #           amazon_address: "AmazonAddress",
-    #           customer_address: "CustomerAddress",
-    #         },
-    #       }
-    #
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual interface.
     #   @return [String]
@@ -1073,24 +918,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         location: "LocationCode", # required
-    #         bandwidth: "Bandwidth", # required
-    #         connection_name: "ConnectionName", # required
-    #         lag_id: "LagId",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #         provider_name: "ProviderName",
-    #         request_mac_sec: false,
-    #       }
-    #
     # @!attribute [rw] location
     #   The location of the connection.
     #   @return [String]
@@ -1122,7 +949,7 @@ module Aws::DirectConnect
     #
     #   MAC Security (MACsec) is only available on dedicated connections.
     #   For information about MAC Security (MACsec) prerequisties, see
-    #   [MACsec prerequisties][1] in the *AWS Direct Connect User Guide*.
+    #   [MACsec prerequisties][1] in the *Direct Connect User Guide*.
     #
     #
     #
@@ -1143,31 +970,13 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDirectConnectGatewayAssociationProposalRequest
-    #   data as a hash:
-    #
-    #       {
-    #         direct_connect_gateway_id: "DirectConnectGatewayId", # required
-    #         direct_connect_gateway_owner_account: "OwnerAccount", # required
-    #         gateway_id: "GatewayIdToAssociate", # required
-    #         add_allowed_prefixes_to_direct_connect_gateway: [
-    #           {
-    #             cidr: "CIDR",
-    #           },
-    #         ],
-    #         remove_allowed_prefixes_to_direct_connect_gateway: [
-    #           {
-    #             cidr: "CIDR",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] direct_connect_gateway_id
     #   The ID of the Direct Connect gateway.
     #   @return [String]
     #
     # @!attribute [rw] direct_connect_gateway_owner_account
-    #   The ID of the AWS account that owns the Direct Connect gateway.
+    #   The ID of the Amazon Web Services account that owns the Direct
+    #   Connect gateway.
     #   @return [String]
     #
     # @!attribute [rw] gateway_id
@@ -1207,20 +1016,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDirectConnectGatewayAssociationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         direct_connect_gateway_id: "DirectConnectGatewayId", # required
-    #         gateway_id: "GatewayIdToAssociate",
-    #         add_allowed_prefixes_to_direct_connect_gateway: [
-    #           {
-    #             cidr: "CIDR",
-    #           },
-    #         ],
-    #         virtual_gateway_id: "VirtualGatewayId",
-    #       }
-    #
     # @!attribute [rw] direct_connect_gateway_id
     #   The ID of the Direct Connect gateway.
     #   @return [String]
@@ -1236,7 +1031,7 @@ module Aws::DirectConnect
     #   transit gateway.
     #
     #   For information about how to set the prefixes, see [Allowed
-    #   Prefixes][1] in the *AWS Direct Connect User Guide*.
+    #   Prefixes][1] in the *Direct Connect User Guide*.
     #
     #
     #
@@ -1270,14 +1065,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDirectConnectGatewayRequest
-    #   data as a hash:
-    #
-    #       {
-    #         direct_connect_gateway_name: "DirectConnectGatewayName", # required
-    #         amazon_side_asn: 1,
-    #       }
-    #
     # @!attribute [rw] direct_connect_gateway_name
     #   The name of the Direct Connect gateway.
     #   @return [String]
@@ -1310,23 +1097,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateInterconnectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         interconnect_name: "InterconnectName", # required
-    #         bandwidth: "Bandwidth", # required
-    #         location: "LocationCode", # required
-    #         lag_id: "LagId",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #         provider_name: "ProviderName",
-    #       }
-    #
     # @!attribute [rw] interconnect_name
     #   The name of the interconnect.
     #   @return [String]
@@ -1364,34 +1134,11 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateLagRequest
-    #   data as a hash:
-    #
-    #       {
-    #         number_of_connections: 1, # required
-    #         location: "LocationCode", # required
-    #         connections_bandwidth: "Bandwidth", # required
-    #         lag_name: "LagName", # required
-    #         connection_id: "ConnectionId",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #         child_connection_tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #         provider_name: "ProviderName",
-    #         request_mac_sec: false,
-    #       }
-    #
     # @!attribute [rw] number_of_connections
     #   The number of physical dedicated connections initially provisioned
-    #   and bundled by the LAG.
+    #   and bundled by the LAG. You can have a maximum of four connections
+    #   when the port speed is 1G or 10G, or two when the port speed is
+    #   100G.
     #   @return [Integer]
     #
     # @!attribute [rw] location
@@ -1428,8 +1175,8 @@ module Aws::DirectConnect
     #
     #   <note markdown="1"> All connections in the LAG must be capable of supporting MAC
     #   Security (MACsec). For information about MAC Security (MACsec)
-    #   prerequisties, see [MACsec prerequisties][1] in the *AWS Direct
-    #   Connect User Guide*.
+    #   prerequisties, see [MACsec prerequisties][1] in the *Direct Connect
+    #   User Guide*.
     #
     #    </note>
     #
@@ -1454,31 +1201,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreatePrivateVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         new_private_virtual_interface: { # required
-    #           virtual_interface_name: "VirtualInterfaceName", # required
-    #           vlan: 1, # required
-    #           asn: 1, # required
-    #           mtu: 1,
-    #           auth_key: "BGPAuthKey",
-    #           amazon_address: "AmazonAddress",
-    #           customer_address: "CustomerAddress",
-    #           address_family: "ipv4", # accepts ipv4, ipv6
-    #           virtual_gateway_id: "VirtualGatewayId",
-    #           direct_connect_gateway_id: "DirectConnectGatewayId",
-    #           tags: [
-    #             {
-    #               key: "TagKey", # required
-    #               value: "TagValue",
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection.
     #   @return [String]
@@ -1496,33 +1218,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreatePublicVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         new_public_virtual_interface: { # required
-    #           virtual_interface_name: "VirtualInterfaceName", # required
-    #           vlan: 1, # required
-    #           asn: 1, # required
-    #           auth_key: "BGPAuthKey",
-    #           amazon_address: "AmazonAddress",
-    #           customer_address: "CustomerAddress",
-    #           address_family: "ipv4", # accepts ipv4, ipv6
-    #           route_filter_prefixes: [
-    #             {
-    #               cidr: "CIDR",
-    #             },
-    #           ],
-    #           tags: [
-    #             {
-    #               key: "TagKey", # required
-    #               value: "TagValue",
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection.
     #   @return [String]
@@ -1540,30 +1235,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateTransitVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         new_transit_virtual_interface: { # required
-    #           virtual_interface_name: "VirtualInterfaceName",
-    #           vlan: 1,
-    #           asn: 1,
-    #           mtu: 1,
-    #           auth_key: "BGPAuthKey",
-    #           amazon_address: "AmazonAddress",
-    #           customer_address: "CustomerAddress",
-    #           address_family: "ipv4", # accepts ipv4, ipv6
-    #           direct_connect_gateway_id: "DirectConnectGatewayId",
-    #           tags: [
-    #             {
-    #               key: "TagKey", # required
-    #               value: "TagValue",
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection.
     #   @return [String]
@@ -1593,16 +1264,26 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBGPPeerRequest
-    #   data as a hash:
+    # The name and status of a customer agreement.
     #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId",
-    #         asn: 1,
-    #         customer_address: "CustomerAddress",
-    #         bgp_peer_id: "BGPPeerId",
-    #       }
+    # @!attribute [rw] agreement_name
+    #   The name of the agreement.
+    #   @return [String]
     #
+    # @!attribute [rw] status
+    #   The status of the customer agreement. This will be either `signed`
+    #   or `unsigned`
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/CustomerAgreement AWS API Documentation
+    #
+    class CustomerAgreement < Struct.new(
+      :agreement_name,
+      :status)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual interface.
     #   @return [String]
@@ -1643,13 +1324,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection.
     #   @return [String]
@@ -1662,13 +1336,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDirectConnectGatewayAssociationProposalRequest
-    #   data as a hash:
-    #
-    #       {
-    #         proposal_id: "DirectConnectGatewayAssociationProposalId", # required
-    #       }
-    #
     # @!attribute [rw] proposal_id
     #   The ID of the proposal.
     #   @return [String]
@@ -1693,15 +1360,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDirectConnectGatewayAssociationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         association_id: "DirectConnectGatewayAssociationId",
-    #         direct_connect_gateway_id: "DirectConnectGatewayId",
-    #         virtual_gateway_id: "VirtualGatewayId",
-    #       }
-    #
     # @!attribute [rw] association_id
     #   The ID of the Direct Connect gateway association.
     #   @return [String]
@@ -1736,13 +1394,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDirectConnectGatewayRequest
-    #   data as a hash:
-    #
-    #       {
-    #         direct_connect_gateway_id: "DirectConnectGatewayId", # required
-    #       }
-    #
     # @!attribute [rw] direct_connect_gateway_id
     #   The ID of the Direct Connect gateway.
     #   @return [String]
@@ -1767,13 +1418,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteInterconnectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         interconnect_id: "InterconnectId", # required
-    #       }
-    #
     # @!attribute [rw] interconnect_id
     #   The ID of the interconnect.
     #   @return [String]
@@ -1790,23 +1434,22 @@ module Aws::DirectConnect
     #   The state of the interconnect. The following are the possible
     #   values:
     #
-    #   * `requested`\: The initial state of an interconnect. The
+    #   * `requested`: The initial state of an interconnect. The
     #     interconnect stays in the requested state until the Letter of
     #     Authorization (LOA) is sent to the customer.
     #
-    #   * `pending`\: The interconnect is approved, and is being
-    #     initialized.
+    #   * `pending`: The interconnect is approved, and is being initialized.
     #
-    #   * `available`\: The network link is up, and the interconnect is
-    #     ready for use.
+    #   * `available`: The network link is up, and the interconnect is ready
+    #     for use.
     #
-    #   * `down`\: The network link is down.
+    #   * `down`: The network link is down.
     #
-    #   * `deleting`\: The interconnect is being deleted.
+    #   * `deleting`: The interconnect is being deleted.
     #
-    #   * `deleted`\: The interconnect is deleted.
+    #   * `deleted`: The interconnect is deleted.
     #
-    #   * `unknown`\: The state of the interconnect is not available.
+    #   * `unknown`: The state of the interconnect is not available.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DeleteInterconnectResponse AWS API Documentation
@@ -1817,13 +1460,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteLagRequest
-    #   data as a hash:
-    #
-    #       {
-    #         lag_id: "LagId", # required
-    #       }
-    #
     # @!attribute [rw] lag_id
     #   The ID of the LAG.
     #   @return [String]
@@ -1836,13 +1472,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteVirtualInterfaceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId", # required
-    #       }
-    #
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual interface.
     #   @return [String]
@@ -1859,36 +1488,36 @@ module Aws::DirectConnect
     #   The state of the virtual interface. The following are the possible
     #   values:
     #
-    #   * `confirming`\: The creation of the virtual interface is pending
+    #   * `confirming`: The creation of the virtual interface is pending
     #     confirmation from the virtual interface owner. If the owner of the
     #     virtual interface is different from the owner of the connection on
     #     which it is provisioned, then the virtual interface will remain in
     #     this state until it is confirmed by the virtual interface owner.
     #
-    #   * `verifying`\: This state only applies to public virtual
-    #     interfaces. Each public virtual interface needs validation before
-    #     the virtual interface can be created.
+    #   * `verifying`: This state only applies to public virtual interfaces.
+    #     Each public virtual interface needs validation before the virtual
+    #     interface can be created.
     #
-    #   * `pending`\: A virtual interface is in this state from the time
-    #     that it is created until the virtual interface is ready to forward
+    #   * `pending`: A virtual interface is in this state from the time that
+    #     it is created until the virtual interface is ready to forward
     #     traffic.
     #
-    #   * `available`\: A virtual interface that is able to forward traffic.
+    #   * `available`: A virtual interface that is able to forward traffic.
     #
-    #   * `down`\: A virtual interface that is BGP down.
+    #   * `down`: A virtual interface that is BGP down.
     #
-    #   * `deleting`\: A virtual interface is in this state immediately
-    #     after calling DeleteVirtualInterface until it can no longer
-    #     forward traffic.
+    #   * `deleting`: A virtual interface is in this state immediately after
+    #     calling DeleteVirtualInterface until it can no longer forward
+    #     traffic.
     #
-    #   * `deleted`\: A virtual interface that cannot forward traffic.
+    #   * `deleted`: A virtual interface that cannot forward traffic.
     #
-    #   * `rejected`\: The virtual interface owner has declined creation of
+    #   * `rejected`: The virtual interface owner has declined creation of
     #     the virtual interface. If a virtual interface in the `Confirming`
     #     state is deleted by the virtual interface owner, the virtual
     #     interface enters the `Rejected` state.
     #
-    #   * `unknown`\: The state of the virtual interface is not available.
+    #   * `unknown`: The state of the virtual interface is not available.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DeleteVirtualInterfaceResponse AWS API Documentation
@@ -1899,15 +1528,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConnectionLoaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         provider_name: "ProviderName",
-    #         loa_content_type: "application/pdf", # accepts application/pdf
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection.
     #   @return [String]
@@ -1947,13 +1567,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConnectionsOnInterconnectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         interconnect_id: "InterconnectId", # required
-    #       }
-    #
     # @!attribute [rw] interconnect_id
     #   The ID of the interconnect.
     #   @return [String]
@@ -1966,13 +1579,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeConnectionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId",
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection.
     #   @return [String]
@@ -1985,17 +1591,32 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDirectConnectGatewayAssociationProposalsRequest
-    #   data as a hash:
+    # @!attribute [rw] agreements
+    #   The list of customer agreements.
+    #   @return [Array<Types::CustomerAgreement>]
     #
-    #       {
-    #         direct_connect_gateway_id: "DirectConnectGatewayId",
-    #         proposal_id: "DirectConnectGatewayAssociationProposalId",
-    #         associated_gateway_id: "AssociatedGatewayId",
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
+    # @!attribute [rw] nni_partner_type
+    #   The type of network-to-network interface (NNI) partner. The partner
+    #   type will be one of the following:
     #
+    #   * V1: This partner can only allocate 50Mbps, 100Mbps, 200Mbps,
+    #     300Mbps, 400Mbps, or 500Mbps subgigabit connections.
+    #
+    #   * V2: This partner can only allocate 1GB, 2GB, 5GB, or 10GB hosted
+    #     connections.
+    #
+    #   * nonPartner: The customer is not a partner.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DescribeCustomerMetadataResponse AWS API Documentation
+    #
+    class DescribeCustomerMetadataResponse < Struct.new(
+      :agreements,
+      :nni_partner_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] direct_connect_gateway_id
     #   The ID of the Direct Connect gateway.
     #   @return [String]
@@ -2051,18 +1672,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDirectConnectGatewayAssociationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         association_id: "DirectConnectGatewayAssociationId",
-    #         associated_gateway_id: "AssociatedGatewayId",
-    #         direct_connect_gateway_id: "DirectConnectGatewayId",
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #         virtual_gateway_id: "VirtualGatewayId",
-    #       }
-    #
     # @!attribute [rw] association_id
     #   The ID of the Direct Connect gateway association.
     #   @return [String]
@@ -2122,16 +1731,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDirectConnectGatewayAttachmentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         direct_connect_gateway_id: "DirectConnectGatewayId",
-    #         virtual_interface_id: "VirtualInterfaceId",
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] direct_connect_gateway_id
     #   The ID of the Direct Connect gateway.
     #   @return [String]
@@ -2181,15 +1780,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDirectConnectGatewaysRequest
-    #   data as a hash:
-    #
-    #       {
-    #         direct_connect_gateway_id: "DirectConnectGatewayId",
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] direct_connect_gateway_id
     #   The ID of the Direct Connect gateway.
     #   @return [String]
@@ -2234,13 +1824,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeHostedConnectionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the interconnect or LAG.
     #   @return [String]
@@ -2253,15 +1836,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeInterconnectLoaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         interconnect_id: "InterconnectId", # required
-    #         provider_name: "ProviderName",
-    #         loa_content_type: "application/pdf", # accepts application/pdf
-    #       }
-    #
     # @!attribute [rw] interconnect_id
     #   The ID of the interconnect.
     #   @return [String]
@@ -2301,13 +1875,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeInterconnectsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         interconnect_id: "InterconnectId",
-    #       }
-    #
     # @!attribute [rw] interconnect_id
     #   The ID of the interconnect.
     #   @return [String]
@@ -2320,13 +1887,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeLagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         lag_id: "LagId",
-    #       }
-    #
     # @!attribute [rw] lag_id
     #   The ID of the LAG.
     #   @return [String]
@@ -2339,15 +1899,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeLoaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         provider_name: "ProviderName",
-    #         loa_content_type: "application/pdf", # accepts application/pdf
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of a connection, LAG, or interconnect.
     #   @return [String]
@@ -2374,13 +1925,54 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTagsRequest
-    #   data as a hash:
+    # Provides the details about a virtual interface's router.
     #
-    #       {
-    #         resource_arns: ["ResourceArn"], # required
-    #       }
+    # @!attribute [rw] virtual_interface_id
+    #   The ID of the virtual interface.
+    #   @return [String]
     #
+    # @!attribute [rw] router_type_identifier
+    #   Identifies the router by a combination of vendor, platform, and
+    #   software version. For example,
+    #   `CiscoSystemsInc-2900SeriesRouters-IOS124`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DescribeRouterConfigurationRequest AWS API Documentation
+    #
+    class DescribeRouterConfigurationRequest < Struct.new(
+      :virtual_interface_id,
+      :router_type_identifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] customer_router_config
+    #   The customer router configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] router
+    #   The details about the router.
+    #   @return [Types::RouterType]
+    #
+    # @!attribute [rw] virtual_interface_id
+    #   The ID assigned to the virtual interface.
+    #   @return [String]
+    #
+    # @!attribute [rw] virtual_interface_name
+    #   Provides the details about a virtual interface's router.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DescribeRouterConfigurationResponse AWS API Documentation
+    #
+    class DescribeRouterConfigurationResponse < Struct.new(
+      :customer_router_config,
+      :router,
+      :virtual_interface_id,
+      :virtual_interface_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arns
     #   The Amazon Resource Names (ARNs) of the resources.
     #   @return [Array<String>]
@@ -2405,14 +1997,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeVirtualInterfacesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId",
-    #         virtual_interface_id: "VirtualInterfaceId",
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection.
     #   @return [String]
@@ -2461,22 +2045,23 @@ module Aws::DirectConnect
     #   @return [Integer]
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account that owns the Direct Connect gateway.
+    #   The ID of the Amazon Web Services account that owns the Direct
+    #   Connect gateway.
     #   @return [String]
     #
     # @!attribute [rw] direct_connect_gateway_state
     #   The state of the Direct Connect gateway. The following are the
     #   possible values:
     #
-    #   * `pending`\: The initial state after calling
+    #   * `pending`: The initial state after calling
     #     CreateDirectConnectGateway.
     #
-    #   * `available`\: The Direct Connect gateway is ready for use.
+    #   * `available`: The Direct Connect gateway is ready for use.
     #
-    #   * `deleting`\: The initial state after calling
+    #   * `deleting`: The initial state after calling
     #     DeleteDirectConnectGateway.
     #
-    #   * `deleted`\: The Direct Connect gateway is deleted and cannot pass
+    #   * `deleted`: The Direct Connect gateway is deleted and cannot pass
     #     traffic.
     #   @return [String]
     #
@@ -2505,26 +2090,31 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] direct_connect_gateway_owner_account
-    #   The ID of the AWS account that owns the associated gateway.
+    #   The ID of the Amazon Web Services account that owns the associated
+    #   gateway.
     #   @return [String]
     #
     # @!attribute [rw] association_state
     #   The state of the association. The following are the possible values:
     #
-    #   * `associating`\: The initial state after calling
+    #   * `associating`: The initial state after calling
     #     CreateDirectConnectGatewayAssociation.
     #
-    #   * `associated`\: The Direct Connect gateway and virtual private
+    #   * `associated`: The Direct Connect gateway and virtual private
     #     gateway or transit gateway are successfully associated and ready
     #     to pass traffic.
     #
-    #   * `disassociating`\: The initial state after calling
+    #   * `disassociating`: The initial state after calling
     #     DeleteDirectConnectGatewayAssociation.
     #
-    #   * `disassociated`\: The virtual private gateway or transit gateway
-    #     is disassociated from the Direct Connect gateway. Traffic flow
+    #   * `disassociated`: The virtual private gateway or transit gateway is
+    #     disassociated from the Direct Connect gateway. Traffic flow
     #     between the Direct Connect gateway and virtual private gateway or
     #     transit gateway is stopped.
+    #
+    #   * `updating`: The CIDR blocks for the virtual private gateway or
+    #     transit gateway are currently being updated. This could be new
+    #     CIDR blocks added or current CIDR blocks removed.
     #   @return [String]
     #
     # @!attribute [rw] state_change_error
@@ -2549,11 +2139,13 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] virtual_gateway_region
-    #   The AWS Region where the virtual private gateway is located.
+    #   The Amazon Web Services Region where the virtual private gateway is
+    #   located.
     #   @return [String]
     #
     # @!attribute [rw] virtual_gateway_owner_account
-    #   The ID of the AWS account that owns the virtual private gateway.
+    #   The ID of the Amazon Web Services account that owns the virtual
+    #   private gateway.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DirectConnectGatewayAssociation AWS API Documentation
@@ -2585,20 +2177,21 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] direct_connect_gateway_owner_account
-    #   The ID of the AWS account that owns the Direct Connect gateway.
+    #   The ID of the Amazon Web Services account that owns the Direct
+    #   Connect gateway.
     #   @return [String]
     #
     # @!attribute [rw] proposal_state
     #   The state of the proposal. The following are possible values:
     #
-    #   * `accepted`\: The proposal has been accepted. The Direct Connect
+    #   * `accepted`: The proposal has been accepted. The Direct Connect
     #     gateway association is available to use in this state.
     #
-    #   * `deleted`\: The proposal has been deleted by the owner that made
+    #   * `deleted`: The proposal has been deleted by the owner that made
     #     the proposal. The Direct Connect gateway association cannot be
     #     used in this state.
     #
-    #   * `requested`\: The proposal has been requested. The Direct Connect
+    #   * `requested`: The proposal has been requested. The Direct Connect
     #     gateway association cannot be used in this state.
     #   @return [String]
     #
@@ -2641,26 +2234,28 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] virtual_interface_region
-    #   The AWS Region where the virtual interface is located.
+    #   The Amazon Web Services Region where the virtual interface is
+    #   located.
     #   @return [String]
     #
     # @!attribute [rw] virtual_interface_owner_account
-    #   The ID of the AWS account that owns the virtual interface.
+    #   The ID of the Amazon Web Services account that owns the virtual
+    #   interface.
     #   @return [String]
     #
     # @!attribute [rw] attachment_state
     #   The state of the attachment. The following are the possible values:
     #
-    #   * `attaching`\: The initial state after a virtual interface is
+    #   * `attaching`: The initial state after a virtual interface is
     #     created using the Direct Connect gateway.
     #
-    #   * `attached`\: The Direct Connect gateway and virtual interface are
+    #   * `attached`: The Direct Connect gateway and virtual interface are
     #     attached and ready to pass traffic.
     #
-    #   * `detaching`\: The initial state after calling
+    #   * `detaching`: The initial state after calling
     #     DeleteVirtualInterface.
     #
-    #   * `detached`\: The virtual interface is detached from the Direct
+    #   * `detached`: The virtual interface is detached from the Direct
     #     Connect gateway. Traffic flow between the Direct Connect gateway
     #     and virtual interface is stopped.
     #   @return [String]
@@ -2700,14 +2295,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateConnectionFromLagRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         lag_id: "LagId", # required
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the connection.
     #   @return [String]
@@ -2725,14 +2312,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateMacSecKeyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         secret_arn: "SecretARN", # required
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the dedicated connection (dxcon-xxxx), or the ID of the
     #   LAG (dxlag-xxxx).
@@ -2797,27 +2376,26 @@ module Aws::DirectConnect
     #   The state of the interconnect. The following are the possible
     #   values:
     #
-    #   * `requested`\: The initial state of an interconnect. The
+    #   * `requested`: The initial state of an interconnect. The
     #     interconnect stays in the requested state until the Letter of
     #     Authorization (LOA) is sent to the customer.
     #
-    #   * `pending`\: The interconnect is approved, and is being
-    #     initialized.
+    #   * `pending`: The interconnect is approved, and is being initialized.
     #
-    #   * `available`\: The network link is up, and the interconnect is
-    #     ready for use.
+    #   * `available`: The network link is up, and the interconnect is ready
+    #     for use.
     #
-    #   * `down`\: The network link is down.
+    #   * `down`: The network link is down.
     #
-    #   * `deleting`\: The interconnect is being deleted.
+    #   * `deleting`: The interconnect is being deleted.
     #
-    #   * `deleted`\: The interconnect is deleted.
+    #   * `deleted`: The interconnect is deleted.
     #
-    #   * `unknown`\: The state of the interconnect is not available.
+    #   * `unknown`: The state of the interconnect is not available.
     #   @return [String]
     #
     # @!attribute [rw] region
-    #   The AWS Region where the connection is located.
+    #   The Amazon Web Services Region where the connection is located.
     #   @return [String]
     #
     # @!attribute [rw] location
@@ -2842,12 +2420,17 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] jumbo_frame_capable
-    #   Indicates whether jumbo frames (9001 MTU) are supported.
+    #   Indicates whether jumbo frames are supported.
     #   @return [Boolean]
     #
     # @!attribute [rw] aws_device_v2
-    #   The Direct Connect endpoint on which the physical connection
-    #   terminates.
+    #   The Direct Connect endpoint that terminates the physical connection.
+    #   @return [String]
+    #
+    # @!attribute [rw] aws_logical_device_id
+    #   The Direct Connect endpoint that terminates the logical connection.
+    #   This device might be different than the device that terminates the
+    #   physical connection.
     #   @return [String]
     #
     # @!attribute [rw] has_logical_redundancy
@@ -2877,6 +2460,7 @@ module Aws::DirectConnect
       :aws_device,
       :jumbo_frame_capable,
       :aws_device_v2,
+      :aws_logical_device_id,
       :has_logical_redundancy,
       :tags,
       :provider_name)
@@ -2913,7 +2497,7 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account that owns the LAG.
+    #   The ID of the Amazon Web Services account that owns the LAG.
     #   @return [String]
     #
     # @!attribute [rw] lag_name
@@ -2923,22 +2507,22 @@ module Aws::DirectConnect
     # @!attribute [rw] lag_state
     #   The state of the LAG. The following are the possible values:
     #
-    #   * `requested`\: The initial state of a LAG. The LAG stays in the
+    #   * `requested`: The initial state of a LAG. The LAG stays in the
     #     requested state until the Letter of Authorization (LOA) is
     #     available.
     #
-    #   * `pending`\: The LAG has been approved and is being initialized.
+    #   * `pending`: The LAG has been approved and is being initialized.
     #
-    #   * `available`\: The network link is established and the LAG is ready
+    #   * `available`: The network link is established and the LAG is ready
     #     for use.
     #
-    #   * `down`\: The network link is down.
+    #   * `down`: The network link is down.
     #
-    #   * `deleting`\: The LAG is being deleted.
+    #   * `deleting`: The LAG is being deleted.
     #
-    #   * `deleted`\: The LAG is deleted.
+    #   * `deleted`: The LAG is deleted.
     #
-    #   * `unknown`\: The state of the LAG is not available.
+    #   * `unknown`: The state of the LAG is not available.
     #   @return [String]
     #
     # @!attribute [rw] location
@@ -2946,7 +2530,7 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] region
-    #   The AWS Region where the connection is located.
+    #   The Amazon Web Services Region where the connection is located.
     #   @return [String]
     #
     # @!attribute [rw] minimum_links
@@ -2955,11 +2539,17 @@ module Aws::DirectConnect
     #   @return [Integer]
     #
     # @!attribute [rw] aws_device
-    #   The AWS Direct Connect endpoint that hosts the LAG.
+    #   The Direct Connect endpoint that hosts the LAG.
     #   @return [String]
     #
     # @!attribute [rw] aws_device_v2
-    #   The AWS Direct Connect endpoint that hosts the LAG.
+    #   The Direct Connect endpoint that hosts the LAG.
+    #   @return [String]
+    #
+    # @!attribute [rw] aws_logical_device_id
+    #   The Direct Connect endpoint that terminates the logical connection.
+    #   This device might be different than the device that terminates the
+    #   physical connection.
     #   @return [String]
     #
     # @!attribute [rw] connections
@@ -2971,7 +2561,7 @@ module Aws::DirectConnect
     #   @return [Boolean]
     #
     # @!attribute [rw] jumbo_frame_capable
-    #   Indicates whether jumbo frames (9001 MTU) are supported.
+    #   Indicates whether jumbo frames are supported.
     #   @return [Boolean]
     #
     # @!attribute [rw] has_logical_redundancy
@@ -3016,6 +2606,7 @@ module Aws::DirectConnect
       :minimum_links,
       :aws_device,
       :aws_device_v2,
+      :aws_logical_device_id,
       :connections,
       :allows_hosted_connections,
       :jumbo_frame_capable,
@@ -3041,18 +2632,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListVirtualInterfaceTestHistoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         test_id: "TestId",
-    #         virtual_interface_id: "VirtualInterfaceId",
-    #         bgp_peers: ["BGPPeerId"],
-    #         status: "FailureTestHistoryStatus",
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] test_id
     #   The ID of the virtual interface failover test.
     #   @return [String]
@@ -3135,7 +2714,7 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # Information about an AWS Direct Connect location.
+    # Information about an Direct Connect location.
     #
     # @!attribute [rw] location_code
     #   The code for the location.
@@ -3147,7 +2726,7 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] region
-    #   The AWS Region for the location.
+    #   The Amazon Web Services Region for the location.
     #   @return [String]
     #
     # @!attribute [rw] available_port_speeds
@@ -3203,17 +2782,17 @@ module Aws::DirectConnect
     #
     #   The possible values are:
     #
-    #   * `associating`\: The MAC Security (MACsec) secret key is being
+    #   * `associating`: The MAC Security (MACsec) secret key is being
     #     validated and not yet associated with the connection or LAG.
     #
-    #   * `associated`\: The MAC Security (MACsec) secret key is validated
+    #   * `associated`: The MAC Security (MACsec) secret key is validated
     #     and associated with the connection or LAG.
     #
-    #   * `disassociating`\: The MAC Security (MACsec) secret key is being
+    #   * `disassociating`: The MAC Security (MACsec) secret key is being
     #     disassociated from the connection or LAG
     #
-    #   * `disassociated`\: The MAC Security (MACsec) secret key is no
-    #     longer associated with the connection or LAG.
+    #   * `disassociated`: The MAC Security (MACsec) secret key is no longer
+    #     associated with the connection or LAG.
     #   @return [String]
     #
     # @!attribute [rw] start_on
@@ -3233,17 +2812,6 @@ module Aws::DirectConnect
     end
 
     # Information about a new BGP peer.
-    #
-    # @note When making an API call, you may pass NewBGPPeer
-    #   data as a hash:
-    #
-    #       {
-    #         asn: 1,
-    #         auth_key: "BGPAuthKey",
-    #         address_family: "ipv4", # accepts ipv4, ipv6
-    #         amazon_address: "AmazonAddress",
-    #         customer_address: "CustomerAddress",
-    #       }
     #
     # @!attribute [rw] asn
     #   The autonomous system (AS) number for Border Gateway Protocol (BGP)
@@ -3281,28 +2849,6 @@ module Aws::DirectConnect
     end
 
     # Information about a private virtual interface.
-    #
-    # @note When making an API call, you may pass NewPrivateVirtualInterface
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_name: "VirtualInterfaceName", # required
-    #         vlan: 1, # required
-    #         asn: 1, # required
-    #         mtu: 1,
-    #         auth_key: "BGPAuthKey",
-    #         amazon_address: "AmazonAddress",
-    #         customer_address: "CustomerAddress",
-    #         address_family: "ipv4", # accepts ipv4, ipv6
-    #         virtual_gateway_id: "VirtualGatewayId",
-    #         direct_connect_gateway_id: "DirectConnectGatewayId",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] virtual_interface_name
     #   The name of the virtual interface assigned by the customer network.
@@ -3356,6 +2902,10 @@ module Aws::DirectConnect
     #   The tags associated with the private virtual interface.
     #   @return [Array<Types::Tag>]
     #
+    # @!attribute [rw] enable_site_link
+    #   Indicates whether to enable or disable SiteLink.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/NewPrivateVirtualInterface AWS API Documentation
     #
     class NewPrivateVirtualInterface < Struct.new(
@@ -3369,33 +2919,14 @@ module Aws::DirectConnect
       :address_family,
       :virtual_gateway_id,
       :direct_connect_gateway_id,
-      :tags)
+      :tags,
+      :enable_site_link)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Information about a private virtual interface to be provisioned on a
     # connection.
-    #
-    # @note When making an API call, you may pass NewPrivateVirtualInterfaceAllocation
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_name: "VirtualInterfaceName", # required
-    #         vlan: 1, # required
-    #         asn: 1, # required
-    #         mtu: 1,
-    #         auth_key: "BGPAuthKey",
-    #         amazon_address: "AmazonAddress",
-    #         address_family: "ipv4", # accepts ipv4, ipv6
-    #         customer_address: "CustomerAddress",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] virtual_interface_name
     #   The name of the virtual interface assigned by the customer network.
@@ -3459,30 +2990,6 @@ module Aws::DirectConnect
 
     # Information about a public virtual interface.
     #
-    # @note When making an API call, you may pass NewPublicVirtualInterface
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_name: "VirtualInterfaceName", # required
-    #         vlan: 1, # required
-    #         asn: 1, # required
-    #         auth_key: "BGPAuthKey",
-    #         amazon_address: "AmazonAddress",
-    #         customer_address: "CustomerAddress",
-    #         address_family: "ipv4", # accepts ipv4, ipv6
-    #         route_filter_prefixes: [
-    #           {
-    #             cidr: "CIDR",
-    #           },
-    #         ],
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] virtual_interface_name
     #   The name of the virtual interface assigned by the customer network.
     #   The name has a maximum of 100 characters. The following are valid
@@ -3519,8 +3026,8 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] route_filter_prefixes
-    #   The routes to be advertised to the AWS network in this Region.
-    #   Applies to public virtual interfaces.
+    #   The routes to be advertised to the Amazon Web Services network in
+    #   this Region. Applies to public virtual interfaces.
     #   @return [Array<Types::RouteFilterPrefix>]
     #
     # @!attribute [rw] tags
@@ -3546,30 +3053,6 @@ module Aws::DirectConnect
     # Information about a public virtual interface to be provisioned on a
     # connection.
     #
-    # @note When making an API call, you may pass NewPublicVirtualInterfaceAllocation
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_name: "VirtualInterfaceName", # required
-    #         vlan: 1, # required
-    #         asn: 1, # required
-    #         auth_key: "BGPAuthKey",
-    #         amazon_address: "AmazonAddress",
-    #         customer_address: "CustomerAddress",
-    #         address_family: "ipv4", # accepts ipv4, ipv6
-    #         route_filter_prefixes: [
-    #           {
-    #             cidr: "CIDR",
-    #           },
-    #         ],
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] virtual_interface_name
     #   The name of the virtual interface assigned by the customer network.
     #   The name has a maximum of 100 characters. The following are valid
@@ -3606,8 +3089,8 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] route_filter_prefixes
-    #   The routes to be advertised to the AWS network in this Region.
-    #   Applies to public virtual interfaces.
+    #   The routes to be advertised to the Amazon Web Services network in
+    #   this Region. Applies to public virtual interfaces.
     #   @return [Array<Types::RouteFilterPrefix>]
     #
     # @!attribute [rw] tags
@@ -3632,27 +3115,6 @@ module Aws::DirectConnect
 
     # Information about a transit virtual interface.
     #
-    # @note When making an API call, you may pass NewTransitVirtualInterface
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_name: "VirtualInterfaceName",
-    #         vlan: 1,
-    #         asn: 1,
-    #         mtu: 1,
-    #         auth_key: "BGPAuthKey",
-    #         amazon_address: "AmazonAddress",
-    #         customer_address: "CustomerAddress",
-    #         address_family: "ipv4", # accepts ipv4, ipv6
-    #         direct_connect_gateway_id: "DirectConnectGatewayId",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] virtual_interface_name
     #   The name of the virtual interface assigned by the customer network.
     #   The name has a maximum of 100 characters. The following are valid
@@ -3672,7 +3134,7 @@ module Aws::DirectConnect
     #
     # @!attribute [rw] mtu
     #   The maximum transmission unit (MTU), in bytes. The supported values
-    #   are 1500 and 9001. The default value is 1500.
+    #   are 1500 and 8500. The default value is 1500.
     #   @return [Integer]
     #
     # @!attribute [rw] auth_key
@@ -3701,6 +3163,10 @@ module Aws::DirectConnect
     #   The tags associated with the transitive virtual interface.
     #   @return [Array<Types::Tag>]
     #
+    # @!attribute [rw] enable_site_link
+    #   Indicates whether to enable or disable SiteLink.
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/NewTransitVirtualInterface AWS API Documentation
     #
     class NewTransitVirtualInterface < Struct.new(
@@ -3713,33 +3179,14 @@ module Aws::DirectConnect
       :customer_address,
       :address_family,
       :direct_connect_gateway_id,
-      :tags)
+      :tags,
+      :enable_site_link)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Information about a transit virtual interface to be provisioned on a
     # connection.
-    #
-    # @note When making an API call, you may pass NewTransitVirtualInterfaceAllocation
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_name: "VirtualInterfaceName",
-    #         vlan: 1,
-    #         asn: 1,
-    #         mtu: 1,
-    #         auth_key: "BGPAuthKey",
-    #         amazon_address: "AmazonAddress",
-    #         customer_address: "CustomerAddress",
-    #         address_family: "ipv4", # accepts ipv4, ipv6
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] virtual_interface_name
     #   The name of the virtual interface assigned by the customer network.
@@ -3760,7 +3207,7 @@ module Aws::DirectConnect
     #
     # @!attribute [rw] mtu
     #   The maximum transmission unit (MTU), in bytes. The supported values
-    #   are 1500 and 9001. The default value is 1500.
+    #   are 1500 and 8500. The default value is 1500
     #   @return [Integer]
     #
     # @!attribute [rw] auth_key
@@ -3801,8 +3248,7 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # Information about a tag associated with an AWS Direct Connect
-    # resource.
+    # Information about a tag associated with an Direct Connect resource.
     #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
@@ -3824,13 +3270,6 @@ module Aws::DirectConnect
     # Information about a route filter prefix that a customer can advertise
     # through Border Gateway Protocol (BGP) over a public virtual interface.
     #
-    # @note When making an API call, you may pass RouteFilterPrefix
-    #   data as a hash:
-    #
-    #       {
-    #         cidr: "CIDR",
-    #       }
-    #
     # @!attribute [rw] cidr
     #   The CIDR block for the advertised route. Separate multiple routes
     #   using commas. An IPv6 CIDR must use /64 or shorter.
@@ -3844,15 +3283,48 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartBgpFailoverTestRequest
-    #   data as a hash:
+    # Information about the virtual router.
     #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId", # required
-    #         bgp_peers: ["BGPPeerId"],
-    #         test_duration_in_minutes: 1,
-    #       }
+    # @!attribute [rw] vendor
+    #   The vendor for the virtual interface's router.
+    #   @return [String]
     #
+    # @!attribute [rw] platform
+    #   The virtual interface router platform.
+    #   @return [String]
+    #
+    # @!attribute [rw] software
+    #   The router software.
+    #   @return [String]
+    #
+    # @!attribute [rw] xslt_template_name
+    #   The template for the virtual interface's router.
+    #   @return [String]
+    #
+    # @!attribute [rw] xslt_template_name_for_mac_sec
+    #   The MAC Security (MACsec) template for the virtual interface's
+    #   router.
+    #   @return [String]
+    #
+    # @!attribute [rw] router_type_identifier
+    #   Identifies the router by a combination of vendor, platform, and
+    #   software version. For example,
+    #   `CiscoSystemsInc-2900SeriesRouters-IOS124`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/RouterType AWS API Documentation
+    #
+    class RouterType < Struct.new(
+      :vendor,
+      :platform,
+      :software,
+      :xslt_template_name,
+      :xslt_template_name_for_mac_sec,
+      :router_type_identifier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual interface you want to test.
     #   @return [String]
@@ -3865,7 +3337,7 @@ module Aws::DirectConnect
     #   The time in minutes that the virtual interface failover test will
     #   last.
     #
-    #   Maximum value: 180 minutes (3 hours).
+    #   Maximum value: 4,320 minutes (72 hours).
     #
     #   Default: 180 minutes (3 hours).
     #   @return [Integer]
@@ -3892,13 +3364,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopBgpFailoverTestRequest
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId", # required
-    #       }
-    #
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual interface you no longer want to test.
     #   @return [String]
@@ -3925,14 +3390,6 @@ module Aws::DirectConnect
 
     # Information about a tag.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue",
-    #       }
-    #
     # @!attribute [rw] key
     #   The key.
     #   @return [String]
@@ -3950,19 +3407,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -3990,14 +3434,6 @@ module Aws::DirectConnect
     #
     class TooManyTagsException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -4019,15 +3455,6 @@ module Aws::DirectConnect
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateConnectionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         connection_id: "ConnectionId", # required
-    #         connection_name: "ConnectionName",
-    #         encryption_mode: "EncryptionMode",
-    #       }
-    #
     # @!attribute [rw] connection_id
     #   The ID of the dedicated connection.
     #
@@ -4055,23 +3482,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateDirectConnectGatewayAssociationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         association_id: "DirectConnectGatewayAssociationId",
-    #         add_allowed_prefixes_to_direct_connect_gateway: [
-    #           {
-    #             cidr: "CIDR",
-    #           },
-    #         ],
-    #         remove_allowed_prefixes_to_direct_connect_gateway: [
-    #           {
-    #             cidr: "CIDR",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] association_id
     #   The ID of the Direct Connect gateway association.
     #   @return [String]
@@ -4108,16 +3518,37 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateLagRequest
-    #   data as a hash:
+    # @!attribute [rw] direct_connect_gateway_id
+    #   The ID of the Direct Connect gateway to update.
+    #   @return [String]
     #
-    #       {
-    #         lag_id: "LagId", # required
-    #         lag_name: "LagName",
-    #         minimum_links: 1,
-    #         encryption_mode: "EncryptionMode",
-    #       }
+    # @!attribute [rw] new_direct_connect_gateway_name
+    #   The new name for the Direct Connect gateway.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/UpdateDirectConnectGatewayRequest AWS API Documentation
+    #
+    class UpdateDirectConnectGatewayRequest < Struct.new(
+      :direct_connect_gateway_id,
+      :new_direct_connect_gateway_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] direct_connect_gateway
+    #   Information about a Direct Connect gateway, which enables you to
+    #   connect virtual interfaces and virtual private gateway or transit
+    #   gateways.
+    #   @return [Types::DirectConnectGateway]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/UpdateDirectConnectGatewayResponse AWS API Documentation
+    #
+    class UpdateDirectConnectGatewayResponse < Struct.new(
+      :direct_connect_gateway)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] lag_id
     #   The ID of the LAG.
     #   @return [String]
@@ -4134,7 +3565,8 @@ module Aws::DirectConnect
     # @!attribute [rw] encryption_mode
     #   The LAG MAC Security (MACsec) encryption mode.
     #
-    #   AWS applies the value to all connections which are part of the LAG.
+    #   Amazon Web Services applies the value to all connections which are
+    #   part of the LAG.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/UpdateLagRequest AWS API Documentation
@@ -4148,14 +3580,6 @@ module Aws::DirectConnect
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateVirtualInterfaceAttributesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_interface_id: "VirtualInterfaceId", # required
-    #         mtu: 1,
-    #       }
-    #
     # @!attribute [rw] virtual_interface_id
     #   The ID of the virtual private interface.
     #   @return [String]
@@ -4165,11 +3589,21 @@ module Aws::DirectConnect
     #   are 1500 and 9001. The default value is 1500.
     #   @return [Integer]
     #
+    # @!attribute [rw] enable_site_link
+    #   Indicates whether to enable or disable SiteLink.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] virtual_interface_name
+    #   The name of the virtual private interface.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/UpdateVirtualInterfaceAttributesRequest AWS API Documentation
     #
     class UpdateVirtualInterfaceAttributesRequest < Struct.new(
       :virtual_interface_id,
-      :mtu)
+      :mtu,
+      :enable_site_link,
+      :virtual_interface_name)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -4185,15 +3619,15 @@ module Aws::DirectConnect
     #   The state of the virtual private gateway. The following are the
     #   possible values:
     #
-    #   * `pending`\: Initial state after creating the virtual private
+    #   * `pending`: Initial state after creating the virtual private
     #     gateway.
     #
-    #   * `available`\: Ready for use by a private virtual interface.
+    #   * `available`: Ready for use by a private virtual interface.
     #
-    #   * `deleting`\: Initial state after deleting the virtual private
+    #   * `deleting`: Initial state after deleting the virtual private
     #     gateway.
     #
-    #   * `deleted`\: The virtual private gateway is deleted. The private
+    #   * `deleted`: The virtual private gateway is deleted. The private
     #     virtual interface is unable to send traffic over this gateway.
     #   @return [String]
     #
@@ -4221,7 +3655,8 @@ module Aws::DirectConnect
     # Information about a virtual interface.
     #
     # @!attribute [rw] owner_account
-    #   The ID of the AWS account that owns the virtual interface.
+    #   The ID of the Amazon Web Services account that owns the virtual
+    #   interface.
     #   @return [String]
     #
     # @!attribute [rw] virtual_interface_id
@@ -4285,36 +3720,36 @@ module Aws::DirectConnect
     #   The state of the virtual interface. The following are the possible
     #   values:
     #
-    #   * `confirming`\: The creation of the virtual interface is pending
+    #   * `confirming`: The creation of the virtual interface is pending
     #     confirmation from the virtual interface owner. If the owner of the
     #     virtual interface is different from the owner of the connection on
     #     which it is provisioned, then the virtual interface will remain in
     #     this state until it is confirmed by the virtual interface owner.
     #
-    #   * `verifying`\: This state only applies to public virtual
-    #     interfaces. Each public virtual interface needs validation before
-    #     the virtual interface can be created.
+    #   * `verifying`: This state only applies to public virtual interfaces.
+    #     Each public virtual interface needs validation before the virtual
+    #     interface can be created.
     #
-    #   * `pending`\: A virtual interface is in this state from the time
-    #     that it is created until the virtual interface is ready to forward
+    #   * `pending`: A virtual interface is in this state from the time that
+    #     it is created until the virtual interface is ready to forward
     #     traffic.
     #
-    #   * `available`\: A virtual interface that is able to forward traffic.
+    #   * `available`: A virtual interface that is able to forward traffic.
     #
-    #   * `down`\: A virtual interface that is BGP down.
+    #   * `down`: A virtual interface that is BGP down.
     #
-    #   * `deleting`\: A virtual interface is in this state immediately
-    #     after calling DeleteVirtualInterface until it can no longer
-    #     forward traffic.
+    #   * `deleting`: A virtual interface is in this state immediately after
+    #     calling DeleteVirtualInterface until it can no longer forward
+    #     traffic.
     #
-    #   * `deleted`\: A virtual interface that cannot forward traffic.
+    #   * `deleted`: A virtual interface that cannot forward traffic.
     #
-    #   * `rejected`\: The virtual interface owner has declined creation of
+    #   * `rejected`: The virtual interface owner has declined creation of
     #     the virtual interface. If a virtual interface in the `Confirming`
     #     state is deleted by the virtual interface owner, the virtual
     #     interface enters the `Rejected` state.
     #
-    #   * `unknown`\: The state of the virtual interface is not available.
+    #   * `unknown`: The state of the virtual interface is not available.
     #   @return [String]
     #
     # @!attribute [rw] customer_router_config
@@ -4323,11 +3758,11 @@ module Aws::DirectConnect
     #
     # @!attribute [rw] mtu
     #   The maximum transmission unit (MTU), in bytes. The supported values
-    #   are 1500 and 9001. The default value is 1500.
+    #   are 1500 and 8500. The default value is 1500
     #   @return [Integer]
     #
     # @!attribute [rw] jumbo_frame_capable
-    #   Indicates whether jumbo frames (9001 MTU) are supported.
+    #   Indicates whether jumbo frames are supported.
     #   @return [Boolean]
     #
     # @!attribute [rw] virtual_gateway_id
@@ -4340,8 +3775,8 @@ module Aws::DirectConnect
     #   @return [String]
     #
     # @!attribute [rw] route_filter_prefixes
-    #   The routes to be advertised to the AWS network in this Region.
-    #   Applies to public virtual interfaces.
+    #   The routes to be advertised to the Amazon Web Services network in
+    #   this Region. Applies to public virtual interfaces.
     #   @return [Array<Types::RouteFilterPrefix>]
     #
     # @!attribute [rw] bgp_peers
@@ -4349,17 +3784,27 @@ module Aws::DirectConnect
     #   @return [Array<Types::BGPPeer>]
     #
     # @!attribute [rw] region
-    #   The AWS Region where the virtual interface is located.
+    #   The Amazon Web Services Region where the virtual interface is
+    #   located.
     #   @return [String]
     #
     # @!attribute [rw] aws_device_v2
-    #   The Direct Connect endpoint on which the virtual interface
-    #   terminates.
+    #   The Direct Connect endpoint that terminates the physical connection.
+    #   @return [String]
+    #
+    # @!attribute [rw] aws_logical_device_id
+    #   The Direct Connect endpoint that terminates the logical connection.
+    #   This device might be different than the device that terminates the
+    #   physical connection.
     #   @return [String]
     #
     # @!attribute [rw] tags
     #   The tags associated with the virtual interface.
     #   @return [Array<Types::Tag>]
+    #
+    # @!attribute [rw] site_link_enabled
+    #   Indicates whether SiteLink is enabled.
+    #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/VirtualInterface AWS API Documentation
     #
@@ -4387,7 +3832,9 @@ module Aws::DirectConnect
       :bgp_peers,
       :region,
       :aws_device_v2,
-      :tags)
+      :aws_logical_device_id,
+      :tags,
+      :site_link_enabled)
       SENSITIVE = []
       include Aws::Structure
     end

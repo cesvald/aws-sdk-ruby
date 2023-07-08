@@ -6,6 +6,9 @@ module Aws
     # @return [Credentials]
     attr_reader :credentials
 
+    # @return [Time]
+    attr_reader :expiration
+
     # @return [Boolean]
     def set?
       !!credentials && credentials.set?

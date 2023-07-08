@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:directconnect)
@@ -73,8 +77,13 @@ module Aws::DirectConnect
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::DirectConnect::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::DirectConnect
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::DirectConnect
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::DirectConnect
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::DirectConnect
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::DirectConnect
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::DirectConnect::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::DirectConnect::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::DirectConnect
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::DirectConnect
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -347,15 +404,15 @@ module Aws::DirectConnect
     #   The ID of the request proposal.
     #
     # @option params [required, String] :associated_gateway_owner_account
-    #   The ID of the AWS account that owns the virtual private gateway or
-    #   transit gateway.
+    #   The ID of the Amazon Web Services account that owns the virtual
+    #   private gateway or transit gateway.
     #
     # @option params [Array<Types::RouteFilterPrefix>] :override_allowed_prefixes_to_direct_connect_gateway
     #   Overrides the Amazon VPC prefixes advertised to the Direct Connect
     #   gateway.
     #
     #   For information about how to set the prefixes, see [Allowed
-    #   Prefixes][1] in the *AWS Direct Connect User Guide*.
+    #   Prefixes][1] in the *Direct Connect User Guide*.
     #
     #
     #
@@ -411,14 +468,14 @@ module Aws::DirectConnect
     # Allocates a VLAN number and a specified amount of bandwidth for use by
     # a hosted connection on the specified interconnect.
     #
-    # <note markdown="1"> Intended for use by AWS Direct Connect Partners only.
+    # <note markdown="1"> Intended for use by Direct Connect Partners only.
     #
     #  </note>
     #
     # @option params [required, String] :bandwidth
     #   The bandwidth of the connection. The possible values are 50Mbps,
     #   100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, and
-    #   10Gbps. Note that only those AWS Direct Connect Partners who have met
+    #   10Gbps. Note that only those Direct Connect Partners who have met
     #   specific requirements are allowed to create a 1Gbps, 2Gbps, 5Gbps or
     #   10Gbps hosted connection.
     #
@@ -426,8 +483,8 @@ module Aws::DirectConnect
     #   The name of the provisioned connection.
     #
     # @option params [required, String] :owner_account
-    #   The ID of the AWS account of the customer for whom the connection will
-    #   be provisioned.
+    #   The ID of the Amazon Web Services account of the customer for whom the
+    #   connection will be provisioned.
     #
     # @option params [required, String] :interconnect_id
     #   The ID of the interconnect on which the connection will be
@@ -452,6 +509,7 @@ module Aws::DirectConnect
     #   * {Types::Connection#aws_device #aws_device} => String
     #   * {Types::Connection#jumbo_frame_capable #jumbo_frame_capable} => Boolean
     #   * {Types::Connection#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Connection#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Connection#has_logical_redundancy #has_logical_redundancy} => String
     #   * {Types::Connection#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::Connection#provider_name #provider_name} => String
@@ -486,6 +544,7 @@ module Aws::DirectConnect
     #   resp.aws_device #=> String
     #   resp.jumbo_frame_capable #=> Boolean
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
@@ -514,11 +573,11 @@ module Aws::DirectConnect
     #
     # Allocates a VLAN number and a specified amount of capacity (bandwidth)
     # for use by a hosted connection on the specified interconnect or LAG of
-    # interconnects. AWS polices the hosted connection for the specified
-    # capacity and the AWS Direct Connect Partner must also police the
-    # hosted connection for the specified capacity.
+    # interconnects. Amazon Web Services polices the hosted connection for
+    # the specified capacity and the Direct Connect Partner must also police
+    # the hosted connection for the specified capacity.
     #
-    # <note markdown="1"> Intended for use by AWS Direct Connect Partners only.
+    # <note markdown="1"> Intended for use by Direct Connect Partners only.
     #
     #  </note>
     #
@@ -526,12 +585,13 @@ module Aws::DirectConnect
     #   The ID of the interconnect or LAG.
     #
     # @option params [required, String] :owner_account
-    #   The ID of the AWS account ID of the customer for the connection.
+    #   The ID of the Amazon Web Services account ID of the customer for the
+    #   connection.
     #
     # @option params [required, String] :bandwidth
     #   The bandwidth of the connection. The possible values are 50Mbps,
     #   100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, and
-    #   10Gbps. Note that only those AWS Direct Connect Partners who have met
+    #   10Gbps. Note that only those Direct Connect Partners who have met
     #   specific requirements are allowed to create a 1Gbps, 2Gbps, 5Gbps or
     #   10Gbps hosted connection.
     #
@@ -560,6 +620,7 @@ module Aws::DirectConnect
     #   * {Types::Connection#aws_device #aws_device} => String
     #   * {Types::Connection#jumbo_frame_capable #jumbo_frame_capable} => Boolean
     #   * {Types::Connection#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Connection#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Connection#has_logical_redundancy #has_logical_redundancy} => String
     #   * {Types::Connection#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::Connection#provider_name #provider_name} => String
@@ -600,6 +661,7 @@ module Aws::DirectConnect
     #   resp.aws_device #=> String
     #   resp.jumbo_frame_capable #=> Boolean
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
@@ -624,7 +686,7 @@ module Aws::DirectConnect
     end
 
     # Provisions a private virtual interface to be owned by the specified
-    # AWS account.
+    # Amazon Web Services account.
     #
     # Virtual interfaces created using this action must be confirmed by the
     # owner using ConfirmPrivateVirtualInterface. Until then, the virtual
@@ -636,7 +698,8 @@ module Aws::DirectConnect
     #   provisioned.
     #
     # @option params [required, String] :owner_account
-    #   The ID of the AWS account that owns the virtual private interface.
+    #   The ID of the Amazon Web Services account that owns the virtual
+    #   private interface.
     #
     # @option params [required, Types::NewPrivateVirtualInterfaceAllocation] :new_private_virtual_interface_allocation
     #   Information about the private virtual interface.
@@ -666,7 +729,9 @@ module Aws::DirectConnect
     #   * {Types::VirtualInterface#bgp_peers #bgp_peers} => Array&lt;Types::BGPPeer&gt;
     #   * {Types::VirtualInterface#region #region} => String
     #   * {Types::VirtualInterface#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::VirtualInterface#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::VirtualInterface#tags #tags} => Array&lt;Types::Tag&gt;
+    #   * {Types::VirtualInterface#site_link_enabled #site_link_enabled} => Boolean
     #
     # @example Request syntax with placeholder values
     #
@@ -724,11 +789,14 @@ module Aws::DirectConnect
     #   resp.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.region #=> String
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
     #   resp.tags[0].value #=> String
+    #   resp.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/AllocatePrivateVirtualInterface AWS API Documentation
     #
@@ -739,11 +807,12 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Provisions a public virtual interface to be owned by the specified AWS
-    # account.
+    # Provisions a public virtual interface to be owned by the specified
+    # Amazon Web Services account.
     #
     # The owner of a connection calls this function to provision a public
-    # virtual interface to be owned by the specified AWS account.
+    # virtual interface to be owned by the specified Amazon Web Services
+    # account.
     #
     # Virtual interfaces created using this function must be confirmed by
     # the owner using ConfirmPublicVirtualInterface. Until this step has
@@ -760,7 +829,8 @@ module Aws::DirectConnect
     #   provisioned.
     #
     # @option params [required, String] :owner_account
-    #   The ID of the AWS account that owns the public virtual interface.
+    #   The ID of the Amazon Web Services account that owns the public virtual
+    #   interface.
     #
     # @option params [required, Types::NewPublicVirtualInterfaceAllocation] :new_public_virtual_interface_allocation
     #   Information about the public virtual interface.
@@ -790,7 +860,9 @@ module Aws::DirectConnect
     #   * {Types::VirtualInterface#bgp_peers #bgp_peers} => Array&lt;Types::BGPPeer&gt;
     #   * {Types::VirtualInterface#region #region} => String
     #   * {Types::VirtualInterface#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::VirtualInterface#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::VirtualInterface#tags #tags} => Array&lt;Types::Tag&gt;
+    #   * {Types::VirtualInterface#site_link_enabled #site_link_enabled} => Boolean
     #
     # @example Request syntax with placeholder values
     #
@@ -852,11 +924,14 @@ module Aws::DirectConnect
     #   resp.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.region #=> String
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
     #   resp.tags[0].value #=> String
+    #   resp.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/AllocatePublicVirtualInterface AWS API Documentation
     #
@@ -868,11 +943,11 @@ module Aws::DirectConnect
     end
 
     # Provisions a transit virtual interface to be owned by the specified
-    # AWS account. Use this type of interface to connect a transit gateway
-    # to your Direct Connect gateway.
+    # Amazon Web Services account. Use this type of interface to connect a
+    # transit gateway to your Direct Connect gateway.
     #
     # The owner of a connection provisions a transit virtual interface to be
-    # owned by the specified AWS account.
+    # owned by the specified Amazon Web Services account.
     #
     # After you create a transit virtual interface, it must be confirmed by
     # the owner using ConfirmTransitVirtualInterface. Until this step has
@@ -884,7 +959,8 @@ module Aws::DirectConnect
     #   provisioned.
     #
     # @option params [required, String] :owner_account
-    #   The ID of the AWS account that owns the transit virtual interface.
+    #   The ID of the Amazon Web Services account that owns the transit
+    #   virtual interface.
     #
     # @option params [required, Types::NewTransitVirtualInterfaceAllocation] :new_transit_virtual_interface_allocation
     #   Information about the transit virtual interface.
@@ -949,11 +1025,14 @@ module Aws::DirectConnect
     #   resp.virtual_interface.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.virtual_interface.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.virtual_interface.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.virtual_interface.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.virtual_interface.region #=> String
     #   resp.virtual_interface.aws_device_v2 #=> String
+    #   resp.virtual_interface.aws_logical_device_id #=> String
     #   resp.virtual_interface.tags #=> Array
     #   resp.virtual_interface.tags[0].key #=> String
     #   resp.virtual_interface.tags[0].value #=> String
+    #   resp.virtual_interface.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/AllocateTransitVirtualInterface AWS API Documentation
     #
@@ -966,13 +1045,13 @@ module Aws::DirectConnect
 
     # Associates an existing connection with a link aggregation group (LAG).
     # The connection is interrupted and re-established as a member of the
-    # LAG (connectivity to AWS is interrupted). The connection must be
-    # hosted on the same AWS Direct Connect endpoint as the LAG, and its
-    # bandwidth must match the bandwidth for the LAG. You can re-associate a
-    # connection that's currently associated with a different LAG; however,
-    # if removing the connection would cause the original LAG to fall below
-    # its setting for minimum number of operational connections, the request
-    # fails.
+    # LAG (connectivity to Amazon Web Services is interrupted). The
+    # connection must be hosted on the same Direct Connect endpoint as the
+    # LAG, and its bandwidth must match the bandwidth for the LAG. You can
+    # re-associate a connection that's currently associated with a
+    # different LAG; however, if removing the connection would cause the
+    # original LAG to fall below its setting for minimum number of
+    # operational connections, the request fails.
     #
     # Any virtual interfaces that are directly associated with the
     # connection are automatically re-associated with the LAG. If the
@@ -1006,6 +1085,7 @@ module Aws::DirectConnect
     #   * {Types::Connection#aws_device #aws_device} => String
     #   * {Types::Connection#jumbo_frame_capable #jumbo_frame_capable} => Boolean
     #   * {Types::Connection#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Connection#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Connection#has_logical_redundancy #has_logical_redundancy} => String
     #   * {Types::Connection#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::Connection#provider_name #provider_name} => String
@@ -1037,6 +1117,7 @@ module Aws::DirectConnect
     #   resp.aws_device #=> String
     #   resp.jumbo_frame_capable #=> Boolean
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
@@ -1064,9 +1145,10 @@ module Aws::DirectConnect
     # aggregation group (LAG) or interconnect. If the target interconnect or
     # LAG has an existing hosted connection with a conflicting VLAN number
     # or IP address, the operation fails. This action temporarily interrupts
-    # the hosted connection's connectivity to AWS as it is being migrated.
+    # the hosted connection's connectivity to Amazon Web Services as it is
+    # being migrated.
     #
-    # <note markdown="1"> Intended for use by AWS Direct Connect Partners only.
+    # <note markdown="1"> Intended for use by Direct Connect Partners only.
     #
     #  </note>
     #
@@ -1092,6 +1174,7 @@ module Aws::DirectConnect
     #   * {Types::Connection#aws_device #aws_device} => String
     #   * {Types::Connection#jumbo_frame_capable #jumbo_frame_capable} => Boolean
     #   * {Types::Connection#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Connection#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Connection#has_logical_redundancy #has_logical_redundancy} => String
     #   * {Types::Connection#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::Connection#provider_name #provider_name} => String
@@ -1123,6 +1206,7 @@ module Aws::DirectConnect
     #   resp.aws_device #=> String
     #   resp.jumbo_frame_capable #=> Boolean
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
@@ -1147,14 +1231,14 @@ module Aws::DirectConnect
     end
 
     # Associates a MAC Security (MACsec) Connection Key Name (CKN)/
-    # Connectivity Association Key (CAK) pair with an AWS Direct Connect
+    # Connectivity Association Key (CAK) pair with an Direct Connect
     # dedicated connection.
     #
     # You must supply either the `secretARN,` or the CKN/CAK (`ckn` and
     # `cak`) pair in the request.
     #
     # For information about MAC Security (MACsec) key considerations, see
-    # [MACsec pre-shared CKN/CAK key considerations ][1] in the *AWS Direct
+    # [MACsec pre-shared CKN/CAK key considerations ][1] in the *Direct
     # Connect User Guide*.
     #
     #
@@ -1233,10 +1317,11 @@ module Aws::DirectConnect
     end
 
     # Associates a virtual interface with a specified link aggregation group
-    # (LAG) or connection. Connectivity to AWS is temporarily interrupted as
-    # the virtual interface is being migrated. If the target connection or
-    # LAG has an associated virtual interface with a conflicting VLAN number
-    # or a conflicting IP address, the operation fails.
+    # (LAG) or connection. Connectivity to Amazon Web Services is
+    # temporarily interrupted as the virtual interface is being migrated. If
+    # the target connection or LAG has an associated virtual interface with
+    # a conflicting VLAN number or a conflicting IP address, the operation
+    # fails.
     #
     # Virtual interfaces associated with a hosted connection cannot be
     # associated with a LAG; hosted connections must be migrated along with
@@ -1279,7 +1364,9 @@ module Aws::DirectConnect
     #   * {Types::VirtualInterface#bgp_peers #bgp_peers} => Array&lt;Types::BGPPeer&gt;
     #   * {Types::VirtualInterface#region #region} => String
     #   * {Types::VirtualInterface#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::VirtualInterface#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::VirtualInterface#tags #tags} => Array&lt;Types::Tag&gt;
+    #   * {Types::VirtualInterface#site_link_enabled #site_link_enabled} => Boolean
     #
     # @example Request syntax with placeholder values
     #
@@ -1321,11 +1408,14 @@ module Aws::DirectConnect
     #   resp.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.region #=> String
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
     #   resp.tags[0].value #=> String
+    #   resp.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/AssociateVirtualInterface AWS API Documentation
     #
@@ -1369,8 +1459,37 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
+    # The confirmation of the terms of agreement when creating the
+    # connection/link aggregation group (LAG).
+    #
+    # @option params [String] :agreement_name
+    #   The name of the customer agreement.
+    #
+    # @return [Types::ConfirmCustomerAgreementResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ConfirmCustomerAgreementResponse#status #status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.confirm_customer_agreement({
+    #     agreement_name: "AgreementName",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.status #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/ConfirmCustomerAgreement AWS API Documentation
+    #
+    # @overload confirm_customer_agreement(params = {})
+    # @param [Hash] params ({})
+    def confirm_customer_agreement(params = {}, options = {})
+      req = build_request(:confirm_customer_agreement, params)
+      req.send_request(options)
+    end
+
     # Accepts ownership of a private virtual interface created by another
-    # AWS account.
+    # Amazon Web Services account.
     #
     # After the virtual interface owner makes this call, the virtual
     # interface is created and attached to the specified virtual private
@@ -1411,8 +1530,8 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Accepts ownership of a public virtual interface created by another AWS
-    # account.
+    # Accepts ownership of a public virtual interface created by another
+    # Amazon Web Services account.
     #
     # After the virtual interface owner makes this call, the specified
     # virtual interface is created and made available to handle traffic.
@@ -1444,7 +1563,7 @@ module Aws::DirectConnect
     end
 
     # Accepts ownership of a transit virtual interface created by another
-    # AWS account.
+    # Amazon Web Services account.
     #
     # After the owner of the transit virtual interface makes this call, the
     # specified transit virtual interface is created and made available to
@@ -1483,8 +1602,8 @@ module Aws::DirectConnect
     # Creates a BGP peer on the specified virtual interface.
     #
     # You must create a BGP peer for the corresponding address family
-    # (IPv4/IPv6) in order to access AWS resources that also use that
-    # address family.
+    # (IPv4/IPv6) in order to access Amazon Web Services resources that also
+    # use that address family.
     #
     # If logical redundancy is not supported by the connection,
     # interconnect, or LAG, the BGP peer cannot be in the same address
@@ -1494,9 +1613,21 @@ module Aws::DirectConnect
     # address. IPv6 addresses are automatically assigned from the Amazon
     # pool of IPv6 addresses; you cannot specify custom IPv6 addresses.
     #
+    # If you let Amazon Web Services auto-assign IPv4 addresses, a /30 CIDR
+    # will be allocated from 169.254.0.0/16. Amazon Web Services does not
+    # recommend this option if you intend to use the customer router peer IP
+    # address as the source and destination for traffic. Instead you should
+    # use RFC 1918 or other addressing, and specify the address yourself.
+    # For more information about RFC 1918 see [ Address Allocation for
+    # Private Internets][1].
+    #
     # For a public virtual interface, the Autonomous System Number (ASN)
     # must be private or already on the allow list for the virtual
     # interface.
+    #
+    #
+    #
+    # [1]: https://datatracker.ietf.org/doc/html/rfc1918
     #
     # @option params [String] :virtual_interface_id
     #   The ID of the virtual interface.
@@ -1554,11 +1685,14 @@ module Aws::DirectConnect
     #   resp.virtual_interface.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.virtual_interface.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.virtual_interface.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.virtual_interface.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.virtual_interface.region #=> String
     #   resp.virtual_interface.aws_device_v2 #=> String
+    #   resp.virtual_interface.aws_logical_device_id #=> String
     #   resp.virtual_interface.tags #=> Array
     #   resp.virtual_interface.tags[0].key #=> String
     #   resp.virtual_interface.tags[0].value #=> String
+    #   resp.virtual_interface.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/CreateBGPPeer AWS API Documentation
     #
@@ -1569,21 +1703,20 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Creates a connection between a customer network and a specific AWS
-    # Direct Connect location.
+    # Creates a connection between a customer network and a specific Direct
+    # Connect location.
     #
-    # A connection links your internal network to an AWS Direct Connect
-    # location over a standard Ethernet fiber-optic cable. One end of the
-    # cable is connected to your router, the other to an AWS Direct Connect
-    # router.
+    # A connection links your internal network to an Direct Connect location
+    # over a standard Ethernet fiber-optic cable. One end of the cable is
+    # connected to your router, the other to an Direct Connect router.
     #
     # To find the locations for your Region, use DescribeLocations.
     #
     # You can automatically add the new connection to a link aggregation
     # group (LAG) by specifying a LAG ID in the request. This ensures that
-    # the new connection is allocated on the same AWS Direct Connect
-    # endpoint that hosts the specified LAG. If there are no available ports
-    # on the endpoint, the request fails and no connection is created.
+    # the new connection is allocated on the same Direct Connect endpoint
+    # that hosts the specified LAG. If there are no available ports on the
+    # endpoint, the request fails and no connection is created.
     #
     # @option params [required, String] :location
     #   The location of the connection.
@@ -1610,7 +1743,7 @@ module Aws::DirectConnect
     #
     #   MAC Security (MACsec) is only available on dedicated connections. For
     #   information about MAC Security (MACsec) prerequisties, see [MACsec
-    #   prerequisties][1] in the *AWS Direct Connect User Guide*.
+    #   prerequisties][1] in the *Direct Connect User Guide*.
     #
     #
     #
@@ -1632,6 +1765,7 @@ module Aws::DirectConnect
     #   * {Types::Connection#aws_device #aws_device} => String
     #   * {Types::Connection#jumbo_frame_capable #jumbo_frame_capable} => Boolean
     #   * {Types::Connection#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Connection#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Connection#has_logical_redundancy #has_logical_redundancy} => String
     #   * {Types::Connection#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::Connection#provider_name #provider_name} => String
@@ -1673,6 +1807,7 @@ module Aws::DirectConnect
     #   resp.aws_device #=> String
     #   resp.jumbo_frame_capable #=> Boolean
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
@@ -1698,12 +1833,13 @@ module Aws::DirectConnect
 
     # Creates a Direct Connect gateway, which is an intermediate object that
     # enables you to connect a set of virtual interfaces and virtual private
-    # gateways. A Direct Connect gateway is global and visible in any AWS
-    # Region after it is created. The virtual interfaces and virtual private
-    # gateways that are connected through a Direct Connect gateway can be in
-    # different AWS Regions. This enables you to connect to a VPC in any
-    # Region, regardless of the Region in which the virtual interfaces are
-    # located, and pass traffic between them.
+    # gateways. A Direct Connect gateway is global and visible in any Amazon
+    # Web Services Region after it is created. The virtual interfaces and
+    # virtual private gateways that are connected through a Direct Connect
+    # gateway can be in different Amazon Web Services Regions. This enables
+    # you to connect to a VPC in any Region, regardless of the Region in
+    # which the virtual interfaces are located, and pass traffic between
+    # them.
     #
     # @option params [required, String] :direct_connect_gateway_name
     #   The name of the Direct Connect gateway.
@@ -1760,7 +1896,7 @@ module Aws::DirectConnect
     #   gateway.
     #
     #   For information about how to set the prefixes, see [Allowed
-    #   Prefixes][1] in the *AWS Direct Connect User Guide*.
+    #   Prefixes][1] in the *Direct Connect User Guide*.
     #
     #
     #
@@ -1816,13 +1952,14 @@ module Aws::DirectConnect
     # or transit gateway with the specified Direct Connect gateway.
     #
     # You can associate a Direct Connect gateway and virtual private gateway
-    # or transit gateway that is owned by any AWS account.
+    # or transit gateway that is owned by any Amazon Web Services account.
     #
     # @option params [required, String] :direct_connect_gateway_id
     #   The ID of the Direct Connect gateway.
     #
     # @option params [required, String] :direct_connect_gateway_owner_account
-    #   The ID of the AWS account that owns the Direct Connect gateway.
+    #   The ID of the Amazon Web Services account that owns the Direct Connect
+    #   gateway.
     #
     # @option params [required, String] :gateway_id
     #   The ID of the virtual private gateway or transit gateway.
@@ -1880,31 +2017,30 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Creates an interconnect between an AWS Direct Connect Partner's
-    # network and a specific AWS Direct Connect location.
+    # Creates an interconnect between an Direct Connect Partner's network
+    # and a specific Direct Connect location.
     #
     # An interconnect is a connection that is capable of hosting other
-    # connections. The AWS Direct Connect partner can use an interconnect to
-    # provide AWS Direct Connect hosted connections to customers through
-    # their own network services. Like a standard connection, an
-    # interconnect links the partner's network to an AWS Direct Connect
-    # location over a standard Ethernet fiber-optic cable. One end is
-    # connected to the partner's router, the other to an AWS Direct Connect
-    # router.
+    # connections. The Direct Connect Partner can use an interconnect to
+    # provide Direct Connect hosted connections to customers through their
+    # own network services. Like a standard connection, an interconnect
+    # links the partner's network to an Direct Connect location over a
+    # standard Ethernet fiber-optic cable. One end is connected to the
+    # partner's router, the other to an Direct Connect router.
     #
     # You can automatically add the new interconnect to a link aggregation
     # group (LAG) by specifying a LAG ID in the request. This ensures that
-    # the new interconnect is allocated on the same AWS Direct Connect
-    # endpoint that hosts the specified LAG. If there are no available ports
-    # on the endpoint, the request fails and no interconnect is created.
+    # the new interconnect is allocated on the same Direct Connect endpoint
+    # that hosts the specified LAG. If there are no available ports on the
+    # endpoint, the request fails and no interconnect is created.
     #
-    # For each end customer, the AWS Direct Connect Partner provisions a
+    # For each end customer, the Direct Connect Partner provisions a
     # connection on their interconnect by calling AllocateHostedConnection.
-    # The end customer can then connect to AWS resources by creating a
-    # virtual interface on their connection, using the VLAN assigned to them
-    # by the AWS Direct Connect Partner.
+    # The end customer can then connect to Amazon Web Services resources by
+    # creating a virtual interface on their connection, using the VLAN
+    # assigned to them by the Direct Connect Partner.
     #
-    # <note markdown="1"> Intended for use by AWS Direct Connect Partners only.
+    # <note markdown="1"> Intended for use by Direct Connect Partners only.
     #
     #  </note>
     #
@@ -1939,6 +2075,7 @@ module Aws::DirectConnect
     #   * {Types::Interconnect#aws_device #aws_device} => String
     #   * {Types::Interconnect#jumbo_frame_capable #jumbo_frame_capable} => Boolean
     #   * {Types::Interconnect#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Interconnect#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Interconnect#has_logical_redundancy #has_logical_redundancy} => String
     #   * {Types::Interconnect#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::Interconnect#provider_name #provider_name} => String
@@ -1972,6 +2109,7 @@ module Aws::DirectConnect
     #   resp.aws_device #=> String
     #   resp.jumbo_frame_capable #=> Boolean
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
@@ -1989,36 +2127,35 @@ module Aws::DirectConnect
 
     # Creates a link aggregation group (LAG) with the specified number of
     # bundled physical dedicated connections between the customer network
-    # and a specific AWS Direct Connect location. A LAG is a logical
-    # interface that uses the Link Aggregation Control Protocol (LACP) to
-    # aggregate multiple interfaces, enabling you to treat them as a single
-    # interface.
+    # and a specific Direct Connect location. A LAG is a logical interface
+    # that uses the Link Aggregation Control Protocol (LACP) to aggregate
+    # multiple interfaces, enabling you to treat them as a single interface.
     #
     # All connections in a LAG must use the same bandwidth (either 1Gbps or
-    # 10Gbps) and must terminate at the same AWS Direct Connect endpoint.
+    # 10Gbps) and must terminate at the same Direct Connect endpoint.
     #
     # You can have up to 10 dedicated connections per LAG. Regardless of
-    # this limit, if you request more connections for the LAG than AWS
-    # Direct Connect can allocate on a single endpoint, no LAG is created.
+    # this limit, if you request more connections for the LAG than Direct
+    # Connect can allocate on a single endpoint, no LAG is created.
     #
     # You can specify an existing physical dedicated connection or
     # interconnect to include in the LAG (which counts towards the total
     # number of connections). Doing so interrupts the current physical
     # dedicated connection, and re-establishes them as a member of the LAG.
-    # The LAG will be created on the same AWS Direct Connect endpoint to
-    # which the dedicated connection terminates. Any virtual interfaces
-    # associated with the dedicated connection are automatically
-    # disassociated and re-associated with the LAG. The connection ID does
-    # not change.
+    # The LAG will be created on the same Direct Connect endpoint to which
+    # the dedicated connection terminates. Any virtual interfaces associated
+    # with the dedicated connection are automatically disassociated and
+    # re-associated with the LAG. The connection ID does not change.
     #
-    # If the AWS account used to create a LAG is a registered AWS Direct
-    # Connect Partner, the LAG is automatically enabled to host
-    # sub-connections. For a LAG owned by a partner, any associated virtual
-    # interfaces cannot be directly configured.
+    # If the Amazon Web Services account used to create a LAG is a
+    # registered Direct Connect Partner, the LAG is automatically enabled to
+    # host sub-connections. For a LAG owned by a partner, any associated
+    # virtual interfaces cannot be directly configured.
     #
     # @option params [required, Integer] :number_of_connections
     #   The number of physical dedicated connections initially provisioned and
-    #   bundled by the LAG.
+    #   bundled by the LAG. You can have a maximum of four connections when
+    #   the port speed is 1G or 10G, or two when the port speed is 100G.
     #
     # @option params [required, String] :location
     #   The location for the LAG.
@@ -2047,7 +2184,7 @@ module Aws::DirectConnect
     #
     #   <note markdown="1"> All connections in the LAG must be capable of supporting MAC Security
     #   (MACsec). For information about MAC Security (MACsec) prerequisties,
-    #   see [MACsec prerequisties][1] in the *AWS Direct Connect User Guide*.
+    #   see [MACsec prerequisties][1] in the *Direct Connect User Guide*.
     #
     #    </note>
     #
@@ -2068,6 +2205,7 @@ module Aws::DirectConnect
     #   * {Types::Lag#minimum_links #minimum_links} => Integer
     #   * {Types::Lag#aws_device #aws_device} => String
     #   * {Types::Lag#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Lag#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Lag#connections #connections} => Array&lt;Types::Connection&gt;
     #   * {Types::Lag#allows_hosted_connections #allows_hosted_connections} => Boolean
     #   * {Types::Lag#jumbo_frame_capable #jumbo_frame_capable} => Boolean
@@ -2115,6 +2253,7 @@ module Aws::DirectConnect
     #   resp.minimum_links #=> Integer
     #   resp.aws_device #=> String
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.connections #=> Array
     #   resp.connections[0].owner_account #=> String
     #   resp.connections[0].connection_id #=> String
@@ -2130,6 +2269,7 @@ module Aws::DirectConnect
     #   resp.connections[0].aws_device #=> String
     #   resp.connections[0].jumbo_frame_capable #=> Boolean
     #   resp.connections[0].aws_device_v2 #=> String
+    #   resp.connections[0].aws_logical_device_id #=> String
     #   resp.connections[0].has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.connections[0].tags #=> Array
     #   resp.connections[0].tags[0].key #=> String
@@ -2168,13 +2308,13 @@ module Aws::DirectConnect
     end
 
     # Creates a private virtual interface. A virtual interface is the VLAN
-    # that transports AWS Direct Connect traffic. A private virtual
-    # interface can be connected to either a Direct Connect gateway or a
-    # Virtual Private Gateway (VGW). Connecting the private virtual
-    # interface to a Direct Connect gateway enables the possibility for
-    # connecting to multiple VPCs, including VPCs in different AWS Regions.
-    # Connecting the private virtual interface to a VGW only provides access
-    # to a single VPC within the same Region.
+    # that transports Direct Connect traffic. A private virtual interface
+    # can be connected to either a Direct Connect gateway or a Virtual
+    # Private Gateway (VGW). Connecting the private virtual interface to a
+    # Direct Connect gateway enables the possibility for connecting to
+    # multiple VPCs, including VPCs in different Amazon Web Services
+    # Regions. Connecting the private virtual interface to a VGW only
+    # provides access to a single VPC within the same Region.
     #
     # Setting the MTU of a virtual interface to 9001 (jumbo frames) can
     # cause an update to the underlying physical connection if it wasn't
@@ -2216,7 +2356,9 @@ module Aws::DirectConnect
     #   * {Types::VirtualInterface#bgp_peers #bgp_peers} => Array&lt;Types::BGPPeer&gt;
     #   * {Types::VirtualInterface#region #region} => String
     #   * {Types::VirtualInterface#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::VirtualInterface#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::VirtualInterface#tags #tags} => Array&lt;Types::Tag&gt;
+    #   * {Types::VirtualInterface#site_link_enabled #site_link_enabled} => Boolean
     #
     # @example Request syntax with placeholder values
     #
@@ -2239,6 +2381,7 @@ module Aws::DirectConnect
     #           value: "TagValue",
     #         },
     #       ],
+    #       enable_site_link: false,
     #     },
     #   })
     #
@@ -2275,11 +2418,14 @@ module Aws::DirectConnect
     #   resp.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.region #=> String
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
     #   resp.tags[0].value #=> String
+    #   resp.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/CreatePrivateVirtualInterface AWS API Documentation
     #
@@ -2291,8 +2437,9 @@ module Aws::DirectConnect
     end
 
     # Creates a public virtual interface. A virtual interface is the VLAN
-    # that transports AWS Direct Connect traffic. A public virtual interface
-    # supports sending traffic to public services of AWS such as Amazon S3.
+    # that transports Direct Connect traffic. A public virtual interface
+    # supports sending traffic to public services of Amazon Web Services
+    # such as Amazon S3.
     #
     # When creating an IPv6 public virtual interface (`addressFamily` is
     # `ipv6`), leave the `customer` and `amazon` address fields blank to use
@@ -2329,7 +2476,9 @@ module Aws::DirectConnect
     #   * {Types::VirtualInterface#bgp_peers #bgp_peers} => Array&lt;Types::BGPPeer&gt;
     #   * {Types::VirtualInterface#region #region} => String
     #   * {Types::VirtualInterface#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::VirtualInterface#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::VirtualInterface#tags #tags} => Array&lt;Types::Tag&gt;
+    #   * {Types::VirtualInterface#site_link_enabled #site_link_enabled} => Boolean
     #
     # @example Request syntax with placeholder values
     #
@@ -2390,11 +2539,14 @@ module Aws::DirectConnect
     #   resp.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.region #=> String
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
     #   resp.tags[0].value #=> String
+    #   resp.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/CreatePublicVirtualInterface AWS API Documentation
     #
@@ -2417,13 +2569,14 @@ module Aws::DirectConnect
     # if you use the default ASN 64512 for both your the transit gateway and
     # Direct Connect gateway, the association request fails.
     #
-    # Setting the MTU of a virtual interface to 8500 (jumbo frames) can
-    # cause an update to the underlying physical connection if it wasn't
-    # updated to support jumbo frames. Updating the connection disrupts
-    # network connectivity for all virtual interfaces associated with the
-    # connection for up to 30 seconds. To check whether your connection
-    # supports jumbo frames, call DescribeConnections. To check whether your
-    # virtual interface supports jumbo frames, call
+    # A jumbo MTU value must be either 1500 or 8500. No other values will be
+    # accepted. Setting the MTU of a virtual interface to 8500 (jumbo
+    # frames) can cause an update to the underlying physical connection if
+    # it wasn't updated to support jumbo frames. Updating the connection
+    # disrupts network connectivity for all virtual interfaces associated
+    # with the connection for up to 30 seconds. To check whether your
+    # connection supports jumbo frames, call DescribeConnections. To check
+    # whether your virtual interface supports jumbo frames, call
     # DescribeVirtualInterfaces.
     #
     # @option params [required, String] :connection_id
@@ -2456,6 +2609,7 @@ module Aws::DirectConnect
     #           value: "TagValue",
     #         },
     #       ],
+    #       enable_site_link: false,
     #     },
     #   })
     #
@@ -2492,11 +2646,14 @@ module Aws::DirectConnect
     #   resp.virtual_interface.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.virtual_interface.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.virtual_interface.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.virtual_interface.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.virtual_interface.region #=> String
     #   resp.virtual_interface.aws_device_v2 #=> String
+    #   resp.virtual_interface.aws_logical_device_id #=> String
     #   resp.virtual_interface.tags #=> Array
     #   resp.virtual_interface.tags[0].key #=> String
     #   resp.virtual_interface.tags[0].value #=> String
+    #   resp.virtual_interface.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/CreateTransitVirtualInterface AWS API Documentation
     #
@@ -2571,11 +2728,14 @@ module Aws::DirectConnect
     #   resp.virtual_interface.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.virtual_interface.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.virtual_interface.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.virtual_interface.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.virtual_interface.region #=> String
     #   resp.virtual_interface.aws_device_v2 #=> String
+    #   resp.virtual_interface.aws_logical_device_id #=> String
     #   resp.virtual_interface.tags #=> Array
     #   resp.virtual_interface.tags[0].key #=> String
     #   resp.virtual_interface.tags[0].value #=> String
+    #   resp.virtual_interface.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DeleteBGPPeer AWS API Documentation
     #
@@ -2588,10 +2748,10 @@ module Aws::DirectConnect
 
     # Deletes the specified connection.
     #
-    # Deleting a connection only stops the AWS Direct Connect port hour and
-    # data transfer charges. If you are partnering with any third parties to
-    # connect with the AWS Direct Connect location, you must cancel your
-    # service with them separately.
+    # Deleting a connection only stops the Direct Connect port hour and data
+    # transfer charges. If you are partnering with any third parties to
+    # connect with the Direct Connect location, you must cancel your service
+    # with them separately.
     #
     # @option params [required, String] :connection_id
     #   The ID of the connection.
@@ -2612,6 +2772,7 @@ module Aws::DirectConnect
     #   * {Types::Connection#aws_device #aws_device} => String
     #   * {Types::Connection#jumbo_frame_capable #jumbo_frame_capable} => Boolean
     #   * {Types::Connection#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Connection#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Connection#has_logical_redundancy #has_logical_redundancy} => String
     #   * {Types::Connection#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::Connection#provider_name #provider_name} => String
@@ -2642,6 +2803,7 @@ module Aws::DirectConnect
     #   resp.aws_device #=> String
     #   resp.jumbo_frame_capable #=> Boolean
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
@@ -2798,7 +2960,7 @@ module Aws::DirectConnect
 
     # Deletes the specified interconnect.
     #
-    # <note markdown="1"> Intended for use by AWS Direct Connect Partners only.
+    # <note markdown="1"> Intended for use by Direct Connect Partners only.
     #
     #  </note>
     #
@@ -2847,6 +3009,7 @@ module Aws::DirectConnect
     #   * {Types::Lag#minimum_links #minimum_links} => Integer
     #   * {Types::Lag#aws_device #aws_device} => String
     #   * {Types::Lag#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Lag#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Lag#connections #connections} => Array&lt;Types::Connection&gt;
     #   * {Types::Lag#allows_hosted_connections #allows_hosted_connections} => Boolean
     #   * {Types::Lag#jumbo_frame_capable #jumbo_frame_capable} => Boolean
@@ -2876,6 +3039,7 @@ module Aws::DirectConnect
     #   resp.minimum_links #=> Integer
     #   resp.aws_device #=> String
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.connections #=> Array
     #   resp.connections[0].owner_account #=> String
     #   resp.connections[0].connection_id #=> String
@@ -2891,6 +3055,7 @@ module Aws::DirectConnect
     #   resp.connections[0].aws_device #=> String
     #   resp.connections[0].jumbo_frame_capable #=> Boolean
     #   resp.connections[0].aws_device_v2 #=> String
+    #   resp.connections[0].aws_logical_device_id #=> String
     #   resp.connections[0].has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.connections[0].tags #=> Array
     #   resp.connections[0].tags[0].key #=> String
@@ -2962,9 +3127,10 @@ module Aws::DirectConnect
     #
     # The Letter of Authorization - Connecting Facility Assignment (LOA-CFA)
     # is a document that your APN partner or service provider uses when
-    # establishing your cross connect to AWS at the colocation facility. For
-    # more information, see [Requesting Cross Connects at AWS Direct Connect
-    # Locations][1] in the *AWS Direct Connect User Guide*.
+    # establishing your cross connect to Amazon Web Services at the
+    # colocation facility. For more information, see [Requesting Cross
+    # Connects at Direct Connect Locations][1] in the *Direct Connect User
+    # Guide*.
     #
     #
     #
@@ -3041,6 +3207,7 @@ module Aws::DirectConnect
     #   resp.connections[0].aws_device #=> String
     #   resp.connections[0].jumbo_frame_capable #=> Boolean
     #   resp.connections[0].aws_device_v2 #=> String
+    #   resp.connections[0].aws_logical_device_id #=> String
     #   resp.connections[0].has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.connections[0].tags #=> Array
     #   resp.connections[0].tags[0].key #=> String
@@ -3069,7 +3236,7 @@ module Aws::DirectConnect
     # Lists the connections that have been provisioned on the specified
     # interconnect.
     #
-    # <note markdown="1"> Intended for use by AWS Direct Connect Partners only.
+    # <note markdown="1"> Intended for use by Direct Connect Partners only.
     #
     #  </note>
     #
@@ -3103,6 +3270,7 @@ module Aws::DirectConnect
     #   resp.connections[0].aws_device #=> String
     #   resp.connections[0].jumbo_frame_capable #=> Boolean
     #   resp.connections[0].aws_device_v2 #=> String
+    #   resp.connections[0].aws_logical_device_id #=> String
     #   resp.connections[0].has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.connections[0].tags #=> Array
     #   resp.connections[0].tags[0].key #=> String
@@ -3123,6 +3291,31 @@ module Aws::DirectConnect
     # @param [Hash] params ({})
     def describe_connections_on_interconnect(params = {}, options = {})
       req = build_request(:describe_connections_on_interconnect, params)
+      req.send_request(options)
+    end
+
+    # Get and view a list of customer agreements, along with their signed
+    # status and whether the customer is an NNIPartner, NNIPartnerV2, or a
+    # nonPartner.
+    #
+    # @return [Types::DescribeCustomerMetadataResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeCustomerMetadataResponse#agreements #agreements} => Array&lt;Types::CustomerAgreement&gt;
+    #   * {Types::DescribeCustomerMetadataResponse#nni_partner_type #nni_partner_type} => String
+    #
+    # @example Response structure
+    #
+    #   resp.agreements #=> Array
+    #   resp.agreements[0].agreement_name #=> String
+    #   resp.agreements[0].status #=> String
+    #   resp.nni_partner_type #=> String, one of "v1", "v2", "nonPartner"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DescribeCustomerMetadata AWS API Documentation
+    #
+    # @overload describe_customer_metadata(params = {})
+    # @param [Hash] params ({})
+    def describe_customer_metadata(params = {}, options = {})
+      req = build_request(:describe_customer_metadata, params)
       req.send_request(options)
     end
 
@@ -3399,7 +3592,7 @@ module Aws::DirectConnect
     # Lists the hosted connections that have been provisioned on the
     # specified interconnect or link aggregation group (LAG).
     #
-    # <note markdown="1"> Intended for use by AWS Direct Connect Partners only.
+    # <note markdown="1"> Intended for use by Direct Connect Partners only.
     #
     #  </note>
     #
@@ -3433,6 +3626,7 @@ module Aws::DirectConnect
     #   resp.connections[0].aws_device #=> String
     #   resp.connections[0].jumbo_frame_capable #=> Boolean
     #   resp.connections[0].aws_device_v2 #=> String
+    #   resp.connections[0].aws_logical_device_id #=> String
     #   resp.connections[0].has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.connections[0].tags #=> Array
     #   resp.connections[0].tags[0].key #=> String
@@ -3461,10 +3655,10 @@ module Aws::DirectConnect
     # Gets the LOA-CFA for the specified interconnect.
     #
     # The Letter of Authorization - Connecting Facility Assignment (LOA-CFA)
-    # is a document that is used when establishing your cross connect to AWS
-    # at the colocation facility. For more information, see [Requesting
-    # Cross Connects at AWS Direct Connect Locations][1] in the *AWS Direct
-    # Connect User Guide*.
+    # is a document that is used when establishing your cross connect to
+    # Amazon Web Services at the colocation facility. For more information,
+    # see [Requesting Cross Connects at Direct Connect Locations][1] in the
+    # *Direct Connect User Guide*.
     #
     #
     #
@@ -3509,8 +3703,8 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Lists the interconnects owned by the AWS account or only the specified
-    # interconnect.
+    # Lists the interconnects owned by the Amazon Web Services account or
+    # only the specified interconnect.
     #
     # @option params [String] :interconnect_id
     #   The ID of the interconnect.
@@ -3539,6 +3733,7 @@ module Aws::DirectConnect
     #   resp.interconnects[0].aws_device #=> String
     #   resp.interconnects[0].jumbo_frame_capable #=> Boolean
     #   resp.interconnects[0].aws_device_v2 #=> String
+    #   resp.interconnects[0].aws_logical_device_id #=> String
     #   resp.interconnects[0].has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.interconnects[0].tags #=> Array
     #   resp.interconnects[0].tags[0].key #=> String
@@ -3583,6 +3778,7 @@ module Aws::DirectConnect
     #   resp.lags[0].minimum_links #=> Integer
     #   resp.lags[0].aws_device #=> String
     #   resp.lags[0].aws_device_v2 #=> String
+    #   resp.lags[0].aws_logical_device_id #=> String
     #   resp.lags[0].connections #=> Array
     #   resp.lags[0].connections[0].owner_account #=> String
     #   resp.lags[0].connections[0].connection_id #=> String
@@ -3598,6 +3794,7 @@ module Aws::DirectConnect
     #   resp.lags[0].connections[0].aws_device #=> String
     #   resp.lags[0].connections[0].jumbo_frame_capable #=> Boolean
     #   resp.lags[0].connections[0].aws_device_v2 #=> String
+    #   resp.lags[0].connections[0].aws_logical_device_id #=> String
     #   resp.lags[0].connections[0].has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.lags[0].connections[0].tags #=> Array
     #   resp.lags[0].connections[0].tags[0].key #=> String
@@ -3639,10 +3836,10 @@ module Aws::DirectConnect
     # group (LAG).
     #
     # The Letter of Authorization - Connecting Facility Assignment (LOA-CFA)
-    # is a document that is used when establishing your cross connect to AWS
-    # at the colocation facility. For more information, see [Requesting
-    # Cross Connects at AWS Direct Connect Locations][1] in the *AWS Direct
-    # Connect User Guide*.
+    # is a document that is used when establishing your cross connect to
+    # Amazon Web Services at the colocation facility. For more information,
+    # see [Requesting Cross Connects at Direct Connect Locations][1] in the
+    # *Direct Connect User Guide*.
     #
     #
     #
@@ -3688,8 +3885,8 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Lists the AWS Direct Connect locations in the current AWS Region.
-    # These are the locations that can be selected when calling
+    # Lists the Direct Connect locations in the current Amazon Web Services
+    # Region. These are the locations that can be selected when calling
     # CreateConnection or CreateInterconnect.
     #
     # @return [Types::Locations] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -3718,7 +3915,52 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Describes the tags associated with the specified AWS Direct Connect
+    # Details about the router.
+    #
+    # @option params [required, String] :virtual_interface_id
+    #   The ID of the virtual interface.
+    #
+    # @option params [String] :router_type_identifier
+    #   Identifies the router by a combination of vendor, platform, and
+    #   software version. For example,
+    #   `CiscoSystemsInc-2900SeriesRouters-IOS124`.
+    #
+    # @return [Types::DescribeRouterConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeRouterConfigurationResponse#customer_router_config #customer_router_config} => String
+    #   * {Types::DescribeRouterConfigurationResponse#router #router} => Types::RouterType
+    #   * {Types::DescribeRouterConfigurationResponse#virtual_interface_id #virtual_interface_id} => String
+    #   * {Types::DescribeRouterConfigurationResponse#virtual_interface_name #virtual_interface_name} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_router_configuration({
+    #     virtual_interface_id: "VirtualInterfaceId", # required
+    #     router_type_identifier: "RouterTypeIdentifier",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.customer_router_config #=> String
+    #   resp.router.vendor #=> String
+    #   resp.router.platform #=> String
+    #   resp.router.software #=> String
+    #   resp.router.xslt_template_name #=> String
+    #   resp.router.xslt_template_name_for_mac_sec #=> String
+    #   resp.router.router_type_identifier #=> String
+    #   resp.virtual_interface_id #=> String
+    #   resp.virtual_interface_name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DescribeRouterConfiguration AWS API Documentation
+    #
+    # @overload describe_router_configuration(params = {})
+    # @param [Hash] params ({})
+    def describe_router_configuration(params = {}, options = {})
+      req = build_request(:describe_router_configuration, params)
+      req.send_request(options)
+    end
+
+    # Describes the tags associated with the specified Direct Connect
     # resources.
     #
     # @option params [required, Array<String>] :resource_arns
@@ -3751,10 +3993,11 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Lists the virtual private gateways owned by the AWS account.
+    # Lists the virtual private gateways owned by the Amazon Web Services
+    # account.
     #
-    # You can create one or more AWS Direct Connect private virtual
-    # interfaces linked to a virtual private gateway.
+    # You can create one or more Direct Connect private virtual interfaces
+    # linked to a virtual private gateway.
     #
     # @return [Types::VirtualGateways] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3775,14 +4018,15 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Displays all virtual interfaces for an AWS account. Virtual interfaces
-    # deleted fewer than 15 minutes before you make the request are also
-    # returned. If you specify a connection ID, only the virtual interfaces
-    # associated with the connection are returned. If you specify a virtual
-    # interface ID, then only a single virtual interface is returned.
+    # Displays all virtual interfaces for an Amazon Web Services account.
+    # Virtual interfaces deleted fewer than 15 minutes before you make the
+    # request are also returned. If you specify a connection ID, only the
+    # virtual interfaces associated with the connection are returned. If you
+    # specify a virtual interface ID, then only a single virtual interface
+    # is returned.
     #
-    # A virtual interface (VLAN) transmits the traffic between the AWS
-    # Direct Connect location and the customer network.
+    # A virtual interface (VLAN) transmits the traffic between the Direct
+    # Connect location and the customer network.
     #
     # @option params [String] :connection_id
     #   The ID of the connection.
@@ -3835,11 +4079,14 @@ module Aws::DirectConnect
     #   resp.virtual_interfaces[0].bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.virtual_interfaces[0].bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.virtual_interfaces[0].bgp_peers[0].aws_device_v2 #=> String
+    #   resp.virtual_interfaces[0].bgp_peers[0].aws_logical_device_id #=> String
     #   resp.virtual_interfaces[0].region #=> String
     #   resp.virtual_interfaces[0].aws_device_v2 #=> String
+    #   resp.virtual_interfaces[0].aws_logical_device_id #=> String
     #   resp.virtual_interfaces[0].tags #=> Array
     #   resp.virtual_interfaces[0].tags[0].key #=> String
     #   resp.virtual_interfaces[0].tags[0].value #=> String
+    #   resp.virtual_interfaces[0].site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DescribeVirtualInterfaces AWS API Documentation
     #
@@ -3855,7 +4102,7 @@ module Aws::DirectConnect
     # connection (the connection is not deleted; to delete the connection,
     # use the DeleteConnection request). If the LAG has associated virtual
     # interfaces or hosted connections, they remain associated with the LAG.
-    # A disassociated connection owned by an AWS Direct Connect Partner is
+    # A disassociated connection owned by an Direct Connect Partner is
     # automatically converted to an interconnect.
     #
     # If disassociating the connection would cause the LAG to fall below its
@@ -3886,6 +4133,7 @@ module Aws::DirectConnect
     #   * {Types::Connection#aws_device #aws_device} => String
     #   * {Types::Connection#jumbo_frame_capable #jumbo_frame_capable} => Boolean
     #   * {Types::Connection#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Connection#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Connection#has_logical_redundancy #has_logical_redundancy} => String
     #   * {Types::Connection#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::Connection#provider_name #provider_name} => String
@@ -3917,6 +4165,7 @@ module Aws::DirectConnect
     #   resp.aws_device #=> String
     #   resp.jumbo_frame_capable #=> Boolean
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
@@ -3941,7 +4190,7 @@ module Aws::DirectConnect
     end
 
     # Removes the association between a MAC Security (MACsec) security key
-    # and an AWS Direct Connect dedicated connection.
+    # and an Direct Connect dedicated connection.
     #
     # @option params [required, String] :connection_id
     #   The ID of the dedicated connection (dxcon-xxxx), or the ID of the LAG
@@ -4081,7 +4330,7 @@ module Aws::DirectConnect
     #   The time in minutes that the virtual interface failover test will
     #   last.
     #
-    #   Maximum value: 180 minutes (3 hours).
+    #   Maximum value: 4,320 minutes (72 hours).
     #
     #   Default: 180 minutes (3 hours).
     #
@@ -4154,8 +4403,8 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Adds the specified tags to the specified AWS Direct Connect resource.
-    # Each resource can have a maximum of 50 tags.
+    # Adds the specified tags to the specified Direct Connect resource. Each
+    # resource can have a maximum of 50 tags.
     #
     # Each tag consists of a key and an optional value. If a tag with the
     # same key is already associated with the resource, this action updates
@@ -4190,8 +4439,7 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Removes one or more tags from the specified AWS Direct Connect
-    # resource.
+    # Removes one or more tags from the specified Direct Connect resource.
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
@@ -4217,7 +4465,7 @@ module Aws::DirectConnect
       req.send_request(options)
     end
 
-    # Updates the AWS Direct Connect dedicated connection configuration.
+    # Updates the Direct Connect dedicated connection configuration.
     #
     # You can update the following parameters for a connection:
     #
@@ -4255,6 +4503,7 @@ module Aws::DirectConnect
     #   * {Types::Connection#aws_device #aws_device} => String
     #   * {Types::Connection#jumbo_frame_capable #jumbo_frame_capable} => Boolean
     #   * {Types::Connection#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Connection#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Connection#has_logical_redundancy #has_logical_redundancy} => String
     #   * {Types::Connection#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::Connection#provider_name #provider_name} => String
@@ -4287,6 +4536,7 @@ module Aws::DirectConnect
     #   resp.aws_device #=> String
     #   resp.jumbo_frame_capable #=> Boolean
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
@@ -4307,6 +4557,43 @@ module Aws::DirectConnect
     # @param [Hash] params ({})
     def update_connection(params = {}, options = {})
       req = build_request(:update_connection, params)
+      req.send_request(options)
+    end
+
+    # Updates the name of a current Direct Connect gateway.
+    #
+    # @option params [required, String] :direct_connect_gateway_id
+    #   The ID of the Direct Connect gateway to update.
+    #
+    # @option params [required, String] :new_direct_connect_gateway_name
+    #   The new name for the Direct Connect gateway.
+    #
+    # @return [Types::UpdateDirectConnectGatewayResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateDirectConnectGatewayResponse#direct_connect_gateway #direct_connect_gateway} => Types::DirectConnectGateway
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_direct_connect_gateway({
+    #     direct_connect_gateway_id: "DirectConnectGatewayId", # required
+    #     new_direct_connect_gateway_name: "DirectConnectGatewayName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.direct_connect_gateway.direct_connect_gateway_id #=> String
+    #   resp.direct_connect_gateway.direct_connect_gateway_name #=> String
+    #   resp.direct_connect_gateway.amazon_side_asn #=> Integer
+    #   resp.direct_connect_gateway.owner_account #=> String
+    #   resp.direct_connect_gateway.direct_connect_gateway_state #=> String, one of "pending", "available", "deleting", "deleted"
+    #   resp.direct_connect_gateway.state_change_error #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/UpdateDirectConnectGateway AWS API Documentation
+    #
+    # @overload update_direct_connect_gateway(params = {})
+    # @param [Hash] params ({})
+    def update_direct_connect_gateway(params = {}, options = {})
+      req = build_request(:update_direct_connect_gateway, params)
       req.send_request(options)
     end
 
@@ -4382,7 +4669,8 @@ module Aws::DirectConnect
     #
     # * The LAG's MACsec encryption mode.
     #
-    #   AWS assigns this value to each connection which is part of the LAG.
+    #   Amazon Web Services assigns this value to each connection which is
+    #   part of the LAG.
     #
     # * The tags
     #
@@ -4405,7 +4693,8 @@ module Aws::DirectConnect
     # @option params [String] :encryption_mode
     #   The LAG MAC Security (MACsec) encryption mode.
     #
-    #   AWS applies the value to all connections which are part of the LAG.
+    #   Amazon Web Services applies the value to all connections which are
+    #   part of the LAG.
     #
     # @return [Types::Lag] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -4420,6 +4709,7 @@ module Aws::DirectConnect
     #   * {Types::Lag#minimum_links #minimum_links} => Integer
     #   * {Types::Lag#aws_device #aws_device} => String
     #   * {Types::Lag#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::Lag#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::Lag#connections #connections} => Array&lt;Types::Connection&gt;
     #   * {Types::Lag#allows_hosted_connections #allows_hosted_connections} => Boolean
     #   * {Types::Lag#jumbo_frame_capable #jumbo_frame_capable} => Boolean
@@ -4452,6 +4742,7 @@ module Aws::DirectConnect
     #   resp.minimum_links #=> Integer
     #   resp.aws_device #=> String
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.connections #=> Array
     #   resp.connections[0].owner_account #=> String
     #   resp.connections[0].connection_id #=> String
@@ -4467,6 +4758,7 @@ module Aws::DirectConnect
     #   resp.connections[0].aws_device #=> String
     #   resp.connections[0].jumbo_frame_capable #=> Boolean
     #   resp.connections[0].aws_device_v2 #=> String
+    #   resp.connections[0].aws_logical_device_id #=> String
     #   resp.connections[0].has_logical_redundancy #=> String, one of "unknown", "yes", "no"
     #   resp.connections[0].tags #=> Array
     #   resp.connections[0].tags[0].key #=> String
@@ -4513,7 +4805,7 @@ module Aws::DirectConnect
     # network connectivity for all virtual interfaces associated with the
     # connection for up to 30 seconds. To check whether your connection
     # supports jumbo frames, call DescribeConnections. To check whether your
-    # virtual q interface supports jumbo frames, call
+    # virtual interface supports jumbo frames, call
     # DescribeVirtualInterfaces.
     #
     # @option params [required, String] :virtual_interface_id
@@ -4522,6 +4814,12 @@ module Aws::DirectConnect
     # @option params [Integer] :mtu
     #   The maximum transmission unit (MTU), in bytes. The supported values
     #   are 1500 and 9001. The default value is 1500.
+    #
+    # @option params [Boolean] :enable_site_link
+    #   Indicates whether to enable or disable SiteLink.
+    #
+    # @option params [String] :virtual_interface_name
+    #   The name of the virtual private interface.
     #
     # @return [Types::VirtualInterface] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -4548,13 +4846,17 @@ module Aws::DirectConnect
     #   * {Types::VirtualInterface#bgp_peers #bgp_peers} => Array&lt;Types::BGPPeer&gt;
     #   * {Types::VirtualInterface#region #region} => String
     #   * {Types::VirtualInterface#aws_device_v2 #aws_device_v2} => String
+    #   * {Types::VirtualInterface#aws_logical_device_id #aws_logical_device_id} => String
     #   * {Types::VirtualInterface#tags #tags} => Array&lt;Types::Tag&gt;
+    #   * {Types::VirtualInterface#site_link_enabled #site_link_enabled} => Boolean
     #
     # @example Request syntax with placeholder values
     #
     #   resp = client.update_virtual_interface_attributes({
     #     virtual_interface_id: "VirtualInterfaceId", # required
     #     mtu: 1,
+    #     enable_site_link: false,
+    #     virtual_interface_name: "VirtualInterfaceName",
     #   })
     #
     # @example Response structure
@@ -4590,11 +4892,14 @@ module Aws::DirectConnect
     #   resp.bgp_peers[0].bgp_peer_state #=> String, one of "verifying", "pending", "available", "deleting", "deleted"
     #   resp.bgp_peers[0].bgp_status #=> String, one of "up", "down", "unknown"
     #   resp.bgp_peers[0].aws_device_v2 #=> String
+    #   resp.bgp_peers[0].aws_logical_device_id #=> String
     #   resp.region #=> String
     #   resp.aws_device_v2 #=> String
+    #   resp.aws_logical_device_id #=> String
     #   resp.tags #=> Array
     #   resp.tags[0].key #=> String
     #   resp.tags[0].value #=> String
+    #   resp.site_link_enabled #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/UpdateVirtualInterfaceAttributes AWS API Documentation
     #
@@ -4618,7 +4923,7 @@ module Aws::DirectConnect
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-directconnect'
-      context[:gem_version] = '1.41.0'
+      context[:gem_version] = '1.64.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

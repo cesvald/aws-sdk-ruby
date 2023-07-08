@@ -10,19 +10,13 @@
 module Aws::CodeBuild
   module Types
 
-    # An AWS service limit was exceeded for the calling AWS account.
+    # An Amazon Web Services service limit was exceeded for the calling
+    # Amazon Web Services account.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/AccountLimitExceededException AWS API Documentation
     #
     class AccountLimitExceededException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass BatchDeleteBuildsInput
-    #   data as a hash:
-    #
-    #       {
-    #         ids: ["NonEmptyString"], # required
-    #       }
-    #
     # @!attribute [rw] ids
     #   The IDs of the builds to delete.
     #   @return [Array<String>]
@@ -52,13 +46,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchGetBuildBatchesInput
-    #   data as a hash:
-    #
-    #       {
-    #         ids: ["NonEmptyString"], # required
-    #       }
-    #
     # @!attribute [rw] ids
     #   An array that contains the batch build identifiers to retrieve.
     #   @return [Array<String>]
@@ -90,13 +77,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchGetBuildsInput
-    #   data as a hash:
-    #
-    #       {
-    #         ids: ["NonEmptyString"], # required
-    #       }
-    #
     # @!attribute [rw] ids
     #   The IDs of the builds.
     #   @return [Array<String>]
@@ -126,17 +106,10 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchGetProjectsInput
-    #   data as a hash:
-    #
-    #       {
-    #         names: ["NonEmptyString"], # required
-    #       }
-    #
     # @!attribute [rw] names
     #   The names or ARNs of the build projects. To get information about a
-    #   project shared with your AWS account, its ARN must be specified. You
-    #   cannot specify a shared project using its name.
+    #   project shared with your Amazon Web Services account, its ARN must
+    #   be specified. You cannot specify a shared project using its name.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetProjectsInput AWS API Documentation
@@ -165,13 +138,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchGetReportGroupsInput
-    #   data as a hash:
-    #
-    #       {
-    #         report_group_arns: ["NonEmptyString"], # required
-    #       }
-    #
     # @!attribute [rw] report_group_arns
     #   An array of report group ARNs that identify the report groups to
     #   return.
@@ -203,13 +169,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchGetReportsInput
-    #   data as a hash:
-    #
-    #       {
-    #         report_arns: ["NonEmptyString"], # required
-    #       }
-    #
     # @!attribute [rw] report_arns
     #   An array of ARNs that identify the `Report` objects to return.
     #   @return [Array<String>]
@@ -242,14 +201,6 @@ module Aws::CodeBuild
 
     # Specifies restrictions for the batch build.
     #
-    # @note When making an API call, you may pass BatchRestrictions
-    #   data as a hash:
-    #
-    #       {
-    #         maximum_builds_allowed: 1,
-    #         compute_types_allowed: ["NonEmptyString"],
-    #       }
-    #
     # @!attribute [rw] maximum_builds_allowed
     #   Specifies the maximum number of builds allowed.
     #   @return [Integer]
@@ -257,7 +208,7 @@ module Aws::CodeBuild
     # @!attribute [rw] compute_types_allowed
     #   An array of strings that specify the compute types that are allowed
     #   for the batch build. See [Build environment compute types][1] in the
-    #   *AWS CodeBuild User Guide* for these values.
+    #   *CodeBuild User Guide* for these values.
     #
     #
     #
@@ -305,17 +256,17 @@ module Aws::CodeBuild
     # @!attribute [rw] build_status
     #   The current status of the build. Valid values include:
     #
-    #   * `FAILED`\: The build failed.
+    #   * `FAILED`: The build failed.
     #
-    #   * `FAULT`\: The build faulted.
+    #   * `FAULT`: The build faulted.
     #
-    #   * `IN_PROGRESS`\: The build is still in progress.
+    #   * `IN_PROGRESS`: The build is still in progress.
     #
-    #   * `STOPPED`\: The build stopped.
+    #   * `STOPPED`: The build stopped.
     #
-    #   * `SUCCEEDED`\: The build succeeded.
+    #   * `SUCCEEDED`: The build succeeded.
     #
-    #   * `TIMED_OUT`\: The build timed out.
+    #   * `TIMED_OUT`: The build timed out.
     #   @return [String]
     #
     # @!attribute [rw] source_version
@@ -324,7 +275,7 @@ module Aws::CodeBuild
     #   this `sourceVersion` (at the build level) takes precedence.
     #
     #   For more information, see [Source Version Sample with CodeBuild][1]
-    #   in the *AWS CodeBuild User Guide*.
+    #   in the *CodeBuild User Guide*.
     #
     #
     #
@@ -334,17 +285,16 @@ module Aws::CodeBuild
     # @!attribute [rw] resolved_source_version
     #   An identifier for the version of this build's source code.
     #
-    #   * For AWS CodeCommit, GitHub, GitHub Enterprise, and BitBucket, the
+    #   * For CodeCommit, GitHub, GitHub Enterprise, and BitBucket, the
     #     commit ID.
     #
-    #   * For AWS CodePipeline, the source revision provided by AWS
-    #     CodePipeline.
+    #   * For CodePipeline, the source revision provided by CodePipeline.
     #
     #   * For Amazon S3, this does not apply.
     #   @return [String]
     #
     # @!attribute [rw] project_name
-    #   The name of the AWS CodeBuild project.
+    #   The name of the CodeBuild project.
     #   @return [String]
     #
     # @!attribute [rw] phases
@@ -364,7 +314,7 @@ module Aws::CodeBuild
     #   An array of `ProjectSourceVersion` objects. Each
     #   `ProjectSourceVersion` must be one of:
     #
-    #   * For AWS CodeCommit: the commit ID, branch, or Git tag to use.
+    #   * For CodeCommit: the commit ID, branch, or Git tag to use.
     #
     #   * For GitHub: the commit ID, pull request ID, branch name, or tag
     #     name that corresponds to the version of the source code you want
@@ -404,12 +354,12 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] logs
-    #   Information about the build's logs in Amazon CloudWatch Logs.
+    #   Information about the build's logs in CloudWatch Logs.
     #   @return [Types::LogsLocation]
     #
     # @!attribute [rw] timeout_in_minutes
-    #   How long, in minutes, for AWS CodeBuild to wait before timing out
-    #   this build if it does not get marked as completed.
+    #   How long, in minutes, for CodeBuild to wait before timing out this
+    #   build if it does not get marked as completed.
     #   @return [Integer]
     #
     # @!attribute [rw] queued_timeout_in_minutes
@@ -424,22 +374,22 @@ module Aws::CodeBuild
     # @!attribute [rw] initiator
     #   The entity that started the build. Valid values include:
     #
-    #   * If AWS CodePipeline started the build, the pipeline's name (for
+    #   * If CodePipeline started the build, the pipeline's name (for
     #     example, `codepipeline/my-demo-pipeline`).
     #
-    #   * If an AWS Identity and Access Management (IAM) user started the
-    #     build, the user's name (for example, `MyUserName`).
+    #   * If an IAM user started the build, the user's name (for example,
+    #     `MyUserName`).
     #
-    #   * If the Jenkins plugin for AWS CodeBuild started the build, the
-    #     string `CodeBuild-Jenkins-Plugin`.
+    #   * If the Jenkins plugin for CodeBuild started the build, the string
+    #     `CodeBuild-Jenkins-Plugin`.
     #   @return [String]
     #
     # @!attribute [rw] vpc_config
-    #   If your AWS CodeBuild project accesses resources in an Amazon VPC,
-    #   you provide this parameter that identifies the VPC ID and the list
-    #   of security group IDs and subnet IDs. The security groups and
-    #   subnets must belong to the same VPC. You must provide at least one
-    #   security group and one subnet ID.
+    #   If your CodeBuild project accesses resources in an Amazon VPC, you
+    #   provide this parameter that identifies the VPC ID and the list of
+    #   security group IDs and subnet IDs. The security groups and subnets
+    #   must belong to the same VPC. You must provide at least one security
+    #   group and one subnet ID.
     #   @return [Types::VpcConfig]
     #
     # @!attribute [rw] network_interface
@@ -447,8 +397,8 @@ module Aws::CodeBuild
     #   @return [Types::NetworkInterface]
     #
     # @!attribute [rw] encryption_key
-    #   The AWS Key Management Service (AWS KMS) customer master key (CMK)
-    #   to be used for encrypting the build output artifacts.
+    #   The Key Management Service customer master key (CMK) to be used for
+    #   encrypting the build output artifacts.
     #
     #   <note markdown="1"> You can use a cross-account KMS key to encrypt the build output
     #   artifacts if your service role has permission to that key.
@@ -463,11 +413,10 @@ module Aws::CodeBuild
     # @!attribute [rw] exported_environment_variables
     #   A list of exported environment variables for this build.
     #
-    #   Exported environment variables are used in conjunction with AWS
+    #   Exported environment variables are used in conjunction with
     #   CodePipeline to export environment variables from the current build
     #   stage to subsequent stages in the pipeline. For more information,
-    #   see [Working with variables][1] in the *AWS CodePipeline User
-    #   Guide*.
+    #   see [Working with variables][1] in the *CodePipeline User Guide*.
     #
     #
     #
@@ -581,12 +530,19 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] bucket_owner_access
-    #   Specifies the access for objects that are uploaded to an Amazon S3
-    #   bucket that is owned by another account.
+    #   Specifies the bucket owner's access for objects that another
+    #   account uploads to their Amazon S3 bucket. By default, only the
+    #   account that uploads the objects to the bucket has access to these
+    #   objects. This property allows you to give the bucket owner access to
+    #   these objects.
     #
-    #   By default, only the account that uploads the objects to the bucket
-    #   has access to these objects. This property allows you to give the
-    #   bucket owner access to these objects.
+    #   <note markdown="1"> To use this property, your CodeBuild service role must have the
+    #   `s3:PutBucketAcl` permission. This permission allows CodeBuild to
+    #   modify the access control list for the bucket.
+    #
+    #    </note>
+    #
+    #   This property can be one of the following values:
     #
     #   NONE
     #
@@ -595,7 +551,7 @@ module Aws::CodeBuild
     #
     #   READ\_ONLY
     #
-    #   : The bucket owner has read only access to the objects. The
+    #   : The bucket owner has read-only access to the objects. The
     #     uploading account retains ownership of the objects.
     #
     #   FULL
@@ -668,11 +624,10 @@ module Aws::CodeBuild
     #   The identifier of the resolved version of this batch build's source
     #   code.
     #
-    #   * For AWS CodeCommit, GitHub, GitHub Enterprise, and BitBucket, the
+    #   * For CodeCommit, GitHub, GitHub Enterprise, and BitBucket, the
     #     commit ID.
     #
-    #   * For AWS CodePipeline, the source revision provided by AWS
-    #     CodePipeline.
+    #   * For CodePipeline, the source revision provided by CodePipeline.
     #
     #   * For Amazon S3, this does not apply.
     #   @return [String]
@@ -699,7 +654,7 @@ module Aws::CodeBuild
     #   An array of `ProjectSourceVersion` objects. Each
     #   `ProjectSourceVersion` must be one of:
     #
-    #   * For AWS CodeCommit: the commit ID, branch, or Git tag to use.
+    #   * For CodeCommit: the commit ID, branch, or Git tag to use.
     #
     #   * For GitHub: the commit ID, pull request ID, branch name, or tag
     #     name that corresponds to the version of the source code you want
@@ -742,7 +697,7 @@ module Aws::CodeBuild
     #
     # @!attribute [rw] log_config
     #   Information about logs for a build project. These can be logs in
-    #   Amazon CloudWatch Logs, built in a specified S3 bucket, or both.
+    #   CloudWatch Logs, built in a specified S3 bucket, or both.
     #   @return [Types::LogsConfig]
     #
     # @!attribute [rw] build_timeout_in_minutes
@@ -762,23 +717,22 @@ module Aws::CodeBuild
     # @!attribute [rw] initiator
     #   The entity that started the batch build. Valid values include:
     #
-    #   * If AWS CodePipeline started the build, the pipeline's name (for
+    #   * If CodePipeline started the build, the pipeline's name (for
     #     example, `codepipeline/my-demo-pipeline`).
     #
-    #   * If an AWS Identity and Access Management (IAM) user started the
-    #     build, the user's name.
+    #   * If an IAM user started the build, the user's name.
     #
-    #   * If the Jenkins plugin for AWS CodeBuild started the build, the
-    #     string `CodeBuild-Jenkins-Plugin`.
+    #   * If the Jenkins plugin for CodeBuild started the build, the string
+    #     `CodeBuild-Jenkins-Plugin`.
     #   @return [String]
     #
     # @!attribute [rw] vpc_config
-    #   Information about the VPC configuration that AWS CodeBuild accesses.
+    #   Information about the VPC configuration that CodeBuild accesses.
     #   @return [Types::VpcConfig]
     #
     # @!attribute [rw] encryption_key
-    #   The AWS Key Management Service (AWS KMS) customer master key (CMK)
-    #   to be used for encrypting the batch build output artifacts.
+    #   The Key Management Service customer master key (CMK) to be used for
+    #   encrypting the batch build output artifacts.
     #
     #   <note markdown="1"> You can use a cross-account KMS key to encrypt the build output
     #   artifacts if your service role has permission to that key.
@@ -864,13 +818,6 @@ module Aws::CodeBuild
 
     # Specifies filters when retrieving batch builds.
     #
-    # @note When making an API call, you may pass BuildBatchFilter
-    #   data as a hash:
-    #
-    #       {
-    #         status: "SUCCEEDED", # accepts SUCCEEDED, FAILED, FAULT, TIMED_OUT, IN_PROGRESS, STOPPED
-    #       }
-    #
     # @!attribute [rw] status
     #   The status of the batch builds to retrieve. Only batch builds that
     #   have this status will be retrieved.
@@ -933,11 +880,6 @@ module Aws::CodeBuild
     #   IN\_PROGRESS
     #
     #   : The build phase is still in progress.
-    #
-    #   QUEUED
-    #
-    #   : The build has been submitted and is queued behind other submitted
-    #     builds.
     #
     #   STOPPED
     #
@@ -1047,35 +989,50 @@ module Aws::CodeBuild
     # @!attribute [rw] phase_type
     #   The name of the build phase. Valid values include:
     #
-    #   * `BUILD`\: Core build activities typically occur in this build
-    #     phase.
+    #   BUILD
     #
-    #   * `COMPLETED`\: The build has been completed.
+    #   : Core build activities typically occur in this build phase.
     #
-    #   * `DOWNLOAD_SOURCE`\: Source code is being downloaded in this build
-    #     phase.
+    #   COMPLETED
     #
-    #   * `FINALIZING`\: The build process is completing in this build
-    #     phase.
+    #   : The build has been completed.
     #
-    #   * `INSTALL`\: Installation activities typically occur in this build
-    #     phase.
+    #   DOWNLOAD\_SOURCE
     #
-    #   * `POST_BUILD`\: Post-build activities typically occur in this build
-    #     phase.
+    #   : Source code is being downloaded in this build phase.
     #
-    #   * `PRE_BUILD`\: Pre-build activities typically occur in this build
-    #     phase.
+    #   FINALIZING
     #
-    #   * `PROVISIONING`\: The build environment is being set up.
+    #   : The build process is completing in this build phase.
     #
-    #   * `QUEUED`\: The build has been submitted and is queued behind other
-    #     submitted builds.
+    #   INSTALL
     #
-    #   * `SUBMITTED`\: The build has been submitted.
+    #   : Installation activities typically occur in this build phase.
     #
-    #   * `UPLOAD_ARTIFACTS`\: Build output artifacts are being uploaded to
-    #     the output location.
+    #   POST\_BUILD
+    #
+    #   : Post-build activities typically occur in this build phase.
+    #
+    #   PRE\_BUILD
+    #
+    #   : Pre-build activities typically occur in this build phase.
+    #
+    #   PROVISIONING
+    #
+    #   : The build environment is being set up.
+    #
+    #   QUEUED
+    #
+    #   : The build has been submitted and is queued behind other submitted
+    #     builds.
+    #
+    #   SUBMITTED
+    #
+    #   : The build has been submitted.
+    #
+    #   UPLOAD\_ARTIFACTS
+    #
+    #   : Build output artifacts are being uploaded to the output location.
     #   @return [String]
     #
     # @!attribute [rw] phase_status
@@ -1092,11 +1049,6 @@ module Aws::CodeBuild
     #   IN\_PROGRESS
     #
     #   : The build phase is still in progress.
-    #
-    #   QUEUED
-    #
-    #   : The build has been submitted and is queued behind other submitted
-    #     builds.
     #
     #   STOPPED
     #
@@ -1142,16 +1094,8 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # Contains information that defines how the AWS CodeBuild build project
+    # Contains information that defines how the CodeBuild build project
     # reports the build status to the source provider.
-    #
-    # @note When making an API call, you may pass BuildStatusConfig
-    #   data as a hash:
-    #
-    #       {
-    #         context: "String",
-    #         target_url: "String",
-    #       }
     #
     # @!attribute [rw] context
     #   Specifies the context of the build status CodeBuild sends to the
@@ -1268,31 +1212,21 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # Information about Amazon CloudWatch Logs for a build project.
-    #
-    # @note When making an API call, you may pass CloudWatchLogsConfig
-    #   data as a hash:
-    #
-    #       {
-    #         status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #         group_name: "String",
-    #         stream_name: "String",
-    #       }
+    # Information about CloudWatch Logs for a build project.
     #
     # @!attribute [rw] status
-    #   The current status of the logs in Amazon CloudWatch Logs for a build
+    #   The current status of the logs in CloudWatch Logs for a build
     #   project. Valid values are:
     #
-    #   * `ENABLED`\: Amazon CloudWatch Logs are enabled for this build
-    #     project.
+    #   * `ENABLED`: CloudWatch Logs are enabled for this build project.
     #
-    #   * `DISABLED`\: Amazon CloudWatch Logs are not enabled for this build
+    #   * `DISABLED`: CloudWatch Logs are not enabled for this build
     #     project.
     #   @return [String]
     #
     # @!attribute [rw] group_name
-    #   The group name of the logs in Amazon CloudWatch Logs. For more
-    #   information, see [Working with Log Groups and Log Streams][1].
+    #   The group name of the logs in CloudWatch Logs. For more information,
+    #   see [Working with Log Groups and Log Streams][1].
     #
     #
     #
@@ -1300,8 +1234,8 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] stream_name
-    #   The prefix of the stream name of the Amazon CloudWatch Logs. For
-    #   more information, see [Working with Log Groups and Log Streams][1].
+    #   The prefix of the stream name of the CloudWatch Logs. For more
+    #   information, see [Working with Log Groups and Log Streams][1].
     #
     #
     #
@@ -1432,161 +1366,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateProjectInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ProjectName", # required
-    #         description: "ProjectDescription",
-    #         source: { # required
-    #           type: "CODECOMMIT", # required, accepts CODECOMMIT, CODEPIPELINE, GITHUB, S3, BITBUCKET, GITHUB_ENTERPRISE, NO_SOURCE
-    #           location: "String",
-    #           git_clone_depth: 1,
-    #           git_submodules_config: {
-    #             fetch_submodules: false, # required
-    #           },
-    #           buildspec: "String",
-    #           auth: {
-    #             type: "OAUTH", # required, accepts OAUTH
-    #             resource: "String",
-    #           },
-    #           report_build_status: false,
-    #           build_status_config: {
-    #             context: "String",
-    #             target_url: "String",
-    #           },
-    #           insecure_ssl: false,
-    #           source_identifier: "String",
-    #         },
-    #         secondary_sources: [
-    #           {
-    #             type: "CODECOMMIT", # required, accepts CODECOMMIT, CODEPIPELINE, GITHUB, S3, BITBUCKET, GITHUB_ENTERPRISE, NO_SOURCE
-    #             location: "String",
-    #             git_clone_depth: 1,
-    #             git_submodules_config: {
-    #               fetch_submodules: false, # required
-    #             },
-    #             buildspec: "String",
-    #             auth: {
-    #               type: "OAUTH", # required, accepts OAUTH
-    #               resource: "String",
-    #             },
-    #             report_build_status: false,
-    #             build_status_config: {
-    #               context: "String",
-    #               target_url: "String",
-    #             },
-    #             insecure_ssl: false,
-    #             source_identifier: "String",
-    #           },
-    #         ],
-    #         source_version: "String",
-    #         secondary_source_versions: [
-    #           {
-    #             source_identifier: "String", # required
-    #             source_version: "String", # required
-    #           },
-    #         ],
-    #         artifacts: { # required
-    #           type: "CODEPIPELINE", # required, accepts CODEPIPELINE, S3, NO_ARTIFACTS
-    #           location: "String",
-    #           path: "String",
-    #           namespace_type: "NONE", # accepts NONE, BUILD_ID
-    #           name: "String",
-    #           packaging: "NONE", # accepts NONE, ZIP
-    #           override_artifact_name: false,
-    #           encryption_disabled: false,
-    #           artifact_identifier: "String",
-    #           bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #         },
-    #         secondary_artifacts: [
-    #           {
-    #             type: "CODEPIPELINE", # required, accepts CODEPIPELINE, S3, NO_ARTIFACTS
-    #             location: "String",
-    #             path: "String",
-    #             namespace_type: "NONE", # accepts NONE, BUILD_ID
-    #             name: "String",
-    #             packaging: "NONE", # accepts NONE, ZIP
-    #             override_artifact_name: false,
-    #             encryption_disabled: false,
-    #             artifact_identifier: "String",
-    #             bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #           },
-    #         ],
-    #         cache: {
-    #           type: "NO_CACHE", # required, accepts NO_CACHE, S3, LOCAL
-    #           location: "String",
-    #           modes: ["LOCAL_DOCKER_LAYER_CACHE"], # accepts LOCAL_DOCKER_LAYER_CACHE, LOCAL_SOURCE_CACHE, LOCAL_CUSTOM_CACHE
-    #         },
-    #         environment: { # required
-    #           type: "WINDOWS_CONTAINER", # required, accepts WINDOWS_CONTAINER, LINUX_CONTAINER, LINUX_GPU_CONTAINER, ARM_CONTAINER, WINDOWS_SERVER_2019_CONTAINER
-    #           image: "NonEmptyString", # required
-    #           compute_type: "BUILD_GENERAL1_SMALL", # required, accepts BUILD_GENERAL1_SMALL, BUILD_GENERAL1_MEDIUM, BUILD_GENERAL1_LARGE, BUILD_GENERAL1_2XLARGE
-    #           environment_variables: [
-    #             {
-    #               name: "NonEmptyString", # required
-    #               value: "String", # required
-    #               type: "PLAINTEXT", # accepts PLAINTEXT, PARAMETER_STORE, SECRETS_MANAGER
-    #             },
-    #           ],
-    #           privileged_mode: false,
-    #           certificate: "String",
-    #           registry_credential: {
-    #             credential: "NonEmptyString", # required
-    #             credential_provider: "SECRETS_MANAGER", # required, accepts SECRETS_MANAGER
-    #           },
-    #           image_pull_credentials_type: "CODEBUILD", # accepts CODEBUILD, SERVICE_ROLE
-    #         },
-    #         service_role: "NonEmptyString", # required
-    #         timeout_in_minutes: 1,
-    #         queued_timeout_in_minutes: 1,
-    #         encryption_key: "NonEmptyString",
-    #         tags: [
-    #           {
-    #             key: "KeyInput",
-    #             value: "ValueInput",
-    #           },
-    #         ],
-    #         vpc_config: {
-    #           vpc_id: "NonEmptyString",
-    #           subnets: ["NonEmptyString"],
-    #           security_group_ids: ["NonEmptyString"],
-    #         },
-    #         badge_enabled: false,
-    #         logs_config: {
-    #           cloud_watch_logs: {
-    #             status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #             group_name: "String",
-    #             stream_name: "String",
-    #           },
-    #           s3_logs: {
-    #             status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #             location: "String",
-    #             encryption_disabled: false,
-    #             bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #           },
-    #         },
-    #         file_system_locations: [
-    #           {
-    #             type: "EFS", # accepts EFS
-    #             location: "String",
-    #             mount_point: "String",
-    #             identifier: "String",
-    #             mount_options: "String",
-    #           },
-    #         ],
-    #         build_batch_config: {
-    #           service_role: "NonEmptyString",
-    #           combine_artifacts: false,
-    #           restrictions: {
-    #             maximum_builds_allowed: 1,
-    #             compute_types_allowed: ["NonEmptyString"],
-    #           },
-    #           timeout_in_mins: 1,
-    #         },
-    #         concurrent_build_limit: 1,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the build project.
     #   @return [String]
@@ -1608,7 +1387,7 @@ module Aws::CodeBuild
     #   specified, the latest version is used. If specified, it must be one
     #   of:
     #
-    #   * For AWS CodeCommit: the commit ID, branch, or Git tag to use.
+    #   * For CodeCommit: the commit ID, branch, or Git tag to use.
     #
     #   * For GitHub: the commit ID, pull request ID, branch name, or tag
     #     name that corresponds to the version of the source code you want
@@ -1631,7 +1410,7 @@ module Aws::CodeBuild
     #   level).
     #
     #   For more information, see [Source Version Sample with CodeBuild][1]
-    #   in the *AWS CodeBuild User Guide*.
+    #   in the *CodeBuild User Guide*.
     #
     #
     #
@@ -1663,15 +1442,15 @@ module Aws::CodeBuild
     #   @return [Types::ProjectEnvironment]
     #
     # @!attribute [rw] service_role
-    #   The ARN of the AWS Identity and Access Management (IAM) role that
-    #   enables AWS CodeBuild to interact with dependent AWS services on
-    #   behalf of the AWS account.
+    #   The ARN of the IAM role that enables CodeBuild to interact with
+    #   dependent Amazon Web Services services on behalf of the Amazon Web
+    #   Services account.
     #   @return [String]
     #
     # @!attribute [rw] timeout_in_minutes
-    #   How long, in minutes, from 5 to 480 (8 hours), for AWS CodeBuild to
-    #   wait before it times out any build that has not been marked as
-    #   completed. The default is 60 minutes.
+    #   How long, in minutes, from 5 to 480 (8 hours), for CodeBuild to wait
+    #   before it times out any build that has not been marked as completed.
+    #   The default is 60 minutes.
     #   @return [Integer]
     #
     # @!attribute [rw] queued_timeout_in_minutes
@@ -1680,8 +1459,8 @@ module Aws::CodeBuild
     #   @return [Integer]
     #
     # @!attribute [rw] encryption_key
-    #   The AWS Key Management Service (AWS KMS) customer master key (CMK)
-    #   to be used for encrypting the build output artifacts.
+    #   The Key Management Service customer master key (CMK) to be used for
+    #   encrypting the build output artifacts.
     #
     #   <note markdown="1"> You can use a cross-account KMS key to encrypt the build output
     #   artifacts if your service role has permission to that key.
@@ -1697,13 +1476,12 @@ module Aws::CodeBuild
     #   A list of tag key and value pairs associated with this build
     #   project.
     #
-    #   These tags are available for use by AWS services that support AWS
-    #   CodeBuild build project tags.
+    #   These tags are available for use by Amazon Web Services services
+    #   that support CodeBuild build project tags.
     #   @return [Array<Types::Tag>]
     #
     # @!attribute [rw] vpc_config
-    #   VpcConfig enables AWS CodeBuild to access resources in an Amazon
-    #   VPC.
+    #   VpcConfig enables CodeBuild to access resources in an Amazon VPC.
     #   @return [Types::VpcConfig]
     #
     # @!attribute [rw] badge_enabled
@@ -1713,8 +1491,7 @@ module Aws::CodeBuild
     #
     # @!attribute [rw] logs_config
     #   Information about logs for the build project. These can be logs in
-    #   Amazon CloudWatch Logs, logs uploaded to a specified S3 bucket, or
-    #   both.
+    #   CloudWatch Logs, logs uploaded to a specified S3 bucket, or both.
     #   @return [Types::LogsConfig]
     #
     # @!attribute [rw] file_system_locations
@@ -1778,31 +1555,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateReportGroupInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ReportGroupName", # required
-    #         type: "TEST", # required, accepts TEST, CODE_COVERAGE
-    #         export_config: { # required
-    #           export_config_type: "S3", # accepts S3, NO_EXPORT
-    #           s3_destination: {
-    #             bucket: "NonEmptyString",
-    #             bucket_owner: "String",
-    #             path: "String",
-    #             packaging: "ZIP", # accepts ZIP, NONE
-    #             encryption_key: "NonEmptyString",
-    #             encryption_disabled: false,
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "KeyInput",
-    #             value: "ValueInput",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the report group.
     #   @return [String]
@@ -1819,8 +1571,8 @@ module Aws::CodeBuild
     # @!attribute [rw] tags
     #   A list of tag key and value pairs associated with this report group.
     #
-    #   These tags are available for use by AWS services that support AWS
-    #   CodeBuild report group tags.
+    #   These tags are available for use by Amazon Web Services services
+    #   that support CodeBuild report group tags.
     #   @return [Array<Types::Tag>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateReportGroupInput AWS API Documentation
@@ -1846,26 +1598,8 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateWebhookInput
-    #   data as a hash:
-    #
-    #       {
-    #         project_name: "ProjectName", # required
-    #         branch_filter: "String",
-    #         filter_groups: [
-    #           [
-    #             {
-    #               type: "EVENT", # required, accepts EVENT, BASE_REF, HEAD_REF, ACTOR_ACCOUNT_ID, FILE_PATH, COMMIT_MESSAGE
-    #               pattern: "String", # required
-    #               exclude_matched_pattern: false,
-    #             },
-    #           ],
-    #         ],
-    #         build_type: "BUILD", # accepts BUILD, BUILD_BATCH
-    #       }
-    #
     # @!attribute [rw] project_name
-    #   The name of the AWS CodeBuild project.
+    #   The name of the CodeBuild project.
     #   @return [String]
     #
     # @!attribute [rw] branch_filter
@@ -1907,7 +1641,7 @@ module Aws::CodeBuild
 
     # @!attribute [rw] webhook
     #   Information about a webhook that connects repository events to a
-    #   build project in AWS CodeBuild.
+    #   build project in CodeBuild.
     #   @return [Types::Webhook]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateWebhookOutput AWS API Documentation
@@ -1944,13 +1678,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBuildBatchInput
-    #   data as a hash:
-    #
-    #       {
-    #         id: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the batch build to delete.
     #   @return [String]
@@ -1987,13 +1714,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteProjectInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the build project.
     #   @return [String]
@@ -2010,14 +1730,6 @@ module Aws::CodeBuild
     #
     class DeleteProjectOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteReportGroupInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "NonEmptyString", # required
-    #         delete_reports: false,
-    #       }
-    #
     # @!attribute [rw] arn
     #   The ARN of the report group to delete.
     #   @return [String]
@@ -2051,13 +1763,6 @@ module Aws::CodeBuild
     #
     class DeleteReportGroupOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteReportInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The ARN of the report to delete.
     #   @return [String]
@@ -2074,13 +1779,6 @@ module Aws::CodeBuild
     #
     class DeleteReportOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteResourcePolicyInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the resource that is associated with the resource policy.
     #   @return [String]
@@ -2097,13 +1795,6 @@ module Aws::CodeBuild
     #
     class DeleteResourcePolicyOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteSourceCredentialsInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the token.
     #   @return [String]
@@ -2128,15 +1819,8 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteWebhookInput
-    #   data as a hash:
-    #
-    #       {
-    #         project_name: "ProjectName", # required
-    #       }
-    #
     # @!attribute [rw] project_name
-    #   The name of the AWS CodeBuild project.
+    #   The name of the CodeBuild project.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteWebhookInput AWS API Documentation
@@ -2151,19 +1835,6 @@ module Aws::CodeBuild
     #
     class DeleteWebhookOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeCodeCoveragesInput
-    #   data as a hash:
-    #
-    #       {
-    #         report_arn: "NonEmptyString", # required
-    #         next_token: "String",
-    #         max_results: 1,
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         sort_by: "LINE_COVERAGE_PERCENTAGE", # accepts LINE_COVERAGE_PERCENTAGE, FILE_PATH
-    #         min_line_coverage_percentage: 1.0,
-    #         max_line_coverage_percentage: 1.0,
-    #       }
-    #
     # @!attribute [rw] report_arn
     #   The ARN of the report for which test cases are returned.
     #   @return [String]
@@ -2237,19 +1908,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTestCasesInput
-    #   data as a hash:
-    #
-    #       {
-    #         report_arn: "String", # required
-    #         next_token: "String",
-    #         max_results: 1,
-    #         filter: {
-    #           status: "String",
-    #           keyword: "String",
-    #         },
-    #       }
-    #
     # @!attribute [rw] report_arn
     #   The ARN of the report for which test cases are returned.
     #   @return [String]
@@ -2308,7 +1966,7 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # Information about a Docker image that is managed by AWS CodeBuild.
+    # Information about a Docker image that is managed by CodeBuild.
     #
     # @!attribute [rw] name
     #   The name of the Docker image.
@@ -2333,7 +1991,7 @@ module Aws::CodeBuild
     end
 
     # A set of Docker images that are related by programming language and
-    # are managed by AWS CodeBuild.
+    # are managed by CodeBuild.
     #
     # @!attribute [rw] language
     #   The programming language for the Docker images.
@@ -2354,7 +2012,7 @@ module Aws::CodeBuild
     end
 
     # A set of Docker images that are related by platform and are managed by
-    # AWS CodeBuild.
+    # CodeBuild.
     #
     # @!attribute [rw] platform
     #   The platform's name.
@@ -2377,15 +2035,6 @@ module Aws::CodeBuild
     # Information about an environment variable for a build project or a
     # build.
     #
-    # @note When making an API call, you may pass EnvironmentVariable
-    #   data as a hash:
-    #
-    #       {
-    #         name: "NonEmptyString", # required
-    #         value: "String", # required
-    #         type: "PLAINTEXT", # accepts PLAINTEXT, PARAMETER_STORE, SECRETS_MANAGER
-    #       }
-    #
     # @!attribute [rw] name
     #   The name or key of the environment variable.
     #   @return [String]
@@ -2394,27 +2043,27 @@ module Aws::CodeBuild
     #   The value of the environment variable.
     #
     #   We strongly discourage the use of `PLAINTEXT` environment variables
-    #   to store sensitive values, especially AWS secret key IDs and secret
-    #   access keys. `PLAINTEXT` environment variables can be displayed in
-    #   plain text using the AWS CodeBuild console and the AWS Command Line
-    #   Interface (AWS CLI). For sensitive values, we recommend you use an
-    #   environment variable of type `PARAMETER_STORE` or `SECRETS_MANAGER`.
+    #   to store sensitive values, especially Amazon Web Services secret key
+    #   IDs and secret access keys. `PLAINTEXT` environment variables can be
+    #   displayed in plain text using the CodeBuild console and the CLI. For
+    #   sensitive values, we recommend you use an environment variable of
+    #   type `PARAMETER_STORE` or `SECRETS_MANAGER`.
     #   @return [String]
     #
     # @!attribute [rw] type
     #   The type of environment variable. Valid values include:
     #
-    #   * `PARAMETER_STORE`\: An environment variable stored in Amazon EC2
-    #     Systems Manager Parameter Store. To learn how to specify a
-    #     parameter store environment variable, see [env/parameter-store][1]
-    #     in the *AWS CodeBuild User Guide*.
+    #   * `PARAMETER_STORE`: An environment variable stored in Systems
+    #     Manager Parameter Store. To learn how to specify a parameter store
+    #     environment variable, see [env/parameter-store][1] in the
+    #     *CodeBuild User Guide*.
     #
-    #   * `PLAINTEXT`\: An environment variable in plain text format. This
-    #     is the default value.
+    #   * `PLAINTEXT`: An environment variable in plain text format. This is
+    #     the default value.
     #
-    #   * `SECRETS_MANAGER`\: An environment variable stored in AWS Secrets
+    #   * `SECRETS_MANAGER`: An environment variable stored in Secrets
     #     Manager. To learn how to specify a secrets manager environment
-    #     variable, see [env/secrets-manager][2] in the *AWS CodeBuild User
+    #     variable, see [env/secrets-manager][2] in the *CodeBuild User
     #     Guide*.
     #
     #
@@ -2435,10 +2084,10 @@ module Aws::CodeBuild
 
     # Contains information about an exported environment variable.
     #
-    # Exported environment variables are used in conjunction with AWS
+    # Exported environment variables are used in conjunction with
     # CodePipeline to export environment variables from the current build
     # stage to subsequent stages in the pipeline. For more information, see
-    # [Working with variables][1] in the *AWS CodePipeline User Guide*.
+    # [Working with variables][1] in the *CodePipeline User Guide*.
     #
     # <note markdown="1"> During a build, the value of a variable is available starting with the
     # `install` phase. It can be updated between the start of the `install`
@@ -2468,15 +2117,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetReportGroupTrendInput
-    #   data as a hash:
-    #
-    #       {
-    #         report_group_arn: "NonEmptyString", # required
-    #         num_of_reports: 1,
-    #         trend_field: "PASS_RATE", # required, accepts PASS_RATE, DURATION, TOTAL, LINE_COVERAGE, LINES_COVERED, LINES_MISSED, BRANCH_COVERAGE, BRANCHES_COVERED, BRANCHES_MISSED
-    #       }
-    #
     # @!attribute [rw] report_group_arn
     #   The ARN of the report group that contains the reports to analyze.
     #   @return [String]
@@ -2568,13 +2208,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetResourcePolicyInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the resource that is associated with the resource policy.
     #   @return [String]
@@ -2600,18 +2233,11 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # Information about the Git submodules configuration for an AWS
-    # CodeBuild build project.
-    #
-    # @note When making an API call, you may pass GitSubmodulesConfig
-    #   data as a hash:
-    #
-    #       {
-    #         fetch_submodules: false, # required
-    #       }
+    # Information about the Git submodules configuration for an CodeBuild
+    # build project.
     #
     # @!attribute [rw] fetch_submodules
-    #   Set to true to fetch Git submodules for your AWS CodeBuild build
+    #   Set to true to fetch Git submodules for your CodeBuild build
     #   project.
     #   @return [Boolean]
     #
@@ -2623,17 +2249,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ImportSourceCredentialsInput
-    #   data as a hash:
-    #
-    #       {
-    #         username: "NonEmptyString",
-    #         token: "SensitiveNonEmptyString", # required
-    #         server_type: "GITHUB", # required, accepts GITHUB, BITBUCKET, GITHUB_ENTERPRISE
-    #         auth_type: "OAUTH", # required, accepts OAUTH, BASIC_AUTH, PERSONAL_ACCESS_TOKEN
-    #         should_overwrite: false,
-    #       }
-    #
     # @!attribute [rw] username
     #   The Bitbucket username when the `authType` is BASIC\_AUTH. This
     #   parameter is not valid for other types of source providers or
@@ -2652,7 +2267,7 @@ module Aws::CodeBuild
     # @!attribute [rw] auth_type
     #   The type of authentication used to connect to a GitHub, GitHub
     #   Enterprise, or Bitbucket repository. An OAUTH connection is not
-    #   supported by the API and must be created using the AWS CodeBuild
+    #   supported by the API and must be created using the CodeBuild
     #   console.
     #   @return [String]
     #
@@ -2692,16 +2307,8 @@ module Aws::CodeBuild
     #
     class InvalidInputException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass InvalidateProjectCacheInput
-    #   data as a hash:
-    #
-    #       {
-    #         project_name: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] project_name
-    #   The name of the AWS CodeBuild build project that the cache is reset
-    #   for.
+    #   The name of the CodeBuild build project that the cache is reset for.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCacheInput AWS API Documentation
@@ -2716,19 +2323,6 @@ module Aws::CodeBuild
     #
     class InvalidateProjectCacheOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ListBuildBatchesForProjectInput
-    #   data as a hash:
-    #
-    #       {
-    #         project_name: "NonEmptyString",
-    #         filter: {
-    #           status: "SUCCEEDED", # accepts SUCCEEDED, FAILED, FAULT, TIMED_OUT, IN_PROGRESS, STOPPED
-    #         },
-    #         max_results: 1,
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] project_name
     #   The name of the project.
     #   @return [String]
@@ -2746,11 +2340,11 @@ module Aws::CodeBuild
     #   Specifies the sort order of the returned items. Valid values
     #   include:
     #
-    #   * `ASCENDING`\: List the batch build identifiers in ascending order
+    #   * `ASCENDING`: List the batch build identifiers in ascending order
     #     by identifier.
     #
-    #   * `DESCENDING`\: List the batch build identifiers in descending
-    #     order by identifier.
+    #   * `DESCENDING`: List the batch build identifiers in descending order
+    #     by identifier.
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -2790,18 +2384,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBuildBatchesInput
-    #   data as a hash:
-    #
-    #       {
-    #         filter: {
-    #           status: "SUCCEEDED", # accepts SUCCEEDED, FAILED, FAULT, TIMED_OUT, IN_PROGRESS, STOPPED
-    #         },
-    #         max_results: 1,
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] filter
     #   A `BuildBatchFilter` object that specifies the filters for the
     #   search.
@@ -2815,11 +2397,11 @@ module Aws::CodeBuild
     #   Specifies the sort order of the returned items. Valid values
     #   include:
     #
-    #   * `ASCENDING`\: List the batch build identifiers in ascending order
+    #   * `ASCENDING`: List the batch build identifiers in ascending order
     #     by identifier.
     #
-    #   * `DESCENDING`\: List the batch build identifiers in descending
-    #     order by identifier.
+    #   * `DESCENDING`: List the batch build identifiers in descending order
+    #     by identifier.
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -2858,28 +2440,22 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBuildsForProjectInput
-    #   data as a hash:
-    #
-    #       {
-    #         project_name: "NonEmptyString", # required
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] project_name
-    #   The name of the AWS CodeBuild project.
+    #   The name of the CodeBuild project.
     #   @return [String]
     #
     # @!attribute [rw] sort_order
-    #   The order to list results in. The results are sorted by build
-    #   number, not the build identifier.
+    #   The order to sort the results in. The results are sorted by build
+    #   number, not the build identifier. If this is not specified, the
+    #   results are sorted in descending order.
     #
     #   Valid values include:
     #
-    #   * `ASCENDING`\: List the build IDs in ascending order by build ID.
+    #   * `ASCENDING`: List the build identifiers in ascending order, by
+    #     build number.
     #
-    #   * `DESCENDING`\: List the build IDs in descending order by build ID.
+    #   * `DESCENDING`: List the build identifiers in descending order, by
+    #     build number.
     #
     #   If the project has more than 100 builds, setting the sort order will
     #   result in an error.
@@ -2906,8 +2482,8 @@ module Aws::CodeBuild
     end
 
     # @!attribute [rw] ids
-    #   A list of build IDs for the specified build project, with each build
-    #   ID representing a single build.
+    #   A list of build identifiers for the specified build project, with
+    #   each build ID representing a single build.
     #   @return [Array<String>]
     #
     # @!attribute [rw] next_token
@@ -2926,20 +2502,12 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListBuildsInput
-    #   data as a hash:
-    #
-    #       {
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] sort_order
     #   The order to list build IDs. Valid values include:
     #
-    #   * `ASCENDING`\: List the build IDs in ascending order by build ID.
+    #   * `ASCENDING`: List the build IDs in ascending order by build ID.
     #
-    #   * `DESCENDING`\: List the build IDs in descending order by build ID.
+    #   * `DESCENDING`: List the build IDs in descending order by build ID.
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -2989,7 +2557,7 @@ module Aws::CodeBuild
 
     # @!attribute [rw] platforms
     #   Information about supported platforms for Docker images that are
-    #   managed by AWS CodeBuild.
+    #   managed by CodeBuild.
     #   @return [Array<Types::EnvironmentPlatform>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListCuratedEnvironmentImagesOutput AWS API Documentation
@@ -3000,26 +2568,16 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListProjectsInput
-    #   data as a hash:
-    #
-    #       {
-    #         sort_by: "NAME", # accepts NAME, CREATED_TIME, LAST_MODIFIED_TIME
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         next_token: "NonEmptyString",
-    #       }
-    #
     # @!attribute [rw] sort_by
     #   The criterion to be used to list build project names. Valid values
     #   include:
     #
-    #   * `CREATED_TIME`\: List based on when each build project was
-    #     created.
+    #   * `CREATED_TIME`: List based on when each build project was created.
     #
-    #   * `LAST_MODIFIED_TIME`\: List based on when information about each
+    #   * `LAST_MODIFIED_TIME`: List based on when information about each
     #     build project was last changed.
     #
-    #   * `NAME`\: List based on each build project's name.
+    #   * `NAME`: List based on each build project's name.
     #
     #   Use `sortOrder` to specify in what order to list the build project
     #   names based on the preceding criteria.
@@ -3028,9 +2586,9 @@ module Aws::CodeBuild
     # @!attribute [rw] sort_order
     #   The order in which to list build projects. Valid values include:
     #
-    #   * `ASCENDING`\: List in ascending order.
+    #   * `ASCENDING`: List in ascending order.
     #
-    #   * `DESCENDING`\: List in descending order.
+    #   * `DESCENDING`: List in descending order.
     #
     #   Use `sortBy` to specify the criterion to be used to list build
     #   project names.
@@ -3077,16 +2635,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListReportGroupsInput
-    #   data as a hash:
-    #
-    #       {
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         sort_by: "NAME", # accepts NAME, CREATED_TIME, LAST_MODIFIED_TIME
-    #         next_token: "String",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] sort_order
     #   Used to specify the order to sort the list of returned report
     #   groups. Valid values are `ASCENDING` and `DESCENDING`.
@@ -3096,12 +2644,12 @@ module Aws::CodeBuild
     #   The criterion to be used to list build report groups. Valid values
     #   include:
     #
-    #   * `CREATED_TIME`\: List based on when each report group was created.
+    #   * `CREATED_TIME`: List based on when each report group was created.
     #
-    #   * `LAST_MODIFIED_TIME`\: List based on when each report group was
+    #   * `LAST_MODIFIED_TIME`: List based on when each report group was
     #     last changed.
     #
-    #   * `NAME`\: List based on each report group's name.
+    #   * `NAME`: List based on each report group's name.
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -3142,7 +2690,8 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] report_groups
-    #   The list of ARNs for the report groups in the current AWS account.
+    #   The list of ARNs for the report groups in the current Amazon Web
+    #   Services account.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListReportGroupsOutput AWS API Documentation
@@ -3154,19 +2703,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListReportsForReportGroupInput
-    #   data as a hash:
-    #
-    #       {
-    #         report_group_arn: "String", # required
-    #         next_token: "String",
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         max_results: 1,
-    #         filter: {
-    #           status: "GENERATING", # accepts GENERATING, SUCCEEDED, FAILED, INCOMPLETE, DELETING
-    #         },
-    #       }
-    #
     # @!attribute [rw] report_group_arn
     #   The ARN of the report group for which you want to return report
     #   ARNs.
@@ -3232,26 +2768,14 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListReportsInput
-    #   data as a hash:
-    #
-    #       {
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         next_token: "String",
-    #         max_results: 1,
-    #         filter: {
-    #           status: "GENERATING", # accepts GENERATING, SUCCEEDED, FAILED, INCOMPLETE, DELETING
-    #         },
-    #       }
-    #
     # @!attribute [rw] sort_order
     #   Specifies the sort order for the list of returned reports. Valid
     #   values are:
     #
-    #   * `ASCENDING`\: return reports in chronological order based on their
+    #   * `ASCENDING`: return reports in chronological order based on their
     #     creation date.
     #
-    #   * `DESCENDING`\: return reports in the reverse chronological order
+    #   * `DESCENDING`: return reports in the reverse chronological order
     #     based on their creation date.
     #   @return [String]
     #
@@ -3297,8 +2821,8 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] reports
-    #   The list of returned ARNs for the reports in the current AWS
-    #   account.
+    #   The list of returned ARNs for the reports in the current Amazon Web
+    #   Services account.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListReportsOutput AWS API Documentation
@@ -3310,23 +2834,13 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListSharedProjectsInput
-    #   data as a hash:
-    #
-    #       {
-    #         sort_by: "ARN", # accepts ARN, MODIFIED_TIME
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         max_results: 1,
-    #         next_token: "NonEmptyString",
-    #       }
-    #
     # @!attribute [rw] sort_by
     #   The criterion to be used to list build projects shared with the
-    #   current AWS account or user. Valid values include:
+    #   current Amazon Web Services account or user. Valid values include:
     #
-    #   * `ARN`\: List based on the ARN.
+    #   * `ARN`: List based on the ARN.
     #
-    #   * `MODIFIED_TIME`\: List based on when information about the shared
+    #   * `MODIFIED_TIME`: List based on when information about the shared
     #     project was last changed.
     #   @return [String]
     #
@@ -3334,9 +2848,9 @@ module Aws::CodeBuild
     #   The order in which to list shared build projects. Valid values
     #   include:
     #
-    #   * `ASCENDING`\: List in ascending order.
+    #   * `ASCENDING`: List in ascending order.
     #
-    #   * `DESCENDING`\: List in descending order.
+    #   * `DESCENDING`: List in descending order.
     #   @return [String]
     #
     # @!attribute [rw] max_results
@@ -3377,8 +2891,8 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] projects
-    #   The list of ARNs for the build projects shared with the current AWS
-    #   account or user.
+    #   The list of ARNs for the build projects shared with the current
+    #   Amazon Web Services account or user.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSharedProjectsOutput AWS API Documentation
@@ -3390,32 +2904,22 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListSharedReportGroupsInput
-    #   data as a hash:
-    #
-    #       {
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #         sort_by: "ARN", # accepts ARN, MODIFIED_TIME
-    #         next_token: "String",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] sort_order
     #   The order in which to list shared report groups. Valid values
     #   include:
     #
-    #   * `ASCENDING`\: List in ascending order.
+    #   * `ASCENDING`: List in ascending order.
     #
-    #   * `DESCENDING`\: List in descending order.
+    #   * `DESCENDING`: List in descending order.
     #   @return [String]
     #
     # @!attribute [rw] sort_by
     #   The criterion to be used to list report groups shared with the
-    #   current AWS account or user. Valid values include:
+    #   current Amazon Web Services account or user. Valid values include:
     #
-    #   * `ARN`\: List based on the ARN.
+    #   * `ARN`: List based on the ARN.
     #
-    #   * `MODIFIED_TIME`\: List based on when information about the shared
+    #   * `MODIFIED_TIME`: List based on when information about the shared
     #     report group was last changed.
     #   @return [String]
     #
@@ -3457,8 +2961,8 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] report_groups
-    #   The list of ARNs for the report groups shared with the current AWS
-    #   account or user.
+    #   The list of ARNs for the report groups shared with the current
+    #   Amazon Web Services account or user.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSharedReportGroupsOutput AWS API Documentation
@@ -3491,28 +2995,11 @@ module Aws::CodeBuild
     end
 
     # Information about logs for a build project. These can be logs in
-    # Amazon CloudWatch Logs, built in a specified S3 bucket, or both.
-    #
-    # @note When making an API call, you may pass LogsConfig
-    #   data as a hash:
-    #
-    #       {
-    #         cloud_watch_logs: {
-    #           status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #           group_name: "String",
-    #           stream_name: "String",
-    #         },
-    #         s3_logs: {
-    #           status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #           location: "String",
-    #           encryption_disabled: false,
-    #           bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #         },
-    #       }
+    # CloudWatch Logs, built in a specified S3 bucket, or both.
     #
     # @!attribute [rw] cloud_watch_logs
-    #   Information about Amazon CloudWatch Logs for a build project. Amazon
-    #   CloudWatch Logs are enabled by default.
+    #   Information about CloudWatch Logs for a build project. CloudWatch
+    #   Logs are enabled by default.
     #   @return [Types::CloudWatchLogsConfig]
     #
     # @!attribute [rw] s3_logs
@@ -3529,18 +3016,18 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # Information about build logs in Amazon CloudWatch Logs.
+    # Information about build logs in CloudWatch Logs.
     #
     # @!attribute [rw] group_name
-    #   The name of the Amazon CloudWatch Logs group for the build logs.
+    #   The name of the CloudWatch Logs group for the build logs.
     #   @return [String]
     #
     # @!attribute [rw] stream_name
-    #   The name of the Amazon CloudWatch Logs stream for the build logs.
+    #   The name of the CloudWatch Logs stream for the build logs.
     #   @return [String]
     #
     # @!attribute [rw] deep_link
-    #   The URL to an individual build log in Amazon CloudWatch Logs.
+    #   The URL to an individual build log in CloudWatch Logs.
     #   @return [String]
     #
     # @!attribute [rw] s3_deep_link
@@ -3548,10 +3035,9 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] cloud_watch_logs_arn
-    #   The ARN of Amazon CloudWatch Logs for a build project. Its format is
+    #   The ARN of CloudWatch Logs for a build project. Its format is
     #   `arn:$\{Partition\}:logs:$\{Region\}:$\{Account\}:log-group:$\{LogGroupName\}:log-stream:$\{LogStreamName\}`.
-    #   For more information, see [Resources Defined by Amazon CloudWatch
-    #   Logs][1].
+    #   For more information, see [Resources Defined by CloudWatch Logs][1].
     #
     #
     #
@@ -3569,7 +3055,7 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] cloud_watch_logs
-    #   Information about Amazon CloudWatch Logs for a build project.
+    #   Information about CloudWatch Logs for a build project.
     #   @return [Types::CloudWatchLogsConfig]
     #
     # @!attribute [rw] s3_logs
@@ -3665,7 +3151,7 @@ module Aws::CodeBuild
     #   specified, the latest version is used. If specified, it must be one
     #   of:
     #
-    #   * For AWS CodeCommit: the commit ID, branch, or Git tag to use.
+    #   * For CodeCommit: the commit ID, branch, or Git tag to use.
     #
     #   * For GitHub: the commit ID, pull request ID, branch name, or tag
     #     name that corresponds to the version of the source code you want
@@ -3688,7 +3174,7 @@ module Aws::CodeBuild
     #   level).
     #
     #   For more information, see [Source Version Sample with CodeBuild][1]
-    #   in the *AWS CodeBuild User Guide*.
+    #   in the *CodeBuild User Guide*.
     #
     #
     #
@@ -3718,14 +3204,14 @@ module Aws::CodeBuild
     #   @return [Types::ProjectEnvironment]
     #
     # @!attribute [rw] service_role
-    #   The ARN of the AWS Identity and Access Management (IAM) role that
-    #   enables AWS CodeBuild to interact with dependent AWS services on
-    #   behalf of the AWS account.
+    #   The ARN of the IAM role that enables CodeBuild to interact with
+    #   dependent Amazon Web Services services on behalf of the Amazon Web
+    #   Services account.
     #   @return [String]
     #
     # @!attribute [rw] timeout_in_minutes
-    #   How long, in minutes, from 5 to 480 (8 hours), for AWS CodeBuild to
-    #   wait before timing out any related build that did not get marked as
+    #   How long, in minutes, from 5 to 480 (8 hours), for CodeBuild to wait
+    #   before timing out any related build that did not get marked as
     #   completed. The default is 60 minutes.
     #   @return [Integer]
     #
@@ -3735,8 +3221,8 @@ module Aws::CodeBuild
     #   @return [Integer]
     #
     # @!attribute [rw] encryption_key
-    #   The AWS Key Management Service (AWS KMS) customer master key (CMK)
-    #   to be used for encrypting the build output artifacts.
+    #   The Key Management Service customer master key (CMK) to be used for
+    #   encrypting the build output artifacts.
     #
     #   <note markdown="1"> You can use a cross-account KMS key to encrypt the build output
     #   artifacts if your service role has permission to that key.
@@ -3745,15 +3231,16 @@ module Aws::CodeBuild
     #
     #   You can specify either the Amazon Resource Name (ARN) of the CMK or,
     #   if available, the CMK's alias (using the format
-    #   `alias/<alias-name>`).
+    #   `alias/<alias-name>`). If you don't specify a value, CodeBuild uses
+    #   the managed CMK for Amazon Simple Storage Service (Amazon S3).
     #   @return [String]
     #
     # @!attribute [rw] tags
     #   A list of tag key and value pairs associated with this build
     #   project.
     #
-    #   These tags are available for use by AWS services that support AWS
-    #   CodeBuild build project tags.
+    #   These tags are available for use by Amazon Web Services services
+    #   that support CodeBuild build project tags.
     #   @return [Array<Types::Tag>]
     #
     # @!attribute [rw] created
@@ -3767,11 +3254,11 @@ module Aws::CodeBuild
     #
     # @!attribute [rw] webhook
     #   Information about a webhook that connects repository events to a
-    #   build project in AWS CodeBuild.
+    #   build project in CodeBuild.
     #   @return [Types::Webhook]
     #
     # @!attribute [rw] vpc_config
-    #   Information about the VPC configuration that AWS CodeBuild accesses.
+    #   Information about the VPC configuration that CodeBuild accesses.
     #   @return [Types::VpcConfig]
     #
     # @!attribute [rw] badge
@@ -3780,7 +3267,7 @@ module Aws::CodeBuild
     #
     # @!attribute [rw] logs_config
     #   Information about logs for the build project. A project can create
-    #   logs in Amazon CloudWatch Logs, an S3 bucket, or both.
+    #   logs in CloudWatch Logs, an S3 bucket, or both.
     #   @return [Types::LogsConfig]
     #
     # @!attribute [rw] file_system_locations
@@ -3803,6 +3290,28 @@ module Aws::CodeBuild
     #   than or equal to this limit. If the current build count meets this
     #   limit, new builds are throttled and are not run.
     #   @return [Integer]
+    #
+    # @!attribute [rw] project_visibility
+    #   Specifies the visibility of the project's builds. Possible values
+    #   are:
+    #
+    #   PUBLIC\_READ
+    #
+    #   : The project builds are visible to the public.
+    #
+    #   PRIVATE
+    #
+    #   : The project builds are not visible to the public.
+    #   @return [String]
+    #
+    # @!attribute [rw] public_project_alias
+    #   Contains the project identifier used with the public build APIs.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_access_role
+    #   The ARN of the IAM role that enables CodeBuild to access the
+    #   CloudWatch Logs and Amazon S3 artifacts for the project's builds.
+    #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/Project AWS API Documentation
     #
@@ -3831,51 +3340,38 @@ module Aws::CodeBuild
       :logs_config,
       :file_system_locations,
       :build_batch_config,
-      :concurrent_build_limit)
+      :concurrent_build_limit,
+      :project_visibility,
+      :public_project_alias,
+      :resource_access_role)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Information about the build output artifacts for the build project.
     #
-    # @note When making an API call, you may pass ProjectArtifacts
-    #   data as a hash:
-    #
-    #       {
-    #         type: "CODEPIPELINE", # required, accepts CODEPIPELINE, S3, NO_ARTIFACTS
-    #         location: "String",
-    #         path: "String",
-    #         namespace_type: "NONE", # accepts NONE, BUILD_ID
-    #         name: "String",
-    #         packaging: "NONE", # accepts NONE, ZIP
-    #         override_artifact_name: false,
-    #         encryption_disabled: false,
-    #         artifact_identifier: "String",
-    #         bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #       }
-    #
     # @!attribute [rw] type
     #   The type of build output artifact. Valid values include:
     #
-    #   * `CODEPIPELINE`\: The build project has build output generated
-    #     through AWS CodePipeline.
+    #   * `CODEPIPELINE`: The build project has build output generated
+    #     through CodePipeline.
     #
     #     <note markdown="1"> The `CODEPIPELINE` type is not supported for `secondaryArtifacts`.
     #
     #      </note>
     #
-    #   * `NO_ARTIFACTS`\: The build project does not produce any build
+    #   * `NO_ARTIFACTS`: The build project does not produce any build
     #     output.
     #
-    #   * `S3`\: The build project stores build output in Amazon S3.
+    #   * `S3`: The build project stores build output in Amazon S3.
     #   @return [String]
     #
     # @!attribute [rw] location
     #   Information about the build output artifact location:
     #
-    #   * If `type` is set to `CODEPIPELINE`, AWS CodePipeline ignores this
-    #     value if specified. This is because AWS CodePipeline manages its
-    #     build output locations instead of AWS CodeBuild.
+    #   * If `type` is set to `CODEPIPELINE`, CodePipeline ignores this
+    #     value if specified. This is because CodePipeline manages its build
+    #     output locations instead of CodeBuild.
     #
     #   * If `type` is set to `NO_ARTIFACTS`, this value is ignored if
     #     specified, because no build output is produced.
@@ -3884,12 +3380,12 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] path
-    #   Along with `namespaceType` and `name`, the pattern that AWS
-    #   CodeBuild uses to name and store the output artifact:
+    #   Along with `namespaceType` and `name`, the pattern that CodeBuild
+    #   uses to name and store the output artifact:
     #
-    #   * If `type` is set to `CODEPIPELINE`, AWS CodePipeline ignores this
-    #     value if specified. This is because AWS CodePipeline manages its
-    #     build output names instead of AWS CodeBuild.
+    #   * If `type` is set to `CODEPIPELINE`, CodePipeline ignores this
+    #     value if specified. This is because CodePipeline manages its build
+    #     output names instead of CodeBuild.
     #
     #   * If `type` is set to `NO_ARTIFACTS`, this value is ignored if
     #     specified, because no build output is produced.
@@ -3904,22 +3400,22 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] namespace_type
-    #   Along with `path` and `name`, the pattern that AWS CodeBuild uses to
+    #   Along with `path` and `name`, the pattern that CodeBuild uses to
     #   determine the name and location to store the output artifact:
     #
-    #   * If `type` is set to `CODEPIPELINE`, AWS CodePipeline ignores this
-    #     value if specified. This is because AWS CodePipeline manages its
-    #     build output names instead of AWS CodeBuild.
+    #   * If `type` is set to `CODEPIPELINE`, CodePipeline ignores this
+    #     value if specified. This is because CodePipeline manages its build
+    #     output names instead of CodeBuild.
     #
     #   * If `type` is set to `NO_ARTIFACTS`, this value is ignored if
     #     specified, because no build output is produced.
     #
     #   * If `type` is set to `S3`, valid values include:
     #
-    #     * `BUILD_ID`\: Include the build ID in the location of the build
+    #     * `BUILD_ID`: Include the build ID in the location of the build
     #       output artifact.
     #
-    #     * `NONE`\: Do not include the build ID. This is the default if
+    #     * `NONE`: Do not include the build ID. This is the default if
     #       `namespaceType` is not specified.
     #
     #   For example, if `path` is set to `MyArtifacts`, `namespaceType` is
@@ -3928,12 +3424,12 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] name
-    #   Along with `path` and `namespaceType`, the pattern that AWS
-    #   CodeBuild uses to name and store the output artifact:
+    #   Along with `path` and `namespaceType`, the pattern that CodeBuild
+    #   uses to name and store the output artifact:
     #
-    #   * If `type` is set to `CODEPIPELINE`, AWS CodePipeline ignores this
-    #     value if specified. This is because AWS CodePipeline manages its
-    #     build output names instead of AWS CodeBuild.
+    #   * If `type` is set to `CODEPIPELINE`, CodePipeline ignores this
+    #     value if specified. This is because CodePipeline manages its build
+    #     output names instead of CodeBuild.
     #
     #   * If `type` is set to `NO_ARTIFACTS`, this value is ignored if
     #     specified, because no build output is produced.
@@ -3960,21 +3456,21 @@ module Aws::CodeBuild
     # @!attribute [rw] packaging
     #   The type of build output artifact to create:
     #
-    #   * If `type` is set to `CODEPIPELINE`, AWS CodePipeline ignores this
-    #     value if specified. This is because AWS CodePipeline manages its
-    #     build output artifacts instead of AWS CodeBuild.
+    #   * If `type` is set to `CODEPIPELINE`, CodePipeline ignores this
+    #     value if specified. This is because CodePipeline manages its build
+    #     output artifacts instead of CodeBuild.
     #
     #   * If `type` is set to `NO_ARTIFACTS`, this value is ignored if
     #     specified, because no build output is produced.
     #
     #   * If `type` is set to `S3`, valid values include:
     #
-    #     * `NONE`\: AWS CodeBuild creates in the output bucket a folder
-    #       that contains the build output. This is the default if
-    #       `packaging` is not specified.
+    #     * `NONE`: CodeBuild creates in the output bucket a folder that
+    #       contains the build output. This is the default if `packaging` is
+    #       not specified.
     #
-    #     * `ZIP`\: AWS CodeBuild creates in the output bucket a ZIP file
-    #       that contains the build output.
+    #     * `ZIP`: CodeBuild creates in the output bucket a ZIP file that
+    #       contains the build output.
     #   @return [String]
     #
     # @!attribute [rw] override_artifact_name
@@ -3996,12 +3492,19 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] bucket_owner_access
-    #   Specifies the access for objects that are uploaded to an Amazon S3
-    #   bucket that is owned by another account.
+    #   Specifies the bucket owner's access for objects that another
+    #   account uploads to their Amazon S3 bucket. By default, only the
+    #   account that uploads the objects to the bucket has access to these
+    #   objects. This property allows you to give the bucket owner access to
+    #   these objects.
     #
-    #   By default, only the account that uploads the objects to the bucket
-    #   has access to these objects. This property allows you to give the
-    #   bucket owner access to these objects.
+    #   <note markdown="1"> To use this property, your CodeBuild service role must have the
+    #   `s3:PutBucketAcl` permission. This permission allows CodeBuild to
+    #   modify the access control list for the bucket.
+    #
+    #    </note>
+    #
+    #   This property can be one of the following values:
     #
     #   NONE
     #
@@ -4010,7 +3513,7 @@ module Aws::CodeBuild
     #
     #   READ\_ONLY
     #
-    #   : The bucket owner has read only access to the objects. The
+    #   : The bucket owner has read-only access to the objects. The
     #     uploading account retains ownership of the objects.
     #
     #   FULL
@@ -4075,19 +3578,6 @@ module Aws::CodeBuild
 
     # Contains configuration information about a batch build project.
     #
-    # @note When making an API call, you may pass ProjectBuildBatchConfig
-    #   data as a hash:
-    #
-    #       {
-    #         service_role: "NonEmptyString",
-    #         combine_artifacts: false,
-    #         restrictions: {
-    #           maximum_builds_allowed: 1,
-    #           compute_types_allowed: ["NonEmptyString"],
-    #         },
-    #         timeout_in_mins: 1,
-    #       }
-    #
     # @!attribute [rw] service_role
     #   Specifies the service role ARN for the batch build project.
     #   @return [String]
@@ -4107,45 +3597,54 @@ module Aws::CodeBuild
     #   build must be completed in.
     #   @return [Integer]
     #
+    # @!attribute [rw] batch_report_mode
+    #   Specifies how build status reports are sent to the source provider
+    #   for the batch build. This property is only used when the source
+    #   provider for your project is Bitbucket, GitHub, or GitHub
+    #   Enterprise, and your project is configured to report build statuses
+    #   to the source provider.
+    #
+    #   REPORT\_AGGREGATED\_BATCH
+    #
+    #   : (Default) Aggregate all of the build statuses into a single status
+    #     report.
+    #
+    #   REPORT\_INDIVIDUAL\_BUILDS
+    #
+    #   : Send a separate status report for each individual build.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ProjectBuildBatchConfig AWS API Documentation
     #
     class ProjectBuildBatchConfig < Struct.new(
       :service_role,
       :combine_artifacts,
       :restrictions,
-      :timeout_in_mins)
+      :timeout_in_mins,
+      :batch_report_mode)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Information about the cache for the build project.
     #
-    # @note When making an API call, you may pass ProjectCache
-    #   data as a hash:
-    #
-    #       {
-    #         type: "NO_CACHE", # required, accepts NO_CACHE, S3, LOCAL
-    #         location: "String",
-    #         modes: ["LOCAL_DOCKER_LAYER_CACHE"], # accepts LOCAL_DOCKER_LAYER_CACHE, LOCAL_SOURCE_CACHE, LOCAL_CUSTOM_CACHE
-    #       }
-    #
     # @!attribute [rw] type
     #   The type of cache used by the build project. Valid values include:
     #
-    #   * `NO_CACHE`\: The build project does not use any cache.
+    #   * `NO_CACHE`: The build project does not use any cache.
     #
-    #   * `S3`\: The build project reads and writes from and to S3.
+    #   * `S3`: The build project reads and writes from and to S3.
     #
-    #   * `LOCAL`\: The build project stores a cache locally on a build host
+    #   * `LOCAL`: The build project stores a cache locally on a build host
     #     that is only available to that build host.
     #   @return [String]
     #
     # @!attribute [rw] location
     #   Information about the cache location:
     #
-    #   * `NO_CACHE` or `LOCAL`\: This value is ignored.
+    #   * `NO_CACHE` or `LOCAL`: This value is ignored.
     #
-    #   * `S3`\: This is the S3 bucket name/prefix.
+    #   * `S3`: This is the S3 bucket name/prefix.
     #   @return [String]
     #
     # @!attribute [rw] modes
@@ -4211,29 +3710,6 @@ module Aws::CodeBuild
 
     # Information about the build environment of the build project.
     #
-    # @note When making an API call, you may pass ProjectEnvironment
-    #   data as a hash:
-    #
-    #       {
-    #         type: "WINDOWS_CONTAINER", # required, accepts WINDOWS_CONTAINER, LINUX_CONTAINER, LINUX_GPU_CONTAINER, ARM_CONTAINER, WINDOWS_SERVER_2019_CONTAINER
-    #         image: "NonEmptyString", # required
-    #         compute_type: "BUILD_GENERAL1_SMALL", # required, accepts BUILD_GENERAL1_SMALL, BUILD_GENERAL1_MEDIUM, BUILD_GENERAL1_LARGE, BUILD_GENERAL1_2XLARGE
-    #         environment_variables: [
-    #           {
-    #             name: "NonEmptyString", # required
-    #             value: "String", # required
-    #             type: "PLAINTEXT", # accepts PLAINTEXT, PARAMETER_STORE, SECRETS_MANAGER
-    #           },
-    #         ],
-    #         privileged_mode: false,
-    #         certificate: "String",
-    #         registry_credential: {
-    #           credential: "NonEmptyString", # required
-    #           credential_provider: "SECRETS_MANAGER", # required, accepts SECRETS_MANAGER
-    #         },
-    #         image_pull_credentials_type: "CODEBUILD", # accepts CODEBUILD, SERVICE_ROLE
-    #       }
-    #
     # @!attribute [rw] type
     #   The type of build environment to use for related builds.
     #
@@ -4254,6 +3730,21 @@ module Aws::CodeBuild
     #     Canada (Central), EU (Ireland), EU (London), EU (Frankfurt), Asia
     #     Pacific (Tokyo), Asia Pacific (Seoul), Asia Pacific (Singapore),
     #     Asia Pacific (Sydney) , China (Beijing), and China (Ningxia).
+    #   ^
+    #
+    #   * The environment types `WINDOWS_CONTAINER` and
+    #     `WINDOWS_SERVER_2019_CONTAINER` are available only in regions US
+    #     East (N. Virginia), US East (Ohio), US West (Oregon), and EU
+    #     (Ireland).
+    #
+    #   ^
+    #
+    #   For more information, see [Build environment compute types][1] in
+    #   the *CodeBuild user guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html
     #   @return [String]
     #
     # @!attribute [rw] image
@@ -4269,26 +3760,33 @@ module Aws::CodeBuild
     #     "sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf,"
     #     use
     #     `<registry>/<repository>@sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf`.
+    #
+    #   For more information, see [Docker images provided by CodeBuild][1]
+    #   in the *CodeBuild user guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
     #   @return [String]
     #
     # @!attribute [rw] compute_type
     #   Information about the compute resources the build project uses.
     #   Available values include:
     #
-    #   * `BUILD_GENERAL1_SMALL`\: Use up to 3 GB memory and 2 vCPUs for
+    #   * `BUILD_GENERAL1_SMALL`: Use up to 3 GB memory and 2 vCPUs for
     #     builds.
     #
-    #   * `BUILD_GENERAL1_MEDIUM`\: Use up to 7 GB memory and 4 vCPUs for
+    #   * `BUILD_GENERAL1_MEDIUM`: Use up to 7 GB memory and 4 vCPUs for
     #     builds.
     #
-    #   * `BUILD_GENERAL1_LARGE`\: Use up to 16 GB memory and 8 vCPUs for
+    #   * `BUILD_GENERAL1_LARGE`: Use up to 16 GB memory and 8 vCPUs for
     #     builds, depending on your environment type.
     #
-    #   * `BUILD_GENERAL1_2XLARGE`\: Use up to 145 GB memory, 72 vCPUs, and
+    #   * `BUILD_GENERAL1_2XLARGE`: Use up to 145 GB memory, 72 vCPUs, and
     #     824 GB of SSD storage for builds. This compute type supports
     #     Docker images up to 100 GB uncompressed.
     #
-    #   If you use `BUILD_GENERAL1_LARGE`\:
+    #   If you use `BUILD_GENERAL1_LARGE`:
     #
     #   * For environment type `LINUX_CONTAINER`, you can use up to 15 GB
     #     memory and 8 vCPUs for builds.
@@ -4300,7 +3798,7 @@ module Aws::CodeBuild
     #     memory and 8 vCPUs on ARM-based processors for builds.
     #
     #   For more information, see [Build Environment Compute Types][1] in
-    #   the *AWS CodeBuild User Guide.*
+    #   the *CodeBuild User Guide.*
     #
     #
     #
@@ -4330,7 +3828,7 @@ module Aws::CodeBuild
     #   `- timeout 15 sh -c "until docker info; do echo .; sleep 1; done"`
     #
     #   If the operating system's base image is Alpine Linux and the
-    #   previous command does not work, add the `-t` argument to `timeout`\:
+    #   previous command does not work, add the `-t` argument to `timeout`:
     #
     #   `- nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock
     #   --host=tcp://0.0.0.0:2375 --storage-driver=overlay&`
@@ -4342,7 +3840,7 @@ module Aws::CodeBuild
     # @!attribute [rw] certificate
     #   The ARN of the Amazon S3 bucket, path prefix, and object key that
     #   contains the PEM-encoded certificate for the build project. For more
-    #   information, see [certificate][1] in the *AWS CodeBuild User Guide*.
+    #   information, see [certificate][1] in the *CodeBuild User Guide*.
     #
     #
     #
@@ -4354,19 +3852,19 @@ module Aws::CodeBuild
     #   @return [Types::RegistryCredential]
     #
     # @!attribute [rw] image_pull_credentials_type
-    #   The type of credentials AWS CodeBuild uses to pull images in your
-    #   build. There are two valid values:
+    #   The type of credentials CodeBuild uses to pull images in your build.
+    #   There are two valid values:
     #
-    #   * `CODEBUILD` specifies that AWS CodeBuild uses its own credentials.
+    #   * `CODEBUILD` specifies that CodeBuild uses its own credentials.
     #     This requires that you modify your ECR repository policy to trust
-    #     AWS CodeBuild's service principal.
+    #     CodeBuild service principal.
     #
-    #   * `SERVICE_ROLE` specifies that AWS CodeBuild uses your build
-    #     project's service role.
+    #   * `SERVICE_ROLE` specifies that CodeBuild uses your build project's
+    #     service role.
     #
     #   When you use a cross-account or private registry image, you must use
-    #   SERVICE\_ROLE credentials. When you use an AWS CodeBuild curated
-    #   image, you must use CODEBUILD credentials.
+    #   SERVICE\_ROLE credentials. When you use an CodeBuild curated image,
+    #   you must use CODEBUILD credentials.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ProjectEnvironment AWS API Documentation
@@ -4392,17 +3890,6 @@ module Aws::CodeBuild
     #
     # [1]: https://docs.aws.amazon.com/efs/latest/ug/whatisefs.html
     #
-    # @note When making an API call, you may pass ProjectFileSystemLocation
-    #   data as a hash:
-    #
-    #       {
-    #         type: "EFS", # accepts EFS
-    #         location: "String",
-    #         mount_point: "String",
-    #         identifier: "String",
-    #         mount_options: "String",
-    #       }
-    #
     # @!attribute [rw] type
     #   The type of the file system. The one supported type is `EFS`.
     #   @return [String]
@@ -4410,7 +3897,7 @@ module Aws::CodeBuild
     # @!attribute [rw] location
     #   A string that specifies the location of the file system created by
     #   Amazon EFS. Its format is `efs-dns-name:/directory-path`. You can
-    #   find the DNS name of file system when you view it in the AWS EFS
+    #   find the DNS name of file system when you view it in the Amazon EFS
     #   console. The directory path is a path to a directory in the file
     #   system that CodeBuild mounts. For example, if the DNS name of a file
     #   system is `fs-abcd1234.efs.us-west-2.amazonaws.com`, and its mount
@@ -4437,8 +3924,8 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] mount_options
-    #   The mount options for a file system created by AWS EFS. The default
-    #   mount options used by CodeBuild are
+    #   The mount options for a file system created by Amazon EFS. The
+    #   default mount options used by CodeBuild are
     #   `nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2`.
     #   For more information, see [Recommended NFS Mount Options][1].
     #
@@ -4461,50 +3948,26 @@ module Aws::CodeBuild
 
     # Information about the build input source code for the build project.
     #
-    # @note When making an API call, you may pass ProjectSource
-    #   data as a hash:
-    #
-    #       {
-    #         type: "CODECOMMIT", # required, accepts CODECOMMIT, CODEPIPELINE, GITHUB, S3, BITBUCKET, GITHUB_ENTERPRISE, NO_SOURCE
-    #         location: "String",
-    #         git_clone_depth: 1,
-    #         git_submodules_config: {
-    #           fetch_submodules: false, # required
-    #         },
-    #         buildspec: "String",
-    #         auth: {
-    #           type: "OAUTH", # required, accepts OAUTH
-    #           resource: "String",
-    #         },
-    #         report_build_status: false,
-    #         build_status_config: {
-    #           context: "String",
-    #           target_url: "String",
-    #         },
-    #         insecure_ssl: false,
-    #         source_identifier: "String",
-    #       }
-    #
     # @!attribute [rw] type
     #   The type of repository that contains the source code to be built.
     #   Valid values include:
     #
-    #   * `BITBUCKET`\: The source code is in a Bitbucket repository.
+    #   * `BITBUCKET`: The source code is in a Bitbucket repository.
     #
-    #   * `CODECOMMIT`\: The source code is in an AWS CodeCommit repository.
+    #   * `CODECOMMIT`: The source code is in an CodeCommit repository.
     #
-    #   * `CODEPIPELINE`\: The source code settings are specified in the
-    #     source action of a pipeline in AWS CodePipeline.
+    #   * `CODEPIPELINE`: The source code settings are specified in the
+    #     source action of a pipeline in CodePipeline.
     #
-    #   * `GITHUB`\: The source code is in a GitHub or GitHub Enterprise
+    #   * `GITHUB`: The source code is in a GitHub or GitHub Enterprise
     #     Cloud repository.
     #
-    #   * `GITHUB_ENTERPRISE`\: The source code is in a GitHub Enterprise
+    #   * `GITHUB_ENTERPRISE`: The source code is in a GitHub Enterprise
     #     Server repository.
     #
-    #   * `NO_SOURCE`\: The project does not have input source code.
+    #   * `NO_SOURCE`: The project does not have input source code.
     #
-    #   * `S3`\: The source code is in an Amazon S3 bucket.
+    #   * `S3`: The source code is in an Amazon S3 bucket.
     #   @return [String]
     #
     # @!attribute [rw] location
@@ -4512,14 +3975,14 @@ module Aws::CodeBuild
     #   values include:
     #
     #   * For source code settings that are specified in the source action
-    #     of a pipeline in AWS CodePipeline, `location` should not be
-    #     specified. If it is specified, AWS CodePipeline ignores it. This
-    #     is because AWS CodePipeline uses the settings in a pipeline's
-    #     source action instead of this value.
+    #     of a pipeline in CodePipeline, `location` should not be specified.
+    #     If it is specified, CodePipeline ignores it. This is because
+    #     CodePipeline uses the settings in a pipeline's source action
+    #     instead of this value.
     #
-    #   * For source code in an AWS CodeCommit repository, the HTTPS clone
-    #     URL to the repository that contains the source code and the
-    #     buildspec file (for example,
+    #   * For source code in an CodeCommit repository, the HTTPS clone URL
+    #     to the repository that contains the source code and the buildspec
+    #     file (for example,
     #     `https://git-codecommit.<region-ID>.amazonaws.com/v1/repos/<repo-name>`).
     #
     #   * For source code in an Amazon S3 input bucket, one of the
@@ -4533,29 +3996,33 @@ module Aws::CodeBuild
     #
     #   * For source code in a GitHub repository, the HTTPS clone URL to the
     #     repository that contains the source and the buildspec file. You
-    #     must connect your AWS account to your GitHub account. Use the AWS
-    #     CodeBuild console to start creating a build project. When you use
-    #     the console to connect (or reconnect) with GitHub, on the GitHub
-    #     **Authorize application** page, for **Organization access**,
-    #     choose **Request access** next to each repository you want to
-    #     allow AWS CodeBuild to have access to, and then choose **Authorize
-    #     application**. (After you have connected to your GitHub account,
-    #     you do not need to finish creating the build project. You can
-    #     leave the AWS CodeBuild console.) To instruct AWS CodeBuild to use
-    #     this connection, in the `source` object, set the `auth` object's
-    #     `type` value to `OAUTH`.
+    #     must connect your Amazon Web Services account to your GitHub
+    #     account. Use the CodeBuild console to start creating a build
+    #     project. When you use the console to connect (or reconnect) with
+    #     GitHub, on the GitHub **Authorize application** page, for
+    #     **Organization access**, choose **Request access** next to each
+    #     repository you want to allow CodeBuild to have access to, and then
+    #     choose **Authorize application**. (After you have connected to
+    #     your GitHub account, you do not need to finish creating the build
+    #     project. You can leave the CodeBuild console.) To instruct
+    #     CodeBuild to use this connection, in the `source` object, set the
+    #     `auth` object's `type` value to `OAUTH`.
     #
     #   * For source code in a Bitbucket repository, the HTTPS clone URL to
     #     the repository that contains the source and the buildspec file.
-    #     You must connect your AWS account to your Bitbucket account. Use
-    #     the AWS CodeBuild console to start creating a build project. When
-    #     you use the console to connect (or reconnect) with Bitbucket, on
-    #     the Bitbucket **Confirm access to your account** page, choose
-    #     **Grant access**. (After you have connected to your Bitbucket
-    #     account, you do not need to finish creating the build project. You
-    #     can leave the AWS CodeBuild console.) To instruct AWS CodeBuild to
-    #     use this connection, in the `source` object, set the `auth`
-    #     object's `type` value to `OAUTH`.
+    #     You must connect your Amazon Web Services account to your
+    #     Bitbucket account. Use the CodeBuild console to start creating a
+    #     build project. When you use the console to connect (or reconnect)
+    #     with Bitbucket, on the Bitbucket **Confirm access to your
+    #     account** page, choose **Grant access**. (After you have connected
+    #     to your Bitbucket account, you do not need to finish creating the
+    #     build project. You can leave the CodeBuild console.) To instruct
+    #     CodeBuild to use this connection, in the `source` object, set the
+    #     `auth` object's `type` value to `OAUTH`.
+    #
+    #   If you specify `CODEPIPELINE` for the `Type` property, don't
+    #   specify this property. For all of the other types, you must specify
+    #   `Location`.
     #   @return [String]
     #
     # @!attribute [rw] git_clone_depth
@@ -4574,11 +4041,12 @@ module Aws::CodeBuild
     #   If this value is set, it can be either an inline buildspec
     #   definition, the path to an alternate buildspec file relative to the
     #   value of the built-in `CODEBUILD_SRC_DIR` environment variable, or
-    #   the path to an S3 bucket. The bucket must be in the same AWS Region
-    #   as the build project. Specify the buildspec file using its ARN (for
-    #   example, `arn:aws:s3:::my-codebuild-sample2/buildspec.yml`). If this
-    #   value is not provided or is set to an empty string, the source code
-    #   must contain a buildspec file in its root directory. For more
+    #   the path to an S3 bucket. The bucket must be in the same Amazon Web
+    #   Services Region as the build project. Specify the buildspec file
+    #   using its ARN (for example,
+    #   `arn:aws:s3:::my-codebuild-sample2/buildspec.yml`). If this value is
+    #   not provided or is set to an empty string, the source code must
+    #   contain a buildspec file in its root directory. For more
     #   information, see [Buildspec File Name and Storage Location][1].
     #
     #
@@ -4587,11 +4055,11 @@ module Aws::CodeBuild
     #   @return [String]
     #
     # @!attribute [rw] auth
-    #   Information about the authorization settings for AWS CodeBuild to
-    #   access the source code to be built.
+    #   Information about the authorization settings for CodeBuild to access
+    #   the source code to be built.
     #
-    #   This information is for the AWS CodeBuild console's use only. Your
-    #   code should not get or set this information directly.
+    #   This information is for the CodeBuild console's use only. Your code
+    #   should not get or set this information directly.
     #   @return [Types::SourceAuth]
     #
     # @!attribute [rw] report_build_status
@@ -4605,12 +4073,14 @@ module Aws::CodeBuild
     #   user associated with the source provider must have write access to
     #   the repo. If the user does not have write access, the build status
     #   cannot be updated. For more information, see [Source provider
-    #   access][1] in the *AWS CodeBuild User Guide*.
+    #   access][1] in the *CodeBuild User Guide*.
     #
-    #   <note markdown="1"> The status of a build triggered by a webhook is always reported to
+    #   The status of a build triggered by a webhook is always reported to
     #   your source provider.
     #
-    #    </note>
+    #   If your project's builds are triggered by a webhook, you must push
+    #   a new commit to the repo for a change to this property to take
+    #   effect.
     #
     #
     #
@@ -4654,14 +4124,6 @@ module Aws::CodeBuild
 
     # A source identifier and its corresponding version.
     #
-    # @note When making an API call, you may pass ProjectSourceVersion
-    #   data as a hash:
-    #
-    #       {
-    #         source_identifier: "String", # required
-    #         source_version: "String", # required
-    #       }
-    #
     # @!attribute [rw] source_identifier
     #   An identifier for a source in the build project. The identifier can
     #   only contain alphanumeric characters and underscores, and must be
@@ -4672,7 +4134,7 @@ module Aws::CodeBuild
     #   The source version for the corresponding source identifier. If
     #   specified, must be one of:
     #
-    #   * For AWS CodeCommit: the commit ID, branch, or Git tag to use.
+    #   * For CodeCommit: the commit ID, branch, or Git tag to use.
     #
     #   * For GitHub: the commit ID, pull request ID, branch name, or tag
     #     name that corresponds to the version of the source code you want
@@ -4691,7 +4153,7 @@ module Aws::CodeBuild
     #     build input ZIP file to use.
     #
     #   For more information, see [Source Version Sample with CodeBuild][1]
-    #   in the *AWS CodeBuild User Guide*.
+    #   in the *CodeBuild User Guide*.
     #
     #
     #
@@ -4707,18 +4169,10 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutResourcePolicyInput
-    #   data as a hash:
-    #
-    #       {
-    #         policy: "NonEmptyString", # required
-    #         resource_arn: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] policy
     #   A JSON-formatted resource policy. For more information, see [Sharing
-    #   a Project][1] and [Sharing a Report Group][2] in the *AWS CodeBuild
-    #   User Guide*.
+    #   a Project][1] and [Sharing a Report Group][2] in the *CodeBuild User
+    #   Guide*.
     #
     #
     #
@@ -4760,35 +4214,26 @@ module Aws::CodeBuild
     #
     # * images cannot be curated or an Amazon ECR image.
     #
-    # For more information, see [Private Registry with AWS Secrets Manager
-    # Sample for AWS CodeBuild][1].
+    # For more information, see [Private Registry with Secrets Manager
+    # Sample for CodeBuild][1].
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/codebuild/latest/userguide/sample-private-registry.html
     #
-    # @note When making an API call, you may pass RegistryCredential
-    #   data as a hash:
-    #
-    #       {
-    #         credential: "NonEmptyString", # required
-    #         credential_provider: "SECRETS_MANAGER", # required, accepts SECRETS_MANAGER
-    #       }
-    #
     # @!attribute [rw] credential
     #   The Amazon Resource Name (ARN) or name of credentials created using
-    #   AWS Secrets Manager.
+    #   Secrets Manager.
     #
     #   <note markdown="1"> The `credential` can use the name of the credentials only if they
-    #   exist in your current AWS Region.
+    #   exist in your current Amazon Web Services Region.
     #
     #    </note>
     #   @return [String]
     #
     # @!attribute [rw] credential_provider
     #   The service that created the credentials to access a private Docker
-    #   registry. The valid value, SECRETS\_MANAGER, is for AWS Secrets
-    #   Manager.
+    #   registry. The valid value, SECRETS\_MANAGER, is for Secrets Manager.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/RegistryCredential AWS API Documentation
@@ -4890,27 +4335,12 @@ module Aws::CodeBuild
 
     # Information about the location where the run of a report is exported.
     #
-    # @note When making an API call, you may pass ReportExportConfig
-    #   data as a hash:
-    #
-    #       {
-    #         export_config_type: "S3", # accepts S3, NO_EXPORT
-    #         s3_destination: {
-    #           bucket: "NonEmptyString",
-    #           bucket_owner: "String",
-    #           path: "String",
-    #           packaging: "ZIP", # accepts ZIP, NONE
-    #           encryption_key: "NonEmptyString",
-    #           encryption_disabled: false,
-    #         },
-    #       }
-    #
     # @!attribute [rw] export_config_type
     #   The export configuration type. Valid values are:
     #
-    #   * `S3`\: The report results are exported to an S3 bucket.
+    #   * `S3`: The report results are exported to an S3 bucket.
     #
-    #   * `NO_EXPORT`\: The report results are not exported.
+    #   * `NO_EXPORT`: The report results are not exported.
     #   @return [String]
     #
     # @!attribute [rw] s3_destination
@@ -4929,13 +4359,6 @@ module Aws::CodeBuild
 
     # A filter used to return reports with the status specified by the input
     # `status` parameter.
-    #
-    # @note When making an API call, you may pass ReportFilter
-    #   data as a hash:
-    #
-    #       {
-    #         status: "GENERATING", # accepts GENERATING, SUCCEEDED, FAILED, INCOMPLETE, DELETING
-    #       }
     #
     # @!attribute [rw] status
     #   The status used to filter reports. You can filter using one status
@@ -4992,8 +4415,8 @@ module Aws::CodeBuild
     # @!attribute [rw] tags
     #   A list of tag key and value pairs associated with this report group.
     #
-    #   These tags are available for use by AWS services that support AWS
-    #   CodeBuild report group tags.
+    #   These tags are available for use by Amazon Web Services services
+    #   that support CodeBuild report group tags.
     #   @return [Array<Types::Tag>]
     #
     # @!attribute [rw] status
@@ -5071,7 +4494,7 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # Represents a resolved build artifact. A resolve artifact is an
+    # Represents a resolved build artifact. A resolved artifact is an
     # artifact that is built and deployed to the destination, such as Amazon
     # S3.
     #
@@ -5097,28 +4520,19 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # The specified AWS resource cannot be created, because an AWS resource
-    # with the same settings already exists.
+    # The specified Amazon Web Services resource cannot be created, because
+    # an Amazon Web Services resource with the same settings already exists.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ResourceAlreadyExistsException AWS API Documentation
     #
     class ResourceAlreadyExistsException < Aws::EmptyStructure; end
 
-    # The specified AWS resource cannot be found.
+    # The specified Amazon Web Services resource cannot be found.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ResourceNotFoundException AWS API Documentation
     #
     class ResourceNotFoundException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass RetryBuildBatchInput
-    #   data as a hash:
-    #
-    #       {
-    #         id: "NonEmptyString",
-    #         idempotency_token: "String",
-    #         retry_type: "RETRY_ALL_BUILDS", # accepts RETRY_ALL_BUILDS, RETRY_FAILED_BUILDS
-    #       }
-    #
     # @!attribute [rw] id
     #   Specifies the identifier of the batch build to restart.
     #   @return [String]
@@ -5128,8 +4542,7 @@ module Aws::CodeBuild
     #   idempotency of the `RetryBuildBatch` request. The token is included
     #   in the `RetryBuildBatch` request and is valid for five minutes. If
     #   you repeat the `RetryBuildBatch` request with the same token, but
-    #   change a parameter, AWS CodeBuild returns a parameter mismatch
-    #   error.
+    #   change a parameter, CodeBuild returns a parameter mismatch error.
     #   @return [String]
     #
     # @!attribute [rw] retry_type
@@ -5158,14 +4571,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RetryBuildInput
-    #   data as a hash:
-    #
-    #       {
-    #         id: "NonEmptyString",
-    #         idempotency_token: "String",
-    #       }
-    #
     # @!attribute [rw] id
     #   Specifies the identifier of the build to restart.
     #   @return [String]
@@ -5175,7 +4580,7 @@ module Aws::CodeBuild
     #   idempotency of the `RetryBuild` request. The token is included in
     #   the `RetryBuild` request and is valid for five minutes. If you
     #   repeat the `RetryBuild` request with the same token, but change a
-    #   parameter, AWS CodeBuild returns a parameter mismatch error.
+    #   parameter, CodeBuild returns a parameter mismatch error.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/RetryBuildInput AWS API Documentation
@@ -5201,22 +4606,12 @@ module Aws::CodeBuild
 
     # Information about S3 logs for a build project.
     #
-    # @note When making an API call, you may pass S3LogsConfig
-    #   data as a hash:
-    #
-    #       {
-    #         status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #         location: "String",
-    #         encryption_disabled: false,
-    #         bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #       }
-    #
     # @!attribute [rw] status
     #   The current status of the S3 build logs. Valid values are:
     #
-    #   * `ENABLED`\: S3 build logs are enabled for this build project.
+    #   * `ENABLED`: S3 build logs are enabled for this build project.
     #
-    #   * `DISABLED`\: S3 build logs are not enabled for this build project.
+    #   * `DISABLED`: S3 build logs are not enabled for this build project.
     #   @return [String]
     #
     # @!attribute [rw] location
@@ -5232,12 +4627,19 @@ module Aws::CodeBuild
     #   @return [Boolean]
     #
     # @!attribute [rw] bucket_owner_access
-    #   Specifies the access for objects that are uploaded to an Amazon S3
-    #   bucket that is owned by another account.
+    #   Specifies the bucket owner's access for objects that another
+    #   account uploads to their Amazon S3 bucket. By default, only the
+    #   account that uploads the objects to the bucket has access to these
+    #   objects. This property allows you to give the bucket owner access to
+    #   these objects.
     #
-    #   By default, only the account that uploads the objects to the bucket
-    #   has access to these objects. This property allows you to give the
-    #   bucket owner access to these objects.
+    #   <note markdown="1"> To use this property, your CodeBuild service role must have the
+    #   `s3:PutBucketAcl` permission. This permission allows CodeBuild to
+    #   modify the access control list for the bucket.
+    #
+    #    </note>
+    #
+    #   This property can be one of the following values:
     #
     #   NONE
     #
@@ -5246,7 +4648,7 @@ module Aws::CodeBuild
     #
     #   READ\_ONLY
     #
-    #   : The bucket owner has read only access to the objects. The
+    #   : The bucket owner has read-only access to the objects. The
     #     uploading account retains ownership of the objects.
     #
     #   FULL
@@ -5285,27 +4687,16 @@ module Aws::CodeBuild
     # Information about the S3 bucket where the raw data of a report are
     # exported.
     #
-    # @note When making an API call, you may pass S3ReportExportConfig
-    #   data as a hash:
-    #
-    #       {
-    #         bucket: "NonEmptyString",
-    #         bucket_owner: "String",
-    #         path: "String",
-    #         packaging: "ZIP", # accepts ZIP, NONE
-    #         encryption_key: "NonEmptyString",
-    #         encryption_disabled: false,
-    #       }
-    #
     # @!attribute [rw] bucket
     #   The name of the S3 bucket where the raw data of a report are
     #   exported.
     #   @return [String]
     #
     # @!attribute [rw] bucket_owner
-    #   The AWS account identifier of the owner of the Amazon S3 bucket.
-    #   This allows report data to be exported to an Amazon S3 bucket that
-    #   is owned by an account other than the account running the build.
+    #   The Amazon Web Services account identifier of the owner of the
+    #   Amazon S3 bucket. This allows report data to be exported to an
+    #   Amazon S3 bucket that is owned by an account other than the account
+    #   running the build.
     #   @return [String]
     #
     # @!attribute [rw] path
@@ -5315,10 +4706,10 @@ module Aws::CodeBuild
     # @!attribute [rw] packaging
     #   The type of build output artifact to create. Valid values include:
     #
-    #   * `NONE`\: AWS CodeBuild creates the raw data in the output bucket.
-    #     This is the default if packaging is not specified.
+    #   * `NONE`: CodeBuild creates the raw data in the output bucket. This
+    #     is the default if packaging is not specified.
     #
-    #   * `ZIP`\: AWS CodeBuild creates a ZIP file with the raw data in the
+    #   * `ZIP`: CodeBuild creates a ZIP file with the raw data in the
     #     output bucket.
     #   @return [String]
     #
@@ -5344,19 +4735,11 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # Information about the authorization settings for AWS CodeBuild to
-    # access the source code to be built.
+    # Information about the authorization settings for CodeBuild to access
+    # the source code to be built.
     #
-    # This information is for the AWS CodeBuild console's use only. Your
-    # code should not get or set this information directly.
-    #
-    # @note When making an API call, you may pass SourceAuth
-    #   data as a hash:
-    #
-    #       {
-    #         type: "OAUTH", # required, accepts OAUTH
-    #         resource: "String",
-    #       }
+    # This information is for the CodeBuild console's use only. Your code
+    # should not get or set this information directly.
     #
     # @!attribute [rw] type
     #   <note markdown="1"> This data type is deprecated and is no longer accurate or used.
@@ -5407,131 +4790,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartBuildBatchInput
-    #   data as a hash:
-    #
-    #       {
-    #         project_name: "NonEmptyString", # required
-    #         secondary_sources_override: [
-    #           {
-    #             type: "CODECOMMIT", # required, accepts CODECOMMIT, CODEPIPELINE, GITHUB, S3, BITBUCKET, GITHUB_ENTERPRISE, NO_SOURCE
-    #             location: "String",
-    #             git_clone_depth: 1,
-    #             git_submodules_config: {
-    #               fetch_submodules: false, # required
-    #             },
-    #             buildspec: "String",
-    #             auth: {
-    #               type: "OAUTH", # required, accepts OAUTH
-    #               resource: "String",
-    #             },
-    #             report_build_status: false,
-    #             build_status_config: {
-    #               context: "String",
-    #               target_url: "String",
-    #             },
-    #             insecure_ssl: false,
-    #             source_identifier: "String",
-    #           },
-    #         ],
-    #         secondary_sources_version_override: [
-    #           {
-    #             source_identifier: "String", # required
-    #             source_version: "String", # required
-    #           },
-    #         ],
-    #         source_version: "String",
-    #         artifacts_override: {
-    #           type: "CODEPIPELINE", # required, accepts CODEPIPELINE, S3, NO_ARTIFACTS
-    #           location: "String",
-    #           path: "String",
-    #           namespace_type: "NONE", # accepts NONE, BUILD_ID
-    #           name: "String",
-    #           packaging: "NONE", # accepts NONE, ZIP
-    #           override_artifact_name: false,
-    #           encryption_disabled: false,
-    #           artifact_identifier: "String",
-    #           bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #         },
-    #         secondary_artifacts_override: [
-    #           {
-    #             type: "CODEPIPELINE", # required, accepts CODEPIPELINE, S3, NO_ARTIFACTS
-    #             location: "String",
-    #             path: "String",
-    #             namespace_type: "NONE", # accepts NONE, BUILD_ID
-    #             name: "String",
-    #             packaging: "NONE", # accepts NONE, ZIP
-    #             override_artifact_name: false,
-    #             encryption_disabled: false,
-    #             artifact_identifier: "String",
-    #             bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #           },
-    #         ],
-    #         environment_variables_override: [
-    #           {
-    #             name: "NonEmptyString", # required
-    #             value: "String", # required
-    #             type: "PLAINTEXT", # accepts PLAINTEXT, PARAMETER_STORE, SECRETS_MANAGER
-    #           },
-    #         ],
-    #         source_type_override: "CODECOMMIT", # accepts CODECOMMIT, CODEPIPELINE, GITHUB, S3, BITBUCKET, GITHUB_ENTERPRISE, NO_SOURCE
-    #         source_location_override: "String",
-    #         source_auth_override: {
-    #           type: "OAUTH", # required, accepts OAUTH
-    #           resource: "String",
-    #         },
-    #         git_clone_depth_override: 1,
-    #         git_submodules_config_override: {
-    #           fetch_submodules: false, # required
-    #         },
-    #         buildspec_override: "String",
-    #         insecure_ssl_override: false,
-    #         report_build_batch_status_override: false,
-    #         environment_type_override: "WINDOWS_CONTAINER", # accepts WINDOWS_CONTAINER, LINUX_CONTAINER, LINUX_GPU_CONTAINER, ARM_CONTAINER, WINDOWS_SERVER_2019_CONTAINER
-    #         image_override: "NonEmptyString",
-    #         compute_type_override: "BUILD_GENERAL1_SMALL", # accepts BUILD_GENERAL1_SMALL, BUILD_GENERAL1_MEDIUM, BUILD_GENERAL1_LARGE, BUILD_GENERAL1_2XLARGE
-    #         certificate_override: "String",
-    #         cache_override: {
-    #           type: "NO_CACHE", # required, accepts NO_CACHE, S3, LOCAL
-    #           location: "String",
-    #           modes: ["LOCAL_DOCKER_LAYER_CACHE"], # accepts LOCAL_DOCKER_LAYER_CACHE, LOCAL_SOURCE_CACHE, LOCAL_CUSTOM_CACHE
-    #         },
-    #         service_role_override: "NonEmptyString",
-    #         privileged_mode_override: false,
-    #         build_timeout_in_minutes_override: 1,
-    #         queued_timeout_in_minutes_override: 1,
-    #         encryption_key_override: "NonEmptyString",
-    #         idempotency_token: "String",
-    #         logs_config_override: {
-    #           cloud_watch_logs: {
-    #             status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #             group_name: "String",
-    #             stream_name: "String",
-    #           },
-    #           s3_logs: {
-    #             status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #             location: "String",
-    #             encryption_disabled: false,
-    #             bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #           },
-    #         },
-    #         registry_credential_override: {
-    #           credential: "NonEmptyString", # required
-    #           credential_provider: "SECRETS_MANAGER", # required, accepts SECRETS_MANAGER
-    #         },
-    #         image_pull_credentials_type_override: "CODEBUILD", # accepts CODEBUILD, SERVICE_ROLE
-    #         build_batch_config_override: {
-    #           service_role: "NonEmptyString",
-    #           combine_artifacts: false,
-    #           restrictions: {
-    #             maximum_builds_allowed: 1,
-    #             compute_types_allowed: ["NonEmptyString"],
-    #           },
-    #           timeout_in_mins: 1,
-    #         },
-    #         debug_session_enabled: false,
-    #       }
-    #
     # @!attribute [rw] project_name
     #   The name of the project.
     #   @return [String]
@@ -5551,7 +4809,7 @@ module Aws::CodeBuild
     #   only. If not specified, the latest version is used. If specified,
     #   the contents depends on the source provider:
     #
-    #   AWS CodeCommit
+    #   CodeCommit
     #
     #   : The commit ID, branch, or Git tag to use.
     #
@@ -5580,7 +4838,7 @@ module Aws::CodeBuild
     #   `sourceVersion` (at the build level) takes precedence.
     #
     #   For more information, see [Source Version Sample with CodeBuild][1]
-    #   in the *AWS CodeBuild User Guide*.
+    #   in the *CodeBuild User Guide*.
     #
     #
     #
@@ -5636,11 +4894,12 @@ module Aws::CodeBuild
     #   If this value is set, it can be either an inline buildspec
     #   definition, the path to an alternate buildspec file relative to the
     #   value of the built-in `CODEBUILD_SRC_DIR` environment variable, or
-    #   the path to an S3 bucket. The bucket must be in the same AWS Region
-    #   as the build project. Specify the buildspec file using its ARN (for
-    #   example, `arn:aws:s3:::my-codebuild-sample2/buildspec.yml`). If this
-    #   value is not provided or is set to an empty string, the source code
-    #   must contain a buildspec file in its root directory. For more
+    #   the path to an S3 bucket. The bucket must be in the same Amazon Web
+    #   Services Region as the build project. Specify the buildspec file
+    #   using its ARN (for example,
+    #   `arn:aws:s3:::my-codebuild-sample2/buildspec.yml`). If this value is
+    #   not provided or is set to an empty string, the source code must
+    #   contain a buildspec file in its root directory. For more
     #   information, see [Buildspec File Name and Storage Location][1].
     #
     #
@@ -5712,9 +4971,9 @@ module Aws::CodeBuild
     #   @return [Integer]
     #
     # @!attribute [rw] encryption_key_override
-    #   The AWS Key Management Service (AWS KMS) customer master key (CMK)
-    #   that overrides the one specified in the batch build project. The CMK
-    #   key encrypts the build output artifacts.
+    #   The Key Management Service customer master key (CMK) that overrides
+    #   the one specified in the batch build project. The CMK key encrypts
+    #   the build output artifacts.
     #
     #   <note markdown="1"> You can use a cross-account KMS key to encrypt the build output
     #   artifacts if your service role has permission to that key.
@@ -5731,8 +4990,7 @@ module Aws::CodeBuild
     #   idempotency of the `StartBuildBatch` request. The token is included
     #   in the `StartBuildBatch` request and is valid for five minutes. If
     #   you repeat the `StartBuildBatch` request with the same token, but
-    #   change a parameter, AWS CodeBuild returns a parameter mismatch
-    #   error.
+    #   change a parameter, CodeBuild returns a parameter mismatch error.
     #   @return [String]
     #
     # @!attribute [rw] logs_config_override
@@ -5746,23 +5004,22 @@ module Aws::CodeBuild
     #   @return [Types::RegistryCredential]
     #
     # @!attribute [rw] image_pull_credentials_type_override
-    #   The type of credentials AWS CodeBuild uses to pull images in your
-    #   batch build. There are two valid values:
+    #   The type of credentials CodeBuild uses to pull images in your batch
+    #   build. There are two valid values:
     #
     #   CODEBUILD
     #
-    #   : Specifies that AWS CodeBuild uses its own credentials. This
-    #     requires that you modify your ECR repository policy to trust AWS
-    #     CodeBuild's service principal.
+    #   : Specifies that CodeBuild uses its own credentials. This requires
+    #     that you modify your ECR repository policy to trust CodeBuild's
+    #     service principal.
     #
     #   SERVICE\_ROLE
     #
-    #   : Specifies that AWS CodeBuild uses your build project's service
-    #     role.
+    #   : Specifies that CodeBuild uses your build project's service role.
     #
     #   When using a cross-account or private registry image, you must use
-    #   `SERVICE_ROLE` credentials. When using an AWS CodeBuild curated
-    #   image, you must use `CODEBUILD` credentials.
+    #   `SERVICE_ROLE` credentials. When using an CodeBuild curated image,
+    #   you must use `CODEBUILD` credentials.
     #   @return [String]
     #
     # @!attribute [rw] build_batch_config_override
@@ -5832,129 +5089,8 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartBuildInput
-    #   data as a hash:
-    #
-    #       {
-    #         project_name: "NonEmptyString", # required
-    #         secondary_sources_override: [
-    #           {
-    #             type: "CODECOMMIT", # required, accepts CODECOMMIT, CODEPIPELINE, GITHUB, S3, BITBUCKET, GITHUB_ENTERPRISE, NO_SOURCE
-    #             location: "String",
-    #             git_clone_depth: 1,
-    #             git_submodules_config: {
-    #               fetch_submodules: false, # required
-    #             },
-    #             buildspec: "String",
-    #             auth: {
-    #               type: "OAUTH", # required, accepts OAUTH
-    #               resource: "String",
-    #             },
-    #             report_build_status: false,
-    #             build_status_config: {
-    #               context: "String",
-    #               target_url: "String",
-    #             },
-    #             insecure_ssl: false,
-    #             source_identifier: "String",
-    #           },
-    #         ],
-    #         secondary_sources_version_override: [
-    #           {
-    #             source_identifier: "String", # required
-    #             source_version: "String", # required
-    #           },
-    #         ],
-    #         source_version: "String",
-    #         artifacts_override: {
-    #           type: "CODEPIPELINE", # required, accepts CODEPIPELINE, S3, NO_ARTIFACTS
-    #           location: "String",
-    #           path: "String",
-    #           namespace_type: "NONE", # accepts NONE, BUILD_ID
-    #           name: "String",
-    #           packaging: "NONE", # accepts NONE, ZIP
-    #           override_artifact_name: false,
-    #           encryption_disabled: false,
-    #           artifact_identifier: "String",
-    #           bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #         },
-    #         secondary_artifacts_override: [
-    #           {
-    #             type: "CODEPIPELINE", # required, accepts CODEPIPELINE, S3, NO_ARTIFACTS
-    #             location: "String",
-    #             path: "String",
-    #             namespace_type: "NONE", # accepts NONE, BUILD_ID
-    #             name: "String",
-    #             packaging: "NONE", # accepts NONE, ZIP
-    #             override_artifact_name: false,
-    #             encryption_disabled: false,
-    #             artifact_identifier: "String",
-    #             bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #           },
-    #         ],
-    #         environment_variables_override: [
-    #           {
-    #             name: "NonEmptyString", # required
-    #             value: "String", # required
-    #             type: "PLAINTEXT", # accepts PLAINTEXT, PARAMETER_STORE, SECRETS_MANAGER
-    #           },
-    #         ],
-    #         source_type_override: "CODECOMMIT", # accepts CODECOMMIT, CODEPIPELINE, GITHUB, S3, BITBUCKET, GITHUB_ENTERPRISE, NO_SOURCE
-    #         source_location_override: "String",
-    #         source_auth_override: {
-    #           type: "OAUTH", # required, accepts OAUTH
-    #           resource: "String",
-    #         },
-    #         git_clone_depth_override: 1,
-    #         git_submodules_config_override: {
-    #           fetch_submodules: false, # required
-    #         },
-    #         buildspec_override: "String",
-    #         insecure_ssl_override: false,
-    #         report_build_status_override: false,
-    #         build_status_config_override: {
-    #           context: "String",
-    #           target_url: "String",
-    #         },
-    #         environment_type_override: "WINDOWS_CONTAINER", # accepts WINDOWS_CONTAINER, LINUX_CONTAINER, LINUX_GPU_CONTAINER, ARM_CONTAINER, WINDOWS_SERVER_2019_CONTAINER
-    #         image_override: "NonEmptyString",
-    #         compute_type_override: "BUILD_GENERAL1_SMALL", # accepts BUILD_GENERAL1_SMALL, BUILD_GENERAL1_MEDIUM, BUILD_GENERAL1_LARGE, BUILD_GENERAL1_2XLARGE
-    #         certificate_override: "String",
-    #         cache_override: {
-    #           type: "NO_CACHE", # required, accepts NO_CACHE, S3, LOCAL
-    #           location: "String",
-    #           modes: ["LOCAL_DOCKER_LAYER_CACHE"], # accepts LOCAL_DOCKER_LAYER_CACHE, LOCAL_SOURCE_CACHE, LOCAL_CUSTOM_CACHE
-    #         },
-    #         service_role_override: "NonEmptyString",
-    #         privileged_mode_override: false,
-    #         timeout_in_minutes_override: 1,
-    #         queued_timeout_in_minutes_override: 1,
-    #         encryption_key_override: "NonEmptyString",
-    #         idempotency_token: "String",
-    #         logs_config_override: {
-    #           cloud_watch_logs: {
-    #             status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #             group_name: "String",
-    #             stream_name: "String",
-    #           },
-    #           s3_logs: {
-    #             status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #             location: "String",
-    #             encryption_disabled: false,
-    #             bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #           },
-    #         },
-    #         registry_credential_override: {
-    #           credential: "NonEmptyString", # required
-    #           credential_provider: "SECRETS_MANAGER", # required, accepts SECRETS_MANAGER
-    #         },
-    #         image_pull_credentials_type_override: "CODEBUILD", # accepts CODEBUILD, SERVICE_ROLE
-    #         debug_session_enabled: false,
-    #       }
-    #
     # @!attribute [rw] project_name
-    #   The name of the AWS CodeBuild build project to start running a
-    #   build.
+    #   The name of the CodeBuild build project to start running a build.
     #   @return [String]
     #
     # @!attribute [rw] secondary_sources_override
@@ -5972,7 +5108,7 @@ module Aws::CodeBuild
     #   not specified, the latest version is used. If specified, the
     #   contents depends on the source provider:
     #
-    #   AWS CodeCommit
+    #   CodeCommit
     #
     #   : The commit ID, branch, or Git tag to use.
     #
@@ -6001,7 +5137,7 @@ module Aws::CodeBuild
     #   `sourceVersion` (at the build level) takes precedence.
     #
     #   For more information, see [Source Version Sample with CodeBuild][1]
-    #   in the *AWS CodeBuild User Guide*.
+    #   in the *CodeBuild User Guide*.
     #
     #
     #
@@ -6046,7 +5182,7 @@ module Aws::CodeBuild
     #
     # @!attribute [rw] git_submodules_config_override
     #   Information about the Git submodules configuration for this build of
-    #   an AWS CodeBuild build project.
+    #   an CodeBuild build project.
     #   @return [Types::GitSubmodulesConfig]
     #
     # @!attribute [rw] buildspec_override
@@ -6056,11 +5192,12 @@ module Aws::CodeBuild
     #   If this value is set, it can be either an inline buildspec
     #   definition, the path to an alternate buildspec file relative to the
     #   value of the built-in `CODEBUILD_SRC_DIR` environment variable, or
-    #   the path to an S3 bucket. The bucket must be in the same AWS Region
-    #   as the build project. Specify the buildspec file using its ARN (for
-    #   example, `arn:aws:s3:::my-codebuild-sample2/buildspec.yml`). If this
-    #   value is not provided or is set to an empty string, the source code
-    #   must contain a buildspec file in its root directory. For more
+    #   the path to an S3 bucket. The bucket must be in the same Amazon Web
+    #   Services Region as the build project. Specify the buildspec file
+    #   using its ARN (for example,
+    #   `arn:aws:s3:::my-codebuild-sample2/buildspec.yml`). If this value is
+    #   not provided or is set to an empty string, the source code must
+    #   contain a buildspec file in its root directory. For more
     #   information, see [Buildspec File Name and Storage Location][1].
     #
     #
@@ -6086,7 +5223,7 @@ module Aws::CodeBuild
     #   user associated with the source provider must have write access to
     #   the repo. If the user does not have write access, the build status
     #   cannot be updated. For more information, see [Source provider
-    #   access][1] in the *AWS CodeBuild User Guide*.
+    #   access][1] in the *CodeBuild User Guide*.
     #
     #   <note markdown="1"> The status of a build triggered by a webhook is always reported to
     #   your source provider.
@@ -6151,9 +5288,9 @@ module Aws::CodeBuild
     #   @return [Integer]
     #
     # @!attribute [rw] encryption_key_override
-    #   The AWS Key Management Service (AWS KMS) customer master key (CMK)
-    #   that overrides the one specified in the build project. The CMK key
-    #   encrypts the build output artifacts.
+    #   The Key Management Service customer master key (CMK) that overrides
+    #   the one specified in the build project. The CMK key encrypts the
+    #   build output artifacts.
     #
     #   <note markdown="1"> You can use a cross-account KMS key to encrypt the build output
     #   artifacts if your service role has permission to that key.
@@ -6169,7 +5306,7 @@ module Aws::CodeBuild
     #   A unique, case sensitive identifier you provide to ensure the
     #   idempotency of the StartBuild request. The token is included in the
     #   StartBuild request and is valid for 5 minutes. If you repeat the
-    #   StartBuild request with the same token, but change a parameter, AWS
+    #   StartBuild request with the same token, but change a parameter,
     #   CodeBuild returns a parameter mismatch error.
     #   @return [String]
     #
@@ -6183,23 +5320,22 @@ module Aws::CodeBuild
     #   @return [Types::RegistryCredential]
     #
     # @!attribute [rw] image_pull_credentials_type_override
-    #   The type of credentials AWS CodeBuild uses to pull images in your
-    #   build. There are two valid values:
+    #   The type of credentials CodeBuild uses to pull images in your build.
+    #   There are two valid values:
     #
     #   CODEBUILD
     #
-    #   : Specifies that AWS CodeBuild uses its own credentials. This
-    #     requires that you modify your ECR repository policy to trust AWS
-    #     CodeBuild's service principal.
+    #   : Specifies that CodeBuild uses its own credentials. This requires
+    #     that you modify your ECR repository policy to trust CodeBuild's
+    #     service principal.
     #
     #   SERVICE\_ROLE
     #
-    #   : Specifies that AWS CodeBuild uses your build project's service
-    #     role.
+    #   : Specifies that CodeBuild uses your build project's service role.
     #
     #   When using a cross-account or private registry image, you must use
-    #   `SERVICE_ROLE` credentials. When using an AWS CodeBuild curated
-    #   image, you must use `CODEBUILD` credentials.
+    #   `SERVICE_ROLE` credentials. When using an CodeBuild curated image,
+    #   you must use `CODEBUILD` credentials.
     #   @return [String]
     #
     # @!attribute [rw] debug_session_enabled
@@ -6261,13 +5397,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopBuildBatchInput
-    #   data as a hash:
-    #
-    #       {
-    #         id: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the batch build to stop.
     #   @return [String]
@@ -6292,13 +5421,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopBuildInput
-    #   data as a hash:
-    #
-    #       {
-    #         id: "NonEmptyString", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the build.
     #   @return [String]
@@ -6325,16 +5447,8 @@ module Aws::CodeBuild
 
     # A tag, consisting of a key and a value.
     #
-    # This tag is available for use by AWS services that support tags in AWS
-    # CodeBuild.
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "KeyInput",
-    #         value: "ValueInput",
-    #       }
+    # This tag is available for use by Amazon Web Services services that
+    # support tags in CodeBuild.
     #
     # @!attribute [rw] key
     #   The tag's key.
@@ -6413,14 +5527,6 @@ module Aws::CodeBuild
     # A filter used to return specific types of test cases. In order to pass
     # the filter, the report must meet all of the filter properties.
     #
-    # @note When making an API call, you may pass TestCaseFilter
-    #   data as a hash:
-    #
-    #       {
-    #         status: "String",
-    #         keyword: "String",
-    #       }
-    #
     # @!attribute [rw] status
     #   The status used to filter test cases. A `TestCaseFilter` can have
     #   one status. Valid values are:
@@ -6478,161 +5584,6 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateProjectInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "NonEmptyString", # required
-    #         description: "ProjectDescription",
-    #         source: {
-    #           type: "CODECOMMIT", # required, accepts CODECOMMIT, CODEPIPELINE, GITHUB, S3, BITBUCKET, GITHUB_ENTERPRISE, NO_SOURCE
-    #           location: "String",
-    #           git_clone_depth: 1,
-    #           git_submodules_config: {
-    #             fetch_submodules: false, # required
-    #           },
-    #           buildspec: "String",
-    #           auth: {
-    #             type: "OAUTH", # required, accepts OAUTH
-    #             resource: "String",
-    #           },
-    #           report_build_status: false,
-    #           build_status_config: {
-    #             context: "String",
-    #             target_url: "String",
-    #           },
-    #           insecure_ssl: false,
-    #           source_identifier: "String",
-    #         },
-    #         secondary_sources: [
-    #           {
-    #             type: "CODECOMMIT", # required, accepts CODECOMMIT, CODEPIPELINE, GITHUB, S3, BITBUCKET, GITHUB_ENTERPRISE, NO_SOURCE
-    #             location: "String",
-    #             git_clone_depth: 1,
-    #             git_submodules_config: {
-    #               fetch_submodules: false, # required
-    #             },
-    #             buildspec: "String",
-    #             auth: {
-    #               type: "OAUTH", # required, accepts OAUTH
-    #               resource: "String",
-    #             },
-    #             report_build_status: false,
-    #             build_status_config: {
-    #               context: "String",
-    #               target_url: "String",
-    #             },
-    #             insecure_ssl: false,
-    #             source_identifier: "String",
-    #           },
-    #         ],
-    #         source_version: "String",
-    #         secondary_source_versions: [
-    #           {
-    #             source_identifier: "String", # required
-    #             source_version: "String", # required
-    #           },
-    #         ],
-    #         artifacts: {
-    #           type: "CODEPIPELINE", # required, accepts CODEPIPELINE, S3, NO_ARTIFACTS
-    #           location: "String",
-    #           path: "String",
-    #           namespace_type: "NONE", # accepts NONE, BUILD_ID
-    #           name: "String",
-    #           packaging: "NONE", # accepts NONE, ZIP
-    #           override_artifact_name: false,
-    #           encryption_disabled: false,
-    #           artifact_identifier: "String",
-    #           bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #         },
-    #         secondary_artifacts: [
-    #           {
-    #             type: "CODEPIPELINE", # required, accepts CODEPIPELINE, S3, NO_ARTIFACTS
-    #             location: "String",
-    #             path: "String",
-    #             namespace_type: "NONE", # accepts NONE, BUILD_ID
-    #             name: "String",
-    #             packaging: "NONE", # accepts NONE, ZIP
-    #             override_artifact_name: false,
-    #             encryption_disabled: false,
-    #             artifact_identifier: "String",
-    #             bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #           },
-    #         ],
-    #         cache: {
-    #           type: "NO_CACHE", # required, accepts NO_CACHE, S3, LOCAL
-    #           location: "String",
-    #           modes: ["LOCAL_DOCKER_LAYER_CACHE"], # accepts LOCAL_DOCKER_LAYER_CACHE, LOCAL_SOURCE_CACHE, LOCAL_CUSTOM_CACHE
-    #         },
-    #         environment: {
-    #           type: "WINDOWS_CONTAINER", # required, accepts WINDOWS_CONTAINER, LINUX_CONTAINER, LINUX_GPU_CONTAINER, ARM_CONTAINER, WINDOWS_SERVER_2019_CONTAINER
-    #           image: "NonEmptyString", # required
-    #           compute_type: "BUILD_GENERAL1_SMALL", # required, accepts BUILD_GENERAL1_SMALL, BUILD_GENERAL1_MEDIUM, BUILD_GENERAL1_LARGE, BUILD_GENERAL1_2XLARGE
-    #           environment_variables: [
-    #             {
-    #               name: "NonEmptyString", # required
-    #               value: "String", # required
-    #               type: "PLAINTEXT", # accepts PLAINTEXT, PARAMETER_STORE, SECRETS_MANAGER
-    #             },
-    #           ],
-    #           privileged_mode: false,
-    #           certificate: "String",
-    #           registry_credential: {
-    #             credential: "NonEmptyString", # required
-    #             credential_provider: "SECRETS_MANAGER", # required, accepts SECRETS_MANAGER
-    #           },
-    #           image_pull_credentials_type: "CODEBUILD", # accepts CODEBUILD, SERVICE_ROLE
-    #         },
-    #         service_role: "NonEmptyString",
-    #         timeout_in_minutes: 1,
-    #         queued_timeout_in_minutes: 1,
-    #         encryption_key: "NonEmptyString",
-    #         tags: [
-    #           {
-    #             key: "KeyInput",
-    #             value: "ValueInput",
-    #           },
-    #         ],
-    #         vpc_config: {
-    #           vpc_id: "NonEmptyString",
-    #           subnets: ["NonEmptyString"],
-    #           security_group_ids: ["NonEmptyString"],
-    #         },
-    #         badge_enabled: false,
-    #         logs_config: {
-    #           cloud_watch_logs: {
-    #             status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #             group_name: "String",
-    #             stream_name: "String",
-    #           },
-    #           s3_logs: {
-    #             status: "ENABLED", # required, accepts ENABLED, DISABLED
-    #             location: "String",
-    #             encryption_disabled: false,
-    #             bucket_owner_access: "NONE", # accepts NONE, READ_ONLY, FULL
-    #           },
-    #         },
-    #         file_system_locations: [
-    #           {
-    #             type: "EFS", # accepts EFS
-    #             location: "String",
-    #             mount_point: "String",
-    #             identifier: "String",
-    #             mount_options: "String",
-    #           },
-    #         ],
-    #         build_batch_config: {
-    #           service_role: "NonEmptyString",
-    #           combine_artifacts: false,
-    #           restrictions: {
-    #             maximum_builds_allowed: 1,
-    #             compute_types_allowed: ["NonEmptyString"],
-    #           },
-    #           timeout_in_mins: 1,
-    #         },
-    #         concurrent_build_limit: 1,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the build project.
     #
@@ -6659,7 +5610,7 @@ module Aws::CodeBuild
     #   specified, the latest version is used. If specified, it must be one
     #   of:
     #
-    #   * For AWS CodeCommit: the commit ID, branch, or Git tag to use.
+    #   * For CodeCommit: the commit ID, branch, or Git tag to use.
     #
     #   * For GitHub: the commit ID, pull request ID, branch name, or tag
     #     name that corresponds to the version of the source code you want
@@ -6682,7 +5633,7 @@ module Aws::CodeBuild
     #   level).
     #
     #   For more information, see [Source Version Sample with CodeBuild][1]
-    #   in the *AWS CodeBuild User Guide*.
+    #   in the *CodeBuild User Guide*.
     #
     #
     #
@@ -6701,7 +5652,7 @@ module Aws::CodeBuild
     #   @return [Types::ProjectArtifacts]
     #
     # @!attribute [rw] secondary_artifacts
-    #   An array of `ProjectSource` objects.
+    #   An array of `ProjectArtifact` objects.
     #   @return [Array<Types::ProjectArtifacts>]
     #
     # @!attribute [rw] cache
@@ -6715,13 +5666,13 @@ module Aws::CodeBuild
     #   @return [Types::ProjectEnvironment]
     #
     # @!attribute [rw] service_role
-    #   The replacement ARN of the AWS Identity and Access Management (IAM)
-    #   role that enables AWS CodeBuild to interact with dependent AWS
-    #   services on behalf of the AWS account.
+    #   The replacement ARN of the IAM role that enables CodeBuild to
+    #   interact with dependent Amazon Web Services services on behalf of
+    #   the Amazon Web Services account.
     #   @return [String]
     #
     # @!attribute [rw] timeout_in_minutes
-    #   The replacement value in minutes, from 5 to 480 (8 hours), for AWS
+    #   The replacement value in minutes, from 5 to 480 (8 hours), for
     #   CodeBuild to wait before timing out any related build that did not
     #   get marked as completed.
     #   @return [Integer]
@@ -6732,8 +5683,8 @@ module Aws::CodeBuild
     #   @return [Integer]
     #
     # @!attribute [rw] encryption_key
-    #   The AWS Key Management Service (AWS KMS) customer master key (CMK)
-    #   to be used for encrypting the build output artifacts.
+    #   The Key Management Service customer master key (CMK) to be used for
+    #   encrypting the build output artifacts.
     #
     #   <note markdown="1"> You can use a cross-account KMS key to encrypt the build output
     #   artifacts if your service role has permission to that key.
@@ -6749,13 +5700,12 @@ module Aws::CodeBuild
     #   An updated list of tag key and value pairs associated with this
     #   build project.
     #
-    #   These tags are available for use by AWS services that support AWS
-    #   CodeBuild build project tags.
+    #   These tags are available for use by Amazon Web Services services
+    #   that support CodeBuild build project tags.
     #   @return [Array<Types::Tag>]
     #
     # @!attribute [rw] vpc_config
-    #   VpcConfig enables AWS CodeBuild to access resources in an Amazon
-    #   VPC.
+    #   VpcConfig enables CodeBuild to access resources in an Amazon VPC.
     #   @return [Types::VpcConfig]
     #
     # @!attribute [rw] badge_enabled
@@ -6765,7 +5715,7 @@ module Aws::CodeBuild
     #
     # @!attribute [rw] logs_config
     #   Information about logs for the build project. A project can create
-    #   logs in Amazon CloudWatch Logs, logs in an S3 bucket, or both.
+    #   logs in CloudWatch Logs, logs in an S3 bucket, or both.
     #   @return [Types::LogsConfig]
     #
     # @!attribute [rw] file_system_locations
@@ -6830,30 +5780,69 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateReportGroupInput
-    #   data as a hash:
+    # @!attribute [rw] project_arn
+    #   The Amazon Resource Name (ARN) of the build project.
+    #   @return [String]
     #
-    #       {
-    #         arn: "NonEmptyString", # required
-    #         export_config: {
-    #           export_config_type: "S3", # accepts S3, NO_EXPORT
-    #           s3_destination: {
-    #             bucket: "NonEmptyString",
-    #             bucket_owner: "String",
-    #             path: "String",
-    #             packaging: "ZIP", # accepts ZIP, NONE
-    #             encryption_key: "NonEmptyString",
-    #             encryption_disabled: false,
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "KeyInput",
-    #             value: "ValueInput",
-    #           },
-    #         ],
-    #       }
+    # @!attribute [rw] project_visibility
+    #   Specifies the visibility of the project's builds. Possible values
+    #   are:
     #
+    #   PUBLIC\_READ
+    #
+    #   : The project builds are visible to the public.
+    #
+    #   PRIVATE
+    #
+    #   : The project builds are not visible to the public.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_access_role
+    #   The ARN of the IAM role that enables CodeBuild to access the
+    #   CloudWatch Logs and Amazon S3 artifacts for the project's builds.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProjectVisibilityInput AWS API Documentation
+    #
+    class UpdateProjectVisibilityInput < Struct.new(
+      :project_arn,
+      :project_visibility,
+      :resource_access_role)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] project_arn
+    #   The Amazon Resource Name (ARN) of the build project.
+    #   @return [String]
+    #
+    # @!attribute [rw] public_project_alias
+    #   Contains the project identifier used with the public build APIs.
+    #   @return [String]
+    #
+    # @!attribute [rw] project_visibility
+    #   Specifies the visibility of the project's builds. Possible values
+    #   are:
+    #
+    #   PUBLIC\_READ
+    #
+    #   : The project builds are visible to the public.
+    #
+    #   PRIVATE
+    #
+    #   : The project builds are not visible to the public.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProjectVisibilityOutput AWS API Documentation
+    #
+    class UpdateProjectVisibilityOutput < Struct.new(
+      :project_arn,
+      :public_project_alias,
+      :project_visibility)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] arn
     #   The ARN of the report group to update.
     #   @return [String]
@@ -6861,17 +5850,17 @@ module Aws::CodeBuild
     # @!attribute [rw] export_config
     #   Used to specify an updated export type. Valid values are:
     #
-    #   * `S3`\: The report results are exported to an S3 bucket.
+    #   * `S3`: The report results are exported to an S3 bucket.
     #
-    #   * `NO_EXPORT`\: The report results are not exported.
+    #   * `NO_EXPORT`: The report results are not exported.
     #   @return [Types::ReportExportConfig]
     #
     # @!attribute [rw] tags
     #   An updated list of tag key and value pairs associated with this
     #   report group.
     #
-    #   These tags are available for use by AWS services that support AWS
-    #   CodeBuild report group tags.
+    #   These tags are available for use by Amazon Web Services services
+    #   that support CodeBuild report group tags.
     #   @return [Array<Types::Tag>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateReportGroupInput AWS API Documentation
@@ -6896,27 +5885,8 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateWebhookInput
-    #   data as a hash:
-    #
-    #       {
-    #         project_name: "ProjectName", # required
-    #         branch_filter: "String",
-    #         rotate_secret: false,
-    #         filter_groups: [
-    #           [
-    #             {
-    #               type: "EVENT", # required, accepts EVENT, BASE_REF, HEAD_REF, ACTOR_ACCOUNT_ID, FILE_PATH, COMMIT_MESSAGE
-    #               pattern: "String", # required
-    #               exclude_matched_pattern: false,
-    #             },
-    #           ],
-    #         ],
-    #         build_type: "BUILD", # accepts BUILD, BUILD_BATCH
-    #       }
-    #
     # @!attribute [rw] project_name
-    #   The name of the AWS CodeBuild project.
+    #   The name of the CodeBuild project.
     #   @return [String]
     #
     # @!attribute [rw] branch_filter
@@ -6961,7 +5931,7 @@ module Aws::CodeBuild
 
     # @!attribute [rw] webhook
     #   Information about a repository's webhook that is associated with a
-    #   project in AWS CodeBuild.
+    #   project in CodeBuild.
     #   @return [Types::Webhook]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateWebhookOutput AWS API Documentation
@@ -6972,16 +5942,7 @@ module Aws::CodeBuild
       include Aws::Structure
     end
 
-    # Information about the VPC configuration that AWS CodeBuild accesses.
-    #
-    # @note When making an API call, you may pass VpcConfig
-    #   data as a hash:
-    #
-    #       {
-    #         vpc_id: "NonEmptyString",
-    #         subnets: ["NonEmptyString"],
-    #         security_group_ids: ["NonEmptyString"],
-    #       }
+    # Information about the VPC configuration that CodeBuild accesses.
     #
     # @!attribute [rw] vpc_id
     #   The ID of the Amazon VPC.
@@ -7006,14 +5967,14 @@ module Aws::CodeBuild
     end
 
     # Information about a webhook that connects repository events to a build
-    # project in AWS CodeBuild.
+    # project in CodeBuild.
     #
     # @!attribute [rw] url
     #   The URL to the webhook.
     #   @return [String]
     #
     # @!attribute [rw] payload_url
-    #   The AWS CodeBuild endpoint where webhook events are sent.
+    #   The CodeBuild endpoint where webhook events are sent.
     #   @return [String]
     #
     # @!attribute [rw] secret
@@ -7070,15 +6031,6 @@ module Aws::CodeBuild
     end
 
     # A filter used to determine which webhooks trigger a build.
-    #
-    # @note When making an API call, you may pass WebhookFilter
-    #   data as a hash:
-    #
-    #       {
-    #         type: "EVENT", # required, accepts EVENT, BASE_REF, HEAD_REF, ACTOR_ACCOUNT_ID, FILE_PATH, COMMIT_MESSAGE
-    #         pattern: "String", # required
-    #         exclude_matched_pattern: false,
-    #       }
     #
     # @!attribute [rw] type
     #   The type of webhook filter. There are six webhook filter types:

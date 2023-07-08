@@ -10,17 +10,6 @@
 module Aws::SSMContacts
   module Types
 
-    # @note When making an API call, you may pass AcceptPageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         page_id: "SsmContactsArn", # required
-    #         contact_channel_id: "SsmContactsArn",
-    #         accept_type: "DELIVERED", # required, accepts DELIVERED, READ
-    #         note: "ReceiptInfo",
-    #         accept_code: "AcceptCode", # required
-    #       }
-    #
     # @!attribute [rw] page_id
     #   The Amazon Resource Name (ARN) of the engagement to a contact
     #   channel.
@@ -40,7 +29,20 @@ module Aws::SSMContacts
     #   @return [String]
     #
     # @!attribute [rw] accept_code
-    #   The accept code is a 6-digit code used to acknowledge the page.
+    #   A 6-digit code used to acknowledge the page.
+    #   @return [String]
+    #
+    # @!attribute [rw] accept_code_validation
+    #   An optional field that Incident Manager uses to `ENFORCE`
+    #   `AcceptCode` validation when acknowledging an page. Acknowledgement
+    #   can occur by replying to a page, or when entering the AcceptCode in
+    #   the console. Enforcing AcceptCode validation causes Incident Manager
+    #   to verify that the code entered by the user matches the code sent by
+    #   Incident Manager with the page.
+    #
+    #   Incident Manager can also `IGNORE` `AcceptCode` validation. Ignoring
+    #   `AcceptCode` validation causes Incident Manager to accept any value
+    #   entered for the `AcceptCode`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/AcceptPageRequest AWS API Documentation
@@ -50,7 +52,8 @@ module Aws::SSMContacts
       :contact_channel_id,
       :accept_type,
       :note,
-      :accept_code)
+      :accept_code,
+      :accept_code_validation)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -59,7 +62,7 @@ module Aws::SSMContacts
     #
     class AcceptPageResult < Aws::EmptyStructure; end
 
-    # You don't have sufficient access to perform this action.
+    # You don't have sufficient access to perform this operation.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -72,14 +75,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ActivateContactChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_channel_id: "SsmContactsArn", # required
-    #         activation_code: "ActivationCode", # required
-    #       }
-    #
     # @!attribute [rw] contact_channel_id
     #   The Amazon Resource Name (ARN) of the contact channel.
     #   @return [String]
@@ -104,14 +99,6 @@ module Aws::SSMContacts
 
     # Information about the contact channel that Incident Manager uses to
     # engage the contact.
-    #
-    # @note When making an API call, you may pass ChannelTargetInfo
-    #   data as a hash:
-    #
-    #       {
-    #         contact_channel_id: "SsmContactsArn", # required
-    #         retry_interval_in_minutes: 1,
-    #       }
     #
     # @!attribute [rw] contact_channel_id
     #   The Amazon Resource Name (ARN) of the contact channel.
@@ -141,15 +128,21 @@ module Aws::SSMContacts
     #   @return [String]
     #
     # @!attribute [rw] resource_type
-    #   ype of the resource in use
+    #   Type of the resource in use
     #   @return [String]
+    #
+    # @!attribute [rw] dependent_entities
+    #   List of dependent entities containing information on relation type
+    #   and resourceArns linked to the resource in use
+    #   @return [Array<Types::DependentEntity>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ConflictException AWS API Documentation
     #
     class ConflictException < Struct.new(
       :message,
       :resource_id,
-      :resource_type)
+      :resource_type,
+      :dependent_entities)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -237,13 +230,6 @@ module Aws::SSMContacts
     # The details that Incident Manager uses when trying to engage the
     # contact channel.
     #
-    # @note When making an API call, you may pass ContactChannelAddress
-    #   data as a hash:
-    #
-    #       {
-    #         simple_address: "SimpleAddress",
-    #       }
-    #
     # @!attribute [rw] simple_address
     #   The format is dependent on the type of the contact channel. The
     #   following are the expected formats:
@@ -265,14 +251,6 @@ module Aws::SSMContacts
 
     # The contact that Incident Manager is engaging during an incident.
     #
-    # @note When making an API call, you may pass ContactTargetInfo
-    #   data as a hash:
-    #
-    #       {
-    #         contact_id: "SsmContactsArn",
-    #         is_essential: false, # required
-    #       }
-    #
     # @!attribute [rw] contact_id
     #   The Amazon Resource Name (ARN) of the contact.
     #   @return [String]
@@ -291,22 +269,28 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateContactChannelRequest
-    #   data as a hash:
+    # Information about when an on-call shift begins and ends.
     #
-    #       {
-    #         contact_id: "SsmContactsArn", # required
-    #         name: "ChannelName", # required
-    #         type: "SMS", # required, accepts SMS, VOICE, EMAIL
-    #         delivery_address: { # required
-    #           simple_address: "SimpleAddress",
-    #         },
-    #         defer_activation: false,
-    #         idempotency_token: "IdempotencyToken",
-    #       }
+    # @!attribute [rw] start
+    #   Information about when the on-call rotation shift begins.
+    #   @return [Types::HandOffTime]
     #
+    # @!attribute [rw] end
+    #   Information about when the on-call rotation shift ends.
+    #   @return [Types::HandOffTime]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/CoverageTime AWS API Documentation
+    #
+    class CoverageTime < Struct.new(
+      :start,
+      :end)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] contact_id
-    #   The Amazon Resource Name (ARN) of the contact channel.
+    #   The Amazon Resource Name (ARN) of the contact you are adding the
+    #   contact channel to.
     #   @return [String]
     #
     # @!attribute [rw] name
@@ -342,7 +326,7 @@ module Aws::SSMContacts
     #   @return [Boolean]
     #
     # @!attribute [rw] idempotency_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -363,7 +347,7 @@ module Aws::SSMContacts
     end
 
     # @!attribute [rw] contact_channel_arn
-    #   The ARN of the contact channel.
+    #   The Amazon Resource Name (ARN) of the contact channel.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/CreateContactChannelResult AWS API Documentation
@@ -374,41 +358,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateContactRequest
-    #   data as a hash:
-    #
-    #       {
-    #         alias: "ContactAlias", # required
-    #         display_name: "ContactName",
-    #         type: "PERSONAL", # required, accepts PERSONAL, ESCALATION
-    #         plan: { # required
-    #           stages: [ # required
-    #             {
-    #               duration_in_minutes: 1, # required
-    #               targets: [ # required
-    #                 {
-    #                   channel_target_info: {
-    #                     contact_channel_id: "SsmContactsArn", # required
-    #                     retry_interval_in_minutes: 1,
-    #                   },
-    #                   contact_target_info: {
-    #                     contact_id: "SsmContactsArn",
-    #                     is_essential: false, # required
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           ],
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #         idempotency_token: "IdempotencyToken",
-    #       }
-    #
     # @!attribute [rw] alias
     #   The short name to quickly identify a contact or escalation plan. The
     #   contact alias must be unique and identifiable.
@@ -435,7 +384,7 @@ module Aws::SSMContacts
     #   @return [Array<Types::Tag>]
     #
     # @!attribute [rw] idempotency_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -468,7 +417,138 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # The action failed to due an encryption key error.
+    # @!attribute [rw] rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation to create an override
+    #   for.
+    #   @return [String]
+    #
+    # @!attribute [rw] new_contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts to replace those in
+    #   the current on-call rotation with.
+    #
+    #   If you want to include any current team members in the override
+    #   shift, you must include their ARNs in the new contact ID list.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] start_time
+    #   The date and time when the override goes into effect.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The date and time when the override ends.
+    #   @return [Time]
+    #
+    # @!attribute [rw] idempotency_token
+    #   A token that ensures that the operation is called only once with the
+    #   specified details.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/CreateRotationOverrideRequest AWS API Documentation
+    #
+    class CreateRotationOverrideRequest < Struct.new(
+      :rotation_id,
+      :new_contact_ids,
+      :start_time,
+      :end_time,
+      :idempotency_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_override_id
+    #   The Amazon Resource Name (ARN) of the created rotation override.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/CreateRotationOverrideResult AWS API Documentation
+    #
+    class CreateRotationOverrideResult < Struct.new(
+      :rotation_override_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] name
+    #   The name of the rotation.
+    #   @return [String]
+    #
+    # @!attribute [rw] contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts to add to the
+    #   rotation.
+    #
+    #   The order that you list the contacts in is their shift order in the
+    #   rotation schedule. To change the order of the contact's shifts, use
+    #   the UpdateRotation operation.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] start_time
+    #   The date and time that the rotation goes into effect.
+    #   @return [Time]
+    #
+    # @!attribute [rw] time_zone_id
+    #   The time zone to base the rotation’s activity on in Internet
+    #   Assigned Numbers Authority (IANA) format. For example:
+    #   "America/Los\_Angeles", "UTC", or "Asia/Seoul". For more
+    #   information, see the [Time Zone Database][1] on the IANA website.
+    #
+    #   <note markdown="1"> Designators for time zones that don’t support Daylight Savings Time
+    #   rules, such as Pacific Standard Time (PST) and Pacific Daylight Time
+    #   (PDT), are not supported.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://www.iana.org/time-zones
+    #   @return [String]
+    #
+    # @!attribute [rw] recurrence
+    #   Information about the rule that specifies when a shift's team
+    #   members rotate.
+    #   @return [Types::RecurrenceSettings]
+    #
+    # @!attribute [rw] tags
+    #   Optional metadata to assign to the rotation. Tags enable you to
+    #   categorize a resource in different ways, such as by purpose, owner,
+    #   or environment. For more information, see [Tagging Incident Manager
+    #   resources][1] in the *Incident Manager User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/incident-manager/latest/userguide/tagging.html
+    #   @return [Array<Types::Tag>]
+    #
+    # @!attribute [rw] idempotency_token
+    #   A token that ensures that the operation is called only once with the
+    #   specified details.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/CreateRotationRequest AWS API Documentation
+    #
+    class CreateRotationRequest < Struct.new(
+      :name,
+      :contact_ids,
+      :start_time,
+      :time_zone_id,
+      :recurrence,
+      :tags,
+      :idempotency_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_arn
+    #   The Amazon Resource Name (ARN) of the created rotation.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/CreateRotationResult AWS API Documentation
+    #
+    class CreateRotationResult < Struct.new(
+      :rotation_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The operation failed to due an encryption key error.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -481,13 +561,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeactivateContactChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_channel_id: "SsmContactsArn", # required
-    #       }
-    #
     # @!attribute [rw] contact_channel_id
     #   The Amazon Resource Name (ARN) of the contact channel you're
     #   deactivating.
@@ -505,13 +578,6 @@ module Aws::SSMContacts
     #
     class DeactivateContactChannelResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteContactChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_channel_id: "SsmContactsArn", # required
-    #       }
-    #
     # @!attribute [rw] contact_channel_id
     #   The Amazon Resource Name (ARN) of the contact channel.
     #   @return [String]
@@ -528,13 +594,6 @@ module Aws::SSMContacts
     #
     class DeleteContactChannelResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteContactRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_id: "SsmContactsArn", # required
-    #       }
-    #
     # @!attribute [rw] contact_id
     #   The Amazon Resource Name (ARN) of the contact that you're deleting.
     #   @return [String]
@@ -551,13 +610,68 @@ module Aws::SSMContacts
     #
     class DeleteContactResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DescribeEngagementRequest
-    #   data as a hash:
+    # @!attribute [rw] rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation that was overridden.
+    #   @return [String]
     #
-    #       {
-    #         engagement_id: "SsmContactsArn", # required
-    #       }
+    # @!attribute [rw] rotation_override_id
+    #   The Amazon Resource Name (ARN) of the on-call rotation override to
+    #   delete.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/DeleteRotationOverrideRequest AWS API Documentation
+    #
+    class DeleteRotationOverrideRequest < Struct.new(
+      :rotation_id,
+      :rotation_override_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/DeleteRotationOverrideResult AWS API Documentation
+    #
+    class DeleteRotationOverrideResult < Aws::EmptyStructure; end
+
+    # @!attribute [rw] rotation_id
+    #   The Amazon Resource Name (ARN) of the on-call rotation to delete.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/DeleteRotationRequest AWS API Documentation
+    #
+    class DeleteRotationRequest < Struct.new(
+      :rotation_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/DeleteRotationResult AWS API Documentation
+    #
+    class DeleteRotationResult < Aws::EmptyStructure; end
+
+    # Information about a resource that another resource is related to or
+    # depends on.
+    #
+    # For example, if a contact is a member of a rotation, the rotation is a
+    # dependent entity of the contact.
+    #
+    # @!attribute [rw] relation_type
+    #   The type of relationship between one resource and the other resource
+    #   that it is related to or depends on.
+    #   @return [String]
+    #
+    # @!attribute [rw] dependent_resource_ids
+    #   The Amazon Resource Names (ARNs) of the dependent resources.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/DependentEntity AWS API Documentation
+    #
+    class DependentEntity < Struct.new(
+      :relation_type,
+      :dependent_resource_ids)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] engagement_id
     #   The Amazon Resource Name (ARN) of the engagement you want the
     #   details of.
@@ -633,13 +747,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribePageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         page_id: "SsmContactsArn", # required
-    #       }
-    #
     # @!attribute [rw] page_id
     #   The ID of the engagement to a contact channel.
     #   @return [String]
@@ -765,13 +872,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetContactChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_channel_id: "SsmContactsArn", # required
-    #       }
-    #
     # @!attribute [rw] contact_channel_id
     #   The Amazon Resource Name (ARN) of the contact channel you want
     #   information about.
@@ -824,13 +924,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetContactPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_arn: "SsmContactsArn", # required
-    #       }
-    #
     # @!attribute [rw] contact_arn
     #   The Amazon Resource Name (ARN) of the contact or escalation plan.
     #   @return [String]
@@ -861,13 +954,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetContactRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_id: "SsmContactsArn", # required
-    #       }
-    #
     # @!attribute [rw] contact_id
     #   The Amazon Resource Name (ARN) of the contact or escalation plan.
     #   @return [String]
@@ -914,6 +1000,137 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
+    # @!attribute [rw] rotation_id
+    #   The Amazon Resource Name (ARN) of the overridden rotation to
+    #   retrieve information about.
+    #   @return [String]
+    #
+    # @!attribute [rw] rotation_override_id
+    #   The Amazon Resource Name (ARN) of the on-call rotation override to
+    #   retrieve information about.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/GetRotationOverrideRequest AWS API Documentation
+    #
+    class GetRotationOverrideRequest < Struct.new(
+      :rotation_id,
+      :rotation_override_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_override_id
+    #   The Amazon Resource Name (ARN) of the override to an on-call
+    #   rotation.
+    #   @return [String]
+    #
+    # @!attribute [rw] rotation_arn
+    #   The Amazon Resource Name (ARN) of the on-call rotation that was
+    #   overridden.
+    #   @return [String]
+    #
+    # @!attribute [rw] new_contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts assigned to the
+    #   override of the on-call rotation.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] start_time
+    #   The date and time when the override goes into effect.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The date and time when the override ends.
+    #   @return [Time]
+    #
+    # @!attribute [rw] create_time
+    #   The date and time when the override was created.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/GetRotationOverrideResult AWS API Documentation
+    #
+    class GetRotationOverrideResult < Struct.new(
+      :rotation_override_id,
+      :rotation_arn,
+      :new_contact_ids,
+      :start_time,
+      :end_time,
+      :create_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_id
+    #   The Amazon Resource Name (ARN) of the on-call rotation to retrieve
+    #   information about.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/GetRotationRequest AWS API Documentation
+    #
+    class GetRotationRequest < Struct.new(
+      :rotation_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_arn
+    #   The Amazon Resource Name (ARN) of the on-call rotation.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   The name of the on-call rotation.
+    #   @return [String]
+    #
+    # @!attribute [rw] contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts assigned to the
+    #   on-call rotation team.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] start_time
+    #   The specified start time for the on-call rotation.
+    #   @return [Time]
+    #
+    # @!attribute [rw] time_zone_id
+    #   The time zone that the rotation’s activity is based on, in Internet
+    #   Assigned Numbers Authority (IANA) format.
+    #   @return [String]
+    #
+    # @!attribute [rw] recurrence
+    #   Specifies how long a rotation lasts before restarting at the
+    #   beginning of the shift order.
+    #   @return [Types::RecurrenceSettings]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/GetRotationResult AWS API Documentation
+    #
+    class GetRotationResult < Struct.new(
+      :rotation_arn,
+      :name,
+      :contact_ids,
+      :start_time,
+      :time_zone_id,
+      :recurrence)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Details about when an on-call rotation shift begins or ends.
+    #
+    # @!attribute [rw] hour_of_day
+    #   The hour when an on-call rotation shift begins or ends.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] minute_of_hour
+    #   The minute when an on-call rotation shift begins or ends.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/HandOffTime AWS API Documentation
+    #
+    class HandOffTime < Struct.new(
+      :hour_of_day,
+      :minute_of_hour)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Unexpected error occurred while processing the request.
     #
     # @!attribute [rw] message
@@ -932,15 +1149,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListContactChannelsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_id: "SsmContactsArn", # required
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] contact_id
     #   The Amazon Resource Name (ARN) of the contact.
     #   @return [String]
@@ -980,16 +1188,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListContactsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #         alias_prefix: "ContactAlias",
-    #         type: "PERSONAL", # accepts PERSONAL, ESCALATION
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The pagination token to continue to the next page of results.
     #   @return [String]
@@ -1038,19 +1236,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListEngagementsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #         incident_id: "IncidentId",
-    #         time_range_value: {
-    #           start_time: Time.now,
-    #           end_time: Time.now,
-    #         },
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The pagination token to continue to the next page of results.
     #   @return [String]
@@ -1097,15 +1282,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPageReceiptsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         page_id: "SsmContactsArn", # required
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] page_id
     #   The Amazon Resource Name (ARN) of the engagement to a specific
     #   contact channel.
@@ -1146,15 +1322,43 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPagesByContactRequest
-    #   data as a hash:
+    # @!attribute [rw] next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results.
+    #   @return [String]
     #
-    #       {
-    #         contact_id: "SsmContactsArn", # required
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] page_id
+    #   The Amazon Resource Name (ARN) of the contact engaged for the
+    #   incident.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListPageResolutionsRequest AWS API Documentation
+    #
+    class ListPageResolutionsRequest < Struct.new(
+      :next_token,
+      :page_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   The token for the next set of items to return. Use this token to get
+    #   the next set of results.
+    #   @return [String]
+    #
+    # @!attribute [rw] page_resolutions
+    #   Information about the resolution for an engagement.
+    #   @return [Array<Types::ResolutionContact>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListPageResolutionsResult AWS API Documentation
+    #
+    class ListPageResolutionsResult < Struct.new(
+      :next_token,
+      :page_resolutions)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] contact_id
     #   The Amazon Resource Name (ARN) of the contact you are retrieving
     #   engagements for.
@@ -1196,15 +1400,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPagesByEngagementRequest
-    #   data as a hash:
-    #
-    #       {
-    #         engagement_id: "SsmContactsArn", # required
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] engagement_id
     #   The Amazon Resource Name (ARN) of the engagement.
     #   @return [String]
@@ -1245,13 +1440,240 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
+    # @!attribute [rw] rotation_start_time
+    #   The date and time a rotation would begin. The first shift is
+    #   calculated from this date and time.
+    #   @return [Time]
     #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #       }
+    # @!attribute [rw] start_time
+    #   Used to filter the range of calculated shifts before sending the
+    #   response back to the user.
+    #   @return [Time]
     #
+    # @!attribute [rw] end_time
+    #   The date and time a rotation shift would end.
+    #   @return [Time]
+    #
+    # @!attribute [rw] members
+    #   The contacts that would be assigned to a rotation.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] time_zone_id
+    #   The time zone the rotation’s activity would be based on, in Internet
+    #   Assigned Numbers Authority (IANA) format. For example:
+    #   "America/Los\_Angeles", "UTC", or "Asia/Seoul".
+    #   @return [String]
+    #
+    # @!attribute [rw] recurrence
+    #   Information about how long a rotation would last before restarting
+    #   at the beginning of the shift order.
+    #   @return [Types::RecurrenceSettings]
+    #
+    # @!attribute [rw] overrides
+    #   Information about changes that would be made in a rotation override.
+    #   @return [Array<Types::PreviewOverride>]
+    #
+    # @!attribute [rw] next_token
+    #   A token to start the list. This token is used to get the next set of
+    #   results.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that can be specified in a subsequent call to get
+    #   the next set of results.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListPreviewRotationShiftsRequest AWS API Documentation
+    #
+    class ListPreviewRotationShiftsRequest < Struct.new(
+      :rotation_start_time,
+      :start_time,
+      :end_time,
+      :members,
+      :time_zone_id,
+      :recurrence,
+      :overrides,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_shifts
+    #   Details about a rotation shift, including times, types, and
+    #   contacts.
+    #   @return [Array<Types::RotationShift>]
+    #
+    # @!attribute [rw] next_token
+    #   The token for the next set of items to return. This token is used to
+    #   get the next set of results.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListPreviewRotationShiftsResult AWS API Documentation
+    #
+    class ListPreviewRotationShiftsResult < Struct.new(
+      :rotation_shifts,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation to retrieve
+    #   information about.
+    #   @return [String]
+    #
+    # @!attribute [rw] start_time
+    #   The date and time for the beginning of a time range for listing
+    #   overrides.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The date and time for the end of a time range for listing overrides.
+    #   @return [Time]
+    #
+    # @!attribute [rw] next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that you can specify in a subsequent call to get the
+    #   next set of results.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListRotationOverridesRequest AWS API Documentation
+    #
+    class ListRotationOverridesRequest < Struct.new(
+      :rotation_id,
+      :start_time,
+      :end_time,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_overrides
+    #   A list of rotation overrides in the specified time range.
+    #   @return [Array<Types::RotationOverride>]
+    #
+    # @!attribute [rw] next_token
+    #   The token for the next set of items to return. Use this token to get
+    #   the next set of results.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListRotationOverridesResult AWS API Documentation
+    #
+    class ListRotationOverridesResult < Struct.new(
+      :rotation_overrides,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation to retrieve shift
+    #   information about.
+    #   @return [String]
+    #
+    # @!attribute [rw] start_time
+    #   The date and time for the beginning of the time range to list shifts
+    #   for.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The date and time for the end of the time range to list shifts for.
+    #   @return [Time]
+    #
+    # @!attribute [rw] next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that you can specify in a subsequent call to get the
+    #   next set of results.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListRotationShiftsRequest AWS API Documentation
+    #
+    class ListRotationShiftsRequest < Struct.new(
+      :rotation_id,
+      :start_time,
+      :end_time,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_shifts
+    #   Information about shifts that meet the filter criteria.
+    #   @return [Array<Types::RotationShift>]
+    #
+    # @!attribute [rw] next_token
+    #   The token for the next set of items to return. Use this token to get
+    #   the next set of results.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListRotationShiftsResult AWS API Documentation
+    #
+    class ListRotationShiftsResult < Struct.new(
+      :rotation_shifts,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] rotation_name_prefix
+    #   A filter to include rotations in list results based on their common
+    #   prefix. For example, entering prod returns a list of all rotation
+    #   names that begin with `prod`, such as `production` and `prod-1`.
+    #   @return [String]
+    #
+    # @!attribute [rw] next_token
+    #   A token to start the list. Use this token to get the next set of
+    #   results.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of items to return for this call. The call also
+    #   returns a token that you can specify in a subsequent call to get the
+    #   next set of results.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListRotationsRequest AWS API Documentation
+    #
+    class ListRotationsRequest < Struct.new(
+      :rotation_name_prefix,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] next_token
+    #   The token for the next set of items to return. Use this token to get
+    #   the next set of results.
+    #   @return [String]
+    #
+    # @!attribute [rw] rotations
+    #   Information about rotations that meet the filter criteria.
+    #   @return [Array<Types::Rotation>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ListRotationsResult AWS API Documentation
+    #
+    class ListRotationsResult < Struct.new(
+      :next_token,
+      :rotations)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the contact or escalation plan.
     #   @return [String]
@@ -1272,6 +1694,26 @@ module Aws::SSMContacts
     #
     class ListTagsForResourceResult < Struct.new(
       :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about on-call rotations that recur monthly.
+    #
+    # @!attribute [rw] day_of_month
+    #   The day of the month when monthly recurring on-call rotations begin.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] hand_off_time
+    #   The time of day when a monthly recurring on-call shift rotation
+    #   begins.
+    #   @return [Types::HandOffTime]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/MonthlySetting AWS API Documentation
+    #
+    class MonthlySetting < Struct.new(
+      :day_of_month,
+      :hand_off_time)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1325,53 +1767,53 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # The stages that an escalation plan or engagement plan engages contacts
-    # and contact methods in.
-    #
-    # @note When making an API call, you may pass Plan
-    #   data as a hash:
-    #
-    #       {
-    #         stages: [ # required
-    #           {
-    #             duration_in_minutes: 1, # required
-    #             targets: [ # required
-    #               {
-    #                 channel_target_info: {
-    #                   contact_channel_id: "SsmContactsArn", # required
-    #                   retry_interval_in_minutes: 1,
-    #                 },
-    #                 contact_target_info: {
-    #                   contact_id: "SsmContactsArn",
-    #                   is_essential: false, # required
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #       }
+    # Information about the stages and on-call rotation teams associated
+    # with an escalation plan or engagement plan.
     #
     # @!attribute [rw] stages
     #   A list of stages that the escalation plan or engagement plan uses to
     #   engage contacts and contact methods.
     #   @return [Array<Types::Stage>]
     #
+    # @!attribute [rw] rotation_ids
+    #   The Amazon Resource Names (ARNs) of the on-call rotations associated
+    #   with the plan.
+    #   @return [Array<String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/Plan AWS API Documentation
     #
     class Plan < Struct.new(
-      :stages)
+      :stages,
+      :rotation_ids)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutContactPolicyRequest
-    #   data as a hash:
+    # Information about contacts and times that an on-call override
+    # replaces.
     #
-    #       {
-    #         contact_arn: "SsmContactsArn", # required
-    #         policy: "Policy", # required
-    #       }
+    # @!attribute [rw] new_members
+    #   Information about contacts to add to an on-call rotation override.
+    #   @return [Array<String>]
     #
+    # @!attribute [rw] start_time
+    #   Information about the time a rotation override would begin.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   Information about the time a rotation override would end.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/PreviewOverride AWS API Documentation
+    #
+    class PreviewOverride < Struct.new(
+      :new_members,
+      :start_time,
+      :end_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] contact_arn
     #   The Amazon Resource Name (ARN) of the contact or escalation plan.
     #   @return [String]
@@ -1424,6 +1866,82 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
+    # Information about when an on-call rotation is in effect and how long
+    # the rotation period lasts.
+    #
+    # @!attribute [rw] monthly_settings
+    #   Information about on-call rotations that recur monthly.
+    #   @return [Array<Types::MonthlySetting>]
+    #
+    # @!attribute [rw] weekly_settings
+    #   Information about on-call rotations that recur weekly.
+    #   @return [Array<Types::WeeklySetting>]
+    #
+    # @!attribute [rw] daily_settings
+    #   Information about on-call rotations that recur daily.
+    #   @return [Array<Types::HandOffTime>]
+    #
+    # @!attribute [rw] number_of_on_calls
+    #   The number of contacts, or shift team members designated to be on
+    #   call concurrently during a shift. For example, in an on-call
+    #   schedule containing ten contacts, a value of `2` designates that two
+    #   of them are on call at any given time.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] shift_coverages
+    #   Information about the days of the week included in on-call rotation
+    #   coverage.
+    #   @return [Hash<String,Array<Types::CoverageTime>>]
+    #
+    # @!attribute [rw] recurrence_multiplier
+    #   The number of days, weeks, or months a single rotation lasts.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/RecurrenceSettings AWS API Documentation
+    #
+    class RecurrenceSettings < Struct.new(
+      :monthly_settings,
+      :weekly_settings,
+      :daily_settings,
+      :number_of_on_calls,
+      :shift_coverages,
+      :recurrence_multiplier)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about the engagement resolution steps. The resolution
+    # starts from the first contact, which can be an escalation plan, then
+    # resolves to an on-call rotation, and finally to a personal contact.
+    #
+    # The `ResolutionContact` structure describes the information for each
+    # node or step in that process. It contains information about different
+    # contact types, such as the escalation, rotation, and personal
+    # contacts.
+    #
+    # @!attribute [rw] contact_arn
+    #   The Amazon Resource Name (ARN) of a contact in the engagement
+    #   resolution process.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   The type of contact for a resolution step.
+    #   @return [String]
+    #
+    # @!attribute [rw] stage_index
+    #   The stage in the escalation plan that resolves to this contact.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ResolutionContact AWS API Documentation
+    #
+    class ResolutionContact < Struct.new(
+      :contact_arn,
+      :type,
+      :stage_index)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Request references a resource that doesn't exist.
     #
     # @!attribute [rw] message
@@ -1447,13 +1965,120 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SendActivationCodeRequest
-    #   data as a hash:
+    # Information about a rotation in an on-call schedule.
     #
-    #       {
-    #         contact_channel_id: "SsmContactsArn", # required
-    #       }
+    # @!attribute [rw] rotation_arn
+    #   The Amazon Resource Name (ARN) of the rotation.
+    #   @return [String]
     #
+    # @!attribute [rw] name
+    #   The name of the rotation.
+    #   @return [String]
+    #
+    # @!attribute [rw] contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts assigned to the
+    #   rotation team.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] start_time
+    #   The date and time the rotation becomes active.
+    #   @return [Time]
+    #
+    # @!attribute [rw] time_zone_id
+    #   The time zone the rotation’s activity is based on, in Internet
+    #   Assigned Numbers Authority (IANA) format. For example:
+    #   "America/Los\_Angeles", "UTC", or "Asia/Seoul".
+    #   @return [String]
+    #
+    # @!attribute [rw] recurrence
+    #   Information about when an on-call rotation is in effect and how long
+    #   the rotation period lasts.
+    #   @return [Types::RecurrenceSettings]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/Rotation AWS API Documentation
+    #
+    class Rotation < Struct.new(
+      :rotation_arn,
+      :name,
+      :contact_ids,
+      :start_time,
+      :time_zone_id,
+      :recurrence)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about an override specified for an on-call rotation.
+    #
+    # @!attribute [rw] rotation_override_id
+    #   The Amazon Resource Name (ARN) of the override to an on-call
+    #   rotation.
+    #   @return [String]
+    #
+    # @!attribute [rw] new_contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts assigned to the
+    #   override of the on-call rotation.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] start_time
+    #   The time a rotation override begins.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The time a rotation override ends.
+    #   @return [Time]
+    #
+    # @!attribute [rw] create_time
+    #   The time a rotation override was created.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/RotationOverride AWS API Documentation
+    #
+    class RotationOverride < Struct.new(
+      :rotation_override_id,
+      :new_contact_ids,
+      :start_time,
+      :end_time,
+      :create_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about a shift that belongs to an on-call rotation.
+    #
+    # @!attribute [rw] contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts who are part of the
+    #   shift rotation.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] start_time
+    #   The time a shift rotation begins.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The time a shift rotation ends.
+    #   @return [Time]
+    #
+    # @!attribute [rw] type
+    #   The type of shift rotation.
+    #   @return [String]
+    #
+    # @!attribute [rw] shift_details
+    #   Additional information about an on-call rotation shift.
+    #   @return [Types::ShiftDetails]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/RotationShift AWS API Documentation
+    #
+    class RotationShift < Struct.new(
+      :contact_ids,
+      :start_time,
+      :end_time,
+      :type,
+      :shift_details)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] contact_channel_id
     #   The Amazon Resource Name (ARN) of the contact channel.
     #   @return [String]
@@ -1503,30 +2128,28 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
+    # Information about overrides to an on-call rotation shift.
+    #
+    # @!attribute [rw] overridden_contact_ids
+    #   The Amazon Resources Names (ARNs) of the contacts who were replaced
+    #   in a shift when an override was created. If the override is deleted,
+    #   these contacts are restored to the shift.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/ShiftDetails AWS API Documentation
+    #
+    class ShiftDetails < Struct.new(
+      :overridden_contact_ids)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A set amount of time that an escalation plan or engagement plan
     # engages the specified contacts or contact methods.
     #
-    # @note When making an API call, you may pass Stage
-    #   data as a hash:
-    #
-    #       {
-    #         duration_in_minutes: 1, # required
-    #         targets: [ # required
-    #           {
-    #             channel_target_info: {
-    #               contact_channel_id: "SsmContactsArn", # required
-    #               retry_interval_in_minutes: 1,
-    #             },
-    #             contact_target_info: {
-    #               contact_id: "SsmContactsArn",
-    #               is_essential: false, # required
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] duration_in_minutes
-    #   The time to wait until beginning the next stage.
+    #   The time to wait until beginning the next stage. The duration can
+    #   only be set to 0 if a target is specified.
     #   @return [Integer]
     #
     # @!attribute [rw] targets
@@ -1543,20 +2166,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartEngagementRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_id: "SsmContactsArn", # required
-    #         sender: "Sender", # required
-    #         subject: "Subject", # required
-    #         content: "Content", # required
-    #         public_subject: "PublicSubject",
-    #         public_content: "PublicContent",
-    #         incident_id: "IncidentId",
-    #         idempotency_token: "IdempotencyToken",
-    #       }
-    #
     # @!attribute [rw] contact_id
     #   The Amazon Resource Name (ARN) of the contact being engaged.
     #   @return [String]
@@ -1590,7 +2199,7 @@ module Aws::SSMContacts
     #   @return [String]
     #
     # @!attribute [rw] idempotency_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -1624,14 +2233,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopEngagementRequest
-    #   data as a hash:
-    #
-    #       {
-    #         engagement_id: "SsmContactsArn", # required
-    #         reason: "StopReason",
-    #       }
-    #
     # @!attribute [rw] engagement_id
     #   The Amazon Resource Name (ARN) of the engagement.
     #   @return [String]
@@ -1655,14 +2256,6 @@ module Aws::SSMContacts
 
     # A container of a key-value name pair.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey",
-    #         value: "TagValue",
-    #       }
-    #
     # @!attribute [rw] key
     #   Name of the object key.
     #   @return [String]
@@ -1680,19 +2273,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the contact or escalation plan.
     #   @return [String]
@@ -1715,21 +2295,7 @@ module Aws::SSMContacts
     #
     class TagResourceResult < Aws::EmptyStructure; end
 
-    # The contact or contact channel that is being engaged.
-    #
-    # @note When making an API call, you may pass Target
-    #   data as a hash:
-    #
-    #       {
-    #         channel_target_info: {
-    #           contact_channel_id: "SsmContactsArn", # required
-    #           retry_interval_in_minutes: 1,
-    #         },
-    #         contact_target_info: {
-    #           contact_id: "SsmContactsArn",
-    #           is_essential: false, # required
-    #         },
-    #       }
+    # The contact or contact channel that's being engaged.
     #
     # @!attribute [rw] channel_target_info
     #   Information about the contact channel Incident Manager is engaging.
@@ -1778,14 +2344,6 @@ module Aws::SSMContacts
 
     # A range of between two set times
     #
-    # @note When making an API call, you may pass TimeRange
-    #   data as a hash:
-    #
-    #       {
-    #         start_time: Time.now,
-    #         end_time: Time.now,
-    #       }
-    #
     # @!attribute [rw] start_time
     #   The start of the time range.
     #   @return [Time]
@@ -1803,14 +2361,6 @@ module Aws::SSMContacts
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the contact or escalation plan.
     #   @return [String]
@@ -1832,24 +2382,13 @@ module Aws::SSMContacts
     #
     class UntagResourceResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateContactChannelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_channel_id: "SsmContactsArn", # required
-    #         name: "ChannelName",
-    #         delivery_address: {
-    #           simple_address: "SimpleAddress",
-    #         },
-    #       }
-    #
     # @!attribute [rw] contact_channel_id
     #   The Amazon Resource Name (ARN) of the contact channel you want to
     #   update.
     #   @return [String]
     #
     # @!attribute [rw] name
-    #   The name of the contact channel
+    #   The name of the contact channel.
     #   @return [String]
     #
     # @!attribute [rw] delivery_address
@@ -1871,33 +2410,6 @@ module Aws::SSMContacts
     #
     class UpdateContactChannelResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateContactRequest
-    #   data as a hash:
-    #
-    #       {
-    #         contact_id: "SsmContactsArn", # required
-    #         display_name: "ContactName",
-    #         plan: {
-    #           stages: [ # required
-    #             {
-    #               duration_in_minutes: 1, # required
-    #               targets: [ # required
-    #                 {
-    #                   channel_target_info: {
-    #                     contact_channel_id: "SsmContactsArn", # required
-    #                     retry_interval_in_minutes: 1,
-    #                   },
-    #                   contact_target_info: {
-    #                     contact_id: "SsmContactsArn",
-    #                     is_essential: false, # required
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] contact_id
     #   The Amazon Resource Name (ARN) of the contact or escalation plan
     #   you're updating.
@@ -1927,8 +2439,62 @@ module Aws::SSMContacts
     #
     class UpdateContactResult < Aws::EmptyStructure; end
 
-    # The input fails to satisfy the constraints specified by an AWS
-    # service.
+    # @!attribute [rw] rotation_id
+    #   The Amazon Resource Name (ARN) of the rotation to update.
+    #   @return [String]
+    #
+    # @!attribute [rw] contact_ids
+    #   The Amazon Resource Names (ARNs) of the contacts to include in the
+    #   updated rotation.
+    #
+    #   The order in which you list the contacts is their shift order in the
+    #   rotation schedule.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] start_time
+    #   The date and time the rotation goes into effect.
+    #   @return [Time]
+    #
+    # @!attribute [rw] time_zone_id
+    #   The time zone to base the updated rotation’s activity on, in
+    #   Internet Assigned Numbers Authority (IANA) format. For example:
+    #   "America/Los\_Angeles", "UTC", or "Asia/Seoul". For more
+    #   information, see the [Time Zone Database][1] on the IANA website.
+    #
+    #   <note markdown="1"> Designators for time zones that don’t support Daylight Savings Time
+    #   Rules, such as Pacific Standard Time (PST) and Pacific Daylight Time
+    #   (PDT), aren't supported.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://www.iana.org/time-zones
+    #   @return [String]
+    #
+    # @!attribute [rw] recurrence
+    #   Information about how long the updated rotation lasts before
+    #   restarting at the beginning of the shift order.
+    #   @return [Types::RecurrenceSettings]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/UpdateRotationRequest AWS API Documentation
+    #
+    class UpdateRotationRequest < Struct.new(
+      :rotation_id,
+      :contact_ids,
+      :start_time,
+      :time_zone_id,
+      :recurrence)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/UpdateRotationResult AWS API Documentation
+    #
+    class UpdateRotationResult < Aws::EmptyStructure; end
+
+    # The input fails to satisfy the constraints specified by an Amazon Web
+    # Services service.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1966,6 +2532,27 @@ module Aws::SSMContacts
     class ValidationExceptionField < Struct.new(
       :name,
       :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about rotations that recur weekly.
+    #
+    # @!attribute [rw] day_of_week
+    #   The day of the week when weekly recurring on-call shift rotations
+    #   begins.
+    #   @return [String]
+    #
+    # @!attribute [rw] hand_off_time
+    #   The time of day when a weekly recurring on-call shift rotation
+    #   begins.
+    #   @return [Types::HandOffTime]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-contacts-2021-05-03/WeeklySetting AWS API Documentation
+    #
+    class WeeklySetting < Struct.new(
+      :day_of_week,
+      :hand_off_time)
       SENSITIVE = []
       include Aws::Structure
     end

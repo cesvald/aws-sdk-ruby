@@ -5,27 +5,41 @@ require_relative 'spec_helper'
 module Aws
   module S3
     describe Presigner do
-      let(:client) do
-        Aws::S3::Client.new(
-          region: 'us-east-1',
-          credentials: Credentials.new(
-            'ACCESS_KEY_ID',
-            'SECRET_ACCESS_KEY'
-          ),
-          stub_responses: true
+      let(:client) { Aws::S3::Client.new(**client_opts) }
+
+      let(:credentials) do
+        Credentials.new(
+          'ACCESS_KEY_ID',
+          'SECRET_ACCESS_KEY'
         )
       end
-
-      let(:now) { double('now') }
-      let(:utc) { double('utc-time') }
-      let(:datetime) { '20130524T000000Z' }
+      let(:client_opts) do
+        {
+          region: 'us-east-1',
+          credentials: credentials,
+          stub_responses: true
+        }
+      end
 
       subject { Presigner.new(client: client) }
 
-      before do
-        allow(Time).to receive(:now).and_return(now)
-        allow(now).to receive(:utc).and_return(utc)
-        allow(utc).to receive(:strftime).and_return(datetime)
+      let(:time) { Time.utc(2021, 8, 27) }
+      before { allow(Time).to receive(:now).and_return(time) }
+
+      let(:expiration_time) { time + 180 }
+      let(:credentials_provider_class) do
+        Class.new do
+          include CredentialProvider
+
+          def initialize(expiration_time)
+            @credentials = Credentials.new(
+              'akid',
+              'secret',
+              'session'
+            )
+            @expiration = expiration_time
+          end
+        end
       end
 
       describe '#initialize' do
@@ -63,18 +77,18 @@ module Aws
         it 'can presign #get_object to spec' do
           expected_url = 'https://examplebucket.s3.amazonaws.com/test.txt?'\
                          'X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential='\
-                         'ACCESS_KEY_ID%2F20130524%2Fus-east-1%2Fs3%2F'\
-                         'aws4_request&X-Amz-Date=20130524T000000Z'\
+                         'ACCESS_KEY_ID%2F20210827%2Fus-east-1%2Fs3%2F'\
+                         'aws4_request&X-Amz-Date=20210827T000000Z'\
                          '&X-Amz-Expires=86400&X-Amz-SignedHeaders=host'\
-                         '&X-Amz-Signature=5da845a038b194a3826362ecd698f78fb1e'\
-                         '26cb44b25af49263f0a0983870f57'
+                         '&X-Amz-Signature=cd4953fc4c1ebb97c3ca18ce433b4bc9ff9'\
+                         'f9f6a54eb47c31d908e0e7ecf524c'
           actual_url = subject.presigned_url(
             :get_object,
             bucket: 'examplebucket',
             key: 'test.txt',
             expires_in: 86_400
           )
-          expect(actual_url).to eq(expected_url)
+          expect(CGI.parse(actual_url)).to eq(CGI.parse(expected_url))
         end
 
         it 'can sign with a given time' do
@@ -83,12 +97,14 @@ module Aws
             bucket: 'examplebucket',
             key: 'test.txt',
             expires_in: 86_400,
-            time: Time.utc(1969, 4, 20)
+            time: Time.utc(2022, 02, 22)
           )
-          expect(actual_url).to include('&X-Amz-Date=19690420T000000Z')
+          expect(actual_url).to include('&X-Amz-Date=20220222T000000Z')
         end
 
         it 'can sign with additional whitelisted headers' do
+          skip("CRT does not support whitelisting user-agent") if Aws::Sigv4::Signer.use_crt?
+
           actual_url = subject.presigned_url(
             :get_object,
             bucket: 'examplebucket',
@@ -134,13 +150,25 @@ module Aws
         end
 
         it 'uses the configured :endpoint scheme' do
-          client.config.endpoint = URI('http://example.com')
+          client_opts[:endpoint] = 'http://example.com'
+          client_opts[:force_path_style] = true
           url = subject.presigned_url(
             :get_object,
             bucket: 'aws-sdk',
             key: 'foo'
           )
-          expect(url).to match(/^http:/)
+          expect(url).to start_with('http://example.com')
+        end
+
+        it 'uses the configured :endpoint port' do
+          client_opts[:endpoint] = 'http://localhost:9000'
+          client_opts[:force_path_style] = true
+          url = subject.presigned_url(
+            :get_object,
+            bucket: 'aws-sdk',
+            key: 'foo'
+          )
+          expect(url).to start_with('http://localhost:9000')
         end
 
         it 'supports virtual hosting' do
@@ -161,6 +189,22 @@ module Aws
             acl: 'public-read'
           )
           expect(url).to match(/x-amz-acl=public-read/)
+        end
+
+        context 'credential expiration' do
+          let(:credentials) do
+            credentials_provider_class.new(expiration_time)
+          end
+
+          it 'picks the minimum time between expires_in and credential expiration' do
+            url = subject.presigned_url(
+              :get_object,
+              bucket: 'aws-sdk',
+              key: 'foo',
+              expires_in: 3600
+            )
+            expect(url).to match(/X-Amz-Expires=180/)
+          end
         end
       end
 
@@ -186,18 +230,18 @@ module Aws
         it 'can presign #get_object to spec' do
           expected_url = 'https://examplebucket.s3.amazonaws.com/test.txt?'\
                          'X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential='\
-                         'ACCESS_KEY_ID%2F20130524%2Fus-east-1%2Fs3%2F'\
-                         'aws4_request&X-Amz-Date=20130524T000000Z'\
+                         'ACCESS_KEY_ID%2F20210827%2Fus-east-1%2Fs3%2F'\
+                         'aws4_request&X-Amz-Date=20210827T000000Z'\
                          '&X-Amz-Expires=86400&X-Amz-SignedHeaders=host'\
-                         '&X-Amz-Signature=5da845a038b194a3826362ecd698f78fb1e'\
-                         '26cb44b25af49263f0a0983870f57'
+                         '&X-Amz-Signature=cd4953fc4c1ebb97c3ca18ce433b4bc9ff9'\
+                         'f9f6a54eb47c31d908e0e7ecf524c'
           actual_url, = subject.presigned_request(
             :get_object,
             bucket: 'examplebucket',
             key: 'test.txt',
             expires_in: 86_400
           )
-          expect(actual_url).to eq(expected_url)
+          expect(CGI.parse(actual_url)).to eq(CGI.parse(expected_url))
         end
 
         it 'can sign with a given time' do
@@ -206,12 +250,14 @@ module Aws
             bucket: 'examplebucket',
             key: 'test.txt',
             expires_in: 86_400,
-            time: Time.utc(1969, 4, 20)
+            time: Time.utc(2022, 02, 22)
           )
-          expect(actual_url).to include('&X-Amz-Date=19690420T000000Z')
+          expect(actual_url).to include('&X-Amz-Date=20220222T000000Z')
         end
 
         it 'can sign with additional whitelisted headers' do
+          skip("CRT is unable to whitelist user-agent") if Aws::Sigv4::Signer.use_crt?
+
           actual_url, = subject.presigned_request(
             :get_object,
             bucket: 'examplebucket',
@@ -257,13 +303,25 @@ module Aws
         end
 
         it 'uses the configured :endpoint scheme' do
-          client.config.endpoint = URI('http://example.com')
+          client_opts[:endpoint] = 'http://example.com'
+          client_opts[:force_path_style] = true
           url, = subject.presigned_request(
             :get_object,
             bucket: 'aws-sdk',
             key: 'foo'
           )
-          expect(url).to match(/^http:/)
+          expect(url).to start_with('http://example.com')
+        end
+
+        it 'uses the configured :endpoint port' do
+          client_opts[:endpoint] = 'http://localhost:9000'
+          client_opts[:force_path_style] = true
+          url, = subject.presigned_request(
+            :get_object,
+            bucket: 'aws-sdk',
+            key: 'foo'
+          )
+          expect(url).to start_with('http://localhost:9000')
         end
 
         it 'supports virtual hosting' do
@@ -284,6 +342,22 @@ module Aws
           expect(url).to match(/X-Amz-SignedHeaders=host%3Bx-amz-acl/)
           expect(headers).to eq('x-amz-acl' => 'public-read')
         end
+
+        context 'credential expiration' do
+          let(:credentials) do
+            credentials_provider_class.new(expiration_time)
+          end
+
+          it 'picks the minimum time between expires_in and credential expiration' do
+            url, = subject.presigned_request(
+              :get_object,
+              bucket: 'aws-sdk',
+              key: 'foo',
+              expires_in: 3600
+            )
+            expect(url).to match(/X-Amz-Expires=180/)
+          end
+        end
       end
 
       context 'outpost access point ARNs' do
@@ -291,30 +365,95 @@ module Aws
           arn = 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint'
           url = subject.presigned_url(:get_object, bucket: arn, key: 'obj')
           expected_service = 's3-outposts'
-          expect(url).to include("X-Amz-Credential=ACCESS_KEY_ID%2F20130524%2Fus-west-2%2F#{expected_service}%2Faws4_request")
+          expect(url).to include(
+            "20210827%2Fus-west-2%2F#{expected_service}%2Faws4_request"
+          )
+          expect(url).to include(
+            'a944fbe2bfbae429f922746546d1c6f890649c88ba7826bd1d258ac13f327e09'
+          )
         end
 
         it 'uses the resolved-region' do
           arn_region = 'us-east-1'
           arn = "arn:aws:s3-outposts:#{arn_region}:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint"
           url = subject.presigned_url(:get_object, bucket: arn, key: 'obj')
-          expect(url).to include("X-Amz-Credential=ACCESS_KEY_ID%2F20130524%2F#{arn_region}%2Fs3-outposts%2Faws4_request")
+          expect(url).to include(
+            "20210827%2F#{arn_region}%2Fs3-outposts%2Faws4_request"
+          )
+          expect(url).to include(
+            '7f93df0b81f80e590d95442d579bd6cf749a35ff4bbdc6373fa669b89c7fce4e'
+          )
         end
       end
 
       context 'access point ARN' do
-        it 'uses s3as the service' do
+        it 'uses s3 as the service' do
           arn = 'arn:aws:s3:us-west-2:123456789012:accesspoint/myendpoint'
           url = subject.presigned_url(:get_object, bucket: arn, key: 'obj')
           expected_service = 's3'
-          expect(url).to include("X-Amz-Credential=ACCESS_KEY_ID%2F20130524%2Fus-west-2%2F#{expected_service}%2Faws4_request")
+          expect(url).to include(
+            "20210827%2Fus-west-2%2F#{expected_service}%2Faws4_request"
+          )
+          expect(url).to include(
+            'd6b2a8840209fa40456c97ae99f9fab2526316d70f3ebaa75c22d654b90e9da9'
+          )
         end
 
         it 'uses the resolved-region' do
           arn_region = 'us-east-1'
           arn = "arn:aws:s3:#{arn_region}:123456789012:accesspoint/myendpoint"
           url = subject.presigned_url(:get_object, bucket: arn, key: 'obj')
-          expect(url).to include("X-Amz-Credential=ACCESS_KEY_ID%2F20130524%2F#{arn_region}%2Fs3%2Faws4_request")
+          expect(url).to include(
+            "20210827%2F#{arn_region}%2Fs3%2Faws4_request"
+          )
+          expect(url).to include(
+            '5a27899693cea5f6ccf9dc26a3e44c4a3d45ae57a441954fb4b7cdc8c2ef45ea'
+          )
+        end
+      end
+
+      context 'MRAP ARNs' do
+        let(:signer) { double('sigv4a_signer') }
+        let(:arn) { 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap' }
+
+        it 'creates a presigned url with sigv4a' do
+          stub_const(
+            'Aws::Plugins::Sign::SUPPORTED_AUTH_TYPES',
+            Aws::Plugins::Sign::SUPPORTED_AUTH_TYPES + ['sigv4a']
+          )
+
+          expect(Aws::Sigv4::Signer)
+            .to receive(:new)
+                  .with(hash_including(
+                          service: 's3',
+                          region: '*',
+                          signing_algorithm: :sigv4a
+                        ))
+                  .and_return(signer)
+
+          expect(signer)
+            .to receive(:presign_url)
+                  .with(hash_including(
+                          url: URI.parse('https://mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com/obj')
+                        ))
+
+          subject.presigned_url(:get_object, bucket: arn, key: 'obj')
+        end
+
+        context 's3_disable_multiregion_access_points is true' do
+          let(:client) do
+            Aws::S3::Client.new(
+              stub_responses: true,
+              s3_disable_multiregion_access_points: true
+            )
+          end
+
+          it 'raises an ArgumentError' do
+            arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+            expect do
+              subject.presigned_url(:get_object, bucket: arn, key: 'obj')
+            end.to raise_error(ArgumentError)
+          end
         end
       end
     end

@@ -10,14 +10,6 @@
 module Aws::ElasticBeanstalk
   module Types
 
-    # @note When making an API call, you may pass AbortEnvironmentUpdateMessage
-    #   data as a hash:
-    #
-    #       {
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #       }
-    #
     # @!attribute [rw] environment_id
     #   This specifies the ID of the environment with the in-progress update
     #   that you want to cancel.
@@ -155,25 +147,6 @@ module Aws::ElasticBeanstalk
     # the service role that AWS Elastic Beanstalk assumes in order to apply
     # lifecycle settings. The version lifecycle configuration defines
     # lifecycle settings for application versions.
-    #
-    # @note When making an API call, you may pass ApplicationResourceLifecycleConfig
-    #   data as a hash:
-    #
-    #       {
-    #         service_role: "String",
-    #         version_lifecycle_config: {
-    #           max_count_rule: {
-    #             enabled: false, # required
-    #             max_count: 1,
-    #             delete_source_from_s3: false,
-    #           },
-    #           max_age_rule: {
-    #             enabled: false, # required
-    #             max_age_in_days: 1,
-    #             delete_source_from_s3: false,
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] service_role
     #   The ARN of an IAM service role that Elastic Beanstalk has permission
@@ -349,22 +322,6 @@ module Aws::ElasticBeanstalk
     # source bundle remains in S3 unless you configure the rule to delete
     # it.
     #
-    # @note When making an API call, you may pass ApplicationVersionLifecycleConfig
-    #   data as a hash:
-    #
-    #       {
-    #         max_count_rule: {
-    #           enabled: false, # required
-    #           max_count: 1,
-    #           delete_source_from_s3: false,
-    #         },
-    #         max_age_rule: {
-    #           enabled: false, # required
-    #           max_age_in_days: 1,
-    #           delete_source_from_s3: false,
-    #         },
-    #       }
-    #
     # @!attribute [rw] max_count_rule
     #   Specify a max count rule to restrict the number of application
     #   versions that are retained for an application.
@@ -385,15 +342,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Request to execute a scheduled managed action immediately.
-    #
-    # @note When making an API call, you may pass ApplyEnvironmentManagedActionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         environment_name: "String",
-    #         environment_id: "String",
-    #         action_id: "String", # required
-    #       }
     #
     # @!attribute [rw] environment_name
     #   The name of the target environment.
@@ -448,14 +396,6 @@ module Aws::ElasticBeanstalk
 
     # Request to add or change the operations role used by an environment.
     #
-    # @note When making an API call, you may pass AssociateEnvironmentOperationsRoleMessage
-    #   data as a hash:
-    #
-    #       {
-    #         environment_name: "EnvironmentName", # required
-    #         operations_role: "OperationsRole", # required
-    #       }
-    #
     # @!attribute [rw] environment_name
     #   The name of the environment to which to set the operations role.
     #   @return [String]
@@ -489,17 +429,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Settings for an AWS CodeBuild build.
-    #
-    # @note When making an API call, you may pass BuildConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         artifact_name: "String",
-    #         code_build_service_role: "NonEmptyString", # required
-    #         compute_type: "BUILD_GENERAL1_SMALL", # accepts BUILD_GENERAL1_SMALL, BUILD_GENERAL1_MEDIUM, BUILD_GENERAL1_LARGE
-    #         image: "NonEmptyString", # required
-    #         timeout_in_minutes: 1,
-    #       }
     #
     # @!attribute [rw] artifact_name
     #   The name of the artifact of the CodeBuild build. If provided,
@@ -636,13 +565,6 @@ module Aws::ElasticBeanstalk
 
     # Results message indicating whether a CNAME is available.
     #
-    # @note When making an API call, you may pass CheckDNSAvailabilityMessage
-    #   data as a hash:
-    #
-    #       {
-    #         cname_prefix: "DNSCnamePrefix", # required
-    #       }
-    #
     # @!attribute [rw] cname_prefix
     #   The prefix used when this CNAME is reserved.
     #   @return [String]
@@ -660,9 +582,9 @@ module Aws::ElasticBeanstalk
     # @!attribute [rw] available
     #   Indicates if the specified CNAME is available:
     #
-    #   * `true`\: The CNAME is available.
+    #   * `true` : The CNAME is available.
     #
-    #   * `false`\: The CNAME is not available.
+    #   * `false` : The CNAME is not available.
     #   @return [Boolean]
     #
     # @!attribute [rw] fully_qualified_cname
@@ -686,15 +608,6 @@ module Aws::ElasticBeanstalk
     class CodeBuildNotInServiceRegionException < Aws::EmptyStructure; end
 
     # Request to create or update a group of environments.
-    #
-    # @note When making an API call, you may pass ComposeEnvironmentsMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName",
-    #         group_name: "GroupName",
-    #         version_labels: ["VersionLabel"],
-    #       }
     #
     # @!attribute [rw] application_name
     #   The name of the application to which the specified source bundles
@@ -749,14 +662,14 @@ module Aws::ElasticBeanstalk
     #   An indication of which action is required if the value for this
     #   configuration option changes:
     #
-    #   * `NoInterruption`\: There is no interruption to the environment or
+    #   * `NoInterruption` : There is no interruption to the environment or
     #     application availability.
     #
-    #   * `RestartEnvironment`\: The environment is entirely restarted, all
+    #   * `RestartEnvironment` : The environment is entirely restarted, all
     #     AWS resources are deleted and recreated, and the environment is
     #     unavailable during the process.
     #
-    #   * `RestartApplicationServer`\: The environment is available the
+    #   * `RestartApplicationServer` : The environment is available the
     #     entire time. However, a short application outage occurs when the
     #     application servers on the running Amazon EC2 instances are
     #     restarted.
@@ -765,11 +678,11 @@ module Aws::ElasticBeanstalk
     # @!attribute [rw] user_defined
     #   An indication of whether the user defined this configuration option:
     #
-    #   * `true`\: This configuration option was defined by the user. It is
+    #   * `true` : This configuration option was defined by the user. It is
     #     a valid choice for specifying if this as an `Option to Remove`
     #     when updating configuration settings.
     #
-    #   * `false`\: This configuration was not defined by the user.
+    #   * `false` : This configuration was not defined by the user.
     #
     #   Constraint: You can remove only `UserDefined` options from a
     #   configuration.
@@ -781,16 +694,16 @@ module Aws::ElasticBeanstalk
     #   An indication of which type of values this option has and whether it
     #   is allowable to select one or more than one of the possible values:
     #
-    #   * `Scalar`\: Values for this option are a single selection from the
+    #   * `Scalar` : Values for this option are a single selection from the
     #     possible values, or an unformatted string, or numeric value
     #     governed by the `MIN/MAX/Regex` constraints.
     #
-    #   * `List`\: Values for this option are multiple selections from the
+    #   * `List` : Values for this option are multiple selections from the
     #     possible values.
     #
-    #   * `Boolean`\: Values for this option are either `true` or `false` .
+    #   * `Boolean` : Values for this option are either `true` or `false` .
     #
-    #   * `Json`\: Values for this option are a JSON representation of a
+    #   * `Json` : Values for this option are a JSON representation of a
     #     `ConfigDocument`.
     #   @return [String]
     #
@@ -845,16 +758,6 @@ module Aws::ElasticBeanstalk
     #
     #
     # [1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options.html
-    #
-    # @note When making an API call, you may pass ConfigurationOptionSetting
-    #   data as a hash:
-    #
-    #       {
-    #         resource_name: "ResourceName",
-    #         namespace: "OptionNamespace",
-    #         option_name: "ConfigurationOptionName",
-    #         value: "ConfigurationOptionValue",
-    #       }
     #
     # @!attribute [rw] resource_name
     #   A unique resource name for the option setting. Use it for a
@@ -943,16 +846,16 @@ module Aws::ElasticBeanstalk
     #   `DeploymentStatus` parameter indicates the deployment status of this
     #   configuration set:
     #
-    #   * `null`\: This configuration is not associated with a running
+    #   * `null`: This configuration is not associated with a running
     #     environment.
     #
-    #   * `pending`\: This is a draft configuration that is not deployed to
+    #   * `pending`: This is a draft configuration that is not deployed to
     #     the associated environment but is in the process of deploying.
     #
-    #   * `deployed`\: This is the configuration that is currently deployed
+    #   * `deployed`: This is the configuration that is currently deployed
     #     to the associated running environment.
     #
-    #   * `failed`\: This is a draft configuration that failed to
+    #   * `failed`: This is a draft configuration that failed to
     #     successfully deploy.
     #   @return [String]
     #
@@ -1018,35 +921,6 @@ module Aws::ElasticBeanstalk
 
     # Request to create an application.
     #
-    # @note When making an API call, you may pass CreateApplicationMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         description: "Description",
-    #         resource_lifecycle_config: {
-    #           service_role: "String",
-    #           version_lifecycle_config: {
-    #             max_count_rule: {
-    #               enabled: false, # required
-    #               max_count: 1,
-    #               delete_source_from_s3: false,
-    #             },
-    #             max_age_rule: {
-    #               enabled: false, # required
-    #               max_age_in_days: 1,
-    #               delete_source_from_s3: false,
-    #             },
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The name of the application. Must be unique within your account.
     #   @return [String]
@@ -1079,39 +953,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateApplicationVersionMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         version_label: "VersionLabel", # required
-    #         description: "Description",
-    #         source_build_information: {
-    #           source_type: "Git", # required, accepts Git, Zip
-    #           source_repository: "CodeCommit", # required, accepts CodeCommit, S3
-    #           source_location: "SourceLocation", # required
-    #         },
-    #         source_bundle: {
-    #           s3_bucket: "S3Bucket",
-    #           s3_key: "S3Key",
-    #         },
-    #         build_configuration: {
-    #           artifact_name: "String",
-    #           code_build_service_role: "NonEmptyString", # required
-    #           compute_type: "BUILD_GENERAL1_SMALL", # accepts BUILD_GENERAL1_SMALL, BUILD_GENERAL1_MEDIUM, BUILD_GENERAL1_LARGE
-    #           image: "NonEmptyString", # required
-    #           timeout_in_minutes: 1,
-    #         },
-    #         auto_create_application: false,
-    #         process: false,
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The name of the application. If no application is found with this
     #   name, and `AutoCreateApplication` is `false`, returns an
@@ -1202,36 +1043,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Request to create a configuration template.
-    #
-    # @note When making an API call, you may pass CreateConfigurationTemplateMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         template_name: "ConfigurationTemplateName", # required
-    #         solution_stack_name: "SolutionStackName",
-    #         platform_arn: "PlatformArn",
-    #         source_configuration: {
-    #           application_name: "ApplicationName",
-    #           template_name: "ConfigurationTemplateName",
-    #         },
-    #         environment_id: "EnvironmentId",
-    #         description: "Description",
-    #         option_settings: [
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #             value: "ConfigurationOptionValue",
-    #           },
-    #         ],
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] application_name
     #   The name of the Elastic Beanstalk application to associate with this
@@ -1341,48 +1152,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateEnvironmentMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         environment_name: "EnvironmentName",
-    #         group_name: "GroupName",
-    #         description: "Description",
-    #         cname_prefix: "DNSCnamePrefix",
-    #         tier: {
-    #           name: "String",
-    #           type: "String",
-    #           version: "String",
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #         version_label: "VersionLabel",
-    #         template_name: "ConfigurationTemplateName",
-    #         solution_stack_name: "SolutionStackName",
-    #         platform_arn: "PlatformArn",
-    #         option_settings: [
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #             value: "ConfigurationOptionValue",
-    #           },
-    #         ],
-    #         options_to_remove: [
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #           },
-    #         ],
-    #         operations_role: "OperationsRole",
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The name of the application that is associated with this
     #   environment.
@@ -1535,33 +1304,6 @@ module Aws::ElasticBeanstalk
 
     # Request to create a new platform version.
     #
-    # @note When making an API call, you may pass CreatePlatformVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         platform_name: "PlatformName", # required
-    #         platform_version: "PlatformVersion", # required
-    #         platform_definition_bundle: { # required
-    #           s3_bucket: "S3Bucket",
-    #           s3_key: "S3Key",
-    #         },
-    #         environment_name: "EnvironmentName",
-    #         option_settings: [
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #             value: "ConfigurationOptionValue",
-    #           },
-    #         ],
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] platform_name
     #   The name of your custom platform.
     #   @return [String]
@@ -1656,14 +1398,6 @@ module Aws::ElasticBeanstalk
 
     # Request to delete an application.
     #
-    # @note When making an API call, you may pass DeleteApplicationMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         terminate_env_by_force: false,
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The name of the application to delete.
     #   @return [String]
@@ -1683,15 +1417,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Request to delete an application version.
-    #
-    # @note When making an API call, you may pass DeleteApplicationVersionMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         version_label: "VersionLabel", # required
-    #         delete_source_bundle: false,
-    #       }
     #
     # @!attribute [rw] application_name
     #   The name of the application to which the version belongs.
@@ -1719,14 +1444,6 @@ module Aws::ElasticBeanstalk
 
     # Request to delete a configuration template.
     #
-    # @note When making an API call, you may pass DeleteConfigurationTemplateMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         template_name: "ConfigurationTemplateName", # required
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The name of the application to delete the configuration template
     #   from.
@@ -1747,14 +1464,6 @@ module Aws::ElasticBeanstalk
 
     # Request to delete a draft environment configuration.
     #
-    # @note When making an API call, you may pass DeleteEnvironmentConfigurationMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         environment_name: "EnvironmentName", # required
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The name of the application the environment is associated with.
     #   @return [String]
@@ -1772,13 +1481,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeletePlatformVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         platform_arn: "PlatformArn",
-    #       }
-    #
     # @!attribute [rw] platform_arn
     #   The ARN of the version of the custom platform.
     #   @return [String]
@@ -1818,11 +1520,11 @@ module Aws::ElasticBeanstalk
     # @!attribute [rw] status
     #   The status of the deployment:
     #
-    #   * `In Progress`\: The deployment is in progress.
+    #   * `In Progress` : The deployment is in progress.
     #
-    #   * `Deployed`\: The deployment succeeded.
+    #   * `Deployed` : The deployment succeeded.
     #
-    #   * `Failed`\: The deployment failed.
+    #   * `Failed` : The deployment failed.
     #   @return [String]
     #
     # @!attribute [rw] deployment_time
@@ -1856,16 +1558,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Request to describe application versions.
-    #
-    # @note When making an API call, you may pass DescribeApplicationVersionsMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName",
-    #         version_labels: ["VersionLabel"],
-    #         max_records: 1,
-    #         next_token: "Token",
-    #       }
     #
     # @!attribute [rw] application_name
     #   Specify an application name to show only application versions for
@@ -1905,13 +1597,6 @@ module Aws::ElasticBeanstalk
 
     # Request to describe one or more applications.
     #
-    # @note When making an API call, you may pass DescribeApplicationsMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_names: ["ApplicationName"],
-    #       }
-    #
     # @!attribute [rw] application_names
     #   If specified, AWS Elastic Beanstalk restricts the returned
     #   descriptions to only include those with the specified names.
@@ -1926,24 +1611,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Result message containing a list of application version descriptions.
-    #
-    # @note When making an API call, you may pass DescribeConfigurationOptionsMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName",
-    #         template_name: "ConfigurationTemplateName",
-    #         environment_name: "EnvironmentName",
-    #         solution_stack_name: "SolutionStackName",
-    #         platform_arn: "PlatformArn",
-    #         options: [
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] application_name
     #   The name of the application associated with the configuration
@@ -1992,15 +1659,6 @@ module Aws::ElasticBeanstalk
     # Result message containing all of the configuration settings for a
     # specified solution stack or configuration template.
     #
-    # @note When making an API call, you may pass DescribeConfigurationSettingsMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         template_name: "ConfigurationTemplateName",
-    #         environment_name: "EnvironmentName",
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The application for the environment or configuration template.
     #   @return [String]
@@ -2035,15 +1693,6 @@ module Aws::ElasticBeanstalk
     end
 
     # See the example below to learn how to create a request body.
-    #
-    # @note When making an API call, you may pass DescribeEnvironmentHealthRequest
-    #   data as a hash:
-    #
-    #       {
-    #         environment_name: "EnvironmentName",
-    #         environment_id: "EnvironmentId",
-    #         attribute_names: ["Status"], # accepts Status, Color, Causes, ApplicationMetrics, InstancesHealth, All, HealthStatus, RefreshedAt
-    #       }
     #
     # @!attribute [rw] environment_name
     #   Specify the environment by name.
@@ -2134,16 +1783,6 @@ module Aws::ElasticBeanstalk
 
     # Request to list completed and failed managed actions.
     #
-    # @note When making an API call, you may pass DescribeEnvironmentManagedActionHistoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #         next_token: "String",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] environment_id
     #   The environment ID of the target environment.
     #   @return [String]
@@ -2196,15 +1835,6 @@ module Aws::ElasticBeanstalk
     # Request to list an environment's upcoming and in-progress managed
     # actions.
     #
-    # @note When making an API call, you may pass DescribeEnvironmentManagedActionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         environment_name: "String",
-    #         environment_id: "String",
-    #         status: "Scheduled", # accepts Scheduled, Pending, Running, Unknown
-    #       }
-    #
     # @!attribute [rw] environment_name
     #   The name of the target environment.
     #   @return [String]
@@ -2243,14 +1873,6 @@ module Aws::ElasticBeanstalk
 
     # Request to describe the resources in an environment.
     #
-    # @note When making an API call, you may pass DescribeEnvironmentResourcesMessage
-    #   data as a hash:
-    #
-    #       {
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #       }
-    #
     # @!attribute [rw] environment_id
     #   The ID of the environment to retrieve AWS resource usage data.
     #
@@ -2278,20 +1900,6 @@ module Aws::ElasticBeanstalk
 
     # Request to describe one or more environments.
     #
-    # @note When making an API call, you may pass DescribeEnvironmentsMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName",
-    #         version_label: "VersionLabel",
-    #         environment_ids: ["EnvironmentId"],
-    #         environment_names: ["EnvironmentName"],
-    #         include_deleted: false,
-    #         included_deleted_back_to: Time.now,
-    #         max_records: 1,
-    #         next_token: "Token",
-    #       }
-    #
     # @!attribute [rw] application_name
     #   If specified, AWS Elastic Beanstalk restricts the returned
     #   descriptions to include only those that are associated with this
@@ -2317,10 +1925,10 @@ module Aws::ElasticBeanstalk
     # @!attribute [rw] include_deleted
     #   Indicates whether to include deleted environments:
     #
-    #   `true`\: Environments that have been deleted after
+    #   `true`: Environments that have been deleted after
     #   `IncludedDeletedBackTo` are displayed.
     #
-    #   `false`\: Do not include deleted environments.
+    #   `false`: Do not include deleted environments.
     #   @return [Boolean]
     #
     # @!attribute [rw] included_deleted_back_to
@@ -2360,24 +1968,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Request to retrieve a list of events for an environment.
-    #
-    # @note When making an API call, you may pass DescribeEventsMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName",
-    #         version_label: "VersionLabel",
-    #         template_name: "ConfigurationTemplateName",
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #         platform_arn: "PlatformArn",
-    #         request_id: "RequestId",
-    #         severity: "TRACE", # accepts TRACE, DEBUG, INFO, WARN, ERROR, FATAL
-    #         start_time: Time.now,
-    #         end_time: Time.now,
-    #         max_records: 1,
-    #         next_token: "Token",
-    #       }
     #
     # @!attribute [rw] application_name
     #   If specified, AWS Elastic Beanstalk restricts the returned
@@ -2463,16 +2053,6 @@ module Aws::ElasticBeanstalk
 
     # Parameters for a call to `DescribeInstancesHealth`.
     #
-    # @note When making an API call, you may pass DescribeInstancesHealthRequest
-    #   data as a hash:
-    #
-    #       {
-    #         environment_name: "EnvironmentName",
-    #         environment_id: "EnvironmentId",
-    #         attribute_names: ["HealthStatus"], # accepts HealthStatus, Color, Causes, ApplicationMetrics, RefreshedAt, LaunchedAt, System, Deployment, AvailabilityZone, InstanceType, All
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] environment_name
     #   Specify the AWS Elastic Beanstalk environment by name.
     #   @return [String]
@@ -2531,13 +2111,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribePlatformVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         platform_arn: "PlatformArn",
-    #       }
-    #
     # @!attribute [rw] platform_arn
     #   The ARN of the platform version.
     #   @return [String]
@@ -2563,13 +2136,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Request to disassociate the operations role from an environment.
-    #
-    # @note When making an API call, you may pass DisassociateEnvironmentOperationsRoleMessage
-    #   data as a hash:
-    #
-    #       {
-    #         environment_name: "EnvironmentName", # required
-    #       }
     #
     # @!attribute [rw] environment_name
     #   The name of the environment from which to disassociate the
@@ -2654,17 +2220,17 @@ module Aws::ElasticBeanstalk
     # @!attribute [rw] status
     #   The current operational status of the environment:
     #
-    #   * `Launching`\: Environment is in the process of initial deployment.
+    #   * `Launching`: Environment is in the process of initial deployment.
     #
-    #   * `Updating`\: Environment is in the process of updating its
+    #   * `Updating`: Environment is in the process of updating its
     #     configuration settings or application version.
     #
-    #   * `Ready`\: Environment is available to have an action performed on
+    #   * `Ready`: Environment is available to have an action performed on
     #     it, such as update or terminate.
     #
-    #   * `Terminating`\: Environment is in the shut-down process.
+    #   * `Terminating`: Environment is in the shut-down process.
     #
-    #   * `Terminated`\: Environment is not running.
+    #   * `Terminated`: Environment is not running.
     #   @return [String]
     #
     # @!attribute [rw] abortable_operation_in_progress
@@ -2680,16 +2246,16 @@ module Aws::ElasticBeanstalk
     #   Describes the health status of the environment. AWS Elastic
     #   Beanstalk indicates the failure levels for a running environment:
     #
-    #   * `Red`\: Indicates the environment is not responsive. Occurs when
+    #   * `Red`: Indicates the environment is not responsive. Occurs when
     #     three or more consecutive failures occur for an environment.
     #
-    #   * `Yellow`\: Indicates that something is wrong. Occurs when two
+    #   * `Yellow`: Indicates that something is wrong. Occurs when two
     #     consecutive failures occur for an environment.
     #
-    #   * `Green`\: Indicates the environment is healthy and fully
+    #   * `Green`: Indicates the environment is healthy and fully
     #     functional.
     #
-    #   * `Grey`\: Default health for a new environment. The environment is
+    #   * `Grey`: Default health for a new environment. The environment is
     #     not fully launched and health checks have not started or health
     #     checks are suspended during an `UpdateEnvironment` or
     #     `RestartEnvironment` request.
@@ -2921,15 +2487,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Describes the properties of an environment tier
-    #
-    # @note When making an API call, you may pass EnvironmentTier
-    #   data as a hash:
-    #
-    #       {
-    #         name: "String",
-    #         type: "String",
-    #         version: "String",
-    #       }
     #
     # @!attribute [rw] name
     #   The name of this environment tier.
@@ -3243,21 +2800,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPlatformBranchesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [
-    #           {
-    #             attribute: "SearchFilterAttribute",
-    #             operator: "SearchFilterOperator",
-    #             values: ["SearchFilterValue"],
-    #           },
-    #         ],
-    #         max_records: 1,
-    #         next_token: "Token",
-    #       }
-    #
     # @!attribute [rw] filters
     #   Criteria for restricting the resulting list of platform branches.
     #   The filter is evaluated as a logical conjunction (AND) of the
@@ -3267,31 +2809,31 @@ module Aws::ElasticBeanstalk
     #   `SearchFilter` terms. Most operators take a single value. The `in`
     #   and `not_in` operators can take multiple values.
     #
-    #   * `Attribute = BranchName`\:
+    #   * `Attribute = BranchName`:
     #
-    #     * `Operator`\: `=` \| `!=` \| `begins_with` \| `ends_with` \|
+    #     * `Operator`: `=` \| `!=` \| `begins_with` \| `ends_with` \|
     #       `contains` \| `in` \| `not_in`
     #
     #     ^
     #
-    #   * `Attribute = LifecycleState`\:
+    #   * `Attribute = LifecycleState`:
     #
-    #     * `Operator`\: `=` \| `!=` \| `in` \| `not_in`
+    #     * `Operator`: `=` \| `!=` \| `in` \| `not_in`
     #
-    #     * `Values`\: `beta` \| `supported` \| `deprecated` \| `retired`
+    #     * `Values`: `beta` \| `supported` \| `deprecated` \| `retired`
     #
-    #   * `Attribute = PlatformName`\:
+    #   * `Attribute = PlatformName`:
     #
-    #     * `Operator`\: `=` \| `!=` \| `begins_with` \| `ends_with` \|
+    #     * `Operator`: `=` \| `!=` \| `begins_with` \| `ends_with` \|
     #       `contains` \| `in` \| `not_in`
     #
     #     ^
     #
-    #   * `Attribute = TierType`\:
+    #   * `Attribute = TierType`:
     #
-    #     * `Operator`\: `=` \| `!=`
+    #     * `Operator`: `=` \| `!=`
     #
-    #     * `Values`\: `WebServer/Standard` \| `Worker/SQS/HTTP`
+    #     * `Values`: `WebServer/Standard` \| `Worker/SQS/HTTP`
     #
     #   Array size: limited to 10 `SearchFilter` objects.
     #
@@ -3340,21 +2882,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPlatformVersionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [
-    #           {
-    #             type: "PlatformFilterType",
-    #             operator: "PlatformFilterOperator",
-    #             values: ["PlatformFilterValue"],
-    #           },
-    #         ],
-    #         max_records: 1,
-    #         next_token: "Token",
-    #       }
-    #
     # @!attribute [rw] filters
     #   Criteria for restricting the resulting list of platform versions.
     #   The filter is interpreted as a logical conjunction (AND) of the
@@ -3402,13 +2929,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceMessage
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resouce for which a tag list
     #   is requested.
@@ -3575,15 +3095,6 @@ module Aws::ElasticBeanstalk
     # A lifecycle rule that deletes application versions after the specified
     # number of days.
     #
-    # @note When making an API call, you may pass MaxAgeRule
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #         max_age_in_days: 1,
-    #         delete_source_from_s3: false,
-    #       }
-    #
     # @!attribute [rw] enabled
     #   Specify `true` to apply the rule, or `false` to disable it.
     #   @return [Boolean]
@@ -3609,15 +3120,6 @@ module Aws::ElasticBeanstalk
 
     # A lifecycle rule that deletes the oldest application version when the
     # maximum count is exceeded.
-    #
-    # @note When making an API call, you may pass MaxCountRule
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false, # required
-    #         max_count: 1,
-    #         delete_source_from_s3: false,
-    #       }
     #
     # @!attribute [rw] enabled
     #   Specify `true` to apply the rule, or `false` to disable it.
@@ -3671,15 +3173,6 @@ module Aws::ElasticBeanstalk
     end
 
     # A specification identifying an individual configuration option.
-    #
-    # @note When making an API call, you may pass OptionSpecification
-    #   data as a hash:
-    #
-    #       {
-    #         resource_name: "ResourceName",
-    #         namespace: "OptionNamespace",
-    #         option_name: "ConfigurationOptionName",
-    #       }
     #
     # @!attribute [rw] resource_name
     #   A unique resource name for a time-based scaling configuration
@@ -3876,15 +3369,6 @@ module Aws::ElasticBeanstalk
     #
     # The filter is evaluated as follows: `Type Operator Values[1]`
     #
-    # @note When making an API call, you may pass PlatformFilter
-    #   data as a hash:
-    #
-    #       {
-    #         type: "PlatformFilterType",
-    #         operator: "PlatformFilterOperator",
-    #         values: ["PlatformFilterValue"],
-    #       }
-    #
     # @!attribute [rw] type
     #   The platform version attribute to which the filter values are
     #   applied.
@@ -3909,14 +3393,14 @@ module Aws::ElasticBeanstalk
     #   The following list shows valid filter values for some filter
     #   attributes.
     #
-    #   * `PlatformStatus`\: `Creating` \| `Failed` \| `Ready` \| `Deleting`
+    #   * `PlatformStatus`: `Creating` \| `Failed` \| `Ready` \| `Deleting`
     #     \| `Deleted`
     #
-    #   * `PlatformLifecycleState`\: `recommended`
+    #   * `PlatformLifecycleState`: `recommended`
     #
-    #   * `SupportedTier`\: `WebServer/Standard` \| `Worker/SQS/HTTP`
+    #   * `SupportedTier`: `WebServer/Standard` \| `Worker/SQS/HTTP`
     #
-    #   * `SupportedAddon`\: `Log/S3` \| `Monitoring/Healthd` \|
+    #   * `SupportedAddon`: `Log/S3` \| `Monitoring/Healthd` \|
     #     `WorkerDaemon/SQSD`
     #   @return [Array<String>]
     #
@@ -4071,14 +3555,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RebuildEnvironmentMessage
-    #   data as a hash:
-    #
-    #       {
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #       }
-    #
     # @!attribute [rw] environment_id
     #   The ID of the environment to rebuild.
     #
@@ -4106,15 +3582,6 @@ module Aws::ElasticBeanstalk
 
     # Request to retrieve logs from an environment and store them in your
     # Elastic Beanstalk storage bucket.
-    #
-    # @note When making an API call, you may pass RequestEnvironmentInfoMessage
-    #   data as a hash:
-    #
-    #       {
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #         info_type: "tail", # required, accepts tail, bundle
-    #       }
     #
     # @!attribute [rw] environment_id
     #   The ID of the environment of the requested data.
@@ -4237,14 +3704,6 @@ module Aws::ElasticBeanstalk
     #
     class ResourceTypeNotSupportedException < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass RestartAppServerMessage
-    #   data as a hash:
-    #
-    #       {
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #       }
-    #
     # @!attribute [rw] environment_id
     #   The ID of the environment to restart the server for.
     #
@@ -4271,15 +3730,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Request to download logs retrieved with RequestEnvironmentInfo.
-    #
-    # @note When making an API call, you may pass RetrieveEnvironmentInfoMessage
-    #   data as a hash:
-    #
-    #       {
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #         info_type: "tail", # required, accepts tail, bundle
-    #       }
     #
     # @!attribute [rw] environment_id
     #   The ID of the data's environment.
@@ -4334,14 +3784,6 @@ module Aws::ElasticBeanstalk
 
     # The bucket and key of an item stored in Amazon S3.
     #
-    # @note When making an API call, you may pass S3Location
-    #   data as a hash:
-    #
-    #       {
-    #         s3_bucket: "S3Bucket",
-    #         s3_key: "S3Key",
-    #       }
-    #
     # @!attribute [rw] s3_bucket
     #   The Amazon S3 bucket where the data is located.
     #   @return [String]
@@ -4391,15 +3833,6 @@ module Aws::ElasticBeanstalk
     # The valid values for attributes of `SearchFilter` depend on the API
     # action. For valid values, see the reference page for the API action
     # you're calling that takes a `SearchFilter` parameter.
-    #
-    # @note When making an API call, you may pass SearchFilter
-    #   data as a hash:
-    #
-    #       {
-    #         attribute: "SearchFilterAttribute",
-    #         operator: "SearchFilterOperator",
-    #         values: ["SearchFilterValue"],
-    #       }
     #
     # @!attribute [rw] attribute
     #   The result attribute to which the filter values are applied. Valid
@@ -4519,15 +3952,6 @@ module Aws::ElasticBeanstalk
 
     # Location of the source code for an application version.
     #
-    # @note When making an API call, you may pass SourceBuildInformation
-    #   data as a hash:
-    #
-    #       {
-    #         source_type: "Git", # required, accepts Git, Zip
-    #         source_repository: "CodeCommit", # required, accepts CodeCommit, S3
-    #         source_location: "SourceLocation", # required
-    #       }
-    #
     # @!attribute [rw] source_type
     #   The type of repository.
     #
@@ -4575,14 +3999,6 @@ module Aws::ElasticBeanstalk
     class SourceBundleDeletionException < Aws::EmptyStructure; end
 
     # A specification for an environment configuration.
-    #
-    # @note When making an API call, you may pass SourceConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName",
-    #         template_name: "ConfigurationTemplateName",
-    #       }
     #
     # @!attribute [rw] application_name
     #   The name of the application associated with the configuration.
@@ -4641,16 +4057,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Swaps the CNAMEs of two environments.
-    #
-    # @note When making an API call, you may pass SwapEnvironmentCNAMEsMessage
-    #   data as a hash:
-    #
-    #       {
-    #         source_environment_id: "EnvironmentId",
-    #         source_environment_name: "EnvironmentName",
-    #         destination_environment_id: "EnvironmentId",
-    #         destination_environment_name: "EnvironmentName",
-    #       }
     #
     # @!attribute [rw] source_environment_id
     #   The ID of the source environment.
@@ -4725,14 +4131,6 @@ module Aws::ElasticBeanstalk
 
     # Describes a tag applied to a resource in an environment.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey",
-    #         value: "TagValue",
-    #       }
-    #
     # @!attribute [rw] key
     #   The key of the tag.
     #   @return [String]
@@ -4751,16 +4149,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Request to terminate an environment.
-    #
-    # @note When making an API call, you may pass TerminateEnvironmentMessage
-    #   data as a hash:
-    #
-    #       {
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #         terminate_resources: false,
-    #         force_terminate: false,
-    #       }
     #
     # @!attribute [rw] environment_id
     #   The ID of the environment to terminate.
@@ -4782,12 +4170,12 @@ module Aws::ElasticBeanstalk
     #   Indicates whether the associated AWS resources should shut down when
     #   the environment is terminated:
     #
-    #   * `true`\: The specified environment as well as the associated AWS
+    #   * `true`: The specified environment as well as the associated AWS
     #     resources, such as Auto Scaling group and LoadBalancer, are
     #     terminated.
     #
-    #   * `false`\: AWS Elastic Beanstalk resource management is removed
-    #     from the environment, but the AWS resources continue to operate.
+    #   * `false`: AWS Elastic Beanstalk resource management is removed from
+    #     the environment, but the AWS resources continue to operate.
     #
     #   For more information, see the [ AWS Elastic Beanstalk User Guide.
     #   ][1]
@@ -4882,14 +4270,6 @@ module Aws::ElasticBeanstalk
 
     # Request to update an application.
     #
-    # @note When making an API call, you may pass UpdateApplicationMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         description: "Description",
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The name of the application to update. If no such application is
     #   found, `UpdateApplication` returns an `InvalidParameterValue` error.
@@ -4911,28 +4291,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateApplicationResourceLifecycleMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         resource_lifecycle_config: { # required
-    #           service_role: "String",
-    #           version_lifecycle_config: {
-    #             max_count_rule: {
-    #               enabled: false, # required
-    #               max_count: 1,
-    #               delete_source_from_s3: false,
-    #             },
-    #             max_age_rule: {
-    #               enabled: false, # required
-    #               max_age_in_days: 1,
-    #               delete_source_from_s3: false,
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The name of the application.
     #   @return [String]
@@ -4950,15 +4308,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateApplicationVersionMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         version_label: "VersionLabel", # required
-    #         description: "Description",
-    #       }
-    #
     # @!attribute [rw] application_name
     #   The name of the application associated with this version.
     #
@@ -4989,30 +4338,6 @@ module Aws::ElasticBeanstalk
 
     # The result message containing the options for the specified solution
     # stack.
-    #
-    # @note When making an API call, you may pass UpdateConfigurationTemplateMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         template_name: "ConfigurationTemplateName", # required
-    #         description: "Description",
-    #         option_settings: [
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #             value: "ConfigurationOptionValue",
-    #           },
-    #         ],
-    #         options_to_remove: [
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] application_name
     #   The name of the application associated with the configuration
@@ -5060,41 +4385,6 @@ module Aws::ElasticBeanstalk
     end
 
     # Request to update an environment.
-    #
-    # @note When making an API call, you may pass UpdateEnvironmentMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName",
-    #         environment_id: "EnvironmentId",
-    #         environment_name: "EnvironmentName",
-    #         group_name: "GroupName",
-    #         description: "Description",
-    #         tier: {
-    #           name: "String",
-    #           type: "String",
-    #           version: "String",
-    #         },
-    #         version_label: "VersionLabel",
-    #         template_name: "ConfigurationTemplateName",
-    #         solution_stack_name: "SolutionStackName",
-    #         platform_arn: "PlatformArn",
-    #         option_settings: [
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #             value: "ConfigurationOptionValue",
-    #           },
-    #         ],
-    #         options_to_remove: [
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] application_name
     #   The name of the application with which the environment is
@@ -5198,20 +4488,6 @@ module Aws::ElasticBeanstalk
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateTagsForResourceMessage
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tags_to_add: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #         tags_to_remove: ["TagKey"],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resouce to be updated.
     #
@@ -5245,23 +4521,6 @@ module Aws::ElasticBeanstalk
     end
 
     # A list of validation messages for a specified configuration template.
-    #
-    # @note When making an API call, you may pass ValidateConfigurationSettingsMessage
-    #   data as a hash:
-    #
-    #       {
-    #         application_name: "ApplicationName", # required
-    #         template_name: "ConfigurationTemplateName",
-    #         environment_name: "EnvironmentName",
-    #         option_settings: [ # required
-    #           {
-    #             resource_name: "ResourceName",
-    #             namespace: "OptionNamespace",
-    #             option_name: "ConfigurationOptionName",
-    #             value: "ConfigurationOptionValue",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] application_name
     #   The name of the application that the configuration template or
@@ -5306,10 +4565,10 @@ module Aws::ElasticBeanstalk
     # @!attribute [rw] severity
     #   An indication of the severity of this message:
     #
-    #   * `error`\: This message indicates that this is not a valid setting
+    #   * `error`: This message indicates that this is not a valid setting
     #     for an option.
     #
-    #   * `warning`\: This message is providing information you should take
+    #   * `warning`: This message is providing information you should take
     #     into account.
     #   @return [String]
     #

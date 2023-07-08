@@ -10,6 +10,20 @@
 module Aws::LexModelBuildingService
   module Types
 
+    # Your IAM user or role does not have permission to call the Amazon Lex
+    # V2 APIs required to migrate your bot.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/AccessDeniedException AWS API Documentation
+    #
+    class AccessDeniedException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request is not well formed. For example, a value is invalid or a
     # required field is missing. Check the field values, and try again.
     #
@@ -258,14 +272,6 @@ module Aws::LexModelBuildingService
     # Specifies a Lambda function that verifies requests to a bot or
     # fulfills the user's request to a bot..
     #
-    # @note When making an API call, you may pass CodeHook
-    #   data as a hash:
-    #
-    #       {
-    #         uri: "LambdaARN", # required
-    #         message_version: "MessageVersion", # required
-    #       }
-    #
     # @!attribute [rw] uri
     #   The Amazon Resource Name (ARN) of the Lambda function.
     #   @return [String]
@@ -299,21 +305,6 @@ module Aws::LexModelBuildingService
     end
 
     # Provides the settings needed for conversation logs.
-    #
-    # @note When making an API call, you may pass ConversationLogsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         log_settings: [ # required
-    #           {
-    #             log_type: "AUDIO", # required, accepts AUDIO, TEXT
-    #             destination: "CLOUDWATCH_LOGS", # required, accepts CLOUDWATCH_LOGS, S3
-    #             kms_key_arn: "KmsKeyArn",
-    #             resource_arn: "ResourceArn", # required
-    #           },
-    #         ],
-    #         iam_role_arn: "IamRoleArn", # required
-    #       }
     #
     # @!attribute [rw] log_settings
     #   The settings for your conversation logs. You can log the
@@ -363,14 +354,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBotVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "BotName", # required
-    #         checksum: "String",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the bot that you want to create a new version of. The
     #   name is case sensitive.
@@ -527,14 +510,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateIntentVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "IntentName", # required
-    #         checksum: "String",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the intent that you want to create a new version of. The
     #   name is case sensitive.
@@ -667,14 +642,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateSlotTypeVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "SlotTypeName", # required
-    #         checksum: "String",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the slot type that you want to create a new version for.
     #   The name is case sensitive.
@@ -759,14 +726,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBotAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "AliasName", # required
-    #         bot_name: "BotName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the alias to delete. The name is case sensitive.
     #   @return [String]
@@ -784,15 +743,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBotChannelAssociationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "BotChannelName", # required
-    #         bot_name: "BotName", # required
-    #         bot_alias: "AliasName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the association. The name is case sensitive.
     #   @return [String]
@@ -816,13 +766,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBotRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "BotName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the bot. The name is case sensitive.
     #   @return [String]
@@ -835,14 +778,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBotVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "BotName", # required
-    #         version: "NumericalVersion", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the bot.
     #   @return [String]
@@ -862,13 +797,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteIntentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "IntentName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the intent. The name is case sensitive.
     #   @return [String]
@@ -881,14 +809,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteIntentVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "IntentName", # required
-    #         version: "NumericalVersion", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the intent.
     #   @return [String]
@@ -908,13 +828,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteSlotTypeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "SlotTypeName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the slot type. The name is case sensitive.
     #   @return [String]
@@ -927,14 +840,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteSlotTypeVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "SlotTypeName", # required
-    #         version: "NumericalVersion", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the slot type.
     #   @return [String]
@@ -954,14 +859,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteUtterancesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         bot_name: "BotName", # required
-    #         user_id: "UserId", # required
-    #       }
-    #
     # @!attribute [rw] bot_name
     #   The name of the bot that stored the utterances.
     #   @return [String]
@@ -999,14 +896,6 @@ module Aws::LexModelBuildingService
     #
     # * stuffed
     #
-    # @note When making an API call, you may pass EnumerationValue
-    #   data as a hash:
-    #
-    #       {
-    #         value: "Value", # required
-    #         synonyms: ["Value"],
-    #       }
-    #
     # @!attribute [rw] value
     #   The value of the slot type.
     #   @return [String]
@@ -1027,33 +916,6 @@ module Aws::LexModelBuildingService
     # A prompt for additional activity after an intent is fulfilled. For
     # example, after the `OrderPizza` intent is fulfilled, you might prompt
     # the user to find out whether the user wants to order drinks.
-    #
-    # @note When making an API call, you may pass FollowUpPrompt
-    #   data as a hash:
-    #
-    #       {
-    #         prompt: { # required
-    #           messages: [ # required
-    #             {
-    #               content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #               content: "ContentString", # required
-    #               group_number: 1,
-    #             },
-    #           ],
-    #           max_attempts: 1, # required
-    #           response_card: "ResponseCard",
-    #         },
-    #         rejection_statement: { # required
-    #           messages: [ # required
-    #             {
-    #               content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #               content: "ContentString", # required
-    #               group_number: 1,
-    #             },
-    #           ],
-    #           response_card: "ResponseCard",
-    #         },
-    #       }
     #
     # @!attribute [rw] prompt
     #   Prompts for information from the user.
@@ -1094,17 +956,6 @@ module Aws::LexModelBuildingService
     #   perform the operation and update the graphics. In this case, you
     #   want Amazon Lex to return the intent data to the client.
     #
-    # @note When making an API call, you may pass FulfillmentActivity
-    #   data as a hash:
-    #
-    #       {
-    #         type: "ReturnIntent", # required, accepts ReturnIntent, CodeHook
-    #         code_hook: {
-    #           uri: "LambdaARN", # required
-    #           message_version: "MessageVersion", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] type
     #   How the intent should be fulfilled, either by running a Lambda
     #   function or by returning the slot data to the client application.
@@ -1124,14 +975,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBotAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "AliasName", # required
-    #         bot_name: "BotName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the bot alias. The name is case sensitive.
     #   @return [String]
@@ -1198,16 +1041,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBotAliasesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         bot_name: "BotName", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         name_contains: "AliasName",
-    #       }
-    #
     # @!attribute [rw] bot_name
     #   The name of the bot.
     #   @return [String]
@@ -1261,15 +1094,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBotChannelAssociationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "BotChannelName", # required
-    #         bot_name: "BotName", # required
-    #         bot_alias: "AliasName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the association between the bot and the channel. The
     #   name is case sensitive.
@@ -1358,17 +1182,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBotChannelAssociationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         bot_name: "BotName", # required
-    #         bot_alias: "AliasNameOrListAll", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         name_contains: "BotChannelName",
-    #       }
-    #
     # @!attribute [rw] bot_name
     #   The name of the Amazon Lex bot in the association.
     #   @return [String]
@@ -1432,14 +1245,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBotRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "BotName", # required
-    #         version_or_alias: "String", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the bot. The name is case sensitive.
     #   @return [String]
@@ -1618,15 +1423,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBotVersionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "BotName", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the bot for which versions should be returned.
     #   @return [String]
@@ -1674,15 +1470,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBotsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         name_contains: "BotName",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   A pagination token that fetches the next page of bots. If the
     #   response to this call is truncated, Amazon Lex returns a pagination
@@ -1729,13 +1516,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBuiltinIntentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         signature: "BuiltinIntentSignature", # required
-    #       }
-    #
     # @!attribute [rw] signature
     #   The unique identifier for a built-in intent. To find the signature
     #   for an intent, see [Standard Built-in Intents][1] in the *Alexa
@@ -1777,16 +1557,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBuiltinIntentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         locale: "de-DE", # accepts de-DE, en-AU, en-GB, en-US, es-419, es-ES, es-US, fr-FR, fr-CA, it-IT, ja-JP
-    #         signature_contains: "String",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] locale
     #   A list of locales that the intent supports.
     #   @return [String]
@@ -1847,16 +1617,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetBuiltinSlotTypesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         locale: "de-DE", # accepts de-DE, en-AU, en-GB, en-US, es-419, es-ES, es-US, fr-FR, fr-CA, it-IT, ja-JP
-    #         signature_contains: "String",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] locale
     #   A list of locales that the slot type supports.
     #   @return [String]
@@ -1910,16 +1670,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetExportRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         version: "NumericalVersion", # required
-    #         resource_type: "BOT", # required, accepts BOT, INTENT, SLOT_TYPE
-    #         export_type: "ALEXA_SKILLS_KIT", # required, accepts ALEXA_SKILLS_KIT, LEX
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the bot to export.
     #   @return [String]
@@ -1999,13 +1749,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetImportRequest
-    #   data as a hash:
-    #
-    #       {
-    #         import_id: "String", # required
-    #       }
-    #
     # @!attribute [rw] import_id
     #   The identifier of the import job information to return.
     #   @return [String]
@@ -2062,14 +1805,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetIntentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "IntentName", # required
-    #         version: "Version", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the intent. The name is case sensitive.
     #   @return [String]
@@ -2199,15 +1934,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetIntentVersionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "IntentName", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the intent for which versions should be returned.
     #   @return [String]
@@ -2255,15 +1981,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetIntentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         name_contains: "IntentName",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   A pagination token that fetches the next page of intents. If the
     #   response to this API call is truncated, Amazon Lex returns a
@@ -2311,14 +2028,164 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetSlotTypeRequest
-    #   data as a hash:
+    # @!attribute [rw] migration_id
+    #   The unique identifier of the migration to view. The `migrationID` is
+    #   returned by the operation.
+    #   @return [String]
     #
-    #       {
-    #         name: "SlotTypeName", # required
-    #         version: "Version", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/GetMigrationRequest AWS API Documentation
     #
+    class GetMigrationRequest < Struct.new(
+      :migration_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] migration_id
+    #   The unique identifier of the migration. This is the same as the
+    #   identifier used when calling the `GetMigration` operation.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_name
+    #   The name of the Amazon Lex V1 bot migrated to Amazon Lex V2.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_version
+    #   The version of the Amazon Lex V1 bot migrated to Amazon Lex V2.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_locale
+    #   The locale of the Amazon Lex V1 bot migrated to Amazon Lex V2.
+    #   @return [String]
+    #
+    # @!attribute [rw] v2_bot_id
+    #   The unique identifier of the Amazon Lex V2 bot that the Amazon Lex
+    #   V1 is being migrated to.
+    #   @return [String]
+    #
+    # @!attribute [rw] v2_bot_role
+    #   The IAM role that Amazon Lex uses to run the Amazon Lex V2 bot.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_status
+    #   Indicates the status of the migration. When the status is `COMPLETE`
+    #   the migration is finished and the bot is available in Amazon Lex V2.
+    #   There may be alerts and warnings that need to be resolved to
+    #   complete the migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_strategy
+    #   The strategy used to conduct the migration.
+    #
+    #   * `CREATE_NEW` - Creates a new Amazon Lex V2 bot and migrates the
+    #     Amazon Lex V1 bot to the new bot.
+    #
+    #   * `UPDATE_EXISTING` - Overwrites the existing Amazon Lex V2 bot
+    #     metadata and the locale being migrated. It doesn't change any
+    #     other locales in the Amazon Lex V2 bot. If the locale doesn't
+    #     exist, a new locale is created in the Amazon Lex V2 bot.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_timestamp
+    #   The date and time that the migration started.
+    #   @return [Time]
+    #
+    # @!attribute [rw] alerts
+    #   A list of alerts and warnings that indicate issues with the
+    #   migration for the Amazon Lex V1 bot to Amazon Lex V2. You receive a
+    #   warning when an Amazon Lex V1 feature has a different implementation
+    #   if Amazon Lex V2.
+    #
+    #   For more information, see [Migrating a bot][1] in the *Amazon Lex V2
+    #   developer guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/migrate.html
+    #   @return [Array<Types::MigrationAlert>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/GetMigrationResponse AWS API Documentation
+    #
+    class GetMigrationResponse < Struct.new(
+      :migration_id,
+      :v1_bot_name,
+      :v1_bot_version,
+      :v1_bot_locale,
+      :v2_bot_id,
+      :v2_bot_role,
+      :migration_status,
+      :migration_strategy,
+      :migration_timestamp,
+      :alerts)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] sort_by_attribute
+    #   The field to sort the list of migrations by. You can sort by the
+    #   Amazon Lex V1 bot name or the date and time that the migration was
+    #   started.
+    #   @return [String]
+    #
+    # @!attribute [rw] sort_by_order
+    #   The order so sort the list.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_name_contains
+    #   Filters the list to contain only bots whose name contains the
+    #   specified string. The string is matched anywhere in bot name.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_status_equals
+    #   Filters the list to contain only migrations in the specified state.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   The maximum number of migrations to return in the response. The
+    #   default is 10.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   A pagination token that fetches the next page of migrations. If the
+    #   response to this operation is truncated, Amazon Lex returns a
+    #   pagination token in the response. To fetch the next page of
+    #   migrations, specify the pagination token in the request.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/GetMigrationsRequest AWS API Documentation
+    #
+    class GetMigrationsRequest < Struct.new(
+      :sort_by_attribute,
+      :sort_by_order,
+      :v1_bot_name_contains,
+      :migration_status_equals,
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] migration_summaries
+    #   An array of summaries for migrations from Amazon Lex V1 to Amazon
+    #   Lex V2. To see details of the migration, use the `migrationId` from
+    #   the summary in a call to the operation.
+    #   @return [Array<Types::MigrationSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   If the response is truncated, it includes a pagination token that
+    #   you can specify in your next request to fetch the next page of
+    #   migrations.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/GetMigrationsResponse AWS API Documentation
+    #
+    class GetMigrationsResponse < Struct.new(
+      :migration_summaries,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] name
     #   The name of the slot type. The name is case sensitive.
     #   @return [String]
@@ -2397,15 +2264,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetSlotTypeVersionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "SlotTypeName", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the slot type for which versions should be returned.
     #   @return [String]
@@ -2453,15 +2311,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetSlotTypesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         name_contains: "SlotTypeName",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   A pagination token that fetches the next page of slot types. If the
     #   response to this API call is truncated, Amazon Lex returns a
@@ -2511,15 +2360,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetUtterancesViewRequest
-    #   data as a hash:
-    #
-    #       {
-    #         bot_name: "BotName", # required
-    #         bot_versions: ["Version"], # required
-    #         status_type: "Detected", # required, accepts Detected, Missed
-    #       }
-    #
     # @!attribute [rw] bot_name
     #   The name of the bot for which utterance information should be
     #   returned.
@@ -2570,13 +2410,6 @@ module Aws::LexModelBuildingService
     # The name of a context that must be active for an intent to be selected
     # by Amazon Lex.
     #
-    # @note When making an API call, you may pass InputContext
-    #   data as a hash:
-    #
-    #       {
-    #         name: "InputContextName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the context.
     #   @return [String]
@@ -2590,14 +2423,6 @@ module Aws::LexModelBuildingService
     end
 
     # Identifies the specific version of an intent.
-    #
-    # @note When making an API call, you may pass Intent
-    #   data as a hash:
-    #
-    #       {
-    #         intent_name: "IntentName", # required
-    #         intent_version: "Version", # required
-    #       }
     #
     # @!attribute [rw] intent_name
     #   The name of the intent.
@@ -2674,15 +2499,6 @@ module Aws::LexModelBuildingService
     #
     # [1]: http://docs.aws.amazon.com/lex/latest/dg/built-in-intent-kendra-search.html
     #
-    # @note When making an API call, you may pass KendraConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         kendra_index: "KendraIndexArn", # required
-    #         query_filter_string: "QueryFilterString",
-    #         role: "roleArn", # required
-    #       }
-    #
     # @!attribute [rw] kendra_index
     #   The Amazon Resource Name (ARN) of the Amazon Kendra index that you
     #   want the AMAZON.KendraSearchIntent intent to search. The index must
@@ -2738,13 +2554,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource to get a list of tags
     #   for.
@@ -2772,16 +2581,6 @@ module Aws::LexModelBuildingService
 
     # Settings used to configure delivery mode and destination for
     # conversation logs.
-    #
-    # @note When making an API call, you may pass LogSettingsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         log_type: "AUDIO", # required, accepts AUDIO, TEXT
-    #         destination: "CLOUDWATCH_LOGS", # required, accepts CLOUDWATCH_LOGS, S3
-    #         kms_key_arn: "KmsKeyArn",
-    #         resource_arn: "ResourceArn", # required
-    #       }
     #
     # @!attribute [rw] log_type
     #   The type of logging to enable. Text logs are delivered to a
@@ -2856,15 +2655,6 @@ module Aws::LexModelBuildingService
 
     # The message object that provides the message text and its type.
     #
-    # @note When making an API call, you may pass Message
-    #   data as a hash:
-    #
-    #       {
-    #         content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #         content: "ContentString", # required
-    #         group_number: 1,
-    #       }
-    #
     # @!attribute [rw] content_type
     #   The content type of the message string.
     #   @return [String]
@@ -2889,6 +2679,106 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
+    # Provides information about alerts and warnings that Amazon Lex sends
+    # during a migration. The alerts include information about how to
+    # resolve the issue.
+    #
+    # @!attribute [rw] type
+    #   The type of alert. There are two kinds of alerts:
+    #
+    #   * `ERROR` - There was an issue with the migration that can't be
+    #     resolved. The migration stops.
+    #
+    #   * `WARN` - There was an issue with the migration that requires
+    #     manual changes to the new Amazon Lex V2 bot. The migration
+    #     continues.
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   A message that describes why the alert was issued.
+    #   @return [String]
+    #
+    # @!attribute [rw] details
+    #   Additional details about the alert.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] reference_urls
+    #   A link to the Amazon Lex documentation that describes how to resolve
+    #   the alert.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/MigrationAlert AWS API Documentation
+    #
+    class MigrationAlert < Struct.new(
+      :type,
+      :message,
+      :details,
+      :reference_urls)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Provides information about migrating a bot from Amazon Lex V1 to
+    # Amazon Lex V2.
+    #
+    # @!attribute [rw] migration_id
+    #   The unique identifier that Amazon Lex assigned to the migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_name
+    #   The name of the Amazon Lex V1 bot that is the source of the
+    #   migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_version
+    #   The version of the Amazon Lex V1 bot that is the source of the
+    #   migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_locale
+    #   The locale of the Amazon Lex V1 bot that is the source of the
+    #   migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] v2_bot_id
+    #   The unique identifier of the Amazon Lex V2 that is the destination
+    #   of the migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] v2_bot_role
+    #   The IAM role that Amazon Lex uses to run the Amazon Lex V2 bot.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_status
+    #   The status of the operation. When the status is `COMPLETE` the bot
+    #   is available in Amazon Lex V2. There may be alerts and warnings that
+    #   need to be resolved to complete the migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_strategy
+    #   The strategy used to conduct the migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_timestamp
+    #   The date and time that the migration started.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/MigrationSummary AWS API Documentation
+    #
+    class MigrationSummary < Struct.new(
+      :migration_id,
+      :v1_bot_name,
+      :v1_bot_version,
+      :v1_bot_locale,
+      :v2_bot_id,
+      :v2_bot_role,
+      :migration_status,
+      :migration_strategy,
+      :migration_timestamp)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The resource specified in the request was not found. Check the
     # resource and try again.
     #
@@ -2905,15 +2795,6 @@ module Aws::LexModelBuildingService
 
     # The specification of an output context that is set when an intent is
     # fulfilled.
-    #
-    # @note When making an API call, you may pass OutputContext
-    #   data as a hash:
-    #
-    #       {
-    #         name: "OutputContextName", # required
-    #         time_to_live_in_seconds: 1, # required
-    #         turns_to_live: 1, # required
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the context.
@@ -2962,21 +2843,6 @@ module Aws::LexModelBuildingService
     # chooses one of the messages to use to prompt the user. For more
     # information, see how-it-works.
     #
-    # @note When making an API call, you may pass Prompt
-    #   data as a hash:
-    #
-    #       {
-    #         messages: [ # required
-    #           {
-    #             content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #             content: "ContentString", # required
-    #             group_number: 1,
-    #           },
-    #         ],
-    #         max_attempts: 1, # required
-    #         response_card: "ResponseCard",
-    #       }
-    #
     # @!attribute [rw] messages
     #   An array of objects, each of which provides a message string and its
     #   type. You can specify the message string in plain text or in Speech
@@ -3004,34 +2870,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutBotAliasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "AliasName", # required
-    #         description: "Description",
-    #         bot_version: "Version", # required
-    #         bot_name: "BotName", # required
-    #         checksum: "String",
-    #         conversation_logs: {
-    #           log_settings: [ # required
-    #             {
-    #               log_type: "AUDIO", # required, accepts AUDIO, TEXT
-    #               destination: "CLOUDWATCH_LOGS", # required, accepts CLOUDWATCH_LOGS, S3
-    #               kms_key_arn: "KmsKeyArn",
-    #               resource_arn: "ResourceArn", # required
-    #             },
-    #           ],
-    #           iam_role_arn: "IamRoleArn", # required
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the alias. The name is *not* case sensitive.
     #   @return [String]
@@ -3140,57 +2978,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutBotRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "BotName", # required
-    #         description: "Description",
-    #         intents: [
-    #           {
-    #             intent_name: "IntentName", # required
-    #             intent_version: "Version", # required
-    #           },
-    #         ],
-    #         enable_model_improvements: false,
-    #         nlu_intent_confidence_threshold: 1.0,
-    #         clarification_prompt: {
-    #           messages: [ # required
-    #             {
-    #               content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #               content: "ContentString", # required
-    #               group_number: 1,
-    #             },
-    #           ],
-    #           max_attempts: 1, # required
-    #           response_card: "ResponseCard",
-    #         },
-    #         abort_statement: {
-    #           messages: [ # required
-    #             {
-    #               content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #               content: "ContentString", # required
-    #               group_number: 1,
-    #             },
-    #           ],
-    #           response_card: "ResponseCard",
-    #         },
-    #         idle_session_ttl_in_seconds: 1,
-    #         voice_id: "String",
-    #         checksum: "String",
-    #         process_behavior: "SAVE", # accepts SAVE, BUILD
-    #         locale: "de-DE", # required, accepts de-DE, en-AU, en-GB, en-US, es-419, es-ES, es-US, fr-FR, fr-CA, it-IT, ja-JP
-    #         child_directed: false, # required
-    #         detect_sentiment: false,
-    #         create_version: false,
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the bot. The name is *not* case sensitive.
     #   @return [String]
@@ -3659,131 +3446,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutIntentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "IntentName", # required
-    #         description: "Description",
-    #         slots: [
-    #           {
-    #             name: "SlotName", # required
-    #             description: "Description",
-    #             slot_constraint: "Required", # required, accepts Required, Optional
-    #             slot_type: "CustomOrBuiltinSlotTypeName",
-    #             slot_type_version: "Version",
-    #             value_elicitation_prompt: {
-    #               messages: [ # required
-    #                 {
-    #                   content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #                   content: "ContentString", # required
-    #                   group_number: 1,
-    #                 },
-    #               ],
-    #               max_attempts: 1, # required
-    #               response_card: "ResponseCard",
-    #             },
-    #             priority: 1,
-    #             sample_utterances: ["Utterance"],
-    #             response_card: "ResponseCard",
-    #             obfuscation_setting: "NONE", # accepts NONE, DEFAULT_OBFUSCATION
-    #             default_value_spec: {
-    #               default_value_list: [ # required
-    #                 {
-    #                   default_value: "SlotDefaultValueString", # required
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         ],
-    #         sample_utterances: ["Utterance"],
-    #         confirmation_prompt: {
-    #           messages: [ # required
-    #             {
-    #               content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #               content: "ContentString", # required
-    #               group_number: 1,
-    #             },
-    #           ],
-    #           max_attempts: 1, # required
-    #           response_card: "ResponseCard",
-    #         },
-    #         rejection_statement: {
-    #           messages: [ # required
-    #             {
-    #               content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #               content: "ContentString", # required
-    #               group_number: 1,
-    #             },
-    #           ],
-    #           response_card: "ResponseCard",
-    #         },
-    #         follow_up_prompt: {
-    #           prompt: { # required
-    #             messages: [ # required
-    #               {
-    #                 content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #                 content: "ContentString", # required
-    #                 group_number: 1,
-    #               },
-    #             ],
-    #             max_attempts: 1, # required
-    #             response_card: "ResponseCard",
-    #           },
-    #           rejection_statement: { # required
-    #             messages: [ # required
-    #               {
-    #                 content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #                 content: "ContentString", # required
-    #                 group_number: 1,
-    #               },
-    #             ],
-    #             response_card: "ResponseCard",
-    #           },
-    #         },
-    #         conclusion_statement: {
-    #           messages: [ # required
-    #             {
-    #               content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #               content: "ContentString", # required
-    #               group_number: 1,
-    #             },
-    #           ],
-    #           response_card: "ResponseCard",
-    #         },
-    #         dialog_code_hook: {
-    #           uri: "LambdaARN", # required
-    #           message_version: "MessageVersion", # required
-    #         },
-    #         fulfillment_activity: {
-    #           type: "ReturnIntent", # required, accepts ReturnIntent, CodeHook
-    #           code_hook: {
-    #             uri: "LambdaARN", # required
-    #             message_version: "MessageVersion", # required
-    #           },
-    #         },
-    #         parent_intent_signature: "BuiltinIntentSignature",
-    #         checksum: "String",
-    #         create_version: false,
-    #         kendra_configuration: {
-    #           kendra_index: "KendraIndexArn", # required
-    #           query_filter_string: "QueryFilterString",
-    #           role: "roleArn", # required
-    #         },
-    #         input_contexts: [
-    #           {
-    #             name: "InputContextName", # required
-    #           },
-    #         ],
-    #         output_contexts: [
-    #           {
-    #             name: "OutputContextName", # required
-    #             time_to_live_in_seconds: 1, # required
-    #             turns_to_live: 1, # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the intent. The name is *not* case sensitive.
     #
@@ -4101,31 +3763,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutSlotTypeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "SlotTypeName", # required
-    #         description: "Description",
-    #         enumeration_values: [
-    #           {
-    #             value: "Value", # required
-    #             synonyms: ["Value"],
-    #           },
-    #         ],
-    #         checksum: "String",
-    #         value_selection_strategy: "ORIGINAL_VALUE", # accepts ORIGINAL_VALUE, TOP_RESOLUTION
-    #         create_version: false,
-    #         parent_slot_type_signature: "CustomOrBuiltinSlotTypeName",
-    #         slot_type_configurations: [
-    #           {
-    #             regex_configuration: {
-    #               pattern: "RegexPattern", # required
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the slot type. The name is *not* case sensitive.
     #
@@ -4354,39 +3991,6 @@ module Aws::LexModelBuildingService
 
     # Identifies the version of a specific slot.
     #
-    # @note When making an API call, you may pass Slot
-    #   data as a hash:
-    #
-    #       {
-    #         name: "SlotName", # required
-    #         description: "Description",
-    #         slot_constraint: "Required", # required, accepts Required, Optional
-    #         slot_type: "CustomOrBuiltinSlotTypeName",
-    #         slot_type_version: "Version",
-    #         value_elicitation_prompt: {
-    #           messages: [ # required
-    #             {
-    #               content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #               content: "ContentString", # required
-    #               group_number: 1,
-    #             },
-    #           ],
-    #           max_attempts: 1, # required
-    #           response_card: "ResponseCard",
-    #         },
-    #         priority: 1,
-    #         sample_utterances: ["Utterance"],
-    #         response_card: "ResponseCard",
-    #         obfuscation_setting: "NONE", # accepts NONE, DEFAULT_OBFUSCATION
-    #         default_value_spec: {
-    #           default_value_list: [ # required
-    #             {
-    #               default_value: "SlotDefaultValueString", # required
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the slot.
     #   @return [String]
@@ -4476,13 +4080,6 @@ module Aws::LexModelBuildingService
 
     # A default value for a slot.
     #
-    # @note When making an API call, you may pass SlotDefaultValue
-    #   data as a hash:
-    #
-    #       {
-    #         default_value: "SlotDefaultValueString", # required
-    #       }
-    #
     # @!attribute [rw] default_value
     #   The default value for the slot. You can specify one of the
     #   following:
@@ -4507,17 +4104,6 @@ module Aws::LexModelBuildingService
     # Contains the default values for a slot. Default values are used when
     # Amazon Lex hasn't determined a value for a slot.
     #
-    # @note When making an API call, you may pass SlotDefaultValueSpec
-    #   data as a hash:
-    #
-    #       {
-    #         default_value_list: [ # required
-    #           {
-    #             default_value: "SlotDefaultValueString", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] default_value_list
     #   The default values for a slot. You can specify more than one
     #   default. For example, you can specify a default value to use from a
@@ -4538,15 +4124,6 @@ module Aws::LexModelBuildingService
     end
 
     # Provides configuration information for a slot type.
-    #
-    # @note When making an API call, you may pass SlotTypeConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         regex_configuration: {
-    #           pattern: "RegexPattern", # required
-    #         },
-    #       }
     #
     # @!attribute [rw] regex_configuration
     #   A regular expression used to validate the value of a slot.
@@ -4597,13 +4174,6 @@ module Aws::LexModelBuildingService
 
     # Provides a regular expression used to validate the value of a slot.
     #
-    # @note When making an API call, you may pass SlotTypeRegexConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         pattern: "RegexPattern", # required
-    #       }
-    #
     # @!attribute [rw] pattern
     #   A regular expression used to validate the value of a slot.
     #
@@ -4634,21 +4204,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartImportRequest
-    #   data as a hash:
-    #
-    #       {
-    #         payload: "data", # required
-    #         resource_type: "BOT", # required, accepts BOT, INTENT, SLOT_TYPE
-    #         merge_strategy: "OVERWRITE_LATEST", # required, accepts OVERWRITE_LATEST, FAIL_ON_CONFLICT
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] payload
     #   A zip archive in binary format. The archive should contain one file,
     #   a JSON file containing the resource to import. The resource should
@@ -4740,22 +4295,106 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
+    # @!attribute [rw] v1_bot_name
+    #   The name of the Amazon Lex V1 bot that you are migrating to Amazon
+    #   Lex V2.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_version
+    #   The version of the bot to migrate to Amazon Lex V2. You can migrate
+    #   the `$LATEST` version as well as any numbered version.
+    #   @return [String]
+    #
+    # @!attribute [rw] v2_bot_name
+    #   The name of the Amazon Lex V2 bot that you are migrating the Amazon
+    #   Lex V1 bot to.
+    #
+    #   * If the Amazon Lex V2 bot doesn't exist, you must use the
+    #     `CREATE_NEW` migration strategy.
+    #
+    #   * If the Amazon Lex V2 bot exists, you must use the
+    #     `UPDATE_EXISTING` migration strategy to change the contents of the
+    #     Amazon Lex V2 bot.
+    #   @return [String]
+    #
+    # @!attribute [rw] v2_bot_role
+    #   The IAM role that Amazon Lex uses to run the Amazon Lex V2 bot.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_strategy
+    #   The strategy used to conduct the migration.
+    #
+    #   * `CREATE_NEW` - Creates a new Amazon Lex V2 bot and migrates the
+    #     Amazon Lex V1 bot to the new bot.
+    #
+    #   * `UPDATE_EXISTING` - Overwrites the existing Amazon Lex V2 bot
+    #     metadata and the locale being migrated. It doesn't change any
+    #     other locales in the Amazon Lex V2 bot. If the locale doesn't
+    #     exist, a new locale is created in the Amazon Lex V2 bot.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/StartMigrationRequest AWS API Documentation
+    #
+    class StartMigrationRequest < Struct.new(
+      :v1_bot_name,
+      :v1_bot_version,
+      :v2_bot_name,
+      :v2_bot_role,
+      :migration_strategy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] v1_bot_name
+    #   The name of the Amazon Lex V1 bot that you are migrating to Amazon
+    #   Lex V2.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_version
+    #   The version of the bot to migrate to Amazon Lex V2.
+    #   @return [String]
+    #
+    # @!attribute [rw] v1_bot_locale
+    #   The locale used for the Amazon Lex V1 bot.
+    #   @return [String]
+    #
+    # @!attribute [rw] v2_bot_id
+    #   The unique identifier for the Amazon Lex V2 bot.
+    #   @return [String]
+    #
+    # @!attribute [rw] v2_bot_role
+    #   The IAM role that Amazon Lex uses to run the Amazon Lex V2 bot.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_id
+    #   The unique identifier that Amazon Lex assigned to the migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_strategy
+    #   The strategy used to conduct the migration.
+    #   @return [String]
+    #
+    # @!attribute [rw] migration_timestamp
+    #   The date and time that the migration started.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/StartMigrationResponse AWS API Documentation
+    #
+    class StartMigrationResponse < Struct.new(
+      :v1_bot_name,
+      :v1_bot_version,
+      :v1_bot_locale,
+      :v2_bot_id,
+      :v2_bot_role,
+      :migration_id,
+      :migration_strategy,
+      :migration_timestamp)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A collection of messages that convey information to the user. At
     # runtime, Amazon Lex selects the message to convey.
-    #
-    # @note When making an API call, you may pass Statement
-    #   data as a hash:
-    #
-    #       {
-    #         messages: [ # required
-    #           {
-    #             content_type: "PlainText", # required, accepts PlainText, SSML, CustomPayload
-    #             content: "ContentString", # required
-    #             group_number: 1,
-    #           },
-    #         ],
-    #         response_card: "ResponseCard",
-    #       }
     #
     # @!attribute [rw] messages
     #   A collection of message objects.
@@ -4785,14 +4424,6 @@ module Aws::LexModelBuildingService
     # channel. Tag keys and values can consist of Unicode letters, digits,
     # white space, and any of the following symbols: \_ . : / = + - @.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
-    #
     # @!attribute [rw] key
     #   The key for the tag. Keys are not case-sensitive and must be unique.
     #   @return [String]
@@ -4811,19 +4442,6 @@ module Aws::LexModelBuildingService
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the bot, bot alias, or bot channel
     #   to tag.
@@ -4847,14 +4465,6 @@ module Aws::LexModelBuildingService
     #
     class TagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource to remove the tags
     #   from.

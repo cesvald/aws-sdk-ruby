@@ -43,10 +43,30 @@ module Aws::SNS
     # * `DisplayName` – The human-readable name used in the `From` field for
     #   notifications to `email` and `email-json` endpoints.
     #
-    # * `Owner` – The AWS account ID of the topic's owner.
+    # * `EffectiveDeliveryPolicy` – The JSON serialization of the effective
+    #   delivery policy, taking system defaults into account.
+    #
+    # * `Owner` – The Amazon Web Services account ID of the topic's owner.
     #
     # * `Policy` – The JSON serialization of the topic's access control
     #   policy.
+    #
+    # * `SignatureVersion` – The signature version corresponds to the
+    #   hashing algorithm used while creating the signature of the
+    #   notifications, subscription confirmations, or unsubscribe
+    #   confirmation messages sent by Amazon SNS.
+    #
+    #   * By default, `SignatureVersion` is set to **1**. The signature is a
+    #     Base64-encoded **SHA1withRSA** signature.
+    #
+    #   * When you set `SignatureVersion` to **2**. Amazon SNS uses a
+    #     Base64-encoded **SHA256withRSA** signature.
+    #
+    #     <note markdown="1"> If the API response does not include the `SignatureVersion`
+    #     attribute, it means that the `SignatureVersion` for the topic has
+    #     value **1**.
+    #
+    #      </note>
     #
     # * `SubscriptionsConfirmed` – The number of confirmed subscriptions for
     #   the topic.
@@ -59,19 +79,23 @@ module Aws::SNS
     #
     # * `TopicArn` – The topic's ARN.
     #
-    # * `EffectiveDeliveryPolicy` – The JSON serialization of the effective
-    #   delivery policy, taking system defaults into account.
+    # * `TracingConfig` – Tracing mode of an Amazon SNS topic. By default
+    #   `TracingConfig` is set to `PassThrough`, and the topic passes
+    #   through the tracing header it receives from an Amazon SNS publisher
+    #   to its subscriptions. If set to `Active`, Amazon SNS will vend X-Ray
+    #   segment data to topic owner account if the sampled flag in the
+    #   tracing header is true. This is only supported on standard topics.
     #
-    # The following attribute applies only to [server-side-encryption][1]\:
+    # The following attribute applies only to [server-side-encryption][1]:
     #
-    # * `KmsMasterKeyId` - The ID of an AWS-managed customer master key
-    #   (CMK) for Amazon SNS or a custom CMK. For more information, see [Key
-    #   Terms][2]. For more examples, see [KeyId][3] in the *AWS Key
-    #   Management Service API Reference*.
+    # * `KmsMasterKeyId` - The ID of an Amazon Web Services managed customer
+    #   master key (CMK) for Amazon SNS or a custom CMK. For more
+    #   information, see [Key Terms][2]. For more examples, see [KeyId][3]
+    #   in the *Key Management Service API Reference*.
     #
     # ^
     #
-    # The following attributes apply only to [FIFO topics][4]\:
+    # The following attributes apply only to [FIFO topics][4]:
     #
     # * `FifoTopic` – When this is set to `true`, a FIFO topic is created.
     #
@@ -88,8 +112,8 @@ module Aws::SNS
     #     the body of the message (but not the attributes of the message).
     #
     #     (Optional) To override the generated value, you can specify a
-    #     value for the the `MessageDeduplicationId` parameter for the
-    #     `Publish` action.
+    #     value for the `MessageDeduplicationId` parameter for the `Publish`
+    #     action.
     #
     #
     #
@@ -117,7 +141,9 @@ module Aws::SNS
     #
     # @return [self]
     def load
-      resp = @client.get_topic_attributes(topic_arn: @arn)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_topic_attributes(topic_arn: @arn)
+      end
       @data = resp.data
       self
     end
@@ -151,9 +177,10 @@ module Aws::SNS
     # @option options [required, String] :label
     #   A unique identifier for the new policy statement.
     # @option options [required, Array<String>] :aws_account_id
-    #   The AWS account IDs of the users (principals) who will be given access
-    #   to the specified actions. The users must have AWS accounts, but do not
-    #   need to be signed up for this service.
+    #   The Amazon Web Services account IDs of the users (principals) who will
+    #   be given access to the specified actions. The users must have Amazon
+    #   Web Services account, but do not need to be signed up for this
+    #   service.
     # @option options [required, Array<String>] :action_name
     #   The action you want to allow for the specified principal(s).
     #
@@ -161,7 +188,9 @@ module Aws::SNS
     # @return [EmptyStructure]
     def add_permission(options = {})
       options = options.merge(topic_arn: @arn)
-      resp = @client.add_permission(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.add_permission(options)
+      end
       resp.data
     end
 
@@ -176,14 +205,16 @@ module Aws::SNS
     #   Short-lived token sent to an endpoint during the `Subscribe` action.
     # @option options [String] :authenticate_on_unsubscribe
     #   Disallows unauthenticated unsubscribes of the subscription. If the
-    #   value of this parameter is `true` and the request has an AWS
-    #   signature, then only the topic owner and the subscription owner can
-    #   unsubscribe the endpoint. The unsubscribe action requires AWS
-    #   authentication.
+    #   value of this parameter is `true` and the request has an Amazon Web
+    #   Services signature, then only the topic owner and the subscription
+    #   owner can unsubscribe the endpoint. The unsubscribe action requires
+    #   Amazon Web Services authentication.
     # @return [Subscription]
     def confirm_subscription(options = {})
       options = options.merge(topic_arn: @arn)
-      resp = @client.confirm_subscription(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.confirm_subscription(options)
+      end
       Subscription.new(
         arn: resp.data.subscription_arn,
         client: @client
@@ -197,7 +228,9 @@ module Aws::SNS
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(topic_arn: @arn)
-      resp = @client.delete_topic(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_topic(options)
+      end
       resp.data
     end
 
@@ -313,7 +346,7 @@ module Aws::SNS
     # @option options [String] :message_deduplication_id
     #   This parameter applies only to FIFO (first-in-first-out) topics. The
     #   `MessageDeduplicationId` can contain up to 128 alphanumeric characters
-    #   (a-z, A-Z, 0-9) and punctuation ``
+    #   `(a-z, A-Z, 0-9)` and punctuation ``
     #   (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~) ``.
     #
     #   Every message must have a unique `MessageDeduplicationId`, which is a
@@ -327,8 +360,8 @@ module Aws::SNS
     #   `MessageDeduplicationId` overrides the generated one.
     # @option options [String] :message_group_id
     #   This parameter applies only to FIFO (first-in-first-out) topics. The
-    #   `MessageGroupId` can contain up to 128 alphanumeric characters (a-z,
-    #   A-Z, 0-9) and punctuation `` (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~) ``.
+    #   `MessageGroupId` can contain up to 128 alphanumeric characters `(a-z,
+    #   A-Z, 0-9)` and punctuation `` (!"#$%&'()*+,-./:;<=>?@[\]^_`\{|\}~) ``.
     #
     #   The `MessageGroupId` is a tag that specifies that a message belongs to
     #   a specific message group. Messages that belong to the same message
@@ -338,7 +371,9 @@ module Aws::SNS
     # @return [Types::PublishResponse]
     def publish(options = {})
       options = options.merge(topic_arn: @arn)
-      resp = @client.publish(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.publish(options)
+      end
       resp.data
     end
 
@@ -353,7 +388,9 @@ module Aws::SNS
     # @return [EmptyStructure]
     def remove_permission(options = {})
       options = options.merge(topic_arn: @arn)
-      resp = @client.remove_permission(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.remove_permission(options)
+      end
       resp.data
     end
 
@@ -370,6 +407,10 @@ module Aws::SNS
     #   The following lists the names, descriptions, and values of the special
     #   request parameters that the `SetTopicAttributes` action uses:
     #
+    #   * `ApplicationSuccessFeedbackRoleArn` – Indicates failed message
+    #     delivery status for an Amazon SNS topic that is subscribed to a
+    #     platform application endpoint.
+    #
     #   * `DeliveryPolicy` – The policy that defines how Amazon SNS retries
     #     failed deliveries to HTTP/S endpoints.
     #
@@ -379,16 +420,119 @@ module Aws::SNS
     #   * `Policy` – The policy that defines who can access your topic. By
     #     default, only the topic owner can publish or subscribe to the topic.
     #
-    #   The following attribute applies only to [server-side-encryption][1]\:
+    #   * `TracingConfig` – Tracing mode of an Amazon SNS topic. By default
+    #     `TracingConfig` is set to `PassThrough`, and the topic passes
+    #     through the tracing header it receives from an Amazon SNS publisher
+    #     to its subscriptions. If set to `Active`, Amazon SNS will vend X-Ray
+    #     segment data to topic owner account if the sampled flag in the
+    #     tracing header is true. This is only supported on standard topics.
     #
-    #   * `KmsMasterKeyId` – The ID of an AWS-managed customer master key
-    #     (CMK) for Amazon SNS or a custom CMK. For more information, see [Key
-    #     Terms][2]. For more examples, see [KeyId][3] in the *AWS Key
-    #     Management Service API Reference*.
+    #   * HTTP
     #
-    #   ^
+    #     * `HTTPSuccessFeedbackRoleArn` – Indicates successful message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       HTTP endpoint.
     #
-    #   The following attribute applies only to [FIFO topics][4]\:
+    #     * `HTTPSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an HTTP endpoint.
+    #
+    #     * `HTTPFailureFeedbackRoleArn` – Indicates failed message delivery
+    #       status for an Amazon SNS topic that is subscribed to an HTTP
+    #       endpoint.
+    #
+    #   * Amazon Kinesis Data Firehose
+    #
+    #     * `FirehoseSuccessFeedbackRoleArn` – Indicates successful message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Amazon Kinesis Data Firehose endpoint.
+    #
+    #     * `FirehoseSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an Amazon Kinesis Data Firehose endpoint.
+    #
+    #     * `FirehoseFailureFeedbackRoleArn` – Indicates failed message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Amazon Kinesis Data Firehose endpoint.
+    #
+    #   * Lambda
+    #
+    #     * `LambdaSuccessFeedbackRoleArn` – Indicates successful message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Lambda endpoint.
+    #
+    #     * `LambdaSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an Lambda endpoint.
+    #
+    #     * `LambdaFailureFeedbackRoleArn` – Indicates failed message delivery
+    #       status for an Amazon SNS topic that is subscribed to an Lambda
+    #       endpoint.
+    #
+    #   * Platform application endpoint
+    #
+    #     * `ApplicationSuccessFeedbackRoleArn` – Indicates successful message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Amazon Web Services application endpoint.
+    #
+    #     * `ApplicationSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an Amazon Web Services application endpoint.
+    #
+    #     * `ApplicationFailureFeedbackRoleArn` – Indicates failed message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Amazon Web Services application endpoint.
+    #
+    #     <note markdown="1"> In addition to being able to configure topic attributes for message
+    #     delivery status of notification messages sent to Amazon SNS
+    #     application endpoints, you can also configure application attributes
+    #     for the delivery status of push notification messages sent to push
+    #     notification services.
+    #
+    #      For example, For more information, see [Using Amazon SNS Application
+    #     Attributes for Message Delivery Status][1].
+    #
+    #      </note>
+    #
+    #   * Amazon SQS
+    #
+    #     * `SQSSuccessFeedbackRoleArn` – Indicates successful message
+    #       delivery status for an Amazon SNS topic that is subscribed to an
+    #       Amazon SQS endpoint.
+    #
+    #     * `SQSSuccessFeedbackSampleRate` – Indicates percentage of
+    #       successful messages to sample for an Amazon SNS topic that is
+    #       subscribed to an Amazon SQS endpoint.
+    #
+    #     * `SQSFailureFeedbackRoleArn` – Indicates failed message delivery
+    #       status for an Amazon SNS topic that is subscribed to an Amazon SQS
+    #       endpoint.
+    #
+    #   <note markdown="1"> The &lt;ENDPOINT&gt;SuccessFeedbackRoleArn and
+    #   &lt;ENDPOINT&gt;FailureFeedbackRoleArn attributes are used to give
+    #   Amazon SNS write access to use CloudWatch Logs on your behalf. The
+    #   &lt;ENDPOINT&gt;SuccessFeedbackSampleRate attribute is for specifying
+    #   the sample rate percentage (0-100) of successfully delivered messages.
+    #   After you configure the &lt;ENDPOINT&gt;FailureFeedbackRoleArn
+    #   attribute, then all failed message deliveries generate CloudWatch
+    #   Logs.
+    #
+    #    </note>
+    #
+    #   The following attribute applies only to [server-side-encryption][2]:
+    #
+    #   * `KmsMasterKeyId` – The ID of an Amazon Web Services managed customer
+    #     master key (CMK) for Amazon SNS or a custom CMK. For more
+    #     information, see [Key Terms][3]. For more examples, see [KeyId][4]
+    #     in the *Key Management Service API Reference*.
+    #
+    #   * `SignatureVersion` – The signature version corresponds to the
+    #     hashing algorithm used while creating the signature of the
+    #     notifications, subscription confirmations, or unsubscribe
+    #     confirmation messages sent by Amazon SNS. By default,
+    #     `SignatureVersion` is set to `1`.
+    #
+    #   The following attribute applies only to [FIFO topics][5]:
     #
     #   * `ContentBasedDeduplication` – Enables content-based deduplication
     #     for FIFO topics.
@@ -396,29 +540,32 @@ module Aws::SNS
     #     * By default, `ContentBasedDeduplication` is set to `false`. If you
     #       create a FIFO topic and this attribute is `false`, you must
     #       specify a value for the `MessageDeduplicationId` parameter for the
-    #       [Publish][5] action.
+    #       [Publish][6] action.
     #
     #     * When you set `ContentBasedDeduplication` to `true`, Amazon SNS
     #       uses a SHA-256 hash to generate the `MessageDeduplicationId` using
     #       the body of the message (but not the attributes of the message).
     #
     #       (Optional) To override the generated value, you can specify a
-    #       value for the the `MessageDeduplicationId` parameter for the
-    #       `Publish` action.
+    #       value for the `MessageDeduplicationId` parameter for the `Publish`
+    #       action.
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html
-    #   [2]: https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html#sse-key-terms
-    #   [3]: https://docs.aws.amazon.com/kms/latest/APIReference/API_DescribeKey.html#API_DescribeKey_RequestParameters
-    #   [4]: https://docs.aws.amazon.com/sns/latest/dg/sns-fifo-topics.html
-    #   [5]: https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
+    #   [1]: https://docs.aws.amazon.com/sns/latest/dg/sns-msg-status.html
+    #   [2]: https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html
+    #   [3]: https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html#sse-key-terms
+    #   [4]: https://docs.aws.amazon.com/kms/latest/APIReference/API_DescribeKey.html#API_DescribeKey_RequestParameters
+    #   [5]: https://docs.aws.amazon.com/sns/latest/dg/sns-fifo-topics.html
+    #   [6]: https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
     # @option options [String] :attribute_value
     #   The new value for the attribute.
     # @return [EmptyStructure]
     def set_attributes(options = {})
       options = options.merge(topic_arn: @arn)
-      resp = @client.set_topic_attributes(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.set_topic_attributes(options)
+      end
       resp.data
     end
 
@@ -451,8 +598,7 @@ module Aws::SNS
     #   * `application` – delivery of JSON-encoded message to an EndpointArn
     #     for a mobile app and device
     #
-    #   * `lambda` – delivery of JSON-encoded message to an AWS Lambda
-    #     function
+    #   * `lambda` – delivery of JSON-encoded message to an Lambda function
     #
     #   * `firehose` – delivery of JSON-encoded message to an Amazon Kinesis
     #     Data Firehose delivery stream.
@@ -479,7 +625,7 @@ module Aws::SNS
     #   * For the `application` protocol, the endpoint is the EndpointArn of a
     #     mobile app and device.
     #
-    #   * For the `lambda` protocol, the endpoint is the ARN of an AWS Lambda
+    #   * For the `lambda` protocol, the endpoint is the ARN of an Lambda
     #     function.
     #
     #   * For the `firehose` protocol, the endpoint is the ARN of an Amazon
@@ -488,7 +634,7 @@ module Aws::SNS
     #   A map of attributes with their corresponding values.
     #
     #   The following lists the names, descriptions, and values of the special
-    #   request parameters that the `SetTopicAttributes` action uses:
+    #   request parameters that the `Subscribe` action uses:
     #
     #   * `DeliveryPolicy` – The policy that defines how Amazon SNS retries
     #     failed deliveries to HTTP/S endpoints.
@@ -496,6 +642,14 @@ module Aws::SNS
     #   * `FilterPolicy` – The simple JSON object that lets your subscriber
     #     receive only a subset of messages, rather than receiving every
     #     message published to the topic.
+    #
+    #   * `FilterPolicyScope` – This attribute lets you choose the filtering
+    #     scope by using one of the following string value types:
+    #
+    #     * `MessageAttributes` (default) – The filter is applied on the
+    #       message attributes.
+    #
+    #     * `MessageBody` – The filter is applied on the message body.
     #
     #   * `RawMessageDelivery` – When set to `true`, enables raw message
     #     delivery to Amazon SQS or HTTP/S endpoints. This eliminates the need
@@ -544,7 +698,9 @@ module Aws::SNS
     # @return [Subscription]
     def subscribe(options = {})
       options = options.merge(topic_arn: @arn)
-      resp = @client.subscribe(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.subscribe(options)
+      end
       Subscription.new(
         arn: resp.data.subscription_arn,
         client: @client
@@ -561,7 +717,9 @@ module Aws::SNS
     def subscriptions(options = {})
       batches = Enumerator.new do |y|
         options = options.merge(topic_arn: @arn)
-        resp = @client.list_subscriptions_by_topic(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_subscriptions_by_topic(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.subscriptions.each do |s|

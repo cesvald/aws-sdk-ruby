@@ -1,6 +1,238 @@
 Unreleased Changes
 ------------------
 
+1.70.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.69.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.68.0 (2023-06-22)
+------------------
+
+* Feature - Introducing Amazon Kendra Retrieve API that can be used to retrieve relevant passages or text excerpts given an input query.
+
+1.67.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.66.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.65.0 (2023-05-02)
+------------------
+
+* Feature - AWS Kendra now supports configuring document fields/attributes via the GetQuerySuggestions API. You can now base query suggestions on the contents of document fields.
+
+1.64.0 (2023-03-30)
+------------------
+
+* Feature - AWS Kendra now supports featured results for a query.
+
+1.63.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.62.0 (2023-01-11)
+------------------
+
+* Feature - This release adds support to new document types - RTF, XML, XSLT, MS_EXCEL, CSV, JSON, MD
+
+1.61.0 (2022-11-28)
+------------------
+
+* Feature - Amazon Kendra now supports preview of table information from HTML tables in the search results. The most relevant cells with their corresponding rows, columns are displayed as a preview in the search result. The most relevant table cell or cells are also highlighted in table preview.
+
+1.60.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.59.0 (2022-09-27)
+------------------
+
+* Feature - My AWS Service (placeholder) - Amazon Kendra now provides a data source connector for DropBox. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-dropbox.html
+
+1.58.0 (2022-09-13)
+------------------
+
+* Feature - This release enables our customer to choose the option of Sharepoint 2019 for the on-premise Sharepoint connector.
+
+1.57.0 (2022-08-19)
+------------------
+
+* Feature - This release adds support for a new authentication type - Personal Access Token (PAT) for confluence server.
+
+1.56.0 (2022-08-17)
+------------------
+
+* Feature - This release adds Zendesk connector (which allows you to specify Zendesk SAAS platform as data source), Proxy Support for Sharepoint and Confluence Server (which allows you to specify the proxy configuration if proxy is required to connect to your Sharepoint/Confluence Server as data source).
+
+1.55.0 (2022-07-21)
+------------------
+
+* Feature - Amazon Kendra now provides Oauth2 support for SharePoint Online. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-sharepoint.html
+
+1.54.0 (2022-07-14)
+------------------
+
+* Feature - This release adds AccessControlConfigurations which allow you to redefine your document level access control without the need for content re-indexing.
+
+1.53.0 (2022-06-30)
+------------------
+
+* Feature - Amazon Kendra now provides a data source connector for alfresco
+
+1.52.0 (2022-06-02)
+------------------
+
+* Feature - Amazon Kendra now provides a data source connector for GitHub. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-github.html
+
+1.51.0 (2022-05-12)
+------------------
+
+* Feature - Amazon Kendra now provides a data source connector for Jira. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-jira.html
+
+1.50.0 (2022-05-05)
+------------------
+
+* Feature - AWS Kendra now supports hierarchical facets for a query. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/filtering.html
+
+1.49.0 (2022-04-19)
+------------------
+
+* Feature - Amazon Kendra now provides a data source connector for Quip. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-quip.html
+
+1.48.0 (2022-04-06)
+------------------
+
+* Feature - Amazon Kendra now provides a data source connector for Box. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-box.html
+
+1.47.0 (2022-03-14)
+------------------
+
+* Feature - Amazon Kendra now provides a data source connector for Slack. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-slack.html
+
+1.46.0 (2022-03-03)
+------------------
+
+* Feature - Amazon Kendra now suggests spell corrections for a query. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/query-spell-check.html
+
+1.45.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.44.0 (2022-02-08)
+------------------
+
+* Feature - Amazon Kendra now provides a data source connector for Amazon FSx. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-fsx.html
+
+1.43.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.42.0 (2022-01-11)
+------------------
+
+* Feature - Amazon Kendra now supports advanced query language and query-less search.
+
+1.41.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.40.0 (2021-12-01)
+------------------
+
+* Feature - Experience Builder allows customers to build search applications without writing code. Analytics Dashboard provides quality and usability metrics for Kendra indexes. Custom Document Enrichment allows customers to build a custom ingestion pipeline to pre-process documents and generate metadata.
+
+1.39.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.38.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.37.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.36.0 (2021-10-07)
+------------------
+
+* Feature - Amazon Kendra now supports indexing and querying documents in different languages.
+
+1.35.0 (2021-10-06)
+------------------
+
+* Feature - Amazon Kendra now supports integration with AWS SSO
+
+1.34.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.33.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.32.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.31.0 (2021-07-21)
+------------------
+
+* Feature - Amazon Kendra now provides a data source connector for Amazon WorkDocs. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-workdocs.html
+
+1.30.0 (2021-07-12)
+------------------
+
+* Feature - Amazon Kendra now supports Principal Store
+
+1.29.0 (2021-06-30)
+------------------
+
+* Feature - Amazon Kendra Enterprise Edition now offered in smaller more granular units to enable customers with smaller workloads. Virtual Storage Capacity units now offer scaling in increments of 100,000 documents (up to 30GB) per unit and Virtual Query Units offer scaling increments of 8,000 queries per day.
+
+1.28.0 (2021-06-24)
+------------------
+
+* Feature - Amazon Kendra now supports SharePoint 2013 and SharePoint 2016 when using a SharePoint data source.
+
+1.27.0 (2021-06-17)
+------------------
+
+* Feature - Amazon Kendra now supports the indexing of web documents for search through the web crawler.
+
+1.26.0 (2021-06-09)
+------------------
+
+* Feature - AWS Kendra now supports checking document status.
+
+1.25.0 (2021-05-27)
+------------------
+
+* Feature - Amazon Kendra now suggests popular queries in order to help guide query typing and help overall accuracy.
+
 1.24.0 (2021-04-21)
 ------------------
 

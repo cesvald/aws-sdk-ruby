@@ -10,19 +10,6 @@
 module Aws::Support
   module Types
 
-    # @note When making an API call, you may pass AddAttachmentsToSetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         attachment_set_id: "AttachmentSetId",
-    #         attachments: [ # required
-    #           {
-    #             file_name: "FileName",
-    #             data: "data",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] attachment_set_id
     #   The ID of the attachment set. If an `attachmentSetId` is not
     #   specified, a new attachment set is created, and the ID of the set is
@@ -73,16 +60,6 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AddCommunicationToCaseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         case_id: "CaseId",
-    #         communication_body: "CommunicationBody", # required
-    #         cc_email_addresses: ["CcEmailAddress"],
-    #         attachment_set_id: "AttachmentSetId",
-    #       }
-    #
     # @!attribute [rw] case_id
     #   The support case ID requested or returned in the call. The case ID
     #   is an alphanumeric string formatted as shown in this example:
@@ -131,14 +108,6 @@ module Aws::Support
 
     # An attachment to a case communication. The attachment consists of the
     # file name and the content of the file.
-    #
-    # @note When making an API call, you may pass Attachment
-    #   data as a hash:
-    #
-    #       {
-    #         file_name: "FileName",
-    #         data: "data",
-    #       }
     #
     # @!attribute [rw] file_name
     #   The name of the attachment file.
@@ -281,13 +250,14 @@ module Aws::Support
     #   Corresponds to the `CategoryCode` values returned by a call to
     #   DescribeServices.
     #
-    # * **displayId** - The identifier for the case on pages in the AWS
-    #   Support Center.
+    # * **displayId** - The identifier for the case on pages in the Amazon
+    #   Web Services Support Center.
     #
-    # * **language** - The ISO 639-1 code for the language in which AWS
-    #   provides support. AWS Support currently supports English ("en")
-    #   and Japanese ("ja"). Language parameters must be passed explicitly
-    #   for operations that take them.
+    # * **language** - The language in which Amazon Web Services Support
+    #   handles the case. Amazon Web Services Support currently supports
+    #   Chinese (“zh”), English ("en"), Japanese ("ja") and Korean
+    #   (“ko”). You must specify the ISO 639-1 code for the `language`
+    #   parameter if you want support in that language.
     #
     # * **nextToken** - A resumption point for pagination.
     #
@@ -295,8 +265,8 @@ module Aws::Support
     #   of these objects are `attachments`, `body`, `caseId`, `submittedBy`,
     #   and `timeCreated`.
     #
-    # * **serviceCode** - The identifier for the AWS service that
-    #   corresponds to the service code defined in the call to
+    # * **serviceCode** - The identifier for the Amazon Web Services service
+    #   that corresponds to the service code defined in the call to
     #   DescribeServices.
     #
     # * **severityCode** - The severity code assigned to the case. Contains
@@ -304,8 +274,8 @@ module Aws::Support
     #   The possible values are: `low`, `normal`, `high`, `urgent`, and
     #   `critical`.
     #
-    # * **status** - The status of the case in the AWS Support Center. Valid
-    #   values:
+    # * **status** - The status of the case in the Amazon Web Services
+    #   Support Center. Valid values:
     #
     #   * `opened`
     #
@@ -333,12 +303,13 @@ module Aws::Support
     #   @return [String]
     #
     # @!attribute [rw] display_id
-    #   The ID displayed for the case in the AWS Support Center. This is a
-    #   numeric string.
+    #   The ID displayed for the case in the Amazon Web Services Support
+    #   Center. This is a numeric string.
     #   @return [String]
     #
     # @!attribute [rw] subject
-    #   The subject line for the case in the AWS Support Center.
+    #   The subject line for the case in the Amazon Web Services Support
+    #   Center.
     #   @return [String]
     #
     # @!attribute [rw] status
@@ -360,8 +331,9 @@ module Aws::Support
     #   @return [String]
     #
     # @!attribute [rw] service_code
-    #   The code for the AWS service. You can get a list of codes and the
-    #   corresponding service names by calling DescribeServices.
+    #   The code for the Amazon Web Services service. You can get a list of
+    #   codes and the corresponding service names by calling
+    #   DescribeServices.
     #   @return [String]
     #
     # @!attribute [rw] category_code
@@ -378,14 +350,15 @@ module Aws::Support
     #   @return [String]
     #
     # @!attribute [rw] time_created
-    #   The time that the case was created in the AWS Support Center.
+    #   The time that the case was created in the Amazon Web Services
+    #   Support Center.
     #   @return [String]
     #
     # @!attribute [rw] recent_communications
-    #   The five most recent communications between you and AWS Support
-    #   Center, including the IDs of any attachments to the communications.
-    #   Also includes a `nextToken` that you can use to retrieve earlier
-    #   communications.
+    #   The five most recent communications between you and Amazon Web
+    #   Services Support Center, including the IDs of any attachments to the
+    #   communications. Also includes a `nextToken` that you can use to
+    #   retrieve earlier communications.
     #   @return [Types::RecentCaseCommunications]
     #
     # @!attribute [rw] cc_email_addresses
@@ -394,10 +367,11 @@ module Aws::Support
     #   @return [Array<String>]
     #
     # @!attribute [rw] language
-    #   The ISO 639-1 code for the language in which AWS provides support.
-    #   AWS Support currently supports English ("en") and Japanese
-    #   ("ja"). Language parameters must be passed explicitly for
-    #   operations that take them.
+    #   The language in which Amazon Web Services Support handles the case.
+    #   Amazon Web Services Support currently supports Chinese (“zh”),
+    #   English ("en"), Japanese ("ja") and Korean (“ko”). You must
+    #   specify the ISO 639-1 code for the `language` parameter if you want
+    #   support in that language.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/CaseDetails AWS API Documentation
@@ -435,7 +409,7 @@ module Aws::Support
 
     # A JSON-formatted name/value pair that represents the category name and
     # category code of the problem, selected from the DescribeServices
-    # response for each AWS service.
+    # response for each Amazon Web Services service.
     #
     # @!attribute [rw] code
     #   The category code for the support case.
@@ -466,15 +440,17 @@ module Aws::Support
     #   @return [String]
     #
     # @!attribute [rw] body
-    #   The text of the communication between the customer and AWS Support.
+    #   The text of the communication between the customer and Amazon Web
+    #   Services Support.
     #   @return [String]
     #
     # @!attribute [rw] submitted_by
     #   The identity of the account that submitted, or responded to, the
-    #   support case. Customer entries include the role or IAM user as well
-    #   as the email address. For example, "AdminRole (Role)
-    #   &lt;janedoe@example.com&gt;. Entries from the AWS Support team
-    #   display "Amazon Web Services," and don't show an email address.
+    #   support case. Customer entries include the IAM role as well as the
+    #   email address (for example, "AdminRole (Role)
+    #   &lt;janedoe@example.com&gt;). Entries from the Amazon Web Services
+    #   Support team display "Amazon Web Services," and don't show an
+    #   email address.
     #   @return [String]
     #
     # @!attribute [rw] time_created
@@ -497,24 +473,53 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateCaseRequest
-    #   data as a hash:
+    # A JSON-formatted object that contains the CommunicationTypeOptions for
+    # creating a case for a certain communication channel. It is contained
+    # in the response from a DescribeCreateCaseOptions request.
+    # **CommunicationTypeOptions** contains the following fields:
     #
-    #       {
-    #         subject: "Subject", # required
-    #         service_code: "ServiceCode",
-    #         severity_code: "SeverityCode",
-    #         category_code: "CategoryCode",
-    #         communication_body: "CommunicationBody", # required
-    #         cc_email_addresses: ["CcEmailAddress"],
-    #         language: "Language",
-    #         issue_type: "IssueType",
-    #         attachment_set_id: "AttachmentSetId",
-    #       }
+    # * **datesWithoutSupport** - A JSON-formatted list containing date and
+    #   time ranges for periods without support in UTC time. Date and time
+    #   format is RFC 3339 : 'yyyy-MM-dd'T'HH:mm:ss.SSSZZ'.
     #
+    # * **supportedHours** - A JSON-formatted list containing time ranges
+    #   when support are available. Time format is RFC 3339 :
+    #   'HH:mm:ss.SSS'.
+    #
+    # * **type** - A string value indicating the communication type that the
+    #   aforementioned rules apply to. At the moment the type value can
+    #   assume one of 3 values at the moment `chat`, `web` and `call`.
+    #
+    # @!attribute [rw] type
+    #   A string value indicating the communication type. At the moment the
+    #   type value can assume one of 3 values at the moment chat, web and
+    #   call.
+    #   @return [String]
+    #
+    # @!attribute [rw] supported_hours
+    #   A JSON-formatted list containing time ranges when support is
+    #   available.
+    #   @return [Array<Types::SupportedHour>]
+    #
+    # @!attribute [rw] dates_without_support
+    #   A JSON-formatted list containing date and time ranges for periods
+    #   without support
+    #   @return [Array<Types::DateInterval>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/CommunicationTypeOptions AWS API Documentation
+    #
+    class CommunicationTypeOptions < Struct.new(
+      :type,
+      :supported_hours,
+      :dates_without_support)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] subject
     #   The title of the support case. The title appears in the **Subject**
-    #   field on the AWS Support Center [Create Case][1] page.
+    #   field on the Amazon Web Services Support Center [Create Case][1]
+    #   page.
     #
     #
     #
@@ -522,21 +527,22 @@ module Aws::Support
     #   @return [String]
     #
     # @!attribute [rw] service_code
-    #   The code for the AWS service. You can use the DescribeServices
-    #   operation to get the possible `serviceCode` values.
+    #   The code for the Amazon Web Services service. You can use the
+    #   DescribeServices operation to get the possible `serviceCode` values.
     #   @return [String]
     #
     # @!attribute [rw] severity_code
     #   A value that indicates the urgency of the case. This value
     #   determines the response time according to your service level
-    #   agreement with AWS Support. You can use the DescribeSeverityLevels
-    #   operation to get the possible values for `severityCode`.
+    #   agreement with Amazon Web Services Support. You can use the
+    #   DescribeSeverityLevels operation to get the possible values for
+    #   `severityCode`.
     #
     #   For more information, see SeverityLevel and [Choosing a Severity][1]
-    #   in the *AWS Support User Guide*.
+    #   in the *Amazon Web Services Support User Guide*.
     #
     #   <note markdown="1"> The availability of severity levels depends on the support plan for
-    #   the AWS account.
+    #   the Amazon Web Services account.
     #
     #    </note>
     #
@@ -548,13 +554,14 @@ module Aws::Support
     # @!attribute [rw] category_code
     #   The category of problem for the support case. You also use the
     #   DescribeServices operation to get the category code for a service.
-    #   Each AWS service defines its own set of category codes.
+    #   Each Amazon Web Services service defines its own set of category
+    #   codes.
     #   @return [String]
     #
     # @!attribute [rw] communication_body
     #   The communication body text that describes the issue. This text
-    #   appears in the **Description** field on the AWS Support Center
-    #   [Create Case][1] page.
+    #   appears in the **Description** field on the Amazon Web Services
+    #   Support Center [Create Case][1] page.
     #
     #
     #
@@ -562,10 +569,11 @@ module Aws::Support
     #   @return [String]
     #
     # @!attribute [rw] cc_email_addresses
-    #   A list of email addresses that AWS Support copies on case
-    #   correspondence. AWS Support identifies the account that creates the
-    #   case when you specify your AWS credentials in an HTTP POST method or
-    #   use the [AWS SDKs][1].
+    #   A list of email addresses that Amazon Web Services Support copies on
+    #   case correspondence. Amazon Web Services Support identifies the
+    #   account that creates the case when you specify your Amazon Web
+    #   Services credentials in an HTTP POST method or use the [Amazon Web
+    #   Services SDKs][1].
     #
     #
     #
@@ -573,10 +581,11 @@ module Aws::Support
     #   @return [Array<String>]
     #
     # @!attribute [rw] language
-    #   The language in which AWS Support handles the case. You must specify
-    #   the ISO 639-1 code for the `language` parameter if you want support
-    #   in that language. Currently, English ("en") and Japanese ("ja")
-    #   are supported.
+    #   The language in which Amazon Web Services Support handles the case.
+    #   Amazon Web Services Support currently supports Chinese (“zh”),
+    #   English ("en"), Japanese ("ja") and Korean (“ko”). You must
+    #   specify the ISO 639-1 code for the `language` parameter if you want
+    #   support in that language.
     #   @return [String]
     #
     # @!attribute [rw] issue_type
@@ -623,6 +632,28 @@ module Aws::Support
       include Aws::Structure
     end
 
+    # Date and time (UTC) format in RFC 3339 :
+    # 'yyyy-MM-dd'T'HH:mm:ss.SSSZZ'.
+    #
+    # @!attribute [rw] start_date_time
+    #   A JSON object containing start and date time (UTC). Date and time
+    #   format is RFC 3339 : 'yyyy-MM-dd'T'HH:mm:ss.SSSZZ'.
+    #   @return [String]
+    #
+    # @!attribute [rw] end_date_time
+    #   End Date Time (UTC). RFC 3339 format :
+    #   'yyyy-MM-dd'T'HH:mm:ss.SSSZZ'.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DateInterval AWS API Documentation
+    #
+    class DateInterval < Struct.new(
+      :start_date_time,
+      :end_date_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The limit for the number of DescribeAttachment requests in a short
     # period of time has been exceeded.
     #
@@ -639,13 +670,6 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeAttachmentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         attachment_id: "AttachmentId", # required
-    #       }
-    #
     # @!attribute [rw] attachment_id
     #   The ID of the attachment to return. Attachment IDs are returned by
     #   the DescribeCommunications operation.
@@ -679,29 +703,14 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeCasesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         case_id_list: ["CaseId"],
-    #         display_id: "DisplayId",
-    #         after_time: "AfterTime",
-    #         before_time: "BeforeTime",
-    #         include_resolved_cases: false,
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         language: "Language",
-    #         include_communications: false,
-    #       }
-    #
     # @!attribute [rw] case_id_list
     #   A list of ID numbers of the support cases you want returned. The
     #   maximum number of cases is 100.
     #   @return [Array<String>]
     #
     # @!attribute [rw] display_id
-    #   The ID displayed for a case in the AWS Support Center user
-    #   interface.
+    #   The ID displayed for a case in the Amazon Web Services Support
+    #   Center user interface.
     #   @return [String]
     #
     # @!attribute [rw] after_time
@@ -731,10 +740,11 @@ module Aws::Support
     #   @return [Integer]
     #
     # @!attribute [rw] language
-    #   The ISO 639-1 code for the language in which AWS provides support.
-    #   AWS Support currently supports English ("en") and Japanese
-    #   ("ja"). Language parameters must be passed explicitly for
-    #   operations that take them.
+    #   The language in which Amazon Web Services Support handles the case.
+    #   Amazon Web Services Support currently supports Chinese (“zh”),
+    #   English ("en"), Japanese ("ja") and Korean (“ko”). You must
+    #   specify the ISO 639-1 code for the `language` parameter if you want
+    #   support in that language.
     #   @return [String]
     #
     # @!attribute [rw] include_communications
@@ -782,17 +792,6 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeCommunicationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         case_id: "CaseId", # required
-    #         before_time: "BeforeTime",
-    #         after_time: "AfterTime",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] case_id
     #   The support case ID requested or returned in the call. The case ID
     #   is an alphanumeric string formatted as shown in this example:
@@ -850,23 +849,79 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeServicesRequest
-    #   data as a hash:
+    # @!attribute [rw] issue_type
+    #   The type of issue for the case. You can specify `customer-service`
+    #   or `technical`. If you don't specify a value, the default is
+    #   `technical`.
+    #   @return [String]
     #
-    #       {
-    #         service_code_list: ["ServiceCode"],
-    #         language: "Language",
-    #       }
+    # @!attribute [rw] service_code
+    #   The code for the Amazon Web Services service. You can use the
+    #   DescribeServices operation to get the possible `serviceCode` values.
+    #   @return [String]
     #
+    # @!attribute [rw] language
+    #   The language in which Amazon Web Services Support handles the case.
+    #   Amazon Web Services Support currently supports Chinese (“zh”),
+    #   English ("en"), Japanese ("ja") and Korean (“ko”). You must
+    #   specify the ISO 639-1 code for the `language` parameter if you want
+    #   support in that language.
+    #   @return [String]
+    #
+    # @!attribute [rw] category_code
+    #   The category of problem for the support case. You also use the
+    #   DescribeServices operation to get the category code for a service.
+    #   Each Amazon Web Services service defines its own set of category
+    #   codes.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeCreateCaseOptionsRequest AWS API Documentation
+    #
+    class DescribeCreateCaseOptionsRequest < Struct.new(
+      :issue_type,
+      :service_code,
+      :language,
+      :category_code)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] language_availability
+    #   Language availability can be any of the following:
+    #
+    #   * available
+    #
+    #   * best\_effort
+    #
+    #   * unavailable
+    #   @return [String]
+    #
+    # @!attribute [rw] communication_types
+    #   A JSON-formatted array that contains the available communication
+    #   type options, along with the available support timeframes for the
+    #   given inputs.
+    #   @return [Array<Types::CommunicationTypeOptions>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeCreateCaseOptionsResponse AWS API Documentation
+    #
+    class DescribeCreateCaseOptionsResponse < Struct.new(
+      :language_availability,
+      :communication_types)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] service_code_list
-    #   A JSON-formatted list of service codes available for AWS services.
+    #   A JSON-formatted list of service codes available for Amazon Web
+    #   Services services.
     #   @return [Array<String>]
     #
     # @!attribute [rw] language
-    #   The ISO 639-1 code for the language in which AWS provides support.
-    #   AWS Support currently supports English ("en") and Japanese
-    #   ("ja"). Language parameters must be passed explicitly for
-    #   operations that take them.
+    #   The language in which Amazon Web Services Support handles the case.
+    #   Amazon Web Services Support currently supports Chinese (“zh”),
+    #   English ("en"), Japanese ("ja") and Korean (“ko”). You must
+    #   specify the ISO 639-1 code for the `language` parameter if you want
+    #   support in that language.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeServicesRequest AWS API Documentation
@@ -878,10 +933,11 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # The list of AWS services returned by the DescribeServices operation.
+    # The list of Amazon Web Services services returned by the
+    # DescribeServices operation.
     #
     # @!attribute [rw] services
-    #   A JSON-formatted list of AWS services.
+    #   A JSON-formatted list of Amazon Web Services services.
     #   @return [Array<Types::Service>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeServicesResponse AWS API Documentation
@@ -892,18 +948,12 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeSeverityLevelsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         language: "Language",
-    #       }
-    #
     # @!attribute [rw] language
-    #   The ISO 639-1 code for the language in which AWS provides support.
-    #   AWS Support currently supports English ("en") and Japanese
-    #   ("ja"). Language parameters must be passed explicitly for
-    #   operations that take them.
+    #   The language in which Amazon Web Services Support handles the case.
+    #   Amazon Web Services Support currently supports Chinese (“zh”),
+    #   English ("en"), Japanese ("ja") and Korean (“ko”). You must
+    #   specify the ISO 639-1 code for the `language` parameter if you want
+    #   support in that language.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeSeverityLevelsRequest AWS API Documentation
@@ -920,7 +970,7 @@ module Aws::Support
     # @!attribute [rw] severity_levels
     #   The available severity levels for the support case. Available
     #   severity levels are defined by your service level agreement with
-    #   AWS.
+    #   Amazon Web Services.
     #   @return [Array<Types::SeverityLevel>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeSeverityLevelsResponse AWS API Documentation
@@ -931,13 +981,46 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTrustedAdvisorCheckRefreshStatusesRequest
-    #   data as a hash:
+    # @!attribute [rw] issue_type
+    #   The type of issue for the case. You can specify `customer-service`
+    #   or `technical`.
+    #   @return [String]
     #
-    #       {
-    #         check_ids: ["String"], # required
-    #       }
+    # @!attribute [rw] service_code
+    #   The code for the Amazon Web Services service. You can use the
+    #   DescribeServices operation to get the possible `serviceCode` values.
+    #   @return [String]
     #
+    # @!attribute [rw] category_code
+    #   The category of problem for the support case. You also use the
+    #   DescribeServices operation to get the category code for a service.
+    #   Each Amazon Web Services service defines its own set of category
+    #   codes.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeSupportedLanguagesRequest AWS API Documentation
+    #
+    class DescribeSupportedLanguagesRequest < Struct.new(
+      :issue_type,
+      :service_code,
+      :category_code)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] supported_languages
+    #   A JSON-formatted array that contains the available ISO 639-1
+    #   language codes.
+    #   @return [Array<Types::SupportedLanguage>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeSupportedLanguagesResponse AWS API Documentation
+    #
+    class DescribeSupportedLanguagesResponse < Struct.new(
+      :supported_languages)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] check_ids
     #   The IDs of the Trusted Advisor checks to get the status.
     #
@@ -970,23 +1053,38 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTrustedAdvisorCheckResultRequest
-    #   data as a hash:
-    #
-    #       {
-    #         check_id: "String", # required
-    #         language: "String",
-    #       }
-    #
     # @!attribute [rw] check_id
     #   The unique identifier for the Trusted Advisor check.
     #   @return [String]
     #
     # @!attribute [rw] language
-    #   The ISO 639-1 code for the language in which AWS provides support.
-    #   AWS Support currently supports English ("en") and Japanese
-    #   ("ja"). Language parameters must be passed explicitly for
-    #   operations that take them.
+    #   The ISO 639-1 code for the language that you want your check results
+    #   to appear in.
+    #
+    #   The Amazon Web Services Support API currently supports the following
+    #   languages for Trusted Advisor:
+    #
+    #   * Chinese, Simplified - `zh`
+    #
+    #   * Chinese, Traditional - `zh_TW`
+    #
+    #   * English - `en`
+    #
+    #   * French - `fr`
+    #
+    #   * German - `de`
+    #
+    #   * Indonesian - `id`
+    #
+    #   * Italian - `it`
+    #
+    #   * Japanese - `ja`
+    #
+    #   * Korean - `ko`
+    #
+    #   * Portuguese, Brazilian - `pt_BR`
+    #
+    #   * Spanish - `es`
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeTrustedAdvisorCheckResultRequest AWS API Documentation
@@ -1013,13 +1111,6 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTrustedAdvisorCheckSummariesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         check_ids: ["String"], # required
-    #       }
-    #
     # @!attribute [rw] check_ids
     #   The IDs of the Trusted Advisor checks.
     #   @return [Array<String>]
@@ -1047,18 +1138,34 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTrustedAdvisorChecksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         language: "String", # required
-    #       }
-    #
     # @!attribute [rw] language
-    #   The ISO 639-1 code for the language in which AWS provides support.
-    #   AWS Support currently supports English ("en") and Japanese
-    #   ("ja"). Language parameters must be passed explicitly for
-    #   operations that take them.
+    #   The ISO 639-1 code for the language that you want your checks to
+    #   appear in.
+    #
+    #   The Amazon Web Services Support API currently supports the following
+    #   languages for Trusted Advisor:
+    #
+    #   * Chinese, Simplified - `zh`
+    #
+    #   * Chinese, Traditional - `zh_TW`
+    #
+    #   * English - `en`
+    #
+    #   * French - `fr`
+    #
+    #   * German - `de`
+    #
+    #   * Indonesian - `id`
+    #
+    #   * Italian - `it`
+    #
+    #   * Japanese - `ja`
+    #
+    #   * Korean - `ko`
+    #
+    #   * Portuguese, Brazilian - `pt_BR`
+    #
+    #   * Spanish - `es`
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/DescribeTrustedAdvisorChecksRequest AWS API Documentation
@@ -1117,13 +1224,6 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RefreshTrustedAdvisorCheckRequest
-    #   data as a hash:
-    #
-    #       {
-    #         check_id: "String", # required
-    #       }
-    #
     # @!attribute [rw] check_id
     #   The unique identifier for the Trusted Advisor check to refresh.
     #
@@ -1156,13 +1256,6 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ResolveCaseRequest
-    #   data as a hash:
-    #
-    #       {
-    #         case_id: "CaseId",
-    #       }
-    #
     # @!attribute [rw] case_id
     #   The support case ID requested or returned in the call. The case ID
     #   is an alphanumeric string formatted as shown in this example:
@@ -1196,25 +1289,25 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # Information about an AWS service returned by the DescribeServices
-    # operation.
+    # Information about an Amazon Web Services service returned by the
+    # DescribeServices operation.
     #
     # @!attribute [rw] code
-    #   The code for an AWS service returned by the DescribeServices
-    #   response. The `name` element contains the corresponding friendly
-    #   name.
+    #   The code for an Amazon Web Services service returned by the
+    #   DescribeServices response. The `name` element contains the
+    #   corresponding friendly name.
     #   @return [String]
     #
     # @!attribute [rw] name
-    #   The friendly name for an AWS service. The `code` element contains
-    #   the corresponding code.
+    #   The friendly name for an Amazon Web Services service. The `code`
+    #   element contains the corresponding code.
     #   @return [String]
     #
     # @!attribute [rw] categories
     #   A list of categories that describe the type of support issue a case
     #   describes. Categories consist of a category name and a category
-    #   code. Category names and codes are passed to AWS Support when you
-    #   call CreateCase.
+    #   code. Category names and codes are passed to Amazon Web Services
+    #   Support when you call CreateCase.
     #   @return [Array<Types::Category>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/Service AWS API Documentation
@@ -1229,8 +1322,8 @@ module Aws::Support
 
     # A code and name pair that represents the severity level of a support
     # case. The available values depend on the support plan for the account.
-    # For more information, see [Choosing a severity][1] in the *AWS Support
-    # User Guide*.
+    # For more information, see [Choosing a severity][1] in the *Amazon Web
+    # Services Support User Guide*.
     #
     #
     #
@@ -1247,8 +1340,9 @@ module Aws::Support
     #   level code.
     #
     #   <note markdown="1"> The values returned by the API are different from the values that
-    #   appear in the AWS Support Center. For example, the API uses the code
-    #   `low`, but the name appears as General guidance in Support Center.
+    #   appear in the Amazon Web Services Support Center. For example, the
+    #   API uses the code `low`, but the name appears as General guidance in
+    #   Support Center.
     #
     #    The following are the API code names and how they appear in the
     #   console:
@@ -1265,8 +1359,8 @@ module Aws::Support
     #
     #    </note>
     #
-    #   For more information, see [Choosing a severity][1] in the *AWS
-    #   Support User Guide*.
+    #   For more information, see [Choosing a severity][1] in the *Amazon
+    #   Web Services Support User Guide*.
     #
     #
     #
@@ -1278,6 +1372,66 @@ module Aws::Support
     class SeverityLevel < Struct.new(
       :code,
       :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Time range object with `startTime` and `endTime` range in RFC 3339
+    # format. `'HH:mm:ss.SSS'`.
+    #
+    # @!attribute [rw] start_time
+    #   Start Time. RFC 3339 format `'HH:mm:ss.SSS'`.
+    #   @return [String]
+    #
+    # @!attribute [rw] end_time
+    #   End Time. RFC 3339 format `'HH:mm:ss.SSS'`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/SupportedHour AWS API Documentation
+    #
+    class SupportedHour < Struct.new(
+      :start_time,
+      :end_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A JSON-formatted object that contains the available ISO 639-1 language
+    # `code`, `language` name and langauge `display` value. The language
+    # code is what should be used in the CreateCase call.
+    #
+    # @!attribute [rw] code
+    #   2 digit ISO 639-1 code. e.g. `en`
+    #   @return [String]
+    #
+    # @!attribute [rw] language
+    #   Full language description e.g. `ENGLISH`
+    #   @return [String]
+    #
+    # @!attribute [rw] display
+    #   Language display value e.g. `ENGLISH`
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/SupportedLanguage AWS API Documentation
+    #
+    class SupportedLanguage < Struct.new(
+      :code,
+      :language,
+      :display)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # You have exceeded the maximum allowed TPS (Transactions Per Second)
+    # for the operations.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/ThrottlingException AWS API Documentation
+    #
+    class ThrottlingException < Struct.new(
+      :message)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1394,8 +1548,8 @@ module Aws::Support
     #   @return [String]
     #
     # @!attribute [rw] resources_summary
-    #   Details about AWS resources that were analyzed in a call to Trusted
-    #   Advisor DescribeTrustedAdvisorCheckSummaries.
+    #   Details about Amazon Web Services resources that were analyzed in a
+    #   call to Trusted Advisor DescribeTrustedAdvisorCheckSummaries.
     #   @return [Types::TrustedAdvisorResourcesSummary]
     #
     # @!attribute [rw] category_specific_summary
@@ -1441,8 +1595,8 @@ module Aws::Support
     #   @return [Boolean]
     #
     # @!attribute [rw] resources_summary
-    #   Details about AWS resources that were analyzed in a call to Trusted
-    #   Advisor DescribeTrustedAdvisorCheckSummaries.
+    #   Details about Amazon Web Services resources that were analyzed in a
+    #   call to Trusted Advisor DescribeTrustedAdvisorCheckSummaries.
     #   @return [Types::TrustedAdvisorResourcesSummary]
     #
     # @!attribute [rw] category_specific_summary
@@ -1494,7 +1648,8 @@ module Aws::Support
     #   @return [String]
     #
     # @!attribute [rw] region
-    #   The AWS Region in which the identified resource is located.
+    #   The Amazon Web Services Region in which the identified resource is
+    #   located.
     #   @return [String]
     #
     # @!attribute [rw] resource_id
@@ -1502,8 +1657,8 @@ module Aws::Support
     #   @return [String]
     #
     # @!attribute [rw] is_suppressed
-    #   Specifies whether the AWS resource was ignored by Trusted Advisor
-    #   because it was marked as suppressed by the user.
+    #   Specifies whether the Amazon Web Services resource was ignored by
+    #   Trusted Advisor because it was marked as suppressed by the user.
     #   @return [Boolean]
     #
     # @!attribute [rw] metadata
@@ -1527,27 +1682,27 @@ module Aws::Support
       include Aws::Structure
     end
 
-    # Details about AWS resources that were analyzed in a call to Trusted
-    # Advisor DescribeTrustedAdvisorCheckSummaries.
+    # Details about Amazon Web Services resources that were analyzed in a
+    # call to Trusted Advisor DescribeTrustedAdvisorCheckSummaries.
     #
     # @!attribute [rw] resources_processed
-    #   The number of AWS resources that were analyzed by the Trusted
-    #   Advisor check.
+    #   The number of Amazon Web Services resources that were analyzed by
+    #   the Trusted Advisor check.
     #   @return [Integer]
     #
     # @!attribute [rw] resources_flagged
-    #   The number of AWS resources that were flagged (listed) by the
-    #   Trusted Advisor check.
+    #   The number of Amazon Web Services resources that were flagged
+    #   (listed) by the Trusted Advisor check.
     #   @return [Integer]
     #
     # @!attribute [rw] resources_ignored
-    #   The number of AWS resources ignored by Trusted Advisor because
-    #   information was unavailable.
+    #   The number of Amazon Web Services resources ignored by Trusted
+    #   Advisor because information was unavailable.
     #   @return [Integer]
     #
     # @!attribute [rw] resources_suppressed
-    #   The number of AWS resources ignored by Trusted Advisor because they
-    #   were marked as suppressed by the user.
+    #   The number of Amazon Web Services resources ignored by Trusted
+    #   Advisor because they were marked as suppressed by the user.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/support-2013-04-15/TrustedAdvisorResourcesSummary AWS API Documentation

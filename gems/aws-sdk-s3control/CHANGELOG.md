@@ -1,6 +1,187 @@
 Unreleased Changes
 ------------------
 
+1.67.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.66.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.65.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.64.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.63.0 (2023-04-19)
+------------------
+
+* Feature - Provides support for overriding endpoint when region is "snow". This will enable bucket APIs for Amazon S3 Compatible storage on Snow Family devices.
+
+1.62.0 (2023-03-15)
+------------------
+
+* Feature - Added support for S3 Object Lambda aliases.
+
+1.61.0 (2023-03-13)
+------------------
+
+* Feature - Added support for cross-account Multi-Region Access Points. Added support for S3 Replication for S3 on Outposts.
+
+1.60.0 (2023-01-25)
+------------------
+
+* Feature - Add additional endpoint tests for S3 Control. Fix missing endpoint parameters for PutBucketVersioning and GetBucketVersioning. Prior to this fix, those operations may have resulted in an invalid endpoint being resolved.
+
+1.59.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.58.0 (2022-11-30)
+------------------
+
+* Feature - Amazon S3 now supports cross-account access points. S3 bucket owners can now allow trusted AWS accounts to create access points associated with their bucket.
+
+1.57.0 (2022-11-29)
+------------------
+
+* Feature - Added two new APIs to support Amazon S3 Multi-Region Access Point failover controls: GetMultiRegionAccessPointRoutes and SubmitMultiRegionAccessPointRoutes. The failover control APIs are supported in the following Regions: us-east-1, us-west-2, eu-west-1, ap-southeast-2, and ap-northeast-1.
+
+1.56.0 (2022-11-17)
+------------------
+
+* Feature - Added 34 new S3 Storage Lens metrics to support additional customer use cases.
+
+1.55.0 (2022-11-02)
+------------------
+
+* Feature - S3 on Outposts launches support for Lifecycle configuration for Outposts buckets. With S3 Lifecycle configuration, you can mange objects so they are stored cost effectively. You can manage objects using size-based rules and specify how many noncurrent versions bucket will retain.
+
+1.54.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.53.0 (2022-10-19)
+------------------
+
+* Feature - Updates internal logic for constructing API endpoints. We have added rule-based endpoints and internal model parameters.
+
+1.52.0 (2022-10-04)
+------------------
+
+* Feature - S3 Object Lambda adds support to allow customers to intercept HeadObject and ListObjects requests and introduce their own compute. These requests were previously proxied to S3.
+
+1.51.0 (2022-09-21)
+------------------
+
+* Feature - S3 on Outposts launches support for object versioning for Outposts buckets. With S3 Versioning, you can preserve, retrieve, and restore every version of every object stored in your buckets. You can recover from both unintended user actions and application failures.
+
+1.50.0 (2022-04-05)
+------------------
+
+* Feature - Documentation-only update for doc bug fixes for the S3 Control API docs.
+
+1.49.0 (2022-02-24)
+------------------
+
+* Feature - Amazon S3 Batch Operations adds support for new integrity checking capabilities in Amazon S3.
+
+1.48.0 (2022-02-08)
+------------------
+
+* Feature - This release adds support for S3 Batch Replication. Batch Replication lets you replicate existing objects, already replicated objects to new destinations, and objects that previously failed to replicate. Customers will receive object-level visibility of progress and a detailed completion report.
+
+1.47.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.46.0 (2022-01-04)
+------------------
+
+* Feature - Documentation updates for the renaming of Glacier to Glacier Flexible Retrieval.
+
+1.45.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.44.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Fix a bug where the dualstack plugin was dropping URI paths.
+
+1.43.0 (2021-11-22)
+------------------
+
+* Feature - Added Amazon CloudWatch publishing option for S3 Storage Lens metrics.
+
+1.42.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Feature - Support FIPS endpoints for S3 Outposts using Bucket and Access Point ARNs.
+
+1.41.1 (2021-10-20)
+------------------
+
+* Issue - use the correct service with the `EndpointProvider` to determine `sigv4_region`.
+
+1.41.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.40.0 (2021-09-02)
+------------------
+
+* Feature - S3 Multi-Region Access Points provide a single global endpoint to access a data set that spans multiple S3 buckets in different AWS Regions.
+
+1.39.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.38.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.37.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.36.0 (2021-07-26)
+------------------
+
+* Feature - S3 Access Point aliases can be used anywhere you use S3 bucket names to access data in S3
+
+1.35.0 (2021-07-22)
+------------------
+
+* Feature - Documentation updates for Amazon S3-control
+
+1.34.0 (2021-06-03)
+------------------
+
+* Feature - Amazon S3 Batch Operations now supports S3 Bucket Keys.
+
 1.33.0 (2021-05-11)
 ------------------
 

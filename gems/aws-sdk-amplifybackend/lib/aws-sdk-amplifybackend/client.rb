@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:amplifybackend)
@@ -73,8 +77,13 @@ module Aws::AmplifyBackend
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::AmplifyBackend::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::AmplifyBackend
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::AmplifyBackend
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::AmplifyBackend
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::AmplifyBackend
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::AmplifyBackend
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::AmplifyBackend::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::AmplifyBackend::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::AmplifyBackend
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::AmplifyBackend
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -428,8 +485,8 @@ module Aws::AmplifyBackend
     # @option params [required, String] :backend_environment_name
     #
     # @option params [required, Types::BackendAPIResourceConfig] :resource_config
-    #   The resource configuration for the data model, configured as a part of
-    #   the Amplify project.
+    #   The resource config for the data model, configured as a part of the
+    #   Amplify project.
     #
     # @option params [required, String] :resource_name
     #
@@ -574,6 +631,12 @@ module Aws::AmplifyBackend
     #               client_id: "__string",
     #               client_secret: "__string",
     #             },
+    #             sign_in_with_apple: {
+    #               client_id: "__string",
+    #               key_id: "__string",
+    #               private_key: "__string",
+    #               team_id: "__string",
+    #             },
     #           },
     #         },
     #         password_policy: {
@@ -583,6 +646,16 @@ module Aws::AmplifyBackend
     #         required_sign_up_attributes: ["ADDRESS"], # required, accepts ADDRESS, BIRTHDATE, EMAIL, FAMILY_NAME, GENDER, GIVEN_NAME, LOCALE, MIDDLE_NAME, NAME, NICKNAME, PHONE_NUMBER, PICTURE, PREFERRED_USERNAME, PROFILE, UPDATED_AT, WEBSITE, ZONE_INFO
     #         sign_in_method: "EMAIL", # required, accepts EMAIL, EMAIL_AND_PHONE_NUMBER, PHONE_NUMBER, USERNAME
     #         user_pool_name: "__string", # required
+    #         verification_message: {
+    #           delivery_method: "EMAIL", # required, accepts EMAIL, SMS
+    #           email_settings: {
+    #             email_message: "__string",
+    #             email_subject: "__string",
+    #           },
+    #           sms_settings: {
+    #             sms_message: "__string",
+    #           },
+    #         },
     #       },
     #     },
     #     resource_name: "__string", # required
@@ -639,6 +712,56 @@ module Aws::AmplifyBackend
     # @param [Hash] params ({})
     def create_backend_config(params = {}, options = {})
       req = build_request(:create_backend_config, params)
+      req.send_request(options)
+    end
+
+    # Creates a backend storage resource.
+    #
+    # @option params [required, String] :app_id
+    #
+    # @option params [required, String] :backend_environment_name
+    #
+    # @option params [required, Types::CreateBackendStorageResourceConfig] :resource_config
+    #   The resource configuration for creating backend storage.
+    #
+    # @option params [required, String] :resource_name
+    #
+    # @return [Types::CreateBackendStorageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateBackendStorageResponse#app_id #app_id} => String
+    #   * {Types::CreateBackendStorageResponse#backend_environment_name #backend_environment_name} => String
+    #   * {Types::CreateBackendStorageResponse#job_id #job_id} => String
+    #   * {Types::CreateBackendStorageResponse#status #status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_backend_storage({
+    #     app_id: "__string", # required
+    #     backend_environment_name: "__string", # required
+    #     resource_config: { # required
+    #       bucket_name: "__string",
+    #       permissions: { # required
+    #         authenticated: ["READ"], # required, accepts READ, CREATE_AND_UPDATE, DELETE
+    #         un_authenticated: ["READ"], # accepts READ, CREATE_AND_UPDATE, DELETE
+    #       },
+    #       service_name: "S3", # required, accepts S3
+    #     },
+    #     resource_name: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.app_id #=> String
+    #   resp.backend_environment_name #=> String
+    #   resp.job_id #=> String
+    #   resp.status #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/CreateBackendStorage AWS API Documentation
+    #
+    # @overload create_backend_storage(params = {})
+    # @param [Hash] params ({})
+    def create_backend_storage(params = {}, options = {})
+      req = build_request(:create_backend_storage, params)
       req.send_request(options)
     end
 
@@ -723,8 +846,8 @@ module Aws::AmplifyBackend
     # @option params [required, String] :backend_environment_name
     #
     # @option params [Types::BackendAPIResourceConfig] :resource_config
-    #   The resource configuration for the data model, configured as a part of
-    #   the Amplify project.
+    #   The resource config for the data model, configured as a part of the
+    #   Amplify project.
     #
     # @option params [required, String] :resource_name
     #
@@ -842,6 +965,48 @@ module Aws::AmplifyBackend
       req.send_request(options)
     end
 
+    # Removes the specified backend storage resource.
+    #
+    # @option params [required, String] :app_id
+    #
+    # @option params [required, String] :backend_environment_name
+    #
+    # @option params [required, String] :resource_name
+    #
+    # @option params [required, String] :service_name
+    #
+    # @return [Types::DeleteBackendStorageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteBackendStorageResponse#app_id #app_id} => String
+    #   * {Types::DeleteBackendStorageResponse#backend_environment_name #backend_environment_name} => String
+    #   * {Types::DeleteBackendStorageResponse#job_id #job_id} => String
+    #   * {Types::DeleteBackendStorageResponse#status #status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_backend_storage({
+    #     app_id: "__string", # required
+    #     backend_environment_name: "__string", # required
+    #     resource_name: "__string", # required
+    #     service_name: "S3", # required, accepts S3
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.app_id #=> String
+    #   resp.backend_environment_name #=> String
+    #   resp.job_id #=> String
+    #   resp.status #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/DeleteBackendStorage AWS API Documentation
+    #
+    # @overload delete_backend_storage(params = {})
+    # @param [Hash] params ({})
+    def delete_backend_storage(params = {}, options = {})
+      req = build_request(:delete_backend_storage, params)
+      req.send_request(options)
+    end
+
     # Deletes the challenge token based on the given appId and sessionId.
     #
     # @option params [required, String] :app_id
@@ -923,6 +1088,7 @@ module Aws::AmplifyBackend
     #
     # @return [Types::GetBackendResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
+    #   * {Types::GetBackendResponse#amplify_feature_flags #amplify_feature_flags} => String
     #   * {Types::GetBackendResponse#amplify_meta_config #amplify_meta_config} => String
     #   * {Types::GetBackendResponse#app_id #app_id} => String
     #   * {Types::GetBackendResponse#app_name #app_name} => String
@@ -939,6 +1105,7 @@ module Aws::AmplifyBackend
     #
     # @example Response structure
     #
+    #   resp.amplify_feature_flags #=> String
     #   resp.amplify_meta_config #=> String
     #   resp.app_id #=> String
     #   resp.app_name #=> String
@@ -963,8 +1130,8 @@ module Aws::AmplifyBackend
     # @option params [required, String] :backend_environment_name
     #
     # @option params [Types::BackendAPIResourceConfig] :resource_config
-    #   The resource configuration for the data model, configured as a part of
-    #   the Amplify project.
+    #   The resource config for the data model, configured as a part of the
+    #   Amplify project.
     #
     # @option params [required, String] :resource_name
     #
@@ -1059,7 +1226,8 @@ module Aws::AmplifyBackend
       req.send_request(options)
     end
 
-    # Generates a model schema for existing backend API resource.
+    # Gets a model introspection schema for an existing backend API
+    # resource.
     #
     # @option params [required, String] :app_id
     #
@@ -1071,6 +1239,7 @@ module Aws::AmplifyBackend
     #
     #   * {Types::GetBackendAPIModelsResponse#models #models} => String
     #   * {Types::GetBackendAPIModelsResponse#status #status} => String
+    #   * {Types::GetBackendAPIModelsResponse#model_introspection_schema #model_introspection_schema} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -1084,6 +1253,7 @@ module Aws::AmplifyBackend
     #
     #   resp.models #=> String
     #   resp.status #=> String, one of "LATEST", "STALE"
+    #   resp.model_introspection_schema #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendAPIModels AWS API Documentation
     #
@@ -1094,7 +1264,7 @@ module Aws::AmplifyBackend
       req.send_request(options)
     end
 
-    # Gets backend auth details.
+    # Gets a backend auth details.
     #
     # @option params [required, String] :app_id
     #
@@ -1149,6 +1319,10 @@ module Aws::AmplifyBackend
     #   resp.resource_config.user_pool_configs.o_auth.social_provider_settings.google.client_secret #=> String
     #   resp.resource_config.user_pool_configs.o_auth.social_provider_settings.login_with_amazon.client_id #=> String
     #   resp.resource_config.user_pool_configs.o_auth.social_provider_settings.login_with_amazon.client_secret #=> String
+    #   resp.resource_config.user_pool_configs.o_auth.social_provider_settings.sign_in_with_apple.client_id #=> String
+    #   resp.resource_config.user_pool_configs.o_auth.social_provider_settings.sign_in_with_apple.key_id #=> String
+    #   resp.resource_config.user_pool_configs.o_auth.social_provider_settings.sign_in_with_apple.private_key #=> String
+    #   resp.resource_config.user_pool_configs.o_auth.social_provider_settings.sign_in_with_apple.team_id #=> String
     #   resp.resource_config.user_pool_configs.password_policy.additional_constraints #=> Array
     #   resp.resource_config.user_pool_configs.password_policy.additional_constraints[0] #=> String, one of "REQUIRE_DIGIT", "REQUIRE_LOWERCASE", "REQUIRE_SYMBOL", "REQUIRE_UPPERCASE"
     #   resp.resource_config.user_pool_configs.password_policy.minimum_length #=> Float
@@ -1156,6 +1330,10 @@ module Aws::AmplifyBackend
     #   resp.resource_config.user_pool_configs.required_sign_up_attributes[0] #=> String, one of "ADDRESS", "BIRTHDATE", "EMAIL", "FAMILY_NAME", "GENDER", "GIVEN_NAME", "LOCALE", "MIDDLE_NAME", "NAME", "NICKNAME", "PHONE_NUMBER", "PICTURE", "PREFERRED_USERNAME", "PROFILE", "UPDATED_AT", "WEBSITE", "ZONE_INFO"
     #   resp.resource_config.user_pool_configs.sign_in_method #=> String, one of "EMAIL", "EMAIL_AND_PHONE_NUMBER", "PHONE_NUMBER", "USERNAME"
     #   resp.resource_config.user_pool_configs.user_pool_name #=> String
+    #   resp.resource_config.user_pool_configs.verification_message.delivery_method #=> String, one of "EMAIL", "SMS"
+    #   resp.resource_config.user_pool_configs.verification_message.email_settings.email_message #=> String
+    #   resp.resource_config.user_pool_configs.verification_message.email_settings.email_subject #=> String
+    #   resp.resource_config.user_pool_configs.verification_message.sms_settings.sms_message #=> String
     #   resp.resource_name #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendAuth AWS API Documentation
@@ -1214,6 +1392,51 @@ module Aws::AmplifyBackend
       req.send_request(options)
     end
 
+    # Gets details for a backend storage resource.
+    #
+    # @option params [required, String] :app_id
+    #
+    # @option params [required, String] :backend_environment_name
+    #
+    # @option params [required, String] :resource_name
+    #
+    # @return [Types::GetBackendStorageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetBackendStorageResponse#app_id #app_id} => String
+    #   * {Types::GetBackendStorageResponse#backend_environment_name #backend_environment_name} => String
+    #   * {Types::GetBackendStorageResponse#resource_config #resource_config} => Types::GetBackendStorageResourceConfig
+    #   * {Types::GetBackendStorageResponse#resource_name #resource_name} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_backend_storage({
+    #     app_id: "__string", # required
+    #     backend_environment_name: "__string", # required
+    #     resource_name: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.app_id #=> String
+    #   resp.backend_environment_name #=> String
+    #   resp.resource_config.bucket_name #=> String
+    #   resp.resource_config.imported #=> Boolean
+    #   resp.resource_config.permissions.authenticated #=> Array
+    #   resp.resource_config.permissions.authenticated[0] #=> String, one of "READ", "CREATE_AND_UPDATE", "DELETE"
+    #   resp.resource_config.permissions.un_authenticated #=> Array
+    #   resp.resource_config.permissions.un_authenticated[0] #=> String, one of "READ", "CREATE_AND_UPDATE", "DELETE"
+    #   resp.resource_config.service_name #=> String, one of "S3"
+    #   resp.resource_name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/GetBackendStorage AWS API Documentation
+    #
+    # @overload get_backend_storage(params = {})
+    # @param [Hash] params ({})
+    def get_backend_storage(params = {}, options = {})
+      req = build_request(:get_backend_storage, params)
+      req.send_request(options)
+    end
+
     # Gets the challenge token based on the given appId and sessionId.
     #
     # @option params [required, String] :app_id
@@ -1247,6 +1470,100 @@ module Aws::AmplifyBackend
     # @param [Hash] params ({})
     def get_token(params = {}, options = {})
       req = build_request(:get_token, params)
+      req.send_request(options)
+    end
+
+    # Imports an existing backend authentication resource.
+    #
+    # @option params [required, String] :app_id
+    #
+    # @option params [required, String] :backend_environment_name
+    #
+    # @option params [String] :identity_pool_id
+    #
+    # @option params [required, String] :native_client_id
+    #
+    # @option params [required, String] :user_pool_id
+    #
+    # @option params [required, String] :web_client_id
+    #
+    # @return [Types::ImportBackendAuthResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ImportBackendAuthResponse#app_id #app_id} => String
+    #   * {Types::ImportBackendAuthResponse#backend_environment_name #backend_environment_name} => String
+    #   * {Types::ImportBackendAuthResponse#error #error} => String
+    #   * {Types::ImportBackendAuthResponse#job_id #job_id} => String
+    #   * {Types::ImportBackendAuthResponse#operation #operation} => String
+    #   * {Types::ImportBackendAuthResponse#status #status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.import_backend_auth({
+    #     app_id: "__string", # required
+    #     backend_environment_name: "__string", # required
+    #     identity_pool_id: "__string",
+    #     native_client_id: "__string", # required
+    #     user_pool_id: "__string", # required
+    #     web_client_id: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.app_id #=> String
+    #   resp.backend_environment_name #=> String
+    #   resp.error #=> String
+    #   resp.job_id #=> String
+    #   resp.operation #=> String
+    #   resp.status #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ImportBackendAuth AWS API Documentation
+    #
+    # @overload import_backend_auth(params = {})
+    # @param [Hash] params ({})
+    def import_backend_auth(params = {}, options = {})
+      req = build_request(:import_backend_auth, params)
+      req.send_request(options)
+    end
+
+    # Imports an existing backend storage resource.
+    #
+    # @option params [required, String] :app_id
+    #
+    # @option params [required, String] :backend_environment_name
+    #
+    # @option params [String] :bucket_name
+    #
+    # @option params [required, String] :service_name
+    #
+    # @return [Types::ImportBackendStorageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ImportBackendStorageResponse#app_id #app_id} => String
+    #   * {Types::ImportBackendStorageResponse#backend_environment_name #backend_environment_name} => String
+    #   * {Types::ImportBackendStorageResponse#job_id #job_id} => String
+    #   * {Types::ImportBackendStorageResponse#status #status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.import_backend_storage({
+    #     app_id: "__string", # required
+    #     backend_environment_name: "__string", # required
+    #     bucket_name: "__string",
+    #     service_name: "S3", # required, accepts S3
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.app_id #=> String
+    #   resp.backend_environment_name #=> String
+    #   resp.job_id #=> String
+    #   resp.status #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ImportBackendStorage AWS API Documentation
+    #
+    # @overload import_backend_storage(params = {})
+    # @param [Hash] params ({})
+    def import_backend_storage(params = {}, options = {})
+      req = build_request(:import_backend_storage, params)
       req.send_request(options)
     end
 
@@ -1307,6 +1624,37 @@ module Aws::AmplifyBackend
       req.send_request(options)
     end
 
+    # The list of S3 buckets in your account.
+    #
+    # @option params [String] :next_token
+    #
+    # @return [Types::ListS3BucketsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListS3BucketsResponse#buckets #buckets} => Array&lt;Types::S3BucketInfo&gt;
+    #   * {Types::ListS3BucketsResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_s3_buckets({
+    #     next_token: "__string",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.buckets #=> Array
+    #   resp.buckets[0].creation_date #=> String
+    #   resp.buckets[0].name #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/ListS3Buckets AWS API Documentation
+    #
+    # @overload list_s3_buckets(params = {})
+    # @param [Hash] params ({})
+    def list_s3_buckets(params = {}, options = {})
+      req = build_request(:list_s3_buckets, params)
+      req.send_request(options)
+    end
+
     # Removes all backend environments from your Amplify project.
     #
     # @option params [required, String] :app_id
@@ -1345,8 +1693,7 @@ module Aws::AmplifyBackend
       req.send_request(options)
     end
 
-    # Removes the AWS resources that are required to access the Amplify
-    # Admin UI.
+    # Removes the AWS resources required to access the Amplify Admin UI.
     #
     # @option params [required, String] :app_id
     #
@@ -1380,8 +1727,8 @@ module Aws::AmplifyBackend
     # @option params [required, String] :backend_environment_name
     #
     # @option params [Types::BackendAPIResourceConfig] :resource_config
-    #   The resource configuration for the data model, configured as a part of
-    #   the Amplify project.
+    #   The resource config for the data model, configured as a part of the
+    #   Amplify project.
     #
     # @option params [required, String] :resource_name
     #
@@ -1525,11 +1872,27 @@ module Aws::AmplifyBackend
     #               client_id: "__string",
     #               client_secret: "__string",
     #             },
+    #             sign_in_with_apple: {
+    #               client_id: "__string",
+    #               key_id: "__string",
+    #               private_key: "__string",
+    #               team_id: "__string",
+    #             },
     #           },
     #         },
     #         password_policy: {
     #           additional_constraints: ["REQUIRE_DIGIT"], # accepts REQUIRE_DIGIT, REQUIRE_LOWERCASE, REQUIRE_SYMBOL, REQUIRE_UPPERCASE
     #           minimum_length: 1.0,
+    #         },
+    #         verification_message: {
+    #           delivery_method: "EMAIL", # required, accepts EMAIL, SMS
+    #           email_settings: {
+    #             email_message: "__string",
+    #             email_subject: "__string",
+    #           },
+    #           sms_settings: {
+    #             sms_message: "__string",
+    #           },
     #         },
     #       },
     #     },
@@ -1554,8 +1917,7 @@ module Aws::AmplifyBackend
       req.send_request(options)
     end
 
-    # Updates the AWS resources that are required to access the Amplify
-    # Admin UI.
+    # Updates the AWS resources required to access the Amplify Admin UI.
     #
     # @option params [required, String] :app_id
     #
@@ -1653,6 +2015,55 @@ module Aws::AmplifyBackend
       req.send_request(options)
     end
 
+    # Updates an existing backend storage resource.
+    #
+    # @option params [required, String] :app_id
+    #
+    # @option params [required, String] :backend_environment_name
+    #
+    # @option params [required, Types::UpdateBackendStorageResourceConfig] :resource_config
+    #   The resource configuration for updating backend storage.
+    #
+    # @option params [required, String] :resource_name
+    #
+    # @return [Types::UpdateBackendStorageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateBackendStorageResponse#app_id #app_id} => String
+    #   * {Types::UpdateBackendStorageResponse#backend_environment_name #backend_environment_name} => String
+    #   * {Types::UpdateBackendStorageResponse#job_id #job_id} => String
+    #   * {Types::UpdateBackendStorageResponse#status #status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_backend_storage({
+    #     app_id: "__string", # required
+    #     backend_environment_name: "__string", # required
+    #     resource_config: { # required
+    #       permissions: { # required
+    #         authenticated: ["READ"], # required, accepts READ, CREATE_AND_UPDATE, DELETE
+    #         un_authenticated: ["READ"], # accepts READ, CREATE_AND_UPDATE, DELETE
+    #       },
+    #       service_name: "S3", # required, accepts S3
+    #     },
+    #     resource_name: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.app_id #=> String
+    #   resp.backend_environment_name #=> String
+    #   resp.job_id #=> String
+    #   resp.status #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/amplifybackend-2020-08-11/UpdateBackendStorage AWS API Documentation
+    #
+    # @overload update_backend_storage(params = {})
+    # @param [Hash] params ({})
+    def update_backend_storage(params = {}, options = {})
+      req = build_request(:update_backend_storage, params)
+      req.send_request(options)
+    end
+
     # @!endgroup
 
     # @param params ({})
@@ -1666,7 +2077,7 @@ module Aws::AmplifyBackend
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-amplifybackend'
-      context[:gem_version] = '1.3.0'
+      context[:gem_version] = '1.24.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

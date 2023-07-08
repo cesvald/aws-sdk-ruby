@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:cloudwatchevents)
@@ -73,8 +77,13 @@ module Aws::CloudWatchEvents
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::CloudWatchEvents::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::CloudWatchEvents
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::CloudWatchEvents
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::CloudWatchEvents
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::CloudWatchEvents
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::CloudWatchEvents
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::CloudWatchEvents::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::CloudWatchEvents::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::CloudWatchEvents
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::CloudWatchEvents
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -462,7 +519,7 @@ module Aws::CloudWatchEvents
     #   The name for the archive to create.
     #
     # @option params [required, String] :event_source_arn
-    #   The ARN of the event source associated with the archive.
+    #   The ARN of the event bus that sends events to the archive.
     #
     # @option params [String] :description
     #   A description for the archive.
@@ -672,43 +729,45 @@ module Aws::CloudWatchEvents
     end
 
     # Called by an SaaS partner to create a partner event source. This
-    # operation is not used by AWS customers.
+    # operation is not used by Amazon Web Services customers.
     #
-    # Each partner event source can be used by one AWS account to create a
-    # matching partner event bus in that AWS account. A SaaS partner must
-    # create one partner event source for each AWS account that wants to
-    # receive those event types.
+    # Each partner event source can be used by one Amazon Web Services
+    # account to create a matching partner event bus in that Amazon Web
+    # Services account. A SaaS partner must create one partner event source
+    # for each Amazon Web Services account that wants to receive those event
+    # types.
     #
     # A partner event source creates events based on resources within the
     # SaaS partner's service or application.
     #
-    # An AWS account that creates a partner event bus that matches the
-    # partner event source can use that event bus to receive events from the
-    # partner, and then process them using AWS Events rules and targets.
+    # An Amazon Web Services account that creates a partner event bus that
+    # matches the partner event source can use that event bus to receive
+    # events from the partner, and then process them using Amazon Web
+    # Services Events rules and targets.
     #
     # Partner event source names follow this format:
     #
     # ` partner_name/event_namespace/event_name `
     #
     # *partner\_name* is determined during partner registration and
-    # identifies the partner to AWS customers. *event\_namespace* is
-    # determined by the partner and is a way for the partner to categorize
-    # their events. *event\_name* is determined by the partner, and should
-    # uniquely identify an event-generating resource within the partner
-    # system. The combination of *event\_namespace* and *event\_name* should
-    # help AWS customers decide whether to create an event bus to receive
-    # these events.
+    # identifies the partner to Amazon Web Services customers.
+    # *event\_namespace* is determined by the partner and is a way for the
+    # partner to categorize their events. *event\_name* is determined by the
+    # partner, and should uniquely identify an event-generating resource
+    # within the partner system. The combination of *event\_namespace* and
+    # *event\_name* should help Amazon Web Services customers decide whether
+    # to create an event bus to receive these events.
     #
     # @option params [required, String] :name
     #   The name of the partner event source. This name must be unique and
     #   must be in the format ` partner_name/event_namespace/event_name `. The
-    #   AWS account that wants to use this partner event source must create a
-    #   partner event bus with a name that matches the name of the partner
-    #   event source.
+    #   Amazon Web Services account that wants to use this partner event
+    #   source must create a partner event bus with a name that matches the
+    #   name of the partner event source.
     #
     # @option params [required, String] :account
-    #   The AWS account ID that is permitted to create a matching partner
-    #   event bus for this partner event source.
+    #   The Amazon Web Services account ID that is permitted to create a
+    #   matching partner event bus for this partner event source.
     #
     # @return [Types::CreatePartnerEventSourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -743,7 +802,11 @@ module Aws::CloudWatchEvents
     # it is deleted.
     #
     # To activate a deactivated partner event source, use
-    # ActivateEventSource.
+    # [ActivateEventSource][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_ActivateEventSource.html
     #
     # @option params [required, String] :name
     #   The name of the partner event source to deactivate.
@@ -908,17 +971,18 @@ module Aws::CloudWatchEvents
     end
 
     # This operation is used by SaaS partners to delete a partner event
-    # source. This operation is not used by AWS customers.
+    # source. This operation is not used by Amazon Web Services customers.
     #
     # When you delete an event source, the status of the corresponding
-    # partner event bus in the AWS customer account becomes DELETED.
+    # partner event bus in the Amazon Web Services customer account becomes
+    # DELETED.
     #
     # @option params [required, String] :name
     #   The name of the event source to delete.
     #
     # @option params [required, String] :account
-    #   The AWS account ID of the AWS customer that the event source was
-    #   created for.
+    #   The Amazon Web Services account ID of the Amazon Web Services customer
+    #   that the event source was created for.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -941,16 +1005,25 @@ module Aws::CloudWatchEvents
     # Deletes the specified rule.
     #
     # Before you can delete the rule, you must remove all targets, using
-    # RemoveTargets.
+    # [RemoveTargets][1].
     #
     # When you delete a rule, incoming events might continue to match to the
     # deleted rule. Allow a short period of time for changes to take effect.
     #
-    # Managed rules are rules created and managed by another AWS service on
-    # your behalf. These rules are created by those other AWS services to
-    # support functionality in those services. You can delete these rules
-    # using the `Force` option, but you should do so only if you are sure
-    # the other service is not still using that rule.
+    # If you call delete rule multiple times for the same rule, all calls
+    # will succeed. When you call delete rule for a non-existent custom
+    # eventbus, `ResourceNotFoundException` is returned.
+    #
+    # Managed rules are rules created and managed by another Amazon Web
+    # Services service on your behalf. These rules are created by those
+    # other Amazon Web Services services to support functionality in those
+    # services. You can delete these rules using the `Force` option, but you
+    # should do so only if you are sure the other service is not still using
+    # that rule.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_RemoveTargets.html
     #
     # @option params [required, String] :name
     #   The name of the rule.
@@ -960,11 +1033,11 @@ module Aws::CloudWatchEvents
     #   this, the default event bus is used.
     #
     # @option params [Boolean] :force
-    #   If this is a managed rule, created by an AWS service on your behalf,
-    #   you must specify `Force` as `True` to delete the rule. This parameter
-    #   is ignored for rules that are not managed rules. You can check whether
-    #   a rule is a managed rule by using `DescribeRule` or `ListRules` and
-    #   checking the `ManagedBy` field of the response.
+    #   If this is a managed rule, created by an Amazon Web Services service
+    #   on your behalf, you must specify `Force` as `True` to delete the rule.
+    #   This parameter is ignored for rules that are not managed rules. You
+    #   can check whether a rule is a managed rule by using `DescribeRule` or
+    #   `ListRules` and checking the `ManagedBy` field of the response.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1156,15 +1229,21 @@ module Aws::CloudWatchEvents
     end
 
     # Displays details about an event bus in your account. This can include
-    # the external AWS accounts that are permitted to write events to your
-    # default event bus, and the associated policy. For custom event buses
-    # and partner event buses, it displays the name, ARN, policy, state, and
-    # creation time.
+    # the external Amazon Web Services accounts that are permitted to write
+    # events to your default event bus, and the associated policy. For
+    # custom event buses and partner event buses, it displays the name, ARN,
+    # policy, state, and creation time.
     #
     # To enable your account to receive events from other accounts on its
-    # default event bus, use PutPermission.
+    # default event bus, use [PutPermission][1].
     #
-    # For more information about partner event buses, see CreateEventBus.
+    # For more information about partner event buses, see
+    # [CreateEventBus][2].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html
+    # [2]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_CreateEventBus.html
     #
     # @option params [String] :name
     #   The name or ARN of the event bus to show details for. If you omit
@@ -1237,9 +1316,14 @@ module Aws::CloudWatchEvents
     end
 
     # An SaaS partner can use this operation to list details about a partner
-    # event source that they have created. AWS customers do not use this
-    # operation. Instead, AWS customers can use DescribeEventSource to see
-    # details about a partner event source that is shared with them.
+    # event source that they have created. Amazon Web Services customers do
+    # not use this operation. Instead, Amazon Web Services customers can use
+    # [DescribeEventSource][1] to see details about a partner event source
+    # that is shared with them.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventSource.html
     #
     # @option params [required, String] :name
     #   The name of the event source to display.
@@ -1333,7 +1417,11 @@ module Aws::CloudWatchEvents
     # Describes the specified rule.
     #
     # DescribeRule does not list the targets of a rule. To see the targets
-    # associated with a rule, use ListTargetsByRule.
+    # associated with a rule, use [ListTargetsByRule][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_ListTargetsByRule.html
     #
     # @option params [required, String] :name
     #   The name of the rule.
@@ -1659,8 +1747,12 @@ module Aws::CloudWatchEvents
     end
 
     # You can use this to see all the partner event sources that have been
-    # shared with your AWS account. For more information about partner event
-    # sources, see CreateEventBus.
+    # shared with your Amazon Web Services account. For more information
+    # about partner event sources, see [CreateEventBus][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_CreateEventBus.html
     #
     # @option params [String] :name_prefix
     #   Specifying this limits the results to only those partner event sources
@@ -1708,9 +1800,10 @@ module Aws::CloudWatchEvents
       req.send_request(options)
     end
 
-    # An SaaS partner can use this operation to display the AWS account ID
-    # that a particular partner event source name is associated with. This
-    # operation is not used by AWS customers.
+    # An SaaS partner can use this operation to display the Amazon Web
+    # Services account ID that a particular partner event source name is
+    # associated with. This operation is not used by Amazon Web Services
+    # customers.
     #
     # @option params [required, String] :event_source_name
     #   The name of the partner event source to display account information
@@ -1757,8 +1850,8 @@ module Aws::CloudWatchEvents
     end
 
     # An SaaS partner can use this operation to list all the partner event
-    # source names that they have created. This operation is not used by AWS
-    # customers.
+    # source names that they have created. This operation is not used by
+    # Amazon Web Services customers.
     #
     # @option params [required, String] :name_prefix
     #   If you specify this, the results are limited to only those partner
@@ -1814,7 +1907,7 @@ module Aws::CloudWatchEvents
     #   The state of the replay.
     #
     # @option params [String] :event_source_arn
-    #   The ARN of the event source associated with the replay.
+    #   The ARN of the archive from which the events are replayed.
     #
     # @option params [String] :next_token
     #   The token returned by a previous call to retrieve the next set of
@@ -1912,7 +2005,11 @@ module Aws::CloudWatchEvents
     # or you can provide a prefix to match to the rule names.
     #
     # ListRules does not list the targets of a rule. To see the targets
-    # associated with a rule, use ListTargetsByRule.
+    # associated with a rule, use [ListTargetsByRule][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_ListTargetsByRule.html
     #
     # @option params [String] :name_prefix
     #   The prefix matching the rule name.
@@ -2044,7 +2141,7 @@ module Aws::CloudWatchEvents
     #   resp.targets[0].run_command_parameters.run_command_targets[0].values[0] #=> String
     #   resp.targets[0].ecs_parameters.task_definition_arn #=> String
     #   resp.targets[0].ecs_parameters.task_count #=> Integer
-    #   resp.targets[0].ecs_parameters.launch_type #=> String, one of "EC2", "FARGATE"
+    #   resp.targets[0].ecs_parameters.launch_type #=> String, one of "EC2", "FARGATE", "EXTERNAL"
     #   resp.targets[0].ecs_parameters.network_configuration.awsvpc_configuration.subnets #=> Array
     #   resp.targets[0].ecs_parameters.network_configuration.awsvpc_configuration.subnets[0] #=> String
     #   resp.targets[0].ecs_parameters.network_configuration.awsvpc_configuration.security_groups #=> Array
@@ -2052,6 +2149,23 @@ module Aws::CloudWatchEvents
     #   resp.targets[0].ecs_parameters.network_configuration.awsvpc_configuration.assign_public_ip #=> String, one of "ENABLED", "DISABLED"
     #   resp.targets[0].ecs_parameters.platform_version #=> String
     #   resp.targets[0].ecs_parameters.group #=> String
+    #   resp.targets[0].ecs_parameters.capacity_provider_strategy #=> Array
+    #   resp.targets[0].ecs_parameters.capacity_provider_strategy[0].capacity_provider #=> String
+    #   resp.targets[0].ecs_parameters.capacity_provider_strategy[0].weight #=> Integer
+    #   resp.targets[0].ecs_parameters.capacity_provider_strategy[0].base #=> Integer
+    #   resp.targets[0].ecs_parameters.enable_ecs_managed_tags #=> Boolean
+    #   resp.targets[0].ecs_parameters.enable_execute_command #=> Boolean
+    #   resp.targets[0].ecs_parameters.placement_constraints #=> Array
+    #   resp.targets[0].ecs_parameters.placement_constraints[0].type #=> String, one of "distinctInstance", "memberOf"
+    #   resp.targets[0].ecs_parameters.placement_constraints[0].expression #=> String
+    #   resp.targets[0].ecs_parameters.placement_strategy #=> Array
+    #   resp.targets[0].ecs_parameters.placement_strategy[0].type #=> String, one of "random", "spread", "binpack"
+    #   resp.targets[0].ecs_parameters.placement_strategy[0].field #=> String
+    #   resp.targets[0].ecs_parameters.propagate_tags #=> String, one of "TASK_DEFINITION"
+    #   resp.targets[0].ecs_parameters.reference_id #=> String
+    #   resp.targets[0].ecs_parameters.tags #=> Array
+    #   resp.targets[0].ecs_parameters.tags[0].key #=> String
+    #   resp.targets[0].ecs_parameters.tags[0].value #=> String
     #   resp.targets[0].batch_parameters.job_definition #=> String
     #   resp.targets[0].batch_parameters.job_name #=> String
     #   resp.targets[0].batch_parameters.array_properties.size #=> Integer
@@ -2097,7 +2211,7 @@ module Aws::CloudWatchEvents
     # @return [Types::PutEventsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::PutEventsResponse#failed_entry_count #failed_entry_count} => Integer
-    #   * {Types::PutEventsResponse#entries #entries} => Array&lt;Types::PutEventsResultEntry&gt;
+    #   * {Types::PutEventsResponse#entries #data.entries} => Array&lt;Types::PutEventsResultEntry&gt; (This method conflicts with a method on Response, call it through the data member)
     #
     # @example Request syntax with placeholder values
     #
@@ -2118,10 +2232,10 @@ module Aws::CloudWatchEvents
     # @example Response structure
     #
     #   resp.failed_entry_count #=> Integer
-    #   resp.entries #=> Array
-    #   resp.entries[0].event_id #=> String
-    #   resp.entries[0].error_code #=> String
-    #   resp.entries[0].error_message #=> String
+    #   resp.data.entries #=> Array
+    #   resp.data.entries[0].event_id #=> String
+    #   resp.data.entries[0].error_code #=> String
+    #   resp.data.entries[0].error_message #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/PutEvents AWS API Documentation
     #
@@ -2133,7 +2247,7 @@ module Aws::CloudWatchEvents
     end
 
     # This is used by SaaS partners to write events to a customer's partner
-    # event bus. AWS customers do not use this operation.
+    # event bus. Amazon Web Services customers do not use this operation.
     #
     # @option params [required, Array<Types::PutPartnerEventsRequestEntry>] :entries
     #   The list of events to write to the event bus.
@@ -2141,7 +2255,7 @@ module Aws::CloudWatchEvents
     # @return [Types::PutPartnerEventsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::PutPartnerEventsResponse#failed_entry_count #failed_entry_count} => Integer
-    #   * {Types::PutPartnerEventsResponse#entries #entries} => Array&lt;Types::PutPartnerEventsResultEntry&gt;
+    #   * {Types::PutPartnerEventsResponse#entries #data.entries} => Array&lt;Types::PutPartnerEventsResultEntry&gt; (This method conflicts with a method on Response, call it through the data member)
     #
     # @example Request syntax with placeholder values
     #
@@ -2160,10 +2274,10 @@ module Aws::CloudWatchEvents
     # @example Response structure
     #
     #   resp.failed_entry_count #=> Integer
-    #   resp.entries #=> Array
-    #   resp.entries[0].event_id #=> String
-    #   resp.entries[0].error_code #=> String
-    #   resp.entries[0].error_message #=> String
+    #   resp.data.entries #=> Array
+    #   resp.data.entries[0].event_id #=> String
+    #   resp.data.entries[0].error_code #=> String
+    #   resp.data.entries[0].error_message #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/PutPartnerEvents AWS API Documentation
     #
@@ -2174,30 +2288,31 @@ module Aws::CloudWatchEvents
       req.send_request(options)
     end
 
-    # Running `PutPermission` permits the specified AWS account or AWS
-    # organization to put events to the specified *event bus*. Amazon
-    # EventBridge (CloudWatch Events) rules in your account are triggered by
-    # these events arriving to an event bus in your account.
+    # Running `PutPermission` permits the specified Amazon Web Services
+    # account or Amazon Web Services organization to put events to the
+    # specified *event bus*. Amazon EventBridge (CloudWatch Events) rules in
+    # your account are triggered by these events arriving to an event bus in
+    # your account.
     #
     # For another account to send events to your account, that external
     # account must have an EventBridge rule with your account's event bus
     # as a target.
     #
-    # To enable multiple AWS accounts to put events to your event bus, run
-    # `PutPermission` once for each of these accounts. Or, if all the
-    # accounts are members of the same AWS organization, you can run
-    # `PutPermission` once specifying `Principal` as "*" and specifying
-    # the AWS organization ID in `Condition`, to grant permissions to all
-    # accounts in that organization.
+    # To enable multiple Amazon Web Services accounts to put events to your
+    # event bus, run `PutPermission` once for each of these accounts. Or, if
+    # all the accounts are members of the same Amazon Web Services
+    # organization, you can run `PutPermission` once specifying `Principal`
+    # as "*" and specifying the Amazon Web Services organization ID in
+    # `Condition`, to grant permissions to all accounts in that
+    # organization.
     #
     # If you grant permissions using an organization, then accounts in that
     # organization must specify a `RoleArn` with proper permissions when
     # they use `PutTarget` to add your account's event bus as a target. For
-    # more information, see [Sending and Receiving Events Between AWS
-    # Accounts][1] in the *Amazon EventBridge User Guide*.
+    # more information, see [Sending and Receiving Events Between Amazon Web
+    # Services Accounts][1] in the *Amazon EventBridge User Guide*.
     #
-    # The permission policy on the default event bus cannot exceed 10 KB in
-    # size.
+    # The permission policy on the event bus cannot exceed 10 KB in size.
     #
     #
     #
@@ -2209,12 +2324,11 @@ module Aws::CloudWatchEvents
     #
     # @option params [String] :action
     #   The action that you are enabling the other account to perform.
-    #   Currently, this must be `events:PutEvents`.
     #
     # @option params [String] :principal
-    #   The 12-digit AWS account ID that you are permitting to put events to
-    #   your default event bus. Specify "*" to permit any account to put
-    #   events to your default event bus.
+    #   The 12-digit Amazon Web Services account ID that you are permitting to
+    #   put events to your default event bus. Specify "*" to permit any
+    #   account to put events to your default event bus.
     #
     #   If you specify "*" without specifying `Condition`, avoid creating
     #   rules that may match undesirable events. To create more secure rules,
@@ -2227,17 +2341,23 @@ module Aws::CloudWatchEvents
     #   An identifier string for the external account that you are granting
     #   permissions to. If you later want to revoke the permission for this
     #   external account, specify this `StatementId` when you run
-    #   RemovePermission.
+    #   [RemovePermission][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_RemovePermission.html
     #
     # @option params [Types::Condition] :condition
     #   This parameter enables you to limit the permission to accounts that
-    #   fulfill a certain condition, such as being a member of a certain AWS
-    #   organization. For more information about AWS Organizations, see [What
-    #   Is AWS Organizations][1] in the *AWS Organizations User Guide*.
+    #   fulfill a certain condition, such as being a member of a certain
+    #   Amazon Web Services organization. For more information about Amazon
+    #   Web Services Organizations, see [What Is Amazon Web Services
+    #   Organizations][1] in the *Amazon Web Services Organizations User
+    #   Guide*.
     #
-    #   If you specify `Condition` with an AWS organization ID, and specify
-    #   "*" as the value for `Principal`, you grant permission to all the
-    #   accounts in the named organization.
+    #   If you specify `Condition` with an Amazon Web Services organization
+    #   ID, and specify "*" as the value for `Principal`, you grant
+    #   permission to all the accounts in the named organization.
     #
     #   The `Condition` is a JSON string which must contain `Type`, `Key`, and
     #   `Value` fields.
@@ -2279,15 +2399,15 @@ module Aws::CloudWatchEvents
 
     # Creates or updates the specified rule. Rules are enabled by default,
     # or based on value of the state. You can disable a rule using
-    # DisableRule.
+    # [DisableRule][1].
     #
     # A single rule watches for events from a single event bus. Events
-    # generated by AWS services go to your account's default event bus.
-    # Events generated by SaaS partner services or applications go to the
-    # matching partner event bus. If you have custom applications or
-    # services, you can specify whether their events go to your default
-    # event bus or a custom event bus that you have created. For more
-    # information, see CreateEventBus.
+    # generated by Amazon Web Services services go to your account's
+    # default event bus. Events generated by SaaS partner services or
+    # applications go to the matching partner event bus. If you have custom
+    # applications or services, you can specify whether their events go to
+    # your default event bus or a custom event bus that you have created.
+    # For more information, see [CreateEventBus][2].
     #
     # If you are updating an existing rule, the rule is replaced with what
     # you specify in this `PutRule` command. If you omit arguments in
@@ -2314,13 +2434,13 @@ module Aws::CloudWatchEvents
     #
     # If you are updating an existing rule, any tags you specify in the
     # `PutRule` operation are ignored. To update the tags of an existing
-    # rule, use TagResource and UntagResource.
+    # rule, use [TagResource][3] and [UntagResource][4].
     #
-    # Most services in AWS treat : or / as the same character in Amazon
-    # Resource Names (ARNs). However, EventBridge uses an exact match in
-    # event patterns and rules. Be sure to use the correct ARN characters
-    # when creating event patterns so that they match the ARN syntax in the
-    # event you want to match.
+    # Most services in Amazon Web Services treat : or / as the same
+    # character in Amazon Resource Names (ARNs). However, EventBridge uses
+    # an exact match in event patterns and rules. Be sure to use the correct
+    # ARN characters when creating event patterns so that they match the ARN
+    # syntax in the event you want to match.
     #
     # In EventBridge, it is possible to create rules that lead to infinite
     # loops, where a rule is fired repeatedly. For example, a rule might
@@ -2336,11 +2456,15 @@ module Aws::CloudWatchEvents
     # An infinite loop can quickly cause higher than expected charges. We
     # recommend that you use budgeting, which alerts you when charges exceed
     # your specified limit. For more information, see [Managing Your Costs
-    # with Budgets][1].
+    # with Budgets][5].
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/budgets-managing-costs.html
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DisableRule.html
+    # [2]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_CreateEventBus.html
+    # [3]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_TagResource.html
+    # [4]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_UntagResource.html
+    # [5]: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/budgets-managing-costs.html
     #
     # @option params [required, String] :name
     #   The name of the rule that you are creating or updating.
@@ -2366,6 +2490,12 @@ module Aws::CloudWatchEvents
     # @option params [String] :role_arn
     #   The Amazon Resource Name (ARN) of the IAM role associated with the
     #   rule.
+    #
+    #   If you're setting an event bus in another account as the target and
+    #   that account granted permission to your account through an
+    #   organization instead of directly by the account ID, you must specify a
+    #   `RoleArn` with proper permissions in the `Target` structure, instead
+    #   of here in this parameter.
     #
     # @option params [Array<Types::Tag>] :tags
     #   The list of key-value pairs to associate with the rule.
@@ -2416,45 +2546,59 @@ module Aws::CloudWatchEvents
     #
     # You can configure the following as targets for Events:
     #
-    # * EC2 instances
+    # * [API destination][1]
     #
-    # * SSM Run Command
+    # * Amazon API Gateway REST API endpoints
     #
-    # * SSM Automation
+    # * API Gateway
     #
-    # * AWS Lambda functions
+    # * Batch job queue
     #
-    # * Data streams in Amazon Kinesis Data Streams
+    # * CloudWatch Logs group
     #
-    # * Data delivery streams in Amazon Kinesis Data Firehose
+    # * CodeBuild project
+    #
+    # * CodePipeline
+    #
+    # * Amazon EC2 `CreateSnapshot` API call
+    #
+    # * Amazon EC2 `RebootInstances` API call
+    #
+    # * Amazon EC2 `StopInstances` API call
+    #
+    # * Amazon EC2 `TerminateInstances` API call
     #
     # * Amazon ECS tasks
     #
-    # * AWS Step Functions state machines
+    # * Event bus in a different Amazon Web Services account or Region.
     #
-    # * AWS Batch jobs
+    #   You can use an event bus in the US East (N. Virginia) us-east-1, US
+    #   West (Oregon) us-west-2, or Europe (Ireland) eu-west-1 Regions as a
+    #   target for a rule.
     #
-    # * AWS CodeBuild projects
+    # * Firehose delivery stream (Kinesis Data Firehose)
     #
-    # * Pipelines in AWS CodePipeline
+    # * Inspector assessment template (Amazon Inspector)
     #
-    # * Amazon Inspector assessment templates
+    # * Kinesis stream (Kinesis Data Stream)
     #
-    # * Amazon SNS topics
+    # * Lambda function
     #
-    # * Amazon SQS queues, including FIFO queues
+    # * Redshift clusters (Data API statement execution)
     #
-    # * The default event bus of another AWS account
+    # * Amazon SNS topic
     #
-    # * Amazon API Gateway REST APIs
+    # * Amazon SQS queues (includes FIFO queues
     #
-    # * Redshift Clusters to invoke Data API ExecuteStatement on
+    # * SSM Automation
     #
-    # * Custom/SaaS HTTPS APIs via EventBridge API Destinations
+    # * SSM OpsItem
     #
-    # * Amazon SageMaker Model Building Pipelines
+    # * SSM Run Command
     #
-    # Creating rules with built-in targets is supported only in the AWS
+    # * Step Functions state machines
+    #
+    # Creating rules with built-in targets is supported only in the
     # Management Console. The built-in targets are `EC2 CreateSnapshot API
     # call`, `EC2 RebootInstances API call`, `EC2 StopInstances API call`,
     # and `EC2 TerminateInstances API call`.
@@ -2466,27 +2610,28 @@ module Aws::CloudWatchEvents
     # you can use the `RunCommandParameters` field.
     #
     # To be able to make API calls against the resources that you own,
-    # Amazon EventBridge (CloudWatch Events) needs the appropriate
-    # permissions. For AWS Lambda and Amazon SNS resources, EventBridge
-    # relies on resource-based policies. For EC2 instances, Kinesis data
-    # streams, AWS Step Functions state machines and API Gateway REST APIs,
-    # EventBridge relies on IAM roles that you specify in the `RoleARN`
-    # argument in `PutTargets`. For more information, see [Authentication
-    # and Access Control][1] in the *Amazon EventBridge User Guide*.
+    # Amazon EventBridge needs the appropriate permissions. For Lambda and
+    # Amazon SNS resources, EventBridge relies on resource-based policies.
+    # For EC2 instances, Kinesis Data Streams, Step Functions state machines
+    # and API Gateway REST APIs, EventBridge relies on IAM roles that you
+    # specify in the `RoleARN` argument in `PutTargets`. For more
+    # information, see [Authentication and Access Control][2] in the *Amazon
+    # EventBridge User Guide*.
     #
-    # If another AWS account is in the same region and has granted you
-    # permission (using `PutPermission`), you can send events to that
-    # account. Set that account's event bus as a target of the rules in
-    # your account. To send the matched events to the other account, specify
-    # that account's event bus as the `Arn` value when you run
+    # If another Amazon Web Services account is in the same region and has
+    # granted you permission (using `PutPermission`), you can send events to
+    # that account. Set that account's event bus as a target of the rules
+    # in your account. To send the matched events to the other account,
+    # specify that account's event bus as the `Arn` value when you run
     # `PutTargets`. If your account sends events to another account, your
     # account is charged for each sent event. Each event sent to another
     # account is charged as a custom event. The account receiving the event
     # is not charged. For more information, see [Amazon EventBridge
-    # (CloudWatch Events) Pricing][2].
+    # Pricing][3].
     #
     # <note markdown="1"> `Input`, `InputPath`, and `InputTransformer` are not available with
-    # `PutTarget` if the target is an event bus of a different AWS account.
+    # `PutTarget` if the target is an event bus of a different Amazon Web
+    # Services account.
     #
     #  </note>
     #
@@ -2494,11 +2639,11 @@ module Aws::CloudWatchEvents
     # that account granted permission to your account through an
     # organization instead of directly by the account ID, then you must
     # specify a `RoleArn` with proper permissions in the `Target` structure.
-    # For more information, see [Sending and Receiving Events Between AWS
-    # Accounts][3] in the *Amazon EventBridge User Guide*.
+    # For more information, see [Sending and Receiving Events Between Amazon
+    # Web Services Accounts][4] in the *Amazon EventBridge User Guide*.
     #
     # For more information about enabling cross-account events, see
-    # PutPermission.
+    # [PutPermission][5].
     #
     # **Input**, **InputPath**, and **InputTransformer** are mutually
     # exclusive and optional parameters of a target. When a rule is
@@ -2535,9 +2680,11 @@ module Aws::CloudWatchEvents
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/eventbridge/latest/userguide/auth-and-access-control-eventbridge.html
-    # [2]: https://aws.amazon.com/eventbridge/pricing/
-    # [3]: https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-cross-account-event-delivery.html
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-api-destinations.html
+    # [2]: https://docs.aws.amazon.com/eventbridge/latest/userguide/auth-and-access-control-eventbridge.html
+    # [3]: http://aws.amazon.com/eventbridge/pricing/
+    # [4]: https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-cross-account-event-delivery.html
+    # [5]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html
     #
     # @option params [required, String] :rule
     #   The name of the rule.
@@ -2586,7 +2733,7 @@ module Aws::CloudWatchEvents
     #         ecs_parameters: {
     #           task_definition_arn: "Arn", # required
     #           task_count: 1,
-    #           launch_type: "EC2", # accepts EC2, FARGATE
+    #           launch_type: "EC2", # accepts EC2, FARGATE, EXTERNAL
     #           network_configuration: {
     #             awsvpc_configuration: {
     #               subnets: ["String"], # required
@@ -2596,6 +2743,35 @@ module Aws::CloudWatchEvents
     #           },
     #           platform_version: "String",
     #           group: "String",
+    #           capacity_provider_strategy: [
+    #             {
+    #               capacity_provider: "CapacityProvider", # required
+    #               weight: 1,
+    #               base: 1,
+    #             },
+    #           ],
+    #           enable_ecs_managed_tags: false,
+    #           enable_execute_command: false,
+    #           placement_constraints: [
+    #             {
+    #               type: "distinctInstance", # accepts distinctInstance, memberOf
+    #               expression: "PlacementConstraintExpression",
+    #             },
+    #           ],
+    #           placement_strategy: [
+    #             {
+    #               type: "random", # accepts random, spread, binpack
+    #               field: "PlacementStrategyField",
+    #             },
+    #           ],
+    #           propagate_tags: "TASK_DEFINITION", # accepts TASK_DEFINITION
+    #           reference_id: "ReferenceId",
+    #           tags: [
+    #             {
+    #               key: "TagKey", # required
+    #               value: "TagValue", # required
+    #             },
+    #           ],
     #         },
     #         batch_parameters: {
     #           job_definition: "String", # required
@@ -2663,11 +2839,15 @@ module Aws::CloudWatchEvents
       req.send_request(options)
     end
 
-    # Revokes the permission of another AWS account to be able to put events
-    # to the specified event bus. Specify the account to revoke by the
-    # `StatementId` value that you associated with the account when you
-    # granted it permission with `PutPermission`. You can find the
-    # `StatementId` by using DescribeEventBus.
+    # Revokes the permission of another Amazon Web Services account to be
+    # able to put events to the specified event bus. Specify the account to
+    # revoke by the `StatementId` value that you associated with the account
+    # when you granted it permission with `PutPermission`. You can find the
+    # `StatementId` by using [DescribeEventBus][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
     #
     # @option params [String] :statement_id
     #   The statement ID corresponding to the account that is no longer
@@ -2722,11 +2902,11 @@ module Aws::CloudWatchEvents
     #   The IDs of the targets to remove from the rule.
     #
     # @option params [Boolean] :force
-    #   If this is a managed rule, created by an AWS service on your behalf,
-    #   you must specify `Force` as `True` to remove targets. This parameter
-    #   is ignored for rules that are not managed rules. You can check whether
-    #   a rule is a managed rule by using `DescribeRule` or `ListRules` and
-    #   checking the `ManagedBy` field of the response.
+    #   If this is a managed rule, created by an Amazon Web Services service
+    #   on your behalf, you must specify `Force` as `True` to remove targets.
+    #   This parameter is ignored for rules that are not managed rules. You
+    #   can check whether a rule is a managed rule by using `DescribeRule` or
+    #   `ListRules` and checking the `ManagedBy` field of the response.
     #
     # @return [Types::RemoveTargetsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2834,8 +3014,8 @@ module Aws::CloudWatchEvents
     # a user permission to access or change only resources with certain tag
     # values. In EventBridge, rules and event buses can be tagged.
     #
-    # Tags don't have any semantic meaning to AWS and are interpreted
-    # strictly as strings of characters.
+    # Tags don't have any semantic meaning to Amazon Web Services and are
+    # interpreted strictly as strings of characters.
     #
     # You can use the `TagResource` action with a resource that already has
     # tags. If you specify a new tag key, this tag is appended to the list
@@ -2876,11 +3056,11 @@ module Aws::CloudWatchEvents
 
     # Tests whether the specified event pattern matches the provided event.
     #
-    # Most services in AWS treat : or / as the same character in Amazon
-    # Resource Names (ARNs). However, EventBridge uses an exact match in
-    # event patterns and rules. Be sure to use the correct ARN characters
-    # when creating event patterns so that they match the ARN syntax in the
-    # event you want to match.
+    # Most services in Amazon Web Services treat : or / as the same
+    # character in Amazon Resource Names (ARNs). However, EventBridge uses
+    # an exact match in event patterns and rules. Be sure to use the correct
+    # ARN characters when creating event patterns so that they match the ARN
+    # syntax in the event you want to match.
     #
     # @option params [required, String] :event_pattern
     #   The event pattern. For more information, see [Events and Event
@@ -2892,8 +3072,8 @@ module Aws::CloudWatchEvents
     #
     # @option params [required, String] :event
     #   The event, in JSON format, to test against the event pattern. The JSON
-    #   must follow the format specified in [AWS Events][1], and the following
-    #   fields are mandatory:
+    #   must follow the format specified in [Amazon Web Services Events][1],
+    #   and the following fields are mandatory:
     #
     #   * `id`
     #
@@ -2938,7 +3118,7 @@ module Aws::CloudWatchEvents
     end
 
     # Removes one or more tags from the specified EventBridge resource. In
-    # Amazon EventBridge (CloudWatch Events, rules and event buses can be
+    # Amazon EventBridge (CloudWatch Events), rules and event buses can be
     # tagged.
     #
     # @option params [required, String] :resource_arn
@@ -3190,7 +3370,7 @@ module Aws::CloudWatchEvents
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-cloudwatchevents'
-      context[:gem_version] = '1.46.0'
+      context[:gem_version] = '1.63.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

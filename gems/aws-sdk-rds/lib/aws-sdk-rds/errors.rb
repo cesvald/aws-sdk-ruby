@@ -31,10 +31,14 @@ module Aws::RDS
   # * {AuthorizationNotFoundFault}
   # * {AuthorizationQuotaExceededFault}
   # * {BackupPolicyNotFoundFault}
+  # * {BlueGreenDeploymentAlreadyExistsFault}
+  # * {BlueGreenDeploymentNotFoundFault}
   # * {CertificateNotFoundFault}
-  # * {CustomAvailabilityZoneAlreadyExistsFault}
+  # * {CreateCustomDBEngineVersionFault}
   # * {CustomAvailabilityZoneNotFoundFault}
-  # * {CustomAvailabilityZoneQuotaExceededFault}
+  # * {CustomDBEngineVersionAlreadyExistsFault}
+  # * {CustomDBEngineVersionNotFoundFault}
+  # * {CustomDBEngineVersionQuotaExceededFault}
   # * {DBClusterAlreadyExistsFault}
   # * {DBClusterBacktrackNotFoundFault}
   # * {DBClusterEndpointAlreadyExistsFault}
@@ -82,6 +86,7 @@ module Aws::RDS
   # * {DBSubnetQuotaExceededFault}
   # * {DBUpgradeDependencyFailureFault}
   # * {DomainNotFoundFault}
+  # * {Ec2ImagePropertiesNotSupportedFault}
   # * {EventSubscriptionQuotaExceededFault}
   # * {ExportTaskAlreadyExistsFault}
   # * {ExportTaskNotFoundFault}
@@ -90,13 +95,13 @@ module Aws::RDS
   # * {GlobalClusterQuotaExceededFault}
   # * {IamRoleMissingPermissionsFault}
   # * {IamRoleNotFoundFault}
-  # * {InstallationMediaAlreadyExistsFault}
-  # * {InstallationMediaNotFoundFault}
   # * {InstanceQuotaExceededFault}
   # * {InsufficientAvailableIPsInSubnetFault}
   # * {InsufficientDBClusterCapacityFault}
   # * {InsufficientDBInstanceCapacityFault}
   # * {InsufficientStorageClusterCapacityFault}
+  # * {InvalidBlueGreenDeploymentStateFault}
+  # * {InvalidCustomDBEngineVersionStateFault}
   # * {InvalidDBClusterCapacityFault}
   # * {InvalidDBClusterEndpointStateFault}
   # * {InvalidDBClusterSnapshotStateFault}
@@ -122,6 +127,7 @@ module Aws::RDS
   # * {InvalidSubnet}
   # * {InvalidVPCNetworkStateFault}
   # * {KMSKeyNotAccessibleFault}
+  # * {NetworkTypeNotSupported}
   # * {OptionGroupAlreadyExistsFault}
   # * {OptionGroupNotFoundFault}
   # * {OptionGroupQuotaExceededFault}
@@ -137,8 +143,11 @@ module Aws::RDS
   # * {SNSTopicArnNotFoundFault}
   # * {SharedSnapshotQuotaExceededFault}
   # * {SnapshotQuotaExceededFault}
+  # * {SourceClusterNotSupportedFault}
+  # * {SourceDatabaseNotSupportedFault}
   # * {SourceNotFoundFault}
   # * {StorageQuotaExceededFault}
+  # * {StorageTypeNotAvailableFault}
   # * {StorageTypeNotSupportedFault}
   # * {SubnetAlreadyInUse}
   # * {SubscriptionAlreadyExistFault}
@@ -191,6 +200,26 @@ module Aws::RDS
       end
     end
 
+    class BlueGreenDeploymentAlreadyExistsFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::BlueGreenDeploymentAlreadyExistsFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
+    class BlueGreenDeploymentNotFoundFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::BlueGreenDeploymentNotFoundFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
     class CertificateNotFoundFault < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -201,11 +230,11 @@ module Aws::RDS
       end
     end
 
-    class CustomAvailabilityZoneAlreadyExistsFault < ServiceError
+    class CreateCustomDBEngineVersionFault < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
-      # @param [Aws::RDS::Types::CustomAvailabilityZoneAlreadyExistsFault] data
+      # @param [Aws::RDS::Types::CreateCustomDBEngineVersionFault] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -221,11 +250,31 @@ module Aws::RDS
       end
     end
 
-    class CustomAvailabilityZoneQuotaExceededFault < ServiceError
+    class CustomDBEngineVersionAlreadyExistsFault < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
-      # @param [Aws::RDS::Types::CustomAvailabilityZoneQuotaExceededFault] data
+      # @param [Aws::RDS::Types::CustomDBEngineVersionAlreadyExistsFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
+    class CustomDBEngineVersionNotFoundFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::CustomDBEngineVersionNotFoundFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
+    class CustomDBEngineVersionQuotaExceededFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::CustomDBEngineVersionQuotaExceededFault] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -701,6 +750,16 @@ module Aws::RDS
       end
     end
 
+    class Ec2ImagePropertiesNotSupportedFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::Ec2ImagePropertiesNotSupportedFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
     class EventSubscriptionQuotaExceededFault < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -781,26 +840,6 @@ module Aws::RDS
       end
     end
 
-    class InstallationMediaAlreadyExistsFault < ServiceError
-
-      # @param [Seahorse::Client::RequestContext] context
-      # @param [String] message
-      # @param [Aws::RDS::Types::InstallationMediaAlreadyExistsFault] data
-      def initialize(context, message, data = Aws::EmptyStructure.new)
-        super(context, message, data)
-      end
-    end
-
-    class InstallationMediaNotFoundFault < ServiceError
-
-      # @param [Seahorse::Client::RequestContext] context
-      # @param [String] message
-      # @param [Aws::RDS::Types::InstallationMediaNotFoundFault] data
-      def initialize(context, message, data = Aws::EmptyStructure.new)
-        super(context, message, data)
-      end
-    end
-
     class InstanceQuotaExceededFault < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -846,6 +885,26 @@ module Aws::RDS
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::RDS::Types::InsufficientStorageClusterCapacityFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
+    class InvalidBlueGreenDeploymentStateFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::InvalidBlueGreenDeploymentStateFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
+    class InvalidCustomDBEngineVersionStateFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::InvalidCustomDBEngineVersionStateFault] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -1101,6 +1160,16 @@ module Aws::RDS
       end
     end
 
+    class NetworkTypeNotSupported < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::NetworkTypeNotSupported] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
     class OptionGroupAlreadyExistsFault < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -1251,6 +1320,26 @@ module Aws::RDS
       end
     end
 
+    class SourceClusterNotSupportedFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::SourceClusterNotSupportedFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
+    class SourceDatabaseNotSupportedFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::SourceDatabaseNotSupportedFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
     class SourceNotFoundFault < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -1266,6 +1355,16 @@ module Aws::RDS
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::RDS::Types::StorageQuotaExceededFault] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+    end
+
+    class StorageTypeNotAvailableFault < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::RDS::Types::StorageTypeNotAvailableFault] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end

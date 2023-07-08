@@ -13,14 +13,9 @@ module Aws::AppMesh
     # An object that represents the access logging information for a virtual
     # node.
     #
-    # @note When making an API call, you may pass AccessLog
-    #   data as a hash:
+    # @note AccessLog is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         file: {
-    #           path: "FilePath", # required
-    #         },
-    #       }
+    # @note AccessLog is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of AccessLog corresponding to the set member.
     #
     # @!attribute [rw] file
     #   The file object to send virtual node access logs to.
@@ -29,36 +24,33 @@ module Aws::AppMesh
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/AccessLog AWS API Documentation
     #
     class AccessLog < Struct.new(
-      :file)
+      :file,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class File < AccessLog; end
+      class Unknown < AccessLog; end
     end
 
-    # An object that represents the AWS Cloud Map attribute information for
-    # your virtual node.
+    # An object that represents the Cloud Map attribute information for your
+    # virtual node.
     #
-    # <note markdown="1"> AWS Cloud Map is not available in the eu-south-1 Region.
+    # <note markdown="1"> Cloud Map is not available in the eu-south-1 Region.
     #
     #  </note>
     #
-    # @note When making an API call, you may pass AwsCloudMapInstanceAttribute
-    #   data as a hash:
-    #
-    #       {
-    #         key: "AwsCloudMapInstanceAttributeKey", # required
-    #         value: "AwsCloudMapInstanceAttributeValue", # required
-    #       }
-    #
     # @!attribute [rw] key
-    #   The name of an AWS Cloud Map service instance attribute key. Any AWS
-    #   Cloud Map service instance that contains the specified key and value
-    #   is returned.
+    #   The name of an Cloud Map service instance attribute key. Any Cloud
+    #   Map service instance that contains the specified key and value is
+    #   returned.
     #   @return [String]
     #
     # @!attribute [rw] value
-    #   The value of an AWS Cloud Map service instance attribute key. Any
-    #   AWS Cloud Map service instance that contains the specified key and
-    #   value is returned.
+    #   The value of an Cloud Map service instance attribute key. Any Cloud
+    #   Map service instance that contains the specified key and value is
+    #   returned.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/AwsCloudMapInstanceAttribute AWS API Documentation
@@ -70,26 +62,12 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # An object that represents the AWS Cloud Map service discovery
-    # information for your virtual node.
+    # An object that represents the Cloud Map service discovery information
+    # for your virtual node.
     #
-    # <note markdown="1"> AWS Cloud Map is not available in the eu-south-1 Region.
+    # <note markdown="1"> Cloud Map is not available in the eu-south-1 Region.
     #
     #  </note>
-    #
-    # @note When making an API call, you may pass AwsCloudMapServiceDiscovery
-    #   data as a hash:
-    #
-    #       {
-    #         attributes: [
-    #           {
-    #             key: "AwsCloudMapInstanceAttributeKey", # required
-    #             value: "AwsCloudMapInstanceAttributeValue", # required
-    #           },
-    #         ],
-    #         namespace_name: "AwsCloudMapName", # required
-    #         service_name: "AwsCloudMapName", # required
-    #       }
     #
     # @!attribute [rw] attributes
     #   A string map that contains attributes with values that you can use
@@ -98,18 +76,25 @@ module Aws::AppMesh
     #   specified key/value pairs will be returned.
     #   @return [Array<Types::AwsCloudMapInstanceAttribute>]
     #
+    # @!attribute [rw] ip_preference
+    #   The preferred IP version that this virtual node uses. Setting the IP
+    #   preference on the virtual node only overrides the IP preference set
+    #   for the mesh on this specific node.
+    #   @return [String]
+    #
     # @!attribute [rw] namespace_name
-    #   The name of the AWS Cloud Map namespace to use.
+    #   The name of the Cloud Map namespace to use.
     #   @return [String]
     #
     # @!attribute [rw] service_name
-    #   The name of the AWS Cloud Map service to use.
+    #   The name of the Cloud Map service to use.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/AwsCloudMapServiceDiscovery AWS API Documentation
     #
     class AwsCloudMapServiceDiscovery < Struct.new(
       :attributes,
+      :ip_preference,
       :namespace_name,
       :service_name)
       SENSITIVE = []
@@ -119,47 +104,9 @@ module Aws::AppMesh
     # An object that represents the backends that a virtual node is expected
     # to send outbound traffic to.
     #
-    # @note When making an API call, you may pass Backend
-    #   data as a hash:
+    # @note Backend is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         virtual_service: {
-    #           client_policy: {
-    #             tls: {
-    #               certificate: {
-    #                 file: {
-    #                   certificate_chain: "FilePath", # required
-    #                   private_key: "FilePath", # required
-    #                 },
-    #                 sds: {
-    #                   secret_name: "SdsSecretName", # required
-    #                 },
-    #               },
-    #               enforce: false,
-    #               ports: [1],
-    #               validation: { # required
-    #                 subject_alternative_names: {
-    #                   match: { # required
-    #                     exact: ["SubjectAlternativeName"], # required
-    #                   },
-    #                 },
-    #                 trust: { # required
-    #                   acm: {
-    #                     certificate_authority_arns: ["Arn"], # required
-    #                   },
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "SdsSecretName", # required
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           },
-    #           virtual_service_name: "ServiceName", # required
-    #         },
-    #       }
+    # @note Backend is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of Backend corresponding to the set member.
     #
     # @!attribute [rw] virtual_service
     #   Specifies a virtual service to use as a backend.
@@ -168,51 +115,17 @@ module Aws::AppMesh
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/Backend AWS API Documentation
     #
     class Backend < Struct.new(
-      :virtual_service)
+      :virtual_service,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class VirtualService < Backend; end
+      class Unknown < Backend; end
     end
 
     # An object that represents the default properties for a backend.
-    #
-    # @note When making an API call, you may pass BackendDefaults
-    #   data as a hash:
-    #
-    #       {
-    #         client_policy: {
-    #           tls: {
-    #             certificate: {
-    #               file: {
-    #                 certificate_chain: "FilePath", # required
-    #                 private_key: "FilePath", # required
-    #               },
-    #               sds: {
-    #                 secret_name: "SdsSecretName", # required
-    #               },
-    #             },
-    #             enforce: false,
-    #             ports: [1],
-    #             validation: { # required
-    #               subject_alternative_names: {
-    #                 match: { # required
-    #                   exact: ["SubjectAlternativeName"], # required
-    #                 },
-    #               },
-    #               trust: { # required
-    #                 acm: {
-    #                   certificate_authority_arns: ["Arn"], # required
-    #                 },
-    #                 file: {
-    #                   certificate_chain: "FilePath", # required
-    #                 },
-    #                 sds: {
-    #                   secret_name: "SdsSecretName", # required
-    #                 },
-    #               },
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] client_policy
     #   A reference to an object that represents a client policy.
@@ -242,43 +155,6 @@ module Aws::AppMesh
 
     # An object that represents a client policy.
     #
-    # @note When making an API call, you may pass ClientPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         tls: {
-    #           certificate: {
-    #             file: {
-    #               certificate_chain: "FilePath", # required
-    #               private_key: "FilePath", # required
-    #             },
-    #             sds: {
-    #               secret_name: "SdsSecretName", # required
-    #             },
-    #           },
-    #           enforce: false,
-    #           ports: [1],
-    #           validation: { # required
-    #             subject_alternative_names: {
-    #               match: { # required
-    #                 exact: ["SubjectAlternativeName"], # required
-    #               },
-    #             },
-    #             trust: { # required
-    #               acm: {
-    #                 certificate_authority_arns: ["Arn"], # required
-    #               },
-    #               file: {
-    #                 certificate_chain: "FilePath", # required
-    #               },
-    #               sds: {
-    #                 secret_name: "SdsSecretName", # required
-    #               },
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] tls
     #   A reference to an object that represents a Transport Layer Security
     #   (TLS) client policy.
@@ -294,41 +170,6 @@ module Aws::AppMesh
 
     # A reference to an object that represents a Transport Layer Security
     # (TLS) client policy.
-    #
-    # @note When making an API call, you may pass ClientPolicyTls
-    #   data as a hash:
-    #
-    #       {
-    #         certificate: {
-    #           file: {
-    #             certificate_chain: "FilePath", # required
-    #             private_key: "FilePath", # required
-    #           },
-    #           sds: {
-    #             secret_name: "SdsSecretName", # required
-    #           },
-    #         },
-    #         enforce: false,
-    #         ports: [1],
-    #         validation: { # required
-    #           subject_alternative_names: {
-    #             match: { # required
-    #               exact: ["SubjectAlternativeName"], # required
-    #             },
-    #           },
-    #           trust: { # required
-    #             acm: {
-    #               certificate_authority_arns: ["Arn"], # required
-    #             },
-    #             file: {
-    #               certificate_chain: "FilePath", # required
-    #             },
-    #             sds: {
-    #               secret_name: "SdsSecretName", # required
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] certificate
     #   A reference to an object that represents a client's TLS
@@ -361,18 +202,9 @@ module Aws::AppMesh
 
     # An object that represents the client's certificate.
     #
-    # @note When making an API call, you may pass ClientTlsCertificate
-    #   data as a hash:
+    # @note ClientTlsCertificate is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         file: {
-    #           certificate_chain: "FilePath", # required
-    #           private_key: "FilePath", # required
-    #         },
-    #         sds: {
-    #           secret_name: "SdsSecretName", # required
-    #         },
-    #       }
+    # @note ClientTlsCertificate is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of ClientTlsCertificate corresponding to the set member.
     #
     # @!attribute [rw] file
     #   An object that represents a local file certificate. The certificate
@@ -382,7 +214,7 @@ module Aws::AppMesh
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html#virtual-node-tls-prerequisites
+    #   [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html
     #   @return [Types::ListenerTlsFileCertificate]
     #
     # @!attribute [rw] sds
@@ -394,9 +226,15 @@ module Aws::AppMesh
     #
     class ClientTlsCertificate < Struct.new(
       :file,
-      :sds)
+      :sds,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class File < ClientTlsCertificate; end
+      class Sds < ClientTlsCertificate; end
+      class Unknown < ClientTlsCertificate; end
     end
 
     # The request contains a client token that was used for a previous
@@ -414,61 +252,6 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateGatewayRouteInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         gateway_route_name: "ResourceName", # required
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           grpc_route: {
-    #             action: { # required
-    #               target: { # required
-    #                 virtual_service: { # required
-    #                   virtual_service_name: "ResourceName", # required
-    #                 },
-    #               },
-    #             },
-    #             match: { # required
-    #               service_name: "ServiceName",
-    #             },
-    #           },
-    #           http2_route: {
-    #             action: { # required
-    #               target: { # required
-    #                 virtual_service: { # required
-    #                   virtual_service_name: "ResourceName", # required
-    #                 },
-    #               },
-    #             },
-    #             match: { # required
-    #               prefix: "String", # required
-    #             },
-    #           },
-    #           http_route: {
-    #             action: { # required
-    #               target: { # required
-    #                 virtual_service: { # required
-    #                   virtual_service_name: "ResourceName", # required
-    #                 },
-    #               },
-    #             },
-    #             match: { # required
-    #               prefix: "String", # required
-    #             },
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         virtual_gateway_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -487,11 +270,11 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then the account that you specify must share the
-    #   mesh with your account before you can create the resource in the
-    #   service mesh. For more information about mesh sharing, see [Working
-    #   with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then the account that you specify
+    #   must share the mesh with your account before you can create the
+    #   resource in the service mesh. For more information about mesh
+    #   sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -546,25 +329,6 @@ module Aws::AppMesh
     # <zonbook />
     #
     # <xhtml />
-    #
-    # @note When making an API call, you may pass CreateMeshInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         spec: {
-    #           egress_filter: {
-    #             type: "ALLOW_ALL", # required, accepts ALLOW_ALL, DROP_ALL
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
@@ -622,192 +386,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass CreateRouteInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         route_name: "ResourceName", # required
-    #         spec: { # required
-    #           grpc_route: {
-    #             action: { # required
-    #               weighted_targets: [ # required
-    #                 {
-    #                   virtual_node: "ResourceName", # required
-    #                   weight: 1, # required
-    #                 },
-    #               ],
-    #             },
-    #             match: { # required
-    #               metadata: [
-    #                 {
-    #                   invert: false,
-    #                   match: {
-    #                     exact: "HeaderMatch",
-    #                     prefix: "HeaderMatch",
-    #                     range: {
-    #                       end: 1, # required
-    #                       start: 1, # required
-    #                     },
-    #                     regex: "HeaderMatch",
-    #                     suffix: "HeaderMatch",
-    #                   },
-    #                   name: "HeaderName", # required
-    #                 },
-    #               ],
-    #               method_name: "MethodName",
-    #               service_name: "ServiceName",
-    #             },
-    #             retry_policy: {
-    #               grpc_retry_events: ["cancelled"], # accepts cancelled, deadline-exceeded, internal, resource-exhausted, unavailable
-    #               http_retry_events: ["HttpRetryPolicyEvent"],
-    #               max_retries: 1, # required
-    #               per_retry_timeout: { # required
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               tcp_retry_events: ["connection-error"], # accepts connection-error
-    #             },
-    #             timeout: {
-    #               idle: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               per_request: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #             },
-    #           },
-    #           http2_route: {
-    #             action: { # required
-    #               weighted_targets: [ # required
-    #                 {
-    #                   virtual_node: "ResourceName", # required
-    #                   weight: 1, # required
-    #                 },
-    #               ],
-    #             },
-    #             match: { # required
-    #               headers: [
-    #                 {
-    #                   invert: false,
-    #                   match: {
-    #                     exact: "HeaderMatch",
-    #                     prefix: "HeaderMatch",
-    #                     range: {
-    #                       end: 1, # required
-    #                       start: 1, # required
-    #                     },
-    #                     regex: "HeaderMatch",
-    #                     suffix: "HeaderMatch",
-    #                   },
-    #                   name: "HeaderName", # required
-    #                 },
-    #               ],
-    #               method: "GET", # accepts GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
-    #               prefix: "String", # required
-    #               scheme: "http", # accepts http, https
-    #             },
-    #             retry_policy: {
-    #               http_retry_events: ["HttpRetryPolicyEvent"],
-    #               max_retries: 1, # required
-    #               per_retry_timeout: { # required
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               tcp_retry_events: ["connection-error"], # accepts connection-error
-    #             },
-    #             timeout: {
-    #               idle: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               per_request: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #             },
-    #           },
-    #           http_route: {
-    #             action: { # required
-    #               weighted_targets: [ # required
-    #                 {
-    #                   virtual_node: "ResourceName", # required
-    #                   weight: 1, # required
-    #                 },
-    #               ],
-    #             },
-    #             match: { # required
-    #               headers: [
-    #                 {
-    #                   invert: false,
-    #                   match: {
-    #                     exact: "HeaderMatch",
-    #                     prefix: "HeaderMatch",
-    #                     range: {
-    #                       end: 1, # required
-    #                       start: 1, # required
-    #                     },
-    #                     regex: "HeaderMatch",
-    #                     suffix: "HeaderMatch",
-    #                   },
-    #                   name: "HeaderName", # required
-    #                 },
-    #               ],
-    #               method: "GET", # accepts GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
-    #               prefix: "String", # required
-    #               scheme: "http", # accepts http, https
-    #             },
-    #             retry_policy: {
-    #               http_retry_events: ["HttpRetryPolicyEvent"],
-    #               max_retries: 1, # required
-    #               per_retry_timeout: { # required
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               tcp_retry_events: ["connection-error"], # accepts connection-error
-    #             },
-    #             timeout: {
-    #               idle: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               per_request: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #             },
-    #           },
-    #           priority: 1,
-    #           tcp_route: {
-    #             action: { # required
-    #               weighted_targets: [ # required
-    #                 {
-    #                   virtual_node: "ResourceName", # required
-    #                   weight: 1, # required
-    #                 },
-    #               ],
-    #             },
-    #             timeout: {
-    #               idle: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #             },
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -822,11 +400,11 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then the account that you specify must share the
-    #   mesh with your account before you can create the resource in the
-    #   service mesh. For more information about mesh sharing, see [Working
-    #   with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then the account that you specify
+    #   must share the mesh with your account before you can create the
+    #   resource in the service mesh. For more information about mesh
+    #   sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -885,125 +463,6 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateVirtualGatewayInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           backend_defaults: {
-    #             client_policy: {
-    #               tls: {
-    #                 certificate: {
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                     private_key: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "VirtualGatewaySdsSecretName", # required
-    #                   },
-    #                 },
-    #                 enforce: false,
-    #                 ports: [1],
-    #                 validation: { # required
-    #                   subject_alternative_names: {
-    #                     match: { # required
-    #                       exact: ["SubjectAlternativeName"], # required
-    #                     },
-    #                   },
-    #                   trust: { # required
-    #                     acm: {
-    #                       certificate_authority_arns: ["Arn"], # required
-    #                     },
-    #                     file: {
-    #                       certificate_chain: "FilePath", # required
-    #                     },
-    #                     sds: {
-    #                       secret_name: "VirtualGatewaySdsSecretName", # required
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           },
-    #           listeners: [ # required
-    #             {
-    #               connection_pool: {
-    #                 grpc: {
-    #                   max_requests: 1, # required
-    #                 },
-    #                 http: {
-    #                   max_connections: 1, # required
-    #                   max_pending_requests: 1,
-    #                 },
-    #                 http2: {
-    #                   max_requests: 1, # required
-    #                 },
-    #               },
-    #               health_check: {
-    #                 healthy_threshold: 1, # required
-    #                 interval_millis: 1, # required
-    #                 path: "String",
-    #                 port: 1,
-    #                 protocol: "http", # required, accepts http, http2, grpc
-    #                 timeout_millis: 1, # required
-    #                 unhealthy_threshold: 1, # required
-    #               },
-    #               port_mapping: { # required
-    #                 port: 1, # required
-    #                 protocol: "http", # required, accepts http, http2, grpc
-    #               },
-    #               tls: {
-    #                 certificate: { # required
-    #                   acm: {
-    #                     certificate_arn: "Arn", # required
-    #                   },
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                     private_key: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "VirtualGatewaySdsSecretName", # required
-    #                   },
-    #                 },
-    #                 mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #                 validation: {
-    #                   subject_alternative_names: {
-    #                     match: { # required
-    #                       exact: ["SubjectAlternativeName"], # required
-    #                     },
-    #                   },
-    #                   trust: { # required
-    #                     file: {
-    #                       certificate_chain: "FilePath", # required
-    #                     },
-    #                     sds: {
-    #                       secret_name: "VirtualGatewaySdsSecretName", # required
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #           logging: {
-    #             access_log: {
-    #               file: {
-    #                 path: "FilePath", # required
-    #               },
-    #             },
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         virtual_gateway_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -1018,11 +477,11 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then the account that you specify must share the
-    #   mesh with your account before you can create the resource in the
-    #   service mesh. For more information about mesh sharing, see [Working
-    #   with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then the account that you specify
+    #   must share the mesh with your account before you can create the
+    #   resource in the service mesh. For more information about mesh
+    #   sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1075,233 +534,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass CreateVirtualNodeInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           backend_defaults: {
-    #             client_policy: {
-    #               tls: {
-    #                 certificate: {
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                     private_key: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "SdsSecretName", # required
-    #                   },
-    #                 },
-    #                 enforce: false,
-    #                 ports: [1],
-    #                 validation: { # required
-    #                   subject_alternative_names: {
-    #                     match: { # required
-    #                       exact: ["SubjectAlternativeName"], # required
-    #                     },
-    #                   },
-    #                   trust: { # required
-    #                     acm: {
-    #                       certificate_authority_arns: ["Arn"], # required
-    #                     },
-    #                     file: {
-    #                       certificate_chain: "FilePath", # required
-    #                     },
-    #                     sds: {
-    #                       secret_name: "SdsSecretName", # required
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           },
-    #           backends: [
-    #             {
-    #               virtual_service: {
-    #                 client_policy: {
-    #                   tls: {
-    #                     certificate: {
-    #                       file: {
-    #                         certificate_chain: "FilePath", # required
-    #                         private_key: "FilePath", # required
-    #                       },
-    #                       sds: {
-    #                         secret_name: "SdsSecretName", # required
-    #                       },
-    #                     },
-    #                     enforce: false,
-    #                     ports: [1],
-    #                     validation: { # required
-    #                       subject_alternative_names: {
-    #                         match: { # required
-    #                           exact: ["SubjectAlternativeName"], # required
-    #                         },
-    #                       },
-    #                       trust: { # required
-    #                         acm: {
-    #                           certificate_authority_arns: ["Arn"], # required
-    #                         },
-    #                         file: {
-    #                           certificate_chain: "FilePath", # required
-    #                         },
-    #                         sds: {
-    #                           secret_name: "SdsSecretName", # required
-    #                         },
-    #                       },
-    #                     },
-    #                   },
-    #                 },
-    #                 virtual_service_name: "ServiceName", # required
-    #               },
-    #             },
-    #           ],
-    #           listeners: [
-    #             {
-    #               connection_pool: {
-    #                 grpc: {
-    #                   max_requests: 1, # required
-    #                 },
-    #                 http: {
-    #                   max_connections: 1, # required
-    #                   max_pending_requests: 1,
-    #                 },
-    #                 http2: {
-    #                   max_requests: 1, # required
-    #                 },
-    #                 tcp: {
-    #                   max_connections: 1, # required
-    #                 },
-    #               },
-    #               health_check: {
-    #                 healthy_threshold: 1, # required
-    #                 interval_millis: 1, # required
-    #                 path: "String",
-    #                 port: 1,
-    #                 protocol: "http", # required, accepts http, tcp, http2, grpc
-    #                 timeout_millis: 1, # required
-    #                 unhealthy_threshold: 1, # required
-    #               },
-    #               outlier_detection: {
-    #                 base_ejection_duration: { # required
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #                 interval: { # required
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #                 max_ejection_percent: 1, # required
-    #                 max_server_errors: 1, # required
-    #               },
-    #               port_mapping: { # required
-    #                 port: 1, # required
-    #                 protocol: "http", # required, accepts http, tcp, http2, grpc
-    #               },
-    #               timeout: {
-    #                 grpc: {
-    #                   idle: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                   per_request: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                 },
-    #                 http: {
-    #                   idle: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                   per_request: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                 },
-    #                 http2: {
-    #                   idle: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                   per_request: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                 },
-    #                 tcp: {
-    #                   idle: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                 },
-    #               },
-    #               tls: {
-    #                 certificate: { # required
-    #                   acm: {
-    #                     certificate_arn: "Arn", # required
-    #                   },
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                     private_key: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "SdsSecretName", # required
-    #                   },
-    #                 },
-    #                 mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #                 validation: {
-    #                   subject_alternative_names: {
-    #                     match: { # required
-    #                       exact: ["SubjectAlternativeName"], # required
-    #                     },
-    #                   },
-    #                   trust: { # required
-    #                     file: {
-    #                       certificate_chain: "FilePath", # required
-    #                     },
-    #                     sds: {
-    #                       secret_name: "SdsSecretName", # required
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #           logging: {
-    #             access_log: {
-    #               file: {
-    #                 path: "FilePath", # required
-    #               },
-    #             },
-    #           },
-    #           service_discovery: {
-    #             aws_cloud_map: {
-    #               attributes: [
-    #                 {
-    #                   key: "AwsCloudMapInstanceAttributeKey", # required
-    #                   value: "AwsCloudMapInstanceAttributeValue", # required
-    #                 },
-    #               ],
-    #               namespace_name: "AwsCloudMapName", # required
-    #               service_name: "AwsCloudMapName", # required
-    #             },
-    #             dns: {
-    #               hostname: "Hostname", # required
-    #             },
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         virtual_node_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -1316,11 +548,11 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then the account that you specify must share the
-    #   mesh with your account before you can create the resource in the
-    #   service mesh. For more information about mesh sharing, see [Working
-    #   with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then the account that you specify
+    #   must share the mesh with your account before you can create the
+    #   resource in the service mesh. For more information about mesh
+    #   sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1376,32 +608,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass CreateVirtualRouterInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           listeners: [
-    #             {
-    #               port_mapping: { # required
-    #                 port: 1, # required
-    #                 protocol: "http", # required, accepts http, tcp, http2, grpc
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -1416,11 +622,11 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then the account that you specify must share the
-    #   mesh with your account before you can create the resource in the
-    #   service mesh. For more information about mesh sharing, see [Working
-    #   with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then the account that you specify
+    #   must share the mesh with your account before you can create the
+    #   resource in the service mesh. For more information about mesh
+    #   sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1477,32 +683,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass CreateVirtualServiceInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           provider: {
-    #             virtual_node: {
-    #               virtual_node_name: "ResourceName", # required
-    #             },
-    #             virtual_router: {
-    #               virtual_router_name: "ResourceName", # required
-    #             },
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         virtual_service_name: "ServiceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -1517,11 +697,11 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then the account that you specify must share the
-    #   mesh with your account before you can create the resource in the
-    #   service mesh. For more information about mesh sharing, see [Working
-    #   with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then the account that you specify
+    #   must share the mesh with your account before you can create the
+    #   resource in the service mesh. For more information about mesh
+    #   sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1574,16 +754,6 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteGatewayRouteInput
-    #   data as a hash:
-    #
-    #       {
-    #         gateway_route_name: "ResourceName", # required
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_gateway_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] gateway_route_name
     #   The name of the gateway route to delete.
     #   @return [String]
@@ -1593,10 +763,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1634,13 +804,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass DeleteMeshInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh to delete.
     #   @return [String]
@@ -1673,25 +836,15 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass DeleteRouteInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         route_name: "ResourceName", # required
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh to delete the route in.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1733,24 +886,15 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteVirtualGatewayInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_gateway_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh to delete the virtual gateway from.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1783,28 +927,17 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # <zonbook />
-    #
-    # <xhtml />
-    #
-    # @note When making an API call, you may pass DeleteVirtualNodeInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_node_name: "ResourceName", # required
-    #       }
+    # Deletes a virtual node input.
     #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh to delete the virtual node in.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1845,24 +978,15 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass DeleteVirtualRouterInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh to delete the virtual router in.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1903,24 +1027,15 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass DeleteVirtualServiceInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_service_name: "ServiceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh to delete the virtual service in.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -1957,16 +1072,6 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeGatewayRouteInput
-    #   data as a hash:
-    #
-    #       {
-    #         gateway_route_name: "ResourceName", # required
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_gateway_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] gateway_route_name
     #   The name of the gateway route to describe.
     #   @return [String]
@@ -1976,10 +1081,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -2018,23 +1123,15 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass DescribeMeshInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh to describe.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -2070,25 +1167,15 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass DescribeRouteInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         route_name: "ResourceName", # required
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh that the route resides in.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -2130,24 +1217,15 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeVirtualGatewayInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_gateway_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh that the gateway route resides in.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -2184,24 +1262,15 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass DescribeVirtualNodeInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_node_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh that the virtual node resides in.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -2242,24 +1311,15 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass DescribeVirtualRouterInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh that the virtual router resides in.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -2300,24 +1360,15 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass DescribeVirtualServiceInput
-    #   data as a hash:
-    #
-    #       {
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         virtual_service_name: "ServiceName", # required
-    #       }
-    #
     # @!attribute [rw] mesh_name
     #   The name of the service mesh that the virtual service resides in.
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -2357,34 +1408,31 @@ module Aws::AppMesh
     # An object that represents the DNS service discovery information for
     # your virtual node.
     #
-    # @note When making an API call, you may pass DnsServiceDiscovery
-    #   data as a hash:
-    #
-    #       {
-    #         hostname: "Hostname", # required
-    #       }
-    #
     # @!attribute [rw] hostname
     #   Specifies the DNS service discovery hostname for the virtual node.
+    #   @return [String]
+    #
+    # @!attribute [rw] ip_preference
+    #   The preferred IP version that this virtual node uses. Setting the IP
+    #   preference on the virtual node only overrides the IP preference set
+    #   for the mesh on this specific node.
+    #   @return [String]
+    #
+    # @!attribute [rw] response_type
+    #   Specifies the DNS response type for the virtual node.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/DnsServiceDiscovery AWS API Documentation
     #
     class DnsServiceDiscovery < Struct.new(
-      :hostname)
+      :hostname,
+      :ip_preference,
+      :response_type)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # An object that represents a duration of time.
-    #
-    # @note When making an API call, you may pass Duration
-    #   data as a hash:
-    #
-    #       {
-    #         unit: "s", # accepts s, ms
-    #         value: 1,
-    #       }
     #
     # @!attribute [rw] unit
     #   A unit of time.
@@ -2405,19 +1453,13 @@ module Aws::AppMesh
 
     # An object that represents the egress filter rules for a service mesh.
     #
-    # @note When making an API call, you may pass EgressFilter
-    #   data as a hash:
-    #
-    #       {
-    #         type: "ALLOW_ALL", # required, accepts ALLOW_ALL, DROP_ALL
-    #       }
-    #
     # @!attribute [rw] type
     #   The egress filter type. By default, the type is `DROP_ALL`, which
     #   allows egress only from virtual nodes to other defined resources in
-    #   the service mesh (and any traffic to `*.amazonaws.com` for AWS API
-    #   calls). You can set the egress filter type to `ALLOW_ALL` to allow
-    #   egress to any endpoint inside or outside of the service mesh.
+    #   the service mesh (and any traffic to `*.amazonaws.com` for Amazon
+    #   Web Services API calls). You can set the egress filter type to
+    #   `ALLOW_ALL` to allow egress to any endpoint inside or outside of the
+    #   service mesh.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/EgressFilter AWS API Documentation
@@ -2430,12 +1472,10 @@ module Aws::AppMesh
 
     # An object that represents an access log file.
     #
-    # @note When making an API call, you may pass FileAccessLog
-    #   data as a hash:
-    #
-    #       {
-    #         path: "FilePath", # required
-    #       }
+    # @!attribute [rw] format
+    #   The specified format for the logs. The format is either
+    #   `json_format` or `text_format`.
+    #   @return [Types::LoggingFormat]
     #
     # @!attribute [rw] path
     #   The file path to write access logs to. You can use `/dev/stdout` to
@@ -2445,15 +1485,13 @@ module Aws::AppMesh
     #   specify a path in the Envoy container's file system to write the
     #   files to disk.
     #
-    #   <note markdown="1"> The Envoy process must have write permissions to the path that you
-    #   specify here. Otherwise, Envoy fails to bootstrap properly.
-    #
-    #    </note>
+    #        <note> <p>The Envoy process must have write permissions to the path that you specify here. Otherwise, Envoy fails to bootstrap properly.</p> </note>
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/FileAccessLog AWS API Documentation
     #
     class FileAccessLog < Struct.new(
+      :format,
       :path)
       SENSITIVE = []
       include Aws::Structure
@@ -2512,6 +1550,39 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
+    # An object representing the gateway route host name to match.
+    #
+    # @!attribute [rw] exact
+    #   The exact host name to match on.
+    #   @return [String]
+    #
+    # @!attribute [rw] suffix
+    #   The specified ending characters of the host name to match on.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/GatewayRouteHostnameMatch AWS API Documentation
+    #
+    class GatewayRouteHostnameMatch < Struct.new(
+      :exact,
+      :suffix)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object representing the gateway route host name to rewrite.
+    #
+    # @!attribute [rw] default_target_hostname
+    #   The default target host name to write to.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/GatewayRouteHostnameRewrite AWS API Documentation
+    #
+    class GatewayRouteHostnameRewrite < Struct.new(
+      :default_target_hostname)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # An object that represents a gateway route returned by a list
     # operation.
     #
@@ -2538,10 +1609,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -2549,10 +1620,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] resource_owner
-    #   The AWS IAM account ID of the resource owner. If the account ID is
-    #   not your own, then it's the ID of the mesh owner or of another
-    #   account that the mesh is shared with. For more information about
-    #   mesh sharing, see [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the resource owner. If the
+    #   account ID is not your own, then it's the ID of the mesh owner or
+    #   of another account that the mesh is shared with. For more
+    #   information about mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -2587,48 +1658,6 @@ module Aws::AppMesh
     # An object that represents a gateway route specification. Specify one
     # gateway route type.
     #
-    # @note When making an API call, you may pass GatewayRouteSpec
-    #   data as a hash:
-    #
-    #       {
-    #         grpc_route: {
-    #           action: { # required
-    #             target: { # required
-    #               virtual_service: { # required
-    #                 virtual_service_name: "ResourceName", # required
-    #               },
-    #             },
-    #           },
-    #           match: { # required
-    #             service_name: "ServiceName",
-    #           },
-    #         },
-    #         http2_route: {
-    #           action: { # required
-    #             target: { # required
-    #               virtual_service: { # required
-    #                 virtual_service_name: "ResourceName", # required
-    #               },
-    #             },
-    #           },
-    #           match: { # required
-    #             prefix: "String", # required
-    #           },
-    #         },
-    #         http_route: {
-    #           action: { # required
-    #             target: { # required
-    #               virtual_service: { # required
-    #                 virtual_service_name: "ResourceName", # required
-    #               },
-    #             },
-    #           },
-    #           match: { # required
-    #             prefix: "String", # required
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] grpc_route
     #   An object that represents the specification of a gRPC gateway route.
     #   @return [Types::GrpcGatewayRoute]
@@ -2643,12 +1672,17 @@ module Aws::AppMesh
     #   route.
     #   @return [Types::HttpGatewayRoute]
     #
+    # @!attribute [rw] priority
+    #   The ordering of the gateway routes spec.
+    #   @return [Integer]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/GatewayRouteSpec AWS API Documentation
     #
     class GatewayRouteSpec < Struct.new(
       :grpc_route,
       :http2_route,
-      :http_route)
+      :http_route,
+      :priority)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2669,14 +1703,9 @@ module Aws::AppMesh
 
     # An object that represents a gateway route target.
     #
-    # @note When making an API call, you may pass GatewayRouteTarget
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_service: { # required
-    #           virtual_service_name: "ResourceName", # required
-    #         },
-    #       }
+    # @!attribute [rw] port
+    #   The port number of the gateway route target.
+    #   @return [Integer]
     #
     # @!attribute [rw] virtual_service
     #   An object that represents a virtual service gateway route target.
@@ -2685,6 +1714,7 @@ module Aws::AppMesh
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/GatewayRouteTarget AWS API Documentation
     #
     class GatewayRouteTarget < Struct.new(
+      :port,
       :virtual_service)
       SENSITIVE = []
       include Aws::Structure
@@ -2692,13 +1722,6 @@ module Aws::AppMesh
 
     # An object that represents the virtual service that traffic is routed
     # to.
-    #
-    # @note When making an API call, you may pass GatewayRouteVirtualService
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_service_name: "ResourceName", # required
-    #       }
     #
     # @!attribute [rw] virtual_service_name
     #   The name of the virtual service that traffic is routed to.
@@ -2713,22 +1736,6 @@ module Aws::AppMesh
     end
 
     # An object that represents a gRPC gateway route.
-    #
-    # @note When making an API call, you may pass GrpcGatewayRoute
-    #   data as a hash:
-    #
-    #       {
-    #         action: { # required
-    #           target: { # required
-    #             virtual_service: { # required
-    #               virtual_service_name: "ResourceName", # required
-    #             },
-    #           },
-    #         },
-    #         match: { # required
-    #           service_name: "ServiceName",
-    #         },
-    #       }
     #
     # @!attribute [rw] action
     #   An object that represents the action to take if a match is
@@ -2751,16 +1758,9 @@ module Aws::AppMesh
 
     # An object that represents the action to take if a match is determined.
     #
-    # @note When making an API call, you may pass GrpcGatewayRouteAction
-    #   data as a hash:
-    #
-    #       {
-    #         target: { # required
-    #           virtual_service: { # required
-    #             virtual_service_name: "ResourceName", # required
-    #           },
-    #         },
-    #       }
+    # @!attribute [rw] rewrite
+    #   The gateway route action to rewrite.
+    #   @return [Types::GrpcGatewayRouteRewrite]
     #
     # @!attribute [rw] target
     #   An object that represents the target that traffic is routed to when
@@ -2770,6 +1770,7 @@ module Aws::AppMesh
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/GrpcGatewayRouteAction AWS API Documentation
     #
     class GrpcGatewayRouteAction < Struct.new(
+      :rewrite,
       :target)
       SENSITIVE = []
       include Aws::Structure
@@ -2778,12 +1779,17 @@ module Aws::AppMesh
     # An object that represents the criteria for determining a request
     # match.
     #
-    # @note When making an API call, you may pass GrpcGatewayRouteMatch
-    #   data as a hash:
+    # @!attribute [rw] hostname
+    #   The gateway route host name to be matched on.
+    #   @return [Types::GatewayRouteHostnameMatch]
     #
-    #       {
-    #         service_name: "ServiceName",
-    #       }
+    # @!attribute [rw] metadata
+    #   The gateway route metadata to be matched on.
+    #   @return [Array<Types::GrpcGatewayRouteMetadata>]
+    #
+    # @!attribute [rw] port
+    #   The port number to match from the request.
+    #   @return [Integer]
     #
     # @!attribute [rw] service_name
     #   The fully qualified domain name for the service to match from the
@@ -2793,28 +1799,114 @@ module Aws::AppMesh
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/GrpcGatewayRouteMatch AWS API Documentation
     #
     class GrpcGatewayRouteMatch < Struct.new(
+      :hostname,
+      :metadata,
+      :port,
       :service_name)
       SENSITIVE = []
       include Aws::Structure
     end
 
+    # An object representing the metadata of the gateway route.
+    #
+    # @!attribute [rw] invert
+    #   Specify `True` to match anything except the match criteria. The
+    #   default value is `False`.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] match
+    #   The criteria for determining a metadata match.
+    #   @return [Types::GrpcMetadataMatchMethod]
+    #
+    # @!attribute [rw] name
+    #   A name for the gateway route metadata.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/GrpcGatewayRouteMetadata AWS API Documentation
+    #
+    class GrpcGatewayRouteMetadata < Struct.new(
+      :invert,
+      :match,
+      :name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object that represents the gateway route to rewrite.
+    #
+    # @!attribute [rw] hostname
+    #   The host name of the gateway route to rewrite.
+    #   @return [Types::GatewayRouteHostnameRewrite]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/GrpcGatewayRouteRewrite AWS API Documentation
+    #
+    class GrpcGatewayRouteRewrite < Struct.new(
+      :hostname)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object representing the method header to be matched.
+    #
+    # @note GrpcMetadataMatchMethod is a union - when making an API calls you must set exactly one of the members.
+    #
+    # @note GrpcMetadataMatchMethod is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of GrpcMetadataMatchMethod corresponding to the set member.
+    #
+    # @!attribute [rw] exact
+    #   The exact method header to be matched on.
+    #   @return [String]
+    #
+    # @!attribute [rw] prefix
+    #   The specified beginning characters of the method header to be
+    #   matched on.
+    #   @return [String]
+    #
+    # @!attribute [rw] range
+    #   An object that represents the range of values to match on. The first
+    #   character of the range is included in the range, though the last
+    #   character is not. For example, if the range specified were 1-100,
+    #   only values 1-99 would be matched.
+    #   @return [Types::MatchRange]
+    #
+    # @!attribute [rw] regex
+    #   The regex used to match the method header.
+    #   @return [String]
+    #
+    # @!attribute [rw] suffix
+    #   The specified ending characters of the method header to match on.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/GrpcMetadataMatchMethod AWS API Documentation
+    #
+    class GrpcMetadataMatchMethod < Struct.new(
+      :exact,
+      :prefix,
+      :range,
+      :regex,
+      :suffix,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class Exact < GrpcMetadataMatchMethod; end
+      class Prefix < GrpcMetadataMatchMethod; end
+      class Range < GrpcMetadataMatchMethod; end
+      class Regex < GrpcMetadataMatchMethod; end
+      class Suffix < GrpcMetadataMatchMethod; end
+      class Unknown < GrpcMetadataMatchMethod; end
+    end
+
     # An object that represents a retry policy. Specify at least one value
     # for at least one of the types of `RetryEvents`, a value for
-    # `maxRetries`, and a value for `perRetryTimeout`.
+    # `maxRetries`, and a value for `perRetryTimeout`. Both `server-error`
+    # and `gateway-error` under `httpRetryEvents` include the Envoy `reset`
+    # policy. For more information on the `reset` policy, see the [Envoy
+    # documentation][1].
     #
-    # @note When making an API call, you may pass GrpcRetryPolicy
-    #   data as a hash:
     #
-    #       {
-    #         grpc_retry_events: ["cancelled"], # accepts cancelled, deadline-exceeded, internal, resource-exhausted, unavailable
-    #         http_retry_events: ["HttpRetryPolicyEvent"],
-    #         max_retries: 1, # required
-    #         per_retry_timeout: { # required
-    #           unit: "s", # accepts s, ms
-    #           value: 1,
-    #         },
-    #         tcp_retry_events: ["connection-error"], # accepts connection-error
-    #       }
+    #
+    # [1]: https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on
     #
     # @!attribute [rw] grpc_retry_events
     #   Specify at least one of the valid values.
@@ -2861,60 +1953,6 @@ module Aws::AppMesh
 
     # An object that represents a gRPC route type.
     #
-    # @note When making an API call, you may pass GrpcRoute
-    #   data as a hash:
-    #
-    #       {
-    #         action: { # required
-    #           weighted_targets: [ # required
-    #             {
-    #               virtual_node: "ResourceName", # required
-    #               weight: 1, # required
-    #             },
-    #           ],
-    #         },
-    #         match: { # required
-    #           metadata: [
-    #             {
-    #               invert: false,
-    #               match: {
-    #                 exact: "HeaderMatch",
-    #                 prefix: "HeaderMatch",
-    #                 range: {
-    #                   end: 1, # required
-    #                   start: 1, # required
-    #                 },
-    #                 regex: "HeaderMatch",
-    #                 suffix: "HeaderMatch",
-    #               },
-    #               name: "HeaderName", # required
-    #             },
-    #           ],
-    #           method_name: "MethodName",
-    #           service_name: "ServiceName",
-    #         },
-    #         retry_policy: {
-    #           grpc_retry_events: ["cancelled"], # accepts cancelled, deadline-exceeded, internal, resource-exhausted, unavailable
-    #           http_retry_events: ["HttpRetryPolicyEvent"],
-    #           max_retries: 1, # required
-    #           per_retry_timeout: { # required
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #           tcp_retry_events: ["connection-error"], # accepts connection-error
-    #         },
-    #         timeout: {
-    #           idle: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #           per_request: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] action
     #   An object that represents the action to take if a match is
     #   determined.
@@ -2946,18 +1984,6 @@ module Aws::AppMesh
 
     # An object that represents the action to take if a match is determined.
     #
-    # @note When making an API call, you may pass GrpcRouteAction
-    #   data as a hash:
-    #
-    #       {
-    #         weighted_targets: [ # required
-    #           {
-    #             virtual_node: "ResourceName", # required
-    #             weight: 1, # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] weighted_targets
     #   An object that represents the targets that traffic is routed to when
     #   a request matches the route.
@@ -2974,30 +2000,6 @@ module Aws::AppMesh
     # An object that represents the criteria for determining a request
     # match.
     #
-    # @note When making an API call, you may pass GrpcRouteMatch
-    #   data as a hash:
-    #
-    #       {
-    #         metadata: [
-    #           {
-    #             invert: false,
-    #             match: {
-    #               exact: "HeaderMatch",
-    #               prefix: "HeaderMatch",
-    #               range: {
-    #                 end: 1, # required
-    #                 start: 1, # required
-    #               },
-    #               regex: "HeaderMatch",
-    #               suffix: "HeaderMatch",
-    #             },
-    #             name: "HeaderName", # required
-    #           },
-    #         ],
-    #         method_name: "MethodName",
-    #         service_name: "ServiceName",
-    #       }
-    #
     # @!attribute [rw] metadata
     #   An object that represents the data to match from the request.
     #   @return [Array<Types::GrpcRouteMetadata>]
@@ -3006,6 +2008,10 @@ module Aws::AppMesh
     #   The method name to match from the request. If you specify a name,
     #   you must also specify a `serviceName`.
     #   @return [String]
+    #
+    # @!attribute [rw] port
+    #   The port number to match on.
+    #   @return [Integer]
     #
     # @!attribute [rw] service_name
     #   The fully qualified domain name for the service to match from the
@@ -3017,30 +2023,13 @@ module Aws::AppMesh
     class GrpcRouteMatch < Struct.new(
       :metadata,
       :method_name,
+      :port,
       :service_name)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # An object that represents the match metadata for the route.
-    #
-    # @note When making an API call, you may pass GrpcRouteMetadata
-    #   data as a hash:
-    #
-    #       {
-    #         invert: false,
-    #         match: {
-    #           exact: "HeaderMatch",
-    #           prefix: "HeaderMatch",
-    #           range: {
-    #             end: 1, # required
-    #             start: 1, # required
-    #           },
-    #           regex: "HeaderMatch",
-    #           suffix: "HeaderMatch",
-    #         },
-    #         name: "HeaderName", # required
-    #       }
     #
     # @!attribute [rw] invert
     #   Specify `True` to match anything except the match criteria. The
@@ -3068,19 +2057,9 @@ module Aws::AppMesh
     # An object that represents the match method. Specify one of the match
     # values.
     #
-    # @note When making an API call, you may pass GrpcRouteMetadataMatchMethod
-    #   data as a hash:
+    # @note GrpcRouteMetadataMatchMethod is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         exact: "HeaderMatch",
-    #         prefix: "HeaderMatch",
-    #         range: {
-    #           end: 1, # required
-    #           start: 1, # required
-    #         },
-    #         regex: "HeaderMatch",
-    #         suffix: "HeaderMatch",
-    #       }
+    # @note GrpcRouteMetadataMatchMethod is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of GrpcRouteMetadataMatchMethod corresponding to the set member.
     #
     # @!attribute [rw] exact
     #   The value sent by the client must match the specified value exactly.
@@ -3110,26 +2089,21 @@ module Aws::AppMesh
       :prefix,
       :range,
       :regex,
-      :suffix)
+      :suffix,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Exact < GrpcRouteMetadataMatchMethod; end
+      class Prefix < GrpcRouteMetadataMatchMethod; end
+      class Range < GrpcRouteMetadataMatchMethod; end
+      class Regex < GrpcRouteMetadataMatchMethod; end
+      class Suffix < GrpcRouteMetadataMatchMethod; end
+      class Unknown < GrpcRouteMetadataMatchMethod; end
     end
 
     # An object that represents types of timeouts.
-    #
-    # @note When making an API call, you may pass GrpcTimeout
-    #   data as a hash:
-    #
-    #       {
-    #         idle: {
-    #           unit: "s", # accepts s, ms
-    #           value: 1,
-    #         },
-    #         per_request: {
-    #           unit: "s", # accepts s, ms
-    #           value: 1,
-    #         },
-    #       }
     #
     # @!attribute [rw] idle
     #   An object that represents an idle timeout. An idle timeout bounds
@@ -3159,19 +2133,9 @@ module Aws::AppMesh
     # An object that represents the method and value to match with the
     # header value sent in a request. Specify one match method.
     #
-    # @note When making an API call, you may pass HeaderMatchMethod
-    #   data as a hash:
+    # @note HeaderMatchMethod is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         exact: "HeaderMatch",
-    #         prefix: "HeaderMatch",
-    #         range: {
-    #           end: 1, # required
-    #           start: 1, # required
-    #         },
-    #         regex: "HeaderMatch",
-    #         suffix: "HeaderMatch",
-    #       }
+    # @note HeaderMatchMethod is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of HeaderMatchMethod corresponding to the set member.
     #
     # @!attribute [rw] exact
     #   The value sent by the client must match the specified value exactly.
@@ -3201,26 +2165,22 @@ module Aws::AppMesh
       :prefix,
       :range,
       :regex,
-      :suffix)
+      :suffix,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Exact < HeaderMatchMethod; end
+      class Prefix < HeaderMatchMethod; end
+      class Range < HeaderMatchMethod; end
+      class Regex < HeaderMatchMethod; end
+      class Suffix < HeaderMatchMethod; end
+      class Unknown < HeaderMatchMethod; end
     end
 
     # An object that represents the health check policy for a virtual
     # node's listener.
-    #
-    # @note When making an API call, you may pass HealthCheckPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         healthy_threshold: 1, # required
-    #         interval_millis: 1, # required
-    #         path: "String",
-    #         port: 1,
-    #         protocol: "http", # required, accepts http, tcp, http2, grpc
-    #         timeout_millis: 1, # required
-    #         unhealthy_threshold: 1, # required
-    #       }
     #
     # @!attribute [rw] healthy_threshold
     #   The number of consecutive successful health checks that must occur
@@ -3278,22 +2238,6 @@ module Aws::AppMesh
 
     # An object that represents an HTTP gateway route.
     #
-    # @note When making an API call, you may pass HttpGatewayRoute
-    #   data as a hash:
-    #
-    #       {
-    #         action: { # required
-    #           target: { # required
-    #             virtual_service: { # required
-    #               virtual_service_name: "ResourceName", # required
-    #             },
-    #           },
-    #         },
-    #         match: { # required
-    #           prefix: "String", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] action
     #   An object that represents the action to take if a match is
     #   determined.
@@ -3315,16 +2259,9 @@ module Aws::AppMesh
 
     # An object that represents the action to take if a match is determined.
     #
-    # @note When making an API call, you may pass HttpGatewayRouteAction
-    #   data as a hash:
-    #
-    #       {
-    #         target: { # required
-    #           virtual_service: { # required
-    #             virtual_service_name: "ResourceName", # required
-    #           },
-    #         },
-    #       }
+    # @!attribute [rw] rewrite
+    #   The gateway route action to rewrite.
+    #   @return [Types::HttpGatewayRouteRewrite]
     #
     # @!attribute [rw] target
     #   An object that represents the target that traffic is routed to when
@@ -3334,7 +2271,35 @@ module Aws::AppMesh
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/HttpGatewayRouteAction AWS API Documentation
     #
     class HttpGatewayRouteAction < Struct.new(
+      :rewrite,
       :target)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object that represents the HTTP header in the gateway route.
+    #
+    # @!attribute [rw] invert
+    #   Specify `True` to match anything except the match criteria. The
+    #   default value is `False`.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] match
+    #   An object that represents the method and value to match with the
+    #   header value sent in a request. Specify one match method.
+    #   @return [Types::HeaderMatchMethod]
+    #
+    # @!attribute [rw] name
+    #   A name for the HTTP header in the gateway route that will be matched
+    #   on.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/HttpGatewayRouteHeader AWS API Documentation
+    #
+    class HttpGatewayRouteHeader < Struct.new(
+      :invert,
+      :match,
+      :name)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -3342,12 +2307,25 @@ module Aws::AppMesh
     # An object that represents the criteria for determining a request
     # match.
     #
-    # @note When making an API call, you may pass HttpGatewayRouteMatch
-    #   data as a hash:
+    # @!attribute [rw] headers
+    #   The client request headers to match on.
+    #   @return [Array<Types::HttpGatewayRouteHeader>]
     #
-    #       {
-    #         prefix: "String", # required
-    #       }
+    # @!attribute [rw] hostname
+    #   The host name to match on.
+    #   @return [Types::GatewayRouteHostnameMatch]
+    #
+    # @!attribute [rw] method
+    #   The method to match on.
+    #   @return [String]
+    #
+    # @!attribute [rw] path
+    #   The path to match on.
+    #   @return [Types::HttpPathMatch]
+    #
+    # @!attribute [rw] port
+    #   The port number to match on.
+    #   @return [Integer]
     #
     # @!attribute [rw] prefix
     #   Specifies the path to match requests with. This parameter must
@@ -3358,30 +2336,131 @@ module Aws::AppMesh
     #   `my-service.local/metrics`, your prefix should be `/metrics`.
     #   @return [String]
     #
+    # @!attribute [rw] query_parameters
+    #   The query parameter to match on.
+    #   @return [Array<Types::HttpQueryParameter>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/HttpGatewayRouteMatch AWS API Documentation
     #
     class HttpGatewayRouteMatch < Struct.new(
+      :headers,
+      :hostname,
+      :method,
+      :path,
+      :port,
+      :prefix,
+      :query_parameters)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object that represents the path to rewrite.
+    #
+    # @!attribute [rw] exact
+    #   The exact path to rewrite.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/HttpGatewayRoutePathRewrite AWS API Documentation
+    #
+    class HttpGatewayRoutePathRewrite < Struct.new(
+      :exact)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object representing the beginning characters of the route to
+    # rewrite.
+    #
+    # @!attribute [rw] default_prefix
+    #   The default prefix used to replace the incoming route prefix when
+    #   rewritten.
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   The value used to replace the incoming route prefix when rewritten.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/HttpGatewayRoutePrefixRewrite AWS API Documentation
+    #
+    class HttpGatewayRoutePrefixRewrite < Struct.new(
+      :default_prefix,
+      :value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object representing the gateway route to rewrite.
+    #
+    # @!attribute [rw] hostname
+    #   The host name to rewrite.
+    #   @return [Types::GatewayRouteHostnameRewrite]
+    #
+    # @!attribute [rw] path
+    #   The path to rewrite.
+    #   @return [Types::HttpGatewayRoutePathRewrite]
+    #
+    # @!attribute [rw] prefix
+    #   The specified beginning characters to rewrite.
+    #   @return [Types::HttpGatewayRoutePrefixRewrite]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/HttpGatewayRouteRewrite AWS API Documentation
+    #
+    class HttpGatewayRouteRewrite < Struct.new(
+      :hostname,
+      :path,
       :prefix)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object representing the path to match in the request.
+    #
+    # @!attribute [rw] exact
+    #   The exact path to match on.
+    #   @return [String]
+    #
+    # @!attribute [rw] regex
+    #   The regex used to match the path.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/HttpPathMatch AWS API Documentation
+    #
+    class HttpPathMatch < Struct.new(
+      :exact,
+      :regex)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object that represents the query parameter in the request.
+    #
+    # @!attribute [rw] match
+    #   The query parameter to match on.
+    #   @return [Types::QueryParameterMatch]
+    #
+    # @!attribute [rw] name
+    #   A name for the query parameter that will be matched on.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/HttpQueryParameter AWS API Documentation
+    #
+    class HttpQueryParameter < Struct.new(
+      :match,
+      :name)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # An object that represents a retry policy. Specify at least one value
     # for at least one of the types of `RetryEvents`, a value for
-    # `maxRetries`, and a value for `perRetryTimeout`.
+    # `maxRetries`, and a value for `perRetryTimeout`. Both `server-error`
+    # and `gateway-error` under `httpRetryEvents` include the Envoy `reset`
+    # policy. For more information on the `reset` policy, see the [Envoy
+    # documentation][1].
     #
-    # @note When making an API call, you may pass HttpRetryPolicy
-    #   data as a hash:
     #
-    #       {
-    #         http_retry_events: ["HttpRetryPolicyEvent"],
-    #         max_retries: 1, # required
-    #         per_retry_timeout: { # required
-    #           unit: "s", # accepts s, ms
-    #           value: 1,
-    #         },
-    #         tcp_retry_events: ["connection-error"], # accepts connection-error
-    #       }
+    #
+    # [1]: https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on
     #
     # @!attribute [rw] http_retry_events
     #   Specify at least one of the following values.
@@ -3423,60 +2502,6 @@ module Aws::AppMesh
 
     # An object that represents an HTTP or HTTP/2 route type.
     #
-    # @note When making an API call, you may pass HttpRoute
-    #   data as a hash:
-    #
-    #       {
-    #         action: { # required
-    #           weighted_targets: [ # required
-    #             {
-    #               virtual_node: "ResourceName", # required
-    #               weight: 1, # required
-    #             },
-    #           ],
-    #         },
-    #         match: { # required
-    #           headers: [
-    #             {
-    #               invert: false,
-    #               match: {
-    #                 exact: "HeaderMatch",
-    #                 prefix: "HeaderMatch",
-    #                 range: {
-    #                   end: 1, # required
-    #                   start: 1, # required
-    #                 },
-    #                 regex: "HeaderMatch",
-    #                 suffix: "HeaderMatch",
-    #               },
-    #               name: "HeaderName", # required
-    #             },
-    #           ],
-    #           method: "GET", # accepts GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
-    #           prefix: "String", # required
-    #           scheme: "http", # accepts http, https
-    #         },
-    #         retry_policy: {
-    #           http_retry_events: ["HttpRetryPolicyEvent"],
-    #           max_retries: 1, # required
-    #           per_retry_timeout: { # required
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #           tcp_retry_events: ["connection-error"], # accepts connection-error
-    #         },
-    #         timeout: {
-    #           idle: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #           per_request: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] action
     #   An object that represents the action to take if a match is
     #   determined.
@@ -3508,18 +2533,6 @@ module Aws::AppMesh
 
     # An object that represents the action to take if a match is determined.
     #
-    # @note When making an API call, you may pass HttpRouteAction
-    #   data as a hash:
-    #
-    #       {
-    #         weighted_targets: [ # required
-    #           {
-    #             virtual_node: "ResourceName", # required
-    #             weight: 1, # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] weighted_targets
     #   An object that represents the targets that traffic is routed to when
     #   a request matches the route.
@@ -3534,24 +2547,6 @@ module Aws::AppMesh
     end
 
     # An object that represents the HTTP header in the request.
-    #
-    # @note When making an API call, you may pass HttpRouteHeader
-    #   data as a hash:
-    #
-    #       {
-    #         invert: false,
-    #         match: {
-    #           exact: "HeaderMatch",
-    #           prefix: "HeaderMatch",
-    #           range: {
-    #             end: 1, # required
-    #             start: 1, # required
-    #           },
-    #           regex: "HeaderMatch",
-    #           suffix: "HeaderMatch",
-    #         },
-    #         name: "HeaderName", # required
-    #       }
     #
     # @!attribute [rw] invert
     #   Specify `True` to match anything except the match criteria. The
@@ -3580,38 +2575,21 @@ module Aws::AppMesh
     # An object that represents the requirements for a route to match HTTP
     # requests for a virtual router.
     #
-    # @note When making an API call, you may pass HttpRouteMatch
-    #   data as a hash:
-    #
-    #       {
-    #         headers: [
-    #           {
-    #             invert: false,
-    #             match: {
-    #               exact: "HeaderMatch",
-    #               prefix: "HeaderMatch",
-    #               range: {
-    #                 end: 1, # required
-    #                 start: 1, # required
-    #               },
-    #               regex: "HeaderMatch",
-    #               suffix: "HeaderMatch",
-    #             },
-    #             name: "HeaderName", # required
-    #           },
-    #         ],
-    #         method: "GET", # accepts GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
-    #         prefix: "String", # required
-    #         scheme: "http", # accepts http, https
-    #       }
-    #
     # @!attribute [rw] headers
-    #   An object that represents the client request headers to match on.
+    #   The client request headers to match on.
     #   @return [Array<Types::HttpRouteHeader>]
     #
     # @!attribute [rw] method
     #   The client request method to match on. Specify only one.
     #   @return [String]
+    #
+    # @!attribute [rw] path
+    #   The client request path to match on.
+    #   @return [Types::HttpPathMatch]
+    #
+    # @!attribute [rw] port
+    #   The port number to match on.
+    #   @return [Integer]
     #
     # @!attribute [rw] prefix
     #   Specifies the path to match requests with. This parameter must
@@ -3622,8 +2600,13 @@ module Aws::AppMesh
     #   `my-service.local/metrics`, your prefix should be `/metrics`.
     #   @return [String]
     #
+    # @!attribute [rw] query_parameters
+    #   The client request query parameters to match on.
+    #   @return [Array<Types::HttpQueryParameter>]
+    #
     # @!attribute [rw] scheme
-    #   The client request scheme to match on. Specify only one.
+    #   The client request scheme to match on. Specify only one. Applicable
+    #   only for HTTP2 routes.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/HttpRouteMatch AWS API Documentation
@@ -3631,27 +2614,16 @@ module Aws::AppMesh
     class HttpRouteMatch < Struct.new(
       :headers,
       :method,
+      :path,
+      :port,
       :prefix,
+      :query_parameters,
       :scheme)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # An object that represents types of timeouts.
-    #
-    # @note When making an API call, you may pass HttpTimeout
-    #   data as a hash:
-    #
-    #       {
-    #         idle: {
-    #           unit: "s", # accepts s, ms
-    #           value: 1,
-    #         },
-    #         per_request: {
-    #           unit: "s", # accepts s, ms
-    #           value: 1,
-    #         },
-    #       }
     #
     # @!attribute [rw] idle
     #   An object that represents an idle timeout. An idle timeout bounds
@@ -3692,8 +2664,27 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
+    # An object that represents the key value pairs for the JSON.
+    #
+    # @!attribute [rw] key
+    #   The specified key for the JSON.
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   The specified value for the JSON.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/JsonFormatRef AWS API Documentation
+    #
+    class JsonFormatRef < Struct.new(
+      :key,
+      :value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # You have exceeded a service limit for your account. For more
-    # information, see [Service Limits][1] in the *AWS App Mesh User Guide*.
+    # information, see [Service Limits][1] in the *App Mesh User Guide*.
     #
     #
     #
@@ -3710,17 +2701,6 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListGatewayRoutesInput
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         next_token: "String",
-    #         virtual_gateway_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] limit
     #   The maximum number of results returned by `ListGatewayRoutes` in
     #   paginated output. When you use this parameter, `ListGatewayRoutes`
@@ -3737,10 +2717,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -3795,14 +2775,6 @@ module Aws::AppMesh
     # <zonbook />
     #
     # <xhtml />
-    #
-    # @note When making an API call, you may pass ListMeshesInput
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         next_token: "String",
-    #       }
     #
     # @!attribute [rw] limit
     #   The maximum number of results returned by `ListMeshes` in paginated
@@ -3865,17 +2837,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass ListRoutesInput
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         next_token: "String",
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] limit
     #   The maximum number of results returned by `ListRoutes` in paginated
     #   output. When you use this parameter, `ListRoutes` returns only
@@ -3892,10 +2853,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -3953,15 +2914,6 @@ module Aws::AppMesh
     # <zonbook />
     #
     # <xhtml />
-    #
-    # @note When making an API call, you may pass ListTagsForResourceInput
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         next_token: "String",
-    #         resource_arn: "Arn", # required
-    #       }
     #
     # @!attribute [rw] limit
     #   The maximum number of tag results returned by `ListTagsForResource`
@@ -4022,16 +2974,6 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListVirtualGatewaysInput
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] limit
     #   The maximum number of results returned by `ListVirtualGateways` in
     #   paginated output. When you use this parameter, `ListVirtualGateways`
@@ -4048,10 +2990,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -4102,16 +3044,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass ListVirtualNodesInput
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] limit
     #   The maximum number of results returned by `ListVirtualNodes` in
     #   paginated output. When you use this parameter, `ListVirtualNodes`
@@ -4128,10 +3060,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -4185,16 +3117,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass ListVirtualRoutersInput
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] limit
     #   The maximum number of results returned by `ListVirtualRouters` in
     #   paginated output. When you use this parameter, `ListVirtualRouters`
@@ -4211,10 +3133,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -4268,16 +3190,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass ListVirtualServicesInput
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] limit
     #   The maximum number of results returned by `ListVirtualServices` in
     #   paginated output. When you use this parameter, `ListVirtualServices`
@@ -4294,10 +3206,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -4350,120 +3262,6 @@ module Aws::AppMesh
 
     # An object that represents a listener for a virtual node.
     #
-    # @note When making an API call, you may pass Listener
-    #   data as a hash:
-    #
-    #       {
-    #         connection_pool: {
-    #           grpc: {
-    #             max_requests: 1, # required
-    #           },
-    #           http: {
-    #             max_connections: 1, # required
-    #             max_pending_requests: 1,
-    #           },
-    #           http2: {
-    #             max_requests: 1, # required
-    #           },
-    #           tcp: {
-    #             max_connections: 1, # required
-    #           },
-    #         },
-    #         health_check: {
-    #           healthy_threshold: 1, # required
-    #           interval_millis: 1, # required
-    #           path: "String",
-    #           port: 1,
-    #           protocol: "http", # required, accepts http, tcp, http2, grpc
-    #           timeout_millis: 1, # required
-    #           unhealthy_threshold: 1, # required
-    #         },
-    #         outlier_detection: {
-    #           base_ejection_duration: { # required
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #           interval: { # required
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #           max_ejection_percent: 1, # required
-    #           max_server_errors: 1, # required
-    #         },
-    #         port_mapping: { # required
-    #           port: 1, # required
-    #           protocol: "http", # required, accepts http, tcp, http2, grpc
-    #         },
-    #         timeout: {
-    #           grpc: {
-    #             idle: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #             per_request: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #           },
-    #           http: {
-    #             idle: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #             per_request: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #           },
-    #           http2: {
-    #             idle: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #             per_request: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #           },
-    #           tcp: {
-    #             idle: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #           },
-    #         },
-    #         tls: {
-    #           certificate: { # required
-    #             acm: {
-    #               certificate_arn: "Arn", # required
-    #             },
-    #             file: {
-    #               certificate_chain: "FilePath", # required
-    #               private_key: "FilePath", # required
-    #             },
-    #             sds: {
-    #               secret_name: "SdsSecretName", # required
-    #             },
-    #           },
-    #           mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #           validation: {
-    #             subject_alternative_names: {
-    #               match: { # required
-    #                 exact: ["SubjectAlternativeName"], # required
-    #               },
-    #             },
-    #             trust: { # required
-    #               file: {
-    #                 certificate_chain: "FilePath", # required
-    #               },
-    #               sds: {
-    #                 secret_name: "SdsSecretName", # required
-    #               },
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] connection_pool
     #   The connection pool information for the listener.
     #   @return [Types::VirtualNodeConnectionPool]
@@ -4504,47 +3302,9 @@ module Aws::AppMesh
 
     # An object that represents timeouts for different protocols.
     #
-    # @note When making an API call, you may pass ListenerTimeout
-    #   data as a hash:
+    # @note ListenerTimeout is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         grpc: {
-    #           idle: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #           per_request: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #         },
-    #         http: {
-    #           idle: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #           per_request: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #         },
-    #         http2: {
-    #           idle: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #           per_request: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #         },
-    #         tcp: {
-    #           idle: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #         },
-    #       }
+    # @note ListenerTimeout is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of ListenerTimeout corresponding to the set member.
     #
     # @!attribute [rw] grpc
     #   An object that represents types of timeouts.
@@ -4568,47 +3328,21 @@ module Aws::AppMesh
       :grpc,
       :http,
       :http2,
-      :tcp)
+      :tcp,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Grpc < ListenerTimeout; end
+      class Http < ListenerTimeout; end
+      class Http2 < ListenerTimeout; end
+      class Tcp < ListenerTimeout; end
+      class Unknown < ListenerTimeout; end
     end
 
     # An object that represents the Transport Layer Security (TLS)
     # properties for a listener.
-    #
-    # @note When making an API call, you may pass ListenerTls
-    #   data as a hash:
-    #
-    #       {
-    #         certificate: { # required
-    #           acm: {
-    #             certificate_arn: "Arn", # required
-    #           },
-    #           file: {
-    #             certificate_chain: "FilePath", # required
-    #             private_key: "FilePath", # required
-    #           },
-    #           sds: {
-    #             secret_name: "SdsSecretName", # required
-    #           },
-    #         },
-    #         mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #         validation: {
-    #           subject_alternative_names: {
-    #             match: { # required
-    #               exact: ["SubjectAlternativeName"], # required
-    #             },
-    #           },
-    #           trust: { # required
-    #             file: {
-    #               certificate_chain: "FilePath", # required
-    #             },
-    #             sds: {
-    #               secret_name: "SdsSecretName", # required
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] certificate
     #   A reference to an object that represents a listener's Transport
@@ -4641,14 +3375,7 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # An object that represents an AWS Certicate Manager (ACM) certificate.
-    #
-    # @note When making an API call, you may pass ListenerTlsAcmCertificate
-    #   data as a hash:
-    #
-    #       {
-    #         certificate_arn: "Arn", # required
-    #       }
+    # An object that represents an Certificate Manager certificate.
     #
     # @!attribute [rw] certificate_arn
     #   The Amazon Resource Name (ARN) for the certificate. The certificate
@@ -4672,25 +3399,13 @@ module Aws::AppMesh
     # An object that represents a listener's Transport Layer Security (TLS)
     # certificate.
     #
-    # @note When making an API call, you may pass ListenerTlsCertificate
-    #   data as a hash:
+    # @note ListenerTlsCertificate is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         acm: {
-    #           certificate_arn: "Arn", # required
-    #         },
-    #         file: {
-    #           certificate_chain: "FilePath", # required
-    #           private_key: "FilePath", # required
-    #         },
-    #         sds: {
-    #           secret_name: "SdsSecretName", # required
-    #         },
-    #       }
+    # @note ListenerTlsCertificate is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of ListenerTlsCertificate corresponding to the set member.
     #
     # @!attribute [rw] acm
-    #   A reference to an object that represents an AWS Certicate Manager
-    #   (ACM) certificate.
+    #   A reference to an object that represents an Certificate Manager
+    #   certificate.
     #   @return [Types::ListenerTlsAcmCertificate]
     #
     # @!attribute [rw] file
@@ -4707,9 +3422,16 @@ module Aws::AppMesh
     class ListenerTlsCertificate < Struct.new(
       :acm,
       :file,
-      :sds)
+      :sds,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Acm < ListenerTlsCertificate; end
+      class File < ListenerTlsCertificate; end
+      class Sds < ListenerTlsCertificate; end
+      class Unknown < ListenerTlsCertificate; end
     end
 
     # An object that represents a local file certificate. The certificate
@@ -4720,14 +3442,6 @@ module Aws::AppMesh
     #
     #
     # [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html#virtual-node-tls-prerequisites
-    #
-    # @note When making an API call, you may pass ListenerTlsFileCertificate
-    #   data as a hash:
-    #
-    #       {
-    #         certificate_chain: "FilePath", # required
-    #         private_key: "FilePath", # required
-    #       }
     #
     # @!attribute [rw] certificate_chain
     #   The certificate chain for the certificate.
@@ -4756,13 +3470,6 @@ module Aws::AppMesh
     #
     # [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html
     #
-    # @note When making an API call, you may pass ListenerTlsSdsCertificate
-    #   data as a hash:
-    #
-    #       {
-    #         secret_name: "SdsSecretName", # required
-    #       }
-    #
     # @!attribute [rw] secret_name
     #   A reference to an object that represents the name of the secret
     #   requested from the Secret Discovery Service provider representing
@@ -4780,25 +3487,6 @@ module Aws::AppMesh
 
     # An object that represents a listener's Transport Layer Security (TLS)
     # validation context.
-    #
-    # @note When making an API call, you may pass ListenerTlsValidationContext
-    #   data as a hash:
-    #
-    #       {
-    #         subject_alternative_names: {
-    #           match: { # required
-    #             exact: ["SubjectAlternativeName"], # required
-    #           },
-    #         },
-    #         trust: { # required
-    #           file: {
-    #             certificate_chain: "FilePath", # required
-    #           },
-    #           sds: {
-    #             secret_name: "SdsSecretName", # required
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] subject_alternative_names
     #   A reference to an object that represents the SANs for a listener's
@@ -4822,17 +3510,9 @@ module Aws::AppMesh
     # An object that represents a listener's Transport Layer Security (TLS)
     # validation context trust.
     #
-    # @note When making an API call, you may pass ListenerTlsValidationContextTrust
-    #   data as a hash:
+    # @note ListenerTlsValidationContextTrust is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         file: {
-    #           certificate_chain: "FilePath", # required
-    #         },
-    #         sds: {
-    #           secret_name: "SdsSecretName", # required
-    #         },
-    #       }
+    # @note ListenerTlsValidationContextTrust is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of ListenerTlsValidationContextTrust corresponding to the set member.
     #
     # @!attribute [rw] file
     #   An object that represents a Transport Layer Security (TLS)
@@ -4849,23 +3529,18 @@ module Aws::AppMesh
     #
     class ListenerTlsValidationContextTrust < Struct.new(
       :file,
-      :sds)
+      :sds,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class File < ListenerTlsValidationContextTrust; end
+      class Sds < ListenerTlsValidationContextTrust; end
+      class Unknown < ListenerTlsValidationContextTrust; end
     end
 
     # An object that represents the logging information for a virtual node.
-    #
-    # @note When making an API call, you may pass Logging
-    #   data as a hash:
-    #
-    #       {
-    #         access_log: {
-    #           file: {
-    #             path: "FilePath", # required
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] access_log
     #   The access log configuration for a virtual node.
@@ -4879,18 +3554,37 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
+    # An object that represents the format for the logs.
+    #
+    # @note LoggingFormat is a union - when making an API calls you must set exactly one of the members.
+    #
+    # @note LoggingFormat is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of LoggingFormat corresponding to the set member.
+    #
+    # @!attribute [rw] json
+    #   @return [Array<Types::JsonFormatRef>]
+    #
+    # @!attribute [rw] text
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/LoggingFormat AWS API Documentation
+    #
+    class LoggingFormat < Struct.new(
+      :json,
+      :text,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class Json < LoggingFormat; end
+      class Text < LoggingFormat; end
+      class Unknown < LoggingFormat; end
+    end
+
     # An object that represents the range of values to match on. The first
     # character of the range is included in the range, though the last
     # character is not. For example, if the range specified were 1-100, only
     # values 1-99 would be matched.
-    #
-    # @note When making an API call, you may pass MatchRange
-    #   data as a hash:
-    #
-    #       {
-    #         end: 1, # required
-    #         start: 1, # required
-    #       }
     #
     # @!attribute [rw] end
     #   The end of the range.
@@ -4960,10 +3654,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -4971,10 +3665,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] resource_owner
-    #   The AWS IAM account ID of the resource owner. If the account ID is
-    #   not your own, then it's the ID of the mesh owner or of another
-    #   account that the mesh is shared with. For more information about
-    #   mesh sharing, see [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the resource owner. If the
+    #   account ID is not your own, then it's the ID of the mesh owner or
+    #   of another account that the mesh is shared with. For more
+    #   information about mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -5000,25 +3694,37 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
+    # An object that represents the service discovery information for a
+    # service mesh.
+    #
+    # @!attribute [rw] ip_preference
+    #   The IP version to use to control traffic within the mesh.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/MeshServiceDiscovery AWS API Documentation
+    #
+    class MeshServiceDiscovery < Struct.new(
+      :ip_preference)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # An object that represents the specification of a service mesh.
-    #
-    # @note When making an API call, you may pass MeshSpec
-    #   data as a hash:
-    #
-    #       {
-    #         egress_filter: {
-    #           type: "ALLOW_ALL", # required, accepts ALLOW_ALL, DROP_ALL
-    #         },
-    #       }
     #
     # @!attribute [rw] egress_filter
     #   The egress filter rules for the service mesh.
     #   @return [Types::EgressFilter]
     #
+    # @!attribute [rw] service_discovery
+    #   An object that represents the service discovery information for a
+    #   service mesh.
+    #   @return [Types::MeshServiceDiscovery]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/MeshSpec AWS API Documentation
     #
     class MeshSpec < Struct.new(
-      :egress_filter)
+      :egress_filter,
+      :service_discovery)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -5054,22 +3760,6 @@ module Aws::AppMesh
     # An object that represents the outlier detection for a virtual node's
     # listener.
     #
-    # @note When making an API call, you may pass OutlierDetection
-    #   data as a hash:
-    #
-    #       {
-    #         base_ejection_duration: { # required
-    #           unit: "s", # accepts s, ms
-    #           value: 1,
-    #         },
-    #         interval: { # required
-    #           unit: "s", # accepts s, ms
-    #           value: 1,
-    #         },
-    #         max_ejection_percent: 1, # required
-    #         max_server_errors: 1, # required
-    #       }
-    #
     # @!attribute [rw] base_ejection_duration
     #   The base amount of time for which a host is ejected.
     #   @return [Types::Duration]
@@ -5101,14 +3791,6 @@ module Aws::AppMesh
 
     # An object that represents a port mapping.
     #
-    # @note When making an API call, you may pass PortMapping
-    #   data as a hash:
-    #
-    #       {
-    #         port: 1, # required
-    #         protocol: "http", # required, accepts http, tcp, http2, grpc
-    #       }
-    #
     # @!attribute [rw] port
     #   The port used for the port mapping.
     #   @return [Integer]
@@ -5122,6 +3804,20 @@ module Aws::AppMesh
     class PortMapping < Struct.new(
       :port,
       :protocol)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An object representing the query parameter to match.
+    #
+    # @!attribute [rw] exact
+    #   The exact query parameter to match on.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/QueryParameterMatch AWS API Documentation
+    #
+    class QueryParameterMatch < Struct.new(
+      :exact)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -5157,10 +3853,10 @@ module Aws::AppMesh
     #   @return [Time]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -5168,10 +3864,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] resource_owner
-    #   The AWS IAM account ID of the resource owner. If the account ID is
-    #   not your own, then it's the ID of the mesh owner or of another
-    #   account that the mesh is shared with. For more information about
-    #   mesh sharing, see [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the resource owner. If the
+    #   account ID is not your own, then it's the ID of the mesh owner or
+    #   of another account that the mesh is shared with. For more
+    #   information about mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -5261,10 +3957,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -5272,10 +3968,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] resource_owner
-    #   The AWS IAM account ID of the resource owner. If the account ID is
-    #   not your own, then it's the ID of the mesh owner or of another
-    #   account that the mesh is shared with. For more information about
-    #   mesh sharing, see [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the resource owner. If the
+    #   account ID is not your own, then it's the ID of the mesh owner or
+    #   of another account that the mesh is shared with. For more
+    #   information about mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -5313,179 +4009,6 @@ module Aws::AppMesh
 
     # An object that represents a route specification. Specify one route
     # type.
-    #
-    # @note When making an API call, you may pass RouteSpec
-    #   data as a hash:
-    #
-    #       {
-    #         grpc_route: {
-    #           action: { # required
-    #             weighted_targets: [ # required
-    #               {
-    #                 virtual_node: "ResourceName", # required
-    #                 weight: 1, # required
-    #               },
-    #             ],
-    #           },
-    #           match: { # required
-    #             metadata: [
-    #               {
-    #                 invert: false,
-    #                 match: {
-    #                   exact: "HeaderMatch",
-    #                   prefix: "HeaderMatch",
-    #                   range: {
-    #                     end: 1, # required
-    #                     start: 1, # required
-    #                   },
-    #                   regex: "HeaderMatch",
-    #                   suffix: "HeaderMatch",
-    #                 },
-    #                 name: "HeaderName", # required
-    #               },
-    #             ],
-    #             method_name: "MethodName",
-    #             service_name: "ServiceName",
-    #           },
-    #           retry_policy: {
-    #             grpc_retry_events: ["cancelled"], # accepts cancelled, deadline-exceeded, internal, resource-exhausted, unavailable
-    #             http_retry_events: ["HttpRetryPolicyEvent"],
-    #             max_retries: 1, # required
-    #             per_retry_timeout: { # required
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #             tcp_retry_events: ["connection-error"], # accepts connection-error
-    #           },
-    #           timeout: {
-    #             idle: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #             per_request: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #           },
-    #         },
-    #         http2_route: {
-    #           action: { # required
-    #             weighted_targets: [ # required
-    #               {
-    #                 virtual_node: "ResourceName", # required
-    #                 weight: 1, # required
-    #               },
-    #             ],
-    #           },
-    #           match: { # required
-    #             headers: [
-    #               {
-    #                 invert: false,
-    #                 match: {
-    #                   exact: "HeaderMatch",
-    #                   prefix: "HeaderMatch",
-    #                   range: {
-    #                     end: 1, # required
-    #                     start: 1, # required
-    #                   },
-    #                   regex: "HeaderMatch",
-    #                   suffix: "HeaderMatch",
-    #                 },
-    #                 name: "HeaderName", # required
-    #               },
-    #             ],
-    #             method: "GET", # accepts GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
-    #             prefix: "String", # required
-    #             scheme: "http", # accepts http, https
-    #           },
-    #           retry_policy: {
-    #             http_retry_events: ["HttpRetryPolicyEvent"],
-    #             max_retries: 1, # required
-    #             per_retry_timeout: { # required
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #             tcp_retry_events: ["connection-error"], # accepts connection-error
-    #           },
-    #           timeout: {
-    #             idle: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #             per_request: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #           },
-    #         },
-    #         http_route: {
-    #           action: { # required
-    #             weighted_targets: [ # required
-    #               {
-    #                 virtual_node: "ResourceName", # required
-    #                 weight: 1, # required
-    #               },
-    #             ],
-    #           },
-    #           match: { # required
-    #             headers: [
-    #               {
-    #                 invert: false,
-    #                 match: {
-    #                   exact: "HeaderMatch",
-    #                   prefix: "HeaderMatch",
-    #                   range: {
-    #                     end: 1, # required
-    #                     start: 1, # required
-    #                   },
-    #                   regex: "HeaderMatch",
-    #                   suffix: "HeaderMatch",
-    #                 },
-    #                 name: "HeaderName", # required
-    #               },
-    #             ],
-    #             method: "GET", # accepts GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
-    #             prefix: "String", # required
-    #             scheme: "http", # accepts http, https
-    #           },
-    #           retry_policy: {
-    #             http_retry_events: ["HttpRetryPolicyEvent"],
-    #             max_retries: 1, # required
-    #             per_retry_timeout: { # required
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #             tcp_retry_events: ["connection-error"], # accepts connection-error
-    #           },
-    #           timeout: {
-    #             idle: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #             per_request: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #           },
-    #         },
-    #         priority: 1,
-    #         tcp_route: {
-    #           action: { # required
-    #             weighted_targets: [ # required
-    #               {
-    #                 virtual_node: "ResourceName", # required
-    #                 weight: 1, # required
-    #               },
-    #             ],
-    #           },
-    #           timeout: {
-    #             idle: {
-    #               unit: "s", # accepts s, ms
-    #               value: 1,
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] grpc_route
     #   An object that represents the specification of a gRPC route.
@@ -5537,27 +4060,12 @@ module Aws::AppMesh
     # An object that represents the service discovery information for a
     # virtual node.
     #
-    # @note When making an API call, you may pass ServiceDiscovery
-    #   data as a hash:
+    # @note ServiceDiscovery is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         aws_cloud_map: {
-    #           attributes: [
-    #             {
-    #               key: "AwsCloudMapInstanceAttributeKey", # required
-    #               value: "AwsCloudMapInstanceAttributeValue", # required
-    #             },
-    #           ],
-    #           namespace_name: "AwsCloudMapName", # required
-    #           service_name: "AwsCloudMapName", # required
-    #         },
-    #         dns: {
-    #           hostname: "Hostname", # required
-    #         },
-    #       }
+    # @note ServiceDiscovery is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of ServiceDiscovery corresponding to the set member.
     #
     # @!attribute [rw] aws_cloud_map
-    #   Specifies any AWS Cloud Map information for the virtual node.
+    #   Specifies any Cloud Map information for the virtual node.
     #   @return [Types::AwsCloudMapServiceDiscovery]
     #
     # @!attribute [rw] dns
@@ -5568,9 +4076,15 @@ module Aws::AppMesh
     #
     class ServiceDiscovery < Struct.new(
       :aws_cloud_map,
-      :dns)
+      :dns,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class AwsCloudMap < ServiceDiscovery; end
+      class Dns < ServiceDiscovery; end
+      class Unknown < ServiceDiscovery; end
     end
 
     # The request has failed due to a temporary failure of the service.
@@ -5590,13 +4104,6 @@ module Aws::AppMesh
     # name on a peer Transport Layer Security (TLS) certificate can be
     # matched.
     #
-    # @note When making an API call, you may pass SubjectAlternativeNameMatchers
-    #   data as a hash:
-    #
-    #       {
-    #         exact: ["SubjectAlternativeName"], # required
-    #       }
-    #
     # @!attribute [rw] exact
     #   The values sent must match the specified values exactly.
     #   @return [Array<String>]
@@ -5611,15 +4118,6 @@ module Aws::AppMesh
 
     # An object that represents the subject alternative names secured by the
     # certificate.
-    #
-    # @note When making an API call, you may pass SubjectAlternativeNames
-    #   data as a hash:
-    #
-    #       {
-    #         match: { # required
-    #           exact: ["SubjectAlternativeName"], # required
-    #         },
-    #       }
     #
     # @!attribute [rw] match
     #   An object that represents the criteria for determining a SANs match.
@@ -5638,14 +4136,6 @@ module Aws::AppMesh
     # optional value, both of which you define. Tag keys can have a maximum
     # character length of 128 characters, and tag values can have a maximum
     # length of 256 characters.
-    #
-    # @note When making an API call, you may pass TagRef
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
     #
     # @!attribute [rw] key
     #   One part of a key-value pair that make up a tag. A `key` is a
@@ -5670,19 +4160,6 @@ module Aws::AppMesh
     # <zonbook />
     #
     # <xhtml />
-    #
-    # @note When making an API call, you may pass TagResourceInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource to add tags to.
@@ -5714,29 +4191,14 @@ module Aws::AppMesh
 
     # An object that represents a TCP route type.
     #
-    # @note When making an API call, you may pass TcpRoute
-    #   data as a hash:
-    #
-    #       {
-    #         action: { # required
-    #           weighted_targets: [ # required
-    #             {
-    #               virtual_node: "ResourceName", # required
-    #               weight: 1, # required
-    #             },
-    #           ],
-    #         },
-    #         timeout: {
-    #           idle: {
-    #             unit: "s", # accepts s, ms
-    #             value: 1,
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] action
     #   The action to take if a match is determined.
     #   @return [Types::TcpRouteAction]
+    #
+    # @!attribute [rw] match
+    #   An object that represents the criteria for determining a request
+    #   match.
+    #   @return [Types::TcpRouteMatch]
     #
     # @!attribute [rw] timeout
     #   An object that represents types of timeouts.
@@ -5746,24 +4208,13 @@ module Aws::AppMesh
     #
     class TcpRoute < Struct.new(
       :action,
+      :match,
       :timeout)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # An object that represents the action to take if a match is determined.
-    #
-    # @note When making an API call, you may pass TcpRouteAction
-    #   data as a hash:
-    #
-    #       {
-    #         weighted_targets: [ # required
-    #           {
-    #             virtual_node: "ResourceName", # required
-    #             weight: 1, # required
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] weighted_targets
     #   An object that represents the targets that traffic is routed to when
@@ -5778,17 +4229,21 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
+    # An object representing the TCP route to match.
+    #
+    # @!attribute [rw] port
+    #   The port number to match on.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/TcpRouteMatch AWS API Documentation
+    #
+    class TcpRouteMatch < Struct.new(
+      :port)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # An object that represents types of timeouts.
-    #
-    # @note When making an API call, you may pass TcpTimeout
-    #   data as a hash:
-    #
-    #       {
-    #         idle: {
-    #           unit: "s", # accepts s, ms
-    #           value: 1,
-    #         },
-    #       }
     #
     # @!attribute [rw] idle
     #   An object that represents an idle timeout. An idle timeout bounds
@@ -5807,31 +4262,16 @@ module Aws::AppMesh
     # An object that represents how the proxy will validate its peer during
     # Transport Layer Security (TLS) negotiation.
     #
-    # @note When making an API call, you may pass TlsValidationContext
-    #   data as a hash:
-    #
-    #       {
-    #         subject_alternative_names: {
-    #           match: { # required
-    #             exact: ["SubjectAlternativeName"], # required
-    #           },
-    #         },
-    #         trust: { # required
-    #           acm: {
-    #             certificate_authority_arns: ["Arn"], # required
-    #           },
-    #           file: {
-    #             certificate_chain: "FilePath", # required
-    #           },
-    #           sds: {
-    #             secret_name: "SdsSecretName", # required
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] subject_alternative_names
     #   A reference to an object that represents the SANs for a Transport
-    #   Layer Security (TLS) validation context.
+    #   Layer Security (TLS) validation context. If you don't specify SANs
+    #   on the *terminating* mesh endpoint, the Envoy proxy for that node
+    #   doesn't verify the SAN on a peer client certificate. If you don't
+    #   specify SANs on the *originating* mesh endpoint, the SAN on the
+    #   certificate provided by the terminating endpoint must match the mesh
+    #   endpoint service discovery configuration. Since SPIRE vended
+    #   certificates have a SPIFFE ID as a name, you must set the SAN since
+    #   the name doesn't match the service discovery name.
     #   @return [Types::SubjectAlternativeNames]
     #
     # @!attribute [rw] trust
@@ -5849,14 +4289,7 @@ module Aws::AppMesh
     end
 
     # An object that represents a Transport Layer Security (TLS) validation
-    # context trust for an AWS Certicate Manager (ACM) certificate.
-    #
-    # @note When making an API call, you may pass TlsValidationContextAcmTrust
-    #   data as a hash:
-    #
-    #       {
-    #         certificate_authority_arns: ["Arn"], # required
-    #       }
+    # context trust for an Certificate Manager certificate.
     #
     # @!attribute [rw] certificate_authority_arns
     #   One or more ACM Amazon Resource Name (ARN)s.
@@ -5872,13 +4305,6 @@ module Aws::AppMesh
 
     # An object that represents a Transport Layer Security (TLS) validation
     # context trust for a local file.
-    #
-    # @note When making an API call, you may pass TlsValidationContextFileTrust
-    #   data as a hash:
-    #
-    #       {
-    #         certificate_chain: "FilePath", # required
-    #       }
     #
     # @!attribute [rw] certificate_chain
     #   The certificate trust chain for a certificate stored on the file
@@ -5902,13 +4328,6 @@ module Aws::AppMesh
     #
     # [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html
     #
-    # @note When making an API call, you may pass TlsValidationContextSdsTrust
-    #   data as a hash:
-    #
-    #       {
-    #         secret_name: "SdsSecretName", # required
-    #       }
-    #
     # @!attribute [rw] secret_name
     #   A reference to an object that represents the name of the secret for
     #   a Transport Layer Security (TLS) Secret Discovery Service validation
@@ -5926,24 +4345,13 @@ module Aws::AppMesh
     # An object that represents a Transport Layer Security (TLS) validation
     # context trust.
     #
-    # @note When making an API call, you may pass TlsValidationContextTrust
-    #   data as a hash:
+    # @note TlsValidationContextTrust is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         acm: {
-    #           certificate_authority_arns: ["Arn"], # required
-    #         },
-    #         file: {
-    #           certificate_chain: "FilePath", # required
-    #         },
-    #         sds: {
-    #           secret_name: "SdsSecretName", # required
-    #         },
-    #       }
+    # @note TlsValidationContextTrust is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of TlsValidationContextTrust corresponding to the set member.
     #
     # @!attribute [rw] acm
     #   A reference to an object that represents a Transport Layer Security
-    #   (TLS) validation context trust for an AWS Certicate Manager (ACM)
+    #   (TLS) validation context trust for an Certificate Manager
     #   certificate.
     #   @return [Types::TlsValidationContextAcmTrust]
     #
@@ -5962,9 +4370,16 @@ module Aws::AppMesh
     class TlsValidationContextTrust < Struct.new(
       :acm,
       :file,
-      :sds)
+      :sds,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Acm < TlsValidationContextTrust; end
+      class File < TlsValidationContextTrust; end
+      class Sds < TlsValidationContextTrust; end
+      class Unknown < TlsValidationContextTrust; end
     end
 
     # The maximum request rate permitted by the App Mesh APIs has been
@@ -6002,14 +4417,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass UntagResourceInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource to delete tags from.
     #   @return [String]
@@ -6035,55 +4442,6 @@ module Aws::AppMesh
     #
     class UntagResourceOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateGatewayRouteInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         gateway_route_name: "ResourceName", # required
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           grpc_route: {
-    #             action: { # required
-    #               target: { # required
-    #                 virtual_service: { # required
-    #                   virtual_service_name: "ResourceName", # required
-    #                 },
-    #               },
-    #             },
-    #             match: { # required
-    #               service_name: "ServiceName",
-    #             },
-    #           },
-    #           http2_route: {
-    #             action: { # required
-    #               target: { # required
-    #                 virtual_service: { # required
-    #                   virtual_service_name: "ResourceName", # required
-    #                 },
-    #               },
-    #             },
-    #             match: { # required
-    #               prefix: "String", # required
-    #             },
-    #           },
-    #           http_route: {
-    #             action: { # required
-    #               target: { # required
-    #                 virtual_service: { # required
-    #                   virtual_service_name: "ResourceName", # required
-    #                 },
-    #               },
-    #             },
-    #             match: { # required
-    #               prefix: "String", # required
-    #             },
-    #           },
-    #         },
-    #         virtual_gateway_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -6102,10 +4460,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -6150,19 +4508,6 @@ module Aws::AppMesh
     # <zonbook />
     #
     # <xhtml />
-    #
-    # @note When making an API call, you may pass UpdateMeshInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         spec: {
-    #           egress_filter: {
-    #             type: "ALLOW_ALL", # required, accepts ALLOW_ALL, DROP_ALL
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
@@ -6212,186 +4557,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass UpdateRouteInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         route_name: "ResourceName", # required
-    #         spec: { # required
-    #           grpc_route: {
-    #             action: { # required
-    #               weighted_targets: [ # required
-    #                 {
-    #                   virtual_node: "ResourceName", # required
-    #                   weight: 1, # required
-    #                 },
-    #               ],
-    #             },
-    #             match: { # required
-    #               metadata: [
-    #                 {
-    #                   invert: false,
-    #                   match: {
-    #                     exact: "HeaderMatch",
-    #                     prefix: "HeaderMatch",
-    #                     range: {
-    #                       end: 1, # required
-    #                       start: 1, # required
-    #                     },
-    #                     regex: "HeaderMatch",
-    #                     suffix: "HeaderMatch",
-    #                   },
-    #                   name: "HeaderName", # required
-    #                 },
-    #               ],
-    #               method_name: "MethodName",
-    #               service_name: "ServiceName",
-    #             },
-    #             retry_policy: {
-    #               grpc_retry_events: ["cancelled"], # accepts cancelled, deadline-exceeded, internal, resource-exhausted, unavailable
-    #               http_retry_events: ["HttpRetryPolicyEvent"],
-    #               max_retries: 1, # required
-    #               per_retry_timeout: { # required
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               tcp_retry_events: ["connection-error"], # accepts connection-error
-    #             },
-    #             timeout: {
-    #               idle: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               per_request: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #             },
-    #           },
-    #           http2_route: {
-    #             action: { # required
-    #               weighted_targets: [ # required
-    #                 {
-    #                   virtual_node: "ResourceName", # required
-    #                   weight: 1, # required
-    #                 },
-    #               ],
-    #             },
-    #             match: { # required
-    #               headers: [
-    #                 {
-    #                   invert: false,
-    #                   match: {
-    #                     exact: "HeaderMatch",
-    #                     prefix: "HeaderMatch",
-    #                     range: {
-    #                       end: 1, # required
-    #                       start: 1, # required
-    #                     },
-    #                     regex: "HeaderMatch",
-    #                     suffix: "HeaderMatch",
-    #                   },
-    #                   name: "HeaderName", # required
-    #                 },
-    #               ],
-    #               method: "GET", # accepts GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
-    #               prefix: "String", # required
-    #               scheme: "http", # accepts http, https
-    #             },
-    #             retry_policy: {
-    #               http_retry_events: ["HttpRetryPolicyEvent"],
-    #               max_retries: 1, # required
-    #               per_retry_timeout: { # required
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               tcp_retry_events: ["connection-error"], # accepts connection-error
-    #             },
-    #             timeout: {
-    #               idle: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               per_request: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #             },
-    #           },
-    #           http_route: {
-    #             action: { # required
-    #               weighted_targets: [ # required
-    #                 {
-    #                   virtual_node: "ResourceName", # required
-    #                   weight: 1, # required
-    #                 },
-    #               ],
-    #             },
-    #             match: { # required
-    #               headers: [
-    #                 {
-    #                   invert: false,
-    #                   match: {
-    #                     exact: "HeaderMatch",
-    #                     prefix: "HeaderMatch",
-    #                     range: {
-    #                       end: 1, # required
-    #                       start: 1, # required
-    #                     },
-    #                     regex: "HeaderMatch",
-    #                     suffix: "HeaderMatch",
-    #                   },
-    #                   name: "HeaderName", # required
-    #                 },
-    #               ],
-    #               method: "GET", # accepts GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
-    #               prefix: "String", # required
-    #               scheme: "http", # accepts http, https
-    #             },
-    #             retry_policy: {
-    #               http_retry_events: ["HttpRetryPolicyEvent"],
-    #               max_retries: 1, # required
-    #               per_retry_timeout: { # required
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               tcp_retry_events: ["connection-error"], # accepts connection-error
-    #             },
-    #             timeout: {
-    #               idle: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               per_request: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #             },
-    #           },
-    #           priority: 1,
-    #           tcp_route: {
-    #             action: { # required
-    #               weighted_targets: [ # required
-    #                 {
-    #                   virtual_node: "ResourceName", # required
-    #                   weight: 1, # required
-    #                 },
-    #               ],
-    #             },
-    #             timeout: {
-    #               idle: {
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #             },
-    #           },
-    #         },
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -6406,10 +4571,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -6458,119 +4623,6 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateVirtualGatewayInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           backend_defaults: {
-    #             client_policy: {
-    #               tls: {
-    #                 certificate: {
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                     private_key: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "VirtualGatewaySdsSecretName", # required
-    #                   },
-    #                 },
-    #                 enforce: false,
-    #                 ports: [1],
-    #                 validation: { # required
-    #                   subject_alternative_names: {
-    #                     match: { # required
-    #                       exact: ["SubjectAlternativeName"], # required
-    #                     },
-    #                   },
-    #                   trust: { # required
-    #                     acm: {
-    #                       certificate_authority_arns: ["Arn"], # required
-    #                     },
-    #                     file: {
-    #                       certificate_chain: "FilePath", # required
-    #                     },
-    #                     sds: {
-    #                       secret_name: "VirtualGatewaySdsSecretName", # required
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           },
-    #           listeners: [ # required
-    #             {
-    #               connection_pool: {
-    #                 grpc: {
-    #                   max_requests: 1, # required
-    #                 },
-    #                 http: {
-    #                   max_connections: 1, # required
-    #                   max_pending_requests: 1,
-    #                 },
-    #                 http2: {
-    #                   max_requests: 1, # required
-    #                 },
-    #               },
-    #               health_check: {
-    #                 healthy_threshold: 1, # required
-    #                 interval_millis: 1, # required
-    #                 path: "String",
-    #                 port: 1,
-    #                 protocol: "http", # required, accepts http, http2, grpc
-    #                 timeout_millis: 1, # required
-    #                 unhealthy_threshold: 1, # required
-    #               },
-    #               port_mapping: { # required
-    #                 port: 1, # required
-    #                 protocol: "http", # required, accepts http, http2, grpc
-    #               },
-    #               tls: {
-    #                 certificate: { # required
-    #                   acm: {
-    #                     certificate_arn: "Arn", # required
-    #                   },
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                     private_key: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "VirtualGatewaySdsSecretName", # required
-    #                   },
-    #                 },
-    #                 mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #                 validation: {
-    #                   subject_alternative_names: {
-    #                     match: { # required
-    #                       exact: ["SubjectAlternativeName"], # required
-    #                     },
-    #                   },
-    #                   trust: { # required
-    #                     file: {
-    #                       certificate_chain: "FilePath", # required
-    #                     },
-    #                     sds: {
-    #                       secret_name: "VirtualGatewaySdsSecretName", # required
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #           logging: {
-    #             access_log: {
-    #               file: {
-    #                 path: "FilePath", # required
-    #               },
-    #             },
-    #           },
-    #         },
-    #         virtual_gateway_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -6585,10 +4637,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -6632,227 +4684,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass UpdateVirtualNodeInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           backend_defaults: {
-    #             client_policy: {
-    #               tls: {
-    #                 certificate: {
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                     private_key: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "SdsSecretName", # required
-    #                   },
-    #                 },
-    #                 enforce: false,
-    #                 ports: [1],
-    #                 validation: { # required
-    #                   subject_alternative_names: {
-    #                     match: { # required
-    #                       exact: ["SubjectAlternativeName"], # required
-    #                     },
-    #                   },
-    #                   trust: { # required
-    #                     acm: {
-    #                       certificate_authority_arns: ["Arn"], # required
-    #                     },
-    #                     file: {
-    #                       certificate_chain: "FilePath", # required
-    #                     },
-    #                     sds: {
-    #                       secret_name: "SdsSecretName", # required
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           },
-    #           backends: [
-    #             {
-    #               virtual_service: {
-    #                 client_policy: {
-    #                   tls: {
-    #                     certificate: {
-    #                       file: {
-    #                         certificate_chain: "FilePath", # required
-    #                         private_key: "FilePath", # required
-    #                       },
-    #                       sds: {
-    #                         secret_name: "SdsSecretName", # required
-    #                       },
-    #                     },
-    #                     enforce: false,
-    #                     ports: [1],
-    #                     validation: { # required
-    #                       subject_alternative_names: {
-    #                         match: { # required
-    #                           exact: ["SubjectAlternativeName"], # required
-    #                         },
-    #                       },
-    #                       trust: { # required
-    #                         acm: {
-    #                           certificate_authority_arns: ["Arn"], # required
-    #                         },
-    #                         file: {
-    #                           certificate_chain: "FilePath", # required
-    #                         },
-    #                         sds: {
-    #                           secret_name: "SdsSecretName", # required
-    #                         },
-    #                       },
-    #                     },
-    #                   },
-    #                 },
-    #                 virtual_service_name: "ServiceName", # required
-    #               },
-    #             },
-    #           ],
-    #           listeners: [
-    #             {
-    #               connection_pool: {
-    #                 grpc: {
-    #                   max_requests: 1, # required
-    #                 },
-    #                 http: {
-    #                   max_connections: 1, # required
-    #                   max_pending_requests: 1,
-    #                 },
-    #                 http2: {
-    #                   max_requests: 1, # required
-    #                 },
-    #                 tcp: {
-    #                   max_connections: 1, # required
-    #                 },
-    #               },
-    #               health_check: {
-    #                 healthy_threshold: 1, # required
-    #                 interval_millis: 1, # required
-    #                 path: "String",
-    #                 port: 1,
-    #                 protocol: "http", # required, accepts http, tcp, http2, grpc
-    #                 timeout_millis: 1, # required
-    #                 unhealthy_threshold: 1, # required
-    #               },
-    #               outlier_detection: {
-    #                 base_ejection_duration: { # required
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #                 interval: { # required
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #                 max_ejection_percent: 1, # required
-    #                 max_server_errors: 1, # required
-    #               },
-    #               port_mapping: { # required
-    #                 port: 1, # required
-    #                 protocol: "http", # required, accepts http, tcp, http2, grpc
-    #               },
-    #               timeout: {
-    #                 grpc: {
-    #                   idle: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                   per_request: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                 },
-    #                 http: {
-    #                   idle: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                   per_request: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                 },
-    #                 http2: {
-    #                   idle: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                   per_request: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                 },
-    #                 tcp: {
-    #                   idle: {
-    #                     unit: "s", # accepts s, ms
-    #                     value: 1,
-    #                   },
-    #                 },
-    #               },
-    #               tls: {
-    #                 certificate: { # required
-    #                   acm: {
-    #                     certificate_arn: "Arn", # required
-    #                   },
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                     private_key: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "SdsSecretName", # required
-    #                   },
-    #                 },
-    #                 mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #                 validation: {
-    #                   subject_alternative_names: {
-    #                     match: { # required
-    #                       exact: ["SubjectAlternativeName"], # required
-    #                     },
-    #                   },
-    #                   trust: { # required
-    #                     file: {
-    #                       certificate_chain: "FilePath", # required
-    #                     },
-    #                     sds: {
-    #                       secret_name: "SdsSecretName", # required
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #           logging: {
-    #             access_log: {
-    #               file: {
-    #                 path: "FilePath", # required
-    #               },
-    #             },
-    #           },
-    #           service_discovery: {
-    #             aws_cloud_map: {
-    #               attributes: [
-    #                 {
-    #                   key: "AwsCloudMapInstanceAttributeKey", # required
-    #                   value: "AwsCloudMapInstanceAttributeValue", # required
-    #                 },
-    #               ],
-    #               namespace_name: "AwsCloudMapName", # required
-    #               service_name: "AwsCloudMapName", # required
-    #             },
-    #             dns: {
-    #               hostname: "Hostname", # required
-    #             },
-    #           },
-    #         },
-    #         virtual_node_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -6867,10 +4698,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -6918,26 +4749,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass UpdateVirtualRouterInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           listeners: [
-    #             {
-    #               port_mapping: { # required
-    #                 port: 1, # required
-    #                 protocol: "http", # required, accepts http, tcp, http2, grpc
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -6952,10 +4763,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -7003,26 +4814,6 @@ module Aws::AppMesh
     #
     # <xhtml />
     #
-    # @note When making an API call, you may pass UpdateVirtualServiceInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "String",
-    #         mesh_name: "ResourceName", # required
-    #         mesh_owner: "AccountId",
-    #         spec: { # required
-    #           provider: {
-    #             virtual_node: {
-    #               virtual_node_name: "ResourceName", # required
-    #             },
-    #             virtual_router: {
-    #               virtual_router_name: "ResourceName", # required
-    #             },
-    #           },
-    #         },
-    #         virtual_service_name: "ServiceName", # required
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request. Up to 36 letters, numbers, hyphens, and
@@ -7037,10 +4828,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -7086,14 +4877,9 @@ module Aws::AppMesh
 
     # The access log configuration for a virtual gateway.
     #
-    # @note When making an API call, you may pass VirtualGatewayAccessLog
-    #   data as a hash:
+    # @note VirtualGatewayAccessLog is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         file: {
-    #           path: "FilePath", # required
-    #         },
-    #       }
+    # @note VirtualGatewayAccessLog is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of VirtualGatewayAccessLog corresponding to the set member.
     #
     # @!attribute [rw] file
     #   The file object to send virtual gateway access logs to.
@@ -7102,51 +4888,17 @@ module Aws::AppMesh
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/VirtualGatewayAccessLog AWS API Documentation
     #
     class VirtualGatewayAccessLog < Struct.new(
-      :file)
+      :file,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class File < VirtualGatewayAccessLog; end
+      class Unknown < VirtualGatewayAccessLog; end
     end
 
     # An object that represents the default properties for a backend.
-    #
-    # @note When making an API call, you may pass VirtualGatewayBackendDefaults
-    #   data as a hash:
-    #
-    #       {
-    #         client_policy: {
-    #           tls: {
-    #             certificate: {
-    #               file: {
-    #                 certificate_chain: "FilePath", # required
-    #                 private_key: "FilePath", # required
-    #               },
-    #               sds: {
-    #                 secret_name: "VirtualGatewaySdsSecretName", # required
-    #               },
-    #             },
-    #             enforce: false,
-    #             ports: [1],
-    #             validation: { # required
-    #               subject_alternative_names: {
-    #                 match: { # required
-    #                   exact: ["SubjectAlternativeName"], # required
-    #                 },
-    #               },
-    #               trust: { # required
-    #                 acm: {
-    #                   certificate_authority_arns: ["Arn"], # required
-    #                 },
-    #                 file: {
-    #                   certificate_chain: "FilePath", # required
-    #                 },
-    #                 sds: {
-    #                   secret_name: "VirtualGatewaySdsSecretName", # required
-    #                 },
-    #               },
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] client_policy
     #   A reference to an object that represents a client policy.
@@ -7161,43 +4913,6 @@ module Aws::AppMesh
     end
 
     # An object that represents a client policy.
-    #
-    # @note When making an API call, you may pass VirtualGatewayClientPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         tls: {
-    #           certificate: {
-    #             file: {
-    #               certificate_chain: "FilePath", # required
-    #               private_key: "FilePath", # required
-    #             },
-    #             sds: {
-    #               secret_name: "VirtualGatewaySdsSecretName", # required
-    #             },
-    #           },
-    #           enforce: false,
-    #           ports: [1],
-    #           validation: { # required
-    #             subject_alternative_names: {
-    #               match: { # required
-    #                 exact: ["SubjectAlternativeName"], # required
-    #               },
-    #             },
-    #             trust: { # required
-    #               acm: {
-    #                 certificate_authority_arns: ["Arn"], # required
-    #               },
-    #               file: {
-    #                 certificate_chain: "FilePath", # required
-    #               },
-    #               sds: {
-    #                 secret_name: "VirtualGatewaySdsSecretName", # required
-    #               },
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] tls
     #   A reference to an object that represents a Transport Layer Security
@@ -7214,41 +4929,6 @@ module Aws::AppMesh
 
     # An object that represents a Transport Layer Security (TLS) client
     # policy.
-    #
-    # @note When making an API call, you may pass VirtualGatewayClientPolicyTls
-    #   data as a hash:
-    #
-    #       {
-    #         certificate: {
-    #           file: {
-    #             certificate_chain: "FilePath", # required
-    #             private_key: "FilePath", # required
-    #           },
-    #           sds: {
-    #             secret_name: "VirtualGatewaySdsSecretName", # required
-    #           },
-    #         },
-    #         enforce: false,
-    #         ports: [1],
-    #         validation: { # required
-    #           subject_alternative_names: {
-    #             match: { # required
-    #               exact: ["SubjectAlternativeName"], # required
-    #             },
-    #           },
-    #           trust: { # required
-    #             acm: {
-    #               certificate_authority_arns: ["Arn"], # required
-    #             },
-    #             file: {
-    #               certificate_chain: "FilePath", # required
-    #             },
-    #             sds: {
-    #               secret_name: "VirtualGatewaySdsSecretName", # required
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] certificate
     #   A reference to an object that represents a virtual gateway's
@@ -7283,28 +4963,19 @@ module Aws::AppMesh
     # An object that represents the virtual gateway's client's Transport
     # Layer Security (TLS) certificate.
     #
-    # @note When making an API call, you may pass VirtualGatewayClientTlsCertificate
-    #   data as a hash:
+    # @note VirtualGatewayClientTlsCertificate is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         file: {
-    #           certificate_chain: "FilePath", # required
-    #           private_key: "FilePath", # required
-    #         },
-    #         sds: {
-    #           secret_name: "VirtualGatewaySdsSecretName", # required
-    #         },
-    #       }
+    # @note VirtualGatewayClientTlsCertificate is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of VirtualGatewayClientTlsCertificate corresponding to the set member.
     #
     # @!attribute [rw] file
     #   An object that represents a local file certificate. The certificate
     #   must meet specific requirements and you must have proxy
-    #   authorization enabled. For more information, see [Transport Layer
-    #   Security (TLS)][1].
+    #   authorization enabled. For more information, see [ Transport Layer
+    #   Security (TLS) ][1].
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html#virtual-node-tls-prerequisites
+    #   [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html
     #   @return [Types::VirtualGatewayListenerTlsFileCertificate]
     #
     # @!attribute [rw] sds
@@ -7316,9 +4987,15 @@ module Aws::AppMesh
     #
     class VirtualGatewayClientTlsCertificate < Struct.new(
       :file,
-      :sds)
+      :sds,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class File < VirtualGatewayClientTlsCertificate; end
+      class Sds < VirtualGatewayClientTlsCertificate; end
+      class Unknown < VirtualGatewayClientTlsCertificate; end
     end
 
     # An object that represents the type of virtual gateway connection pool.
@@ -7329,21 +5006,9 @@ module Aws::AppMesh
     # If not present the default value for `maxPendingRequests` is
     # `2147483647`.
     #
-    # @note When making an API call, you may pass VirtualGatewayConnectionPool
-    #   data as a hash:
+    # @note VirtualGatewayConnectionPool is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         grpc: {
-    #           max_requests: 1, # required
-    #         },
-    #         http: {
-    #           max_connections: 1, # required
-    #           max_pending_requests: 1,
-    #         },
-    #         http2: {
-    #           max_requests: 1, # required
-    #         },
-    #       }
+    # @note VirtualGatewayConnectionPool is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of VirtualGatewayConnectionPool corresponding to the set member.
     #
     # @!attribute [rw] grpc
     #   An object that represents a type of connection pool.
@@ -7362,9 +5027,16 @@ module Aws::AppMesh
     class VirtualGatewayConnectionPool < Struct.new(
       :grpc,
       :http,
-      :http2)
+      :http2,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Grpc < VirtualGatewayConnectionPool; end
+      class Http < VirtualGatewayConnectionPool; end
+      class Http2 < VirtualGatewayConnectionPool; end
+      class Unknown < VirtualGatewayConnectionPool; end
     end
 
     # An object that represents a virtual gateway returned by a describe
@@ -7404,12 +5076,10 @@ module Aws::AppMesh
 
     # An object that represents an access log file.
     #
-    # @note When making an API call, you may pass VirtualGatewayFileAccessLog
-    #   data as a hash:
-    #
-    #       {
-    #         path: "FilePath", # required
-    #       }
+    # @!attribute [rw] format
+    #   The specified format for the virtual gateway access logs. It can be
+    #   either `json_format` or `text_format`.
+    #   @return [Types::LoggingFormat]
     #
     # @!attribute [rw] path
     #   The file path to write access logs to. You can use `/dev/stdout` to
@@ -7423,19 +5093,13 @@ module Aws::AppMesh
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/VirtualGatewayFileAccessLog AWS API Documentation
     #
     class VirtualGatewayFileAccessLog < Struct.new(
+      :format,
       :path)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # An object that represents a type of connection pool.
-    #
-    # @note When making an API call, you may pass VirtualGatewayGrpcConnectionPool
-    #   data as a hash:
-    #
-    #       {
-    #         max_requests: 1, # required
-    #       }
     #
     # @!attribute [rw] max_requests
     #   Maximum number of inflight requests Envoy can concurrently support
@@ -7452,19 +5116,6 @@ module Aws::AppMesh
 
     # An object that represents the health check policy for a virtual
     # gateway's listener.
-    #
-    # @note When making an API call, you may pass VirtualGatewayHealthCheckPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         healthy_threshold: 1, # required
-    #         interval_millis: 1, # required
-    #         path: "String",
-    #         port: 1,
-    #         protocol: "http", # required, accepts http, http2, grpc
-    #         timeout_millis: 1, # required
-    #         unhealthy_threshold: 1, # required
-    #       }
     #
     # @!attribute [rw] healthy_threshold
     #   The number of consecutive successful health checks that must occur
@@ -7522,13 +5173,6 @@ module Aws::AppMesh
 
     # An object that represents a type of connection pool.
     #
-    # @note When making an API call, you may pass VirtualGatewayHttp2ConnectionPool
-    #   data as a hash:
-    #
-    #       {
-    #         max_requests: 1, # required
-    #       }
-    #
     # @!attribute [rw] max_requests
     #   Maximum number of inflight requests Envoy can concurrently support
     #   across hosts in upstream cluster.
@@ -7543,14 +5187,6 @@ module Aws::AppMesh
     end
 
     # An object that represents a type of connection pool.
-    #
-    # @note When making an API call, you may pass VirtualGatewayHttpConnectionPool
-    #   data as a hash:
-    #
-    #       {
-    #         max_connections: 1, # required
-    #         max_pending_requests: 1,
-    #       }
     #
     # @!attribute [rw] max_connections
     #   Maximum number of outbound TCP connections Envoy can establish
@@ -7572,67 +5208,6 @@ module Aws::AppMesh
     end
 
     # An object that represents a listener for a virtual gateway.
-    #
-    # @note When making an API call, you may pass VirtualGatewayListener
-    #   data as a hash:
-    #
-    #       {
-    #         connection_pool: {
-    #           grpc: {
-    #             max_requests: 1, # required
-    #           },
-    #           http: {
-    #             max_connections: 1, # required
-    #             max_pending_requests: 1,
-    #           },
-    #           http2: {
-    #             max_requests: 1, # required
-    #           },
-    #         },
-    #         health_check: {
-    #           healthy_threshold: 1, # required
-    #           interval_millis: 1, # required
-    #           path: "String",
-    #           port: 1,
-    #           protocol: "http", # required, accepts http, http2, grpc
-    #           timeout_millis: 1, # required
-    #           unhealthy_threshold: 1, # required
-    #         },
-    #         port_mapping: { # required
-    #           port: 1, # required
-    #           protocol: "http", # required, accepts http, http2, grpc
-    #         },
-    #         tls: {
-    #           certificate: { # required
-    #             acm: {
-    #               certificate_arn: "Arn", # required
-    #             },
-    #             file: {
-    #               certificate_chain: "FilePath", # required
-    #               private_key: "FilePath", # required
-    #             },
-    #             sds: {
-    #               secret_name: "VirtualGatewaySdsSecretName", # required
-    #             },
-    #           },
-    #           mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #           validation: {
-    #             subject_alternative_names: {
-    #               match: { # required
-    #                 exact: ["SubjectAlternativeName"], # required
-    #               },
-    #             },
-    #             trust: { # required
-    #               file: {
-    #                 certificate_chain: "FilePath", # required
-    #               },
-    #               sds: {
-    #                 secret_name: "VirtualGatewaySdsSecretName", # required
-    #               },
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] connection_pool
     #   The connection pool information for the virtual gateway listener.
@@ -7665,40 +5240,6 @@ module Aws::AppMesh
     # An object that represents the Transport Layer Security (TLS)
     # properties for a listener.
     #
-    # @note When making an API call, you may pass VirtualGatewayListenerTls
-    #   data as a hash:
-    #
-    #       {
-    #         certificate: { # required
-    #           acm: {
-    #             certificate_arn: "Arn", # required
-    #           },
-    #           file: {
-    #             certificate_chain: "FilePath", # required
-    #             private_key: "FilePath", # required
-    #           },
-    #           sds: {
-    #             secret_name: "VirtualGatewaySdsSecretName", # required
-    #           },
-    #         },
-    #         mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #         validation: {
-    #           subject_alternative_names: {
-    #             match: { # required
-    #               exact: ["SubjectAlternativeName"], # required
-    #             },
-    #           },
-    #           trust: { # required
-    #             file: {
-    #               certificate_chain: "FilePath", # required
-    #             },
-    #             sds: {
-    #               secret_name: "VirtualGatewaySdsSecretName", # required
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] certificate
     #   An object that represents a Transport Layer Security (TLS)
     #   certificate.
@@ -7730,14 +5271,7 @@ module Aws::AppMesh
       include Aws::Structure
     end
 
-    # An object that represents an AWS Certicate Manager (ACM) certificate.
-    #
-    # @note When making an API call, you may pass VirtualGatewayListenerTlsAcmCertificate
-    #   data as a hash:
-    #
-    #       {
-    #         certificate_arn: "Arn", # required
-    #       }
+    # An object that represents an Certificate Manager certificate.
     #
     # @!attribute [rw] certificate_arn
     #   The Amazon Resource Name (ARN) for the certificate. The certificate
@@ -7761,25 +5295,13 @@ module Aws::AppMesh
     # An object that represents a listener's Transport Layer Security (TLS)
     # certificate.
     #
-    # @note When making an API call, you may pass VirtualGatewayListenerTlsCertificate
-    #   data as a hash:
+    # @note VirtualGatewayListenerTlsCertificate is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         acm: {
-    #           certificate_arn: "Arn", # required
-    #         },
-    #         file: {
-    #           certificate_chain: "FilePath", # required
-    #           private_key: "FilePath", # required
-    #         },
-    #         sds: {
-    #           secret_name: "VirtualGatewaySdsSecretName", # required
-    #         },
-    #       }
+    # @note VirtualGatewayListenerTlsCertificate is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of VirtualGatewayListenerTlsCertificate corresponding to the set member.
     #
     # @!attribute [rw] acm
-    #   A reference to an object that represents an AWS Certicate Manager
-    #   (ACM) certificate.
+    #   A reference to an object that represents an Certificate Manager
+    #   certificate.
     #   @return [Types::VirtualGatewayListenerTlsAcmCertificate]
     #
     # @!attribute [rw] file
@@ -7796,9 +5318,16 @@ module Aws::AppMesh
     class VirtualGatewayListenerTlsCertificate < Struct.new(
       :acm,
       :file,
-      :sds)
+      :sds,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Acm < VirtualGatewayListenerTlsCertificate; end
+      class File < VirtualGatewayListenerTlsCertificate; end
+      class Sds < VirtualGatewayListenerTlsCertificate; end
+      class Unknown < VirtualGatewayListenerTlsCertificate; end
     end
 
     # An object that represents a local file certificate. The certificate
@@ -7809,14 +5338,6 @@ module Aws::AppMesh
     #
     #
     # [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html#virtual-node-tls-prerequisites
-    #
-    # @note When making an API call, you may pass VirtualGatewayListenerTlsFileCertificate
-    #   data as a hash:
-    #
-    #       {
-    #         certificate_chain: "FilePath", # required
-    #         private_key: "FilePath", # required
-    #       }
     #
     # @!attribute [rw] certificate_chain
     #   The certificate chain for the certificate.
@@ -7838,19 +5359,12 @@ module Aws::AppMesh
 
     # An object that represents the virtual gateway's listener's Secret
     # Discovery Service certificate.The proxy must be configured with a
-    # local SDS provider via a Unix Domain Socket. See App Mesh [TLS
+    # local SDS provider via a Unix Domain Socket. See App Mesh[TLS
     # documentation][1] for more info.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html
-    #
-    # @note When making an API call, you may pass VirtualGatewayListenerTlsSdsCertificate
-    #   data as a hash:
-    #
-    #       {
-    #         secret_name: "VirtualGatewaySdsSecretName", # required
-    #       }
     #
     # @!attribute [rw] secret_name
     #   A reference to an object that represents the name of the secret
@@ -7869,25 +5383,6 @@ module Aws::AppMesh
 
     # An object that represents a virtual gateway's listener's Transport
     # Layer Security (TLS) validation context.
-    #
-    # @note When making an API call, you may pass VirtualGatewayListenerTlsValidationContext
-    #   data as a hash:
-    #
-    #       {
-    #         subject_alternative_names: {
-    #           match: { # required
-    #             exact: ["SubjectAlternativeName"], # required
-    #           },
-    #         },
-    #         trust: { # required
-    #           file: {
-    #             certificate_chain: "FilePath", # required
-    #           },
-    #           sds: {
-    #             secret_name: "VirtualGatewaySdsSecretName", # required
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] subject_alternative_names
     #   A reference to an object that represents the SANs for a virtual
@@ -7912,17 +5407,9 @@ module Aws::AppMesh
     # An object that represents a virtual gateway's listener's Transport
     # Layer Security (TLS) validation context trust.
     #
-    # @note When making an API call, you may pass VirtualGatewayListenerTlsValidationContextTrust
-    #   data as a hash:
+    # @note VirtualGatewayListenerTlsValidationContextTrust is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         file: {
-    #           certificate_chain: "FilePath", # required
-    #         },
-    #         sds: {
-    #           secret_name: "VirtualGatewaySdsSecretName", # required
-    #         },
-    #       }
+    # @note VirtualGatewayListenerTlsValidationContextTrust is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of VirtualGatewayListenerTlsValidationContextTrust corresponding to the set member.
     #
     # @!attribute [rw] file
     #   An object that represents a Transport Layer Security (TLS)
@@ -7939,23 +5426,18 @@ module Aws::AppMesh
     #
     class VirtualGatewayListenerTlsValidationContextTrust < Struct.new(
       :file,
-      :sds)
+      :sds,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class File < VirtualGatewayListenerTlsValidationContextTrust; end
+      class Sds < VirtualGatewayListenerTlsValidationContextTrust; end
+      class Unknown < VirtualGatewayListenerTlsValidationContextTrust; end
     end
 
     # An object that represents logging information.
-    #
-    # @note When making an API call, you may pass VirtualGatewayLogging
-    #   data as a hash:
-    #
-    #       {
-    #         access_log: {
-    #           file: {
-    #             path: "FilePath", # required
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] access_log
     #   The access log configuration.
@@ -7970,14 +5452,6 @@ module Aws::AppMesh
     end
 
     # An object that represents a port mapping.
-    #
-    # @note When making an API call, you may pass VirtualGatewayPortMapping
-    #   data as a hash:
-    #
-    #       {
-    #         port: 1, # required
-    #         protocol: "http", # required, accepts http, http2, grpc
-    #       }
     #
     # @!attribute [rw] port
     #   The port used for the port mapping. Specify one protocol.
@@ -8018,10 +5492,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -8029,10 +5503,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] resource_owner
-    #   The AWS IAM account ID of the resource owner. If the account ID is
-    #   not your own, then it's the ID of the mesh owner or of another
-    #   account that the mesh is shared with. For more information about
-    #   mesh sharing, see [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the resource owner. If the
+    #   account ID is not your own, then it's the ID of the mesh owner or
+    #   of another account that the mesh is shared with. For more
+    #   information about mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -8065,113 +5539,6 @@ module Aws::AppMesh
 
     # An object that represents the specification of a service mesh
     # resource.
-    #
-    # @note When making an API call, you may pass VirtualGatewaySpec
-    #   data as a hash:
-    #
-    #       {
-    #         backend_defaults: {
-    #           client_policy: {
-    #             tls: {
-    #               certificate: {
-    #                 file: {
-    #                   certificate_chain: "FilePath", # required
-    #                   private_key: "FilePath", # required
-    #                 },
-    #                 sds: {
-    #                   secret_name: "VirtualGatewaySdsSecretName", # required
-    #                 },
-    #               },
-    #               enforce: false,
-    #               ports: [1],
-    #               validation: { # required
-    #                 subject_alternative_names: {
-    #                   match: { # required
-    #                     exact: ["SubjectAlternativeName"], # required
-    #                   },
-    #                 },
-    #                 trust: { # required
-    #                   acm: {
-    #                     certificate_authority_arns: ["Arn"], # required
-    #                   },
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "VirtualGatewaySdsSecretName", # required
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           },
-    #         },
-    #         listeners: [ # required
-    #           {
-    #             connection_pool: {
-    #               grpc: {
-    #                 max_requests: 1, # required
-    #               },
-    #               http: {
-    #                 max_connections: 1, # required
-    #                 max_pending_requests: 1,
-    #               },
-    #               http2: {
-    #                 max_requests: 1, # required
-    #               },
-    #             },
-    #             health_check: {
-    #               healthy_threshold: 1, # required
-    #               interval_millis: 1, # required
-    #               path: "String",
-    #               port: 1,
-    #               protocol: "http", # required, accepts http, http2, grpc
-    #               timeout_millis: 1, # required
-    #               unhealthy_threshold: 1, # required
-    #             },
-    #             port_mapping: { # required
-    #               port: 1, # required
-    #               protocol: "http", # required, accepts http, http2, grpc
-    #             },
-    #             tls: {
-    #               certificate: { # required
-    #                 acm: {
-    #                   certificate_arn: "Arn", # required
-    #                 },
-    #                 file: {
-    #                   certificate_chain: "FilePath", # required
-    #                   private_key: "FilePath", # required
-    #                 },
-    #                 sds: {
-    #                   secret_name: "VirtualGatewaySdsSecretName", # required
-    #                 },
-    #               },
-    #               mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #               validation: {
-    #                 subject_alternative_names: {
-    #                   match: { # required
-    #                     exact: ["SubjectAlternativeName"], # required
-    #                   },
-    #                 },
-    #                 trust: { # required
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "VirtualGatewaySdsSecretName", # required
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         logging: {
-    #           access_log: {
-    #             file: {
-    #               path: "FilePath", # required
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] backend_defaults
     #   A reference to an object that represents the defaults for backends.
@@ -8213,28 +5580,6 @@ module Aws::AppMesh
     # An object that represents a Transport Layer Security (TLS) validation
     # context.
     #
-    # @note When making an API call, you may pass VirtualGatewayTlsValidationContext
-    #   data as a hash:
-    #
-    #       {
-    #         subject_alternative_names: {
-    #           match: { # required
-    #             exact: ["SubjectAlternativeName"], # required
-    #           },
-    #         },
-    #         trust: { # required
-    #           acm: {
-    #             certificate_authority_arns: ["Arn"], # required
-    #           },
-    #           file: {
-    #             certificate_chain: "FilePath", # required
-    #           },
-    #           sds: {
-    #             secret_name: "VirtualGatewaySdsSecretName", # required
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] subject_alternative_names
     #   A reference to an object that represents the SANs for a virtual
     #   gateway's listener's Transport Layer Security (TLS) validation
@@ -8256,14 +5601,7 @@ module Aws::AppMesh
     end
 
     # An object that represents a Transport Layer Security (TLS) validation
-    # context trust for an AWS Certicate Manager (ACM) certificate.
-    #
-    # @note When making an API call, you may pass VirtualGatewayTlsValidationContextAcmTrust
-    #   data as a hash:
-    #
-    #       {
-    #         certificate_authority_arns: ["Arn"], # required
-    #       }
+    # context trust for an Certificate Manager certificate.
     #
     # @!attribute [rw] certificate_authority_arns
     #   One or more ACM Amazon Resource Name (ARN)s.
@@ -8279,13 +5617,6 @@ module Aws::AppMesh
 
     # An object that represents a Transport Layer Security (TLS) validation
     # context trust for a local file.
-    #
-    # @note When making an API call, you may pass VirtualGatewayTlsValidationContextFileTrust
-    #   data as a hash:
-    #
-    #       {
-    #         certificate_chain: "FilePath", # required
-    #       }
     #
     # @!attribute [rw] certificate_chain
     #   The certificate trust chain for a certificate stored on the file
@@ -8309,13 +5640,6 @@ module Aws::AppMesh
     #
     # [1]: https://docs.aws.amazon.com/app-mesh/latest/userguide/tls.html
     #
-    # @note When making an API call, you may pass VirtualGatewayTlsValidationContextSdsTrust
-    #   data as a hash:
-    #
-    #       {
-    #         secret_name: "VirtualGatewaySdsSecretName", # required
-    #       }
-    #
     # @!attribute [rw] secret_name
     #   A reference to an object that represents the name of the secret for
     #   a virtual gateway's Transport Layer Security (TLS) Secret Discovery
@@ -8333,24 +5657,13 @@ module Aws::AppMesh
     # An object that represents a Transport Layer Security (TLS) validation
     # context trust.
     #
-    # @note When making an API call, you may pass VirtualGatewayTlsValidationContextTrust
-    #   data as a hash:
+    # @note VirtualGatewayTlsValidationContextTrust is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         acm: {
-    #           certificate_authority_arns: ["Arn"], # required
-    #         },
-    #         file: {
-    #           certificate_chain: "FilePath", # required
-    #         },
-    #         sds: {
-    #           secret_name: "VirtualGatewaySdsSecretName", # required
-    #         },
-    #       }
+    # @note VirtualGatewayTlsValidationContextTrust is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of VirtualGatewayTlsValidationContextTrust corresponding to the set member.
     #
     # @!attribute [rw] acm
     #   A reference to an object that represents a Transport Layer Security
-    #   (TLS) validation context trust for an AWS Certicate Manager (ACM)
+    #   (TLS) validation context trust for an Certificate Manager
     #   certificate.
     #   @return [Types::VirtualGatewayTlsValidationContextAcmTrust]
     #
@@ -8370,9 +5683,16 @@ module Aws::AppMesh
     class VirtualGatewayTlsValidationContextTrust < Struct.new(
       :acm,
       :file,
-      :sds)
+      :sds,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Acm < VirtualGatewayTlsValidationContextTrust; end
+      class File < VirtualGatewayTlsValidationContextTrust; end
+      class Sds < VirtualGatewayTlsValidationContextTrust; end
+      class Unknown < VirtualGatewayTlsValidationContextTrust; end
     end
 
     # An object that represents the type of virtual node connection pool.
@@ -8383,24 +5703,9 @@ module Aws::AppMesh
     # If not present the default value for `maxPendingRequests` is
     # `2147483647`.
     #
-    # @note When making an API call, you may pass VirtualNodeConnectionPool
-    #   data as a hash:
+    # @note VirtualNodeConnectionPool is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         grpc: {
-    #           max_requests: 1, # required
-    #         },
-    #         http: {
-    #           max_connections: 1, # required
-    #           max_pending_requests: 1,
-    #         },
-    #         http2: {
-    #           max_requests: 1, # required
-    #         },
-    #         tcp: {
-    #           max_connections: 1, # required
-    #         },
-    #       }
+    # @note VirtualNodeConnectionPool is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of VirtualNodeConnectionPool corresponding to the set member.
     #
     # @!attribute [rw] grpc
     #   An object that represents a type of connection pool.
@@ -8424,9 +5729,17 @@ module Aws::AppMesh
       :grpc,
       :http,
       :http2,
-      :tcp)
+      :tcp,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Grpc < VirtualNodeConnectionPool; end
+      class Http < VirtualNodeConnectionPool; end
+      class Http2 < VirtualNodeConnectionPool; end
+      class Tcp < VirtualNodeConnectionPool; end
+      class Unknown < VirtualNodeConnectionPool; end
     end
 
     # An object that represents a virtual node returned by a describe
@@ -8466,13 +5779,6 @@ module Aws::AppMesh
 
     # An object that represents a type of connection pool.
     #
-    # @note When making an API call, you may pass VirtualNodeGrpcConnectionPool
-    #   data as a hash:
-    #
-    #       {
-    #         max_requests: 1, # required
-    #       }
-    #
     # @!attribute [rw] max_requests
     #   Maximum number of inflight requests Envoy can concurrently support
     #   across hosts in upstream cluster.
@@ -8488,13 +5794,6 @@ module Aws::AppMesh
 
     # An object that represents a type of connection pool.
     #
-    # @note When making an API call, you may pass VirtualNodeHttp2ConnectionPool
-    #   data as a hash:
-    #
-    #       {
-    #         max_requests: 1, # required
-    #       }
-    #
     # @!attribute [rw] max_requests
     #   Maximum number of inflight requests Envoy can concurrently support
     #   across hosts in upstream cluster.
@@ -8509,14 +5808,6 @@ module Aws::AppMesh
     end
 
     # An object that represents a type of connection pool.
-    #
-    # @note When making an API call, you may pass VirtualNodeHttpConnectionPool
-    #   data as a hash:
-    #
-    #       {
-    #         max_connections: 1, # required
-    #         max_pending_requests: 1,
-    #       }
     #
     # @!attribute [rw] max_connections
     #   Maximum number of outbound TCP connections Envoy can establish
@@ -8558,10 +5849,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -8569,10 +5860,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] resource_owner
-    #   The AWS IAM account ID of the resource owner. If the account ID is
-    #   not your own, then it's the ID of the mesh owner or of another
-    #   account that the mesh is shared with. For more information about
-    #   mesh sharing, see [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the resource owner. If the
+    #   account ID is not your own, then it's the ID of the mesh owner or
+    #   of another account that the mesh is shared with. For more
+    #   information about mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -8605,13 +5896,6 @@ module Aws::AppMesh
 
     # An object that represents a virtual node service provider.
     #
-    # @note When making an API call, you may pass VirtualNodeServiceProvider
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_node_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] virtual_node_name
     #   The name of the virtual node that is acting as a service provider.
     #   @return [String]
@@ -8625,221 +5909,6 @@ module Aws::AppMesh
     end
 
     # An object that represents the specification of a virtual node.
-    #
-    # @note When making an API call, you may pass VirtualNodeSpec
-    #   data as a hash:
-    #
-    #       {
-    #         backend_defaults: {
-    #           client_policy: {
-    #             tls: {
-    #               certificate: {
-    #                 file: {
-    #                   certificate_chain: "FilePath", # required
-    #                   private_key: "FilePath", # required
-    #                 },
-    #                 sds: {
-    #                   secret_name: "SdsSecretName", # required
-    #                 },
-    #               },
-    #               enforce: false,
-    #               ports: [1],
-    #               validation: { # required
-    #                 subject_alternative_names: {
-    #                   match: { # required
-    #                     exact: ["SubjectAlternativeName"], # required
-    #                   },
-    #                 },
-    #                 trust: { # required
-    #                   acm: {
-    #                     certificate_authority_arns: ["Arn"], # required
-    #                   },
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "SdsSecretName", # required
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           },
-    #         },
-    #         backends: [
-    #           {
-    #             virtual_service: {
-    #               client_policy: {
-    #                 tls: {
-    #                   certificate: {
-    #                     file: {
-    #                       certificate_chain: "FilePath", # required
-    #                       private_key: "FilePath", # required
-    #                     },
-    #                     sds: {
-    #                       secret_name: "SdsSecretName", # required
-    #                     },
-    #                   },
-    #                   enforce: false,
-    #                   ports: [1],
-    #                   validation: { # required
-    #                     subject_alternative_names: {
-    #                       match: { # required
-    #                         exact: ["SubjectAlternativeName"], # required
-    #                       },
-    #                     },
-    #                     trust: { # required
-    #                       acm: {
-    #                         certificate_authority_arns: ["Arn"], # required
-    #                       },
-    #                       file: {
-    #                         certificate_chain: "FilePath", # required
-    #                       },
-    #                       sds: {
-    #                         secret_name: "SdsSecretName", # required
-    #                       },
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #               virtual_service_name: "ServiceName", # required
-    #             },
-    #           },
-    #         ],
-    #         listeners: [
-    #           {
-    #             connection_pool: {
-    #               grpc: {
-    #                 max_requests: 1, # required
-    #               },
-    #               http: {
-    #                 max_connections: 1, # required
-    #                 max_pending_requests: 1,
-    #               },
-    #               http2: {
-    #                 max_requests: 1, # required
-    #               },
-    #               tcp: {
-    #                 max_connections: 1, # required
-    #               },
-    #             },
-    #             health_check: {
-    #               healthy_threshold: 1, # required
-    #               interval_millis: 1, # required
-    #               path: "String",
-    #               port: 1,
-    #               protocol: "http", # required, accepts http, tcp, http2, grpc
-    #               timeout_millis: 1, # required
-    #               unhealthy_threshold: 1, # required
-    #             },
-    #             outlier_detection: {
-    #               base_ejection_duration: { # required
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               interval: { # required
-    #                 unit: "s", # accepts s, ms
-    #                 value: 1,
-    #               },
-    #               max_ejection_percent: 1, # required
-    #               max_server_errors: 1, # required
-    #             },
-    #             port_mapping: { # required
-    #               port: 1, # required
-    #               protocol: "http", # required, accepts http, tcp, http2, grpc
-    #             },
-    #             timeout: {
-    #               grpc: {
-    #                 idle: {
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #                 per_request: {
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #               },
-    #               http: {
-    #                 idle: {
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #                 per_request: {
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #               },
-    #               http2: {
-    #                 idle: {
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #                 per_request: {
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #               },
-    #               tcp: {
-    #                 idle: {
-    #                   unit: "s", # accepts s, ms
-    #                   value: 1,
-    #                 },
-    #               },
-    #             },
-    #             tls: {
-    #               certificate: { # required
-    #                 acm: {
-    #                   certificate_arn: "Arn", # required
-    #                 },
-    #                 file: {
-    #                   certificate_chain: "FilePath", # required
-    #                   private_key: "FilePath", # required
-    #                 },
-    #                 sds: {
-    #                   secret_name: "SdsSecretName", # required
-    #                 },
-    #               },
-    #               mode: "STRICT", # required, accepts STRICT, PERMISSIVE, DISABLED
-    #               validation: {
-    #                 subject_alternative_names: {
-    #                   match: { # required
-    #                     exact: ["SubjectAlternativeName"], # required
-    #                   },
-    #                 },
-    #                 trust: { # required
-    #                   file: {
-    #                     certificate_chain: "FilePath", # required
-    #                   },
-    #                   sds: {
-    #                     secret_name: "SdsSecretName", # required
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         logging: {
-    #           access_log: {
-    #             file: {
-    #               path: "FilePath", # required
-    #             },
-    #           },
-    #         },
-    #         service_discovery: {
-    #           aws_cloud_map: {
-    #             attributes: [
-    #               {
-    #                 key: "AwsCloudMapInstanceAttributeKey", # required
-    #                 value: "AwsCloudMapInstanceAttributeValue", # required
-    #               },
-    #             ],
-    #             namespace_name: "AwsCloudMapName", # required
-    #             service_name: "AwsCloudMapName", # required
-    #           },
-    #           dns: {
-    #             hostname: "Hostname", # required
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] backend_defaults
     #   A reference to an object that represents the defaults for backends.
@@ -8895,13 +5964,6 @@ module Aws::AppMesh
 
     # An object that represents a type of connection pool.
     #
-    # @note When making an API call, you may pass VirtualNodeTcpConnectionPool
-    #   data as a hash:
-    #
-    #       {
-    #         max_connections: 1, # required
-    #       }
-    #
     # @!attribute [rw] max_connections
     #   Maximum number of outbound TCP connections Envoy can establish
     #   concurrently with all hosts in upstream cluster.
@@ -8952,16 +6014,6 @@ module Aws::AppMesh
 
     # An object that represents a virtual router listener.
     #
-    # @note When making an API call, you may pass VirtualRouterListener
-    #   data as a hash:
-    #
-    #       {
-    #         port_mapping: { # required
-    #           port: 1, # required
-    #           protocol: "http", # required, accepts http, tcp, http2, grpc
-    #         },
-    #       }
-    #
     # @!attribute [rw] port_mapping
     #   An object that represents a port mapping.
     #   @return [Types::PortMapping]
@@ -8996,10 +6048,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -9007,10 +6059,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] resource_owner
-    #   The AWS IAM account ID of the resource owner. If the account ID is
-    #   not your own, then it's the ID of the mesh owner or of another
-    #   account that the mesh is shared with. For more information about
-    #   mesh sharing, see [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the resource owner. If the
+    #   account ID is not your own, then it's the ID of the mesh owner or
+    #   of another account that the mesh is shared with. For more
+    #   information about mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -9043,13 +6095,6 @@ module Aws::AppMesh
 
     # An object that represents a virtual node service provider.
     #
-    # @note When making an API call, you may pass VirtualRouterServiceProvider
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_router_name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] virtual_router_name
     #   The name of the virtual router that is acting as a service provider.
     #   @return [String]
@@ -9063,20 +6108,6 @@ module Aws::AppMesh
     end
 
     # An object that represents the specification of a virtual router.
-    #
-    # @note When making an API call, you may pass VirtualRouterSpec
-    #   data as a hash:
-    #
-    #       {
-    #         listeners: [
-    #           {
-    #             port_mapping: { # required
-    #               port: 1, # required
-    #               protocol: "http", # required, accepts http, tcp, http2, grpc
-    #             },
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] listeners
     #   The listeners that the virtual router is expected to receive inbound
@@ -9107,46 +6138,6 @@ module Aws::AppMesh
 
     # An object that represents a virtual service backend for a virtual
     # node.
-    #
-    # @note When making an API call, you may pass VirtualServiceBackend
-    #   data as a hash:
-    #
-    #       {
-    #         client_policy: {
-    #           tls: {
-    #             certificate: {
-    #               file: {
-    #                 certificate_chain: "FilePath", # required
-    #                 private_key: "FilePath", # required
-    #               },
-    #               sds: {
-    #                 secret_name: "SdsSecretName", # required
-    #               },
-    #             },
-    #             enforce: false,
-    #             ports: [1],
-    #             validation: { # required
-    #               subject_alternative_names: {
-    #                 match: { # required
-    #                   exact: ["SubjectAlternativeName"], # required
-    #                 },
-    #               },
-    #               trust: { # required
-    #                 acm: {
-    #                   certificate_authority_arns: ["Arn"], # required
-    #                 },
-    #                 file: {
-    #                   certificate_chain: "FilePath", # required
-    #                 },
-    #                 sds: {
-    #                   secret_name: "SdsSecretName", # required
-    #                 },
-    #               },
-    #             },
-    #           },
-    #         },
-    #         virtual_service_name: "ServiceName", # required
-    #       }
     #
     # @!attribute [rw] client_policy
     #   A reference to an object that represents the client policy for a
@@ -9204,17 +6195,9 @@ module Aws::AppMesh
 
     # An object that represents the provider for a virtual service.
     #
-    # @note When making an API call, you may pass VirtualServiceProvider
-    #   data as a hash:
+    # @note VirtualServiceProvider is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         virtual_node: {
-    #           virtual_node_name: "ResourceName", # required
-    #         },
-    #         virtual_router: {
-    #           virtual_router_name: "ResourceName", # required
-    #         },
-    #       }
+    # @note VirtualServiceProvider is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of VirtualServiceProvider corresponding to the set member.
     #
     # @!attribute [rw] virtual_node
     #   The virtual node associated with a virtual service.
@@ -9228,9 +6211,15 @@ module Aws::AppMesh
     #
     class VirtualServiceProvider < Struct.new(
       :virtual_node,
-      :virtual_router)
+      :virtual_router,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class VirtualNode < VirtualServiceProvider; end
+      class VirtualRouter < VirtualServiceProvider; end
+      class Unknown < VirtualServiceProvider; end
     end
 
     # An object that represents a virtual service returned by a list
@@ -9255,10 +6244,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] mesh_owner
-    #   The AWS IAM account ID of the service mesh owner. If the account ID
-    #   is not your own, then it's the ID of the account that shared the
-    #   mesh with your account. For more information about mesh sharing, see
-    #   [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the service mesh owner. If
+    #   the account ID is not your own, then it's the ID of the account
+    #   that shared the mesh with your account. For more information about
+    #   mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -9266,10 +6255,10 @@ module Aws::AppMesh
     #   @return [String]
     #
     # @!attribute [rw] resource_owner
-    #   The AWS IAM account ID of the resource owner. If the account ID is
-    #   not your own, then it's the ID of the mesh owner or of another
-    #   account that the mesh is shared with. For more information about
-    #   mesh sharing, see [Working with shared meshes][1].
+    #   The Amazon Web Services IAM account ID of the resource owner. If the
+    #   account ID is not your own, then it's the ID of the mesh owner or
+    #   of another account that the mesh is shared with. For more
+    #   information about mesh sharing, see [Working with shared meshes][1].
     #
     #
     #
@@ -9301,20 +6290,6 @@ module Aws::AppMesh
     end
 
     # An object that represents the specification of a virtual service.
-    #
-    # @note When making an API call, you may pass VirtualServiceSpec
-    #   data as a hash:
-    #
-    #       {
-    #         provider: {
-    #           virtual_node: {
-    #             virtual_node_name: "ResourceName", # required
-    #           },
-    #           virtual_router: {
-    #             virtual_router_name: "ResourceName", # required
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] provider
     #   The App Mesh object that is acting as the provider for a virtual
@@ -9349,13 +6324,9 @@ module Aws::AppMesh
     # times as much traffic as one with a relative weight of 10. The total
     # weight for all targets combined must be less than or equal to 100.
     #
-    # @note When making an API call, you may pass WeightedTarget
-    #   data as a hash:
-    #
-    #       {
-    #         virtual_node: "ResourceName", # required
-    #         weight: 1, # required
-    #       }
+    # @!attribute [rw] port
+    #   The targeted port of the weighted object.
+    #   @return [Integer]
     #
     # @!attribute [rw] virtual_node
     #   The virtual node to associate with the weighted target.
@@ -9368,6 +6339,7 @@ module Aws::AppMesh
     # @see http://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/WeightedTarget AWS API Documentation
     #
     class WeightedTarget < Struct.new(
+      :port,
       :virtual_node,
       :weight)
       SENSITIVE = []

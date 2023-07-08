@@ -14,13 +14,18 @@ module Aws::CodeGuruReviewer
     include Seahorse::Model
 
     AccessDeniedException = Shapes::StructureShape.new(name: 'AccessDeniedException')
+    AnalysisType = Shapes::StringShape.new(name: 'AnalysisType')
+    AnalysisTypes = Shapes::ListShape.new(name: 'AnalysisTypes')
     Arn = Shapes::StringShape.new(name: 'Arn')
     AssociateRepositoryRequest = Shapes::StructureShape.new(name: 'AssociateRepositoryRequest')
     AssociateRepositoryResponse = Shapes::StructureShape.new(name: 'AssociateRepositoryResponse')
     AssociationArn = Shapes::StringShape.new(name: 'AssociationArn')
     AssociationId = Shapes::StringShape.new(name: 'AssociationId')
+    BranchDiffSourceCodeType = Shapes::StructureShape.new(name: 'BranchDiffSourceCodeType')
     BranchName = Shapes::StringShape.new(name: 'BranchName')
+    BuildArtifactsObjectKey = Shapes::StringShape.new(name: 'BuildArtifactsObjectKey')
     ClientRequestToken = Shapes::StringShape.new(name: 'ClientRequestToken')
+    CodeArtifacts = Shapes::StructureShape.new(name: 'CodeArtifacts')
     CodeCommitRepository = Shapes::StructureShape.new(name: 'CodeCommitRepository')
     CodeReview = Shapes::StructureShape.new(name: 'CodeReview')
     CodeReviewName = Shapes::StringShape.new(name: 'CodeReviewName')
@@ -29,6 +34,7 @@ module Aws::CodeGuruReviewer
     CodeReviewType = Shapes::StructureShape.new(name: 'CodeReviewType')
     CommitDiffSourceCodeType = Shapes::StructureShape.new(name: 'CommitDiffSourceCodeType')
     CommitId = Shapes::StringShape.new(name: 'CommitId')
+    ConfigFileState = Shapes::StringShape.new(name: 'ConfigFileState')
     ConflictException = Shapes::StructureShape.new(name: 'ConflictException')
     ConnectionArn = Shapes::StringShape.new(name: 'ConnectionArn')
     CreateCodeReviewRequest = Shapes::StructureShape.new(name: 'CreateCodeReviewRequest')
@@ -43,6 +49,9 @@ module Aws::CodeGuruReviewer
     DisassociateRepositoryResponse = Shapes::StructureShape.new(name: 'DisassociateRepositoryResponse')
     EncryptionOption = Shapes::StringShape.new(name: 'EncryptionOption')
     ErrorMessage = Shapes::StringShape.new(name: 'ErrorMessage')
+    EventInfo = Shapes::StructureShape.new(name: 'EventInfo')
+    EventName = Shapes::StringShape.new(name: 'EventName')
+    EventState = Shapes::StringShape.new(name: 'EventState')
     FilePath = Shapes::StringShape.new(name: 'FilePath')
     FindingsCount = Shapes::IntegerShape.new(name: 'FindingsCount')
     InternalServerException = Shapes::StructureShape.new(name: 'InternalServerException')
@@ -51,19 +60,21 @@ module Aws::CodeGuruReviewer
     KMSKeyDetails = Shapes::StructureShape.new(name: 'KMSKeyDetails')
     KMSKeyId = Shapes::StringShape.new(name: 'KMSKeyId')
     LineNumber = Shapes::IntegerShape.new(name: 'LineNumber')
+    LinesOfCodeCount = Shapes::IntegerShape.new(name: 'LinesOfCodeCount')
     ListCodeReviewsMaxResults = Shapes::IntegerShape.new(name: 'ListCodeReviewsMaxResults')
     ListCodeReviewsRequest = Shapes::StructureShape.new(name: 'ListCodeReviewsRequest')
     ListCodeReviewsResponse = Shapes::StructureShape.new(name: 'ListCodeReviewsResponse')
     ListRecommendationFeedbackRequest = Shapes::StructureShape.new(name: 'ListRecommendationFeedbackRequest')
     ListRecommendationFeedbackResponse = Shapes::StructureShape.new(name: 'ListRecommendationFeedbackResponse')
+    ListRecommendationsMaxResults = Shapes::IntegerShape.new(name: 'ListRecommendationsMaxResults')
     ListRecommendationsRequest = Shapes::StructureShape.new(name: 'ListRecommendationsRequest')
     ListRecommendationsResponse = Shapes::StructureShape.new(name: 'ListRecommendationsResponse')
     ListRepositoryAssociationsRequest = Shapes::StructureShape.new(name: 'ListRepositoryAssociationsRequest')
     ListRepositoryAssociationsResponse = Shapes::StructureShape.new(name: 'ListRepositoryAssociationsResponse')
     ListTagsForResourceRequest = Shapes::StructureShape.new(name: 'ListTagsForResourceRequest')
     ListTagsForResourceResponse = Shapes::StructureShape.new(name: 'ListTagsForResourceResponse')
+    LongDescription = Shapes::StringShape.new(name: 'LongDescription')
     MaxResults = Shapes::IntegerShape.new(name: 'MaxResults')
-    MeteredLinesOfCodeCount = Shapes::IntegerShape.new(name: 'MeteredLinesOfCodeCount')
     Metrics = Shapes::StructureShape.new(name: 'Metrics')
     MetricsSummary = Shapes::StructureShape.new(name: 'MetricsSummary')
     Name = Shapes::StringShape.new(name: 'Name')
@@ -79,6 +90,7 @@ module Aws::CodeGuruReviewer
     PutRecommendationFeedbackResponse = Shapes::StructureShape.new(name: 'PutRecommendationFeedbackResponse')
     Reaction = Shapes::StringShape.new(name: 'Reaction')
     Reactions = Shapes::ListShape.new(name: 'Reactions')
+    RecommendationCategory = Shapes::StringShape.new(name: 'RecommendationCategory')
     RecommendationFeedback = Shapes::StructureShape.new(name: 'RecommendationFeedback')
     RecommendationFeedbackSummaries = Shapes::ListShape.new(name: 'RecommendationFeedbackSummaries')
     RecommendationFeedbackSummary = Shapes::StructureShape.new(name: 'RecommendationFeedbackSummary')
@@ -95,7 +107,22 @@ module Aws::CodeGuruReviewer
     RepositoryAssociationSummary = Shapes::StructureShape.new(name: 'RepositoryAssociationSummary')
     RepositoryHeadSourceCodeType = Shapes::StructureShape.new(name: 'RepositoryHeadSourceCodeType')
     RepositoryNames = Shapes::ListShape.new(name: 'RepositoryNames')
+    RequestId = Shapes::StringShape.new(name: 'RequestId')
+    RequestMetadata = Shapes::StructureShape.new(name: 'RequestMetadata')
+    Requester = Shapes::StringShape.new(name: 'Requester')
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
+    RuleId = Shapes::StringShape.new(name: 'RuleId')
+    RuleMetadata = Shapes::StructureShape.new(name: 'RuleMetadata')
+    RuleName = Shapes::StringShape.new(name: 'RuleName')
+    RuleTag = Shapes::StringShape.new(name: 'RuleTag')
+    RuleTags = Shapes::ListShape.new(name: 'RuleTags')
+    S3BucketName = Shapes::StringShape.new(name: 'S3BucketName')
+    S3BucketRepository = Shapes::StructureShape.new(name: 'S3BucketRepository')
+    S3Repository = Shapes::StructureShape.new(name: 'S3Repository')
+    S3RepositoryDetails = Shapes::StructureShape.new(name: 'S3RepositoryDetails')
+    Severity = Shapes::StringShape.new(name: 'Severity')
+    ShortDescription = Shapes::StringShape.new(name: 'ShortDescription')
+    SourceCodeArtifactsObjectKey = Shapes::StringShape.new(name: 'SourceCodeArtifactsObjectKey')
     SourceCodeType = Shapes::StructureShape.new(name: 'SourceCodeType')
     StateReason = Shapes::StringShape.new(name: 'StateReason')
     TagKey = Shapes::StringShape.new(name: 'TagKey')
@@ -114,9 +141,12 @@ module Aws::CodeGuruReviewer
     UserId = Shapes::StringShape.new(name: 'UserId')
     UserIds = Shapes::ListShape.new(name: 'UserIds')
     ValidationException = Shapes::StructureShape.new(name: 'ValidationException')
+    VendorName = Shapes::StringShape.new(name: 'VendorName')
 
     AccessDeniedException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     AccessDeniedException.struct_class = Types::AccessDeniedException
+
+    AnalysisTypes.member = Shapes::ShapeRef.new(shape: AnalysisType)
 
     AssociateRepositoryRequest.add_member(:repository, Shapes::ShapeRef.new(shape: Repository, required: true, location_name: "Repository"))
     AssociateRepositoryRequest.add_member(:client_request_token, Shapes::ShapeRef.new(shape: ClientRequestToken, location_name: "ClientRequestToken", metadata: {"idempotencyToken"=>true}))
@@ -127,6 +157,14 @@ module Aws::CodeGuruReviewer
     AssociateRepositoryResponse.add_member(:repository_association, Shapes::ShapeRef.new(shape: RepositoryAssociation, location_name: "RepositoryAssociation"))
     AssociateRepositoryResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "Tags"))
     AssociateRepositoryResponse.struct_class = Types::AssociateRepositoryResponse
+
+    BranchDiffSourceCodeType.add_member(:source_branch_name, Shapes::ShapeRef.new(shape: BranchName, required: true, location_name: "SourceBranchName"))
+    BranchDiffSourceCodeType.add_member(:destination_branch_name, Shapes::ShapeRef.new(shape: BranchName, required: true, location_name: "DestinationBranchName"))
+    BranchDiffSourceCodeType.struct_class = Types::BranchDiffSourceCodeType
+
+    CodeArtifacts.add_member(:source_code_artifacts_object_key, Shapes::ShapeRef.new(shape: SourceCodeArtifactsObjectKey, required: true, location_name: "SourceCodeArtifactsObjectKey"))
+    CodeArtifacts.add_member(:build_artifacts_object_key, Shapes::ShapeRef.new(shape: BuildArtifactsObjectKey, location_name: "BuildArtifactsObjectKey"))
+    CodeArtifacts.struct_class = Types::CodeArtifacts
 
     CodeCommitRepository.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "Name"))
     CodeCommitRepository.struct_class = Types::CodeCommitRepository
@@ -145,6 +183,8 @@ module Aws::CodeGuruReviewer
     CodeReview.add_member(:source_code_type, Shapes::ShapeRef.new(shape: SourceCodeType, location_name: "SourceCodeType"))
     CodeReview.add_member(:association_arn, Shapes::ShapeRef.new(shape: AssociationArn, location_name: "AssociationArn"))
     CodeReview.add_member(:metrics, Shapes::ShapeRef.new(shape: Metrics, location_name: "Metrics"))
+    CodeReview.add_member(:analysis_types, Shapes::ShapeRef.new(shape: AnalysisTypes, location_name: "AnalysisTypes"))
+    CodeReview.add_member(:config_file_state, Shapes::ShapeRef.new(shape: ConfigFileState, location_name: "ConfigFileState"))
     CodeReview.struct_class = Types::CodeReview
 
     CodeReviewSummaries.member = Shapes::ShapeRef.new(shape: CodeReviewSummary)
@@ -160,13 +200,16 @@ module Aws::CodeGuruReviewer
     CodeReviewSummary.add_member(:type, Shapes::ShapeRef.new(shape: Type, location_name: "Type"))
     CodeReviewSummary.add_member(:pull_request_id, Shapes::ShapeRef.new(shape: PullRequestId, location_name: "PullRequestId"))
     CodeReviewSummary.add_member(:metrics_summary, Shapes::ShapeRef.new(shape: MetricsSummary, location_name: "MetricsSummary"))
+    CodeReviewSummary.add_member(:source_code_type, Shapes::ShapeRef.new(shape: SourceCodeType, location_name: "SourceCodeType"))
     CodeReviewSummary.struct_class = Types::CodeReviewSummary
 
     CodeReviewType.add_member(:repository_analysis, Shapes::ShapeRef.new(shape: RepositoryAnalysis, required: true, location_name: "RepositoryAnalysis"))
+    CodeReviewType.add_member(:analysis_types, Shapes::ShapeRef.new(shape: AnalysisTypes, location_name: "AnalysisTypes"))
     CodeReviewType.struct_class = Types::CodeReviewType
 
     CommitDiffSourceCodeType.add_member(:source_commit, Shapes::ShapeRef.new(shape: CommitId, location_name: "SourceCommit"))
     CommitDiffSourceCodeType.add_member(:destination_commit, Shapes::ShapeRef.new(shape: CommitId, location_name: "DestinationCommit"))
+    CommitDiffSourceCodeType.add_member(:merge_base_commit, Shapes::ShapeRef.new(shape: CommitId, location_name: "MergeBaseCommit"))
     CommitDiffSourceCodeType.struct_class = Types::CommitDiffSourceCodeType
 
     ConflictException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
@@ -209,6 +252,10 @@ module Aws::CodeGuruReviewer
     DisassociateRepositoryResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "Tags"))
     DisassociateRepositoryResponse.struct_class = Types::DisassociateRepositoryResponse
 
+    EventInfo.add_member(:name, Shapes::ShapeRef.new(shape: EventName, location_name: "Name"))
+    EventInfo.add_member(:state, Shapes::ShapeRef.new(shape: EventState, location_name: "State"))
+    EventInfo.struct_class = Types::EventInfo
+
     InternalServerException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     InternalServerException.struct_class = Types::InternalServerException
 
@@ -242,7 +289,7 @@ module Aws::CodeGuruReviewer
     ListRecommendationFeedbackResponse.struct_class = Types::ListRecommendationFeedbackResponse
 
     ListRecommendationsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location: "querystring", location_name: "NextToken"))
-    ListRecommendationsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location: "querystring", location_name: "MaxResults"))
+    ListRecommendationsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: ListRecommendationsMaxResults, location: "querystring", location_name: "MaxResults"))
     ListRecommendationsRequest.add_member(:code_review_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location: "uri", location_name: "CodeReviewArn"))
     ListRecommendationsRequest.struct_class = Types::ListRecommendationsRequest
 
@@ -268,11 +315,13 @@ module Aws::CodeGuruReviewer
     ListTagsForResourceResponse.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "Tags"))
     ListTagsForResourceResponse.struct_class = Types::ListTagsForResourceResponse
 
-    Metrics.add_member(:metered_lines_of_code_count, Shapes::ShapeRef.new(shape: MeteredLinesOfCodeCount, location_name: "MeteredLinesOfCodeCount"))
+    Metrics.add_member(:metered_lines_of_code_count, Shapes::ShapeRef.new(shape: LinesOfCodeCount, location_name: "MeteredLinesOfCodeCount"))
+    Metrics.add_member(:suppressed_lines_of_code_count, Shapes::ShapeRef.new(shape: LinesOfCodeCount, location_name: "SuppressedLinesOfCodeCount"))
     Metrics.add_member(:findings_count, Shapes::ShapeRef.new(shape: FindingsCount, location_name: "FindingsCount"))
     Metrics.struct_class = Types::Metrics
 
-    MetricsSummary.add_member(:metered_lines_of_code_count, Shapes::ShapeRef.new(shape: MeteredLinesOfCodeCount, location_name: "MeteredLinesOfCodeCount"))
+    MetricsSummary.add_member(:metered_lines_of_code_count, Shapes::ShapeRef.new(shape: LinesOfCodeCount, location_name: "MeteredLinesOfCodeCount"))
+    MetricsSummary.add_member(:suppressed_lines_of_code_count, Shapes::ShapeRef.new(shape: LinesOfCodeCount, location_name: "SuppressedLinesOfCodeCount"))
     MetricsSummary.add_member(:findings_count, Shapes::ShapeRef.new(shape: FindingsCount, location_name: "FindingsCount"))
     MetricsSummary.struct_class = Types::MetricsSummary
 
@@ -318,14 +367,19 @@ module Aws::CodeGuruReviewer
     RecommendationSummary.add_member(:start_line, Shapes::ShapeRef.new(shape: LineNumber, location_name: "StartLine"))
     RecommendationSummary.add_member(:end_line, Shapes::ShapeRef.new(shape: LineNumber, location_name: "EndLine"))
     RecommendationSummary.add_member(:description, Shapes::ShapeRef.new(shape: Text, location_name: "Description"))
+    RecommendationSummary.add_member(:recommendation_category, Shapes::ShapeRef.new(shape: RecommendationCategory, location_name: "RecommendationCategory"))
+    RecommendationSummary.add_member(:rule_metadata, Shapes::ShapeRef.new(shape: RuleMetadata, location_name: "RuleMetadata"))
+    RecommendationSummary.add_member(:severity, Shapes::ShapeRef.new(shape: Severity, location_name: "Severity"))
     RecommendationSummary.struct_class = Types::RecommendationSummary
 
     Repository.add_member(:code_commit, Shapes::ShapeRef.new(shape: CodeCommitRepository, location_name: "CodeCommit"))
     Repository.add_member(:bitbucket, Shapes::ShapeRef.new(shape: ThirdPartySourceRepository, location_name: "Bitbucket"))
     Repository.add_member(:git_hub_enterprise_server, Shapes::ShapeRef.new(shape: ThirdPartySourceRepository, location_name: "GitHubEnterpriseServer"))
+    Repository.add_member(:s3_bucket, Shapes::ShapeRef.new(shape: S3Repository, location_name: "S3Bucket"))
     Repository.struct_class = Types::Repository
 
-    RepositoryAnalysis.add_member(:repository_head, Shapes::ShapeRef.new(shape: RepositoryHeadSourceCodeType, required: true, location_name: "RepositoryHead"))
+    RepositoryAnalysis.add_member(:repository_head, Shapes::ShapeRef.new(shape: RepositoryHeadSourceCodeType, location_name: "RepositoryHead"))
+    RepositoryAnalysis.add_member(:source_code_type, Shapes::ShapeRef.new(shape: SourceCodeType, location_name: "SourceCodeType"))
     RepositoryAnalysis.struct_class = Types::RepositoryAnalysis
 
     RepositoryAssociation.add_member(:association_id, Shapes::ShapeRef.new(shape: AssociationId, location_name: "AssociationId"))
@@ -339,6 +393,7 @@ module Aws::CodeGuruReviewer
     RepositoryAssociation.add_member(:last_updated_time_stamp, Shapes::ShapeRef.new(shape: TimeStamp, location_name: "LastUpdatedTimeStamp"))
     RepositoryAssociation.add_member(:created_time_stamp, Shapes::ShapeRef.new(shape: TimeStamp, location_name: "CreatedTimeStamp"))
     RepositoryAssociation.add_member(:kms_key_details, Shapes::ShapeRef.new(shape: KMSKeyDetails, location_name: "KMSKeyDetails"))
+    RepositoryAssociation.add_member(:s3_repository_details, Shapes::ShapeRef.new(shape: S3RepositoryDetails, location_name: "S3RepositoryDetails"))
     RepositoryAssociation.struct_class = Types::RepositoryAssociation
 
     RepositoryAssociationStates.member = Shapes::ShapeRef.new(shape: RepositoryAssociationState)
@@ -360,11 +415,41 @@ module Aws::CodeGuruReviewer
 
     RepositoryNames.member = Shapes::ShapeRef.new(shape: Name)
 
+    RequestMetadata.add_member(:request_id, Shapes::ShapeRef.new(shape: RequestId, location_name: "RequestId"))
+    RequestMetadata.add_member(:requester, Shapes::ShapeRef.new(shape: Requester, location_name: "Requester"))
+    RequestMetadata.add_member(:event_info, Shapes::ShapeRef.new(shape: EventInfo, location_name: "EventInfo"))
+    RequestMetadata.add_member(:vendor_name, Shapes::ShapeRef.new(shape: VendorName, location_name: "VendorName"))
+    RequestMetadata.struct_class = Types::RequestMetadata
+
     ResourceNotFoundException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     ResourceNotFoundException.struct_class = Types::ResourceNotFoundException
 
+    RuleMetadata.add_member(:rule_id, Shapes::ShapeRef.new(shape: RuleId, location_name: "RuleId"))
+    RuleMetadata.add_member(:rule_name, Shapes::ShapeRef.new(shape: RuleName, location_name: "RuleName"))
+    RuleMetadata.add_member(:short_description, Shapes::ShapeRef.new(shape: ShortDescription, location_name: "ShortDescription"))
+    RuleMetadata.add_member(:long_description, Shapes::ShapeRef.new(shape: LongDescription, location_name: "LongDescription"))
+    RuleMetadata.add_member(:rule_tags, Shapes::ShapeRef.new(shape: RuleTags, location_name: "RuleTags"))
+    RuleMetadata.struct_class = Types::RuleMetadata
+
+    RuleTags.member = Shapes::ShapeRef.new(shape: RuleTag)
+
+    S3BucketRepository.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "Name"))
+    S3BucketRepository.add_member(:details, Shapes::ShapeRef.new(shape: S3RepositoryDetails, location_name: "Details"))
+    S3BucketRepository.struct_class = Types::S3BucketRepository
+
+    S3Repository.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "Name"))
+    S3Repository.add_member(:bucket_name, Shapes::ShapeRef.new(shape: S3BucketName, required: true, location_name: "BucketName"))
+    S3Repository.struct_class = Types::S3Repository
+
+    S3RepositoryDetails.add_member(:bucket_name, Shapes::ShapeRef.new(shape: S3BucketName, location_name: "BucketName"))
+    S3RepositoryDetails.add_member(:code_artifacts, Shapes::ShapeRef.new(shape: CodeArtifacts, location_name: "CodeArtifacts"))
+    S3RepositoryDetails.struct_class = Types::S3RepositoryDetails
+
     SourceCodeType.add_member(:commit_diff, Shapes::ShapeRef.new(shape: CommitDiffSourceCodeType, location_name: "CommitDiff"))
     SourceCodeType.add_member(:repository_head, Shapes::ShapeRef.new(shape: RepositoryHeadSourceCodeType, location_name: "RepositoryHead"))
+    SourceCodeType.add_member(:branch_diff, Shapes::ShapeRef.new(shape: BranchDiffSourceCodeType, location_name: "BranchDiff"))
+    SourceCodeType.add_member(:s3_bucket_repository, Shapes::ShapeRef.new(shape: S3BucketRepository, location_name: "S3BucketRepository"))
+    SourceCodeType.add_member(:request_metadata, Shapes::ShapeRef.new(shape: RequestMetadata, location_name: "RequestMetadata"))
     SourceCodeType.struct_class = Types::SourceCodeType
 
     TagKeyList.member = Shapes::ShapeRef.new(shape: TagKey)

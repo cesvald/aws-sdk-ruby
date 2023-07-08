@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:sagemakerfeaturestoreruntime)
@@ -73,8 +77,13 @@ module Aws::SageMakerFeatureStoreRuntime
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::SageMakerFeatureStoreRuntime::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::SageMakerFeatureStoreRuntime
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::SageMakerFeatureStoreRuntime
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::SageMakerFeatureStoreRuntime
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::SageMakerFeatureStoreRuntime
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::SageMakerFeatureStoreRuntime
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::SageMakerFeatureStoreRuntime::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::SageMakerFeatureStoreRuntime::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::SageMakerFeatureStoreRuntime
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::SageMakerFeatureStoreRuntime
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -327,9 +384,87 @@ module Aws::SageMakerFeatureStoreRuntime
 
     # @!group API Operations
 
-    # Deletes a `Record` from a `FeatureGroup`. A new record will show up in
-    # the `OfflineStore` when the `DeleteRecord` API is called. This record
-    # will have a value of `True` in the `is_deleted` column.
+    # Retrieves a batch of `Records` from a `FeatureGroup`.
+    #
+    # @option params [required, Array<Types::BatchGetRecordIdentifier>] :identifiers
+    #   A list of `FeatureGroup` names, with their corresponding
+    #   `RecordIdentifier` value, and Feature name that have been requested to
+    #   be retrieved in batch.
+    #
+    # @option params [String] :expiration_time_response
+    #   Parameter to request `ExpiresAt` in response. If `Enabled`,
+    #   `BatchGetRecord` will return the value of `ExpiresAt`, if it is not
+    #   null. If `Disabled` and null, `BatchGetRecord` will return null.
+    #
+    # @return [Types::BatchGetRecordResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchGetRecordResponse#records #records} => Array&lt;Types::BatchGetRecordResultDetail&gt;
+    #   * {Types::BatchGetRecordResponse#errors #errors} => Array&lt;Types::BatchGetRecordError&gt;
+    #   * {Types::BatchGetRecordResponse#unprocessed_identifiers #unprocessed_identifiers} => Array&lt;Types::BatchGetRecordIdentifier&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_get_record({
+    #     identifiers: [ # required
+    #       {
+    #         feature_group_name: "FeatureGroupName", # required
+    #         record_identifiers_value_as_string: ["ValueAsString"], # required
+    #         feature_names: ["FeatureName"],
+    #       },
+    #     ],
+    #     expiration_time_response: "Enabled", # accepts Enabled, Disabled
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.records #=> Array
+    #   resp.records[0].feature_group_name #=> String
+    #   resp.records[0].record_identifier_value_as_string #=> String
+    #   resp.records[0].record #=> Array
+    #   resp.records[0].record[0].feature_name #=> String
+    #   resp.records[0].record[0].value_as_string #=> String
+    #   resp.records[0].expires_at #=> String
+    #   resp.errors #=> Array
+    #   resp.errors[0].feature_group_name #=> String
+    #   resp.errors[0].record_identifier_value_as_string #=> String
+    #   resp.errors[0].error_code #=> String
+    #   resp.errors[0].error_message #=> String
+    #   resp.unprocessed_identifiers #=> Array
+    #   resp.unprocessed_identifiers[0].feature_group_name #=> String
+    #   resp.unprocessed_identifiers[0].record_identifiers_value_as_string #=> Array
+    #   resp.unprocessed_identifiers[0].record_identifiers_value_as_string[0] #=> String
+    #   resp.unprocessed_identifiers[0].feature_names #=> Array
+    #   resp.unprocessed_identifiers[0].feature_names[0] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sagemaker-featurestore-runtime-2020-07-01/BatchGetRecord AWS API Documentation
+    #
+    # @overload batch_get_record(params = {})
+    # @param [Hash] params ({})
+    def batch_get_record(params = {}, options = {})
+      req = build_request(:batch_get_record, params)
+      req.send_request(options)
+    end
+
+    # Deletes a `Record` from a `FeatureGroup` in the `OnlineStore`. Feature
+    # Store supports both `SoftDelete` and `HardDelete`. For `SoftDelete`
+    # (default), feature columns are set to `null` and the record is no
+    # longer retrievable by `GetRecord` or `BatchGetRecord`. For
+    # `HardDelete`, the complete `Record` is removed from the `OnlineStore`.
+    # In both cases, Feature Store appends the deleted record marker to the
+    # `OfflineStore` with feature values set to `null`, `is_deleted` value
+    # set to `True`, and `EventTime` set to the delete input `EventTime`.
+    #
+    # Note that the `EventTime` specified in `DeleteRecord` should be set
+    # later than the `EventTime` of the existing record in the `OnlineStore`
+    # for that `RecordIdentifer`. If it is not, the deletion does not occur:
+    #
+    # * For `SoftDelete`, the existing (undeleted) record remains in the
+    #   `OnlineStore`, though the delete record marker is still written to
+    #   the `OfflineStore`.
+    #
+    # * `HardDelete` returns `EventTime`: `400 ValidationException` to
+    #   indicate that the delete operation failed. No delete record marker
+    #   is written to the `OfflineStore`.
     #
     # @option params [required, String] :feature_group_name
     #   The name of the feature group to delete the record from.
@@ -342,6 +477,15 @@ module Aws::SageMakerFeatureStoreRuntime
     #   Timestamp indicating when the deletion event occurred. `EventTime` can
     #   be used to query data at a certain point in time.
     #
+    # @option params [Array<String>] :target_stores
+    #   A list of stores from which you're deleting the record. By default,
+    #   Feature Store deletes the record from all of the stores that you're
+    #   using for the `FeatureGroup`.
+    #
+    # @option params [String] :deletion_mode
+    #   The name of the deletion mode for deleting the record. By default, the
+    #   deletion mode is set to `SoftDelete`.
+    #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
     # @example Request syntax with placeholder values
@@ -350,6 +494,8 @@ module Aws::SageMakerFeatureStoreRuntime
     #     feature_group_name: "FeatureGroupName", # required
     #     record_identifier_value_as_string: "ValueAsString", # required
     #     event_time: "ValueAsString", # required
+    #     target_stores: ["OnlineStore"], # accepts OnlineStore, OfflineStore
+    #     deletion_mode: "SoftDelete", # accepts SoftDelete, HardDelete
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/sagemaker-featurestore-runtime-2020-07-01/DeleteRecord AWS API Documentation
@@ -367,7 +513,8 @@ module Aws::SageMakerFeatureStoreRuntime
     # returned.
     #
     # @option params [required, String] :feature_group_name
-    #   The name of the feature group in which you want to put the records.
+    #   The name of the feature group from which you want to retrieve a
+    #   record.
     #
     # @option params [required, String] :record_identifier_value_as_string
     #   The value that corresponds to `RecordIdentifier` type and uniquely
@@ -377,9 +524,15 @@ module Aws::SageMakerFeatureStoreRuntime
     #   List of names of Features to be retrieved. If not specified, the
     #   latest value for all the Features are returned.
     #
+    # @option params [String] :expiration_time_response
+    #   Parameter to request `ExpiresAt` in response. If `Enabled`,
+    #   `BatchGetRecord` will return the value of `ExpiresAt`, if it is not
+    #   null. If `Disabled` and null, `BatchGetRecord` will return null.
+    #
     # @return [Types::GetRecordResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::GetRecordResponse#record #record} => Array&lt;Types::FeatureValue&gt;
+    #   * {Types::GetRecordResponse#expires_at #expires_at} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -387,6 +540,7 @@ module Aws::SageMakerFeatureStoreRuntime
     #     feature_group_name: "FeatureGroupName", # required
     #     record_identifier_value_as_string: "ValueAsString", # required
     #     feature_names: ["FeatureName"],
+    #     expiration_time_response: "Enabled", # accepts Enabled, Disabled
     #   })
     #
     # @example Response structure
@@ -394,6 +548,7 @@ module Aws::SageMakerFeatureStoreRuntime
     #   resp.record #=> Array
     #   resp.record[0].feature_name #=> String
     #   resp.record[0].value_as_string #=> String
+    #   resp.expires_at #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/sagemaker-featurestore-runtime-2020-07-01/GetRecord AWS API Documentation
     #
@@ -424,6 +579,21 @@ module Aws::SageMakerFeatureStoreRuntime
     #
     #   * Use `PutRecord` to update feature values.
     #
+    # @option params [Array<String>] :target_stores
+    #   A list of stores to which you're adding the record. By default,
+    #   Feature Store adds the record to all of the stores that you're using
+    #   for the `FeatureGroup`.
+    #
+    # @option params [Types::TtlDuration] :ttl_duration
+    #   Time to live duration, where the record is hard deleted after the
+    #   expiration time is reached; `ExpiresAt` = `EventTime` + `TtlDuration`.
+    #   For information on HardDelete, see the [DeleteRecord][1] API in the
+    #   Amazon SageMaker API Reference guide.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_feature_store_DeleteRecord.html
+    #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
     # @example Request syntax with placeholder values
@@ -436,6 +606,11 @@ module Aws::SageMakerFeatureStoreRuntime
     #         value_as_string: "ValueAsString", # required
     #       },
     #     ],
+    #     target_stores: ["OnlineStore"], # accepts OnlineStore, OfflineStore
+    #     ttl_duration: {
+    #       unit: "Seconds", # required, accepts Seconds, Minutes, Hours, Days, Weeks
+    #       value: 1, # required
+    #     },
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/sagemaker-featurestore-runtime-2020-07-01/PutRecord AWS API Documentation
@@ -460,7 +635,7 @@ module Aws::SageMakerFeatureStoreRuntime
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-sagemakerfeaturestoreruntime'
-      context[:gem_version] = '1.2.0'
+      context[:gem_version] = '1.21.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

@@ -42,20 +42,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateNodeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         server_name: "ServerName", # required
-    #         node_name: "NodeName", # required
-    #         engine_attributes: [ # required
-    #           {
-    #             name: "EngineAttributeName",
-    #             value: "EngineAttributeValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] server_name
     #   The name of the server with which to associate the node.
     #   @return [String]
@@ -69,16 +55,16 @@ module Aws::OpsWorksCM
     #
     #   **Attributes accepted in a AssociateNode request for Chef**
     #
-    #   * `CHEF_ORGANIZATION`\: The Chef organization with which the node is
+    #   * `CHEF_ORGANIZATION`: The Chef organization with which the node is
     #     associated. By default only one organization named `default` can
     #     exist.
     #
-    #   * `CHEF_NODE_PUBLIC_KEY`\: A PEM-formatted public key. This key is
+    #   * `CHEF_NODE_PUBLIC_KEY`: A PEM-formatted public key. This key is
     #     required for the `chef-client` agent to access the Chef API.
     #
     #   **Attributes accepted in a AssociateNode request for Puppet**
     #
-    #   * `PUPPET_NODE_CSR`\: A PEM-formatted certificate-signing request
+    #   * `PUPPET_NODE_CSR`: A PEM-formatted certificate-signing request
     #     (CSR) that is created by the node.
     #
     #   ^
@@ -255,20 +241,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateBackupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         server_name: "ServerName", # required
-    #         description: "String",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] server_name
     #   The name of the server that you want to back up.
     #   @return [String]
@@ -320,43 +292,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateServerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         associate_public_ip_address: false,
-    #         custom_domain: "CustomDomain",
-    #         custom_certificate: "CustomCertificate",
-    #         custom_private_key: "CustomPrivateKey",
-    #         disable_automated_backup: false,
-    #         engine: "String", # required
-    #         engine_model: "String",
-    #         engine_version: "String",
-    #         engine_attributes: [
-    #           {
-    #             name: "EngineAttributeName",
-    #             value: "EngineAttributeValue",
-    #           },
-    #         ],
-    #         backup_retention_count: 1,
-    #         server_name: "ServerName", # required
-    #         instance_profile_arn: "InstanceProfileArn", # required
-    #         instance_type: "String", # required
-    #         key_pair: "KeyPair",
-    #         preferred_maintenance_window: "TimeWindowDefinition",
-    #         preferred_backup_window: "TimeWindowDefinition",
-    #         security_group_ids: ["String"],
-    #         service_role_arn: "ServiceRoleArn", # required
-    #         subnet_ids: ["String"],
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         backup_id: "BackupId",
-    #       }
-    #
     # @!attribute [rw] associate_public_ip_address
     #   Associate a public IP address with a server that you are launching.
     #   Valid values are `true` or `false`. The default value is `true`.
@@ -424,7 +359,7 @@ module Aws::OpsWorksCM
     # @!attribute [rw] engine_version
     #   The major release version of the engine that you want to use. For a
     #   Chef server, the valid value for EngineVersion is currently `2`. For
-    #   a Puppet server, the valid value is `2017`.
+    #   a Puppet server, valid values are `2019` or `2017`.
     #   @return [String]
     #
     # @!attribute [rw] engine_attributes
@@ -432,12 +367,12 @@ module Aws::OpsWorksCM
     #
     #   **Attributes accepted in a Chef createServer request:**
     #
-    #   * `CHEF_AUTOMATE_PIVOTAL_KEY`\: A base64-encoded RSA public key. The
+    #   * `CHEF_AUTOMATE_PIVOTAL_KEY`: A base64-encoded RSA public key. The
     #     corresponding private key is required to access the Chef API. When
     #     no CHEF\_AUTOMATE\_PIVOTAL\_KEY is set, a private key is generated
     #     and returned in the response.
     #
-    #   * `CHEF_AUTOMATE_ADMIN_PASSWORD`\: The password for the
+    #   * `CHEF_AUTOMATE_ADMIN_PASSWORD`: The password for the
     #     administrative user in the Chef Automate web-based dashboard. The
     #     password length is a minimum of eight characters, and a maximum of
     #     32. The password can contain letters, numbers, and special
@@ -448,15 +383,15 @@ module Aws::OpsWorksCM
     #
     #   **Attributes accepted in a Puppet createServer request:**
     #
-    #   * `PUPPET_ADMIN_PASSWORD`\: To work with the Puppet Enterprise
+    #   * `PUPPET_ADMIN_PASSWORD`: To work with the Puppet Enterprise
     #     console, a password must use ASCII characters.
     #
-    #   * `PUPPET_R10K_REMOTE`\: The r10k remote is the URL of your control
+    #   * `PUPPET_R10K_REMOTE`: The r10k remote is the URL of your control
     #     repository (for example,
     #     ssh://git@your.git-repo.com:user/control-repo.git). Specifying an
     #     r10k remote opens TCP port 8170.
     #
-    #   * `PUPPET_R10K_PRIVATE_KEY`\: If you are using a private Git
+    #   * `PUPPET_R10K_PRIVATE_KEY`: If you are using a private Git
     #     repository, add PUPPET\_R10K\_PRIVATE\_KEY to specify a
     #     PEM-encoded private SSH key.
     #   @return [Array<Types::EngineAttribute>]
@@ -636,13 +571,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteBackupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         backup_id: "BackupId", # required
-    #       }
-    #
     # @!attribute [rw] backup_id
     #   The ID of the backup to delete. Run the DescribeBackups command to
     #   get a list of backup IDs. Backup IDs are in the format
@@ -661,13 +589,6 @@ module Aws::OpsWorksCM
     #
     class DeleteBackupResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteServerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         server_name: "ServerName", # required
-    #       }
-    #
     # @!attribute [rw] server_name
     #   The ID of the server to delete.
     #   @return [String]
@@ -702,16 +623,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeBackupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         backup_id: "BackupId",
-    #         server_name: "ServerName",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] backup_id
     #   Describes a single backup.
     #   @return [String]
@@ -756,15 +667,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         server_name: "ServerName", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] server_name
     #   The name of the server for which you want to view events.
     #   @return [String]
@@ -824,14 +726,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeNodeAssociationStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         node_association_status_token: "NodeAssociationStatusToken", # required
-    #         server_name: "ServerName", # required
-    #       }
-    #
     # @!attribute [rw] node_association_status_token
     #   The token returned in either the AssociateNodeResponse or the
     #   DisassociateNodeResponse.
@@ -855,11 +749,11 @@ module Aws::OpsWorksCM
     #
     #   **Possible values:**
     #
-    #   * `SUCCESS`\: The association or disassociation succeeded.
+    #   * `SUCCESS`: The association or disassociation succeeded.
     #
-    #   * `FAILED`\: The association or disassociation failed.
+    #   * `FAILED`: The association or disassociation failed.
     #
-    #   * `IN_PROGRESS`\: The association or disassociation is still in
+    #   * `IN_PROGRESS`: The association or disassociation is still in
     #     progress.
     #   @return [String]
     #
@@ -878,15 +772,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeServersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         server_name: "ServerName",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] server_name
     #   Describes the server with the specified ServerName.
     #   @return [String]
@@ -919,11 +804,23 @@ module Aws::OpsWorksCM
     #   running Chef Automate 1 must have had at least one successful
     #   maintenance run after November 1, 2019.
     #
-    #   *For Puppet Server:*
-    #   `DescribeServersResponse$Servers$EngineAttributes` contains
-    #   PUPPET\_API\_CA\_CERT. This is the PEM-encoded CA certificate that
-    #   is used by the Puppet API over TCP port number 8140. The CA
-    #   certificate is also used to sign node certificates.
+    #   *For Puppet servers:*
+    #   `DescribeServersResponse$Servers$EngineAttributes` contains the
+    #   following two responses:
+    #
+    #   * `PUPPET_API_CA_CERT`, the PEM-encoded CA certificate that is used
+    #     by the Puppet API over TCP port number 8140. The CA certificate is
+    #     also used to sign node certificates.
+    #
+    #   * `PUPPET_API_CRL`, a certificate revocation list. The certificate
+    #     revocation list is for internal maintenance purposes only. For
+    #     more information about the Puppet certificate revocation list, see
+    #     [Man Page: puppet certificate\_revocation\_list][1] in the Puppet
+    #     documentation.
+    #
+    #
+    #
+    #   [1]: https://puppet.com/docs/puppet/5.5/man/certificate_revocation_list.html
     #   @return [Array<Types::Server>]
     #
     # @!attribute [rw] next_token
@@ -939,20 +836,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateNodeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         server_name: "ServerName", # required
-    #         node_name: "NodeName", # required
-    #         engine_attributes: [
-    #           {
-    #             name: "EngineAttributeName",
-    #             value: "EngineAttributeValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] server_name
     #   The name of the server from which to disassociate the node.
     #   @return [String]
@@ -967,9 +850,9 @@ module Aws::OpsWorksCM
     #
     #   **Attributes required in a DisassociateNode request for Chef**
     #
-    #   * `CHEF_ORGANIZATION`\: The Chef organization with which the node
-    #     was associated. By default only one organization named `default`
-    #     can exist.
+    #   * `CHEF_ORGANIZATION`: The Chef organization with which the node was
+    #     associated. By default only one organization named `default` can
+    #     exist.
     #
     #   ^
     #   @return [Array<Types::EngineAttribute>]
@@ -1000,14 +883,6 @@ module Aws::OpsWorksCM
 
     # A name and value pair that is specific to the engine of the server.
     #
-    # @note When making an API call, you may pass EngineAttribute
-    #   data as a hash:
-    #
-    #       {
-    #         name: "EngineAttributeName",
-    #         value: "EngineAttributeValue",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the engine attribute.
     #   @return [String]
@@ -1025,20 +900,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ExportServerEngineAttributeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         export_attribute_name: "String", # required
-    #         server_name: "ServerName", # required
-    #         input_attributes: [
-    #           {
-    #             name: "EngineAttributeName",
-    #             value: "EngineAttributeValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] export_attribute_name
     #   The name of the export attribute. Currently, the supported export
     #   attribute is `Userdata`. This exports a user data script that
@@ -1147,15 +1008,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AWSOpsWorksCMResourceArn", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Number (ARN) of an AWS OpsWorks for Chef
     #   Automate or AWS OpsWorks for Puppet Enterprise server for which you
@@ -1241,16 +1093,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RestoreServerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         backup_id: "BackupId", # required
-    #         server_name: "ServerName", # required
-    #         instance_type: "String",
-    #         key_pair: "KeyPair",
-    #       }
-    #
     # @!attribute [rw] backup_id
     #   The ID of the backup that you want to use to restore a server.
     #   @return [String]
@@ -1283,9 +1125,17 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
+    # @!attribute [rw] server
+    #   Describes a configuration management server.
+    #   @return [Types::Server]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/opsworkscm-2016-11-01/RestoreServerResponse AWS API Documentation
     #
-    class RestoreServerResponse < Aws::EmptyStructure; end
+    class RestoreServerResponse < Struct.new(
+      :server)
+      SENSITIVE = []
+      include Aws::Structure
+    end
 
     # Describes a configuration management server.
     #
@@ -1346,11 +1196,11 @@ module Aws::OpsWorksCM
     #
     #   **Attributes returned in a createServer response for Chef**
     #
-    #   * `CHEF_AUTOMATE_PIVOTAL_KEY`\: A base64-encoded RSA private key
-    #     that is generated by AWS OpsWorks for Chef Automate. This private
-    #     key is required to access the Chef API.
+    #   * `CHEF_AUTOMATE_PIVOTAL_KEY`: A base64-encoded RSA private key that
+    #     is generated by AWS OpsWorks for Chef Automate. This private key
+    #     is required to access the Chef API.
     #
-    #   * `CHEF_STARTER_KIT`\: A base64-encoded ZIP file. The ZIP file
+    #   * `CHEF_STARTER_KIT`: A base64-encoded ZIP file. The ZIP file
     #     contains a Chef starter kit, which includes a README, a
     #     configuration file, and the required RSA private key. Save this
     #     file, unzip it, and then change to the directory where you've
@@ -1359,20 +1209,20 @@ module Aws::OpsWorksCM
     #
     #   **Attributes returned in a createServer response for Puppet**
     #
-    #   * `PUPPET_STARTER_KIT`\: A base64-encoded ZIP file. The ZIP file
+    #   * `PUPPET_STARTER_KIT`: A base64-encoded ZIP file. The ZIP file
     #     contains a Puppet starter kit, including a README and a required
     #     private key. Save this file, unzip it, and then change to the
     #     directory where you've unzipped the file contents.
     #
-    #   * `PUPPET_ADMIN_PASSWORD`\: An administrator password that you can
+    #   * `PUPPET_ADMIN_PASSWORD`: An administrator password that you can
     #     use to sign in to the Puppet Enterprise console after the server
     #     is online.
     #   @return [Array<Types::EngineAttribute>]
     #
     # @!attribute [rw] engine_version
     #   The engine version of the server. For a Chef server, the valid value
-    #   for EngineVersion is currently `2`. For a Puppet server, the valid
-    #   value is `2017`.
+    #   for EngineVersion is currently `2`. For a Puppet server, specify
+    #   either `2019` or `2017`.
     #   @return [String]
     #
     # @!attribute [rw] instance_profile_arn
@@ -1493,19 +1343,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartMaintenanceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         server_name: "ServerName", # required
-    #         engine_attributes: [
-    #           {
-    #             name: "EngineAttributeName",
-    #             value: "EngineAttributeValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] server_name
     #   The name of the server on which to run maintenance.
     #   @return [String]
@@ -1516,7 +1353,7 @@ module Aws::OpsWorksCM
     #
     #   **Attributes accepted in a StartMaintenance request for Chef**
     #
-    #   * `CHEF_MAJOR_UPGRADE`\: If a Chef Automate server is eligible for
+    #   * `CHEF_MAJOR_UPGRADE`: If a Chef Automate server is eligible for
     #     upgrade to Chef Automate 2, add this engine attribute to a
     #     `StartMaintenance` request and set the value to `true` to upgrade
     #     the server to Chef Automate 2. For more information, see [Upgrade
@@ -1556,14 +1393,6 @@ module Aws::OpsWorksCM
     # key and value. A maximum of 50 user-applied tags is allowed for
     # tag-supported AWS OpsWorks-CM resources.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
-    #
     # @!attribute [rw] key
     #   A tag key, such as `Stage` or `Name`. A tag key cannot be empty. The
     #   key can be a maximum of 127 characters, and can contain only Unicode
@@ -1587,19 +1416,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AWSOpsWorksCMResourceArn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Number (ARN) of a resource to which you want to
     #   apply tags. For example,
@@ -1640,14 +1456,6 @@ module Aws::OpsWorksCM
     #
     class TagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AWSOpsWorksCMResourceArn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Number (ARN) of a resource from which you want
     #   to remove tags. For example,
@@ -1671,15 +1479,6 @@ module Aws::OpsWorksCM
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateServerEngineAttributesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         server_name: "ServerName", # required
-    #         attribute_name: "AttributeName", # required
-    #         attribute_value: "AttributeValue",
-    #       }
-    #
     # @!attribute [rw] server_name
     #   The name of the server to update.
     #   @return [String]
@@ -1714,17 +1513,6 @@ module Aws::OpsWorksCM
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateServerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         disable_automated_backup: false,
-    #         backup_retention_count: 1,
-    #         server_name: "ServerName", # required
-    #         preferred_maintenance_window: "TimeWindowDefinition",
-    #         preferred_backup_window: "TimeWindowDefinition",
-    #       }
-    #
     # @!attribute [rw] disable_automated_backup
     #   Setting DisableAutomatedBackup to `true` disables automated or
     #   scheduled backups. Automated backups are enabled by default.

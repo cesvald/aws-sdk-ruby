@@ -52,12 +52,16 @@ module Aws::Lambda
   # * {PolicyLengthExceededException}
   # * {PreconditionFailedException}
   # * {ProvisionedConcurrencyConfigNotFoundException}
+  # * {RecursiveInvocationException}
   # * {RequestTooLargeException}
   # * {ResourceConflictException}
   # * {ResourceInUseException}
   # * {ResourceNotFoundException}
   # * {ResourceNotReadyException}
   # * {ServiceException}
+  # * {SnapStartException}
+  # * {SnapStartNotReadyException}
+  # * {SnapStartTimeoutException}
   # * {SubnetIPAddressLimitReachedException}
   # * {TooManyRequestsException}
   # * {UnsupportedMediaTypeException}
@@ -573,6 +577,26 @@ module Aws::Lambda
       end
     end
 
+    class RecursiveInvocationException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Lambda::Types::RecursiveInvocationException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def type
+        @data[:type]
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class RequestTooLargeException < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -678,6 +702,66 @@ module Aws::Lambda
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::Lambda::Types::ServiceException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def type
+        @data[:type]
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class SnapStartException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Lambda::Types::SnapStartException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def type
+        @data[:type]
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class SnapStartNotReadyException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Lambda::Types::SnapStartNotReadyException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def type
+        @data[:type]
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class SnapStartTimeoutException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::Lambda::Types::SnapStartTimeoutException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end

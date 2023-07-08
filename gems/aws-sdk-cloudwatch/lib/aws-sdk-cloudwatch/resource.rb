@@ -117,7 +117,9 @@ module Aws::CloudWatch
     # @return [Alarm::Collection]
     def alarms(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.describe_alarms(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_alarms(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.metric_alarms.each do |m|
@@ -215,7 +217,9 @@ module Aws::CloudWatch
     # @return [CompositeAlarm::Collection]
     def composite_alarms(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.describe_alarms(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_alarms(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.composite_alarms.each do |c|
@@ -254,6 +258,8 @@ module Aws::CloudWatch
     #       },
     #     ],
     #     recently_active: "PT3H", # accepts PT3H
+    #     include_linked_accounts: false,
+    #     owning_account: "AccountId",
     #   })
     # @param [Hash] options ({})
     # @option options [String] :namespace
@@ -274,10 +280,22 @@ module Aws::CloudWatch
     #   specify. There is a low probability that the returned results include
     #   metrics with last published data as much as 40 minutes more than the
     #   specified time interval.
+    # @option options [Boolean] :include_linked_accounts
+    #   If you are using this operation in a monitoring account, specify
+    #   `true` to include metrics from source accounts in the returned data.
+    #
+    #   The default is `false`.
+    # @option options [String] :owning_account
+    #   When you use this operation in a monitoring account, use this field to
+    #   return metrics only from one source account. To do so, specify that
+    #   source account ID in this field, and also specify `true` for
+    #   `IncludeLinkedAccounts`.
     # @return [Metric::Collection]
     def metrics(options = {})
       batches = Enumerator.new do |y|
-        resp = @client.list_metrics(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_metrics(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.metrics.each do |m|

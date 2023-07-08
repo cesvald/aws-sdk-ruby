@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:resourcegroups)
@@ -73,8 +77,13 @@ module Aws::ResourceGroups
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::ResourceGroups::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::ResourceGroups
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::ResourceGroups
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::ResourceGroups
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::ResourceGroups
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::ResourceGroups
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::ResourceGroups::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::ResourceGroups::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::ResourceGroups
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::ResourceGroups
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -328,11 +385,12 @@ module Aws::ResourceGroups
     # @!group API Operations
 
     # Creates a resource group with the specified name and description. You
-    # can optionally include a resource query, or a service configuration.
-    # For more information about constructing a resource query, see [Create
-    # a tag-based group in Resource Groups][1]. For more information about
-    # service configurations, see [Service configurations for resource
-    # groups][2].
+    # can optionally include either a resource query or a service
+    # configuration. For more information about constructing a resource
+    # query, see [Build queries and groups in Resource Groups][1] in the
+    # *Resource Groups User Guide*. For more information about
+    # service-linked groups and service configurations, see [Service
+    # configurations for Resource Groups][2].
     #
     # **Minimum permissions**
     #
@@ -344,7 +402,7 @@ module Aws::ResourceGroups
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/ARG/latest/userguide/gettingstarted-query.html#gettingstarted-query-cli-tag
+    # [1]: https://docs.aws.amazon.com/ARG/latest/userguide/getting_started-query.html
     # [2]: https://docs.aws.amazon.com/ARG/latest/APIReference/about-slg.html
     #
     # @option params [required, String] :name
@@ -353,16 +411,16 @@ module Aws::ResourceGroups
     #   create it. A resource group name can consist of letters, numbers,
     #   hyphens, periods, and underscores. The name cannot start with `AWS` or
     #   `aws`; these are reserved. A resource group name must be unique within
-    #   each AWS Region in your AWS account.
+    #   each Amazon Web Services Region in your Amazon Web Services account.
     #
     # @option params [String] :description
     #   The description of the resource group. Descriptions can consist of
     #   letters, numbers, hyphens, underscores, periods, and spaces.
     #
     # @option params [Types::ResourceQuery] :resource_query
-    #   The resource query that determines which AWS resources are members of
-    #   this group. For more information about resource queries, see [Create a
-    #   tag-based group in Resource Groups][1].
+    #   The resource query that determines which Amazon Web Services resources
+    #   are members of this group. For more information about resource
+    #   queries, see [Create a tag-based group in Resource Groups][1].
     #
     #   <note markdown="1"> A resource group can contain either a `ResourceQuery` or a
     #   `Configuration`, but not both.
@@ -377,11 +435,12 @@ module Aws::ResourceGroups
     #   The tags to add to the group. A tag is key-value pair string.
     #
     # @option params [Array<Types::GroupConfigurationItem>] :configuration
-    #   A configuration associates the resource group with an AWS service and
-    #   specifies how the service can interact with the resources in the
-    #   group. A configuration is an array of GroupConfigurationItem elements.
-    #   For details about the syntax of service configurations, see [Service
-    #   configurations for resource groups][1].
+    #   A configuration associates the resource group with an Amazon Web
+    #   Services service and specifies how the service can interact with the
+    #   resources in the group. A configuration is an array of
+    #   GroupConfigurationItem elements. For details about the syntax of
+    #   service configurations, see [Service configurations for Resource
+    #   Groups][1].
     #
     #   <note markdown="1"> A resource group can contain either a `Configuration` or a
     #   `ResourceQuery`, but not both.
@@ -501,6 +560,27 @@ module Aws::ResourceGroups
       req.send_request(options)
     end
 
+    # Retrieves the current status of optional features in Resource Groups.
+    #
+    # @return [Types::GetAccountSettingsOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetAccountSettingsOutput#account_settings #account_settings} => Types::AccountSettings
+    #
+    # @example Response structure
+    #
+    #   resp.account_settings.group_lifecycle_events_desired_status #=> String, one of "ACTIVE", "INACTIVE"
+    #   resp.account_settings.group_lifecycle_events_status #=> String, one of "ACTIVE", "INACTIVE", "IN_PROGRESS", "ERROR"
+    #   resp.account_settings.group_lifecycle_events_status_message #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/resource-groups-2017-11-27/GetAccountSettings AWS API Documentation
+    #
+    # @overload get_account_settings(params = {})
+    # @param [Hash] params ({})
+    def get_account_settings(params = {}, options = {})
+      req = build_request(:get_account_settings, params)
+      req.send_request(options)
+    end
+
     # Returns information about a specified resource group.
     #
     # **Minimum permissions**
@@ -543,9 +623,9 @@ module Aws::ResourceGroups
       req.send_request(options)
     end
 
-    # Returns the service configuration associated with the specified
+    # Retrieves the service configuration associated with the specified
     # resource group. For details about the service configuration syntax,
-    # see [Service configurations for resource groups][1].
+    # see [Service configurations for Resource Groups][1].
     #
     # **Minimum permissions**
     #
@@ -560,7 +640,8 @@ module Aws::ResourceGroups
     # [1]: https://docs.aws.amazon.com/ARG/latest/APIReference/about-slg.html
     #
     # @option params [String] :group
-    #   The name or the ARN of the resource group.
+    #   The name or the ARN of the resource group for which you want to
+    #   retrive the service configuration.
     #
     # @return [Types::GetGroupConfigurationOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -688,6 +769,16 @@ module Aws::ResourceGroups
 
     # Adds the specified resources to the specified group.
     #
+    # You can use this operation with only resource groups that are
+    # configured with the following types:
+    #
+    #  * `AWS::EC2::HostManagement`
+    #
+    # * `AWS::EC2::CapacityReservationPool`
+    #
+    #  Other resource group type and resource types aren't currently
+    # supported by this operation.
+    #
     # **Minimum permissions**
     #
     # To run this command, you must have the following permissions:
@@ -700,7 +791,7 @@ module Aws::ResourceGroups
     #   The name or the ARN of the resource group to add resources to.
     #
     # @option params [required, Array<String>] :resource_arns
-    #   The list of ARNs for resources to be added to the group.
+    #   The list of ARNs of the resources to be added to the group.
     #
     # @return [Types::GroupResourcesOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -744,7 +835,11 @@ module Aws::ResourceGroups
     #
     # * `resource-groups:ListGroupResources`
     #
-    # ^
+    # * `cloudformation:DescribeStacks`
+    #
+    # * `cloudformation:ListStackResources`
+    #
+    # * `tag:GetResources`
     #
     # @option params [String] :group_name
     #   <i> <b>Deprecated - don't use this parameter. Use the
@@ -765,12 +860,12 @@ module Aws::ResourceGroups
     #   ^
     #
     #   When you specify a `resource-type` filter for `ListGroupResources`,
-    #   AWS Resource Groups validates your filter resource types against the
-    #   types that are defined in the query associated with the group. For
-    #   example, if a group contains only S3 buckets because its query
-    #   specifies only that resource type, but your `resource-type` filter
-    #   includes EC2 instances, AWS Resource Groups does not filter for EC2
-    #   instances. In this case, a `ListGroupResources` request returns a
+    #   Resource Groups validates your filter resource types against the types
+    #   that are defined in the query associated with the group. For example,
+    #   if a group contains only S3 buckets because its query specifies only
+    #   that resource type, but your `resource-type` filter includes EC2
+    #   instances, AWS Resource Groups does not filter for EC2 instances. In
+    #   this case, a `ListGroupResources` request returns a
     #   `BadRequestException` error with a message similar to the following:
     #
     #   `The resource types specified as filters in the request are not
@@ -780,8 +875,8 @@ module Aws::ResourceGroups
     #   because they are not part of the query associated with the group. This
     #   validation doesn't occur when the group query specifies
     #   `AWS::AllSupported`, because a group based on such a query can contain
-    #   any of the allowed resource types for the query type (tag-based or AWS
-    #   CloudFormation stack-based queries).
+    #   any of the allowed resource types for the query type (tag-based or
+    #   Amazon CloudFront stack-based queries).
     #
     # @option params [Integer] :max_results
     #   The total number of results that you want included on each page of the
@@ -837,7 +932,7 @@ module Aws::ResourceGroups
     #   resp.resource_identifiers[0].resource_type #=> String
     #   resp.next_token #=> String
     #   resp.query_errors #=> Array
-    #   resp.query_errors[0].error_code #=> String, one of "CLOUDFORMATION_STACK_INACTIVE", "CLOUDFORMATION_STACK_NOT_EXISTING"
+    #   resp.query_errors[0].error_code #=> String, one of "CLOUDFORMATION_STACK_INACTIVE", "CLOUDFORMATION_STACK_NOT_EXISTING", "CLOUDFORMATION_STACK_UNASSUMABLE_ROLE"
     #   resp.query_errors[0].message #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/resource-groups-2017-11-27/ListGroupResources AWS API Documentation
@@ -849,7 +944,7 @@ module Aws::ResourceGroups
       req.send_request(options)
     end
 
-    # Returns a list of existing resource groups in your account.
+    # Returns a list of existing Resource Groups in your account.
     #
     # **Minimum permissions**
     #
@@ -872,9 +967,9 @@ module Aws::ResourceGroups
     #     groups that have the specified configuration types attached. The
     #     current supported values are:
     #
-    #     * `AWS:EC2::CapacityReservationPool`
+    #     * `AWS::EC2::CapacityReservationPool`
     #
-    #     * `AWS:EC2::HostManagement`
+    #     * `AWS::EC2::HostManagement`
     #
     # @option params [Integer] :max_results
     #   The total number of results that you want included on each page of the
@@ -954,12 +1049,13 @@ module Aws::ResourceGroups
     #
     # @option params [Array<Types::GroupConfigurationItem>] :configuration
     #   The new configuration to associate with the specified group. A
-    #   configuration associates the resource group with an AWS service and
-    #   specifies how the service can interact with the resources in the
-    #   group. A configuration is an array of GroupConfigurationItem elements.
+    #   configuration associates the resource group with an Amazon Web
+    #   Services service and specifies how the service can interact with the
+    #   resources in the group. A configuration is an array of
+    #   GroupConfigurationItem elements.
     #
     #   For information about the syntax of a service configuration, see
-    #   [Service configurations for resource groups][1].
+    #   [Service configurations for Resource Groups][1].
     #
     #   <note markdown="1"> A resource group can contain either a `Configuration` or a
     #   `ResourceQuery`, but not both.
@@ -998,9 +1094,9 @@ module Aws::ResourceGroups
       req.send_request(options)
     end
 
-    # Returns a list of AWS resource identifiers that matches the specified
-    # query. The query uses the same format as a resource query in a
-    # CreateGroup or UpdateGroupQuery operation.
+    # Returns a list of Amazon Web Services resource identifiers that
+    # matches the specified query. The query uses the same format as a
+    # resource query in a CreateGroup or UpdateGroupQuery operation.
     #
     # **Minimum permissions**
     #
@@ -1008,7 +1104,11 @@ module Aws::ResourceGroups
     #
     # * `resource-groups:SearchResources`
     #
-    # ^
+    # * `cloudformation:DescribeStacks`
+    #
+    # * `cloudformation:ListStackResources`
+    #
+    # * `tag:GetResources`
     #
     # @option params [required, Types::ResourceQuery] :resource_query
     #   The search query, using the same formats that are supported for
@@ -1059,7 +1159,7 @@ module Aws::ResourceGroups
     #   resp.resource_identifiers[0].resource_type #=> String
     #   resp.next_token #=> String
     #   resp.query_errors #=> Array
-    #   resp.query_errors[0].error_code #=> String, one of "CLOUDFORMATION_STACK_INACTIVE", "CLOUDFORMATION_STACK_NOT_EXISTING"
+    #   resp.query_errors[0].error_code #=> String, one of "CLOUDFORMATION_STACK_INACTIVE", "CLOUDFORMATION_STACK_NOT_EXISTING", "CLOUDFORMATION_STACK_UNASSUMABLE_ROLE"
     #   resp.query_errors[0].message #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/resource-groups-2017-11-27/SearchResources AWS API Documentation
@@ -1124,7 +1224,11 @@ module Aws::ResourceGroups
       req.send_request(options)
     end
 
-    # Removes the specified resources from the specified group.
+    # Removes the specified resources from the specified group. This
+    # operation works only with static groups that you populated using the
+    # GroupResources operation. It doesn't work with any resource groups
+    # that are automatically populated by tag-based or CloudFormation
+    # stack-based queries.
     #
     # **Minimum permissions**
     #
@@ -1219,6 +1323,46 @@ module Aws::ResourceGroups
       req.send_request(options)
     end
 
+    # Turns on or turns off optional features in Resource Groups.
+    #
+    # The preceding example shows that the request to turn on group
+    # lifecycle events is `IN_PROGRESS`. You can call the GetAccountSettings
+    # operation to check for completion by looking for
+    # `GroupLifecycleEventsStatus` to change to `ACTIVE`.
+    #
+    # @option params [String] :group_lifecycle_events_desired_status
+    #   Specifies whether you want to turn [group lifecycle events][1] on or
+    #   off.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/ARG/latest/userguide/monitor-groups.html
+    #
+    # @return [Types::UpdateAccountSettingsOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateAccountSettingsOutput#account_settings #account_settings} => Types::AccountSettings
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_account_settings({
+    #     group_lifecycle_events_desired_status: "ACTIVE", # accepts ACTIVE, INACTIVE
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.account_settings.group_lifecycle_events_desired_status #=> String, one of "ACTIVE", "INACTIVE"
+    #   resp.account_settings.group_lifecycle_events_status #=> String, one of "ACTIVE", "INACTIVE", "IN_PROGRESS", "ERROR"
+    #   resp.account_settings.group_lifecycle_events_status_message #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/resource-groups-2017-11-27/UpdateAccountSettings AWS API Documentation
+    #
+    # @overload update_account_settings(params = {})
+    # @param [Hash] params ({})
+    def update_account_settings(params = {}, options = {})
+      req = build_request(:update_account_settings, params)
+      req.send_request(options)
+    end
+
     # Updates the description for an existing group. You cannot update the
     # name of a resource group.
     #
@@ -1291,8 +1435,8 @@ module Aws::ResourceGroups
     #   The name or the ARN of the resource group to query.
     #
     # @option params [required, Types::ResourceQuery] :resource_query
-    #   The resource query to determine which AWS resources are members of
-    #   this resource group.
+    #   The resource query to determine which Amazon Web Services resources
+    #   are members of this resource group.
     #
     #   <note markdown="1"> A resource group can contain either a `Configuration` or a
     #   `ResourceQuery`, but not both.
@@ -1342,7 +1486,7 @@ module Aws::ResourceGroups
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-resourcegroups'
-      context[:gem_version] = '1.35.0'
+      context[:gem_version] = '1.52.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

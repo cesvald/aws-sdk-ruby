@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 require 'aws-sdk-machinelearning/plugins/predict_endpoint.rb'
 
@@ -74,9 +78,14 @@ module Aws::MachineLearning
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
     add_plugin(Aws::MachineLearning::Plugins::PredictEndpoint)
+    add_plugin(Aws::MachineLearning::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -121,7 +130,9 @@ module Aws::MachineLearning
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -175,9 +186,17 @@ module Aws::MachineLearning
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -218,6 +237,11 @@ module Aws::MachineLearning
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -264,6 +288,11 @@ module Aws::MachineLearning
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -287,9 +316,34 @@ module Aws::MachineLearning
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::MachineLearning::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::MachineLearning::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -298,7 +352,7 @@ module Aws::MachineLearning
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -313,6 +367,9 @@ module Aws::MachineLearning
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -486,7 +543,7 @@ module Aws::MachineLearning
     #   A user-supplied name or description of the `DataSource`.
     #
     # @option params [required, Types::RDSDataSpec] :rds_data
-    #   The data specification of an Amazon RDS `DataSource`\:
+    #   The data specification of an Amazon RDS `DataSource`:
     #
     #   * DatabaseInformation -
     #
@@ -639,7 +696,7 @@ module Aws::MachineLearning
     #   A user-supplied name or description of the `DataSource`.
     #
     # @option params [required, Types::RedshiftDataSpec] :data_spec
-    #   The data specification of an Amazon Redshift `DataSource`\:
+    #   The data specification of an Amazon Redshift `DataSource`:
     #
     #   * DatabaseInformation -
     #
@@ -768,7 +825,7 @@ module Aws::MachineLearning
     #   A user-supplied name or description of the `DataSource`.
     #
     # @option params [required, Types::S3DataSpec] :data_spec
-    #   The data specification of a `DataSource`\:
+    #   The data specification of a `DataSource`:
     #
     #   * DataLocationS3 - The Amazon S3 location of the observation data.
     #
@@ -828,7 +885,7 @@ module Aws::MachineLearning
     # provides a summary so that you know how effective the `MLModel`
     # functions on the test data. Evaluation generates a relevant
     # performance metric, such as BinaryAUC, RegressionRMSE or
-    # MulticlassAvgFScore based on the corresponding `MLModelType`\:
+    # MulticlassAvgFScore based on the corresponding `MLModelType`:
     # `BINARY`, `REGRESSION` or `MULTICLASS`.
     #
     # `CreateEvaluation` is an asynchronous operation. In response to
@@ -1255,7 +1312,7 @@ module Aws::MachineLearning
     #
     # @option params [String] :filter_variable
     #   Use one of the following variables to filter a list of
-    #   `BatchPrediction`\:
+    #   `BatchPrediction`:
     #
     #   * `CreatedAt` - Sets the search criteria to the `BatchPrediction`
     #     creation date.
@@ -1314,7 +1371,7 @@ module Aws::MachineLearning
     #   For example, a `Batch Prediction` operation could have the `Name`
     #   `2014-09-09-HolidayGiftMailer`. To search for this `BatchPrediction`,
     #   select `Name` for the `FilterVariable` and any of the following
-    #   strings for the `Prefix`\:
+    #   strings for the `Prefix`:
     #
     #   * 2014-09
     #
@@ -1399,7 +1456,7 @@ module Aws::MachineLearning
     # request.
     #
     # @option params [String] :filter_variable
-    #   Use one of the following variables to filter a list of `DataSource`\:
+    #   Use one of the following variables to filter a list of `DataSource`:
     #
     #   * `CreatedAt` - Sets the search criteria to `DataSource` creation
     #     dates.
@@ -1452,7 +1509,7 @@ module Aws::MachineLearning
     #   For example, a `DataSource` could have the `Name`
     #   `2014-09-09-HolidayGiftMailer`. To search for this `DataSource`,
     #   select `Name` for the `FilterVariable` and any of the following
-    #   strings for the `Prefix`\:
+    #   strings for the `Prefix`:
     #
     #   * 2014-09
     #
@@ -1607,7 +1664,7 @@ module Aws::MachineLearning
     #   For example, an `Evaluation` could have the `Name`
     #   `2014-09-09-HolidayGiftMailer`. To search for this `Evaluation`,
     #   select `Name` for the `FilterVariable` and any of the following
-    #   strings for the `Prefix`\:
+    #   strings for the `Prefix`:
     #
     #   * 2014-09
     #
@@ -1690,7 +1747,7 @@ module Aws::MachineLearning
     # request.
     #
     # @option params [String] :filter_variable
-    #   Use one of the following variables to filter a list of `MLModel`\:
+    #   Use one of the following variables to filter a list of `MLModel`:
     #
     #   * `CreatedAt` - Sets the search criteria to `MLModel` creation date.
     #
@@ -1754,7 +1811,7 @@ module Aws::MachineLearning
     #   For example, an `MLModel` could have the `Name`
     #   `2014-09-09-HolidayGiftMailer`. To search for this `MLModel`, select
     #   `Name` for the `FilterVariable` and any of the following strings for
-    #   the `Prefix`\:
+    #   the `Prefix`:
     #
     #   * 2014-09
     #
@@ -2366,7 +2423,7 @@ module Aws::MachineLearning
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-machinelearning'
-      context[:gem_version] = '1.28.0'
+      context[:gem_version] = '1.43.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

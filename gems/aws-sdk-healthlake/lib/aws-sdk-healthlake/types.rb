@@ -38,18 +38,6 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateFHIRDatastoreRequest
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_name: "DatastoreName",
-    #         datastore_type_version: "R4", # required, accepts R4
-    #         preload_data_config: {
-    #           preload_data_type: "SYNTHEA", # required, accepts SYNTHEA
-    #         },
-    #         client_token: "ClientTokenString",
-    #       }
-    #
     # @!attribute [rw] datastore_name
     #   The user generated name for the Data Store.
     #   @return [String]
@@ -58,6 +46,11 @@ module Aws::HealthLake
     #   The FHIR version of the Data Store. The only supported version is
     #   R4.
     #   @return [String]
+    #
+    # @!attribute [rw] sse_configuration
+    #   The server-side encryption key configuration for a customer provided
+    #   encryption key specified for creating a Data Store.
+    #   @return [Types::SseConfiguration]
     #
     # @!attribute [rw] preload_data_config
     #   Optional parameter to preload data upon creation of the Data Store.
@@ -72,13 +65,25 @@ module Aws::HealthLake
     #   not need to pass this option.
     #   @return [String]
     #
+    # @!attribute [rw] tags
+    #   Resource tags that are applied to a Data Store when it is created.
+    #   @return [Array<Types::Tag>]
+    #
+    # @!attribute [rw] identity_provider_configuration
+    #   The configuration of the identity provider that you want to use for
+    #   your Data Store.
+    #   @return [Types::IdentityProviderConfiguration]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/CreateFHIRDatastoreRequest AWS API Documentation
     #
     class CreateFHIRDatastoreRequest < Struct.new(
       :datastore_name,
       :datastore_type_version,
+      :sse_configuration,
       :preload_data_config,
-      :client_token)
+      :client_token,
+      :tags,
+      :identity_provider_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -89,9 +94,9 @@ module Aws::HealthLake
     #   @return [String]
     #
     # @!attribute [rw] datastore_arn
-    #   The datastore ARN is generated during the creation of the Data Store
-    #   and can be found in the output from the initial Data Store creation
-    #   call.
+    #   The Data Store ARN is generated during the creation of the Data
+    #   Store and can be found in the output from the initial Data Store
+    #   creation call.
     #   @return [String]
     #
     # @!attribute [rw] datastore_status
@@ -100,8 +105,7 @@ module Aws::HealthLake
     #   @return [String]
     #
     # @!attribute [rw] datastore_endpoint
-    #   The AWS endpoint for the created Data Store. For preview, only
-    #   US-east-1 endpoints are supported.
+    #   The AWS endpoint for the created Data Store.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/CreateFHIRDatastoreResponse AWS API Documentation
@@ -116,16 +120,6 @@ module Aws::HealthLake
     end
 
     # The filters applied to Data Store query.
-    #
-    # @note When making an API call, you may pass DatastoreFilter
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_name: "DatastoreName",
-    #         datastore_status: "CREATING", # accepts CREATING, ACTIVE, DELETING, DELETED
-    #         created_before: Time.now,
-    #         created_after: Time.now,
-    #       }
     #
     # @!attribute [rw] datastore_name
     #   Allows the user to filter Data Store results by name.
@@ -158,7 +152,7 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
-    # Displays the properties of the Data Store, including the ID, Arn,
+    # Displays the properties of the Data Store, including the ID, ARN,
     # name, and the status of the Data Store.
     #
     # @!attribute [rw] datastore_id
@@ -191,10 +185,20 @@ module Aws::HealthLake
     #   own endpoint with Data Store ID in the endpoint URL.
     #   @return [String]
     #
+    # @!attribute [rw] sse_configuration
+    #   The server-side encryption key configuration for a customer provided
+    #   encryption key (CMK).
+    #   @return [Types::SseConfiguration]
+    #
     # @!attribute [rw] preload_data_config
     #   The preloaded data configuration for the Data Store. Only data
     #   preloaded from Synthea is supported.
     #   @return [Types::PreloadDataConfig]
+    #
+    # @!attribute [rw] identity_provider_configuration
+    #   The identity provider that you selected when you created the Data
+    #   Store.
+    #   @return [Types::IdentityProviderConfiguration]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/DatastoreProperties AWS API Documentation
     #
@@ -206,18 +210,13 @@ module Aws::HealthLake
       :created_at,
       :datastore_type_version,
       :datastore_endpoint,
-      :preload_data_config)
+      :sse_configuration,
+      :preload_data_config,
+      :identity_provider_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFHIRDatastoreRequest
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_id: "DatastoreId",
-    #       }
-    #
     # @!attribute [rw] datastore_id
     #   The AWS-generated ID for the Data Store to be deleted.
     #   @return [String]
@@ -260,16 +259,8 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeFHIRDatastoreRequest
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_id: "DatastoreId",
-    #       }
-    #
     # @!attribute [rw] datastore_id
-    #   The AWS-generated Data Store id. This is part of the
-    #   ‘CreateFHIRDatastore’ output.
+    #   The AWS-generated Data Store ID.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/DescribeFHIRDatastoreRequest AWS API Documentation
@@ -294,14 +285,6 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeFHIRExportJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_id: "DatastoreId", # required
-    #         job_id: "JobId", # required
-    #       }
-    #
     # @!attribute [rw] datastore_id
     #   The AWS generated ID for the Data Store from which files are being
     #   exported from for an export job.
@@ -333,14 +316,6 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeFHIRImportJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         datastore_id: "DatastoreId", # required
-    #         job_id: "JobId", # required
-    #       }
-    #
     # @!attribute [rw] datastore_id
     #   The AWS-generated ID of the Data Store.
     #   @return [String]
@@ -430,6 +405,65 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
+    # The identity provider configuration that you gave when the Data Store
+    # was created.
+    #
+    # @!attribute [rw] authorization_strategy
+    #   The authorization strategy that you selected when you created the
+    #   Data Store.
+    #   @return [String]
+    #
+    # @!attribute [rw] fine_grained_authorization_enabled
+    #   If you enabled fine-grained authorization when you created the Data
+    #   Store.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] metadata
+    #   The JSON metadata elements that you want to use in your identity
+    #   provider configuration. Required elements are listed based on the
+    #   launch specification of the SMART application. For more information
+    #   on all possible elements, see [Metadata][1] in SMART's App Launch
+    #   specification.
+    #
+    #   `authorization_endpoint`: The URL to the OAuth2 authorization
+    #   endpoint.
+    #
+    #   `grant_types_supported`: An array of grant types that are supported
+    #   at the token endpoint. You must provide at least one grant type
+    #   option. Valid options are `authorization_code` and
+    #   `client_credentials`.
+    #
+    #   `token_endpoint`: The URL to the OAuth2 token endpoint.
+    #
+    #   `capabilities`: An array of strings of the SMART capabilities that
+    #   the authorization server supports.
+    #
+    #   `code_challenge_methods_supported`: An array of strings of supported
+    #   PKCE code challenge methods. You must include the `S256` method in
+    #   the array of PKCE code challenge methods.
+    #
+    #
+    #
+    #   [1]: https://build.fhir.org/ig/HL7/smart-app-launch/conformance.html#metadata
+    #   @return [String]
+    #
+    # @!attribute [rw] idp_lambda_arn
+    #   The Amazon Resource Name (ARN) of the Lambda function that you want
+    #   to use to decode the access token created by the authorization
+    #   server.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/IdentityProviderConfiguration AWS API Documentation
+    #
+    class IdentityProviderConfiguration < Struct.new(
+      :authorization_strategy,
+      :fine_grained_authorization_enabled,
+      :metadata,
+      :idp_lambda_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Displays the properties of the import job, including the ID, Arn,
     # Name, and the status of the Data Store.
     #
@@ -443,7 +477,7 @@ module Aws::HealthLake
     #
     # @!attribute [rw] job_status
     #   The job status for an Import job. Possible statuses are SUBMITTED,
-    #   IN\_PROGRESS, COMPLETED, FAILED.
+    #   IN\_PROGRESS, COMPLETED\_WITH\_ERRORS, COMPLETED, FAILED.
     #   @return [String]
     #
     # @!attribute [rw] submit_time
@@ -462,6 +496,11 @@ module Aws::HealthLake
     #   The input data configuration that was supplied when the Import job
     #   was created.
     #   @return [Types::InputDataConfig]
+    #
+    # @!attribute [rw] job_output_data_config
+    #   The output data configuration that was supplied when the export job
+    #   was created.
+    #   @return [Types::OutputDataConfig]
     #
     # @!attribute [rw] data_access_role_arn
     #   The Amazon Resource Name (ARN) that gives Amazon HealthLake access
@@ -483,6 +522,7 @@ module Aws::HealthLake
       :end_time,
       :datastore_id,
       :input_data_config,
+      :job_output_data_config,
       :data_access_role_arn,
       :message)
       SENSITIVE = []
@@ -491,12 +531,9 @@ module Aws::HealthLake
 
     # The input properties for an import job.
     #
-    # @note When making an API call, you may pass InputDataConfig
-    #   data as a hash:
+    # @note InputDataConfig is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         s3_uri: "S3Uri",
-    #       }
+    # @note InputDataConfig is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of InputDataConfig corresponding to the set member.
     #
     # @!attribute [rw] s3_uri
     #   The S3Uri is the user specified S3 location of the FHIR data to be
@@ -506,9 +543,14 @@ module Aws::HealthLake
     # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/InputDataConfig AWS API Documentation
     #
     class InputDataConfig < Struct.new(
-      :s3_uri)
+      :s3_uri,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class S3Uri < InputDataConfig; end
+      class Unknown < InputDataConfig; end
     end
 
     # Unknown error occurs in the service.
@@ -524,20 +566,29 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFHIRDatastoresRequest
-    #   data as a hash:
+    # The customer-managed-key(CMK) used when creating a Data Store. If a
+    # customer owned key is not specified, an AWS owned key will be used for
+    # encryption.
     #
-    #       {
-    #         filter: {
-    #           datastore_name: "DatastoreName",
-    #           datastore_status: "CREATING", # accepts CREATING, ACTIVE, DELETING, DELETED
-    #           created_before: Time.now,
-    #           created_after: Time.now,
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] cmk_type
+    #   The type of customer-managed-key(CMK) used for encyrption. The two
+    #   types of supported CMKs are customer owned CMKs and AWS owned CMKs.
+    #   @return [String]
     #
+    # @!attribute [rw] kms_key_id
+    #   The KMS encryption key id/alias used to encrypt the Data Store
+    #   contents at rest.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/KmsEncryptionConfig AWS API Documentation
+    #
+    class KmsEncryptionConfig < Struct.new(
+      :cmk_type,
+      :kms_key_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] filter
     #   Lists all filters associated with a FHIR Data Store request.
     #   @return [Types::DatastoreFilter]
@@ -579,38 +630,194 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
-    # The output data configuration that was supplied when the export job
-    # was created.
-    #
-    # @note When making an API call, you may pass OutputDataConfig
-    #   data as a hash:
-    #
-    #       {
-    #         s3_uri: "S3Uri",
-    #       }
-    #
-    # @!attribute [rw] s3_uri
-    #   The S3Uri is the user specified S3 location to which data will be
-    #   exported from a FHIR Data Store.
+    # @!attribute [rw] datastore_id
+    #   This parameter limits the response to the export job with the
+    #   specified Data Store ID.
     #   @return [String]
     #
-    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/OutputDataConfig AWS API Documentation
+    # @!attribute [rw] next_token
+    #   A pagination token used to identify the next page of results to
+    #   return for a ListFHIRExportJobs query.
+    #   @return [String]
     #
-    class OutputDataConfig < Struct.new(
-      :s3_uri)
+    # @!attribute [rw] max_results
+    #   This parameter limits the number of results returned for a
+    #   ListFHIRExportJobs to a maximum quantity specified by the user.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] job_name
+    #   This parameter limits the response to the export job with the
+    #   specified job name.
+    #   @return [String]
+    #
+    # @!attribute [rw] job_status
+    #   This parameter limits the response to the export jobs with the
+    #   specified job status.
+    #   @return [String]
+    #
+    # @!attribute [rw] submitted_before
+    #   This parameter limits the response to FHIR export jobs submitted
+    #   before a user specified date.
+    #   @return [Time]
+    #
+    # @!attribute [rw] submitted_after
+    #   This parameter limits the response to FHIR export jobs submitted
+    #   after a user specified date.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListFHIRExportJobsRequest AWS API Documentation
+    #
+    class ListFHIRExportJobsRequest < Struct.new(
+      :datastore_id,
+      :next_token,
+      :max_results,
+      :job_name,
+      :job_status,
+      :submitted_before,
+      :submitted_after)
       SENSITIVE = []
       include Aws::Structure
     end
 
+    # @!attribute [rw] export_job_properties_list
+    #   The properties of listed FHIR export jobs, including the ID, ARN,
+    #   name, and the status of the job.
+    #   @return [Array<Types::ExportJobProperties>]
+    #
+    # @!attribute [rw] next_token
+    #   A pagination token used to identify the next page of results to
+    #   return for a ListFHIRExportJobs query.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListFHIRExportJobsResponse AWS API Documentation
+    #
+    class ListFHIRExportJobsResponse < Struct.new(
+      :export_job_properties_list,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] datastore_id
+    #   This parameter limits the response to the import job with the
+    #   specified Data Store ID.
+    #   @return [String]
+    #
+    # @!attribute [rw] next_token
+    #   A pagination token used to identify the next page of results to
+    #   return for a ListFHIRImportJobs query.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_results
+    #   This parameter limits the number of results returned for a
+    #   ListFHIRImportJobs to a maximum quantity specified by the user.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] job_name
+    #   This parameter limits the response to the import job with the
+    #   specified job name.
+    #   @return [String]
+    #
+    # @!attribute [rw] job_status
+    #   This parameter limits the response to the import job with the
+    #   specified job status.
+    #   @return [String]
+    #
+    # @!attribute [rw] submitted_before
+    #   This parameter limits the response to FHIR import jobs submitted
+    #   before a user specified date.
+    #   @return [Time]
+    #
+    # @!attribute [rw] submitted_after
+    #   This parameter limits the response to FHIR import jobs submitted
+    #   after a user specified date.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListFHIRImportJobsRequest AWS API Documentation
+    #
+    class ListFHIRImportJobsRequest < Struct.new(
+      :datastore_id,
+      :next_token,
+      :max_results,
+      :job_name,
+      :job_status,
+      :submitted_before,
+      :submitted_after)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] import_job_properties_list
+    #   The properties of a listed FHIR import jobs, including the ID, ARN,
+    #   name, and the status of the job.
+    #   @return [Array<Types::ImportJobProperties>]
+    #
+    # @!attribute [rw] next_token
+    #   A pagination token used to identify the next page of results to
+    #   return for a ListFHIRImportJobs query.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListFHIRImportJobsResponse AWS API Documentation
+    #
+    class ListFHIRImportJobsResponse < Struct.new(
+      :import_job_properties_list,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_arn
+    #   The Amazon Resource Name(ARN) of the Data Store for which tags are
+    #   being added.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListTagsForResourceRequest AWS API Documentation
+    #
+    class ListTagsForResourceRequest < Struct.new(
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] tags
+    #   Returns a list of tags associated with a Data Store.
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListTagsForResourceResponse AWS API Documentation
+    #
+    class ListTagsForResourceResponse < Struct.new(
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The output data configuration that was supplied when the export job
+    # was created.
+    #
+    # @note OutputDataConfig is a union - when making an API calls you must set exactly one of the members.
+    #
+    # @note OutputDataConfig is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of OutputDataConfig corresponding to the set member.
+    #
+    # @!attribute [rw] s3_configuration
+    #   The output data configuration that was supplied when the export job
+    #   was created.
+    #   @return [Types::S3Configuration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/OutputDataConfig AWS API Documentation
+    #
+    class OutputDataConfig < Struct.new(
+      :s3_configuration,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class S3Configuration < OutputDataConfig; end
+      class Unknown < OutputDataConfig; end
+    end
+
     # The input properties for the preloaded Data Store. Only data preloaded
     # from Synthea is supported.
-    #
-    # @note When making an API call, you may pass PreloadDataConfig
-    #   data as a hash:
-    #
-    #       {
-    #         preload_data_type: "SYNTHEA", # required, accepts SYNTHEA
-    #       }
     #
     # @!attribute [rw] preload_data_type
     #   The type of preloaded data. Only Synthea preloaded data is
@@ -638,19 +845,43 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartFHIRExportJobRequest
-    #   data as a hash:
+    # The configuration of the S3 bucket for either an import or export job.
+    # This includes assigning permissions for access.
     #
-    #       {
-    #         job_name: "JobName",
-    #         output_data_config: { # required
-    #           s3_uri: "S3Uri",
-    #         },
-    #         datastore_id: "DatastoreId", # required
-    #         data_access_role_arn: "IamRoleArn", # required
-    #         client_token: "ClientTokenString", # required
-    #       }
+    # @!attribute [rw] s3_uri
+    #   The S3Uri is the user specified S3 location of the FHIR data to be
+    #   imported into Amazon HealthLake.
+    #   @return [String]
     #
+    # @!attribute [rw] kms_key_id
+    #   The KMS key ID used to access the S3 bucket.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/S3Configuration AWS API Documentation
+    #
+    class S3Configuration < Struct.new(
+      :s3_uri,
+      :kms_key_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The server-side encryption key configuration for a customer provided
+    # encryption key.
+    #
+    # @!attribute [rw] kms_encryption_config
+    #   The KMS encryption configuration used to provide details for data
+    #   encryption.
+    #   @return [Types::KmsEncryptionConfig]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/SseConfiguration AWS API Documentation
+    #
+    class SseConfiguration < Struct.new(
+      :kms_encryption_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] job_name
     #   The user generated name for an export job.
     #   @return [String]
@@ -712,19 +943,6 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartFHIRImportJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         job_name: "JobName",
-    #         input_data_config: { # required
-    #           s3_uri: "S3Uri",
-    #         },
-    #         datastore_id: "DatastoreId", # required
-    #         data_access_role_arn: "IamRoleArn", # required
-    #         client_token: "ClientTokenString", # required
-    #       }
-    #
     # @!attribute [rw] job_name
     #   The name of the FHIR Import job in the StartFHIRImport job request.
     #   @return [String]
@@ -733,6 +951,11 @@ module Aws::HealthLake
     #   The input properties of the FHIR Import job in the StartFHIRImport
     #   job request.
     #   @return [Types::InputDataConfig]
+    #
+    # @!attribute [rw] job_output_data_config
+    #   The output data configuration that was supplied when the export job
+    #   was created.
+    #   @return [Types::OutputDataConfig]
     #
     # @!attribute [rw] datastore_id
     #   The AWS-generated Data Store ID.
@@ -755,6 +978,7 @@ module Aws::HealthLake
     class StartFHIRImportJobRequest < Struct.new(
       :job_name,
       :input_data_config,
+      :job_output_data_config,
       :datastore_id,
       :data_access_role_arn,
       :client_token)
@@ -784,6 +1008,49 @@ module Aws::HealthLake
       include Aws::Structure
     end
 
+    # A tag is a label consisting of a user-defined key and value. The form
+    # for tags is \\\{"Key", "Value"\\}
+    #
+    # @!attribute [rw] key
+    #   The key portion of a tag. Tag keys are case sensitive.
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   The value portion of a tag. Tag values are case sensitive.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/Tag AWS API Documentation
+    #
+    class Tag < Struct.new(
+      :key,
+      :value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_arn
+    #   The Amazon Resource Name(ARN)that gives Amazon HealthLake access to
+    #   the Data Store which tags are being added to.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The user specified key and value pair tags being added to a Data
+    #   Store.
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/TagResourceRequest AWS API Documentation
+    #
+    class TagResourceRequest < Struct.new(
+      :resource_arn,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/TagResourceResponse AWS API Documentation
+    #
+    class TagResourceResponse < Aws::EmptyStructure; end
+
     # The user has exceeded their maximum number of allowed calls to the
     # given API.
     #
@@ -797,6 +1064,28 @@ module Aws::HealthLake
       SENSITIVE = []
       include Aws::Structure
     end
+
+    # @!attribute [rw] resource_arn
+    #   "The Amazon Resource Name(ARN) of the Data Store for which tags are
+    #   being removed
+    #   @return [String]
+    #
+    # @!attribute [rw] tag_keys
+    #   The keys for the tags to be removed from the Healthlake Data Store.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/UntagResourceRequest AWS API Documentation
+    #
+    class UntagResourceRequest < Struct.new(
+      :resource_arn,
+      :tag_keys)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/UntagResourceResponse AWS API Documentation
+    #
+    class UntagResourceResponse < Aws::EmptyStructure; end
 
     # The user input parameter was invalid.
     #

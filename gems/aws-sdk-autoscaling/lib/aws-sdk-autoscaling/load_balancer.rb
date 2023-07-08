@@ -45,21 +45,21 @@ module Aws::AutoScaling
 
     # One of the following load balancer states:
     #
-    # * `Adding` - The instances in the group are being registered with the
+    # * `Adding` - The Auto Scaling instances are being registered with the
     #   load balancer.
     #
-    # * `Added` - All instances in the group are registered with the load
+    # * `Added` - All Auto Scaling instances are registered with the load
     #   balancer.
     #
-    # * `InService` - At least one instance in the group passed an ELB
+    # * `InService` - At least one Auto Scaling instance passed an `ELB`
     #   health check.
     #
-    # * `Removing` - The instances in the group are being deregistered from
+    # * `Removing` - The Auto Scaling instances are being deregistered from
     #   the load balancer. If connection draining is enabled, Elastic Load
     #   Balancing waits for in-flight requests to complete before
     #   deregistering the instances.
     #
-    # * `Removed` - All instances in the group are deregistered from the
+    # * `Removed` - All Auto Scaling instances are deregistered from the
     #   load balancer.
     # @return [String]
     def state
@@ -190,7 +190,9 @@ module Aws::AutoScaling
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -205,7 +207,9 @@ module Aws::AutoScaling
         auto_scaling_group_name: @group_name,
         load_balancer_names: [@name]
       )
-      resp = @client.attach_load_balancers(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.attach_load_balancers(options)
+      end
       resp.data
     end
 
@@ -219,7 +223,9 @@ module Aws::AutoScaling
         auto_scaling_group_name: @group_name,
         load_balancer_names: [@name]
       )
-      resp = @client.detach_load_balancers(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.detach_load_balancers(options)
+      end
       resp.data
     end
 
@@ -281,7 +287,9 @@ module Aws::AutoScaling
           batch.each do |item|
             params[:load_balancer_names] << item.name
           end
-          batch[0].client.attach_load_balancers(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.attach_load_balancers(params)
+          end
         end
         nil
       end
@@ -296,7 +304,9 @@ module Aws::AutoScaling
           batch.each do |item|
             params[:load_balancer_names] << item.name
           end
-          batch[0].client.detach_load_balancers(params)
+          Aws::Plugins::UserAgent.feature('resource') do
+            batch[0].client.detach_load_balancers(params)
+          end
         end
         nil
       end

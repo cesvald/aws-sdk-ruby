@@ -67,15 +67,18 @@ module Aws::Lambda
   # The following table lists the valid waiter names, the operations they call,
   # and the default `:delay` and `:max_attempts` values.
   #
-  # | waiter_name      | params                              | :delay   | :max_attempts |
-  # | ---------------- | ----------------------------------- | -------- | ------------- |
-  # | function_active  | {Client#get_function_configuration} | 5        | 60            |
-  # | function_exists  | {Client#get_function}               | 1        | 20            |
-  # | function_updated | {Client#get_function_configuration} | 5        | 60            |
+  # | waiter_name              | params                              | :delay   | :max_attempts |
+  # | ------------------------ | ----------------------------------- | -------- | ------------- |
+  # | function_active          | {Client#get_function_configuration} | 5        | 60            |
+  # | function_active_v2       | {Client#get_function}               | 1        | 300           |
+  # | function_exists          | {Client#get_function}               | 1        | 20            |
+  # | function_updated         | {Client#get_function_configuration} | 5        | 60            |
+  # | function_updated_v2      | {Client#get_function}               | 1        | 300           |
+  # | published_version_active | {Client#get_function_configuration} | 5        | 312           |
   #
   module Waiters
 
-    # Waits for the function's State to be Active.
+    # Waits for the function's State to be Active. This waiter uses GetFunctionConfiguration API. This should be used after new function creation.
     class FunctionActive
 
       # @param [Hash] options
@@ -117,6 +120,57 @@ module Aws::Lambda
 
       # @option (see Client#get_function_configuration)
       # @return (see Client#get_function_configuration)
+      def wait(params = {})
+        @waiter.wait(client: @client, params: params)
+      end
+
+      # @api private
+      attr_reader :waiter
+
+    end
+
+    # Waits for the function's State to be Active. This waiter uses GetFunction API. This should be used after new function creation.
+    class FunctionActiveV2
+
+      # @param [Hash] options
+      # @option options [required, Client] :client
+      # @option options [Integer] :max_attempts (300)
+      # @option options [Integer] :delay (1)
+      # @option options [Proc] :before_attempt
+      # @option options [Proc] :before_wait
+      def initialize(options)
+        @client = options.fetch(:client)
+        @waiter = Aws::Waiters::Waiter.new({
+          max_attempts: 300,
+          delay: 1,
+          poller: Aws::Waiters::Poller.new(
+            operation_name: :get_function,
+            acceptors: [
+              {
+                "state" => "success",
+                "matcher" => "path",
+                "argument" => "configuration.state",
+                "expected" => "Active"
+              },
+              {
+                "state" => "failure",
+                "matcher" => "path",
+                "argument" => "configuration.state",
+                "expected" => "Failed"
+              },
+              {
+                "state" => "retry",
+                "matcher" => "path",
+                "argument" => "configuration.state",
+                "expected" => "Pending"
+              }
+            ]
+          )
+        }.merge(options))
+      end
+
+      # @option (see Client#get_function)
+      # @return (see Client#get_function)
       def wait(params = {})
         @waiter.wait(client: @client, params: params)
       end
@@ -168,7 +222,7 @@ module Aws::Lambda
 
     end
 
-    # Waits for the function's LastUpdateStatus to be Successful.
+    # Waits for the function's LastUpdateStatus to be Successful. This waiter uses GetFunctionConfiguration API. This should be used after function updates.
     class FunctionUpdated
 
       # @param [Hash] options
@@ -202,6 +256,108 @@ module Aws::Lambda
                 "matcher" => "path",
                 "argument" => "last_update_status",
                 "expected" => "InProgress"
+              }
+            ]
+          )
+        }.merge(options))
+      end
+
+      # @option (see Client#get_function_configuration)
+      # @return (see Client#get_function_configuration)
+      def wait(params = {})
+        @waiter.wait(client: @client, params: params)
+      end
+
+      # @api private
+      attr_reader :waiter
+
+    end
+
+    # Waits for the function's LastUpdateStatus to be Successful. This waiter uses GetFunction API. This should be used after function updates.
+    class FunctionUpdatedV2
+
+      # @param [Hash] options
+      # @option options [required, Client] :client
+      # @option options [Integer] :max_attempts (300)
+      # @option options [Integer] :delay (1)
+      # @option options [Proc] :before_attempt
+      # @option options [Proc] :before_wait
+      def initialize(options)
+        @client = options.fetch(:client)
+        @waiter = Aws::Waiters::Waiter.new({
+          max_attempts: 300,
+          delay: 1,
+          poller: Aws::Waiters::Poller.new(
+            operation_name: :get_function,
+            acceptors: [
+              {
+                "state" => "success",
+                "matcher" => "path",
+                "argument" => "configuration.last_update_status",
+                "expected" => "Successful"
+              },
+              {
+                "state" => "failure",
+                "matcher" => "path",
+                "argument" => "configuration.last_update_status",
+                "expected" => "Failed"
+              },
+              {
+                "state" => "retry",
+                "matcher" => "path",
+                "argument" => "configuration.last_update_status",
+                "expected" => "InProgress"
+              }
+            ]
+          )
+        }.merge(options))
+      end
+
+      # @option (see Client#get_function)
+      # @return (see Client#get_function)
+      def wait(params = {})
+        @waiter.wait(client: @client, params: params)
+      end
+
+      # @api private
+      attr_reader :waiter
+
+    end
+
+    # Waits for the published version's State to be Active. This waiter uses GetFunctionConfiguration API. This should be used after new version is published.
+    class PublishedVersionActive
+
+      # @param [Hash] options
+      # @option options [required, Client] :client
+      # @option options [Integer] :max_attempts (312)
+      # @option options [Integer] :delay (5)
+      # @option options [Proc] :before_attempt
+      # @option options [Proc] :before_wait
+      def initialize(options)
+        @client = options.fetch(:client)
+        @waiter = Aws::Waiters::Waiter.new({
+          max_attempts: 312,
+          delay: 5,
+          poller: Aws::Waiters::Poller.new(
+            operation_name: :get_function_configuration,
+            acceptors: [
+              {
+                "state" => "success",
+                "matcher" => "path",
+                "argument" => "state",
+                "expected" => "Active"
+              },
+              {
+                "state" => "failure",
+                "matcher" => "path",
+                "argument" => "state",
+                "expected" => "Failed"
+              },
+              {
+                "state" => "retry",
+                "matcher" => "path",
+                "argument" => "state",
+                "expected" => "Pending"
               }
             ]
           )

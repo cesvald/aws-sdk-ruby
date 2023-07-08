@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-managedblockchain/types'
 require_relative 'aws-sdk-managedblockchain/client_api'
+require_relative 'aws-sdk-managedblockchain/plugins/endpoints.rb'
 require_relative 'aws-sdk-managedblockchain/client'
 require_relative 'aws-sdk-managedblockchain/errors'
 require_relative 'aws-sdk-managedblockchain/resource'
+require_relative 'aws-sdk-managedblockchain/endpoint_parameters'
+require_relative 'aws-sdk-managedblockchain/endpoint_provider'
+require_relative 'aws-sdk-managedblockchain/endpoints'
 require_relative 'aws-sdk-managedblockchain/customizations'
 
 # This module provides support for Amazon Managed Blockchain. This module is available in the
@@ -28,7 +32,7 @@ require_relative 'aws-sdk-managedblockchain/customizations'
 # structure.
 #
 #     managed_blockchain = Aws::ManagedBlockchain::Client.new
-#     resp = managed_blockchain.create_member(params)
+#     resp = managed_blockchain.create_accessor(params)
 #
 # See {Client} for more information.
 #
@@ -48,6 +52,6 @@ require_relative 'aws-sdk-managedblockchain/customizations'
 # @!group service
 module Aws::ManagedBlockchain
 
-  GEM_VERSION = '1.22.0'
+  GEM_VERSION = '1.42.0'
 
 end

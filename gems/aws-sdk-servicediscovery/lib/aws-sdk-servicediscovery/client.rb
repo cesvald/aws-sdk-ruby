@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:servicediscovery)
@@ -73,8 +77,13 @@ module Aws::ServiceDiscovery
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::ServiceDiscovery::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::ServiceDiscovery
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::ServiceDiscovery
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::ServiceDiscovery
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::ServiceDiscovery
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::ServiceDiscovery
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::ServiceDiscovery::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::ServiceDiscovery::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::ServiceDiscovery
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::ServiceDiscovery
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -337,13 +394,13 @@ module Aws::ServiceDiscovery
 
     # @!group API Operations
 
-    # Creates an HTTP namespace. Service instances that you register using
-    # an HTTP namespace can be discovered using a `DiscoverInstances`
-    # request but can't be discovered using DNS.
+    # Creates an HTTP namespace. Service instances registered using an HTTP
+    # namespace can be discovered using a `DiscoverInstances` request but
+    # can't be discovered using DNS.
     #
     # For the current quota on the number of namespaces that you can create
-    # using the same AWS account, see [AWS Cloud Map quotas][1] in the *AWS
-    # Cloud Map Developer Guide*.
+    # using the same Amazon Web Services account, see [Cloud Map quotas][1]
+    # in the *Cloud Map Developer Guide*.
     #
     #
     #
@@ -356,7 +413,7 @@ module Aws::ServiceDiscovery
     #   A unique string that identifies the request and that allows failed
     #   `CreateHttpNamespace` requests to be retried without the risk of
     #   running the operation twice. `CreatorRequestId` can be any unique
-    #   string, for example, a date/time stamp.
+    #   string (for example, a date/time stamp).
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
@@ -420,9 +477,12 @@ module Aws::ServiceDiscovery
     # a specified Amazon VPC. The namespace defines your service naming
     # scheme. For example, if you name your namespace `example.com` and name
     # your service `backend`, the resulting DNS name for the service is
-    # `backend.example.com`. For the current quota on the number of
-    # namespaces that you can create using the same AWS account, see [AWS
-    # Cloud Map Limits][1] in the *AWS Cloud Map Developer Guide*.
+    # `backend.example.com`. Service instances that are registered using a
+    # private DNS namespace can be discovered using either a
+    # `DiscoverInstances` request or using DNS. For the current quota on the
+    # number of namespaces that you can create using the same Amazon Web
+    # Services account, see [Cloud Map quotas][1] in the *Cloud Map
+    # Developer Guide*.
     #
     #
     #
@@ -430,14 +490,14 @@ module Aws::ServiceDiscovery
     #
     # @option params [required, String] :name
     #   The name that you want to assign to this namespace. When you create a
-    #   private DNS namespace, AWS Cloud Map automatically creates an Amazon
+    #   private DNS namespace, Cloud Map automatically creates an Amazon
     #   Route 53 private hosted zone that has the same name as the namespace.
     #
     # @option params [String] :creator_request_id
     #   A unique string that identifies the request and that allows failed
     #   `CreatePrivateDnsNamespace` requests to be retried without the risk of
     #   running the operation twice. `CreatorRequestId` can be any unique
-    #   string, for example, a date/timestamp.
+    #   string (for example, a date/timestamp).
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
@@ -453,6 +513,9 @@ module Aws::ServiceDiscovery
     #   The tags to add to the namespace. Each tag consists of a key and an
     #   optional value that you define. Tags keys can be up to 128 characters
     #   in length, and tag values can be up to 256 characters in length.
+    #
+    # @option params [Types::PrivateDnsNamespaceProperties] :properties
+    #   Properties for the private DNS namespace.
     #
     # @return [Types::CreatePrivateDnsNamespaceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -487,6 +550,13 @@ module Aws::ServiceDiscovery
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     properties: {
+    #       dns_properties: { # required
+    #         soa: { # required
+    #           ttl: 1, # required
+    #         },
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -506,9 +576,14 @@ module Aws::ServiceDiscovery
     # internet. The namespace defines your service naming scheme. For
     # example, if you name your namespace `example.com` and name your
     # service `backend`, the resulting DNS name for the service is
-    # `backend.example.com`. For the current quota on the number of
-    # namespaces that you can create using the same AWS account, see [AWS
-    # Cloud Map Limits][1] in the *AWS Cloud Map Developer Guide*.
+    # `backend.example.com`. You can discover instances that were registered
+    # with a public DNS namespace by using either a `DiscoverInstances`
+    # request or using DNS. For the current quota on the number of
+    # namespaces that you can create using the same Amazon Web Services
+    # account, see [Cloud Map quotas][1] in the *Cloud Map Developer Guide*.
+    #
+    # The `CreatePublicDnsNamespace` API operation is not supported in the
+    # Amazon Web Services GovCloud (US) Regions.
     #
     #
     #
@@ -517,11 +592,16 @@ module Aws::ServiceDiscovery
     # @option params [required, String] :name
     #   The name that you want to assign to this namespace.
     #
+    #   <note markdown="1"> Do not include sensitive information in the name. The name is publicly
+    #   available using DNS queries.
+    #
+    #    </note>
+    #
     # @option params [String] :creator_request_id
     #   A unique string that identifies the request and that allows failed
     #   `CreatePublicDnsNamespace` requests to be retried without the risk of
     #   running the operation twice. `CreatorRequestId` can be any unique
-    #   string, for example, a date/timestamp.
+    #   string (for example, a date/timestamp).
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
@@ -533,6 +613,9 @@ module Aws::ServiceDiscovery
     #   The tags to add to the namespace. Each tag consists of a key and an
     #   optional value that you define. Tags keys can be up to 128 characters
     #   in length, and tag values can be up to 256 characters in length.
+    #
+    # @option params [Types::PublicDnsNamespaceProperties] :properties
+    #   Properties for the public DNS namespace.
     #
     # @return [Types::CreatePublicDnsNamespaceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -566,6 +649,13 @@ module Aws::ServiceDiscovery
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     properties: {
+    #       dns_properties: { # required
+    #         soa: { # required
+    #           ttl: 1, # required
+    #         },
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -581,8 +671,8 @@ module Aws::ServiceDiscovery
       req.send_request(options)
     end
 
-    # Creates a service, which defines the configuration for the following
-    # entities:
+    # Creates a service. This action defines the configuration for the
+    # following entities:
     #
     # * For public and private DNS namespaces, one of the following
     #   combinations of DNS records in Amazon Route 53:
@@ -600,12 +690,12 @@ module Aws::ServiceDiscovery
     # * Optionally, a health check
     #
     # After you create the service, you can submit a [RegisterInstance][1]
-    # request, and AWS Cloud Map uses the values in the configuration to
-    # create the specified entities.
+    # request, and Cloud Map uses the values in the configuration to create
+    # the specified entities.
     #
     # For the current quota on the number of instances that you can register
-    # using the same namespace and using the same service, see [AWS Cloud
-    # Map Limits][2] in the *AWS Cloud Map Developer Guide*.
+    # using the same namespace and using the same service, see [Cloud Map
+    # quotas][2] in the *Cloud Map Developer Guide*.
     #
     #
     #
@@ -615,19 +705,24 @@ module Aws::ServiceDiscovery
     # @option params [required, String] :name
     #   The name that you want to assign to the service.
     #
-    #   If you want AWS Cloud Map to create an `SRV` record when you register
-    #   an instance and you're using a system that requires a specific `SRV`
-    #   format, such as [HAProxy][1], specify the following for `Name`\:
+    #   <note markdown="1"> Do not include sensitive information in the name if the namespace is
+    #   discoverable by public DNS queries.
+    #
+    #    </note>
+    #
+    #   If you want Cloud Map to create an `SRV` record when you register an
+    #   instance and you're using a system that requires a specific `SRV`
+    #   format, such as [HAProxy][1], specify the following for `Name`:
     #
     #   * Start the name with an underscore (\_), such as `_exampleservice`.
     #
     #   * End the name with *.\_protocol*, such as `._tcp`.
     #
-    #   When you register an instance, AWS Cloud Map creates an `SRV` record
-    #   and assigns a name to the record by concatenating the service name and
-    #   the namespace name, for example:
+    #   When you register an instance, Cloud Map creates an `SRV` record and
+    #   assigns a name to the record by concatenating the service name and the
+    #   namespace name (for example,
     #
-    #   `_exampleservice._tcp.example.com`
+    #   `_exampleservice._tcp.example.com`).
     #
     #   <note markdown="1"> For services that are accessible by DNS queries, you can't create
     #   multiple services with names that differ only by case (such as EXAMPLE
@@ -650,8 +745,8 @@ module Aws::ServiceDiscovery
     # @option params [String] :creator_request_id
     #   A unique string that identifies the request and that allows failed
     #   `CreateService` requests to be retried without the risk of running the
-    #   operation twice. `CreatorRequestId` can be any unique string, for
-    #   example, a date/timestamp.
+    #   operation twice. `CreatorRequestId` can be any unique string (for
+    #   example, a date/timestamp).
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
@@ -661,20 +756,20 @@ module Aws::ServiceDiscovery
     #
     # @option params [Types::DnsConfig] :dns_config
     #   A complex type that contains information about the Amazon Route 53
-    #   records that you want AWS Cloud Map to create when you register an
+    #   records that you want Cloud Map to create when you register an
     #   instance.
     #
     # @option params [Types::HealthCheckConfig] :health_check_config
     #   *Public DNS and HTTP namespaces only.* A complex type that contains
     #   settings for an optional Route 53 health check. If you specify
-    #   settings for a health check, AWS Cloud Map associates the health check
+    #   settings for a health check, Cloud Map associates the health check
     #   with all the Route 53 DNS records that you specify in `DnsConfig`.
     #
     #   If you specify a health check configuration, you can specify either
     #   `HealthCheckCustomConfig` or `HealthCheckConfig` but not both.
     #
-    #   For information about the charges for health checks, see [AWS Cloud
-    #   Map Pricing][1].
+    #   For information about the charges for health checks, see [Cloud Map
+    #   Pricing][1].
     #
     #
     #
@@ -697,7 +792,7 @@ module Aws::ServiceDiscovery
     #
     # @option params [String] :type
     #   If present, specifies that the service instances are only discoverable
-    #   using the `DiscoverInstances` API operation. No DNS records will be
+    #   using the `DiscoverInstances` API operation. No DNS records is
     #   registered for the service instances. The only valid value is `HTTP`.
     #
     # @return [Types::CreateServiceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -891,7 +986,7 @@ module Aws::ServiceDiscovery
     end
 
     # Deletes the Amazon Route 53 DNS records and health check, if any, that
-    # AWS Cloud Map created for the specified instance.
+    # Cloud Map created for the specified instance.
     #
     # @option params [required, String] :service_id
     #   The ID of the service that the instance is associated with.
@@ -949,33 +1044,53 @@ module Aws::ServiceDiscovery
     # queries to discover instances.
     #
     # @option params [required, String] :namespace_name
-    #   The `HttpName` name of the namespace, found in the `HttpProperties`
-    #   member of the `Properties` member of the namespace.
+    #   The `HttpName` name of the namespace. It's found in the
+    #   `HttpProperties` member of the `Properties` member of the namespace.
     #
     # @option params [required, String] :service_name
     #   The name of the service that you specified when you registered the
     #   instance.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of instances that you want AWS Cloud Map to return
-    #   in the response to a `DiscoverInstances` request. If you don't
-    #   specify a value for `MaxResults`, AWS Cloud Map returns up to 100
-    #   instances.
+    #   The maximum number of instances that you want Cloud Map to return in
+    #   the response to a `DiscoverInstances` request. If you don't specify a
+    #   value for `MaxResults`, Cloud Map returns up to 100 instances.
     #
     # @option params [Hash<String,String>] :query_parameters
     #   Filters to scope the results based on custom attributes for the
-    #   instance. For example, `\{version=v1, az=1a\}`. Only instances that
+    #   instance (for example, `\{version=v1, az=1a\}`). Only instances that
     #   match all the specified key-value pairs are returned.
     #
     # @option params [Hash<String,String>] :optional_parameters
     #   Opportunistic filters to scope the results based on custom attributes.
     #   If there are instances that match both the filters specified in both
-    #   the `QueryParameters` parameter and this parameter, they are returned.
-    #   Otherwise, these filters are ignored and only instances that match the
-    #   filters specified in the `QueryParameters` parameter are returned.
+    #   the `QueryParameters` parameter and this parameter, all of these
+    #   instances are returned. Otherwise, the filters are ignored, and only
+    #   instances that match the filters that are specified in the
+    #   `QueryParameters` parameter are returned.
     #
     # @option params [String] :health_status
-    #   The health status of the instances that you want to discover.
+    #   The health status of the instances that you want to discover. This
+    #   parameter is ignored for services that don't have a health check
+    #   configured, and all instances are returned.
+    #
+    #   HEALTHY
+    #
+    #   : Returns healthy instances.
+    #
+    #   UNHEALTHY
+    #
+    #   : Returns unhealthy instances.
+    #
+    #   ALL
+    #
+    #   : Returns all instances.
+    #
+    #   HEALTHY\_OR\_ELSE\_ALL
+    #
+    #   : Returns healthy instances, unless none are reporting a healthy
+    #     state. In that case, return all instances. This is also called
+    #     failing open.
     #
     # @return [Types::DiscoverInstancesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1021,7 +1136,7 @@ module Aws::ServiceDiscovery
     #     optional_parameters: {
     #       "AttrKey" => "AttrValue",
     #     },
-    #     health_status: "HEALTHY", # accepts HEALTHY, UNHEALTHY, ALL
+    #     health_status: "HEALTHY", # accepts HEALTHY, UNHEALTHY, ALL, HEALTHY_OR_ELSE_ALL
     #   })
     #
     # @example Response structure
@@ -1105,7 +1220,7 @@ module Aws::ServiceDiscovery
     # Gets the current health status (`Healthy`, `Unhealthy`, or `Unknown`)
     # of one or more instances that are associated with a specified service.
     #
-    # <note markdown="1"> There is a brief delay between when you register an instance and when
+    # <note markdown="1"> There's a brief delay between when you register an instance and when
     # the health status for the instance is available.
     #
     #  </note>
@@ -1117,8 +1232,8 @@ module Aws::ServiceDiscovery
     #   An array that contains the IDs of all the instances that you want to
     #   get the health status for.
     #
-    #   If you omit `Instances`, AWS Cloud Map returns the health status for
-    #   all the instances that are associated with the specified service.
+    #   If you omit `Instances`, Cloud Map returns the health status for all
+    #   the instances that are associated with the specified service.
     #
     #   <note markdown="1"> To get the IDs for the instances that you've registered by using a
     #   specified service, submit a [ListInstances][1] request.
@@ -1130,9 +1245,9 @@ module Aws::ServiceDiscovery
     #   [1]: https://docs.aws.amazon.com/cloud-map/latest/api/API_ListInstances.html
     #
     # @option params [Integer] :max_results
-    #   The maximum number of instances that you want AWS Cloud Map to return
-    #   in the response to a `GetInstancesHealthStatus` request. If you don't
-    #   specify a value for `MaxResults`, AWS Cloud Map returns up to 100
+    #   The maximum number of instances that you want Cloud Map to return in
+    #   the response to a `GetInstancesHealthStatus` request. If you don't
+    #   specify a value for `MaxResults`, Cloud Map returns up to 100
     #   instances.
     #
     # @option params [String] :next_token
@@ -1212,7 +1327,7 @@ module Aws::ServiceDiscovery
     #   resp.to_h outputs the following:
     #   {
     #     namespace: {
-    #       arn: "arn:aws:servicediscovery:us-west-2: 123456789120:namespace/ns-e1tpmexample0001", 
+    #       arn: "arn:aws:servicediscovery:us-west-2:123456789012:namespace/ns-e1tpmexample0001", 
     #       create_date: Time.parse("20181118T211712Z"), 
     #       creator_request_id: "example-creator-request-id-0001", 
     #       description: "Example.com AWS Cloud Map HTTP Namespace", 
@@ -1244,6 +1359,7 @@ module Aws::ServiceDiscovery
     #   resp.namespace.description #=> String
     #   resp.namespace.service_count #=> Integer
     #   resp.namespace.properties.dns_properties.hosted_zone_id #=> String
+    #   resp.namespace.properties.dns_properties.soa.ttl #=> Integer
     #   resp.namespace.properties.http_properties.http_name #=> String
     #   resp.namespace.create_date #=> Time
     #   resp.namespace.creator_request_id #=> String
@@ -1308,7 +1424,7 @@ module Aws::ServiceDiscovery
     # @example Response structure
     #
     #   resp.operation.id #=> String
-    #   resp.operation.type #=> String, one of "CREATE_NAMESPACE", "DELETE_NAMESPACE", "UPDATE_SERVICE", "REGISTER_INSTANCE", "DEREGISTER_INSTANCE"
+    #   resp.operation.type #=> String, one of "CREATE_NAMESPACE", "DELETE_NAMESPACE", "UPDATE_NAMESPACE", "UPDATE_SERVICE", "REGISTER_INSTANCE", "DEREGISTER_INSTANCE"
     #   resp.operation.status #=> String, one of "SUBMITTED", "PENDING", "SUCCESS", "FAIL"
     #   resp.operation.error_message #=> String
     #   resp.operation.error_code #=> String
@@ -1347,7 +1463,7 @@ module Aws::ServiceDiscovery
     #   resp.to_h outputs the following:
     #   {
     #     service: {
-    #       arn: "arn:aws:servicediscovery:us-west-2:123456789120:service/srv-e4anhexample0004", 
+    #       arn: "arn:aws:servicediscovery:us-west-2:123456789012:service/srv-e4anhexample0004", 
     #       create_date: Time.parse("20181118T211707Z"), 
     #       creator_request_id: "example-creator-request-id-0004", 
     #       description: "Example.com AWS Cloud Map HTTP Service", 
@@ -1413,9 +1529,9 @@ module Aws::ServiceDiscovery
     #   in the next request.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of instances that you want AWS Cloud Map to return
-    #   in the response to a `ListInstances` request. If you don't specify a
-    #   value for `MaxResults`, AWS Cloud Map returns up to 100 instances.
+    #   The maximum number of instances that you want Cloud Map to return in
+    #   the response to a `ListInstances` request. If you don't specify a
+    #   value for `MaxResults`, Cloud Map returns up to 100 instances.
     #
     # @return [Types::ListInstancesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1472,7 +1588,7 @@ module Aws::ServiceDiscovery
     end
 
     # Lists summary information about the namespaces that were created by
-    # the current AWS account.
+    # the current Amazon Web Services account.
     #
     # @option params [String] :next_token
     #   For the first `ListNamespaces` request, omit this value.
@@ -1481,18 +1597,18 @@ module Aws::ServiceDiscovery
     #   request to get the next group of results. Specify the value of
     #   `NextToken` from the previous response in the next request.
     #
-    #   <note markdown="1"> AWS Cloud Map gets `MaxResults` namespaces and then filters them based
-    #   on the specified criteria. It's possible that no namespaces in the
-    #   first `MaxResults` namespaces matched the specified criteria but that
+    #   <note markdown="1"> Cloud Map gets `MaxResults` namespaces and then filters them based on
+    #   the specified criteria. It's possible that no namespaces in the first
+    #   `MaxResults` namespaces matched the specified criteria but that
     #   subsequent groups of `MaxResults` namespaces do contain namespaces
     #   that match the criteria.
     #
     #    </note>
     #
     # @option params [Integer] :max_results
-    #   The maximum number of namespaces that you want AWS Cloud Map to return
-    #   in the response to a `ListNamespaces` request. If you don't specify a
-    #   value for `MaxResults`, AWS Cloud Map returns up to 100 namespaces.
+    #   The maximum number of namespaces that you want Cloud Map to return in
+    #   the response to a `ListNamespaces` request. If you don't specify a
+    #   value for `MaxResults`, Cloud Map returns up to 100 namespaces.
     #
     # @option params [Array<Types::NamespaceFilter>] :filters
     #   A complex type that contains specifications for the namespaces that
@@ -1574,9 +1690,9 @@ module Aws::ServiceDiscovery
     #     max_results: 1,
     #     filters: [
     #       {
-    #         name: "TYPE", # required, accepts TYPE
+    #         name: "TYPE", # required, accepts TYPE, NAME, HTTP_NAME
     #         values: ["FilterValue"], # required
-    #         condition: "EQ", # accepts EQ, IN, BETWEEN
+    #         condition: "EQ", # accepts EQ, IN, BETWEEN, BEGINS_WITH
     #       },
     #     ],
     #   })
@@ -1591,6 +1707,7 @@ module Aws::ServiceDiscovery
     #   resp.namespaces[0].description #=> String
     #   resp.namespaces[0].service_count #=> Integer
     #   resp.namespaces[0].properties.dns_properties.hosted_zone_id #=> String
+    #   resp.namespaces[0].properties.dns_properties.soa.ttl #=> Integer
     #   resp.namespaces[0].properties.http_properties.http_name #=> String
     #   resp.namespaces[0].create_date #=> Time
     #   resp.next_token #=> String
@@ -1613,18 +1730,18 @@ module Aws::ServiceDiscovery
     #   request to get the next group of results. Specify the value of
     #   `NextToken` from the previous response in the next request.
     #
-    #   <note markdown="1"> AWS Cloud Map gets `MaxResults` operations and then filters them based
-    #   on the specified criteria. It's possible that no operations in the
-    #   first `MaxResults` operations matched the specified criteria but that
+    #   <note markdown="1"> Cloud Map gets `MaxResults` operations and then filters them based on
+    #   the specified criteria. It's possible that no operations in the first
+    #   `MaxResults` operations matched the specified criteria but that
     #   subsequent groups of `MaxResults` operations do contain operations
     #   that match the criteria.
     #
     #    </note>
     #
     # @option params [Integer] :max_results
-    #   The maximum number of items that you want AWS Cloud Map to return in
-    #   the response to a `ListOperations` request. If you don't specify a
-    #   value for `MaxResults`, AWS Cloud Map returns up to 100 operations.
+    #   The maximum number of items that you want Cloud Map to return in the
+    #   response to a `ListOperations` request. If you don't specify a value
+    #   for `MaxResults`, Cloud Map returns up to 100 operations.
     #
     # @option params [Array<Types::OperationFilter>] :filters
     #   A complex type that contains specifications for the operations that
@@ -1686,7 +1803,7 @@ module Aws::ServiceDiscovery
     #       {
     #         name: "NAMESPACE_ID", # required, accepts NAMESPACE_ID, SERVICE_ID, STATUS, TYPE, UPDATE_DATE
     #         values: ["FilterValue"], # required
-    #         condition: "EQ", # accepts EQ, IN, BETWEEN
+    #         condition: "EQ", # accepts EQ, IN, BETWEEN, BEGINS_WITH
     #       },
     #     ],
     #   })
@@ -1717,18 +1834,18 @@ module Aws::ServiceDiscovery
     #   request to get the next group of results. Specify the value of
     #   `NextToken` from the previous response in the next request.
     #
-    #   <note markdown="1"> AWS Cloud Map gets `MaxResults` services and then filters them based
-    #   on the specified criteria. It's possible that no services in the
-    #   first `MaxResults` services matched the specified criteria but that
+    #   <note markdown="1"> Cloud Map gets `MaxResults` services and then filters them based on
+    #   the specified criteria. It's possible that no services in the first
+    #   `MaxResults` services matched the specified criteria but that
     #   subsequent groups of `MaxResults` services do contain services that
     #   match the criteria.
     #
     #    </note>
     #
     # @option params [Integer] :max_results
-    #   The maximum number of services that you want AWS Cloud Map to return
-    #   in the response to a `ListServices` request. If you don't specify a
-    #   value for `MaxResults`, AWS Cloud Map returns up to 100 services.
+    #   The maximum number of services that you want Cloud Map to return in
+    #   the response to a `ListServices` request. If you don't specify a
+    #   value for `MaxResults`, Cloud Map returns up to 100 services.
     #
     # @option params [Array<Types::ServiceFilter>] :filters
     #   A complex type that contains specifications for the namespaces that
@@ -1782,7 +1899,7 @@ module Aws::ServiceDiscovery
     #       {
     #         name: "NAMESPACE_ID", # required, accepts NAMESPACE_ID
     #         values: ["FilterValue"], # required
-    #         condition: "EQ", # accepts EQ, IN, BETWEEN
+    #         condition: "EQ", # accepts EQ, IN, BETWEEN, BEGINS_WITH
     #       },
     #     ],
     #   })
@@ -1875,9 +1992,9 @@ module Aws::ServiceDiscovery
     # health check based on the settings in a specified service. When you
     # submit a `RegisterInstance` request, the following occurs:
     #
-    # * For each DNS record that you define in the service that is specified
+    # * For each DNS record that you define in the service that's specified
     #   by `ServiceId`, a record is created or updated in the hosted zone
-    #   that is associated with the corresponding namespace.
+    #   that's associated with the corresponding namespace.
     #
     # * If the service includes `HealthCheckConfig`, a health check is
     #   created based on the settings in the health check configuration.
@@ -1890,20 +2007,20 @@ module Aws::ServiceDiscovery
     #
     # For more information, see [CreateService][1].
     #
-    # When AWS Cloud Map receives a DNS query for the specified DNS name, it
+    # When Cloud Map receives a DNS query for the specified DNS name, it
     # returns the applicable value:
     #
-    # * **If the health check is healthy**\: returns all the records
+    # * **If the health check is healthy**: returns all the records
     #
-    # * **If the health check is unhealthy**\: returns the applicable value
+    # * **If the health check is unhealthy**: returns the applicable value
     #   for the last healthy instance
     #
-    # * **If you didn't specify a health check configuration**\: returns
-    #   all the records
+    # * **If you didn't specify a health check configuration**: returns all
+    #   the records
     #
     # For the current quota on the number of instances that you can register
-    # using the same namespace and using the same service, see [AWS Cloud
-    # Map Limits][2] in the *AWS Cloud Map Developer Guide*.
+    # using the same namespace and using the same service, see [Cloud Map
+    # quotas][2] in the *Cloud Map Developer Guide*.
     #
     #
     #
@@ -1918,25 +2035,32 @@ module Aws::ServiceDiscovery
     #   An identifier that you want to associate with the instance. Note the
     #   following:
     #
-    #   * If the service that is specified by `ServiceId` includes settings
+    #   * If the service that's specified by `ServiceId` includes settings
     #     for an `SRV` record, the value of `InstanceId` is automatically
     #     included as part of the value for the `SRV` record. For more
     #     information, see [DnsRecord &gt; Type][1].
     #
     #   * You can use this value to update an existing instance.
     #
-    #   * To register a new instance, you must specify a value that is unique
+    #   * To register a new instance, you must specify a value that's unique
     #     among instances that you register by using the same service.
     #
-    #   * If you specify an existing `InstanceId` and `ServiceId`, AWS Cloud
-    #     Map updates the existing DNS records, if any. If there's also an
-    #     existing health check, AWS Cloud Map deletes the old health check
-    #     and creates a new one.
+    #   * If you specify an existing `InstanceId` and `ServiceId`, Cloud Map
+    #     updates the existing DNS records, if any. If there's also an
+    #     existing health check, Cloud Map deletes the old health check and
+    #     creates a new one.
     #
     #     <note markdown="1"> The health check isn't deleted immediately, so it will still appear
     #     for a while if you submit a `ListHealthChecks` request, for example.
     #
     #      </note>
+    #
+    #   <note markdown="1"> Do not include sensitive information in `InstanceId` if the namespace
+    #   is discoverable by public DNS queries and any `Type` member of
+    #   `DnsRecord` for the service contains `SRV` because the `InstanceId` is
+    #   discoverable by public DNS queries.
+    #
+    #    </note>
     #
     #
     #
@@ -1948,48 +2072,53 @@ module Aws::ServiceDiscovery
     #   executing the operation twice. You must use a unique
     #   `CreatorRequestId` string every time you submit a `RegisterInstance`
     #   request if you're registering additional instances for the same
-    #   namespace and service. `CreatorRequestId` can be any unique string,
-    #   for example, a date/time stamp.
+    #   namespace and service. `CreatorRequestId` can be any unique string
+    #   (for example, a date/time stamp).
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
     #
     # @option params [required, Hash<String,String>] :attributes
     #   A string map that contains the following information for the service
-    #   that you specify in `ServiceId`\:
+    #   that you specify in `ServiceId`:
     #
     #   * The attributes that apply to the records that are defined in the
     #     service.
     #
     #   * For each attribute, the applicable value.
     #
+    #   <note markdown="1"> Do not include sensitive information in the attributes if the
+    #   namespace is discoverable by public DNS queries.
+    #
+    #    </note>
+    #
     #   Supported attribute keys include the following:
     #
     #   AWS\_ALIAS\_DNS\_NAME
     #
-    #   : If you want AWS Cloud Map to create an Amazon Route 53 alias record
-    #     that routes traffic to an Elastic Load Balancing load balancer,
-    #     specify the DNS name that is associated with the load balancer. For
+    #   : If you want Cloud Map to create an Amazon Route 53 alias record that
+    #     routes traffic to an Elastic Load Balancing load balancer, specify
+    #     the DNS name that's associated with the load balancer. For
     #     information about how to get the DNS name, see "DNSName" in the
     #     topic [AliasTarget][1] in the *Route 53 API Reference*.
     #
     #     Note the following:
     #
-    #     * The configuration for the service that is specified by `ServiceId`
+    #     * The configuration for the service that's specified by `ServiceId`
     #       must include settings for an `A` record, an `AAAA` record, or
     #       both.
     #
-    #     * In the service that is specified by `ServiceId`, the value of
+    #     * In the service that's specified by `ServiceId`, the value of
     #       `RoutingPolicy` must be `WEIGHTED`.
     #
-    #     * If the service that is specified by `ServiceId` includes
-    #       `HealthCheckConfig` settings, AWS Cloud Map will create the
-    #       Route 53 health check, but it doesn't associate the health check
-    #       with the alias record.
+    #     * If the service that's specified by `ServiceId` includes
+    #       `HealthCheckConfig` settings, Cloud Map will create the Route 53
+    #       health check, but it doesn't associate the health check with the
+    #       alias record.
     #
     #     * Auto naming currently doesn't support creating alias records that
-    #       route traffic to AWS resources other than Elastic Load Balancing
-    #       load balancers.
+    #       route traffic to Amazon Web Services resources other than Elastic
+    #       Load Balancing load balancers.
     #
     #     * If you specify a value for `AWS_ALIAS_DNS_NAME`, don't specify
     #       values for any of the `AWS_INSTANCE` attributes.
@@ -2014,8 +2143,8 @@ module Aws::ServiceDiscovery
     #   AWS\_INSTANCE\_CNAME
     #
     #   : If the service configuration includes a `CNAME` record, the domain
-    #     name that you want Route 53 to return in response to DNS queries,
-    #     for example, `example.com`.
+    #     name that you want Route 53 to return in response to DNS queries
+    #     (for example, `example.com`).
     #
     #     This value is required if the service specified by `ServiceId`
     #     includes settings for an `CNAME` record.
@@ -2023,8 +2152,8 @@ module Aws::ServiceDiscovery
     #   AWS\_INSTANCE\_IPV4
     #
     #   : If the service configuration includes an `A` record, the IPv4
-    #     address that you want Route 53 to return in response to DNS queries,
-    #     for example, `192.0.2.44`.
+    #     address that you want Route 53 to return in response to DNS queries
+    #     (for example, `192.0.2.44`).
     #
     #     This value is required if the service specified by `ServiceId`
     #     includes settings for an `A` record. If the service includes
@@ -2034,8 +2163,8 @@ module Aws::ServiceDiscovery
     #   AWS\_INSTANCE\_IPV6
     #
     #   : If the service configuration includes an `AAAA` record, the IPv6
-    #     address that you want Route 53 to return in response to DNS queries,
-    #     for example, `2001:0db8:85a3:0000:0000:abcd:0001:2345`.
+    #     address that you want Route 53 to return in response to DNS queries
+    #     (for example, `2001:0db8:85a3:0000:0000:abcd:0001:2345`).
     #
     #     This value is required if the service specified by `ServiceId`
     #     includes settings for an `AAAA` record. If the service includes
@@ -2214,6 +2343,50 @@ module Aws::ServiceDiscovery
       req.send_request(options)
     end
 
+    # Updates an HTTP namespace.
+    #
+    # @option params [required, String] :id
+    #   The ID of the namespace that you want to update.
+    #
+    # @option params [String] :updater_request_id
+    #   A unique string that identifies the request and that allows failed
+    #   `UpdateHttpNamespace` requests to be retried without the risk of
+    #   running the operation twice. `UpdaterRequestId` can be any unique
+    #   string (for example, a date/timestamp).
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @option params [required, Types::HttpNamespaceChange] :namespace
+    #   Updated properties for the the HTTP namespace.
+    #
+    # @return [Types::UpdateHttpNamespaceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateHttpNamespaceResponse#operation_id #operation_id} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_http_namespace({
+    #     id: "ResourceId", # required
+    #     updater_request_id: "ResourceId",
+    #     namespace: { # required
+    #       description: "ResourceDescription", # required
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.operation_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/UpdateHttpNamespace AWS API Documentation
+    #
+    # @overload update_http_namespace(params = {})
+    # @param [Hash] params ({})
+    def update_http_namespace(params = {}, options = {})
+      req = build_request(:update_http_namespace, params)
+      req.send_request(options)
+    end
+
     # Submits a request to change the health status of a custom health check
     # to healthy or unhealthy.
     #
@@ -2270,6 +2443,108 @@ module Aws::ServiceDiscovery
       req.send_request(options)
     end
 
+    # Updates a private DNS namespace.
+    #
+    # @option params [required, String] :id
+    #   The ID of the namespace that you want to update.
+    #
+    # @option params [String] :updater_request_id
+    #   A unique string that identifies the request and that allows failed
+    #   `UpdatePrivateDnsNamespace` requests to be retried without the risk of
+    #   running the operation twice. `UpdaterRequestId` can be any unique
+    #   string (for example, a date/timestamp).
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @option params [required, Types::PrivateDnsNamespaceChange] :namespace
+    #   Updated properties for the private DNS namespace.
+    #
+    # @return [Types::UpdatePrivateDnsNamespaceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdatePrivateDnsNamespaceResponse#operation_id #operation_id} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_private_dns_namespace({
+    #     id: "ResourceId", # required
+    #     updater_request_id: "ResourceId",
+    #     namespace: { # required
+    #       description: "ResourceDescription",
+    #       properties: {
+    #         dns_properties: { # required
+    #           soa: { # required
+    #             ttl: 1, # required
+    #           },
+    #         },
+    #       },
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.operation_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/UpdatePrivateDnsNamespace AWS API Documentation
+    #
+    # @overload update_private_dns_namespace(params = {})
+    # @param [Hash] params ({})
+    def update_private_dns_namespace(params = {}, options = {})
+      req = build_request(:update_private_dns_namespace, params)
+      req.send_request(options)
+    end
+
+    # Updates a public DNS namespace.
+    #
+    # @option params [required, String] :id
+    #   The ID of the namespace being updated.
+    #
+    # @option params [String] :updater_request_id
+    #   A unique string that identifies the request and that allows failed
+    #   `UpdatePublicDnsNamespace` requests to be retried without the risk of
+    #   running the operation twice. `UpdaterRequestId` can be any unique
+    #   string (for example, a date/timestamp).
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @option params [required, Types::PublicDnsNamespaceChange] :namespace
+    #   Updated properties for the public DNS namespace.
+    #
+    # @return [Types::UpdatePublicDnsNamespaceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdatePublicDnsNamespaceResponse#operation_id #operation_id} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_public_dns_namespace({
+    #     id: "ResourceId", # required
+    #     updater_request_id: "ResourceId",
+    #     namespace: { # required
+    #       description: "ResourceDescription",
+    #       properties: {
+    #         dns_properties: { # required
+    #           soa: { # required
+    #             ttl: 1, # required
+    #           },
+    #         },
+    #       },
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.operation_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/servicediscovery-2017-03-14/UpdatePublicDnsNamespace AWS API Documentation
+    #
+    # @overload update_public_dns_namespace(params = {})
+    # @param [Hash] params ({})
+    def update_public_dns_namespace(params = {}, options = {})
+      req = build_request(:update_public_dns_namespace, params)
+      req.send_request(options)
+    end
+
     # Submits a request to perform the following operations:
     #
     # * Update the TTL setting for existing `DnsRecords` configurations
@@ -2291,7 +2566,7 @@ module Aws::ServiceDiscovery
     #   an `UpdateService` request, the configuration isn't deleted from
     #   the service.
     #
-    # When you update settings for a service, AWS Cloud Map also updates the
+    # When you update settings for a service, Cloud Map also updates the
     # corresponding settings in all the records and health checks that were
     # created by using the specified service.
     #
@@ -2382,7 +2657,7 @@ module Aws::ServiceDiscovery
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-servicediscovery'
-      context[:gem_version] = '1.35.0'
+      context[:gem_version] = '1.55.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

@@ -1,6 +1,26 @@
 Unreleased Changes
 ------------------
 
+1.11.0 (2022-08-30)
+------------------
+
+* Feature - Documentation updates for the AWS IAM Identity Center Portal CLI Reference.
+
+1.10.0 (2022-08-15)
+------------------
+
+* Feature - Documentation updates to reflect service rename - AWS IAM Identity Center (successor to AWS Single Sign-On)
+
+1.9.0 (2022-08-08)
+------------------
+
+* Feature - Documentation updates to reflect service rename - AWS IAM Identity Center (successor to AWS Single Sign-On)
+
+1.8.0 (2021-09-01)
+------------------
+
+* Feature - AWS SDK for Ruby no longer supports Ruby runtime versions 1.9, 2.0, 2.1, and 2.2.
+
 1.7.1 (2021-03-04)
 ------------------
 

@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 require 'aws-sdk-core/plugins/event_stream_configuration.rb'
 
@@ -74,9 +78,14 @@ module Aws::LexRuntimeV2
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
     add_plugin(Aws::Plugins::EventStreamConfiguration)
+    add_plugin(Aws::LexRuntimeV2::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -121,7 +130,9 @@ module Aws::LexRuntimeV2
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -175,9 +186,17 @@ module Aws::LexRuntimeV2
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -228,6 +247,11 @@ module Aws::LexRuntimeV2
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
     #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
+    #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
     #     This option is only used in the `legacy` retry mode.
@@ -273,6 +297,11 @@ module Aws::LexRuntimeV2
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -286,9 +315,34 @@ module Aws::LexRuntimeV2
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::LexRuntimeV2::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::LexRuntimeV2::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -297,7 +351,7 @@ module Aws::LexRuntimeV2
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -312,6 +366,9 @@ module Aws::LexRuntimeV2
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -405,7 +462,7 @@ module Aws::LexRuntimeV2
     # For example, you can use this operation to retrieve session
     # information for a user that has left a long-running session in use.
     #
-    # If the bot, alias, or session identifier doesn't exist, Amazon Lex
+    # If the bot, alias, or session identifier doesn't exist, Amazon Lex V2
     # returns a `BadRequestException`. If the locale doesn't exist or is
     # not enabled for the alias, you receive a `BadRequestException`.
     #
@@ -463,17 +520,28 @@ module Aws::LexRuntimeV2
     #   resp.interpretations[0].intent.slots["NonEmptyString"].value.interpreted_value #=> String
     #   resp.interpretations[0].intent.slots["NonEmptyString"].value.resolved_values #=> Array
     #   resp.interpretations[0].intent.slots["NonEmptyString"].value.resolved_values[0] #=> String
-    #   resp.interpretations[0].intent.state #=> String, one of "Failed", "Fulfilled", "InProgress", "ReadyForFulfillment", "Waiting"
+    #   resp.interpretations[0].intent.slots["NonEmptyString"].shape #=> String, one of "Scalar", "List", "Composite"
+    #   resp.interpretations[0].intent.slots["NonEmptyString"].values #=> Array
+    #   resp.interpretations[0].intent.slots["NonEmptyString"].values[0] #=> Types::Slot
+    #   resp.interpretations[0].intent.slots["NonEmptyString"].sub_slots #=> Types::Slots
+    #   resp.interpretations[0].intent.state #=> String, one of "Failed", "Fulfilled", "InProgress", "ReadyForFulfillment", "Waiting", "FulfillmentInProgress"
     #   resp.interpretations[0].intent.confirmation_state #=> String, one of "Confirmed", "Denied", "None"
-    #   resp.session_state.dialog_action.type #=> String, one of "Close", "ConfirmIntent", "Delegate", "ElicitIntent", "ElicitSlot"
+    #   resp.session_state.dialog_action.type #=> String, one of "Close", "ConfirmIntent", "Delegate", "ElicitIntent", "ElicitSlot", "None"
     #   resp.session_state.dialog_action.slot_to_elicit #=> String
+    #   resp.session_state.dialog_action.slot_elicitation_style #=> String, one of "Default", "SpellByLetter", "SpellByWord"
+    #   resp.session_state.dialog_action.sub_slot_to_elicit.name #=> String
+    #   resp.session_state.dialog_action.sub_slot_to_elicit.sub_slot_to_elicit #=> Types::ElicitSubSlot
     #   resp.session_state.intent.name #=> String
     #   resp.session_state.intent.slots #=> Hash
     #   resp.session_state.intent.slots["NonEmptyString"].value.original_value #=> String
     #   resp.session_state.intent.slots["NonEmptyString"].value.interpreted_value #=> String
     #   resp.session_state.intent.slots["NonEmptyString"].value.resolved_values #=> Array
     #   resp.session_state.intent.slots["NonEmptyString"].value.resolved_values[0] #=> String
-    #   resp.session_state.intent.state #=> String, one of "Failed", "Fulfilled", "InProgress", "ReadyForFulfillment", "Waiting"
+    #   resp.session_state.intent.slots["NonEmptyString"].shape #=> String, one of "Scalar", "List", "Composite"
+    #   resp.session_state.intent.slots["NonEmptyString"].values #=> Array
+    #   resp.session_state.intent.slots["NonEmptyString"].values[0] #=> Types::Slot
+    #   resp.session_state.intent.slots["NonEmptyString"].sub_slots #=> Types::Slots
+    #   resp.session_state.intent.state #=> String, one of "Failed", "Fulfilled", "InProgress", "ReadyForFulfillment", "Waiting", "FulfillmentInProgress"
     #   resp.session_state.intent.confirmation_state #=> String, one of "Confirmed", "Denied", "None"
     #   resp.session_state.active_contexts #=> Array
     #   resp.session_state.active_contexts[0].name #=> String
@@ -484,6 +552,11 @@ module Aws::LexRuntimeV2
     #   resp.session_state.session_attributes #=> Hash
     #   resp.session_state.session_attributes["NonEmptyString"] #=> String
     #   resp.session_state.originating_request_id #=> String
+    #   resp.session_state.runtime_hints.slot_hints #=> Hash
+    #   resp.session_state.runtime_hints.slot_hints["Name"] #=> Hash
+    #   resp.session_state.runtime_hints.slot_hints["Name"]["Name"].runtime_hint_values #=> Array
+    #   resp.session_state.runtime_hints.slot_hints["Name"]["Name"].runtime_hint_values[0].phrase #=> String
+    #   resp.session_state.runtime_hints.slot_hints["Name"]["Name"].sub_slot_hints #=> Types::SlotHintsSlotMap
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/runtime.lex.v2-2020-08-07/GetSession AWS API Documentation
     #
@@ -495,7 +568,7 @@ module Aws::LexRuntimeV2
     end
 
     # Creates a new session or modifies an existing session with an Amazon
-    # Lex bot. Use this operation to enable your application to set the
+    # Lex V2 bot. Use this operation to enable your application to set the
     # state of the bot.
     #
     # @option params [required, String] :bot_id
@@ -517,22 +590,22 @@ module Aws::LexRuntimeV2
     # @option params [required, Types::SessionState] :session_state
     #   Sets the state of the session with the user. You can use this to set
     #   the current intent, attributes, context, and dialog action. Use the
-    #   dialog action to determine the next step that Amazon Lex should use in
-    #   the conversation with the user.
+    #   dialog action to determine the next step that Amazon Lex V2 should use
+    #   in the conversation with the user.
     #
     # @option params [Hash<String,String>] :request_attributes
-    #   Request-specific information passed between Amazon Lex and the client
-    #   application.
+    #   Request-specific information passed between Amazon Lex V2 and the
+    #   client application.
     #
     #   The namespace `x-amz-lex:` is reserved for special attributes. Don't
     #   create any request attributes with the prefix `x-amz-lex:`.
     #
     # @option params [String] :response_content_type
-    #   The message that Amazon Lex returns in the response can be either text
-    #   or speech depending on the value of this parameter.
+    #   The message that Amazon Lex V2 returns in the response can be either
+    #   text or speech depending on the value of this parameter.
     #
-    #   * If the value is `text/plain; charset=utf-8`, Amazon Lex returns text
-    #     in the response.
+    #   * If the value is `text/plain; charset=utf-8`, Amazon Lex V2 returns
+    #     text in the response.
     #
     #   ^
     #
@@ -555,7 +628,7 @@ module Aws::LexRuntimeV2
     #     messages: [
     #       {
     #         content: "Text",
-    #         content_type: "CustomPayload", # accepts CustomPayload, ImageResponseCard, PlainText, SSML
+    #         content_type: "CustomPayload", # required, accepts CustomPayload, ImageResponseCard, PlainText, SSML
     #         image_response_card: {
     #           title: "AttachmentTitle", # required
     #           subtitle: "AttachmentTitle",
@@ -571,8 +644,15 @@ module Aws::LexRuntimeV2
     #     ],
     #     session_state: { # required
     #       dialog_action: {
-    #         type: "Close", # required, accepts Close, ConfirmIntent, Delegate, ElicitIntent, ElicitSlot
+    #         type: "Close", # required, accepts Close, ConfirmIntent, Delegate, ElicitIntent, ElicitSlot, None
     #         slot_to_elicit: "NonEmptyString",
+    #         slot_elicitation_style: "Default", # accepts Default, SpellByLetter, SpellByWord
+    #         sub_slot_to_elicit: {
+    #           name: "NonEmptyString", # required
+    #           sub_slot_to_elicit: {
+    #             # recursive ElicitSubSlot
+    #           },
+    #         },
     #       },
     #       intent: {
     #         name: "NonEmptyString", # required
@@ -583,9 +663,18 @@ module Aws::LexRuntimeV2
     #               interpreted_value: "NonEmptyString", # required
     #               resolved_values: ["NonEmptyString"],
     #             },
+    #             shape: "Scalar", # accepts Scalar, List, Composite
+    #             values: [
+    #               {
+    #                 # recursive Slot
+    #               },
+    #             ],
+    #             sub_slots: {
+    #               # recursive Slots
+    #             },
     #           },
     #         },
-    #         state: "Failed", # accepts Failed, Fulfilled, InProgress, ReadyForFulfillment, Waiting
+    #         state: "Failed", # accepts Failed, Fulfilled, InProgress, ReadyForFulfillment, Waiting, FulfillmentInProgress
     #         confirmation_state: "Confirmed", # accepts Confirmed, Denied, None
     #       },
     #       active_contexts: [
@@ -595,7 +684,7 @@ module Aws::LexRuntimeV2
     #             time_to_live_in_seconds: 1, # required
     #             turns_to_live: 1, # required
     #           },
-    #           context_attributes: {
+    #           context_attributes: { # required
     #             "ParameterName" => "Text",
     #           },
     #         },
@@ -604,6 +693,22 @@ module Aws::LexRuntimeV2
     #         "NonEmptyString" => "String",
     #       },
     #       originating_request_id: "NonEmptyString",
+    #       runtime_hints: {
+    #         slot_hints: {
+    #           "Name" => {
+    #             "Name" => {
+    #               runtime_hint_values: [
+    #                 {
+    #                   phrase: "RuntimeHintPhrase", # required
+    #                 },
+    #               ],
+    #               sub_slot_hints: {
+    #                 # recursive SlotHintsSlotMap
+    #               },
+    #             },
+    #           },
+    #         },
+    #       },
     #     },
     #     request_attributes: {
     #       "NonEmptyString" => "String",
@@ -629,12 +734,37 @@ module Aws::LexRuntimeV2
       req.send_request(options, &block)
     end
 
-    # Sends user input to Amazon Lex. Client applications use this API to
-    # send requests to Amazon Lex at runtime. Amazon Lex then interprets the
-    # user input using the machine learning model that it build for the bot.
+    # Sends user input to Amazon Lex V2. Client applications use this API to
+    # send requests to Amazon Lex V2 at runtime. Amazon Lex V2 then
+    # interprets the user input using the machine learning model that it
+    # build for the bot.
     #
-    # In response, Amazon Lex returns the next message to convey to the user
-    # and an optional response card to display.
+    # In response, Amazon Lex V2 returns the next message to convey to the
+    # user and an optional response card to display.
+    #
+    # If the optional post-fulfillment response is specified, the messages
+    # are returned as follows. For more information, see
+    # [PostFulfillmentStatusSpecification][1].
+    #
+    # * **Success message** - Returned if the Lambda function completes
+    #   successfully and the intent state is fulfilled or ready fulfillment
+    #   if the message is present.
+    #
+    # * **Failed message** - The failed message is returned if the Lambda
+    #   function throws an exception or if the Lambda function returns a
+    #   failed intent state without a message.
+    #
+    # * **Timeout message** - If you don't configure a timeout message and
+    #   a timeout, and the Lambda function doesn't return within 30
+    #   seconds, the timeout message is returned. If you configure a
+    #   timeout, the timeout message is returned when the period times out.
+    #
+    # For more information, see [Completion message][2].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lexv2/latest/dg/API_PostFulfillmentStatusSpecification.html
+    # [2]: https://docs.aws.amazon.com/lexv2/latest/dg/streaming-progress.html#progress-complete.html
     #
     # @option params [required, String] :bot_id
     #   The identifier of the bot that processes the request.
@@ -649,14 +779,14 @@ module Aws::LexRuntimeV2
     #   The identifier of the user session that is having the conversation.
     #
     # @option params [required, String] :text
-    #   The text that the user entered. Amazon Lex interprets this text.
+    #   The text that the user entered. Amazon Lex V2 interprets this text.
     #
     # @option params [Types::SessionState] :session_state
     #   The current state of the dialog between the user and the bot.
     #
     # @option params [Hash<String,String>] :request_attributes
     #   Request-specific information passed between the client application and
-    #   Amazon Lex
+    #   Amazon Lex V2
     #
     #   The namespace `x-amz-lex:` is reserved for special attributes. Don't
     #   create any request attributes with the prefix `x-amz-lex:`.
@@ -668,6 +798,7 @@ module Aws::LexRuntimeV2
     #   * {Types::RecognizeTextResponse#interpretations #interpretations} => Array&lt;Types::Interpretation&gt;
     #   * {Types::RecognizeTextResponse#request_attributes #request_attributes} => Hash&lt;String,String&gt;
     #   * {Types::RecognizeTextResponse#session_id #session_id} => String
+    #   * {Types::RecognizeTextResponse#recognized_bot_member #recognized_bot_member} => Types::RecognizedBotMember
     #
     # @example Request syntax with placeholder values
     #
@@ -679,8 +810,15 @@ module Aws::LexRuntimeV2
     #     text: "Text", # required
     #     session_state: {
     #       dialog_action: {
-    #         type: "Close", # required, accepts Close, ConfirmIntent, Delegate, ElicitIntent, ElicitSlot
+    #         type: "Close", # required, accepts Close, ConfirmIntent, Delegate, ElicitIntent, ElicitSlot, None
     #         slot_to_elicit: "NonEmptyString",
+    #         slot_elicitation_style: "Default", # accepts Default, SpellByLetter, SpellByWord
+    #         sub_slot_to_elicit: {
+    #           name: "NonEmptyString", # required
+    #           sub_slot_to_elicit: {
+    #             # recursive ElicitSubSlot
+    #           },
+    #         },
     #       },
     #       intent: {
     #         name: "NonEmptyString", # required
@@ -691,9 +829,18 @@ module Aws::LexRuntimeV2
     #               interpreted_value: "NonEmptyString", # required
     #               resolved_values: ["NonEmptyString"],
     #             },
+    #             shape: "Scalar", # accepts Scalar, List, Composite
+    #             values: [
+    #               {
+    #                 # recursive Slot
+    #               },
+    #             ],
+    #             sub_slots: {
+    #               # recursive Slots
+    #             },
     #           },
     #         },
-    #         state: "Failed", # accepts Failed, Fulfilled, InProgress, ReadyForFulfillment, Waiting
+    #         state: "Failed", # accepts Failed, Fulfilled, InProgress, ReadyForFulfillment, Waiting, FulfillmentInProgress
     #         confirmation_state: "Confirmed", # accepts Confirmed, Denied, None
     #       },
     #       active_contexts: [
@@ -703,7 +850,7 @@ module Aws::LexRuntimeV2
     #             time_to_live_in_seconds: 1, # required
     #             turns_to_live: 1, # required
     #           },
-    #           context_attributes: {
+    #           context_attributes: { # required
     #             "ParameterName" => "Text",
     #           },
     #         },
@@ -712,6 +859,22 @@ module Aws::LexRuntimeV2
     #         "NonEmptyString" => "String",
     #       },
     #       originating_request_id: "NonEmptyString",
+    #       runtime_hints: {
+    #         slot_hints: {
+    #           "Name" => {
+    #             "Name" => {
+    #               runtime_hint_values: [
+    #                 {
+    #                   phrase: "RuntimeHintPhrase", # required
+    #                 },
+    #               ],
+    #               sub_slot_hints: {
+    #                 # recursive SlotHintsSlotMap
+    #               },
+    #             },
+    #           },
+    #         },
+    #       },
     #     },
     #     request_attributes: {
     #       "NonEmptyString" => "String",
@@ -729,15 +892,22 @@ module Aws::LexRuntimeV2
     #   resp.messages[0].image_response_card.buttons #=> Array
     #   resp.messages[0].image_response_card.buttons[0].text #=> String
     #   resp.messages[0].image_response_card.buttons[0].value #=> String
-    #   resp.session_state.dialog_action.type #=> String, one of "Close", "ConfirmIntent", "Delegate", "ElicitIntent", "ElicitSlot"
+    #   resp.session_state.dialog_action.type #=> String, one of "Close", "ConfirmIntent", "Delegate", "ElicitIntent", "ElicitSlot", "None"
     #   resp.session_state.dialog_action.slot_to_elicit #=> String
+    #   resp.session_state.dialog_action.slot_elicitation_style #=> String, one of "Default", "SpellByLetter", "SpellByWord"
+    #   resp.session_state.dialog_action.sub_slot_to_elicit.name #=> String
+    #   resp.session_state.dialog_action.sub_slot_to_elicit.sub_slot_to_elicit #=> Types::ElicitSubSlot
     #   resp.session_state.intent.name #=> String
     #   resp.session_state.intent.slots #=> Hash
     #   resp.session_state.intent.slots["NonEmptyString"].value.original_value #=> String
     #   resp.session_state.intent.slots["NonEmptyString"].value.interpreted_value #=> String
     #   resp.session_state.intent.slots["NonEmptyString"].value.resolved_values #=> Array
     #   resp.session_state.intent.slots["NonEmptyString"].value.resolved_values[0] #=> String
-    #   resp.session_state.intent.state #=> String, one of "Failed", "Fulfilled", "InProgress", "ReadyForFulfillment", "Waiting"
+    #   resp.session_state.intent.slots["NonEmptyString"].shape #=> String, one of "Scalar", "List", "Composite"
+    #   resp.session_state.intent.slots["NonEmptyString"].values #=> Array
+    #   resp.session_state.intent.slots["NonEmptyString"].values[0] #=> Types::Slot
+    #   resp.session_state.intent.slots["NonEmptyString"].sub_slots #=> Types::Slots
+    #   resp.session_state.intent.state #=> String, one of "Failed", "Fulfilled", "InProgress", "ReadyForFulfillment", "Waiting", "FulfillmentInProgress"
     #   resp.session_state.intent.confirmation_state #=> String, one of "Confirmed", "Denied", "None"
     #   resp.session_state.active_contexts #=> Array
     #   resp.session_state.active_contexts[0].name #=> String
@@ -748,6 +918,11 @@ module Aws::LexRuntimeV2
     #   resp.session_state.session_attributes #=> Hash
     #   resp.session_state.session_attributes["NonEmptyString"] #=> String
     #   resp.session_state.originating_request_id #=> String
+    #   resp.session_state.runtime_hints.slot_hints #=> Hash
+    #   resp.session_state.runtime_hints.slot_hints["Name"] #=> Hash
+    #   resp.session_state.runtime_hints.slot_hints["Name"]["Name"].runtime_hint_values #=> Array
+    #   resp.session_state.runtime_hints.slot_hints["Name"]["Name"].runtime_hint_values[0].phrase #=> String
+    #   resp.session_state.runtime_hints.slot_hints["Name"]["Name"].sub_slot_hints #=> Types::SlotHintsSlotMap
     #   resp.interpretations #=> Array
     #   resp.interpretations[0].nlu_confidence.score #=> Float
     #   resp.interpretations[0].sentiment_response.sentiment #=> String, one of "MIXED", "NEGATIVE", "NEUTRAL", "POSITIVE"
@@ -761,11 +936,17 @@ module Aws::LexRuntimeV2
     #   resp.interpretations[0].intent.slots["NonEmptyString"].value.interpreted_value #=> String
     #   resp.interpretations[0].intent.slots["NonEmptyString"].value.resolved_values #=> Array
     #   resp.interpretations[0].intent.slots["NonEmptyString"].value.resolved_values[0] #=> String
-    #   resp.interpretations[0].intent.state #=> String, one of "Failed", "Fulfilled", "InProgress", "ReadyForFulfillment", "Waiting"
+    #   resp.interpretations[0].intent.slots["NonEmptyString"].shape #=> String, one of "Scalar", "List", "Composite"
+    #   resp.interpretations[0].intent.slots["NonEmptyString"].values #=> Array
+    #   resp.interpretations[0].intent.slots["NonEmptyString"].values[0] #=> Types::Slot
+    #   resp.interpretations[0].intent.slots["NonEmptyString"].sub_slots #=> Types::Slots
+    #   resp.interpretations[0].intent.state #=> String, one of "Failed", "Fulfilled", "InProgress", "ReadyForFulfillment", "Waiting", "FulfillmentInProgress"
     #   resp.interpretations[0].intent.confirmation_state #=> String, one of "Confirmed", "Denied", "None"
     #   resp.request_attributes #=> Hash
     #   resp.request_attributes["NonEmptyString"] #=> String
     #   resp.session_id #=> String
+    #   resp.recognized_bot_member.bot_id #=> String
+    #   resp.recognized_bot_member.bot_name #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/runtime.lex.v2-2020-08-07/RecognizeText AWS API Documentation
     #
@@ -776,10 +957,59 @@ module Aws::LexRuntimeV2
       req.send_request(options)
     end
 
-    # Sends user input to Amazon Lex. You can send text or speech. Clients
-    # use this API to send text and audio requests to Amazon Lex at runtime.
-    # Amazon Lex interprets the user input using the machine learning model
-    # built for the bot.
+    # Sends user input to Amazon Lex V2. You can send text or speech.
+    # Clients use this API to send text and audio requests to Amazon Lex V2
+    # at runtime. Amazon Lex V2 interprets the user input using the machine
+    # learning model built for the bot.
+    #
+    # The following request fields must be compressed with gzip and then
+    # base64 encoded before you send them to Amazon Lex V2.
+    #
+    # * requestAttributes
+    #
+    # * sessionState
+    #
+    # The following response fields are compressed using gzip and then
+    # base64 encoded by Amazon Lex V2. Before you can use these fields, you
+    # must decode and decompress them.
+    #
+    # * inputTranscript
+    #
+    # * interpretations
+    #
+    # * messages
+    #
+    # * requestAttributes
+    #
+    # * sessionState
+    #
+    # The example contains a Java application that compresses and encodes a
+    # Java object to send to Amazon Lex V2, and a second that decodes and
+    # decompresses a response from Amazon Lex V2.
+    #
+    # If the optional post-fulfillment response is specified, the messages
+    # are returned as follows. For more information, see
+    # [PostFulfillmentStatusSpecification][1].
+    #
+    # * **Success message** - Returned if the Lambda function completes
+    #   successfully and the intent state is fulfilled or ready fulfillment
+    #   if the message is present.
+    #
+    # * **Failed message** - The failed message is returned if the Lambda
+    #   function throws an exception or if the Lambda function returns a
+    #   failed intent state without a message.
+    #
+    # * **Timeout message** - If you don't configure a timeout message and
+    #   a timeout, and the Lambda function doesn't return within 30
+    #   seconds, the timeout message is returned. If you configure a
+    #   timeout, the timeout message is returned when the period times out.
+    #
+    # For more information, see [Completion message][2].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lexv2/latest/dg/API_PostFulfillmentStatusSpecification.html
+    # [2]: https://docs.aws.amazon.com/lexv2/latest/dg/streaming-progress.html#progress-complete.html
     #
     # @option params [required, String] :bot_id
     #   The identifier of the bot that should receive the request.
@@ -797,15 +1027,21 @@ module Aws::LexRuntimeV2
     # @option params [String] :session_state
     #   Sets the state of the session with the user. You can use this to set
     #   the current intent, attributes, context, and dialog action. Use the
-    #   dialog action to determine the next step that Amazon Lex should use in
-    #   the conversation with the user.
+    #   dialog action to determine the next step that Amazon Lex V2 should use
+    #   in the conversation with the user.
+    #
+    #   The `sessionState` field must be compressed using gzip and then base64
+    #   encoded before sending to Amazon Lex V2.
     #
     # @option params [String] :request_attributes
     #   Request-specific information passed between the client application and
-    #   Amazon Lex
+    #   Amazon Lex V2
     #
     #   The namespace `x-amz-lex:` is reserved for special attributes. Don't
     #   create any request attributes for prefix `x-amz-lex:`.
+    #
+    #   The `requestAttributes` field must be compressed using gzip and then
+    #   base64 encoded before sending to Amazon Lex V2.
     #
     # @option params [required, String] :request_content_type
     #   Indicates the format for audio input or that the content is text. The
@@ -833,17 +1069,18 @@ module Aws::LexRuntimeV2
     #     ^
     #
     # @option params [String] :response_content_type
-    #   The message that Amazon Lex returns in the response can be either text
-    #   or speech based on the `responseContentType` value.
+    #   The message that Amazon Lex V2 returns in the response can be either
+    #   text or speech based on the `responseContentType` value.
     #
-    #   * If the value is `text/plain;charset=utf-8`, Amazon Lex returns text
-    #     in the response.
+    #   * If the value is `text/plain;charset=utf-8`, Amazon Lex V2 returns
+    #     text in the response.
     #
-    #   * If the value begins with `audio/`, Amazon Lex returns speech in the
-    #     response. Amazon Lex uses Amazon Polly to generate the speech using
-    #     the configuration that you specified in the `requestContentType`
-    #     parameter. For example, if you specify `audio/mpeg` as the value,
-    #     Amazon Lex returns speech in the MPEG format.
+    #   * If the value begins with `audio/`, Amazon Lex V2 returns speech in
+    #     the response. Amazon Lex V2 uses Amazon Polly to generate the speech
+    #     using the configuration that you specified in the
+    #     `responseContentType` parameter. For example, if you specify
+    #     `audio/mpeg` as the value, Amazon Lex V2 returns speech in the MPEG
+    #     format.
     #
     #   * If the value is `audio/pcm`, the speech returned is `audio/pcm` at
     #     16 KHz in 16-bit, little-endian format.
@@ -875,6 +1112,7 @@ module Aws::LexRuntimeV2
     #   * {Types::RecognizeUtteranceResponse#session_id #session_id} => String
     #   * {Types::RecognizeUtteranceResponse#input_transcript #input_transcript} => String
     #   * {Types::RecognizeUtteranceResponse#audio_stream #audio_stream} => IO
+    #   * {Types::RecognizeUtteranceResponse#recognized_bot_member #recognized_bot_member} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -901,6 +1139,7 @@ module Aws::LexRuntimeV2
     #   resp.session_id #=> String
     #   resp.input_transcript #=> String
     #   resp.audio_stream #=> IO
+    #   resp.recognized_bot_member #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/runtime.lex.v2-2020-08-07/RecognizeUtterance AWS API Documentation
     #
@@ -924,7 +1163,7 @@ module Aws::LexRuntimeV2
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-lexruntimev2'
-      context[:gem_version] = '1.2.0'
+      context[:gem_version] = '1.23.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

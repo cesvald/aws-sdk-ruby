@@ -14,18 +14,18 @@ module Aws::SSMIncidents
     include Seahorse::Model
 
     AccessDeniedException = Shapes::StructureShape.new(name: 'AccessDeniedException')
-    Action = Shapes::StructureShape.new(name: 'Action')
+    Action = Shapes::UnionShape.new(name: 'Action')
     ActionsList = Shapes::ListShape.new(name: 'ActionsList')
     AddRegionAction = Shapes::StructureShape.new(name: 'AddRegionAction')
     Arn = Shapes::StringShape.new(name: 'Arn')
-    AttributeValueList = Shapes::StructureShape.new(name: 'AttributeValueList')
-    AutomationExecution = Shapes::StructureShape.new(name: 'AutomationExecution')
+    AttributeValueList = Shapes::UnionShape.new(name: 'AttributeValueList')
+    AutomationExecution = Shapes::UnionShape.new(name: 'AutomationExecution')
     AutomationExecutionSet = Shapes::ListShape.new(name: 'AutomationExecutionSet')
     Boolean = Shapes::BooleanShape.new(name: 'Boolean')
-    ChatChannel = Shapes::StructureShape.new(name: 'ChatChannel')
+    ChatChannel = Shapes::UnionShape.new(name: 'ChatChannel')
     ChatbotSnsConfigurationSet = Shapes::ListShape.new(name: 'ChatbotSnsConfigurationSet')
     ClientToken = Shapes::StringShape.new(name: 'ClientToken')
-    Condition = Shapes::StructureShape.new(name: 'Condition')
+    Condition = Shapes::UnionShape.new(name: 'Condition')
     ConflictException = Shapes::StructureShape.new(name: 'ConflictException')
     CreateReplicationSetInput = Shapes::StructureShape.new(name: 'CreateReplicationSetInput')
     CreateReplicationSetOutput = Shapes::StructureShape.new(name: 'CreateReplicationSetOutput')
@@ -45,15 +45,21 @@ module Aws::SSMIncidents
     DeleteResponsePlanOutput = Shapes::StructureShape.new(name: 'DeleteResponsePlanOutput')
     DeleteTimelineEventInput = Shapes::StructureShape.new(name: 'DeleteTimelineEventInput')
     DeleteTimelineEventOutput = Shapes::StructureShape.new(name: 'DeleteTimelineEventOutput')
+    DynamicSsmParameterValue = Shapes::UnionShape.new(name: 'DynamicSsmParameterValue')
+    DynamicSsmParameters = Shapes::MapShape.new(name: 'DynamicSsmParameters')
+    DynamicSsmParametersKeyString = Shapes::StringShape.new(name: 'DynamicSsmParametersKeyString')
     EmptyChatChannel = Shapes::StructureShape.new(name: 'EmptyChatChannel')
     EngagementSet = Shapes::ListShape.new(name: 'EngagementSet')
     EventData = Shapes::StringShape.new(name: 'EventData')
+    EventReference = Shapes::UnionShape.new(name: 'EventReference')
+    EventReferenceList = Shapes::ListShape.new(name: 'EventReferenceList')
     EventSummary = Shapes::StructureShape.new(name: 'EventSummary')
     EventSummaryList = Shapes::ListShape.new(name: 'EventSummaryList')
     ExceptionMessage = Shapes::StringShape.new(name: 'ExceptionMessage')
     Filter = Shapes::StructureShape.new(name: 'Filter')
     FilterKeyString = Shapes::StringShape.new(name: 'FilterKeyString')
     FilterList = Shapes::ListShape.new(name: 'FilterList')
+    GeneratedId = Shapes::StringShape.new(name: 'GeneratedId')
     GetIncidentRecordInput = Shapes::StructureShape.new(name: 'GetIncidentRecordInput')
     GetIncidentRecordOutput = Shapes::StructureShape.new(name: 'GetIncidentRecordOutput')
     GetReplicationSetInput = Shapes::StructureShape.new(name: 'GetReplicationSetInput')
@@ -76,10 +82,12 @@ module Aws::SSMIncidents
     IncidentTitle = Shapes::StringShape.new(name: 'IncidentTitle')
     Integer = Shapes::IntegerShape.new(name: 'Integer')
     IntegerList = Shapes::ListShape.new(name: 'IntegerList')
+    Integration = Shapes::UnionShape.new(name: 'Integration')
+    Integrations = Shapes::ListShape.new(name: 'Integrations')
     InternalServerException = Shapes::StructureShape.new(name: 'InternalServerException')
     ItemIdentifier = Shapes::StructureShape.new(name: 'ItemIdentifier')
     ItemType = Shapes::StringShape.new(name: 'ItemType')
-    ItemValue = Shapes::StructureShape.new(name: 'ItemValue')
+    ItemValue = Shapes::UnionShape.new(name: 'ItemValue')
     ListIncidentRecordsInput = Shapes::StructureShape.new(name: 'ListIncidentRecordsInput')
     ListIncidentRecordsOutput = Shapes::StructureShape.new(name: 'ListIncidentRecordsOutput')
     ListRelatedItemsInput = Shapes::StructureShape.new(name: 'ListRelatedItemsInput')
@@ -95,8 +103,16 @@ module Aws::SSMIncidents
     MaxResults = Shapes::IntegerShape.new(name: 'MaxResults')
     MetricDefinition = Shapes::StringShape.new(name: 'MetricDefinition')
     NextToken = Shapes::StringShape.new(name: 'NextToken')
-    NotificationTargetItem = Shapes::StructureShape.new(name: 'NotificationTargetItem')
+    NotificationTargetItem = Shapes::UnionShape.new(name: 'NotificationTargetItem')
     NotificationTargetSet = Shapes::ListShape.new(name: 'NotificationTargetSet')
+    PagerDutyConfiguration = Shapes::StructureShape.new(name: 'PagerDutyConfiguration')
+    PagerDutyConfigurationNameString = Shapes::StringShape.new(name: 'PagerDutyConfigurationNameString')
+    PagerDutyConfigurationSecretIdString = Shapes::StringShape.new(name: 'PagerDutyConfigurationSecretIdString')
+    PagerDutyIncidentConfiguration = Shapes::StructureShape.new(name: 'PagerDutyIncidentConfiguration')
+    PagerDutyIncidentConfigurationServiceIdString = Shapes::StringShape.new(name: 'PagerDutyIncidentConfigurationServiceIdString')
+    PagerDutyIncidentDetail = Shapes::StructureShape.new(name: 'PagerDutyIncidentDetail')
+    PagerDutyIncidentDetailIdString = Shapes::StringShape.new(name: 'PagerDutyIncidentDetailIdString')
+    PagerDutyIncidentDetailSecretIdString = Shapes::StringShape.new(name: 'PagerDutyIncidentDetailSecretIdString')
     Policy = Shapes::StringShape.new(name: 'Policy')
     PolicyId = Shapes::StringShape.new(name: 'PolicyId')
     PutResourcePolicyInput = Shapes::StructureShape.new(name: 'PutResourcePolicyInput')
@@ -111,7 +127,7 @@ module Aws::SSMIncidents
     RelatedItem = Shapes::StructureShape.new(name: 'RelatedItem')
     RelatedItemList = Shapes::ListShape.new(name: 'RelatedItemList')
     RelatedItemTitleString = Shapes::StringShape.new(name: 'RelatedItemTitleString')
-    RelatedItemsUpdate = Shapes::StructureShape.new(name: 'RelatedItemsUpdate')
+    RelatedItemsUpdate = Shapes::UnionShape.new(name: 'RelatedItemsUpdate')
     ReplicationSet = Shapes::StructureShape.new(name: 'ReplicationSet')
     ReplicationSetArnList = Shapes::ListShape.new(name: 'ReplicationSetArnList')
     ReplicationSetStatus = Shapes::StringShape.new(name: 'ReplicationSetStatus')
@@ -125,6 +141,7 @@ module Aws::SSMIncidents
     ResponsePlanSummaryList = Shapes::ListShape.new(name: 'ResponsePlanSummaryList')
     RoleArn = Shapes::StringShape.new(name: 'RoleArn')
     ServiceCode = Shapes::StringShape.new(name: 'ServiceCode')
+    ServicePrincipal = Shapes::StringShape.new(name: 'ServicePrincipal')
     ServiceQuotaExceededException = Shapes::StructureShape.new(name: 'ServiceQuotaExceededException')
     SnsArn = Shapes::StringShape.new(name: 'SnsArn')
     SortOrder = Shapes::StringShape.new(name: 'SortOrder')
@@ -146,6 +163,7 @@ module Aws::SSMIncidents
     TagKey = Shapes::StringShape.new(name: 'TagKey')
     TagKeyList = Shapes::ListShape.new(name: 'TagKeyList')
     TagMap = Shapes::MapShape.new(name: 'TagMap')
+    TagMapUpdate = Shapes::MapShape.new(name: 'TagMapUpdate')
     TagResourceRequest = Shapes::StructureShape.new(name: 'TagResourceRequest')
     TagResourceResponse = Shapes::StructureShape.new(name: 'TagResourceResponse')
     TagValue = Shapes::StringShape.new(name: 'TagValue')
@@ -164,7 +182,7 @@ module Aws::SSMIncidents
     UpdateIncidentRecordOutput = Shapes::StructureShape.new(name: 'UpdateIncidentRecordOutput')
     UpdateRelatedItemsInput = Shapes::StructureShape.new(name: 'UpdateRelatedItemsInput')
     UpdateRelatedItemsOutput = Shapes::StructureShape.new(name: 'UpdateRelatedItemsOutput')
-    UpdateReplicationSetAction = Shapes::StructureShape.new(name: 'UpdateReplicationSetAction')
+    UpdateReplicationSetAction = Shapes::UnionShape.new(name: 'UpdateReplicationSetAction')
     UpdateReplicationSetInput = Shapes::StructureShape.new(name: 'UpdateReplicationSetInput')
     UpdateReplicationSetInputActionsList = Shapes::ListShape.new(name: 'UpdateReplicationSetInputActionsList')
     UpdateReplicationSetOutput = Shapes::StructureShape.new(name: 'UpdateReplicationSetOutput')
@@ -174,11 +192,15 @@ module Aws::SSMIncidents
     UpdateTimelineEventOutput = Shapes::StructureShape.new(name: 'UpdateTimelineEventOutput')
     Url = Shapes::StringShape.new(name: 'Url')
     ValidationException = Shapes::StructureShape.new(name: 'ValidationException')
+    VariableType = Shapes::StringShape.new(name: 'VariableType')
 
     AccessDeniedException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, required: true, location_name: "message"))
     AccessDeniedException.struct_class = Types::AccessDeniedException
 
     Action.add_member(:ssm_automation, Shapes::ShapeRef.new(shape: SsmAutomation, location_name: "ssmAutomation"))
+    Action.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    Action.add_member_subclass(:ssm_automation, Types::Action::SsmAutomation)
+    Action.add_member_subclass(:unknown, Types::Action::Unknown)
     Action.struct_class = Types::Action
 
     ActionsList.member = Shapes::ShapeRef.new(shape: Action)
@@ -189,15 +211,26 @@ module Aws::SSMIncidents
 
     AttributeValueList.add_member(:integer_values, Shapes::ShapeRef.new(shape: IntegerList, location_name: "integerValues"))
     AttributeValueList.add_member(:string_values, Shapes::ShapeRef.new(shape: StringList, location_name: "stringValues"))
+    AttributeValueList.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    AttributeValueList.add_member_subclass(:integer_values, Types::AttributeValueList::IntegerValues)
+    AttributeValueList.add_member_subclass(:string_values, Types::AttributeValueList::StringValues)
+    AttributeValueList.add_member_subclass(:unknown, Types::AttributeValueList::Unknown)
     AttributeValueList.struct_class = Types::AttributeValueList
 
     AutomationExecution.add_member(:ssm_execution_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "ssmExecutionArn"))
+    AutomationExecution.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    AutomationExecution.add_member_subclass(:ssm_execution_arn, Types::AutomationExecution::SsmExecutionArn)
+    AutomationExecution.add_member_subclass(:unknown, Types::AutomationExecution::Unknown)
     AutomationExecution.struct_class = Types::AutomationExecution
 
     AutomationExecutionSet.member = Shapes::ShapeRef.new(shape: AutomationExecution)
 
     ChatChannel.add_member(:chatbot_sns, Shapes::ShapeRef.new(shape: ChatbotSnsConfigurationSet, location_name: "chatbotSns"))
     ChatChannel.add_member(:empty, Shapes::ShapeRef.new(shape: EmptyChatChannel, location_name: "empty"))
+    ChatChannel.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    ChatChannel.add_member_subclass(:chatbot_sns, Types::ChatChannel::ChatbotSns)
+    ChatChannel.add_member_subclass(:empty, Types::ChatChannel::Empty)
+    ChatChannel.add_member_subclass(:unknown, Types::ChatChannel::Unknown)
     ChatChannel.struct_class = Types::ChatChannel
 
     ChatbotSnsConfigurationSet.member = Shapes::ShapeRef.new(shape: SnsArn)
@@ -205,15 +238,22 @@ module Aws::SSMIncidents
     Condition.add_member(:after, Shapes::ShapeRef.new(shape: Timestamp, location_name: "after"))
     Condition.add_member(:before, Shapes::ShapeRef.new(shape: Timestamp, location_name: "before"))
     Condition.add_member(:equals, Shapes::ShapeRef.new(shape: AttributeValueList, location_name: "equals"))
+    Condition.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    Condition.add_member_subclass(:after, Types::Condition::After)
+    Condition.add_member_subclass(:before, Types::Condition::Before)
+    Condition.add_member_subclass(:equals, Types::Condition::Equals)
+    Condition.add_member_subclass(:unknown, Types::Condition::Unknown)
     Condition.struct_class = Types::Condition
 
     ConflictException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, required: true, location_name: "message"))
     ConflictException.add_member(:resource_identifier, Shapes::ShapeRef.new(shape: String, location_name: "resourceIdentifier"))
     ConflictException.add_member(:resource_type, Shapes::ShapeRef.new(shape: ResourceType, location_name: "resourceType"))
+    ConflictException.add_member(:retry_after, Shapes::ShapeRef.new(shape: Timestamp, location_name: "retryAfter"))
     ConflictException.struct_class = Types::ConflictException
 
     CreateReplicationSetInput.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
     CreateReplicationSetInput.add_member(:regions, Shapes::ShapeRef.new(shape: RegionMapInput, required: true, location_name: "regions"))
+    CreateReplicationSetInput.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     CreateReplicationSetInput.struct_class = Types::CreateReplicationSetInput
 
     CreateReplicationSetOutput.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "arn"))
@@ -225,6 +265,7 @@ module Aws::SSMIncidents
     CreateResponsePlanInput.add_member(:display_name, Shapes::ShapeRef.new(shape: ResponsePlanDisplayName, location_name: "displayName"))
     CreateResponsePlanInput.add_member(:engagements, Shapes::ShapeRef.new(shape: EngagementSet, location_name: "engagements"))
     CreateResponsePlanInput.add_member(:incident_template, Shapes::ShapeRef.new(shape: IncidentTemplate, required: true, location_name: "incidentTemplate"))
+    CreateResponsePlanInput.add_member(:integrations, Shapes::ShapeRef.new(shape: Integrations, location_name: "integrations"))
     CreateResponsePlanInput.add_member(:name, Shapes::ShapeRef.new(shape: ResponsePlanName, required: true, location_name: "name"))
     CreateResponsePlanInput.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "tags"))
     CreateResponsePlanInput.struct_class = Types::CreateResponsePlanInput
@@ -232,8 +273,9 @@ module Aws::SSMIncidents
     CreateResponsePlanOutput.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "arn"))
     CreateResponsePlanOutput.struct_class = Types::CreateResponsePlanOutput
 
-    CreateTimelineEventInput.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
+    CreateTimelineEventInput.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
     CreateTimelineEventInput.add_member(:event_data, Shapes::ShapeRef.new(shape: EventData, required: true, location_name: "eventData"))
+    CreateTimelineEventInput.add_member(:event_references, Shapes::ShapeRef.new(shape: EventReferenceList, location_name: "eventReferences"))
     CreateTimelineEventInput.add_member(:event_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "eventTime"))
     CreateTimelineEventInput.add_member(:event_type, Shapes::ShapeRef.new(shape: TimelineEventType, required: true, location_name: "eventType"))
     CreateTimelineEventInput.add_member(:incident_record_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "incidentRecordArn"))
@@ -273,11 +315,31 @@ module Aws::SSMIncidents
 
     DeleteTimelineEventOutput.struct_class = Types::DeleteTimelineEventOutput
 
+    DynamicSsmParameterValue.add_member(:variable, Shapes::ShapeRef.new(shape: VariableType, location_name: "variable"))
+    DynamicSsmParameterValue.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    DynamicSsmParameterValue.add_member_subclass(:variable, Types::DynamicSsmParameterValue::Variable)
+    DynamicSsmParameterValue.add_member_subclass(:unknown, Types::DynamicSsmParameterValue::Unknown)
+    DynamicSsmParameterValue.struct_class = Types::DynamicSsmParameterValue
+
+    DynamicSsmParameters.key = Shapes::ShapeRef.new(shape: DynamicSsmParametersKeyString)
+    DynamicSsmParameters.value = Shapes::ShapeRef.new(shape: DynamicSsmParameterValue)
+
     EmptyChatChannel.struct_class = Types::EmptyChatChannel
 
     EngagementSet.member = Shapes::ShapeRef.new(shape: SsmContactsArn)
 
+    EventReference.add_member(:related_item_id, Shapes::ShapeRef.new(shape: GeneratedId, location_name: "relatedItemId"))
+    EventReference.add_member(:resource, Shapes::ShapeRef.new(shape: Arn, location_name: "resource"))
+    EventReference.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    EventReference.add_member_subclass(:related_item_id, Types::EventReference::RelatedItemId)
+    EventReference.add_member_subclass(:resource, Types::EventReference::Resource)
+    EventReference.add_member_subclass(:unknown, Types::EventReference::Unknown)
+    EventReference.struct_class = Types::EventReference
+
+    EventReferenceList.member = Shapes::ShapeRef.new(shape: EventReference)
+
     EventSummary.add_member(:event_id, Shapes::ShapeRef.new(shape: UUID, required: true, location_name: "eventId"))
+    EventSummary.add_member(:event_references, Shapes::ShapeRef.new(shape: EventReferenceList, location_name: "eventReferences"))
     EventSummary.add_member(:event_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "eventTime"))
     EventSummary.add_member(:event_type, Shapes::ShapeRef.new(shape: TimelineEventType, required: true, location_name: "eventType"))
     EventSummary.add_member(:event_updated_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "eventUpdatedTime"))
@@ -322,6 +384,7 @@ module Aws::SSMIncidents
     GetResponsePlanOutput.add_member(:display_name, Shapes::ShapeRef.new(shape: ResponsePlanDisplayName, location_name: "displayName"))
     GetResponsePlanOutput.add_member(:engagements, Shapes::ShapeRef.new(shape: EngagementSet, location_name: "engagements"))
     GetResponsePlanOutput.add_member(:incident_template, Shapes::ShapeRef.new(shape: IncidentTemplate, required: true, location_name: "incidentTemplate"))
+    GetResponsePlanOutput.add_member(:integrations, Shapes::ShapeRef.new(shape: Integrations, location_name: "integrations"))
     GetResponsePlanOutput.add_member(:name, Shapes::ShapeRef.new(shape: ResponsePlanName, required: true, location_name: "name"))
     GetResponsePlanOutput.struct_class = Types::GetResponsePlanOutput
 
@@ -349,7 +412,7 @@ module Aws::SSMIncidents
     IncidentRecord.struct_class = Types::IncidentRecord
 
     IncidentRecordSource.add_member(:created_by, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "createdBy"))
-    IncidentRecordSource.add_member(:invoked_by, Shapes::ShapeRef.new(shape: Arn, location_name: "invokedBy"))
+    IncidentRecordSource.add_member(:invoked_by, Shapes::ShapeRef.new(shape: ServicePrincipal, location_name: "invokedBy"))
     IncidentRecordSource.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "resourceArn"))
     IncidentRecordSource.add_member(:source, Shapes::ShapeRef.new(shape: IncidentSource, required: true, location_name: "source"))
     IncidentRecordSource.struct_class = Types::IncidentRecordSource
@@ -367,12 +430,21 @@ module Aws::SSMIncidents
 
     IncidentTemplate.add_member(:dedupe_string, Shapes::ShapeRef.new(shape: DedupeString, location_name: "dedupeString"))
     IncidentTemplate.add_member(:impact, Shapes::ShapeRef.new(shape: Impact, required: true, location_name: "impact"))
+    IncidentTemplate.add_member(:incident_tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "incidentTags"))
     IncidentTemplate.add_member(:notification_targets, Shapes::ShapeRef.new(shape: NotificationTargetSet, location_name: "notificationTargets"))
     IncidentTemplate.add_member(:summary, Shapes::ShapeRef.new(shape: IncidentSummary, location_name: "summary"))
     IncidentTemplate.add_member(:title, Shapes::ShapeRef.new(shape: IncidentTitle, required: true, location_name: "title"))
     IncidentTemplate.struct_class = Types::IncidentTemplate
 
     IntegerList.member = Shapes::ShapeRef.new(shape: Integer)
+
+    Integration.add_member(:pager_duty_configuration, Shapes::ShapeRef.new(shape: PagerDutyConfiguration, location_name: "pagerDutyConfiguration"))
+    Integration.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    Integration.add_member_subclass(:pager_duty_configuration, Types::Integration::PagerDutyConfiguration)
+    Integration.add_member_subclass(:unknown, Types::Integration::Unknown)
+    Integration.struct_class = Types::Integration
+
+    Integrations.member = Shapes::ShapeRef.new(shape: Integration)
 
     InternalServerException.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, required: true, location_name: "message"))
     InternalServerException.struct_class = Types::InternalServerException
@@ -383,7 +455,14 @@ module Aws::SSMIncidents
 
     ItemValue.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "arn"))
     ItemValue.add_member(:metric_definition, Shapes::ShapeRef.new(shape: MetricDefinition, location_name: "metricDefinition"))
+    ItemValue.add_member(:pager_duty_incident_detail, Shapes::ShapeRef.new(shape: PagerDutyIncidentDetail, location_name: "pagerDutyIncidentDetail"))
     ItemValue.add_member(:url, Shapes::ShapeRef.new(shape: Url, location_name: "url"))
+    ItemValue.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    ItemValue.add_member_subclass(:arn, Types::ItemValue::Arn)
+    ItemValue.add_member_subclass(:metric_definition, Types::ItemValue::MetricDefinition)
+    ItemValue.add_member_subclass(:pager_duty_incident_detail, Types::ItemValue::PagerDutyIncidentDetail)
+    ItemValue.add_member_subclass(:url, Types::ItemValue::Url)
+    ItemValue.add_member_subclass(:unknown, Types::ItemValue::Unknown)
     ItemValue.struct_class = Types::ItemValue
 
     ListIncidentRecordsInput.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "filters"))
@@ -439,9 +518,25 @@ module Aws::SSMIncidents
     ListTimelineEventsOutput.struct_class = Types::ListTimelineEventsOutput
 
     NotificationTargetItem.add_member(:sns_topic_arn, Shapes::ShapeRef.new(shape: Arn, location_name: "snsTopicArn"))
+    NotificationTargetItem.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    NotificationTargetItem.add_member_subclass(:sns_topic_arn, Types::NotificationTargetItem::SnsTopicArn)
+    NotificationTargetItem.add_member_subclass(:unknown, Types::NotificationTargetItem::Unknown)
     NotificationTargetItem.struct_class = Types::NotificationTargetItem
 
     NotificationTargetSet.member = Shapes::ShapeRef.new(shape: NotificationTargetItem)
+
+    PagerDutyConfiguration.add_member(:name, Shapes::ShapeRef.new(shape: PagerDutyConfigurationNameString, required: true, location_name: "name"))
+    PagerDutyConfiguration.add_member(:pager_duty_incident_configuration, Shapes::ShapeRef.new(shape: PagerDutyIncidentConfiguration, required: true, location_name: "pagerDutyIncidentConfiguration"))
+    PagerDutyConfiguration.add_member(:secret_id, Shapes::ShapeRef.new(shape: PagerDutyConfigurationSecretIdString, required: true, location_name: "secretId"))
+    PagerDutyConfiguration.struct_class = Types::PagerDutyConfiguration
+
+    PagerDutyIncidentConfiguration.add_member(:service_id, Shapes::ShapeRef.new(shape: PagerDutyIncidentConfigurationServiceIdString, required: true, location_name: "serviceId"))
+    PagerDutyIncidentConfiguration.struct_class = Types::PagerDutyIncidentConfiguration
+
+    PagerDutyIncidentDetail.add_member(:auto_resolve, Shapes::ShapeRef.new(shape: Boolean, location_name: "autoResolve"))
+    PagerDutyIncidentDetail.add_member(:id, Shapes::ShapeRef.new(shape: PagerDutyIncidentDetailIdString, required: true, location_name: "id"))
+    PagerDutyIncidentDetail.add_member(:secret_id, Shapes::ShapeRef.new(shape: PagerDutyIncidentDetailSecretIdString, location_name: "secretId"))
+    PagerDutyIncidentDetail.struct_class = Types::PagerDutyIncidentDetail
 
     PutResourcePolicyInput.add_member(:policy, Shapes::ShapeRef.new(shape: Policy, required: true, location_name: "policy"))
     PutResourcePolicyInput.add_member(:resource_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "resourceArn"))
@@ -465,6 +560,7 @@ module Aws::SSMIncidents
     RegionMapInputValue.add_member(:sse_kms_key_id, Shapes::ShapeRef.new(shape: SseKmsKey, location_name: "sseKmsKeyId"))
     RegionMapInputValue.struct_class = Types::RegionMapInputValue
 
+    RelatedItem.add_member(:generated_id, Shapes::ShapeRef.new(shape: GeneratedId, location_name: "generatedId"))
     RelatedItem.add_member(:identifier, Shapes::ShapeRef.new(shape: ItemIdentifier, required: true, location_name: "identifier"))
     RelatedItem.add_member(:title, Shapes::ShapeRef.new(shape: RelatedItemTitleString, location_name: "title"))
     RelatedItem.struct_class = Types::RelatedItem
@@ -473,8 +569,13 @@ module Aws::SSMIncidents
 
     RelatedItemsUpdate.add_member(:item_to_add, Shapes::ShapeRef.new(shape: RelatedItem, location_name: "itemToAdd"))
     RelatedItemsUpdate.add_member(:item_to_remove, Shapes::ShapeRef.new(shape: ItemIdentifier, location_name: "itemToRemove"))
+    RelatedItemsUpdate.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    RelatedItemsUpdate.add_member_subclass(:item_to_add, Types::RelatedItemsUpdate::ItemToAdd)
+    RelatedItemsUpdate.add_member_subclass(:item_to_remove, Types::RelatedItemsUpdate::ItemToRemove)
+    RelatedItemsUpdate.add_member_subclass(:unknown, Types::RelatedItemsUpdate::Unknown)
     RelatedItemsUpdate.struct_class = Types::RelatedItemsUpdate
 
+    ReplicationSet.add_member(:arn, Shapes::ShapeRef.new(shape: Arn, location_name: "arn"))
     ReplicationSet.add_member(:created_by, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "createdBy"))
     ReplicationSet.add_member(:created_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "createdTime"))
     ReplicationSet.add_member(:deletion_protected, Shapes::ShapeRef.new(shape: Boolean, required: true, location_name: "deletionProtected"))
@@ -514,6 +615,7 @@ module Aws::SSMIncidents
 
     SsmAutomation.add_member(:document_name, Shapes::ShapeRef.new(shape: SsmAutomationDocumentNameString, required: true, location_name: "documentName"))
     SsmAutomation.add_member(:document_version, Shapes::ShapeRef.new(shape: SsmAutomationDocumentVersionString, location_name: "documentVersion"))
+    SsmAutomation.add_member(:dynamic_parameters, Shapes::ShapeRef.new(shape: DynamicSsmParameters, location_name: "dynamicParameters"))
     SsmAutomation.add_member(:parameters, Shapes::ShapeRef.new(shape: SsmParameters, location_name: "parameters"))
     SsmAutomation.add_member(:role_arn, Shapes::ShapeRef.new(shape: RoleArn, required: true, location_name: "roleArn"))
     SsmAutomation.add_member(:target_account, Shapes::ShapeRef.new(shape: SsmTargetAccount, location_name: "targetAccount"))
@@ -542,6 +644,9 @@ module Aws::SSMIncidents
     TagMap.key = Shapes::ShapeRef.new(shape: TagKey)
     TagMap.value = Shapes::ShapeRef.new(shape: TagValue)
 
+    TagMapUpdate.key = Shapes::ShapeRef.new(shape: TagKey)
+    TagMapUpdate.value = Shapes::ShapeRef.new(shape: TagValue)
+
     TagResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: String, required: true, location: "uri", location_name: "resourceArn"))
     TagResourceRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, required: true, location_name: "tags"))
     TagResourceRequest.struct_class = Types::TagResourceRequest
@@ -555,6 +660,7 @@ module Aws::SSMIncidents
 
     TimelineEvent.add_member(:event_data, Shapes::ShapeRef.new(shape: EventData, required: true, location_name: "eventData"))
     TimelineEvent.add_member(:event_id, Shapes::ShapeRef.new(shape: UUID, required: true, location_name: "eventId"))
+    TimelineEvent.add_member(:event_references, Shapes::ShapeRef.new(shape: EventReferenceList, location_name: "eventReferences"))
     TimelineEvent.add_member(:event_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "eventTime"))
     TimelineEvent.add_member(:event_type, Shapes::ShapeRef.new(shape: TimelineEventType, required: true, location_name: "eventType"))
     TimelineEvent.add_member(:event_updated_time, Shapes::ShapeRef.new(shape: Timestamp, required: true, location_name: "eventUpdatedTime"))
@@ -601,6 +707,10 @@ module Aws::SSMIncidents
 
     UpdateReplicationSetAction.add_member(:add_region_action, Shapes::ShapeRef.new(shape: AddRegionAction, location_name: "addRegionAction"))
     UpdateReplicationSetAction.add_member(:delete_region_action, Shapes::ShapeRef.new(shape: DeleteRegionAction, location_name: "deleteRegionAction"))
+    UpdateReplicationSetAction.add_member(:unknown, Shapes::ShapeRef.new(shape: nil, location_name: 'unknown'))
+    UpdateReplicationSetAction.add_member_subclass(:add_region_action, Types::UpdateReplicationSetAction::AddRegionAction)
+    UpdateReplicationSetAction.add_member_subclass(:delete_region_action, Types::UpdateReplicationSetAction::DeleteRegionAction)
+    UpdateReplicationSetAction.add_member_subclass(:unknown, Types::UpdateReplicationSetAction::Unknown)
     UpdateReplicationSetAction.struct_class = Types::UpdateReplicationSetAction
 
     UpdateReplicationSetInput.add_member(:actions, Shapes::ShapeRef.new(shape: UpdateReplicationSetInputActionsList, required: true, location_name: "actions"))
@@ -622,14 +732,17 @@ module Aws::SSMIncidents
     UpdateResponsePlanInput.add_member(:incident_template_impact, Shapes::ShapeRef.new(shape: Impact, location_name: "incidentTemplateImpact"))
     UpdateResponsePlanInput.add_member(:incident_template_notification_targets, Shapes::ShapeRef.new(shape: NotificationTargetSet, location_name: "incidentTemplateNotificationTargets"))
     UpdateResponsePlanInput.add_member(:incident_template_summary, Shapes::ShapeRef.new(shape: IncidentSummary, location_name: "incidentTemplateSummary"))
+    UpdateResponsePlanInput.add_member(:incident_template_tags, Shapes::ShapeRef.new(shape: TagMapUpdate, location_name: "incidentTemplateTags"))
     UpdateResponsePlanInput.add_member(:incident_template_title, Shapes::ShapeRef.new(shape: IncidentTitle, location_name: "incidentTemplateTitle"))
+    UpdateResponsePlanInput.add_member(:integrations, Shapes::ShapeRef.new(shape: Integrations, location_name: "integrations"))
     UpdateResponsePlanInput.struct_class = Types::UpdateResponsePlanInput
 
     UpdateResponsePlanOutput.struct_class = Types::UpdateResponsePlanOutput
 
-    UpdateTimelineEventInput.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, required: true, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
+    UpdateTimelineEventInput.add_member(:client_token, Shapes::ShapeRef.new(shape: ClientToken, location_name: "clientToken", metadata: {"idempotencyToken"=>true}))
     UpdateTimelineEventInput.add_member(:event_data, Shapes::ShapeRef.new(shape: EventData, location_name: "eventData"))
     UpdateTimelineEventInput.add_member(:event_id, Shapes::ShapeRef.new(shape: UUID, required: true, location_name: "eventId"))
+    UpdateTimelineEventInput.add_member(:event_references, Shapes::ShapeRef.new(shape: EventReferenceList, location_name: "eventReferences"))
     UpdateTimelineEventInput.add_member(:event_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "eventTime"))
     UpdateTimelineEventInput.add_member(:event_type, Shapes::ShapeRef.new(shape: TimelineEventType, location_name: "eventType"))
     UpdateTimelineEventInput.add_member(:incident_record_arn, Shapes::ShapeRef.new(shape: Arn, required: true, location_name: "incidentRecordArn"))
@@ -1044,6 +1157,7 @@ module Aws::SSMIncidents
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: ConflictException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
       end)
 

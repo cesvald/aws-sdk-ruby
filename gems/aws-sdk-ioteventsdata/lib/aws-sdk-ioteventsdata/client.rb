@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:ioteventsdata)
@@ -73,8 +77,13 @@ module Aws::IoTEventsData
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::IoTEventsData::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::IoTEventsData
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::IoTEventsData
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::IoTEventsData
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::IoTEventsData
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::IoTEventsData
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::IoTEventsData::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::IoTEventsData::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::IoTEventsData
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::IoTEventsData
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -327,12 +384,168 @@ module Aws::IoTEventsData
 
     # @!group API Operations
 
-    # Sends a set of messages to the AWS IoT Events system. Each message
-    # payload is transformed into the input you specify (`"inputName"`) and
-    # ingested into any detectors that monitor that input. If multiple
-    # messages are sent, the order in which the messages are processed
-    # isn't guaranteed. To guarantee ordering, you must send messages one
-    # at a time and wait for a successful response.
+    # Acknowledges one or more alarms. The alarms change to the
+    # `ACKNOWLEDGED` state after you acknowledge them.
+    #
+    # @option params [required, Array<Types::AcknowledgeAlarmActionRequest>] :acknowledge_action_requests
+    #   The list of acknowledge action requests. You can specify up to 10
+    #   requests per operation.
+    #
+    # @return [Types::BatchAcknowledgeAlarmResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchAcknowledgeAlarmResponse#error_entries #error_entries} => Array&lt;Types::BatchAlarmActionErrorEntry&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_acknowledge_alarm({
+    #     acknowledge_action_requests: [ # required
+    #       {
+    #         request_id: "RequestId", # required
+    #         alarm_model_name: "AlarmModelName", # required
+    #         key_value: "KeyValue",
+    #         note: "Note",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.error_entries #=> Array
+    #   resp.error_entries[0].request_id #=> String
+    #   resp.error_entries[0].error_code #=> String, one of "ResourceNotFoundException", "InvalidRequestException", "InternalFailureException", "ServiceUnavailableException", "ThrottlingException"
+    #   resp.error_entries[0].error_message #=> String
+    #
+    # @overload batch_acknowledge_alarm(params = {})
+    # @param [Hash] params ({})
+    def batch_acknowledge_alarm(params = {}, options = {})
+      req = build_request(:batch_acknowledge_alarm, params)
+      req.send_request(options)
+    end
+
+    # Deletes one or more detectors that were created. When a detector is
+    # deleted, its state will be cleared and the detector will be removed
+    # from the list of detectors. The deleted detector will no longer appear
+    # if referenced in the [ListDetectors][1] API call.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/iotevents/latest/apireference/API_iotevents-data_ListDetectors.html
+    #
+    # @option params [required, Array<Types::DeleteDetectorRequest>] :detectors
+    #   The list of one or more detectors to be deleted.
+    #
+    # @return [Types::BatchDeleteDetectorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchDeleteDetectorResponse#batch_delete_detector_error_entries #batch_delete_detector_error_entries} => Array&lt;Types::BatchDeleteDetectorErrorEntry&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_delete_detector({
+    #     detectors: [ # required
+    #       {
+    #         message_id: "MessageId", # required
+    #         detector_model_name: "DetectorModelName", # required
+    #         key_value: "KeyValue",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.batch_delete_detector_error_entries #=> Array
+    #   resp.batch_delete_detector_error_entries[0].message_id #=> String
+    #   resp.batch_delete_detector_error_entries[0].error_code #=> String, one of "ResourceNotFoundException", "InvalidRequestException", "InternalFailureException", "ServiceUnavailableException", "ThrottlingException"
+    #   resp.batch_delete_detector_error_entries[0].error_message #=> String
+    #
+    # @overload batch_delete_detector(params = {})
+    # @param [Hash] params ({})
+    def batch_delete_detector(params = {}, options = {})
+      req = build_request(:batch_delete_detector, params)
+      req.send_request(options)
+    end
+
+    # Disables one or more alarms. The alarms change to the `DISABLED` state
+    # after you disable them.
+    #
+    # @option params [required, Array<Types::DisableAlarmActionRequest>] :disable_action_requests
+    #   The list of disable action requests. You can specify up to 10 requests
+    #   per operation.
+    #
+    # @return [Types::BatchDisableAlarmResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchDisableAlarmResponse#error_entries #error_entries} => Array&lt;Types::BatchAlarmActionErrorEntry&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_disable_alarm({
+    #     disable_action_requests: [ # required
+    #       {
+    #         request_id: "RequestId", # required
+    #         alarm_model_name: "AlarmModelName", # required
+    #         key_value: "KeyValue",
+    #         note: "Note",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.error_entries #=> Array
+    #   resp.error_entries[0].request_id #=> String
+    #   resp.error_entries[0].error_code #=> String, one of "ResourceNotFoundException", "InvalidRequestException", "InternalFailureException", "ServiceUnavailableException", "ThrottlingException"
+    #   resp.error_entries[0].error_message #=> String
+    #
+    # @overload batch_disable_alarm(params = {})
+    # @param [Hash] params ({})
+    def batch_disable_alarm(params = {}, options = {})
+      req = build_request(:batch_disable_alarm, params)
+      req.send_request(options)
+    end
+
+    # Enables one or more alarms. The alarms change to the `NORMAL` state
+    # after you enable them.
+    #
+    # @option params [required, Array<Types::EnableAlarmActionRequest>] :enable_action_requests
+    #   The list of enable action requests. You can specify up to 10 requests
+    #   per operation.
+    #
+    # @return [Types::BatchEnableAlarmResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchEnableAlarmResponse#error_entries #error_entries} => Array&lt;Types::BatchAlarmActionErrorEntry&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_enable_alarm({
+    #     enable_action_requests: [ # required
+    #       {
+    #         request_id: "RequestId", # required
+    #         alarm_model_name: "AlarmModelName", # required
+    #         key_value: "KeyValue",
+    #         note: "Note",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.error_entries #=> Array
+    #   resp.error_entries[0].request_id #=> String
+    #   resp.error_entries[0].error_code #=> String, one of "ResourceNotFoundException", "InvalidRequestException", "InternalFailureException", "ServiceUnavailableException", "ThrottlingException"
+    #   resp.error_entries[0].error_message #=> String
+    #
+    # @overload batch_enable_alarm(params = {})
+    # @param [Hash] params ({})
+    def batch_enable_alarm(params = {}, options = {})
+      req = build_request(:batch_enable_alarm, params)
+      req.send_request(options)
+    end
+
+    # Sends a set of messages to the IoT Events system. Each message payload
+    # is transformed into the input you specify (`"inputName"`) and ingested
+    # into any detectors that monitor that input. If multiple messages are
+    # sent, the order in which the messages are processed isn't guaranteed.
+    # To guarantee ordering, you must send messages one at a time and wait
+    # for a successful response.
     #
     # @option params [required, Array<Types::Message>] :messages
     #   The list of messages to send. Each message has the following format:
@@ -349,8 +562,11 @@ module Aws::IoTEventsData
     #     messages: [ # required
     #       {
     #         message_id: "MessageId", # required
-    #         input_name: "InputName", # required
+    #         input_name: "EphemeralInputName", # required
     #         payload: "data", # required
+    #         timestamp: {
+    #           time_in_millis: 1,
+    #         },
     #       },
     #     ],
     #   })
@@ -366,6 +582,83 @@ module Aws::IoTEventsData
     # @param [Hash] params ({})
     def batch_put_message(params = {}, options = {})
       req = build_request(:batch_put_message, params)
+      req.send_request(options)
+    end
+
+    # Resets one or more alarms. The alarms return to the `NORMAL` state
+    # after you reset them.
+    #
+    # @option params [required, Array<Types::ResetAlarmActionRequest>] :reset_action_requests
+    #   The list of reset action requests. You can specify up to 10 requests
+    #   per operation.
+    #
+    # @return [Types::BatchResetAlarmResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchResetAlarmResponse#error_entries #error_entries} => Array&lt;Types::BatchAlarmActionErrorEntry&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_reset_alarm({
+    #     reset_action_requests: [ # required
+    #       {
+    #         request_id: "RequestId", # required
+    #         alarm_model_name: "AlarmModelName", # required
+    #         key_value: "KeyValue",
+    #         note: "Note",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.error_entries #=> Array
+    #   resp.error_entries[0].request_id #=> String
+    #   resp.error_entries[0].error_code #=> String, one of "ResourceNotFoundException", "InvalidRequestException", "InternalFailureException", "ServiceUnavailableException", "ThrottlingException"
+    #   resp.error_entries[0].error_message #=> String
+    #
+    # @overload batch_reset_alarm(params = {})
+    # @param [Hash] params ({})
+    def batch_reset_alarm(params = {}, options = {})
+      req = build_request(:batch_reset_alarm, params)
+      req.send_request(options)
+    end
+
+    # Changes one or more alarms to the snooze mode. The alarms change to
+    # the `SNOOZE_DISABLED` state after you set them to the snooze mode.
+    #
+    # @option params [required, Array<Types::SnoozeAlarmActionRequest>] :snooze_action_requests
+    #   The list of snooze action requests. You can specify up to 10 requests
+    #   per operation.
+    #
+    # @return [Types::BatchSnoozeAlarmResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchSnoozeAlarmResponse#error_entries #error_entries} => Array&lt;Types::BatchAlarmActionErrorEntry&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_snooze_alarm({
+    #     snooze_action_requests: [ # required
+    #       {
+    #         request_id: "RequestId", # required
+    #         alarm_model_name: "AlarmModelName", # required
+    #         key_value: "KeyValue",
+    #         note: "Note",
+    #         snooze_duration: 1, # required
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.error_entries #=> Array
+    #   resp.error_entries[0].request_id #=> String
+    #   resp.error_entries[0].error_code #=> String, one of "ResourceNotFoundException", "InvalidRequestException", "InternalFailureException", "ServiceUnavailableException", "ThrottlingException"
+    #   resp.error_entries[0].error_message #=> String
+    #
+    # @overload batch_snooze_alarm(params = {})
+    # @param [Hash] params ({})
+    def batch_snooze_alarm(params = {}, options = {})
+      req = build_request(:batch_snooze_alarm, params)
       req.send_request(options)
     end
 
@@ -421,6 +714,59 @@ module Aws::IoTEventsData
       req.send_request(options)
     end
 
+    # Retrieves information about an alarm.
+    #
+    # @option params [required, String] :alarm_model_name
+    #   The name of the alarm model.
+    #
+    # @option params [String] :key_value
+    #   The value of the key used as a filter to select only the alarms
+    #   associated with the [key][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/iotevents/latest/apireference/API_CreateAlarmModel.html#iotevents-CreateAlarmModel-request-key
+    #
+    # @return [Types::DescribeAlarmResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeAlarmResponse#alarm #alarm} => Types::Alarm
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_alarm({
+    #     alarm_model_name: "AlarmModelName", # required
+    #     key_value: "KeyValue",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.alarm.alarm_model_name #=> String
+    #   resp.alarm.alarm_model_version #=> String
+    #   resp.alarm.key_value #=> String
+    #   resp.alarm.alarm_state.state_name #=> String, one of "DISABLED", "NORMAL", "ACTIVE", "ACKNOWLEDGED", "SNOOZE_DISABLED", "LATCHED"
+    #   resp.alarm.alarm_state.rule_evaluation.simple_rule_evaluation.input_property_value #=> String
+    #   resp.alarm.alarm_state.rule_evaluation.simple_rule_evaluation.operator #=> String, one of "GREATER", "GREATER_OR_EQUAL", "LESS", "LESS_OR_EQUAL", "EQUAL", "NOT_EQUAL"
+    #   resp.alarm.alarm_state.rule_evaluation.simple_rule_evaluation.threshold_value #=> String
+    #   resp.alarm.alarm_state.customer_action.action_name #=> String, one of "SNOOZE", "ENABLE", "DISABLE", "ACKNOWLEDGE", "RESET"
+    #   resp.alarm.alarm_state.customer_action.snooze_action_configuration.snooze_duration #=> Integer
+    #   resp.alarm.alarm_state.customer_action.snooze_action_configuration.note #=> String
+    #   resp.alarm.alarm_state.customer_action.enable_action_configuration.note #=> String
+    #   resp.alarm.alarm_state.customer_action.disable_action_configuration.note #=> String
+    #   resp.alarm.alarm_state.customer_action.acknowledge_action_configuration.note #=> String
+    #   resp.alarm.alarm_state.customer_action.reset_action_configuration.note #=> String
+    #   resp.alarm.alarm_state.system_event.event_type #=> String, one of "STATE_CHANGE"
+    #   resp.alarm.alarm_state.system_event.state_change_configuration.trigger_type #=> String, one of "SNOOZE_TIMEOUT"
+    #   resp.alarm.severity #=> Integer
+    #   resp.alarm.creation_time #=> Time
+    #   resp.alarm.last_update_time #=> Time
+    #
+    # @overload describe_alarm(params = {})
+    # @param [Hash] params ({})
+    def describe_alarm(params = {}, options = {})
+      req = build_request(:describe_alarm, params)
+      req.send_request(options)
+    end
+
     # Returns information about the specified detector (instance).
     #
     # @option params [required, String] :detector_model_name
@@ -464,6 +810,49 @@ module Aws::IoTEventsData
       req.send_request(options)
     end
 
+    # Lists one or more alarms. The operation returns only the metadata
+    # associated with each alarm.
+    #
+    # @option params [required, String] :alarm_model_name
+    #   The name of the alarm model.
+    #
+    # @option params [String] :next_token
+    #   The token that you can use to return the next set of results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to be returned per request.
+    #
+    # @return [Types::ListAlarmsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListAlarmsResponse#alarm_summaries #alarm_summaries} => Array&lt;Types::AlarmSummary&gt;
+    #   * {Types::ListAlarmsResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_alarms({
+    #     alarm_model_name: "AlarmModelName", # required
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.alarm_summaries #=> Array
+    #   resp.alarm_summaries[0].alarm_model_name #=> String
+    #   resp.alarm_summaries[0].alarm_model_version #=> String
+    #   resp.alarm_summaries[0].key_value #=> String
+    #   resp.alarm_summaries[0].state_name #=> String, one of "DISABLED", "NORMAL", "ACTIVE", "ACKNOWLEDGED", "SNOOZE_DISABLED", "LATCHED"
+    #   resp.alarm_summaries[0].creation_time #=> Time
+    #   resp.alarm_summaries[0].last_update_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @overload list_alarms(params = {})
+    # @param [Hash] params ({})
+    def list_alarms(params = {}, options = {})
+      req = build_request(:list_alarms, params)
+      req.send_request(options)
+    end
+
     # Lists detectors (the instances of a detector model).
     #
     # @option params [required, String] :detector_model_name
@@ -474,10 +863,10 @@ module Aws::IoTEventsData
     #   given state.
     #
     # @option params [String] :next_token
-    #   The token for the next set of results.
+    #   The token that you can use to return the next set of results.
     #
     # @option params [Integer] :max_results
-    #   The maximum number of results to return at one time.
+    #   The maximum number of results to be returned per request.
     #
     # @return [Types::ListDetectorsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -524,7 +913,7 @@ module Aws::IoTEventsData
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-ioteventsdata'
-      context[:gem_version] = '1.15.0'
+      context[:gem_version] = '1.33.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.license       = 'Apache-2.0'
   spec.email         = ['{{email}}']
   spec.require_paths = ['lib']
-  spec.files         = Dir['LICENSE.txt', 'CHANGELOG.md', 'VERSION', 'lib/**/*.rb']
+  spec.files         = Dir{{{files}}}
 
   {{#metadata}}
   spec.metadata = {
@@ -27,4 +27,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency('{{gem}}', '{{&version}}')
   {{/dependencies}}
 
+  spec.required_ruby_version = '>= 2.3'
 end

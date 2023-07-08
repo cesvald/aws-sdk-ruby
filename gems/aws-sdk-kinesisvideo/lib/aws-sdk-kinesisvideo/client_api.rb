@@ -26,6 +26,7 @@ module Aws::KinesisVideo
     ChannelType = Shapes::StringShape.new(name: 'ChannelType')
     ClientLimitExceededException = Shapes::StructureShape.new(name: 'ClientLimitExceededException')
     ComparisonOperator = Shapes::StringShape.new(name: 'ComparisonOperator')
+    ConfigurationStatus = Shapes::StringShape.new(name: 'ConfigurationStatus')
     CreateSignalingChannelInput = Shapes::StructureShape.new(name: 'CreateSignalingChannelInput')
     CreateSignalingChannelOutput = Shapes::StructureShape.new(name: 'CreateSignalingChannelOutput')
     CreateStreamInput = Shapes::StructureShape.new(name: 'CreateStreamInput')
@@ -33,25 +34,63 @@ module Aws::KinesisVideo
     DataEndpoint = Shapes::StringShape.new(name: 'DataEndpoint')
     DataRetentionChangeInHours = Shapes::IntegerShape.new(name: 'DataRetentionChangeInHours')
     DataRetentionInHours = Shapes::IntegerShape.new(name: 'DataRetentionInHours')
+    DeleteAfterUpload = Shapes::BooleanShape.new(name: 'DeleteAfterUpload')
+    DeleteEdgeConfigurationInput = Shapes::StructureShape.new(name: 'DeleteEdgeConfigurationInput')
+    DeleteEdgeConfigurationOutput = Shapes::StructureShape.new(name: 'DeleteEdgeConfigurationOutput')
     DeleteSignalingChannelInput = Shapes::StructureShape.new(name: 'DeleteSignalingChannelInput')
     DeleteSignalingChannelOutput = Shapes::StructureShape.new(name: 'DeleteSignalingChannelOutput')
     DeleteStreamInput = Shapes::StructureShape.new(name: 'DeleteStreamInput')
     DeleteStreamOutput = Shapes::StructureShape.new(name: 'DeleteStreamOutput')
+    DeletionConfig = Shapes::StructureShape.new(name: 'DeletionConfig')
+    DescribeEdgeConfigurationInput = Shapes::StructureShape.new(name: 'DescribeEdgeConfigurationInput')
+    DescribeEdgeConfigurationOutput = Shapes::StructureShape.new(name: 'DescribeEdgeConfigurationOutput')
+    DescribeImageGenerationConfigurationInput = Shapes::StructureShape.new(name: 'DescribeImageGenerationConfigurationInput')
+    DescribeImageGenerationConfigurationOutput = Shapes::StructureShape.new(name: 'DescribeImageGenerationConfigurationOutput')
+    DescribeMappedResourceConfigurationInput = Shapes::StructureShape.new(name: 'DescribeMappedResourceConfigurationInput')
+    DescribeMappedResourceConfigurationOutput = Shapes::StructureShape.new(name: 'DescribeMappedResourceConfigurationOutput')
+    DescribeMediaStorageConfigurationInput = Shapes::StructureShape.new(name: 'DescribeMediaStorageConfigurationInput')
+    DescribeMediaStorageConfigurationOutput = Shapes::StructureShape.new(name: 'DescribeMediaStorageConfigurationOutput')
+    DescribeNotificationConfigurationInput = Shapes::StructureShape.new(name: 'DescribeNotificationConfigurationInput')
+    DescribeNotificationConfigurationOutput = Shapes::StructureShape.new(name: 'DescribeNotificationConfigurationOutput')
     DescribeSignalingChannelInput = Shapes::StructureShape.new(name: 'DescribeSignalingChannelInput')
     DescribeSignalingChannelOutput = Shapes::StructureShape.new(name: 'DescribeSignalingChannelOutput')
     DescribeStreamInput = Shapes::StructureShape.new(name: 'DescribeStreamInput')
     DescribeStreamOutput = Shapes::StructureShape.new(name: 'DescribeStreamOutput')
+    DestinationRegion = Shapes::StringShape.new(name: 'DestinationRegion')
+    DestinationUri = Shapes::StringShape.new(name: 'DestinationUri')
     DeviceName = Shapes::StringShape.new(name: 'DeviceName')
     DeviceStreamLimitExceededException = Shapes::StructureShape.new(name: 'DeviceStreamLimitExceededException')
+    DurationInSeconds = Shapes::IntegerShape.new(name: 'DurationInSeconds')
+    EdgeAgentStatus = Shapes::StructureShape.new(name: 'EdgeAgentStatus')
+    EdgeConfig = Shapes::StructureShape.new(name: 'EdgeConfig')
+    EdgeRetentionInHours = Shapes::IntegerShape.new(name: 'EdgeRetentionInHours')
     ErrorMessage = Shapes::StringShape.new(name: 'ErrorMessage')
+    FailedStatusDetails = Shapes::StringShape.new(name: 'FailedStatusDetails')
+    Format = Shapes::StringShape.new(name: 'Format')
+    FormatConfig = Shapes::MapShape.new(name: 'FormatConfig')
+    FormatConfigKey = Shapes::StringShape.new(name: 'FormatConfigKey')
+    FormatConfigValue = Shapes::StringShape.new(name: 'FormatConfigValue')
     GetDataEndpointInput = Shapes::StructureShape.new(name: 'GetDataEndpointInput')
     GetDataEndpointOutput = Shapes::StructureShape.new(name: 'GetDataEndpointOutput')
     GetSignalingChannelEndpointInput = Shapes::StructureShape.new(name: 'GetSignalingChannelEndpointInput')
     GetSignalingChannelEndpointOutput = Shapes::StructureShape.new(name: 'GetSignalingChannelEndpointOutput')
+    HeightPixels = Shapes::IntegerShape.new(name: 'HeightPixels')
+    HubDeviceArn = Shapes::StringShape.new(name: 'HubDeviceArn')
+    ImageGenerationConfiguration = Shapes::StructureShape.new(name: 'ImageGenerationConfiguration')
+    ImageGenerationDestinationConfig = Shapes::StructureShape.new(name: 'ImageGenerationDestinationConfig')
+    ImageSelectorType = Shapes::StringShape.new(name: 'ImageSelectorType')
     InvalidArgumentException = Shapes::StructureShape.new(name: 'InvalidArgumentException')
     InvalidDeviceException = Shapes::StructureShape.new(name: 'InvalidDeviceException')
     InvalidResourceFormatException = Shapes::StructureShape.new(name: 'InvalidResourceFormatException')
+    JobStatusDetails = Shapes::StringShape.new(name: 'JobStatusDetails')
     KmsKeyId = Shapes::StringShape.new(name: 'KmsKeyId')
+    LastRecorderStatus = Shapes::StructureShape.new(name: 'LastRecorderStatus')
+    LastUploaderStatus = Shapes::StructureShape.new(name: 'LastUploaderStatus')
+    ListEdgeAgentConfigurationsEdgeConfig = Shapes::StructureShape.new(name: 'ListEdgeAgentConfigurationsEdgeConfig')
+    ListEdgeAgentConfigurationsEdgeConfigList = Shapes::ListShape.new(name: 'ListEdgeAgentConfigurationsEdgeConfigList')
+    ListEdgeAgentConfigurationsInput = Shapes::StructureShape.new(name: 'ListEdgeAgentConfigurationsInput')
+    ListEdgeAgentConfigurationsInputLimit = Shapes::IntegerShape.new(name: 'ListEdgeAgentConfigurationsInputLimit')
+    ListEdgeAgentConfigurationsOutput = Shapes::StructureShape.new(name: 'ListEdgeAgentConfigurationsOutput')
     ListOfProtocols = Shapes::ListShape.new(name: 'ListOfProtocols')
     ListSignalingChannelsInput = Shapes::StructureShape.new(name: 'ListSignalingChannelsInput')
     ListSignalingChannelsOutput = Shapes::StructureShape.new(name: 'ListSignalingChannelsOutput')
@@ -62,10 +101,25 @@ module Aws::KinesisVideo
     ListTagsForResourceOutput = Shapes::StructureShape.new(name: 'ListTagsForResourceOutput')
     ListTagsForStreamInput = Shapes::StructureShape.new(name: 'ListTagsForStreamInput')
     ListTagsForStreamOutput = Shapes::StructureShape.new(name: 'ListTagsForStreamOutput')
+    LocalSizeConfig = Shapes::StructureShape.new(name: 'LocalSizeConfig')
+    MappedResourceConfigurationList = Shapes::ListShape.new(name: 'MappedResourceConfigurationList')
+    MappedResourceConfigurationListItem = Shapes::StructureShape.new(name: 'MappedResourceConfigurationListItem')
+    MappedResourceConfigurationListLimit = Shapes::IntegerShape.new(name: 'MappedResourceConfigurationListLimit')
+    MaxLocalMediaSizeInMB = Shapes::IntegerShape.new(name: 'MaxLocalMediaSizeInMB')
+    MediaSourceConfig = Shapes::StructureShape.new(name: 'MediaSourceConfig')
+    MediaStorageConfiguration = Shapes::StructureShape.new(name: 'MediaStorageConfiguration')
+    MediaStorageConfigurationStatus = Shapes::StringShape.new(name: 'MediaStorageConfigurationStatus')
     MediaType = Shapes::StringShape.new(name: 'MediaType')
+    MediaUriSecretArn = Shapes::StringShape.new(name: 'MediaUriSecretArn')
+    MediaUriType = Shapes::StringShape.new(name: 'MediaUriType')
     MessageTtlSeconds = Shapes::IntegerShape.new(name: 'MessageTtlSeconds')
     NextToken = Shapes::StringShape.new(name: 'NextToken')
+    NoDataRetentionException = Shapes::StructureShape.new(name: 'NoDataRetentionException')
     NotAuthorizedException = Shapes::StructureShape.new(name: 'NotAuthorizedException')
+    NotificationConfiguration = Shapes::StructureShape.new(name: 'NotificationConfiguration')
+    NotificationDestinationConfig = Shapes::StructureShape.new(name: 'NotificationDestinationConfig')
+    RecorderConfig = Shapes::StructureShape.new(name: 'RecorderConfig')
+    RecorderStatus = Shapes::StringShape.new(name: 'RecorderStatus')
     ResourceARN = Shapes::StringShape.new(name: 'ResourceARN')
     ResourceEndpoint = Shapes::StringShape.new(name: 'ResourceEndpoint')
     ResourceEndpointList = Shapes::ListShape.new(name: 'ResourceEndpointList')
@@ -73,13 +127,21 @@ module Aws::KinesisVideo
     ResourceInUseException = Shapes::StructureShape.new(name: 'ResourceInUseException')
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
     ResourceTags = Shapes::MapShape.new(name: 'ResourceTags')
+    SamplingInterval = Shapes::IntegerShape.new(name: 'SamplingInterval')
+    ScheduleConfig = Shapes::StructureShape.new(name: 'ScheduleConfig')
+    ScheduleExpression = Shapes::StringShape.new(name: 'ScheduleExpression')
     SingleMasterChannelEndpointConfiguration = Shapes::StructureShape.new(name: 'SingleMasterChannelEndpointConfiguration')
     SingleMasterConfiguration = Shapes::StructureShape.new(name: 'SingleMasterConfiguration')
+    StartEdgeConfigurationUpdateInput = Shapes::StructureShape.new(name: 'StartEdgeConfigurationUpdateInput')
+    StartEdgeConfigurationUpdateOutput = Shapes::StructureShape.new(name: 'StartEdgeConfigurationUpdateOutput')
     Status = Shapes::StringShape.new(name: 'Status')
+    StrategyOnFullSize = Shapes::StringShape.new(name: 'StrategyOnFullSize')
+    StreamEdgeConfigurationNotFoundException = Shapes::StructureShape.new(name: 'StreamEdgeConfigurationNotFoundException')
     StreamInfo = Shapes::StructureShape.new(name: 'StreamInfo')
     StreamInfoList = Shapes::ListShape.new(name: 'StreamInfoList')
     StreamName = Shapes::StringShape.new(name: 'StreamName')
     StreamNameCondition = Shapes::StructureShape.new(name: 'StreamNameCondition')
+    SyncStatus = Shapes::StringShape.new(name: 'SyncStatus')
     Tag = Shapes::StructureShape.new(name: 'Tag')
     TagKey = Shapes::StringShape.new(name: 'TagKey')
     TagKeyList = Shapes::ListShape.new(name: 'TagKeyList')
@@ -92,6 +154,7 @@ module Aws::KinesisVideo
     TagValue = Shapes::StringShape.new(name: 'TagValue')
     TagsPerResourceExceededLimitException = Shapes::StructureShape.new(name: 'TagsPerResourceExceededLimitException')
     Timestamp = Shapes::TimestampShape.new(name: 'Timestamp')
+    Type = Shapes::StringShape.new(name: 'Type')
     UntagResourceInput = Shapes::StructureShape.new(name: 'UntagResourceInput')
     UntagResourceOutput = Shapes::StructureShape.new(name: 'UntagResourceOutput')
     UntagStreamInput = Shapes::StructureShape.new(name: 'UntagStreamInput')
@@ -99,12 +162,21 @@ module Aws::KinesisVideo
     UpdateDataRetentionInput = Shapes::StructureShape.new(name: 'UpdateDataRetentionInput')
     UpdateDataRetentionOperation = Shapes::StringShape.new(name: 'UpdateDataRetentionOperation')
     UpdateDataRetentionOutput = Shapes::StructureShape.new(name: 'UpdateDataRetentionOutput')
+    UpdateImageGenerationConfigurationInput = Shapes::StructureShape.new(name: 'UpdateImageGenerationConfigurationInput')
+    UpdateImageGenerationConfigurationOutput = Shapes::StructureShape.new(name: 'UpdateImageGenerationConfigurationOutput')
+    UpdateMediaStorageConfigurationInput = Shapes::StructureShape.new(name: 'UpdateMediaStorageConfigurationInput')
+    UpdateMediaStorageConfigurationOutput = Shapes::StructureShape.new(name: 'UpdateMediaStorageConfigurationOutput')
+    UpdateNotificationConfigurationInput = Shapes::StructureShape.new(name: 'UpdateNotificationConfigurationInput')
+    UpdateNotificationConfigurationOutput = Shapes::StructureShape.new(name: 'UpdateNotificationConfigurationOutput')
     UpdateSignalingChannelInput = Shapes::StructureShape.new(name: 'UpdateSignalingChannelInput')
     UpdateSignalingChannelOutput = Shapes::StructureShape.new(name: 'UpdateSignalingChannelOutput')
     UpdateStreamInput = Shapes::StructureShape.new(name: 'UpdateStreamInput')
     UpdateStreamOutput = Shapes::StructureShape.new(name: 'UpdateStreamOutput')
+    UploaderConfig = Shapes::StructureShape.new(name: 'UploaderConfig')
+    UploaderStatus = Shapes::StringShape.new(name: 'UploaderStatus')
     Version = Shapes::StringShape.new(name: 'Version')
     VersionMismatchException = Shapes::StructureShape.new(name: 'VersionMismatchException')
+    WidthPixels = Shapes::IntegerShape.new(name: 'WidthPixels')
 
     AccessDeniedException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     AccessDeniedException.struct_class = Types::AccessDeniedException
@@ -153,6 +225,12 @@ module Aws::KinesisVideo
     CreateStreamOutput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
     CreateStreamOutput.struct_class = Types::CreateStreamOutput
 
+    DeleteEdgeConfigurationInput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    DeleteEdgeConfigurationInput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    DeleteEdgeConfigurationInput.struct_class = Types::DeleteEdgeConfigurationInput
+
+    DeleteEdgeConfigurationOutput.struct_class = Types::DeleteEdgeConfigurationOutput
+
     DeleteSignalingChannelInput.add_member(:channel_arn, Shapes::ShapeRef.new(shape: ResourceARN, required: true, location_name: "ChannelARN"))
     DeleteSignalingChannelInput.add_member(:current_version, Shapes::ShapeRef.new(shape: Version, location_name: "CurrentVersion"))
     DeleteSignalingChannelInput.struct_class = Types::DeleteSignalingChannelInput
@@ -164,6 +242,56 @@ module Aws::KinesisVideo
     DeleteStreamInput.struct_class = Types::DeleteStreamInput
 
     DeleteStreamOutput.struct_class = Types::DeleteStreamOutput
+
+    DeletionConfig.add_member(:edge_retention_in_hours, Shapes::ShapeRef.new(shape: EdgeRetentionInHours, location_name: "EdgeRetentionInHours"))
+    DeletionConfig.add_member(:local_size_config, Shapes::ShapeRef.new(shape: LocalSizeConfig, location_name: "LocalSizeConfig"))
+    DeletionConfig.add_member(:delete_after_upload, Shapes::ShapeRef.new(shape: DeleteAfterUpload, location_name: "DeleteAfterUpload"))
+    DeletionConfig.struct_class = Types::DeletionConfig
+
+    DescribeEdgeConfigurationInput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    DescribeEdgeConfigurationInput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    DescribeEdgeConfigurationInput.struct_class = Types::DescribeEdgeConfigurationInput
+
+    DescribeEdgeConfigurationOutput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    DescribeEdgeConfigurationOutput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    DescribeEdgeConfigurationOutput.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    DescribeEdgeConfigurationOutput.add_member(:last_updated_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastUpdatedTime"))
+    DescribeEdgeConfigurationOutput.add_member(:sync_status, Shapes::ShapeRef.new(shape: SyncStatus, location_name: "SyncStatus"))
+    DescribeEdgeConfigurationOutput.add_member(:failed_status_details, Shapes::ShapeRef.new(shape: FailedStatusDetails, location_name: "FailedStatusDetails"))
+    DescribeEdgeConfigurationOutput.add_member(:edge_config, Shapes::ShapeRef.new(shape: EdgeConfig, location_name: "EdgeConfig"))
+    DescribeEdgeConfigurationOutput.add_member(:edge_agent_status, Shapes::ShapeRef.new(shape: EdgeAgentStatus, location_name: "EdgeAgentStatus"))
+    DescribeEdgeConfigurationOutput.struct_class = Types::DescribeEdgeConfigurationOutput
+
+    DescribeImageGenerationConfigurationInput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    DescribeImageGenerationConfigurationInput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    DescribeImageGenerationConfigurationInput.struct_class = Types::DescribeImageGenerationConfigurationInput
+
+    DescribeImageGenerationConfigurationOutput.add_member(:image_generation_configuration, Shapes::ShapeRef.new(shape: ImageGenerationConfiguration, location_name: "ImageGenerationConfiguration"))
+    DescribeImageGenerationConfigurationOutput.struct_class = Types::DescribeImageGenerationConfigurationOutput
+
+    DescribeMappedResourceConfigurationInput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    DescribeMappedResourceConfigurationInput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    DescribeMappedResourceConfigurationInput.add_member(:max_results, Shapes::ShapeRef.new(shape: MappedResourceConfigurationListLimit, location_name: "MaxResults"))
+    DescribeMappedResourceConfigurationInput.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    DescribeMappedResourceConfigurationInput.struct_class = Types::DescribeMappedResourceConfigurationInput
+
+    DescribeMappedResourceConfigurationOutput.add_member(:mapped_resource_configuration_list, Shapes::ShapeRef.new(shape: MappedResourceConfigurationList, location_name: "MappedResourceConfigurationList"))
+    DescribeMappedResourceConfigurationOutput.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    DescribeMappedResourceConfigurationOutput.struct_class = Types::DescribeMappedResourceConfigurationOutput
+
+    DescribeMediaStorageConfigurationInput.add_member(:channel_name, Shapes::ShapeRef.new(shape: ChannelName, location_name: "ChannelName"))
+    DescribeMediaStorageConfigurationInput.add_member(:channel_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "ChannelARN"))
+    DescribeMediaStorageConfigurationInput.struct_class = Types::DescribeMediaStorageConfigurationInput
+
+    DescribeMediaStorageConfigurationOutput.add_member(:media_storage_configuration, Shapes::ShapeRef.new(shape: MediaStorageConfiguration, location_name: "MediaStorageConfiguration"))
+    DescribeMediaStorageConfigurationOutput.struct_class = Types::DescribeMediaStorageConfigurationOutput
+
+    DescribeNotificationConfigurationInput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    DescribeNotificationConfigurationInput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    DescribeNotificationConfigurationInput.struct_class = Types::DescribeNotificationConfigurationInput
+
+    DescribeNotificationConfigurationOutput.add_member(:notification_configuration, Shapes::ShapeRef.new(shape: NotificationConfiguration, location_name: "NotificationConfiguration"))
+    DescribeNotificationConfigurationOutput.struct_class = Types::DescribeNotificationConfigurationOutput
 
     DescribeSignalingChannelInput.add_member(:channel_name, Shapes::ShapeRef.new(shape: ChannelName, location_name: "ChannelName"))
     DescribeSignalingChannelInput.add_member(:channel_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "ChannelARN"))
@@ -182,6 +310,19 @@ module Aws::KinesisVideo
     DeviceStreamLimitExceededException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     DeviceStreamLimitExceededException.struct_class = Types::DeviceStreamLimitExceededException
 
+    EdgeAgentStatus.add_member(:last_recorder_status, Shapes::ShapeRef.new(shape: LastRecorderStatus, location_name: "LastRecorderStatus"))
+    EdgeAgentStatus.add_member(:last_uploader_status, Shapes::ShapeRef.new(shape: LastUploaderStatus, location_name: "LastUploaderStatus"))
+    EdgeAgentStatus.struct_class = Types::EdgeAgentStatus
+
+    EdgeConfig.add_member(:hub_device_arn, Shapes::ShapeRef.new(shape: HubDeviceArn, required: true, location_name: "HubDeviceArn"))
+    EdgeConfig.add_member(:recorder_config, Shapes::ShapeRef.new(shape: RecorderConfig, required: true, location_name: "RecorderConfig"))
+    EdgeConfig.add_member(:uploader_config, Shapes::ShapeRef.new(shape: UploaderConfig, location_name: "UploaderConfig"))
+    EdgeConfig.add_member(:deletion_config, Shapes::ShapeRef.new(shape: DeletionConfig, location_name: "DeletionConfig"))
+    EdgeConfig.struct_class = Types::EdgeConfig
+
+    FormatConfig.key = Shapes::ShapeRef.new(shape: FormatConfigKey)
+    FormatConfig.value = Shapes::ShapeRef.new(shape: FormatConfigValue)
+
     GetDataEndpointInput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
     GetDataEndpointInput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
     GetDataEndpointInput.add_member(:api_name, Shapes::ShapeRef.new(shape: APIName, required: true, location_name: "APIName"))
@@ -197,6 +338,20 @@ module Aws::KinesisVideo
     GetSignalingChannelEndpointOutput.add_member(:resource_endpoint_list, Shapes::ShapeRef.new(shape: ResourceEndpointList, location_name: "ResourceEndpointList"))
     GetSignalingChannelEndpointOutput.struct_class = Types::GetSignalingChannelEndpointOutput
 
+    ImageGenerationConfiguration.add_member(:status, Shapes::ShapeRef.new(shape: ConfigurationStatus, required: true, location_name: "Status"))
+    ImageGenerationConfiguration.add_member(:image_selector_type, Shapes::ShapeRef.new(shape: ImageSelectorType, required: true, location_name: "ImageSelectorType"))
+    ImageGenerationConfiguration.add_member(:destination_config, Shapes::ShapeRef.new(shape: ImageGenerationDestinationConfig, required: true, location_name: "DestinationConfig"))
+    ImageGenerationConfiguration.add_member(:sampling_interval, Shapes::ShapeRef.new(shape: SamplingInterval, required: true, location_name: "SamplingInterval"))
+    ImageGenerationConfiguration.add_member(:format, Shapes::ShapeRef.new(shape: Format, required: true, location_name: "Format"))
+    ImageGenerationConfiguration.add_member(:format_config, Shapes::ShapeRef.new(shape: FormatConfig, location_name: "FormatConfig"))
+    ImageGenerationConfiguration.add_member(:width_pixels, Shapes::ShapeRef.new(shape: WidthPixels, location_name: "WidthPixels"))
+    ImageGenerationConfiguration.add_member(:height_pixels, Shapes::ShapeRef.new(shape: HeightPixels, location_name: "HeightPixels"))
+    ImageGenerationConfiguration.struct_class = Types::ImageGenerationConfiguration
+
+    ImageGenerationDestinationConfig.add_member(:uri, Shapes::ShapeRef.new(shape: DestinationUri, required: true, location_name: "Uri"))
+    ImageGenerationDestinationConfig.add_member(:destination_region, Shapes::ShapeRef.new(shape: DestinationRegion, required: true, location_name: "DestinationRegion"))
+    ImageGenerationDestinationConfig.struct_class = Types::ImageGenerationDestinationConfig
+
     InvalidArgumentException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     InvalidArgumentException.struct_class = Types::InvalidArgumentException
 
@@ -205,6 +360,38 @@ module Aws::KinesisVideo
 
     InvalidResourceFormatException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     InvalidResourceFormatException.struct_class = Types::InvalidResourceFormatException
+
+    LastRecorderStatus.add_member(:job_status_details, Shapes::ShapeRef.new(shape: JobStatusDetails, location_name: "JobStatusDetails"))
+    LastRecorderStatus.add_member(:last_collected_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastCollectedTime"))
+    LastRecorderStatus.add_member(:last_updated_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastUpdatedTime"))
+    LastRecorderStatus.add_member(:recorder_status, Shapes::ShapeRef.new(shape: RecorderStatus, location_name: "RecorderStatus"))
+    LastRecorderStatus.struct_class = Types::LastRecorderStatus
+
+    LastUploaderStatus.add_member(:job_status_details, Shapes::ShapeRef.new(shape: JobStatusDetails, location_name: "JobStatusDetails"))
+    LastUploaderStatus.add_member(:last_collected_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastCollectedTime"))
+    LastUploaderStatus.add_member(:last_updated_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastUpdatedTime"))
+    LastUploaderStatus.add_member(:uploader_status, Shapes::ShapeRef.new(shape: UploaderStatus, location_name: "UploaderStatus"))
+    LastUploaderStatus.struct_class = Types::LastUploaderStatus
+
+    ListEdgeAgentConfigurationsEdgeConfig.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    ListEdgeAgentConfigurationsEdgeConfig.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    ListEdgeAgentConfigurationsEdgeConfig.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    ListEdgeAgentConfigurationsEdgeConfig.add_member(:last_updated_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastUpdatedTime"))
+    ListEdgeAgentConfigurationsEdgeConfig.add_member(:sync_status, Shapes::ShapeRef.new(shape: SyncStatus, location_name: "SyncStatus"))
+    ListEdgeAgentConfigurationsEdgeConfig.add_member(:failed_status_details, Shapes::ShapeRef.new(shape: FailedStatusDetails, location_name: "FailedStatusDetails"))
+    ListEdgeAgentConfigurationsEdgeConfig.add_member(:edge_config, Shapes::ShapeRef.new(shape: EdgeConfig, location_name: "EdgeConfig"))
+    ListEdgeAgentConfigurationsEdgeConfig.struct_class = Types::ListEdgeAgentConfigurationsEdgeConfig
+
+    ListEdgeAgentConfigurationsEdgeConfigList.member = Shapes::ShapeRef.new(shape: ListEdgeAgentConfigurationsEdgeConfig)
+
+    ListEdgeAgentConfigurationsInput.add_member(:hub_device_arn, Shapes::ShapeRef.new(shape: HubDeviceArn, required: true, location_name: "HubDeviceArn"))
+    ListEdgeAgentConfigurationsInput.add_member(:max_results, Shapes::ShapeRef.new(shape: ListEdgeAgentConfigurationsInputLimit, location_name: "MaxResults"))
+    ListEdgeAgentConfigurationsInput.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListEdgeAgentConfigurationsInput.struct_class = Types::ListEdgeAgentConfigurationsInput
+
+    ListEdgeAgentConfigurationsOutput.add_member(:edge_configs, Shapes::ShapeRef.new(shape: ListEdgeAgentConfigurationsEdgeConfigList, location_name: "EdgeConfigs"))
+    ListEdgeAgentConfigurationsOutput.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListEdgeAgentConfigurationsOutput.struct_class = Types::ListEdgeAgentConfigurationsOutput
 
     ListOfProtocols.member = Shapes::ShapeRef.new(shape: ChannelProtocol)
 
@@ -243,8 +430,40 @@ module Aws::KinesisVideo
     ListTagsForStreamOutput.add_member(:tags, Shapes::ShapeRef.new(shape: ResourceTags, location_name: "Tags"))
     ListTagsForStreamOutput.struct_class = Types::ListTagsForStreamOutput
 
+    LocalSizeConfig.add_member(:max_local_media_size_in_mb, Shapes::ShapeRef.new(shape: MaxLocalMediaSizeInMB, location_name: "MaxLocalMediaSizeInMB"))
+    LocalSizeConfig.add_member(:strategy_on_full_size, Shapes::ShapeRef.new(shape: StrategyOnFullSize, location_name: "StrategyOnFullSize"))
+    LocalSizeConfig.struct_class = Types::LocalSizeConfig
+
+    MappedResourceConfigurationList.member = Shapes::ShapeRef.new(shape: MappedResourceConfigurationListItem)
+
+    MappedResourceConfigurationListItem.add_member(:type, Shapes::ShapeRef.new(shape: Type, location_name: "Type"))
+    MappedResourceConfigurationListItem.add_member(:arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "ARN"))
+    MappedResourceConfigurationListItem.struct_class = Types::MappedResourceConfigurationListItem
+
+    MediaSourceConfig.add_member(:media_uri_secret_arn, Shapes::ShapeRef.new(shape: MediaUriSecretArn, required: true, location_name: "MediaUriSecretArn"))
+    MediaSourceConfig.add_member(:media_uri_type, Shapes::ShapeRef.new(shape: MediaUriType, required: true, location_name: "MediaUriType"))
+    MediaSourceConfig.struct_class = Types::MediaSourceConfig
+
+    MediaStorageConfiguration.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    MediaStorageConfiguration.add_member(:status, Shapes::ShapeRef.new(shape: MediaStorageConfigurationStatus, required: true, location_name: "Status"))
+    MediaStorageConfiguration.struct_class = Types::MediaStorageConfiguration
+
+    NoDataRetentionException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
+    NoDataRetentionException.struct_class = Types::NoDataRetentionException
+
     NotAuthorizedException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     NotAuthorizedException.struct_class = Types::NotAuthorizedException
+
+    NotificationConfiguration.add_member(:status, Shapes::ShapeRef.new(shape: ConfigurationStatus, required: true, location_name: "Status"))
+    NotificationConfiguration.add_member(:destination_config, Shapes::ShapeRef.new(shape: NotificationDestinationConfig, required: true, location_name: "DestinationConfig"))
+    NotificationConfiguration.struct_class = Types::NotificationConfiguration
+
+    NotificationDestinationConfig.add_member(:uri, Shapes::ShapeRef.new(shape: DestinationUri, required: true, location_name: "Uri"))
+    NotificationDestinationConfig.struct_class = Types::NotificationDestinationConfig
+
+    RecorderConfig.add_member(:media_source_config, Shapes::ShapeRef.new(shape: MediaSourceConfig, required: true, location_name: "MediaSourceConfig"))
+    RecorderConfig.add_member(:schedule_config, Shapes::ShapeRef.new(shape: ScheduleConfig, location_name: "ScheduleConfig"))
+    RecorderConfig.struct_class = Types::RecorderConfig
 
     ResourceEndpointList.member = Shapes::ShapeRef.new(shape: ResourceEndpointListItem)
 
@@ -261,12 +480,33 @@ module Aws::KinesisVideo
     ResourceTags.key = Shapes::ShapeRef.new(shape: TagKey)
     ResourceTags.value = Shapes::ShapeRef.new(shape: TagValue)
 
+    ScheduleConfig.add_member(:schedule_expression, Shapes::ShapeRef.new(shape: ScheduleExpression, required: true, location_name: "ScheduleExpression"))
+    ScheduleConfig.add_member(:duration_in_seconds, Shapes::ShapeRef.new(shape: DurationInSeconds, required: true, location_name: "DurationInSeconds"))
+    ScheduleConfig.struct_class = Types::ScheduleConfig
+
     SingleMasterChannelEndpointConfiguration.add_member(:protocols, Shapes::ShapeRef.new(shape: ListOfProtocols, location_name: "Protocols"))
     SingleMasterChannelEndpointConfiguration.add_member(:role, Shapes::ShapeRef.new(shape: ChannelRole, location_name: "Role"))
     SingleMasterChannelEndpointConfiguration.struct_class = Types::SingleMasterChannelEndpointConfiguration
 
     SingleMasterConfiguration.add_member(:message_ttl_seconds, Shapes::ShapeRef.new(shape: MessageTtlSeconds, location_name: "MessageTtlSeconds"))
     SingleMasterConfiguration.struct_class = Types::SingleMasterConfiguration
+
+    StartEdgeConfigurationUpdateInput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    StartEdgeConfigurationUpdateInput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    StartEdgeConfigurationUpdateInput.add_member(:edge_config, Shapes::ShapeRef.new(shape: EdgeConfig, required: true, location_name: "EdgeConfig"))
+    StartEdgeConfigurationUpdateInput.struct_class = Types::StartEdgeConfigurationUpdateInput
+
+    StartEdgeConfigurationUpdateOutput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    StartEdgeConfigurationUpdateOutput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    StartEdgeConfigurationUpdateOutput.add_member(:creation_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreationTime"))
+    StartEdgeConfigurationUpdateOutput.add_member(:last_updated_time, Shapes::ShapeRef.new(shape: Timestamp, location_name: "LastUpdatedTime"))
+    StartEdgeConfigurationUpdateOutput.add_member(:sync_status, Shapes::ShapeRef.new(shape: SyncStatus, location_name: "SyncStatus"))
+    StartEdgeConfigurationUpdateOutput.add_member(:failed_status_details, Shapes::ShapeRef.new(shape: FailedStatusDetails, location_name: "FailedStatusDetails"))
+    StartEdgeConfigurationUpdateOutput.add_member(:edge_config, Shapes::ShapeRef.new(shape: EdgeConfig, location_name: "EdgeConfig"))
+    StartEdgeConfigurationUpdateOutput.struct_class = Types::StartEdgeConfigurationUpdateOutput
+
+    StreamEdgeConfigurationNotFoundException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
+    StreamEdgeConfigurationNotFoundException.struct_class = Types::StreamEdgeConfigurationNotFoundException
 
     StreamInfo.add_member(:device_name, Shapes::ShapeRef.new(shape: DeviceName, location_name: "DeviceName"))
     StreamInfo.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
@@ -333,6 +573,26 @@ module Aws::KinesisVideo
 
     UpdateDataRetentionOutput.struct_class = Types::UpdateDataRetentionOutput
 
+    UpdateImageGenerationConfigurationInput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    UpdateImageGenerationConfigurationInput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    UpdateImageGenerationConfigurationInput.add_member(:image_generation_configuration, Shapes::ShapeRef.new(shape: ImageGenerationConfiguration, location_name: "ImageGenerationConfiguration"))
+    UpdateImageGenerationConfigurationInput.struct_class = Types::UpdateImageGenerationConfigurationInput
+
+    UpdateImageGenerationConfigurationOutput.struct_class = Types::UpdateImageGenerationConfigurationOutput
+
+    UpdateMediaStorageConfigurationInput.add_member(:channel_arn, Shapes::ShapeRef.new(shape: ResourceARN, required: true, location_name: "ChannelARN"))
+    UpdateMediaStorageConfigurationInput.add_member(:media_storage_configuration, Shapes::ShapeRef.new(shape: MediaStorageConfiguration, required: true, location_name: "MediaStorageConfiguration"))
+    UpdateMediaStorageConfigurationInput.struct_class = Types::UpdateMediaStorageConfigurationInput
+
+    UpdateMediaStorageConfigurationOutput.struct_class = Types::UpdateMediaStorageConfigurationOutput
+
+    UpdateNotificationConfigurationInput.add_member(:stream_name, Shapes::ShapeRef.new(shape: StreamName, location_name: "StreamName"))
+    UpdateNotificationConfigurationInput.add_member(:stream_arn, Shapes::ShapeRef.new(shape: ResourceARN, location_name: "StreamARN"))
+    UpdateNotificationConfigurationInput.add_member(:notification_configuration, Shapes::ShapeRef.new(shape: NotificationConfiguration, location_name: "NotificationConfiguration"))
+    UpdateNotificationConfigurationInput.struct_class = Types::UpdateNotificationConfigurationInput
+
+    UpdateNotificationConfigurationOutput.struct_class = Types::UpdateNotificationConfigurationOutput
+
     UpdateSignalingChannelInput.add_member(:channel_arn, Shapes::ShapeRef.new(shape: ResourceARN, required: true, location_name: "ChannelARN"))
     UpdateSignalingChannelInput.add_member(:current_version, Shapes::ShapeRef.new(shape: Version, required: true, location_name: "CurrentVersion"))
     UpdateSignalingChannelInput.add_member(:single_master_configuration, Shapes::ShapeRef.new(shape: SingleMasterConfiguration, location_name: "SingleMasterConfiguration"))
@@ -348,6 +608,9 @@ module Aws::KinesisVideo
     UpdateStreamInput.struct_class = Types::UpdateStreamInput
 
     UpdateStreamOutput.struct_class = Types::UpdateStreamOutput
+
+    UploaderConfig.add_member(:schedule_config, Shapes::ShapeRef.new(shape: ScheduleConfig, required: true, location_name: "ScheduleConfig"))
+    UploaderConfig.struct_class = Types::UploaderConfig
 
     VersionMismatchException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "Message"))
     VersionMismatchException.struct_class = Types::VersionMismatchException
@@ -398,6 +661,19 @@ module Aws::KinesisVideo
         o.errors << Shapes::ShapeRef.new(shape: TagsPerResourceExceededLimitException)
       end)
 
+      api.add_operation(:delete_edge_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteEdgeConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/deleteEdgeConfiguration"
+        o.input = Shapes::ShapeRef.new(shape: DeleteEdgeConfigurationInput)
+        o.output = Shapes::ShapeRef.new(shape: DeleteEdgeConfigurationOutput)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: StreamEdgeConfigurationNotFoundException)
+      end)
+
       api.add_operation(:delete_signaling_channel, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DeleteSignalingChannel"
         o.http_method = "POST"
@@ -424,6 +700,73 @@ module Aws::KinesisVideo
         o.errors << Shapes::ShapeRef.new(shape: NotAuthorizedException)
         o.errors << Shapes::ShapeRef.new(shape: VersionMismatchException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+      end)
+
+      api.add_operation(:describe_edge_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeEdgeConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/describeEdgeConfiguration"
+        o.input = Shapes::ShapeRef.new(shape: DescribeEdgeConfigurationInput)
+        o.output = Shapes::ShapeRef.new(shape: DescribeEdgeConfigurationOutput)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: StreamEdgeConfigurationNotFoundException)
+      end)
+
+      api.add_operation(:describe_image_generation_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeImageGenerationConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/describeImageGenerationConfiguration"
+        o.input = Shapes::ShapeRef.new(shape: DescribeImageGenerationConfigurationInput)
+        o.output = Shapes::ShapeRef.new(shape: DescribeImageGenerationConfigurationOutput)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+      end)
+
+      api.add_operation(:describe_mapped_resource_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeMappedResourceConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/describeMappedResourceConfiguration"
+        o.input = Shapes::ShapeRef.new(shape: DescribeMappedResourceConfigurationInput)
+        o.output = Shapes::ShapeRef.new(shape: DescribeMappedResourceConfigurationOutput)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:describe_media_storage_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeMediaStorageConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/describeMediaStorageConfiguration"
+        o.input = Shapes::ShapeRef.new(shape: DescribeMediaStorageConfigurationInput)
+        o.output = Shapes::ShapeRef.new(shape: DescribeMediaStorageConfigurationOutput)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+      end)
+
+      api.add_operation(:describe_notification_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeNotificationConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/describeNotificationConfiguration"
+        o.input = Shapes::ShapeRef.new(shape: DescribeNotificationConfigurationInput)
+        o.output = Shapes::ShapeRef.new(shape: DescribeNotificationConfigurationOutput)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
       end)
 
       api.add_operation(:describe_signaling_channel, Seahorse::Model::Operation.new.tap do |o|
@@ -473,6 +816,23 @@ module Aws::KinesisVideo
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+      end)
+
+      api.add_operation(:list_edge_agent_configurations, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListEdgeAgentConfigurations"
+        o.http_method = "POST"
+        o.http_request_uri = "/listEdgeAgentConfigurations"
+        o.input = Shapes::ShapeRef.new(shape: ListEdgeAgentConfigurationsInput)
+        o.output = Shapes::ShapeRef.new(shape: ListEdgeAgentConfigurationsOutput)
+        o.errors << Shapes::ShapeRef.new(shape: NotAuthorizedException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
       end)
 
       api.add_operation(:list_signaling_channels, Seahorse::Model::Operation.new.tap do |o|
@@ -531,6 +891,20 @@ module Aws::KinesisVideo
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: NotAuthorizedException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidResourceFormatException)
+      end)
+
+      api.add_operation(:start_edge_configuration_update, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "StartEdgeConfigurationUpdate"
+        o.http_method = "POST"
+        o.http_request_uri = "/startEdgeConfigurationUpdate"
+        o.input = Shapes::ShapeRef.new(shape: StartEdgeConfigurationUpdateInput)
+        o.output = Shapes::ShapeRef.new(shape: StartEdgeConfigurationUpdateOutput)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: NoDataRetentionException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
       end)
 
       api.add_operation(:tag_resource, Seahorse::Model::Operation.new.tap do |o|
@@ -597,6 +971,48 @@ module Aws::KinesisVideo
         o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
         o.errors << Shapes::ShapeRef.new(shape: NotAuthorizedException)
         o.errors << Shapes::ShapeRef.new(shape: VersionMismatchException)
+      end)
+
+      api.add_operation(:update_image_generation_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UpdateImageGenerationConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/updateImageGenerationConfiguration"
+        o.input = Shapes::ShapeRef.new(shape: UpdateImageGenerationConfigurationInput)
+        o.output = Shapes::ShapeRef.new(shape: UpdateImageGenerationConfigurationOutput)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: NoDataRetentionException)
+      end)
+
+      api.add_operation(:update_media_storage_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UpdateMediaStorageConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/updateMediaStorageConfiguration"
+        o.input = Shapes::ShapeRef.new(shape: UpdateMediaStorageConfigurationInput)
+        o.output = Shapes::ShapeRef.new(shape: UpdateMediaStorageConfigurationOutput)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: NoDataRetentionException)
+      end)
+
+      api.add_operation(:update_notification_configuration, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UpdateNotificationConfiguration"
+        o.http_method = "POST"
+        o.http_request_uri = "/updateNotificationConfiguration"
+        o.input = Shapes::ShapeRef.new(shape: UpdateNotificationConfigurationInput)
+        o.output = Shapes::ShapeRef.new(shape: UpdateNotificationConfigurationOutput)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: ClientLimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceInUseException)
+        o.errors << Shapes::ShapeRef.new(shape: NoDataRetentionException)
       end)
 
       api.add_operation(:update_signaling_channel, Seahorse::Model::Operation.new.tap do |o|

@@ -27,9 +27,12 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
-require 'aws-sdk-lexmodelsv2/plugins/content_type.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:lexmodelsv2)
 
@@ -74,9 +77,13 @@ module Aws::LexModelsV2
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
-    add_plugin(Aws::LexModelsV2::Plugins::ContentType)
+    add_plugin(Aws::LexModelsV2::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -121,7 +128,9 @@ module Aws::LexModelsV2
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -175,9 +184,17 @@ module Aws::LexModelsV2
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -218,6 +235,11 @@ module Aws::LexModelsV2
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -264,6 +286,11 @@ module Aws::LexModelsV2
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -277,9 +304,34 @@ module Aws::LexModelsV2
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::LexModelsV2::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::LexModelsV2::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -288,7 +340,7 @@ module Aws::LexModelsV2
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -303,6 +355,9 @@ module Aws::LexModelsV2
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -329,13 +384,227 @@ module Aws::LexModelsV2
 
     # @!group API Operations
 
+    # Create a batch of custom vocabulary items for a given bot locale's
+    # custom vocabulary.
+    #
+    # @option params [required, String] :bot_id
+    #   The identifier of the bot associated with this custom vocabulary.
+    #
+    # @option params [required, String] :bot_version
+    #   The identifier of the version of the bot associated with this custom
+    #   vocabulary.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale where this custom vocabulary
+    #   is used. The string must match one of the supported locales. For more
+    #   information, see [ Supported Languages ][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [required, Array<Types::NewCustomVocabularyItem>] :custom_vocabulary_item_list
+    #   A list of new custom vocabulary items. Each entry must contain a
+    #   phrase and can optionally contain a displayAs and/or a weight.
+    #
+    # @return [Types::BatchCreateCustomVocabularyItemResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchCreateCustomVocabularyItemResponse#bot_id #bot_id} => String
+    #   * {Types::BatchCreateCustomVocabularyItemResponse#bot_version #bot_version} => String
+    #   * {Types::BatchCreateCustomVocabularyItemResponse#locale_id #locale_id} => String
+    #   * {Types::BatchCreateCustomVocabularyItemResponse#errors #errors} => Array&lt;Types::FailedCustomVocabularyItem&gt;
+    #   * {Types::BatchCreateCustomVocabularyItemResponse#resources #resources} => Array&lt;Types::CustomVocabularyItem&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_create_custom_vocabulary_item({
+    #     bot_id: "Id", # required
+    #     bot_version: "BotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     custom_vocabulary_item_list: [ # required
+    #       {
+    #         phrase: "Phrase", # required
+    #         weight: 1,
+    #         display_as: "Phrase",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.errors #=> Array
+    #   resp.errors[0].item_id #=> String
+    #   resp.errors[0].error_message #=> String
+    #   resp.errors[0].error_code #=> String, one of "DUPLICATE_INPUT", "RESOURCE_DOES_NOT_EXIST", "RESOURCE_ALREADY_EXISTS", "INTERNAL_SERVER_FAILURE"
+    #   resp.resources #=> Array
+    #   resp.resources[0].item_id #=> String
+    #   resp.resources[0].phrase #=> String
+    #   resp.resources[0].weight #=> Integer
+    #   resp.resources[0].display_as #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/BatchCreateCustomVocabularyItem AWS API Documentation
+    #
+    # @overload batch_create_custom_vocabulary_item(params = {})
+    # @param [Hash] params ({})
+    def batch_create_custom_vocabulary_item(params = {}, options = {})
+      req = build_request(:batch_create_custom_vocabulary_item, params)
+      req.send_request(options)
+    end
+
+    # Delete a batch of custom vocabulary items for a given bot locale's
+    # custom vocabulary.
+    #
+    # @option params [required, String] :bot_id
+    #   The identifier of the bot associated with this custom vocabulary.
+    #
+    # @option params [required, String] :bot_version
+    #   The identifier of the version of the bot associated with this custom
+    #   vocabulary.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale where this custom vocabulary
+    #   is used. The string must match one of the supported locales. For more
+    #   information, see [ Supported Languages ][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [required, Array<Types::CustomVocabularyEntryId>] :custom_vocabulary_item_list
+    #   A list of custom vocabulary items requested to be deleted. Each entry
+    #   must contain the unique custom vocabulary entry identifier.
+    #
+    # @return [Types::BatchDeleteCustomVocabularyItemResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchDeleteCustomVocabularyItemResponse#bot_id #bot_id} => String
+    #   * {Types::BatchDeleteCustomVocabularyItemResponse#bot_version #bot_version} => String
+    #   * {Types::BatchDeleteCustomVocabularyItemResponse#locale_id #locale_id} => String
+    #   * {Types::BatchDeleteCustomVocabularyItemResponse#errors #errors} => Array&lt;Types::FailedCustomVocabularyItem&gt;
+    #   * {Types::BatchDeleteCustomVocabularyItemResponse#resources #resources} => Array&lt;Types::CustomVocabularyItem&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_delete_custom_vocabulary_item({
+    #     bot_id: "Id", # required
+    #     bot_version: "BotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     custom_vocabulary_item_list: [ # required
+    #       {
+    #         item_id: "ItemId", # required
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.errors #=> Array
+    #   resp.errors[0].item_id #=> String
+    #   resp.errors[0].error_message #=> String
+    #   resp.errors[0].error_code #=> String, one of "DUPLICATE_INPUT", "RESOURCE_DOES_NOT_EXIST", "RESOURCE_ALREADY_EXISTS", "INTERNAL_SERVER_FAILURE"
+    #   resp.resources #=> Array
+    #   resp.resources[0].item_id #=> String
+    #   resp.resources[0].phrase #=> String
+    #   resp.resources[0].weight #=> Integer
+    #   resp.resources[0].display_as #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/BatchDeleteCustomVocabularyItem AWS API Documentation
+    #
+    # @overload batch_delete_custom_vocabulary_item(params = {})
+    # @param [Hash] params ({})
+    def batch_delete_custom_vocabulary_item(params = {}, options = {})
+      req = build_request(:batch_delete_custom_vocabulary_item, params)
+      req.send_request(options)
+    end
+
+    # Update a batch of custom vocabulary items for a given bot locale's
+    # custom vocabulary.
+    #
+    # @option params [required, String] :bot_id
+    #   The identifier of the bot associated with this custom vocabulary
+    #
+    # @option params [required, String] :bot_version
+    #   The identifier of the version of the bot associated with this custom
+    #   vocabulary.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale where this custom vocabulary
+    #   is used. The string must match one of the supported locales. For more
+    #   information, see [ Supported Languages ][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [required, Array<Types::CustomVocabularyItem>] :custom_vocabulary_item_list
+    #   A list of custom vocabulary items with updated fields. Each entry must
+    #   contain a phrase and can optionally contain a displayAs and/or a
+    #   weight.
+    #
+    # @return [Types::BatchUpdateCustomVocabularyItemResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::BatchUpdateCustomVocabularyItemResponse#bot_id #bot_id} => String
+    #   * {Types::BatchUpdateCustomVocabularyItemResponse#bot_version #bot_version} => String
+    #   * {Types::BatchUpdateCustomVocabularyItemResponse#locale_id #locale_id} => String
+    #   * {Types::BatchUpdateCustomVocabularyItemResponse#errors #errors} => Array&lt;Types::FailedCustomVocabularyItem&gt;
+    #   * {Types::BatchUpdateCustomVocabularyItemResponse#resources #resources} => Array&lt;Types::CustomVocabularyItem&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.batch_update_custom_vocabulary_item({
+    #     bot_id: "Id", # required
+    #     bot_version: "BotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     custom_vocabulary_item_list: [ # required
+    #       {
+    #         item_id: "ItemId", # required
+    #         phrase: "Phrase", # required
+    #         weight: 1,
+    #         display_as: "Phrase",
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.errors #=> Array
+    #   resp.errors[0].item_id #=> String
+    #   resp.errors[0].error_message #=> String
+    #   resp.errors[0].error_code #=> String, one of "DUPLICATE_INPUT", "RESOURCE_DOES_NOT_EXIST", "RESOURCE_ALREADY_EXISTS", "INTERNAL_SERVER_FAILURE"
+    #   resp.resources #=> Array
+    #   resp.resources[0].item_id #=> String
+    #   resp.resources[0].phrase #=> String
+    #   resp.resources[0].weight #=> Integer
+    #   resp.resources[0].display_as #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/BatchUpdateCustomVocabularyItem AWS API Documentation
+    #
+    # @overload batch_update_custom_vocabulary_item(params = {})
+    # @param [Hash] params ({})
+    def batch_update_custom_vocabulary_item(params = {}, options = {})
+      req = build_request(:batch_update_custom_vocabulary_item, params)
+      req.send_request(options)
+    end
+
     # Builds a bot, its intents, and its slot types into a specific locale.
     # A bot can be built into multiple locales. At runtime the locale is
     # used to choose a specific build of the bot.
     #
     # @option params [required, String] :bot_id
     #   The identifier of the bot to build. The identifier is returned in the
-    #   response from the operation.
+    #   response from the [CreateBot][1] operation.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_CreateBot.html
     #
     # @option params [required, String] :bot_version
     #   The version of the bot to build. This can only be the draft version of
@@ -372,7 +641,7 @@ module Aws::LexModelsV2
     #   resp.bot_id #=> String
     #   resp.bot_version #=> String
     #   resp.locale_id #=> String
-    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing"
+    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing", "Processing"
     #   resp.last_build_submitted_date_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/BuildBotLocale AWS API Documentation
@@ -423,6 +692,12 @@ module Aws::LexModelsV2
     #   to update tags. To update tags on the test alias, use the
     #   `TagResource` operation.
     #
+    # @option params [String] :bot_type
+    #   The type of a bot to create.
+    #
+    # @option params [Array<Types::BotMember>] :bot_members
+    #   The list of bot members in a network to be created.
+    #
     # @return [Types::CreateBotResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateBotResponse#bot_id #bot_id} => String
@@ -435,6 +710,8 @@ module Aws::LexModelsV2
     #   * {Types::CreateBotResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::CreateBotResponse#bot_tags #bot_tags} => Hash&lt;String,String&gt;
     #   * {Types::CreateBotResponse#test_bot_alias_tags #test_bot_alias_tags} => Hash&lt;String,String&gt;
+    #   * {Types::CreateBotResponse#bot_type #bot_type} => String
+    #   * {Types::CreateBotResponse#bot_members #bot_members} => Array&lt;Types::BotMember&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -452,6 +729,16 @@ module Aws::LexModelsV2
     #     test_bot_alias_tags: {
     #       "TagKey" => "TagValue",
     #     },
+    #     bot_type: "Bot", # accepts Bot, BotNetwork
+    #     bot_members: [
+    #       {
+    #         bot_member_id: "Id", # required
+    #         bot_member_name: "Name", # required
+    #         bot_member_alias_id: "BotAliasId", # required
+    #         bot_member_alias_name: "BotAliasName", # required
+    #         bot_member_version: "BotVersion", # required
+    #       },
+    #     ],
     #   })
     #
     # @example Response structure
@@ -462,12 +749,19 @@ module Aws::LexModelsV2
     #   resp.role_arn #=> String
     #   resp.data_privacy.child_directed #=> Boolean
     #   resp.idle_session_ttl_in_seconds #=> Integer
-    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing"
+    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing", "Updating"
     #   resp.creation_date_time #=> Time
     #   resp.bot_tags #=> Hash
     #   resp.bot_tags["TagKey"] #=> String
     #   resp.test_bot_alias_tags #=> Hash
     #   resp.test_bot_alias_tags["TagKey"] #=> String
+    #   resp.bot_type #=> String, one of "Bot", "BotNetwork"
+    #   resp.bot_members #=> Array
+    #   resp.bot_members[0].bot_member_id #=> String
+    #   resp.bot_members[0].bot_member_name #=> String
+    #   resp.bot_members[0].bot_member_alias_id #=> String
+    #   resp.bot_members[0].bot_member_alias_name #=> String
+    #   resp.bot_members[0].bot_member_version #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/CreateBot AWS API Documentation
     #
@@ -494,7 +788,12 @@ module Aws::LexModelsV2
     #
     # @option params [String] :bot_version
     #   The version of the bot that this alias points to. You can use the
-    #   operation to change the bot version associated with the alias.
+    #   [UpdateBotAlias][1] operation to change the bot version associated
+    #   with the alias.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_UpdateBotAlias.html
     #
     # @option params [Hash<String,Types::BotAliasLocaleSettings>] :bot_alias_locale_settings
     #   Maps configuration information to a specific locale. You can use this
@@ -656,8 +955,8 @@ module Aws::LexModelsV2
     #   For example, suppose a bot is configured with the confidence threshold
     #   of 0.80 and the `AMAZON.FallbackIntent`. Amazon Lex returns three
     #   alternative intents with the following confidence scores: IntentA
-    #   (0.70), IntentB (0.60), IntentC (0.50). The response from the PostText
-    #   operation would be:
+    #   (0.70), IntentB (0.60), IntentC (0.50). The response from the
+    #   `RecognizeText` operation would be:
     #
     #   * AMAZON.FallbackIntent
     #
@@ -693,6 +992,7 @@ module Aws::LexModelsV2
     #     nlu_intent_confidence_threshold: 1.0, # required
     #     voice_settings: {
     #       voice_id: "VoiceId", # required
+    #       engine: "standard", # accepts standard, neural
     #     },
     #   })
     #
@@ -705,7 +1005,8 @@ module Aws::LexModelsV2
     #   resp.description #=> String
     #   resp.nlu_intent_confidence_threshold #=> Float
     #   resp.voice_settings.voice_id #=> String
-    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing"
+    #   resp.voice_settings.engine #=> String, one of "standard", "neural"
+    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing", "Processing"
     #   resp.creation_date_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/CreateBotLocale AWS API Documentation
@@ -766,7 +1067,7 @@ module Aws::LexModelsV2
     #   resp.bot_version #=> String
     #   resp.bot_version_locale_specification #=> Hash
     #   resp.bot_version_locale_specification["LocaleId"].source_bot_version #=> String
-    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing"
+    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing", "Updating"
     #   resp.creation_date_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/CreateBotVersion AWS API Documentation
@@ -826,8 +1127,16 @@ module Aws::LexModelsV2
     #         bot_version: "BotVersion", # required
     #         locale_id: "LocaleId", # required
     #       },
+    #       custom_vocabulary_export_specification: {
+    #         bot_id: "Id", # required
+    #         bot_version: "BotVersion", # required
+    #         locale_id: "LocaleId", # required
+    #       },
+    #       test_set_export_specification: {
+    #         test_set_id: "Id", # required
+    #       },
     #     },
-    #     file_format: "LexJson", # required, accepts LexJson
+    #     file_format: "LexJson", # required, accepts LexJson, TSV, CSV
     #     file_password: "ImportExportFilePassword",
     #   })
     #
@@ -839,7 +1148,11 @@ module Aws::LexModelsV2
     #   resp.resource_specification.bot_locale_export_specification.bot_id #=> String
     #   resp.resource_specification.bot_locale_export_specification.bot_version #=> String
     #   resp.resource_specification.bot_locale_export_specification.locale_id #=> String
-    #   resp.file_format #=> String, one of "LexJson"
+    #   resp.resource_specification.custom_vocabulary_export_specification.bot_id #=> String
+    #   resp.resource_specification.custom_vocabulary_export_specification.bot_version #=> String
+    #   resp.resource_specification.custom_vocabulary_export_specification.locale_id #=> String
+    #   resp.resource_specification.test_set_export_specification.test_set_id #=> String
+    #   resp.file_format #=> String, one of "LexJson", "TSV", "CSV"
     #   resp.export_status #=> String, one of "InProgress", "Completed", "Failed", "Deleting"
     #   resp.creation_date_time #=> Time
     #
@@ -975,7 +1288,7 @@ module Aws::LexModelsV2
     #   The identifier of the bot associated with this intent.
     #
     # @option params [required, String] :bot_version
-    #   The identifier of the version of the bot associated with this intent.
+    #   The version of the bot associated with this intent.
     #
     # @option params [required, String] :locale_id
     #   The identifier of the language and locale where this intent is used.
@@ -985,6 +1298,10 @@ module Aws::LexModelsV2
     #
     #
     #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [Types::InitialResponseSetting] :initial_response_setting
+    #   Configuration settings for the response that is sent to the user at
+    #   the beginning of a conversation, before eliciting slot values.
     #
     # @return [Types::CreateIntentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1004,297 +1321,7 @@ module Aws::LexModelsV2
     #   * {Types::CreateIntentResponse#bot_version #bot_version} => String
     #   * {Types::CreateIntentResponse#locale_id #locale_id} => String
     #   * {Types::CreateIntentResponse#creation_date_time #creation_date_time} => Time
-    #
-    # @example Request syntax with placeholder values
-    #
-    #   resp = client.create_intent({
-    #     intent_name: "Name", # required
-    #     description: "Description",
-    #     parent_intent_signature: "IntentSignature",
-    #     sample_utterances: [
-    #       {
-    #         utterance: "Utterance", # required
-    #       },
-    #     ],
-    #     dialog_code_hook: {
-    #       enabled: false, # required
-    #     },
-    #     fulfillment_code_hook: {
-    #       enabled: false, # required
-    #     },
-    #     intent_confirmation_setting: {
-    #       prompt_specification: { # required
-    #         message_groups: [ # required
-    #           {
-    #             message: { # required
-    #               plain_text_message: {
-    #                 value: "PlainTextMessageValue", # required
-    #               },
-    #               custom_payload: {
-    #                 value: "CustomPayloadValue", # required
-    #               },
-    #               ssml_message: {
-    #                 value: "SSMLMessageValue", # required
-    #               },
-    #               image_response_card: {
-    #                 title: "AttachmentTitle", # required
-    #                 subtitle: "AttachmentTitle",
-    #                 image_url: "AttachmentUrl",
-    #                 buttons: [
-    #                   {
-    #                     text: "ButtonText", # required
-    #                     value: "ButtonValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #             variations: [
-    #               {
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         max_retries: 1, # required
-    #         allow_interrupt: false,
-    #       },
-    #       declination_response: { # required
-    #         message_groups: [ # required
-    #           {
-    #             message: { # required
-    #               plain_text_message: {
-    #                 value: "PlainTextMessageValue", # required
-    #               },
-    #               custom_payload: {
-    #                 value: "CustomPayloadValue", # required
-    #               },
-    #               ssml_message: {
-    #                 value: "SSMLMessageValue", # required
-    #               },
-    #               image_response_card: {
-    #                 title: "AttachmentTitle", # required
-    #                 subtitle: "AttachmentTitle",
-    #                 image_url: "AttachmentUrl",
-    #                 buttons: [
-    #                   {
-    #                     text: "ButtonText", # required
-    #                     value: "ButtonValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #             variations: [
-    #               {
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         allow_interrupt: false,
-    #       },
-    #     },
-    #     intent_closing_setting: {
-    #       closing_response: { # required
-    #         message_groups: [ # required
-    #           {
-    #             message: { # required
-    #               plain_text_message: {
-    #                 value: "PlainTextMessageValue", # required
-    #               },
-    #               custom_payload: {
-    #                 value: "CustomPayloadValue", # required
-    #               },
-    #               ssml_message: {
-    #                 value: "SSMLMessageValue", # required
-    #               },
-    #               image_response_card: {
-    #                 title: "AttachmentTitle", # required
-    #                 subtitle: "AttachmentTitle",
-    #                 image_url: "AttachmentUrl",
-    #                 buttons: [
-    #                   {
-    #                     text: "ButtonText", # required
-    #                     value: "ButtonValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #             variations: [
-    #               {
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         allow_interrupt: false,
-    #       },
-    #     },
-    #     input_contexts: [
-    #       {
-    #         name: "Name", # required
-    #       },
-    #     ],
-    #     output_contexts: [
-    #       {
-    #         name: "Name", # required
-    #         time_to_live_in_seconds: 1, # required
-    #         turns_to_live: 1, # required
-    #       },
-    #     ],
-    #     kendra_configuration: {
-    #       kendra_index: "KendraIndexArn", # required
-    #       query_filter_string_enabled: false,
-    #       query_filter_string: "QueryFilterString",
-    #     },
-    #     bot_id: "Id", # required
-    #     bot_version: "DraftBotVersion", # required
-    #     locale_id: "LocaleId", # required
-    #   })
-    #
-    # @example Response structure
-    #
-    #   resp.intent_id #=> String
-    #   resp.intent_name #=> String
-    #   resp.description #=> String
-    #   resp.parent_intent_signature #=> String
-    #   resp.sample_utterances #=> Array
-    #   resp.sample_utterances[0].utterance #=> String
-    #   resp.dialog_code_hook.enabled #=> Boolean
-    #   resp.fulfillment_code_hook.enabled #=> Boolean
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.max_retries #=> Integer
-    #   resp.intent_confirmation_setting.prompt_specification.allow_interrupt #=> Boolean
-    #   resp.intent_confirmation_setting.declination_response.message_groups #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.declination_response.allow_interrupt #=> Boolean
-    #   resp.intent_closing_setting.closing_response.message_groups #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.plain_text_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.custom_payload.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.ssml_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.title #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.subtitle #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.image_url #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.buttons #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].plain_text_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].custom_payload.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].ssml_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.title #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.image_url #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
-    #   resp.intent_closing_setting.closing_response.allow_interrupt #=> Boolean
-    #   resp.input_contexts #=> Array
-    #   resp.input_contexts[0].name #=> String
-    #   resp.output_contexts #=> Array
-    #   resp.output_contexts[0].name #=> String
-    #   resp.output_contexts[0].time_to_live_in_seconds #=> Integer
-    #   resp.output_contexts[0].turns_to_live #=> Integer
-    #   resp.kendra_configuration.kendra_index #=> String
-    #   resp.kendra_configuration.query_filter_string_enabled #=> Boolean
-    #   resp.kendra_configuration.query_filter_string #=> String
-    #   resp.bot_id #=> String
-    #   resp.bot_version #=> String
-    #   resp.locale_id #=> String
-    #   resp.creation_date_time #=> Time
+    #   * {Types::CreateIntentResponse#initial_response_setting #initial_response_setting} => Types::InitialResponseSetting
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/CreateIntent AWS API Documentation
     #
@@ -1354,8 +1381,8 @@ module Aws::LexModelsV2
     # resource policy exists, the statement is added to the current resource
     # policy. If a policy doesn't exist, a new policy is created.
     #
-    # You can create a resource policy statement that allows cross-account
-    # access.
+    # You can't create a resource policy statement that allows
+    # cross-account access.
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) of the bot or bot alias that the
@@ -1375,9 +1402,10 @@ module Aws::LexModelsV2
     #   resource.
     #
     # @option params [required, Array<Types::Principal>] :principal
-    #   An IAM principal, such as an IAM users, IAM roles, or AWS services
-    #   that is allowed or denied access to a resource. For more information,
-    #   see [AWS JSON policy elements: Principal][1].
+    #   An IAM principal, such as an IAM user, IAM role, or Amazon Web
+    #   Services services that is allowed or denied access to a resource. For
+    #   more information, see [Amazon Web Services JSON policy elements:
+    #   Principal][1].
     #
     #
     #
@@ -1466,7 +1494,7 @@ module Aws::LexModelsV2
     #   A description of the slot. Use this to help identify the slot in
     #   lists.
     #
-    # @option params [required, String] :slot_type_id
+    # @option params [String] :slot_type_id
     #   The unique identifier for the slot type associated with this slot. The
     #   slot type determines the values that can be entered into the slot.
     #
@@ -1501,6 +1529,19 @@ module Aws::LexModelsV2
     # @option params [required, String] :intent_id
     #   The identifier of the intent that contains the slot.
     #
+    # @option params [Types::MultipleValuesSetting] :multiple_values_setting
+    #   Indicates whether the slot returns multiple values in one response.
+    #   Multi-value slots are only available in the `en-US` locale. If you set
+    #   this value to `true` in any other locale, Amazon Lex throws a
+    #   `ValidationException`.
+    #
+    #   If the `multipleValuesSetting` is not set, the default value is
+    #   `false`.
+    #
+    # @option params [Types::SubSlotSetting] :sub_slot_setting
+    #   Specifications for the constituent sub slots and the expression for
+    #   the composite slot.
+    #
     # @return [Types::CreateSlotResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateSlotResponse#slot_id #slot_id} => String
@@ -1514,253 +1555,8 @@ module Aws::LexModelsV2
     #   * {Types::CreateSlotResponse#locale_id #locale_id} => String
     #   * {Types::CreateSlotResponse#intent_id #intent_id} => String
     #   * {Types::CreateSlotResponse#creation_date_time #creation_date_time} => Time
-    #
-    # @example Request syntax with placeholder values
-    #
-    #   resp = client.create_slot({
-    #     slot_name: "Name", # required
-    #     description: "Description",
-    #     slot_type_id: "BuiltInOrCustomSlotTypeId", # required
-    #     value_elicitation_setting: { # required
-    #       default_value_specification: {
-    #         default_value_list: [ # required
-    #           {
-    #             default_value: "SlotDefaultValueString", # required
-    #           },
-    #         ],
-    #       },
-    #       slot_constraint: "Required", # required, accepts Required, Optional
-    #       prompt_specification: {
-    #         message_groups: [ # required
-    #           {
-    #             message: { # required
-    #               plain_text_message: {
-    #                 value: "PlainTextMessageValue", # required
-    #               },
-    #               custom_payload: {
-    #                 value: "CustomPayloadValue", # required
-    #               },
-    #               ssml_message: {
-    #                 value: "SSMLMessageValue", # required
-    #               },
-    #               image_response_card: {
-    #                 title: "AttachmentTitle", # required
-    #                 subtitle: "AttachmentTitle",
-    #                 image_url: "AttachmentUrl",
-    #                 buttons: [
-    #                   {
-    #                     text: "ButtonText", # required
-    #                     value: "ButtonValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #             variations: [
-    #               {
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         max_retries: 1, # required
-    #         allow_interrupt: false,
-    #       },
-    #       sample_utterances: [
-    #         {
-    #           utterance: "Utterance", # required
-    #         },
-    #       ],
-    #       wait_and_continue_specification: {
-    #         waiting_response: { # required
-    #           message_groups: [ # required
-    #             {
-    #               message: { # required
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #               variations: [
-    #                 {
-    #                   plain_text_message: {
-    #                     value: "PlainTextMessageValue", # required
-    #                   },
-    #                   custom_payload: {
-    #                     value: "CustomPayloadValue", # required
-    #                   },
-    #                   ssml_message: {
-    #                     value: "SSMLMessageValue", # required
-    #                   },
-    #                   image_response_card: {
-    #                     title: "AttachmentTitle", # required
-    #                     subtitle: "AttachmentTitle",
-    #                     image_url: "AttachmentUrl",
-    #                     buttons: [
-    #                       {
-    #                         text: "ButtonText", # required
-    #                         value: "ButtonValue", # required
-    #                       },
-    #                     ],
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           ],
-    #           allow_interrupt: false,
-    #         },
-    #         continue_response: { # required
-    #           message_groups: [ # required
-    #             {
-    #               message: { # required
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #               variations: [
-    #                 {
-    #                   plain_text_message: {
-    #                     value: "PlainTextMessageValue", # required
-    #                   },
-    #                   custom_payload: {
-    #                     value: "CustomPayloadValue", # required
-    #                   },
-    #                   ssml_message: {
-    #                     value: "SSMLMessageValue", # required
-    #                   },
-    #                   image_response_card: {
-    #                     title: "AttachmentTitle", # required
-    #                     subtitle: "AttachmentTitle",
-    #                     image_url: "AttachmentUrl",
-    #                     buttons: [
-    #                       {
-    #                         text: "ButtonText", # required
-    #                         value: "ButtonValue", # required
-    #                       },
-    #                     ],
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           ],
-    #           allow_interrupt: false,
-    #         },
-    #         still_waiting_response: {
-    #           message_groups: [ # required
-    #             {
-    #               message: { # required
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #               variations: [
-    #                 {
-    #                   plain_text_message: {
-    #                     value: "PlainTextMessageValue", # required
-    #                   },
-    #                   custom_payload: {
-    #                     value: "CustomPayloadValue", # required
-    #                   },
-    #                   ssml_message: {
-    #                     value: "SSMLMessageValue", # required
-    #                   },
-    #                   image_response_card: {
-    #                     title: "AttachmentTitle", # required
-    #                     subtitle: "AttachmentTitle",
-    #                     image_url: "AttachmentUrl",
-    #                     buttons: [
-    #                       {
-    #                         text: "ButtonText", # required
-    #                         value: "ButtonValue", # required
-    #                       },
-    #                     ],
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           ],
-    #           frequency_in_seconds: 1, # required
-    #           timeout_in_seconds: 1, # required
-    #           allow_interrupt: false,
-    #         },
-    #       },
-    #     },
-    #     obfuscation_setting: {
-    #       obfuscation_setting_type: "None", # required, accepts None, DefaultObfuscation
-    #     },
-    #     bot_id: "Id", # required
-    #     bot_version: "DraftBotVersion", # required
-    #     locale_id: "LocaleId", # required
-    #     intent_id: "Id", # required
-    #   })
+    #   * {Types::CreateSlotResponse#multiple_values_setting #multiple_values_setting} => Types::MultipleValuesSetting
+    #   * {Types::CreateSlotResponse#sub_slot_setting #sub_slot_setting} => Types::SubSlotSetting
     #
     # @example Response structure
     #
@@ -1793,6 +1589,19 @@ module Aws::LexModelsV2
     #   resp.value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
     #   resp.value_elicitation_setting.prompt_specification.max_retries #=> Integer
     #   resp.value_elicitation_setting.prompt_specification.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.message_selection_strategy #=> String, one of "Random", "Ordered"
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification #=> Hash
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_audio_input #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_dtmf_input #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.start_timeout_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.max_length_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.end_timeout_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.max_length #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_timeout_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.deletion_character #=> String
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_character #=> String
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].text_input_specification.start_timeout_ms #=> Integer
     #   resp.value_elicitation_setting.sample_utterances #=> Array
     #   resp.value_elicitation_setting.sample_utterances[0].utterance #=> String
     #   resp.value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups #=> Array
@@ -1860,12 +1669,627 @@ module Aws::LexModelsV2
     #   resp.value_elicitation_setting.wait_and_continue_specification.still_waiting_response.frequency_in_seconds #=> Integer
     #   resp.value_elicitation_setting.wait_and_continue_specification.still_waiting_response.timeout_in_seconds #=> Integer
     #   resp.value_elicitation_setting.wait_and_continue_specification.still_waiting_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.wait_and_continue_specification.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.enable_code_hook_invocation #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.invocation_label #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.elicitation_code_hook.enable_code_hook_invocation #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.elicitation_code_hook.invocation_label #=> String
     #   resp.obfuscation_setting.obfuscation_setting_type #=> String, one of "None", "DefaultObfuscation"
     #   resp.bot_id #=> String
     #   resp.bot_version #=> String
     #   resp.locale_id #=> String
     #   resp.intent_id #=> String
     #   resp.creation_date_time #=> Time
+    #   resp.multiple_values_setting.allow_multiple_values #=> Boolean
+    #   resp.sub_slot_setting.expression #=> String
+    #   resp.sub_slot_setting.slot_specifications #=> Hash
+    #   resp.sub_slot_setting.slot_specifications["Name"].slot_type_id #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.default_value_specification.default_value_list #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.default_value_specification.default_value_list[0].default_value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.max_retries #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_selection_strategy #=> String, one of "Random", "Ordered"
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification #=> Hash
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_audio_input #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_dtmf_input #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.start_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.max_length_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.end_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.max_length #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.deletion_character #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_character #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].text_input_specification.start_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.sample_utterances #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.sample_utterances[0].utterance #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.frequency_in_seconds #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.timeout_in_seconds #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.active #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/CreateSlot AWS API Documentation
     #
@@ -1884,7 +2308,7 @@ module Aws::LexModelsV2
     #
     # @option params [required, String] :slot_type_name
     #   The name for the slot. A slot type name must be unique within the
-    #   account.
+    #   intent.
     #
     # @option params [String] :description
     #   A description of the slot type. Use the description to help identify
@@ -1896,20 +2320,20 @@ module Aws::LexModelsV2
     #   values that help train the machine learning model about the values
     #   that it resolves for a slot.
     #
-    # @option params [required, Types::SlotValueSelectionSetting] :value_selection_setting
+    # @option params [Types::SlotValueSelectionSetting] :value_selection_setting
     #   Determines the strategy that Amazon Lex uses to select a value from
     #   the list of possible values. The field can be set to one of the
     #   following values:
     #
-    #   * `OriginalValue` - Returns the value entered by the user, if the user
-    #     value is similar to the slot value.
+    #   * `ORIGINAL_VALUE` - Returns the value entered by the user, if the
+    #     user value is similar to the slot value.
     #
-    #   * `TopResolution` - If there is a resolution list for the slot, return
-    #     the first value in the resolution list. If there is no resolution
-    #     list, return null.
+    #   * `TOP_RESOLUTION` - If there is a resolution list for the slot,
+    #     return the first value in the resolution list. If there is no
+    #     resolution list, return null.
     #
     #   If you don't specify the `valueSelectionSetting` parameter, the
-    #   default is `OriginalValue`.
+    #   default is `ORIGINAL_VALUE`.
     #
     # @option params [String] :parent_slot_type_signature
     #   The built-in slot type used as a parent of this slot type. When you
@@ -1934,6 +2358,12 @@ module Aws::LexModelsV2
     #
     #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
     #
+    # @option params [Types::ExternalSourceSetting] :external_source_setting
+    #   Sets the type of external information used to create the slot type.
+    #
+    # @option params [Types::CompositeSlotTypeSetting] :composite_slot_type_setting
+    #   Specifications for a composite slot type.
+    #
     # @return [Types::CreateSlotTypeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateSlotTypeResponse#slot_type_id #slot_type_id} => String
@@ -1946,6 +2376,8 @@ module Aws::LexModelsV2
     #   * {Types::CreateSlotTypeResponse#bot_version #bot_version} => String
     #   * {Types::CreateSlotTypeResponse#locale_id #locale_id} => String
     #   * {Types::CreateSlotTypeResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::CreateSlotTypeResponse#external_source_setting #external_source_setting} => Types::ExternalSourceSetting
+    #   * {Types::CreateSlotTypeResponse#composite_slot_type_setting #composite_slot_type_setting} => Types::CompositeSlotTypeSetting
     #
     # @example Request syntax with placeholder values
     #
@@ -1964,16 +2396,36 @@ module Aws::LexModelsV2
     #         ],
     #       },
     #     ],
-    #     value_selection_setting: { # required
-    #       resolution_strategy: "OriginalValue", # required, accepts OriginalValue, TopResolution
+    #     value_selection_setting: {
+    #       resolution_strategy: "OriginalValue", # required, accepts OriginalValue, TopResolution, Concatenation
     #       regex_filter: {
     #         pattern: "RegexPattern", # required
+    #       },
+    #       advanced_recognition_setting: {
+    #         audio_recognition_strategy: "UseSlotValuesAsCustomVocabulary", # accepts UseSlotValuesAsCustomVocabulary
     #       },
     #     },
     #     parent_slot_type_signature: "SlotTypeSignature",
     #     bot_id: "Id", # required
     #     bot_version: "DraftBotVersion", # required
     #     locale_id: "LocaleId", # required
+    #     external_source_setting: {
+    #       grammar_slot_type_setting: {
+    #         source: {
+    #           s3_bucket_name: "S3BucketName", # required
+    #           s3_object_key: "S3ObjectPath", # required
+    #           kms_key_arn: "KmsKeyArn",
+    #         },
+    #       },
+    #     },
+    #     composite_slot_type_setting: {
+    #       sub_slots: [
+    #         {
+    #           name: "Name", # required
+    #           slot_type_id: "BuiltInOrCustomSlotTypeId", # required
+    #         },
+    #       ],
+    #     },
     #   })
     #
     # @example Response structure
@@ -1985,13 +2437,20 @@ module Aws::LexModelsV2
     #   resp.slot_type_values[0].sample_value.value #=> String
     #   resp.slot_type_values[0].synonyms #=> Array
     #   resp.slot_type_values[0].synonyms[0].value #=> String
-    #   resp.value_selection_setting.resolution_strategy #=> String, one of "OriginalValue", "TopResolution"
+    #   resp.value_selection_setting.resolution_strategy #=> String, one of "OriginalValue", "TopResolution", "Concatenation"
     #   resp.value_selection_setting.regex_filter.pattern #=> String
+    #   resp.value_selection_setting.advanced_recognition_setting.audio_recognition_strategy #=> String, one of "UseSlotValuesAsCustomVocabulary"
     #   resp.parent_slot_type_signature #=> String
     #   resp.bot_id #=> String
     #   resp.bot_version #=> String
     #   resp.locale_id #=> String
     #   resp.creation_date_time #=> Time
+    #   resp.external_source_setting.grammar_slot_type_setting.source.s3_bucket_name #=> String
+    #   resp.external_source_setting.grammar_slot_type_setting.source.s3_object_key #=> String
+    #   resp.external_source_setting.grammar_slot_type_setting.source.kms_key_arn #=> String
+    #   resp.composite_slot_type_setting.sub_slots #=> Array
+    #   resp.composite_slot_type_setting.sub_slots[0].name #=> String
+    #   resp.composite_slot_type_setting.sub_slots[0].slot_type_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/CreateSlotType AWS API Documentation
     #
@@ -1999,6 +2458,53 @@ module Aws::LexModelsV2
     # @param [Hash] params ({})
     def create_slot_type(params = {}, options = {})
       req = build_request(:create_slot_type, params)
+      req.send_request(options)
+    end
+
+    # Create a report that describes the differences between the bot and the
+    # test set.
+    #
+    # @option params [required, String] :test_set_id
+    #   The test set Id for the test set discrepancy report.
+    #
+    # @option params [required, Types::TestSetDiscrepancyReportResourceTarget] :target
+    #   The target bot for the test set discrepancy report.
+    #
+    # @return [Types::CreateTestSetDiscrepancyReportResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateTestSetDiscrepancyReportResponse#test_set_discrepancy_report_id #test_set_discrepancy_report_id} => String
+    #   * {Types::CreateTestSetDiscrepancyReportResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::CreateTestSetDiscrepancyReportResponse#test_set_id #test_set_id} => String
+    #   * {Types::CreateTestSetDiscrepancyReportResponse#target #target} => Types::TestSetDiscrepancyReportResourceTarget
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_test_set_discrepancy_report({
+    #     test_set_id: "Id", # required
+    #     target: { # required
+    #       bot_alias_target: {
+    #         bot_id: "Id", # required
+    #         bot_alias_id: "BotAliasId", # required
+    #         locale_id: "LocaleId", # required
+    #       },
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_set_discrepancy_report_id #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.test_set_id #=> String
+    #   resp.target.bot_alias_target.bot_id #=> String
+    #   resp.target.bot_alias_target.bot_alias_id #=> String
+    #   resp.target.bot_alias_target.locale_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/CreateTestSetDiscrepancyReport AWS API Documentation
+    #
+    # @overload create_test_set_discrepancy_report(params = {})
+    # @param [Hash] params ({})
+    def create_test_set_discrepancy_report(params = {}, options = {})
+      req = build_request(:create_test_set_discrepancy_report, params)
       req.send_request(options)
     end
 
@@ -2039,8 +2545,11 @@ module Aws::LexModelsV2
     #   The identifier of the bot to delete.
     #
     # @option params [Boolean] :skip_resource_in_use_check
-    #   When `true`, Amazon Lex doesn't check to see if another resource,
-    #   such as an alias, is using the bot before it is deleted.
+    #   By default, Amazon Lex checks if any other resource, such as an alias
+    #   or bot network, is using the bot version before it is deleted and
+    #   throws a `ResourceInUseException` exception if the bot is being used
+    #   by another resource. Set this parameter to `true` to skip this check
+    #   and remove the bot even if it is being used by another resource.
     #
     # @return [Types::DeleteBotResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2057,7 +2566,7 @@ module Aws::LexModelsV2
     # @example Response structure
     #
     #   resp.bot_id #=> String
-    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing"
+    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing", "Updating"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DeleteBot AWS API Documentation
     #
@@ -2077,8 +2586,11 @@ module Aws::LexModelsV2
     #   The unique identifier of the bot associated with the alias to delete.
     #
     # @option params [Boolean] :skip_resource_in_use_check
-    #   When this parameter is true, Amazon Lex doesn't check to see if any
-    #   other resource is using the alias before it is deleted.
+    #   By default, Amazon Lex checks if any other resource, such as a bot
+    #   network, is using the bot alias before it is deleted and throws a
+    #   `ResourceInUseException` exception if the alias is being used by
+    #   another resource. Set this parameter to `true` to skip this check and
+    #   remove the alias even if it is being used by another resource.
     #
     # @return [Types::DeleteBotAliasResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2149,7 +2661,7 @@ module Aws::LexModelsV2
     #   resp.bot_id #=> String
     #   resp.bot_version #=> String
     #   resp.locale_id #=> String
-    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing"
+    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing", "Processing"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DeleteBotLocale AWS API Documentation
     #
@@ -2160,8 +2672,12 @@ module Aws::LexModelsV2
       req.send_request(options)
     end
 
-    # Deletes a specific version of a bot. To delete all version of a bot,
-    # use the DeleteBot operation.
+    # Deletes a specific version of a bot. To delete all versions of a bot,
+    # use the [DeleteBot][1] operation.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_DeleteBot.html
     #
     # @option params [required, String] :bot_id
     #   The identifier of the bot that contains the version.
@@ -2170,11 +2686,12 @@ module Aws::LexModelsV2
     #   The version of the bot to delete.
     #
     # @option params [Boolean] :skip_resource_in_use_check
-    #   By default, the `DeleteBotVersion` operations throws a
-    #   `ResourceInUseException` exception if you try to delete a bot version
-    #   that has an alias pointing at it. Set the `skipResourceInUseCheck`
-    #   parameter to `true` to skip this check and remove the version even if
-    #   an alias points to it.
+    #   By default, Amazon Lex checks if any other resource, such as an alias
+    #   or bot network, is using the bot version before it is deleted and
+    #   throws a `ResourceInUseException` exception if the version is being
+    #   used by another resource. Set this parameter to `true` to skip this
+    #   check and remove the version even if it is being used by another
+    #   resource.
     #
     # @return [Types::DeleteBotVersionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2194,7 +2711,7 @@ module Aws::LexModelsV2
     #
     #   resp.bot_id #=> String
     #   resp.bot_version #=> String
-    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing"
+    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing", "Updating"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DeleteBotVersion AWS API Documentation
     #
@@ -2202,6 +2719,50 @@ module Aws::LexModelsV2
     # @param [Hash] params ({})
     def delete_bot_version(params = {}, options = {})
       req = build_request(:delete_bot_version, params)
+      req.send_request(options)
+    end
+
+    # Removes a custom vocabulary from the specified locale in the specified
+    # bot.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot to remove the custom vocabulary from.
+    #
+    # @option params [required, String] :bot_version
+    #   The version of the bot to remove the custom vocabulary from.
+    #
+    # @option params [required, String] :locale_id
+    #   The locale identifier for the locale that contains the custom
+    #   vocabulary to remove.
+    #
+    # @return [Types::DeleteCustomVocabularyResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteCustomVocabularyResponse#bot_id #bot_id} => String
+    #   * {Types::DeleteCustomVocabularyResponse#bot_version #bot_version} => String
+    #   * {Types::DeleteCustomVocabularyResponse#locale_id #locale_id} => String
+    #   * {Types::DeleteCustomVocabularyResponse#custom_vocabulary_status #custom_vocabulary_status} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_custom_vocabulary({
+    #     bot_id: "Id", # required
+    #     bot_version: "DraftBotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.custom_vocabulary_status #=> String, one of "Ready", "Deleting", "Exporting", "Importing", "Creating"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DeleteCustomVocabulary AWS API Documentation
+    #
+    # @overload delete_custom_vocabulary(params = {})
+    # @param [Hash] params ({})
+    def delete_custom_vocabulary(params = {}, options = {})
+      req = build_request(:delete_custom_vocabulary, params)
       req.send_request(options)
     end
 
@@ -2492,6 +3053,87 @@ module Aws::LexModelsV2
       req.send_request(options)
     end
 
+    # The action to delete the selected test set.
+    #
+    # @option params [required, String] :test_set_id
+    #   The test set Id of the test set to be deleted.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_test_set({
+    #     test_set_id: "Id", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DeleteTestSet AWS API Documentation
+    #
+    # @overload delete_test_set(params = {})
+    # @param [Hash] params ({})
+    def delete_test_set(params = {}, options = {})
+      req = build_request(:delete_test_set, params)
+      req.send_request(options)
+    end
+
+    # Deletes stored utterances.
+    #
+    # Amazon Lex stores the utterances that users send to your bot.
+    # Utterances are stored for 15 days for use with the
+    # [ListAggregatedUtterances][1] operation, and then stored indefinitely
+    # for use in improving the ability of your bot to respond to user
+    # input..
+    #
+    # Use the `DeleteUtterances` operation to manually delete utterances for
+    # a specific session. When you use the `DeleteUtterances` operation,
+    # utterances stored for improving your bot's ability to respond to user
+    # input are deleted immediately. Utterances stored for use with the
+    # `ListAggregatedUtterances` operation are deleted after 15 days.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_ListAggregatedUtterances.html
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot that contains the utterances.
+    #
+    # @option params [String] :locale_id
+    #   The identifier of the language and locale where the utterances were
+    #   collected. The string must match one of the supported locales. For
+    #   more information, see [Supported languages][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [String] :session_id
+    #   The unique identifier of the session with the user. The ID is returned
+    #   in the response from the [RecognizeText][1] and
+    #   [RecognizeUtterance][2] operations.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_runtime_RecognizeText.html
+    #   [2]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_runtime_RecognizeUtterance.html
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_utterances({
+    #     bot_id: "Id", # required
+    #     locale_id: "LocaleId",
+    #     session_id: "SessionId",
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DeleteUtterances AWS API Documentation
+    #
+    # @overload delete_utterances(params = {})
+    # @param [Hash] params ({})
+    def delete_utterances(params = {}, options = {})
+      req = build_request(:delete_utterances, params)
+      req.send_request(options)
+    end
+
     # Provides metadata information about a bot.
     #
     # @option params [required, String] :bot_id
@@ -2508,6 +3150,9 @@ module Aws::LexModelsV2
     #   * {Types::DescribeBotResponse#bot_status #bot_status} => String
     #   * {Types::DescribeBotResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::DescribeBotResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::DescribeBotResponse#bot_type #bot_type} => String
+    #   * {Types::DescribeBotResponse#bot_members #bot_members} => Array&lt;Types::BotMember&gt;
+    #   * {Types::DescribeBotResponse#failure_reasons #failure_reasons} => Array&lt;String&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -2523,9 +3168,23 @@ module Aws::LexModelsV2
     #   resp.role_arn #=> String
     #   resp.data_privacy.child_directed #=> Boolean
     #   resp.idle_session_ttl_in_seconds #=> Integer
-    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing"
+    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing", "Updating"
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #   resp.bot_type #=> String, one of "Bot", "BotNetwork"
+    #   resp.bot_members #=> Array
+    #   resp.bot_members[0].bot_member_id #=> String
+    #   resp.bot_members[0].bot_member_name #=> String
+    #   resp.bot_members[0].bot_member_alias_id #=> String
+    #   resp.bot_members[0].bot_member_alias_name #=> String
+    #   resp.bot_members[0].bot_member_version #=> String
+    #   resp.failure_reasons #=> Array
+    #   resp.failure_reasons[0] #=> String
+    #
+    #
+    # The following waiters are defined for this operation (see {Client#wait_until} for detailed usage):
+    #
+    #   * bot_available
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeBot AWS API Documentation
     #
@@ -2558,6 +3217,7 @@ module Aws::LexModelsV2
     #   * {Types::DescribeBotAliasResponse#bot_id #bot_id} => String
     #   * {Types::DescribeBotAliasResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::DescribeBotAliasResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::DescribeBotAliasResponse#parent_bot_networks #parent_bot_networks} => Array&lt;Types::ParentBotNetwork&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -2594,6 +3254,14 @@ module Aws::LexModelsV2
     #   resp.bot_id #=> String
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #   resp.parent_bot_networks #=> Array
+    #   resp.parent_bot_networks[0].bot_id #=> String
+    #   resp.parent_bot_networks[0].bot_version #=> String
+    #
+    #
+    # The following waiters are defined for this operation (see {Client#wait_until} for detailed usage):
+    #
+    #   * bot_alias_available
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeBotAlias AWS API Documentation
     #
@@ -2610,7 +3278,7 @@ module Aws::LexModelsV2
     #   The identifier of the bot associated with the locale.
     #
     # @option params [required, String] :bot_version
-    #   The identifier of the version of the bot associated with the locale.
+    #   The version of the bot associated with the locale.
     #
     # @option params [required, String] :locale_id
     #   The unique identifier of the locale to describe. The string must match
@@ -2638,6 +3306,7 @@ module Aws::LexModelsV2
     #   * {Types::DescribeBotLocaleResponse#last_updated_date_time #last_updated_date_time} => Time
     #   * {Types::DescribeBotLocaleResponse#last_build_submitted_date_time #last_build_submitted_date_time} => Time
     #   * {Types::DescribeBotLocaleResponse#bot_locale_history_events #bot_locale_history_events} => Array&lt;Types::BotLocaleHistoryEvent&gt;
+    #   * {Types::DescribeBotLocaleResponse#recommended_actions #recommended_actions} => Array&lt;String&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -2656,9 +3325,10 @@ module Aws::LexModelsV2
     #   resp.description #=> String
     #   resp.nlu_intent_confidence_threshold #=> Float
     #   resp.voice_settings.voice_id #=> String
+    #   resp.voice_settings.engine #=> String, one of "standard", "neural"
     #   resp.intents_count #=> Integer
     #   resp.slot_types_count #=> Integer
-    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing"
+    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing", "Processing"
     #   resp.failure_reasons #=> Array
     #   resp.failure_reasons[0] #=> String
     #   resp.creation_date_time #=> Time
@@ -2667,6 +3337,15 @@ module Aws::LexModelsV2
     #   resp.bot_locale_history_events #=> Array
     #   resp.bot_locale_history_events[0].event #=> String
     #   resp.bot_locale_history_events[0].event_date #=> Time
+    #   resp.recommended_actions #=> Array
+    #   resp.recommended_actions[0] #=> String
+    #
+    #
+    # The following waiters are defined for this operation (see {Client#wait_until} for detailed usage):
+    #
+    #   * bot_locale_built
+    #   * bot_locale_created
+    #   * bot_locale_express_testing_available
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeBotLocale AWS API Documentation
     #
@@ -2674,6 +3353,89 @@ module Aws::LexModelsV2
     # @param [Hash] params ({})
     def describe_bot_locale(params = {}, options = {})
       req = build_request(:describe_bot_locale, params)
+      req.send_request(options)
+    end
+
+    # Provides metadata information about a bot recommendation. This
+    # information will enable you to get a description on the request
+    # inputs, to download associated transcripts after processing is
+    # complete, and to download intents and slot-types generated by the bot
+    # recommendation.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot associated with the bot
+    #   recommendation.
+    #
+    # @option params [required, String] :bot_version
+    #   The version of the bot associated with the bot recommendation.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale of the bot recommendation to
+    #   describe. The string must match one of the supported locales. For more
+    #   information, see [Supported languages][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [required, String] :bot_recommendation_id
+    #   The identifier of the bot recommendation to describe.
+    #
+    # @return [Types::DescribeBotRecommendationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeBotRecommendationResponse#bot_id #bot_id} => String
+    #   * {Types::DescribeBotRecommendationResponse#bot_version #bot_version} => String
+    #   * {Types::DescribeBotRecommendationResponse#locale_id #locale_id} => String
+    #   * {Types::DescribeBotRecommendationResponse#bot_recommendation_status #bot_recommendation_status} => String
+    #   * {Types::DescribeBotRecommendationResponse#bot_recommendation_id #bot_recommendation_id} => String
+    #   * {Types::DescribeBotRecommendationResponse#failure_reasons #failure_reasons} => Array&lt;String&gt;
+    #   * {Types::DescribeBotRecommendationResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::DescribeBotRecommendationResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::DescribeBotRecommendationResponse#transcript_source_setting #transcript_source_setting} => Types::TranscriptSourceSetting
+    #   * {Types::DescribeBotRecommendationResponse#encryption_setting #encryption_setting} => Types::EncryptionSetting
+    #   * {Types::DescribeBotRecommendationResponse#bot_recommendation_results #bot_recommendation_results} => Types::BotRecommendationResults
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_bot_recommendation({
+    #     bot_id: "Id", # required
+    #     bot_version: "DraftBotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     bot_recommendation_id: "Id", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.bot_recommendation_status #=> String, one of "Processing", "Deleting", "Deleted", "Downloading", "Updating", "Available", "Failed", "Stopping", "Stopped"
+    #   resp.bot_recommendation_id #=> String
+    #   resp.failure_reasons #=> Array
+    #   resp.failure_reasons[0] #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.last_updated_date_time #=> Time
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.s3_bucket_name #=> String
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.path_format.object_prefixes #=> Array
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.path_format.object_prefixes[0] #=> String
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.transcript_format #=> String, one of "Lex"
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.transcript_filter.lex_transcript_filter.date_range_filter.start_date_time #=> Time
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.transcript_filter.lex_transcript_filter.date_range_filter.end_date_time #=> Time
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.kms_key_arn #=> String
+    #   resp.encryption_setting.kms_key_arn #=> String
+    #   resp.encryption_setting.bot_locale_export_password #=> String
+    #   resp.encryption_setting.associated_transcripts_password #=> String
+    #   resp.bot_recommendation_results.bot_locale_export_url #=> String
+    #   resp.bot_recommendation_results.associated_transcripts_url #=> String
+    #   resp.bot_recommendation_results.statistics.intents.discovered_intent_count #=> Integer
+    #   resp.bot_recommendation_results.statistics.slot_types.discovered_slot_type_count #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeBotRecommendation AWS API Documentation
+    #
+    # @overload describe_bot_recommendation(params = {})
+    # @param [Hash] params ({})
+    def describe_bot_recommendation(params = {}, options = {})
+      req = build_request(:describe_bot_recommendation, params)
       req.send_request(options)
     end
 
@@ -2698,6 +3460,9 @@ module Aws::LexModelsV2
     #   * {Types::DescribeBotVersionResponse#bot_status #bot_status} => String
     #   * {Types::DescribeBotVersionResponse#failure_reasons #failure_reasons} => Array&lt;String&gt;
     #   * {Types::DescribeBotVersionResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::DescribeBotVersionResponse#parent_bot_networks #parent_bot_networks} => Array&lt;Types::ParentBotNetwork&gt;
+    #   * {Types::DescribeBotVersionResponse#bot_type #bot_type} => String
+    #   * {Types::DescribeBotVersionResponse#bot_members #bot_members} => Array&lt;Types::BotMember&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -2715,10 +3480,25 @@ module Aws::LexModelsV2
     #   resp.role_arn #=> String
     #   resp.data_privacy.child_directed #=> Boolean
     #   resp.idle_session_ttl_in_seconds #=> Integer
-    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing"
+    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing", "Updating"
     #   resp.failure_reasons #=> Array
     #   resp.failure_reasons[0] #=> String
     #   resp.creation_date_time #=> Time
+    #   resp.parent_bot_networks #=> Array
+    #   resp.parent_bot_networks[0].bot_id #=> String
+    #   resp.parent_bot_networks[0].bot_version #=> String
+    #   resp.bot_type #=> String, one of "Bot", "BotNetwork"
+    #   resp.bot_members #=> Array
+    #   resp.bot_members[0].bot_member_id #=> String
+    #   resp.bot_members[0].bot_member_name #=> String
+    #   resp.bot_members[0].bot_member_alias_id #=> String
+    #   resp.bot_members[0].bot_member_alias_name #=> String
+    #   resp.bot_members[0].bot_member_version #=> String
+    #
+    #
+    # The following waiters are defined for this operation (see {Client#wait_until} for detailed usage):
+    #
+    #   * bot_version_available
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeBotVersion AWS API Documentation
     #
@@ -2726,6 +3506,53 @@ module Aws::LexModelsV2
     # @param [Hash] params ({})
     def describe_bot_version(params = {}, options = {})
       req = build_request(:describe_bot_version, params)
+      req.send_request(options)
+    end
+
+    # Provides metadata information about a custom vocabulary.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot that contains the custom vocabulary.
+    #
+    # @option params [required, String] :bot_version
+    #   The bot version of the bot to return metadata for.
+    #
+    # @option params [required, String] :locale_id
+    #   The locale to return the custom vocabulary information for. The locale
+    #   must be `en_GB`.
+    #
+    # @return [Types::DescribeCustomVocabularyMetadataResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeCustomVocabularyMetadataResponse#bot_id #bot_id} => String
+    #   * {Types::DescribeCustomVocabularyMetadataResponse#bot_version #bot_version} => String
+    #   * {Types::DescribeCustomVocabularyMetadataResponse#locale_id #locale_id} => String
+    #   * {Types::DescribeCustomVocabularyMetadataResponse#custom_vocabulary_status #custom_vocabulary_status} => String
+    #   * {Types::DescribeCustomVocabularyMetadataResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::DescribeCustomVocabularyMetadataResponse#last_updated_date_time #last_updated_date_time} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_custom_vocabulary_metadata({
+    #     bot_id: "Id", # required
+    #     bot_version: "BotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.custom_vocabulary_status #=> String, one of "Ready", "Deleting", "Exporting", "Importing", "Creating"
+    #   resp.creation_date_time #=> Time
+    #   resp.last_updated_date_time #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeCustomVocabularyMetadata AWS API Documentation
+    #
+    # @overload describe_custom_vocabulary_metadata(params = {})
+    # @param [Hash] params ({})
+    def describe_custom_vocabulary_metadata(params = {}, options = {})
+      req = build_request(:describe_custom_vocabulary_metadata, params)
       req.send_request(options)
     end
 
@@ -2759,13 +3586,22 @@ module Aws::LexModelsV2
     #   resp.resource_specification.bot_locale_export_specification.bot_id #=> String
     #   resp.resource_specification.bot_locale_export_specification.bot_version #=> String
     #   resp.resource_specification.bot_locale_export_specification.locale_id #=> String
-    #   resp.file_format #=> String, one of "LexJson"
+    #   resp.resource_specification.custom_vocabulary_export_specification.bot_id #=> String
+    #   resp.resource_specification.custom_vocabulary_export_specification.bot_version #=> String
+    #   resp.resource_specification.custom_vocabulary_export_specification.locale_id #=> String
+    #   resp.resource_specification.test_set_export_specification.test_set_id #=> String
+    #   resp.file_format #=> String, one of "LexJson", "TSV", "CSV"
     #   resp.export_status #=> String, one of "InProgress", "Completed", "Failed", "Deleting"
     #   resp.failure_reasons #=> Array
     #   resp.failure_reasons[0] #=> String
     #   resp.download_url #=> String
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #
+    #
+    # The following waiters are defined for this operation (see {Client#wait_until} for detailed usage):
+    #
+    #   * bot_export_completed
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeExport AWS API Documentation
     #
@@ -2815,14 +3651,34 @@ module Aws::LexModelsV2
     #   resp.resource_specification.bot_locale_import_specification.locale_id #=> String
     #   resp.resource_specification.bot_locale_import_specification.nlu_intent_confidence_threshold #=> Float
     #   resp.resource_specification.bot_locale_import_specification.voice_settings.voice_id #=> String
+    #   resp.resource_specification.bot_locale_import_specification.voice_settings.engine #=> String, one of "standard", "neural"
+    #   resp.resource_specification.custom_vocabulary_import_specification.bot_id #=> String
+    #   resp.resource_specification.custom_vocabulary_import_specification.bot_version #=> String
+    #   resp.resource_specification.custom_vocabulary_import_specification.locale_id #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.test_set_name #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.description #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.role_arn #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.storage_location.s3_bucket_name #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.storage_location.s3_path #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.storage_location.kms_key_arn #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.import_input_location.s3_bucket_name #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.import_input_location.s3_path #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.modality #=> String, one of "Text", "Audio"
+    #   resp.resource_specification.test_set_import_resource_specification.test_set_tags #=> Hash
+    #   resp.resource_specification.test_set_import_resource_specification.test_set_tags["TagKey"] #=> String
     #   resp.imported_resource_id #=> String
     #   resp.imported_resource_name #=> String
-    #   resp.merge_strategy #=> String, one of "Overwrite", "FailOnConflict"
+    #   resp.merge_strategy #=> String, one of "Overwrite", "FailOnConflict", "Append"
     #   resp.import_status #=> String, one of "InProgress", "Completed", "Failed", "Deleting"
     #   resp.failure_reasons #=> Array
     #   resp.failure_reasons[0] #=> String
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #
+    #
+    # The following waiters are defined for this operation (see {Client#wait_until} for detailed usage):
+    #
+    #   * bot_import_completed
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeImport AWS API Documentation
     #
@@ -2873,6 +3729,7 @@ module Aws::LexModelsV2
     #   * {Types::DescribeIntentResponse#locale_id #locale_id} => String
     #   * {Types::DescribeIntentResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::DescribeIntentResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::DescribeIntentResponse#initial_response_setting #initial_response_setting} => Types::InitialResponseSetting
     #
     # @example Request syntax with placeholder values
     #
@@ -2882,98 +3739,6 @@ module Aws::LexModelsV2
     #     bot_version: "BotVersion", # required
     #     locale_id: "LocaleId", # required
     #   })
-    #
-    # @example Response structure
-    #
-    #   resp.intent_id #=> String
-    #   resp.intent_name #=> String
-    #   resp.description #=> String
-    #   resp.parent_intent_signature #=> String
-    #   resp.sample_utterances #=> Array
-    #   resp.sample_utterances[0].utterance #=> String
-    #   resp.dialog_code_hook.enabled #=> Boolean
-    #   resp.fulfillment_code_hook.enabled #=> Boolean
-    #   resp.slot_priorities #=> Array
-    #   resp.slot_priorities[0].priority #=> Integer
-    #   resp.slot_priorities[0].slot_id #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.max_retries #=> Integer
-    #   resp.intent_confirmation_setting.prompt_specification.allow_interrupt #=> Boolean
-    #   resp.intent_confirmation_setting.declination_response.message_groups #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.declination_response.allow_interrupt #=> Boolean
-    #   resp.intent_closing_setting.closing_response.message_groups #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.plain_text_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.custom_payload.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.ssml_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.title #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.subtitle #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.image_url #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.buttons #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].plain_text_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].custom_payload.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].ssml_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.title #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.image_url #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
-    #   resp.intent_closing_setting.closing_response.allow_interrupt #=> Boolean
-    #   resp.input_contexts #=> Array
-    #   resp.input_contexts[0].name #=> String
-    #   resp.output_contexts #=> Array
-    #   resp.output_contexts[0].name #=> String
-    #   resp.output_contexts[0].time_to_live_in_seconds #=> Integer
-    #   resp.output_contexts[0].turns_to_live #=> Integer
-    #   resp.kendra_configuration.kendra_index #=> String
-    #   resp.kendra_configuration.query_filter_string_enabled #=> Boolean
-    #   resp.kendra_configuration.query_filter_string #=> String
-    #   resp.bot_id #=> String
-    #   resp.bot_version #=> String
-    #   resp.locale_id #=> String
-    #   resp.creation_date_time #=> Time
-    #   resp.last_updated_date_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeIntent AWS API Documentation
     #
@@ -3054,6 +3819,8 @@ module Aws::LexModelsV2
     #   * {Types::DescribeSlotResponse#intent_id #intent_id} => String
     #   * {Types::DescribeSlotResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::DescribeSlotResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::DescribeSlotResponse#multiple_values_setting #multiple_values_setting} => Types::MultipleValuesSetting
+    #   * {Types::DescribeSlotResponse#sub_slot_setting #sub_slot_setting} => Types::SubSlotSetting
     #
     # @example Request syntax with placeholder values
     #
@@ -3096,6 +3863,19 @@ module Aws::LexModelsV2
     #   resp.value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
     #   resp.value_elicitation_setting.prompt_specification.max_retries #=> Integer
     #   resp.value_elicitation_setting.prompt_specification.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.message_selection_strategy #=> String, one of "Random", "Ordered"
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification #=> Hash
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_audio_input #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_dtmf_input #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.start_timeout_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.max_length_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.end_timeout_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.max_length #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_timeout_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.deletion_character #=> String
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_character #=> String
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].text_input_specification.start_timeout_ms #=> Integer
     #   resp.value_elicitation_setting.sample_utterances #=> Array
     #   resp.value_elicitation_setting.sample_utterances[0].utterance #=> String
     #   resp.value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups #=> Array
@@ -3163,6 +3943,512 @@ module Aws::LexModelsV2
     #   resp.value_elicitation_setting.wait_and_continue_specification.still_waiting_response.frequency_in_seconds #=> Integer
     #   resp.value_elicitation_setting.wait_and_continue_specification.still_waiting_response.timeout_in_seconds #=> Integer
     #   resp.value_elicitation_setting.wait_and_continue_specification.still_waiting_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.wait_and_continue_specification.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.enable_code_hook_invocation #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.invocation_label #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.elicitation_code_hook.enable_code_hook_invocation #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.elicitation_code_hook.invocation_label #=> String
     #   resp.obfuscation_setting.obfuscation_setting_type #=> String, one of "None", "DefaultObfuscation"
     #   resp.bot_id #=> String
     #   resp.bot_version #=> String
@@ -3170,6 +4456,115 @@ module Aws::LexModelsV2
     #   resp.intent_id #=> String
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #   resp.multiple_values_setting.allow_multiple_values #=> Boolean
+    #   resp.sub_slot_setting.expression #=> String
+    #   resp.sub_slot_setting.slot_specifications #=> Hash
+    #   resp.sub_slot_setting.slot_specifications["Name"].slot_type_id #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.default_value_specification.default_value_list #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.default_value_specification.default_value_list[0].default_value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.max_retries #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_selection_strategy #=> String, one of "Random", "Ordered"
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification #=> Hash
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_audio_input #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_dtmf_input #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.start_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.max_length_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.end_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.max_length #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.deletion_character #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_character #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].text_input_specification.start_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.sample_utterances #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.sample_utterances[0].utterance #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.frequency_in_seconds #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.timeout_in_seconds #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.active #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeSlot AWS API Documentation
     #
@@ -3213,6 +4608,8 @@ module Aws::LexModelsV2
     #   * {Types::DescribeSlotTypeResponse#locale_id #locale_id} => String
     #   * {Types::DescribeSlotTypeResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::DescribeSlotTypeResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::DescribeSlotTypeResponse#external_source_setting #external_source_setting} => Types::ExternalSourceSetting
+    #   * {Types::DescribeSlotTypeResponse#composite_slot_type_setting #composite_slot_type_setting} => Types::CompositeSlotTypeSetting
     #
     # @example Request syntax with placeholder values
     #
@@ -3232,14 +4629,21 @@ module Aws::LexModelsV2
     #   resp.slot_type_values[0].sample_value.value #=> String
     #   resp.slot_type_values[0].synonyms #=> Array
     #   resp.slot_type_values[0].synonyms[0].value #=> String
-    #   resp.value_selection_setting.resolution_strategy #=> String, one of "OriginalValue", "TopResolution"
+    #   resp.value_selection_setting.resolution_strategy #=> String, one of "OriginalValue", "TopResolution", "Concatenation"
     #   resp.value_selection_setting.regex_filter.pattern #=> String
+    #   resp.value_selection_setting.advanced_recognition_setting.audio_recognition_strategy #=> String, one of "UseSlotValuesAsCustomVocabulary"
     #   resp.parent_slot_type_signature #=> String
     #   resp.bot_id #=> String
     #   resp.bot_version #=> String
     #   resp.locale_id #=> String
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #   resp.external_source_setting.grammar_slot_type_setting.source.s3_bucket_name #=> String
+    #   resp.external_source_setting.grammar_slot_type_setting.source.s3_object_key #=> String
+    #   resp.external_source_setting.grammar_slot_type_setting.source.kms_key_arn #=> String
+    #   resp.composite_slot_type_setting.sub_slots #=> Array
+    #   resp.composite_slot_type_setting.sub_slots[0].name #=> String
+    #   resp.composite_slot_type_setting.sub_slots[0].slot_type_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeSlotType AWS API Documentation
     #
@@ -3247,6 +4651,383 @@ module Aws::LexModelsV2
     # @param [Hash] params ({})
     def describe_slot_type(params = {}, options = {})
       req = build_request(:describe_slot_type, params)
+      req.send_request(options)
+    end
+
+    # Gets metadata information about the test execution.
+    #
+    # @option params [required, String] :test_execution_id
+    #   The execution Id of the test set execution.
+    #
+    # @return [Types::DescribeTestExecutionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeTestExecutionResponse#test_execution_id #test_execution_id} => String
+    #   * {Types::DescribeTestExecutionResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::DescribeTestExecutionResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::DescribeTestExecutionResponse#test_execution_status #test_execution_status} => String
+    #   * {Types::DescribeTestExecutionResponse#test_set_id #test_set_id} => String
+    #   * {Types::DescribeTestExecutionResponse#test_set_name #test_set_name} => String
+    #   * {Types::DescribeTestExecutionResponse#target #target} => Types::TestExecutionTarget
+    #   * {Types::DescribeTestExecutionResponse#api_mode #api_mode} => String
+    #   * {Types::DescribeTestExecutionResponse#test_execution_modality #test_execution_modality} => String
+    #   * {Types::DescribeTestExecutionResponse#failure_reasons #failure_reasons} => Array&lt;String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_test_execution({
+    #     test_execution_id: "Id", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_execution_id #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.last_updated_date_time #=> Time
+    #   resp.test_execution_status #=> String, one of "Pending", "Waiting", "InProgress", "Completed", "Failed", "Stopping", "Stopped"
+    #   resp.test_set_id #=> String
+    #   resp.test_set_name #=> String
+    #   resp.target.bot_alias_target.bot_id #=> String
+    #   resp.target.bot_alias_target.bot_alias_id #=> String
+    #   resp.target.bot_alias_target.locale_id #=> String
+    #   resp.api_mode #=> String, one of "Streaming", "NonStreaming"
+    #   resp.test_execution_modality #=> String, one of "Text", "Audio"
+    #   resp.failure_reasons #=> Array
+    #   resp.failure_reasons[0] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeTestExecution AWS API Documentation
+    #
+    # @overload describe_test_execution(params = {})
+    # @param [Hash] params ({})
+    def describe_test_execution(params = {}, options = {})
+      req = build_request(:describe_test_execution, params)
+      req.send_request(options)
+    end
+
+    # Gets metadata information about the test set.
+    #
+    # @option params [required, String] :test_set_id
+    #   The test set Id for the test set request.
+    #
+    # @return [Types::DescribeTestSetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeTestSetResponse#test_set_id #test_set_id} => String
+    #   * {Types::DescribeTestSetResponse#test_set_name #test_set_name} => String
+    #   * {Types::DescribeTestSetResponse#description #description} => String
+    #   * {Types::DescribeTestSetResponse#modality #modality} => String
+    #   * {Types::DescribeTestSetResponse#status #status} => String
+    #   * {Types::DescribeTestSetResponse#role_arn #role_arn} => String
+    #   * {Types::DescribeTestSetResponse#num_turns #num_turns} => Integer
+    #   * {Types::DescribeTestSetResponse#storage_location #storage_location} => Types::TestSetStorageLocation
+    #   * {Types::DescribeTestSetResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::DescribeTestSetResponse#last_updated_date_time #last_updated_date_time} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_test_set({
+    #     test_set_id: "Id", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_set_id #=> String
+    #   resp.test_set_name #=> String
+    #   resp.description #=> String
+    #   resp.modality #=> String, one of "Text", "Audio"
+    #   resp.status #=> String, one of "Importing", "PendingAnnotation", "Deleting", "ValidationError", "Ready"
+    #   resp.role_arn #=> String
+    #   resp.num_turns #=> Integer
+    #   resp.storage_location.s3_bucket_name #=> String
+    #   resp.storage_location.s3_path #=> String
+    #   resp.storage_location.kms_key_arn #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.last_updated_date_time #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeTestSet AWS API Documentation
+    #
+    # @overload describe_test_set(params = {})
+    # @param [Hash] params ({})
+    def describe_test_set(params = {}, options = {})
+      req = build_request(:describe_test_set, params)
+      req.send_request(options)
+    end
+
+    # Gets metadata information about the test set discrepancy report.
+    #
+    # @option params [required, String] :test_set_discrepancy_report_id
+    #   The unique identifier of the test set discrepancy report.
+    #
+    # @return [Types::DescribeTestSetDiscrepancyReportResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeTestSetDiscrepancyReportResponse#test_set_discrepancy_report_id #test_set_discrepancy_report_id} => String
+    #   * {Types::DescribeTestSetDiscrepancyReportResponse#test_set_id #test_set_id} => String
+    #   * {Types::DescribeTestSetDiscrepancyReportResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::DescribeTestSetDiscrepancyReportResponse#target #target} => Types::TestSetDiscrepancyReportResourceTarget
+    #   * {Types::DescribeTestSetDiscrepancyReportResponse#test_set_discrepancy_report_status #test_set_discrepancy_report_status} => String
+    #   * {Types::DescribeTestSetDiscrepancyReportResponse#last_updated_data_time #last_updated_data_time} => Time
+    #   * {Types::DescribeTestSetDiscrepancyReportResponse#test_set_discrepancy_top_errors #test_set_discrepancy_top_errors} => Types::TestSetDiscrepancyErrors
+    #   * {Types::DescribeTestSetDiscrepancyReportResponse#test_set_discrepancy_raw_output_url #test_set_discrepancy_raw_output_url} => String
+    #   * {Types::DescribeTestSetDiscrepancyReportResponse#failure_reasons #failure_reasons} => Array&lt;String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_test_set_discrepancy_report({
+    #     test_set_discrepancy_report_id: "Id", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_set_discrepancy_report_id #=> String
+    #   resp.test_set_id #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.target.bot_alias_target.bot_id #=> String
+    #   resp.target.bot_alias_target.bot_alias_id #=> String
+    #   resp.target.bot_alias_target.locale_id #=> String
+    #   resp.test_set_discrepancy_report_status #=> String, one of "InProgress", "Completed", "Failed"
+    #   resp.last_updated_data_time #=> Time
+    #   resp.test_set_discrepancy_top_errors.intent_discrepancies #=> Array
+    #   resp.test_set_discrepancy_top_errors.intent_discrepancies[0].intent_name #=> String
+    #   resp.test_set_discrepancy_top_errors.intent_discrepancies[0].error_message #=> String
+    #   resp.test_set_discrepancy_top_errors.slot_discrepancies #=> Array
+    #   resp.test_set_discrepancy_top_errors.slot_discrepancies[0].intent_name #=> String
+    #   resp.test_set_discrepancy_top_errors.slot_discrepancies[0].slot_name #=> String
+    #   resp.test_set_discrepancy_top_errors.slot_discrepancies[0].error_message #=> String
+    #   resp.test_set_discrepancy_raw_output_url #=> String
+    #   resp.failure_reasons #=> Array
+    #   resp.failure_reasons[0] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeTestSetDiscrepancyReport AWS API Documentation
+    #
+    # @overload describe_test_set_discrepancy_report(params = {})
+    # @param [Hash] params ({})
+    def describe_test_set_discrepancy_report(params = {}, options = {})
+      req = build_request(:describe_test_set_discrepancy_report, params)
+      req.send_request(options)
+    end
+
+    # Gets metadata information about the test set generation.
+    #
+    # @option params [required, String] :test_set_generation_id
+    #   The unique identifier of the test set generation.
+    #
+    # @return [Types::DescribeTestSetGenerationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeTestSetGenerationResponse#test_set_generation_id #test_set_generation_id} => String
+    #   * {Types::DescribeTestSetGenerationResponse#test_set_generation_status #test_set_generation_status} => String
+    #   * {Types::DescribeTestSetGenerationResponse#failure_reasons #failure_reasons} => Array&lt;String&gt;
+    #   * {Types::DescribeTestSetGenerationResponse#test_set_id #test_set_id} => String
+    #   * {Types::DescribeTestSetGenerationResponse#test_set_name #test_set_name} => String
+    #   * {Types::DescribeTestSetGenerationResponse#description #description} => String
+    #   * {Types::DescribeTestSetGenerationResponse#storage_location #storage_location} => Types::TestSetStorageLocation
+    #   * {Types::DescribeTestSetGenerationResponse#generation_data_source #generation_data_source} => Types::TestSetGenerationDataSource
+    #   * {Types::DescribeTestSetGenerationResponse#role_arn #role_arn} => String
+    #   * {Types::DescribeTestSetGenerationResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::DescribeTestSetGenerationResponse#last_updated_date_time #last_updated_date_time} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_test_set_generation({
+    #     test_set_generation_id: "Id", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_set_generation_id #=> String
+    #   resp.test_set_generation_status #=> String, one of "Generating", "Ready", "Failed", "Pending"
+    #   resp.failure_reasons #=> Array
+    #   resp.failure_reasons[0] #=> String
+    #   resp.test_set_id #=> String
+    #   resp.test_set_name #=> String
+    #   resp.description #=> String
+    #   resp.storage_location.s3_bucket_name #=> String
+    #   resp.storage_location.s3_path #=> String
+    #   resp.storage_location.kms_key_arn #=> String
+    #   resp.generation_data_source.conversation_logs_data_source.bot_id #=> String
+    #   resp.generation_data_source.conversation_logs_data_source.bot_alias_id #=> String
+    #   resp.generation_data_source.conversation_logs_data_source.locale_id #=> String
+    #   resp.generation_data_source.conversation_logs_data_source.filter.start_time #=> Time
+    #   resp.generation_data_source.conversation_logs_data_source.filter.end_time #=> Time
+    #   resp.generation_data_source.conversation_logs_data_source.filter.input_mode #=> String, one of "Speech", "Text"
+    #   resp.role_arn #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.last_updated_date_time #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/DescribeTestSetGeneration AWS API Documentation
+    #
+    # @overload describe_test_set_generation(params = {})
+    # @param [Hash] params ({})
+    def describe_test_set_generation(params = {}, options = {})
+      req = build_request(:describe_test_set_generation, params)
+      req.send_request(options)
+    end
+
+    # The pre-signed Amazon S3 URL to download the test execution result
+    # artifacts.
+    #
+    # @option params [required, String] :test_execution_id
+    #   The unique identifier of the completed test execution.
+    #
+    # @return [Types::GetTestExecutionArtifactsUrlResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetTestExecutionArtifactsUrlResponse#test_execution_id #test_execution_id} => String
+    #   * {Types::GetTestExecutionArtifactsUrlResponse#download_artifacts_url #download_artifacts_url} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_test_execution_artifacts_url({
+    #     test_execution_id: "Id", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_execution_id #=> String
+    #   resp.download_artifacts_url #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/GetTestExecutionArtifactsUrl AWS API Documentation
+    #
+    # @overload get_test_execution_artifacts_url(params = {})
+    # @param [Hash] params ({})
+    def get_test_execution_artifacts_url(params = {}, options = {})
+      req = build_request(:get_test_execution_artifacts_url, params)
+      req.send_request(options)
+    end
+
+    # Provides a list of utterances that users have sent to the bot.
+    #
+    # Utterances are aggregated by the text of the utterance. For example,
+    # all instances where customers used the phrase "I want to order
+    # pizza" are aggregated into the same line in the response.
+    #
+    # You can see both detected utterances and missed utterances. A detected
+    # utterance is where the bot properly recognized the utterance and
+    # activated the associated intent. A missed utterance was not recognized
+    # by the bot and didn't activate an intent.
+    #
+    # Utterances can be aggregated for a bot alias or for a bot version, but
+    # not both at the same time.
+    #
+    # Utterances statistics are not generated under the following
+    # conditions:
+    #
+    # * The `childDirected` field was set to true when the bot was created.
+    #
+    # * You are using slot obfuscation with one or more slots.
+    #
+    # * You opted out of participating in improving Amazon Lex.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot associated with this request.
+    #
+    # @option params [String] :bot_alias_id
+    #   The identifier of the bot alias associated with this request. If you
+    #   specify the bot alias, you can't specify the bot version.
+    #
+    # @option params [String] :bot_version
+    #   The identifier of the bot version associated with this request. If you
+    #   specify the bot version, you can't specify the bot alias.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale where the utterances were
+    #   collected. For more information, see [Supported languages][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [required, Types::UtteranceAggregationDuration] :aggregation_duration
+    #   The time window for aggregating the utterance information. You can
+    #   specify a time between one hour and two weeks.
+    #
+    # @option params [Types::AggregatedUtterancesSortBy] :sort_by
+    #   Specifies sorting parameters for the list of utterances. You can sort
+    #   by the hit count, the missed count, or the number of distinct sessions
+    #   the utterance appeared in.
+    #
+    # @option params [Array<Types::AggregatedUtterancesFilter>] :filters
+    #   Provides the specification of a filter used to limit the utterances in
+    #   the response to only those that match the filter specification. You
+    #   can only specify one filter and one string to filter on.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of utterances to return in each page of results. If
+    #   there are fewer results than the maximum page size, only the actual
+    #   number of results are returned. If you don't specify the `maxResults`
+    #   parameter, 1,000 results are returned.
+    #
+    # @option params [String] :next_token
+    #   If the response from the `ListAggregatedUtterances` operation contains
+    #   more results that specified in the `maxResults` parameter, a token is
+    #   returned in the response. Use that token in the `nextToken` parameter
+    #   to return the next page of results.
+    #
+    # @return [Types::ListAggregatedUtterancesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListAggregatedUtterancesResponse#bot_id #bot_id} => String
+    #   * {Types::ListAggregatedUtterancesResponse#bot_alias_id #bot_alias_id} => String
+    #   * {Types::ListAggregatedUtterancesResponse#bot_version #bot_version} => String
+    #   * {Types::ListAggregatedUtterancesResponse#locale_id #locale_id} => String
+    #   * {Types::ListAggregatedUtterancesResponse#aggregation_duration #aggregation_duration} => Types::UtteranceAggregationDuration
+    #   * {Types::ListAggregatedUtterancesResponse#aggregation_window_start_time #aggregation_window_start_time} => Time
+    #   * {Types::ListAggregatedUtterancesResponse#aggregation_window_end_time #aggregation_window_end_time} => Time
+    #   * {Types::ListAggregatedUtterancesResponse#aggregation_last_refreshed_date_time #aggregation_last_refreshed_date_time} => Time
+    #   * {Types::ListAggregatedUtterancesResponse#aggregated_utterances_summaries #aggregated_utterances_summaries} => Array&lt;Types::AggregatedUtterancesSummary&gt;
+    #   * {Types::ListAggregatedUtterancesResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_aggregated_utterances({
+    #     bot_id: "Id", # required
+    #     bot_alias_id: "BotAliasId",
+    #     bot_version: "BotVersion",
+    #     locale_id: "LocaleId", # required
+    #     aggregation_duration: { # required
+    #       relative_aggregation_duration: { # required
+    #         time_dimension: "Hours", # required, accepts Hours, Days, Weeks
+    #         time_value: 1, # required
+    #       },
+    #     },
+    #     sort_by: {
+    #       attribute: "HitCount", # required, accepts HitCount, MissedCount
+    #       order: "Ascending", # required, accepts Ascending, Descending
+    #     },
+    #     filters: [
+    #       {
+    #         name: "Utterance", # required, accepts Utterance
+    #         values: ["FilterValue"], # required
+    #         operator: "CO", # required, accepts CO, EQ
+    #       },
+    #     ],
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_alias_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.aggregation_duration.relative_aggregation_duration.time_dimension #=> String, one of "Hours", "Days", "Weeks"
+    #   resp.aggregation_duration.relative_aggregation_duration.time_value #=> Integer
+    #   resp.aggregation_window_start_time #=> Time
+    #   resp.aggregation_window_end_time #=> Time
+    #   resp.aggregation_last_refreshed_date_time #=> Time
+    #   resp.aggregated_utterances_summaries #=> Array
+    #   resp.aggregated_utterances_summaries[0].utterance #=> String
+    #   resp.aggregated_utterances_summaries[0].hit_count #=> Integer
+    #   resp.aggregated_utterances_summaries[0].missed_count #=> Integer
+    #   resp.aggregated_utterances_summaries[0].utterance_first_recorded_in_aggregation_duration #=> Time
+    #   resp.aggregated_utterances_summaries[0].utterance_last_recorded_in_aggregation_duration #=> Time
+    #   resp.aggregated_utterances_summaries[0].contains_data_from_deleted_resources #=> Boolean
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListAggregatedUtterances AWS API Documentation
+    #
+    # @overload list_aggregated_utterances(params = {})
+    # @param [Hash] params ({})
+    def list_aggregated_utterances(params = {}, options = {})
+      req = build_request(:list_aggregated_utterances, params)
       req.send_request(options)
     end
 
@@ -3370,7 +5151,7 @@ module Aws::LexModelsV2
     #   resp.bot_locale_summaries[0].locale_id #=> String
     #   resp.bot_locale_summaries[0].locale_name #=> String
     #   resp.bot_locale_summaries[0].description #=> String
-    #   resp.bot_locale_summaries[0].bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing"
+    #   resp.bot_locale_summaries[0].bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing", "Processing"
     #   resp.bot_locale_summaries[0].last_updated_date_time #=> Time
     #   resp.bot_locale_summaries[0].last_build_submitted_date_time #=> Time
     #
@@ -3380,6 +5161,71 @@ module Aws::LexModelsV2
     # @param [Hash] params ({})
     def list_bot_locales(params = {}, options = {})
       req = build_request(:list_bot_locales, params)
+      req.send_request(options)
+    end
+
+    # Get a list of bot recommendations that meet the specified criteria.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot that contains the bot recommendation
+    #   list.
+    #
+    # @option params [required, String] :bot_version
+    #   The version of the bot that contains the bot recommendation list.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale of the bot recommendation
+    #   list.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of bot recommendations to return in each page of
+    #   results. If there are fewer results than the max page size, only the
+    #   actual number of results are returned.
+    #
+    # @option params [String] :next_token
+    #   If the response from the ListBotRecommendation operation contains more
+    #   results than specified in the maxResults parameter, a token is
+    #   returned in the response. Use that token in the nextToken parameter to
+    #   return the next page of results.
+    #
+    # @return [Types::ListBotRecommendationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListBotRecommendationsResponse#bot_id #bot_id} => String
+    #   * {Types::ListBotRecommendationsResponse#bot_version #bot_version} => String
+    #   * {Types::ListBotRecommendationsResponse#locale_id #locale_id} => String
+    #   * {Types::ListBotRecommendationsResponse#bot_recommendation_summaries #bot_recommendation_summaries} => Array&lt;Types::BotRecommendationSummary&gt;
+    #   * {Types::ListBotRecommendationsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_bot_recommendations({
+    #     bot_id: "Id", # required
+    #     bot_version: "DraftBotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.bot_recommendation_summaries #=> Array
+    #   resp.bot_recommendation_summaries[0].bot_recommendation_status #=> String, one of "Processing", "Deleting", "Deleted", "Downloading", "Updating", "Available", "Failed", "Stopping", "Stopped"
+    #   resp.bot_recommendation_summaries[0].bot_recommendation_id #=> String
+    #   resp.bot_recommendation_summaries[0].creation_date_time #=> Time
+    #   resp.bot_recommendation_summaries[0].last_updated_date_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListBotRecommendations AWS API Documentation
+    #
+    # @overload list_bot_recommendations(params = {})
+    # @param [Hash] params ({})
+    def list_bot_recommendations(params = {}, options = {})
+      req = build_request(:list_bot_recommendations, params)
       req.send_request(options)
     end
 
@@ -3439,7 +5285,7 @@ module Aws::LexModelsV2
     #   resp.bot_version_summaries[0].bot_name #=> String
     #   resp.bot_version_summaries[0].bot_version #=> String
     #   resp.bot_version_summaries[0].description #=> String
-    #   resp.bot_version_summaries[0].bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing"
+    #   resp.bot_version_summaries[0].bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing", "Updating"
     #   resp.bot_version_summaries[0].creation_date_time #=> Time
     #   resp.next_token #=> String
     #
@@ -3471,8 +5317,12 @@ module Aws::LexModelsV2
     # @option params [String] :next_token
     #   If the response from the `ListBots` operation contains more results
     #   than specified in the `maxResults` parameter, a token is returned in
-    #   the response. Use that token in the `nextToken` parameter to return
-    #   the next page of results.
+    #   the response.
+    #
+    #   Use the returned token in the `nextToken` parameter of a `ListBots`
+    #   request to return the next page of results. For a complete set of
+    #   results, call the `ListBots` operation until the `nextToken` returned
+    #   in the response is null.
     #
     # @return [Types::ListBotsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3490,9 +5340,9 @@ module Aws::LexModelsV2
     #     },
     #     filters: [
     #       {
-    #         name: "BotName", # required, accepts BotName
+    #         name: "BotName", # required, accepts BotName, BotType
     #         values: ["FilterValue"], # required
-    #         operator: "CO", # required, accepts CO, EQ
+    #         operator: "CO", # required, accepts CO, EQ, NE
     #       },
     #     ],
     #     max_results: 1,
@@ -3505,9 +5355,10 @@ module Aws::LexModelsV2
     #   resp.bot_summaries[0].bot_id #=> String
     #   resp.bot_summaries[0].bot_name #=> String
     #   resp.bot_summaries[0].description #=> String
-    #   resp.bot_summaries[0].bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing"
+    #   resp.bot_summaries[0].bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing", "Updating"
     #   resp.bot_summaries[0].latest_bot_version #=> String
     #   resp.bot_summaries[0].last_updated_date_time #=> Time
+    #   resp.bot_summaries[0].bot_type #=> String, one of "Bot", "BotNetwork"
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListBots AWS API Documentation
@@ -3525,7 +5376,11 @@ module Aws::LexModelsV2
     # To use a built-in intent as a the base for your own intent, include
     # the built-in intent signature in the `parentIntentSignature` parameter
     # when you call the `CreateIntent` operation. For more information, see
-    # CreateIntent.
+    # [CreateIntent][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_CreateIntent.html
     #
     # @option params [required, String] :locale_id
     #   The identifier of the language and locale of the intents to list. The
@@ -3653,8 +5508,71 @@ module Aws::LexModelsV2
       req.send_request(options)
     end
 
-    # Lists the exports for a bot or bot locale. Exports are kept in the
-    # list for 7 days.
+    # Paginated list of custom vocabulary items for a given bot locale's
+    # custom vocabulary.
+    #
+    # @option params [required, String] :bot_id
+    #   The identifier of the version of the bot associated with this custom
+    #   vocabulary.
+    #
+    # @option params [required, String] :bot_version
+    #   The bot version of the bot to the list custom vocabulary request.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale where this custom vocabulary
+    #   is used. The string must match one of the supported locales. For more
+    #   information, see Supported languages
+    #   (https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html).
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of items returned by the list operation.
+    #
+    # @option params [String] :next_token
+    #   The nextToken identifier to the list custom vocabulary request.
+    #
+    # @return [Types::ListCustomVocabularyItemsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListCustomVocabularyItemsResponse#bot_id #bot_id} => String
+    #   * {Types::ListCustomVocabularyItemsResponse#bot_version #bot_version} => String
+    #   * {Types::ListCustomVocabularyItemsResponse#locale_id #locale_id} => String
+    #   * {Types::ListCustomVocabularyItemsResponse#custom_vocabulary_items #custom_vocabulary_items} => Array&lt;Types::CustomVocabularyItem&gt;
+    #   * {Types::ListCustomVocabularyItemsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_custom_vocabulary_items({
+    #     bot_id: "Id", # required
+    #     bot_version: "BotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.custom_vocabulary_items #=> Array
+    #   resp.custom_vocabulary_items[0].item_id #=> String
+    #   resp.custom_vocabulary_items[0].phrase #=> String
+    #   resp.custom_vocabulary_items[0].weight #=> Integer
+    #   resp.custom_vocabulary_items[0].display_as #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListCustomVocabularyItems AWS API Documentation
+    #
+    # @overload list_custom_vocabulary_items(params = {})
+    # @param [Hash] params ({})
+    def list_custom_vocabulary_items(params = {}, options = {})
+      req = build_request(:list_custom_vocabulary_items, params)
+      req.send_request(options)
+    end
+
+    # Lists the exports for a bot, bot locale, or custom vocabulary. Exports
+    # are kept in the list for 7 days.
     #
     # @option params [String] :bot_id
     #   The unique identifier that Amazon Lex assigned to the bot.
@@ -3678,10 +5596,19 @@ module Aws::LexModelsV2
     #   of results are returned.
     #
     # @option params [String] :next_token
-    #   If the response from the `ListExports` operation contans more results
+    #   If the response from the `ListExports` operation contains more results
     #   that specified in the `maxResults` parameter, a token is returned in
-    #   the response. Use that token in the `nextToken` parameter to return
-    #   the next page of results.
+    #   the response.
+    #
+    #   Use the returned token in the `nextToken` parameter of a `ListExports`
+    #   request to return the next page of results. For a complete set of
+    #   results, call the `ListExports` operation until the `nextToken`
+    #   returned in the response is null.
+    #
+    # @option params [String] :locale_id
+    #   Specifies the resources that should be exported. If you don't specify
+    #   a resource type in the `filters` parameter, both bot locales and
+    #   custom vocabularies are exported.
     #
     # @return [Types::ListExportsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3689,6 +5616,7 @@ module Aws::LexModelsV2
     #   * {Types::ListExportsResponse#bot_version #bot_version} => String
     #   * {Types::ListExportsResponse#export_summaries #export_summaries} => Array&lt;Types::ExportSummary&gt;
     #   * {Types::ListExportsResponse#next_token #next_token} => String
+    #   * {Types::ListExportsResponse#locale_id #locale_id} => String
     #
     # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
     #
@@ -3710,6 +5638,7 @@ module Aws::LexModelsV2
     #     ],
     #     max_results: 1,
     #     next_token: "NextToken",
+    #     locale_id: "LocaleId",
     #   })
     #
     # @example Response structure
@@ -3723,11 +5652,16 @@ module Aws::LexModelsV2
     #   resp.export_summaries[0].resource_specification.bot_locale_export_specification.bot_id #=> String
     #   resp.export_summaries[0].resource_specification.bot_locale_export_specification.bot_version #=> String
     #   resp.export_summaries[0].resource_specification.bot_locale_export_specification.locale_id #=> String
-    #   resp.export_summaries[0].file_format #=> String, one of "LexJson"
+    #   resp.export_summaries[0].resource_specification.custom_vocabulary_export_specification.bot_id #=> String
+    #   resp.export_summaries[0].resource_specification.custom_vocabulary_export_specification.bot_version #=> String
+    #   resp.export_summaries[0].resource_specification.custom_vocabulary_export_specification.locale_id #=> String
+    #   resp.export_summaries[0].resource_specification.test_set_export_specification.test_set_id #=> String
+    #   resp.export_summaries[0].file_format #=> String, one of "LexJson", "TSV", "CSV"
     #   resp.export_summaries[0].export_status #=> String, one of "InProgress", "Completed", "Failed", "Deleting"
     #   resp.export_summaries[0].creation_date_time #=> Time
     #   resp.export_summaries[0].last_updated_date_time #=> Time
     #   resp.next_token #=> String
+    #   resp.locale_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListExports AWS API Documentation
     #
@@ -3738,8 +5672,8 @@ module Aws::LexModelsV2
       req.send_request(options)
     end
 
-    # Lists the imports for a bot or bot locale. Imports are kept in the
-    # list for 7 days.
+    # Lists the imports for a bot, bot locale, or custom vocabulary. Imports
+    # are kept in the list for 7 days.
     #
     # @option params [String] :bot_id
     #   The unique identifier that Amazon Lex assigned to the bot.
@@ -3765,8 +5699,17 @@ module Aws::LexModelsV2
     # @option params [String] :next_token
     #   If the response from the `ListImports` operation contains more results
     #   than specified in the `maxResults` parameter, a token is returned in
-    #   the response. Use that token in the `nextToken` parameter to return
-    #   the next page of results.
+    #   the response.
+    #
+    #   Use the returned token in the `nextToken` parameter of a `ListImports`
+    #   request to return the next page of results. For a complete set of
+    #   results, call the `ListImports` operation until the `nextToken`
+    #   returned in the response is null.
+    #
+    # @option params [String] :locale_id
+    #   Specifies the locale that should be present in the list. If you don't
+    #   specify a resource type in the `filters` parameter, the list contains
+    #   both bot locales and custom vocabularies.
     #
     # @return [Types::ListImportsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3774,6 +5717,7 @@ module Aws::LexModelsV2
     #   * {Types::ListImportsResponse#bot_version #bot_version} => String
     #   * {Types::ListImportsResponse#import_summaries #import_summaries} => Array&lt;Types::ImportSummary&gt;
     #   * {Types::ListImportsResponse#next_token #next_token} => String
+    #   * {Types::ListImportsResponse#locale_id #locale_id} => String
     #
     # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
     #
@@ -3795,6 +5739,7 @@ module Aws::LexModelsV2
     #     ],
     #     max_results: 1,
     #     next_token: "NextToken",
+    #     locale_id: "LocaleId",
     #   })
     #
     # @example Response structure
@@ -3806,10 +5751,12 @@ module Aws::LexModelsV2
     #   resp.import_summaries[0].imported_resource_id #=> String
     #   resp.import_summaries[0].imported_resource_name #=> String
     #   resp.import_summaries[0].import_status #=> String, one of "InProgress", "Completed", "Failed", "Deleting"
-    #   resp.import_summaries[0].merge_strategy #=> String, one of "Overwrite", "FailOnConflict"
+    #   resp.import_summaries[0].merge_strategy #=> String, one of "Overwrite", "FailOnConflict", "Append"
     #   resp.import_summaries[0].creation_date_time #=> Time
     #   resp.import_summaries[0].last_updated_date_time #=> Time
+    #   resp.import_summaries[0].imported_resource_type #=> String, one of "Bot", "BotLocale", "CustomVocabulary", "TestSet"
     #   resp.next_token #=> String
+    #   resp.locale_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListImports AWS API Documentation
     #
@@ -3855,8 +5802,12 @@ module Aws::LexModelsV2
     # @option params [String] :next_token
     #   If the response from the `ListIntents` operation contains more results
     #   than specified in the `maxResults` parameter, a token is returned in
-    #   the response. Use that token in the `nextToken` parameter to return
-    #   the next page of results.
+    #   the response.
+    #
+    #   Use the returned token in the `nextToken` parameter of a `ListIntents`
+    #   request to return the next page of results. For a complete set of
+    #   results, call the `ListIntents` operation until the `nextToken`
+    #   returned in the response is null.
     #
     # @return [Types::ListIntentsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3914,6 +5865,78 @@ module Aws::LexModelsV2
     # @param [Hash] params ({})
     def list_intents(params = {}, options = {})
       req = build_request(:list_intents, params)
+      req.send_request(options)
+    end
+
+    # Gets a list of recommended intents provided by the bot recommendation
+    # that you can use in your bot. Intents in the response are ordered by
+    # relevance.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot associated with the recommended
+    #   intents.
+    #
+    # @option params [required, String] :bot_version
+    #   The version of the bot that contains the recommended intents.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale of the recommended intents.
+    #
+    # @option params [required, String] :bot_recommendation_id
+    #   The identifier of the bot recommendation that contains the recommended
+    #   intents.
+    #
+    # @option params [String] :next_token
+    #   If the response from the ListRecommendedIntents operation contains
+    #   more results than specified in the maxResults parameter, a token is
+    #   returned in the response. Use that token in the nextToken parameter to
+    #   return the next page of results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of bot recommendations to return in each page of
+    #   results. If there are fewer results than the max page size, only the
+    #   actual number of results are returned.
+    #
+    # @return [Types::ListRecommendedIntentsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListRecommendedIntentsResponse#bot_id #bot_id} => String
+    #   * {Types::ListRecommendedIntentsResponse#bot_version #bot_version} => String
+    #   * {Types::ListRecommendedIntentsResponse#locale_id #locale_id} => String
+    #   * {Types::ListRecommendedIntentsResponse#bot_recommendation_id #bot_recommendation_id} => String
+    #   * {Types::ListRecommendedIntentsResponse#summary_list #summary_list} => Array&lt;Types::RecommendedIntentSummary&gt;
+    #   * {Types::ListRecommendedIntentsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_recommended_intents({
+    #     bot_id: "Id", # required
+    #     bot_version: "DraftBotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     bot_recommendation_id: "Id", # required
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.bot_recommendation_id #=> String
+    #   resp.summary_list #=> Array
+    #   resp.summary_list[0].intent_id #=> String
+    #   resp.summary_list[0].intent_name #=> String
+    #   resp.summary_list[0].sample_utterances_count #=> Integer
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListRecommendedIntents AWS API Documentation
+    #
+    # @overload list_recommended_intents(params = {})
+    # @param [Hash] params ({})
+    def list_recommended_intents(params = {}, options = {})
+      req = build_request(:list_recommended_intents, params)
       req.send_request(options)
     end
 
@@ -3977,7 +6000,7 @@ module Aws::LexModelsV2
     #     },
     #     filters: [
     #       {
-    #         name: "SlotTypeName", # required, accepts SlotTypeName
+    #         name: "SlotTypeName", # required, accepts SlotTypeName, ExternalSourceType
     #         values: ["FilterValue"], # required
     #         operator: "CO", # required, accepts CO, EQ
     #       },
@@ -3997,6 +6020,7 @@ module Aws::LexModelsV2
     #   resp.slot_type_summaries[0].description #=> String
     #   resp.slot_type_summaries[0].parent_slot_type_signature #=> String
     #   resp.slot_type_summaries[0].last_updated_date_time #=> Time
+    #   resp.slot_type_summaries[0].slot_type_category #=> String, one of "Custom", "Extended", "ExternalGrammar", "Composite"
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListSlotTypes AWS API Documentation
@@ -4116,6 +6140,19 @@ module Aws::LexModelsV2
     #   resp.slot_summaries[0].value_elicitation_prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
     #   resp.slot_summaries[0].value_elicitation_prompt_specification.max_retries #=> Integer
     #   resp.slot_summaries[0].value_elicitation_prompt_specification.allow_interrupt #=> Boolean
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.message_selection_strategy #=> String, one of "Random", "Ordered"
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification #=> Hash
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].allow_interrupt #=> Boolean
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_audio_input #=> Boolean
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_dtmf_input #=> Boolean
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.start_timeout_ms #=> Integer
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.max_length_ms #=> Integer
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.end_timeout_ms #=> Integer
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.max_length #=> Integer
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_timeout_ms #=> Integer
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.deletion_character #=> String
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_character #=> String
+    #   resp.slot_summaries[0].value_elicitation_prompt_specification.prompt_attempts_specification["PromptAttempt"].text_input_specification.start_timeout_ms #=> Integer
     #   resp.slot_summaries[0].last_updated_date_time #=> Time
     #   resp.next_token #=> String
     #
@@ -4159,15 +6196,532 @@ module Aws::LexModelsV2
       req.send_request(options)
     end
 
-    # Starts importing a bot or bot locale from a zip archive that you
-    # uploaded to an S3 bucket.
+    # Gets a list of test execution result items.
+    #
+    # @option params [required, String] :test_execution_id
+    #   The unique identifier of the test execution to list the result items.
+    #
+    # @option params [required, Types::TestExecutionResultFilterBy] :result_filter_by
+    #   The filter for the list of results from the test set execution.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of test execution result items to return in each
+    #   page. If there are fewer results than the max page size, only the
+    #   actual number of results are returned.
+    #
+    # @option params [String] :next_token
+    #   If the response from the `ListTestExecutionResultItems` operation
+    #   contains more results than specified in the `maxResults` parameter, a
+    #   token is returned in the response. Use that token in the `nextToken`
+    #   parameter to return the next page of results.
+    #
+    # @return [Types::ListTestExecutionResultItemsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListTestExecutionResultItemsResponse#test_execution_results #test_execution_results} => Types::TestExecutionResultItems
+    #   * {Types::ListTestExecutionResultItemsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_test_execution_result_items({
+    #     test_execution_id: "Id", # required
+    #     result_filter_by: { # required
+    #       result_type_filter: "OverallTestResults", # required, accepts OverallTestResults, ConversationLevelTestResults, IntentClassificationTestResults, SlotResolutionTestResults, UtteranceLevelResults
+    #       conversation_level_test_results_filter_by: {
+    #         end_to_end_result: "Matched", # accepts Matched, Mismatched, ExecutionError
+    #       },
+    #     },
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_execution_results.overall_test_results.items #=> Array
+    #   resp.test_execution_results.overall_test_results.items[0].multi_turn_conversation #=> Boolean
+    #   resp.test_execution_results.overall_test_results.items[0].total_result_count #=> Integer
+    #   resp.test_execution_results.overall_test_results.items[0].speech_transcription_result_counts #=> Hash
+    #   resp.test_execution_results.overall_test_results.items[0].speech_transcription_result_counts["TestResultMatchStatus"] #=> Integer
+    #   resp.test_execution_results.overall_test_results.items[0].end_to_end_result_counts #=> Hash
+    #   resp.test_execution_results.overall_test_results.items[0].end_to_end_result_counts["TestResultMatchStatus"] #=> Integer
+    #   resp.test_execution_results.conversation_level_test_results.items #=> Array
+    #   resp.test_execution_results.conversation_level_test_results.items[0].conversation_id #=> String
+    #   resp.test_execution_results.conversation_level_test_results.items[0].end_to_end_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.test_execution_results.conversation_level_test_results.items[0].speech_transcription_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.test_execution_results.conversation_level_test_results.items[0].intent_classification_results #=> Array
+    #   resp.test_execution_results.conversation_level_test_results.items[0].intent_classification_results[0].intent_name #=> String
+    #   resp.test_execution_results.conversation_level_test_results.items[0].intent_classification_results[0].match_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.test_execution_results.conversation_level_test_results.items[0].slot_resolution_results #=> Array
+    #   resp.test_execution_results.conversation_level_test_results.items[0].slot_resolution_results[0].intent_name #=> String
+    #   resp.test_execution_results.conversation_level_test_results.items[0].slot_resolution_results[0].slot_name #=> String
+    #   resp.test_execution_results.conversation_level_test_results.items[0].slot_resolution_results[0].match_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.test_execution_results.intent_classification_test_results.items #=> Array
+    #   resp.test_execution_results.intent_classification_test_results.items[0].intent_name #=> String
+    #   resp.test_execution_results.intent_classification_test_results.items[0].multi_turn_conversation #=> Boolean
+    #   resp.test_execution_results.intent_classification_test_results.items[0].result_counts.total_result_count #=> Integer
+    #   resp.test_execution_results.intent_classification_test_results.items[0].result_counts.speech_transcription_result_counts #=> Hash
+    #   resp.test_execution_results.intent_classification_test_results.items[0].result_counts.speech_transcription_result_counts["TestResultMatchStatus"] #=> Integer
+    #   resp.test_execution_results.intent_classification_test_results.items[0].result_counts.intent_match_result_counts #=> Hash
+    #   resp.test_execution_results.intent_classification_test_results.items[0].result_counts.intent_match_result_counts["TestResultMatchStatus"] #=> Integer
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items #=> Array
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items[0].intent_name #=> String
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items[0].multi_turn_conversation #=> Boolean
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items[0].slot_resolution_results #=> Array
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items[0].slot_resolution_results[0].slot_name #=> String
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items[0].slot_resolution_results[0].result_counts.total_result_count #=> Integer
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items[0].slot_resolution_results[0].result_counts.speech_transcription_result_counts #=> Hash
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items[0].slot_resolution_results[0].result_counts.speech_transcription_result_counts["TestResultMatchStatus"] #=> Integer
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items[0].slot_resolution_results[0].result_counts.slot_match_result_counts #=> Hash
+    #   resp.test_execution_results.intent_level_slot_resolution_test_results.items[0].slot_resolution_results[0].result_counts.slot_match_result_counts["TestResultMatchStatus"] #=> Integer
+    #   resp.test_execution_results.utterance_level_test_results.items #=> Array
+    #   resp.test_execution_results.utterance_level_test_results.items[0].record_number #=> Integer
+    #   resp.test_execution_results.utterance_level_test_results.items[0].conversation_id #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.agent.expected_agent_prompt #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.agent.actual_agent_prompt #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.agent.error_details.error_code #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.agent.error_details.error_message #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.agent.actual_elicited_slot #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.agent.actual_intent #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.utterance_input.text_input #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.utterance_input.audio_input.audio_file_s3_location #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.request_attributes #=> Hash
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.request_attributes["NonEmptyString"] #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.session_state.session_attributes #=> Hash
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.session_state.session_attributes["NonEmptyString"] #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.session_state.active_contexts #=> Array
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.session_state.active_contexts[0].name #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.session_state.runtime_hints.slot_hints #=> Hash
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.session_state.runtime_hints.slot_hints["Name"] #=> Hash
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.session_state.runtime_hints.slot_hints["Name"]["Name"].runtime_hint_values #=> Array
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.session_state.runtime_hints.slot_hints["Name"]["Name"].runtime_hint_values[0].phrase #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.input.session_state.runtime_hints.slot_hints["Name"]["Name"].sub_slot_hints #=> Types::SlotHintsSlotMap
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.expected_output.intent.name #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.expected_output.intent.slots #=> Hash
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.expected_output.intent.slots["Name"].value #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.expected_output.intent.slots["Name"].values #=> Array
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.expected_output.intent.slots["Name"].values[0] #=> Types::UserTurnSlotOutput
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.expected_output.intent.slots["Name"].sub_slots #=> Types::UserTurnSlotOutputMap
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.expected_output.active_contexts #=> Array
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.expected_output.active_contexts[0].name #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.expected_output.transcript #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.actual_output.intent.name #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.actual_output.intent.slots #=> Hash
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.actual_output.intent.slots["Name"].value #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.actual_output.intent.slots["Name"].values #=> Array
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.actual_output.intent.slots["Name"].values[0] #=> Types::UserTurnSlotOutput
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.actual_output.intent.slots["Name"].sub_slots #=> Types::UserTurnSlotOutputMap
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.actual_output.active_contexts #=> Array
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.actual_output.active_contexts[0].name #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.actual_output.transcript #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.error_details.error_code #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.error_details.error_message #=> String
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.end_to_end_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.intent_match_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.slot_match_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.speech_transcription_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.conversation_level_result.end_to_end_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.test_execution_results.utterance_level_test_results.items[0].turn_result.user.conversation_level_result.speech_transcription_result #=> String, one of "Matched", "Mismatched", "ExecutionError"
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListTestExecutionResultItems AWS API Documentation
+    #
+    # @overload list_test_execution_result_items(params = {})
+    # @param [Hash] params ({})
+    def list_test_execution_result_items(params = {}, options = {})
+      req = build_request(:list_test_execution_result_items, params)
+      req.send_request(options)
+    end
+
+    # The list of test set executions.
+    #
+    # @option params [Types::TestExecutionSortBy] :sort_by
+    #   The sort order of the test set executions.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of test executions to return in each page. If there
+    #   are fewer results than the max page size, only the actual number of
+    #   results are returned.
+    #
+    # @option params [String] :next_token
+    #   If the response from the ListTestExecutions operation contains more
+    #   results than specified in the maxResults parameter, a token is
+    #   returned in the response. Use that token in the nextToken parameter to
+    #   return the next page of results.
+    #
+    # @return [Types::ListTestExecutionsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListTestExecutionsResponse#test_executions #test_executions} => Array&lt;Types::TestExecutionSummary&gt;
+    #   * {Types::ListTestExecutionsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_test_executions({
+    #     sort_by: {
+    #       attribute: "TestSetName", # required, accepts TestSetName, CreationDateTime
+    #       order: "Ascending", # required, accepts Ascending, Descending
+    #     },
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_executions #=> Array
+    #   resp.test_executions[0].test_execution_id #=> String
+    #   resp.test_executions[0].creation_date_time #=> Time
+    #   resp.test_executions[0].last_updated_date_time #=> Time
+    #   resp.test_executions[0].test_execution_status #=> String, one of "Pending", "Waiting", "InProgress", "Completed", "Failed", "Stopping", "Stopped"
+    #   resp.test_executions[0].test_set_id #=> String
+    #   resp.test_executions[0].test_set_name #=> String
+    #   resp.test_executions[0].target.bot_alias_target.bot_id #=> String
+    #   resp.test_executions[0].target.bot_alias_target.bot_alias_id #=> String
+    #   resp.test_executions[0].target.bot_alias_target.locale_id #=> String
+    #   resp.test_executions[0].api_mode #=> String, one of "Streaming", "NonStreaming"
+    #   resp.test_executions[0].test_execution_modality #=> String, one of "Text", "Audio"
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListTestExecutions AWS API Documentation
+    #
+    # @overload list_test_executions(params = {})
+    # @param [Hash] params ({})
+    def list_test_executions(params = {}, options = {})
+      req = build_request(:list_test_executions, params)
+      req.send_request(options)
+    end
+
+    # The list of test set records.
+    #
+    # @option params [required, String] :test_set_id
+    #   The identifier of the test set to list its test set records.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of test set records to return in each page. If
+    #   there are fewer records than the max page size, only the actual number
+    #   of records are returned.
+    #
+    # @option params [String] :next_token
+    #   If the response from the ListTestSetRecords operation contains more
+    #   results than specified in the maxResults parameter, a token is
+    #   returned in the response. Use that token in the nextToken parameter to
+    #   return the next page of results.
+    #
+    # @return [Types::ListTestSetRecordsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListTestSetRecordsResponse#test_set_records #test_set_records} => Array&lt;Types::TestSetTurnRecord&gt;
+    #   * {Types::ListTestSetRecordsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_test_set_records({
+    #     test_set_id: "Id", # required
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_set_records #=> Array
+    #   resp.test_set_records[0].record_number #=> Integer
+    #   resp.test_set_records[0].conversation_id #=> String
+    #   resp.test_set_records[0].turn_number #=> Integer
+    #   resp.test_set_records[0].turn_specification.agent_turn.agent_prompt #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.input.utterance_input.text_input #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.input.utterance_input.audio_input.audio_file_s3_location #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.input.request_attributes #=> Hash
+    #   resp.test_set_records[0].turn_specification.user_turn.input.request_attributes["NonEmptyString"] #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.input.session_state.session_attributes #=> Hash
+    #   resp.test_set_records[0].turn_specification.user_turn.input.session_state.session_attributes["NonEmptyString"] #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.input.session_state.active_contexts #=> Array
+    #   resp.test_set_records[0].turn_specification.user_turn.input.session_state.active_contexts[0].name #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.input.session_state.runtime_hints.slot_hints #=> Hash
+    #   resp.test_set_records[0].turn_specification.user_turn.input.session_state.runtime_hints.slot_hints["Name"] #=> Hash
+    #   resp.test_set_records[0].turn_specification.user_turn.input.session_state.runtime_hints.slot_hints["Name"]["Name"].runtime_hint_values #=> Array
+    #   resp.test_set_records[0].turn_specification.user_turn.input.session_state.runtime_hints.slot_hints["Name"]["Name"].runtime_hint_values[0].phrase #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.input.session_state.runtime_hints.slot_hints["Name"]["Name"].sub_slot_hints #=> Types::SlotHintsSlotMap
+    #   resp.test_set_records[0].turn_specification.user_turn.expected.intent.name #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.expected.intent.slots #=> Hash
+    #   resp.test_set_records[0].turn_specification.user_turn.expected.intent.slots["Name"].value #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.expected.intent.slots["Name"].values #=> Array
+    #   resp.test_set_records[0].turn_specification.user_turn.expected.intent.slots["Name"].values[0] #=> Types::UserTurnSlotOutput
+    #   resp.test_set_records[0].turn_specification.user_turn.expected.intent.slots["Name"].sub_slots #=> Types::UserTurnSlotOutputMap
+    #   resp.test_set_records[0].turn_specification.user_turn.expected.active_contexts #=> Array
+    #   resp.test_set_records[0].turn_specification.user_turn.expected.active_contexts[0].name #=> String
+    #   resp.test_set_records[0].turn_specification.user_turn.expected.transcript #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListTestSetRecords AWS API Documentation
+    #
+    # @overload list_test_set_records(params = {})
+    # @param [Hash] params ({})
+    def list_test_set_records(params = {}, options = {})
+      req = build_request(:list_test_set_records, params)
+      req.send_request(options)
+    end
+
+    # The list of the test sets
+    #
+    # @option params [Types::TestSetSortBy] :sort_by
+    #   The sort order for the list of test sets.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of test sets to return in each page. If there are
+    #   fewer results than the max page size, only the actual number of
+    #   results are returned.
+    #
+    # @option params [String] :next_token
+    #   If the response from the ListTestSets operation contains more results
+    #   than specified in the maxResults parameter, a token is returned in the
+    #   response. Use that token in the nextToken parameter to return the next
+    #   page of results.
+    #
+    # @return [Types::ListTestSetsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListTestSetsResponse#test_sets #test_sets} => Array&lt;Types::TestSetSummary&gt;
+    #   * {Types::ListTestSetsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_test_sets({
+    #     sort_by: {
+    #       attribute: "TestSetName", # required, accepts TestSetName, LastUpdatedDateTime
+    #       order: "Ascending", # required, accepts Ascending, Descending
+    #     },
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_sets #=> Array
+    #   resp.test_sets[0].test_set_id #=> String
+    #   resp.test_sets[0].test_set_name #=> String
+    #   resp.test_sets[0].description #=> String
+    #   resp.test_sets[0].modality #=> String, one of "Text", "Audio"
+    #   resp.test_sets[0].status #=> String, one of "Importing", "PendingAnnotation", "Deleting", "ValidationError", "Ready"
+    #   resp.test_sets[0].role_arn #=> String
+    #   resp.test_sets[0].num_turns #=> Integer
+    #   resp.test_sets[0].storage_location.s3_bucket_name #=> String
+    #   resp.test_sets[0].storage_location.s3_path #=> String
+    #   resp.test_sets[0].storage_location.kms_key_arn #=> String
+    #   resp.test_sets[0].creation_date_time #=> Time
+    #   resp.test_sets[0].last_updated_date_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/ListTestSets AWS API Documentation
+    #
+    # @overload list_test_sets(params = {})
+    # @param [Hash] params ({})
+    def list_test_sets(params = {}, options = {})
+      req = build_request(:list_test_sets, params)
+      req.send_request(options)
+    end
+
+    # Search for associated transcripts that meet the specified criteria.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot associated with the transcripts that
+    #   you are searching.
+    #
+    # @option params [required, String] :bot_version
+    #   The version of the bot containing the transcripts that you are
+    #   searching.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale of the transcripts to
+    #   search. The string must match one of the supported locales. For more
+    #   information, see [Supported languages][1]
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [required, String] :bot_recommendation_id
+    #   The unique identifier of the bot recommendation associated with the
+    #   transcripts to search.
+    #
+    # @option params [String] :search_order
+    #   How SearchResults are ordered. Valid values are Ascending or
+    #   Descending. The default is Descending.
+    #
+    # @option params [required, Array<Types::AssociatedTranscriptFilter>] :filters
+    #   A list of filter objects.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of bot recommendations to return in each page of
+    #   results. If there are fewer results than the max page size, only the
+    #   actual number of results are returned.
+    #
+    # @option params [Integer] :next_index
+    #   If the response from the SearchAssociatedTranscriptsRequest operation
+    #   contains more results than specified in the maxResults parameter, an
+    #   index is returned in the response. Use that index in the nextIndex
+    #   parameter to return the next page of results.
+    #
+    # @return [Types::SearchAssociatedTranscriptsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::SearchAssociatedTranscriptsResponse#bot_id #bot_id} => String
+    #   * {Types::SearchAssociatedTranscriptsResponse#bot_version #bot_version} => String
+    #   * {Types::SearchAssociatedTranscriptsResponse#locale_id #locale_id} => String
+    #   * {Types::SearchAssociatedTranscriptsResponse#bot_recommendation_id #bot_recommendation_id} => String
+    #   * {Types::SearchAssociatedTranscriptsResponse#next_index #next_index} => Integer
+    #   * {Types::SearchAssociatedTranscriptsResponse#associated_transcripts #associated_transcripts} => Array&lt;Types::AssociatedTranscript&gt;
+    #   * {Types::SearchAssociatedTranscriptsResponse#total_results #total_results} => Integer
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.search_associated_transcripts({
+    #     bot_id: "Id", # required
+    #     bot_version: "BotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     bot_recommendation_id: "Id", # required
+    #     search_order: "Ascending", # accepts Ascending, Descending
+    #     filters: [ # required
+    #       {
+    #         name: "IntentId", # required, accepts IntentId, SlotTypeId
+    #         values: ["FilterValue"], # required
+    #       },
+    #     ],
+    #     max_results: 1,
+    #     next_index: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.bot_recommendation_id #=> String
+    #   resp.next_index #=> Integer
+    #   resp.associated_transcripts #=> Array
+    #   resp.associated_transcripts[0].transcript #=> String
+    #   resp.total_results #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/SearchAssociatedTranscripts AWS API Documentation
+    #
+    # @overload search_associated_transcripts(params = {})
+    # @param [Hash] params ({})
+    def search_associated_transcripts(params = {}, options = {})
+      req = build_request(:search_associated_transcripts, params)
+      req.send_request(options)
+    end
+
+    # Use this to provide your transcript data, and to start the bot
+    # recommendation process.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot containing the bot recommendation.
+    #
+    # @option params [required, String] :bot_version
+    #   The version of the bot containing the bot recommendation.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale of the bot recommendation to
+    #   start. The string must match one of the supported locales. For more
+    #   information, see [Supported languages][1]
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [required, Types::TranscriptSourceSetting] :transcript_source_setting
+    #   The object representing the Amazon S3 bucket containing the
+    #   transcript, as well as the associated metadata.
+    #
+    # @option params [Types::EncryptionSetting] :encryption_setting
+    #   The object representing the passwords that will be used to encrypt the
+    #   data related to the bot recommendation results, as well as the KMS key
+    #   ARN used to encrypt the associated metadata.
+    #
+    # @return [Types::StartBotRecommendationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StartBotRecommendationResponse#bot_id #bot_id} => String
+    #   * {Types::StartBotRecommendationResponse#bot_version #bot_version} => String
+    #   * {Types::StartBotRecommendationResponse#locale_id #locale_id} => String
+    #   * {Types::StartBotRecommendationResponse#bot_recommendation_status #bot_recommendation_status} => String
+    #   * {Types::StartBotRecommendationResponse#bot_recommendation_id #bot_recommendation_id} => String
+    #   * {Types::StartBotRecommendationResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::StartBotRecommendationResponse#transcript_source_setting #transcript_source_setting} => Types::TranscriptSourceSetting
+    #   * {Types::StartBotRecommendationResponse#encryption_setting #encryption_setting} => Types::EncryptionSetting
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.start_bot_recommendation({
+    #     bot_id: "Id", # required
+    #     bot_version: "DraftBotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     transcript_source_setting: { # required
+    #       s3_bucket_transcript_source: {
+    #         s3_bucket_name: "S3BucketName", # required
+    #         path_format: {
+    #           object_prefixes: ["ObjectPrefix"],
+    #         },
+    #         transcript_format: "Lex", # required, accepts Lex
+    #         transcript_filter: {
+    #           lex_transcript_filter: {
+    #             date_range_filter: {
+    #               start_date_time: Time.now, # required
+    #               end_date_time: Time.now, # required
+    #             },
+    #           },
+    #         },
+    #         kms_key_arn: "KmsKeyArn",
+    #       },
+    #     },
+    #     encryption_setting: {
+    #       kms_key_arn: "KmsKeyArn",
+    #       bot_locale_export_password: "FilePassword",
+    #       associated_transcripts_password: "FilePassword",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.bot_recommendation_status #=> String, one of "Processing", "Deleting", "Deleted", "Downloading", "Updating", "Available", "Failed", "Stopping", "Stopped"
+    #   resp.bot_recommendation_id #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.s3_bucket_name #=> String
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.path_format.object_prefixes #=> Array
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.path_format.object_prefixes[0] #=> String
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.transcript_format #=> String, one of "Lex"
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.transcript_filter.lex_transcript_filter.date_range_filter.start_date_time #=> Time
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.transcript_filter.lex_transcript_filter.date_range_filter.end_date_time #=> Time
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.kms_key_arn #=> String
+    #   resp.encryption_setting.kms_key_arn #=> String
+    #   resp.encryption_setting.bot_locale_export_password #=> String
+    #   resp.encryption_setting.associated_transcripts_password #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/StartBotRecommendation AWS API Documentation
+    #
+    # @overload start_bot_recommendation(params = {})
+    # @param [Hash] params ({})
+    def start_bot_recommendation(params = {}, options = {})
+      req = build_request(:start_bot_recommendation, params)
+      req.send_request(options)
+    end
+
+    # Starts importing a bot, bot locale, or custom vocabulary from a zip
+    # archive that you uploaded to an S3 bucket.
     #
     # @option params [required, String] :import_id
     #   The unique identifier for the import. It is included in the response
-    #   from the operation.
+    #   from the [CreateUploadUrl][1] operation.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_CreateUploadUrl.html
     #
     # @option params [required, Types::ImportResourceSpecification] :resource_specification
-    #   Parameters for creating the bot or bot locale.
+    #   Parameters for creating the bot, bot locale or custom vocabulary.
     #
     # @option params [required, String] :merge_strategy
     #   The strategy to use when there is a name conflict between the imported
@@ -4176,8 +6730,8 @@ module Aws::LexModelsV2
     #   fails.
     #
     # @option params [String] :file_password
-    #   The password used to encrypt the zip archive that contains the bot or
-    #   bot locale definition. You should always encrypt the zip archive to
+    #   The password used to encrypt the zip archive that contains the
+    #   resource definition. You should always encrypt the zip archive to
     #   protect it during transit between your site and Amazon Lex.
     #
     # @return [Types::StartImportResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -4214,10 +6768,34 @@ module Aws::LexModelsV2
     #         nlu_intent_confidence_threshold: 1.0,
     #         voice_settings: {
     #           voice_id: "VoiceId", # required
+    #           engine: "standard", # accepts standard, neural
+    #         },
+    #       },
+    #       custom_vocabulary_import_specification: {
+    #         bot_id: "Id", # required
+    #         bot_version: "DraftBotVersion", # required
+    #         locale_id: "LocaleId", # required
+    #       },
+    #       test_set_import_resource_specification: {
+    #         test_set_name: "Name", # required
+    #         description: "Description",
+    #         role_arn: "RoleArn", # required
+    #         storage_location: { # required
+    #           s3_bucket_name: "S3BucketName", # required
+    #           s3_path: "S3ObjectPath", # required
+    #           kms_key_arn: "KmsKeyArn",
+    #         },
+    #         import_input_location: { # required
+    #           s3_bucket_name: "S3BucketName", # required
+    #           s3_path: "S3ObjectPath", # required
+    #         },
+    #         modality: "Text", # required, accepts Text, Audio
+    #         test_set_tags: {
+    #           "TagKey" => "TagValue",
     #         },
     #       },
     #     },
-    #     merge_strategy: "Overwrite", # required, accepts Overwrite, FailOnConflict
+    #     merge_strategy: "Overwrite", # required, accepts Overwrite, FailOnConflict, Append
     #     file_password: "ImportExportFilePassword",
     #   })
     #
@@ -4237,7 +6815,22 @@ module Aws::LexModelsV2
     #   resp.resource_specification.bot_locale_import_specification.locale_id #=> String
     #   resp.resource_specification.bot_locale_import_specification.nlu_intent_confidence_threshold #=> Float
     #   resp.resource_specification.bot_locale_import_specification.voice_settings.voice_id #=> String
-    #   resp.merge_strategy #=> String, one of "Overwrite", "FailOnConflict"
+    #   resp.resource_specification.bot_locale_import_specification.voice_settings.engine #=> String, one of "standard", "neural"
+    #   resp.resource_specification.custom_vocabulary_import_specification.bot_id #=> String
+    #   resp.resource_specification.custom_vocabulary_import_specification.bot_version #=> String
+    #   resp.resource_specification.custom_vocabulary_import_specification.locale_id #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.test_set_name #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.description #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.role_arn #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.storage_location.s3_bucket_name #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.storage_location.s3_path #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.storage_location.kms_key_arn #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.import_input_location.s3_bucket_name #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.import_input_location.s3_path #=> String
+    #   resp.resource_specification.test_set_import_resource_specification.modality #=> String, one of "Text", "Audio"
+    #   resp.resource_specification.test_set_import_resource_specification.test_set_tags #=> Hash
+    #   resp.resource_specification.test_set_import_resource_specification.test_set_tags["TagKey"] #=> String
+    #   resp.merge_strategy #=> String, one of "Overwrite", "FailOnConflict", "Append"
     #   resp.import_status #=> String, one of "InProgress", "Completed", "Failed", "Deleting"
     #   resp.creation_date_time #=> Time
     #
@@ -4247,6 +6840,215 @@ module Aws::LexModelsV2
     # @param [Hash] params ({})
     def start_import(params = {}, options = {})
       req = build_request(:start_import, params)
+      req.send_request(options)
+    end
+
+    # The action to start test set execution.
+    #
+    # @option params [required, String] :test_set_id
+    #   The test set Id for the test set execution.
+    #
+    # @option params [required, Types::TestExecutionTarget] :target
+    #   The target bot for the test set execution.
+    #
+    # @option params [required, String] :api_mode
+    #   Indicates whether we use streaming or non-streaming APIs for the test
+    #   set execution. For streaming, StartConversation Runtime API is used.
+    #   Whereas, for non-streaming, RecognizeUtterance and RecognizeText
+    #   Amazon Lex Runtime API are used.
+    #
+    # @option params [String] :test_execution_modality
+    #   Indicates whether audio or text is used.
+    #
+    # @return [Types::StartTestExecutionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StartTestExecutionResponse#test_execution_id #test_execution_id} => String
+    #   * {Types::StartTestExecutionResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::StartTestExecutionResponse#test_set_id #test_set_id} => String
+    #   * {Types::StartTestExecutionResponse#target #target} => Types::TestExecutionTarget
+    #   * {Types::StartTestExecutionResponse#api_mode #api_mode} => String
+    #   * {Types::StartTestExecutionResponse#test_execution_modality #test_execution_modality} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.start_test_execution({
+    #     test_set_id: "Id", # required
+    #     target: { # required
+    #       bot_alias_target: {
+    #         bot_id: "Id", # required
+    #         bot_alias_id: "BotAliasId", # required
+    #         locale_id: "LocaleId", # required
+    #       },
+    #     },
+    #     api_mode: "Streaming", # required, accepts Streaming, NonStreaming
+    #     test_execution_modality: "Text", # accepts Text, Audio
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_execution_id #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.test_set_id #=> String
+    #   resp.target.bot_alias_target.bot_id #=> String
+    #   resp.target.bot_alias_target.bot_alias_id #=> String
+    #   resp.target.bot_alias_target.locale_id #=> String
+    #   resp.api_mode #=> String, one of "Streaming", "NonStreaming"
+    #   resp.test_execution_modality #=> String, one of "Text", "Audio"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/StartTestExecution AWS API Documentation
+    #
+    # @overload start_test_execution(params = {})
+    # @param [Hash] params ({})
+    def start_test_execution(params = {}, options = {})
+      req = build_request(:start_test_execution, params)
+      req.send_request(options)
+    end
+
+    # The action to start the generation of test set.
+    #
+    # @option params [required, String] :test_set_name
+    #   The test set name for the test set generation request.
+    #
+    # @option params [String] :description
+    #   The test set description for the test set generation request.
+    #
+    # @option params [required, Types::TestSetStorageLocation] :storage_location
+    #   The Amazon S3 storage location for the test set generation.
+    #
+    # @option params [required, Types::TestSetGenerationDataSource] :generation_data_source
+    #   The data source for the test set generation.
+    #
+    # @option params [required, String] :role_arn
+    #   The roleARN used for any operation in the test set to access resources
+    #   in the Amazon Web Services account.
+    #
+    # @option params [Hash<String,String>] :test_set_tags
+    #   A list of tags to add to the test set. You can only add tags when you
+    #   import/generate a new test set. You can't use the `UpdateTestSet`
+    #   operation to update tags. To update tags, use the `TagResource`
+    #   operation.
+    #
+    # @return [Types::StartTestSetGenerationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StartTestSetGenerationResponse#test_set_generation_id #test_set_generation_id} => String
+    #   * {Types::StartTestSetGenerationResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::StartTestSetGenerationResponse#test_set_generation_status #test_set_generation_status} => String
+    #   * {Types::StartTestSetGenerationResponse#test_set_name #test_set_name} => String
+    #   * {Types::StartTestSetGenerationResponse#description #description} => String
+    #   * {Types::StartTestSetGenerationResponse#storage_location #storage_location} => Types::TestSetStorageLocation
+    #   * {Types::StartTestSetGenerationResponse#generation_data_source #generation_data_source} => Types::TestSetGenerationDataSource
+    #   * {Types::StartTestSetGenerationResponse#role_arn #role_arn} => String
+    #   * {Types::StartTestSetGenerationResponse#test_set_tags #test_set_tags} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.start_test_set_generation({
+    #     test_set_name: "Name", # required
+    #     description: "Description",
+    #     storage_location: { # required
+    #       s3_bucket_name: "S3BucketName", # required
+    #       s3_path: "S3ObjectPath", # required
+    #       kms_key_arn: "KmsKeyArn",
+    #     },
+    #     generation_data_source: { # required
+    #       conversation_logs_data_source: {
+    #         bot_id: "Id", # required
+    #         bot_alias_id: "BotAliasId", # required
+    #         locale_id: "LocaleId", # required
+    #         filter: { # required
+    #           start_time: Time.now, # required
+    #           end_time: Time.now, # required
+    #           input_mode: "Speech", # required, accepts Speech, Text
+    #         },
+    #       },
+    #     },
+    #     role_arn: "RoleArn", # required
+    #     test_set_tags: {
+    #       "TagKey" => "TagValue",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_set_generation_id #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.test_set_generation_status #=> String, one of "Generating", "Ready", "Failed", "Pending"
+    #   resp.test_set_name #=> String
+    #   resp.description #=> String
+    #   resp.storage_location.s3_bucket_name #=> String
+    #   resp.storage_location.s3_path #=> String
+    #   resp.storage_location.kms_key_arn #=> String
+    #   resp.generation_data_source.conversation_logs_data_source.bot_id #=> String
+    #   resp.generation_data_source.conversation_logs_data_source.bot_alias_id #=> String
+    #   resp.generation_data_source.conversation_logs_data_source.locale_id #=> String
+    #   resp.generation_data_source.conversation_logs_data_source.filter.start_time #=> Time
+    #   resp.generation_data_source.conversation_logs_data_source.filter.end_time #=> Time
+    #   resp.generation_data_source.conversation_logs_data_source.filter.input_mode #=> String, one of "Speech", "Text"
+    #   resp.role_arn #=> String
+    #   resp.test_set_tags #=> Hash
+    #   resp.test_set_tags["TagKey"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/StartTestSetGeneration AWS API Documentation
+    #
+    # @overload start_test_set_generation(params = {})
+    # @param [Hash] params ({})
+    def start_test_set_generation(params = {}, options = {})
+      req = build_request(:start_test_set_generation, params)
+      req.send_request(options)
+    end
+
+    # Stop an already running Bot Recommendation request.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot containing the bot recommendation to
+    #   be stopped.
+    #
+    # @option params [required, String] :bot_version
+    #   The version of the bot containing the bot recommendation.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale of the bot recommendation to
+    #   stop. The string must match one of the supported locales. For more
+    #   information, see [Supported languages][1]
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [required, String] :bot_recommendation_id
+    #   The unique identifier of the bot recommendation to be stopped.
+    #
+    # @return [Types::StopBotRecommendationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StopBotRecommendationResponse#bot_id #bot_id} => String
+    #   * {Types::StopBotRecommendationResponse#bot_version #bot_version} => String
+    #   * {Types::StopBotRecommendationResponse#locale_id #locale_id} => String
+    #   * {Types::StopBotRecommendationResponse#bot_recommendation_status #bot_recommendation_status} => String
+    #   * {Types::StopBotRecommendationResponse#bot_recommendation_id #bot_recommendation_id} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.stop_bot_recommendation({
+    #     bot_id: "Id", # required
+    #     bot_version: "DraftBotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     bot_recommendation_id: "Id", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.bot_recommendation_status #=> String, one of "Processing", "Deleting", "Deleted", "Downloading", "Updating", "Available", "Failed", "Stopping", "Stopped"
+    #   resp.bot_recommendation_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/StopBotRecommendation AWS API Documentation
+    #
+    # @overload stop_bot_recommendation(params = {})
+    # @param [Hash] params ({})
+    def stop_bot_recommendation(params = {}, options = {})
+      req = build_request(:stop_bot_recommendation, params)
       req.send_request(options)
     end
 
@@ -4313,7 +7115,11 @@ module Aws::LexModelsV2
     #
     # @option params [required, String] :bot_id
     #   The unique identifier of the bot to update. This identifier is
-    #   returned by the CreateBot operation.
+    #   returned by the [CreateBot][1] operation.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_CreateBot.html
     #
     # @option params [required, String] :bot_name
     #   The new name of the bot. The name must be unique in the account that
@@ -4340,6 +7146,13 @@ module Aws::LexModelsV2
     #
     #   You can specify between 60 (1 minute) and 86,400 (24 hours) seconds.
     #
+    # @option params [String] :bot_type
+    #   The type of the bot to be updated.
+    #
+    # @option params [Array<Types::BotMember>] :bot_members
+    #   The list of bot members in the network associated with the update
+    #   action.
+    #
     # @return [Types::UpdateBotResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateBotResponse#bot_id #bot_id} => String
@@ -4351,6 +7164,8 @@ module Aws::LexModelsV2
     #   * {Types::UpdateBotResponse#bot_status #bot_status} => String
     #   * {Types::UpdateBotResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::UpdateBotResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::UpdateBotResponse#bot_type #bot_type} => String
+    #   * {Types::UpdateBotResponse#bot_members #bot_members} => Array&lt;Types::BotMember&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -4363,6 +7178,16 @@ module Aws::LexModelsV2
     #       child_directed: false, # required
     #     },
     #     idle_session_ttl_in_seconds: 1, # required
+    #     bot_type: "Bot", # accepts Bot, BotNetwork
+    #     bot_members: [
+    #       {
+    #         bot_member_id: "Id", # required
+    #         bot_member_name: "Name", # required
+    #         bot_member_alias_id: "BotAliasId", # required
+    #         bot_member_alias_name: "BotAliasName", # required
+    #         bot_member_version: "BotVersion", # required
+    #       },
+    #     ],
     #   })
     #
     # @example Response structure
@@ -4373,9 +7198,16 @@ module Aws::LexModelsV2
     #   resp.role_arn #=> String
     #   resp.data_privacy.child_directed #=> Boolean
     #   resp.idle_session_ttl_in_seconds #=> Integer
-    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing"
+    #   resp.bot_status #=> String, one of "Creating", "Available", "Inactive", "Deleting", "Failed", "Versioning", "Importing", "Updating"
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #   resp.bot_type #=> String, one of "Bot", "BotNetwork"
+    #   resp.bot_members #=> Array
+    #   resp.bot_members[0].bot_member_id #=> String
+    #   resp.bot_members[0].bot_member_name #=> String
+    #   resp.bot_members[0].bot_member_alias_id #=> String
+    #   resp.bot_members[0].bot_member_alias_name #=> String
+    #   resp.bot_members[0].bot_member_version #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/UpdateBot AWS API Documentation
     #
@@ -4554,6 +7386,7 @@ module Aws::LexModelsV2
     #   * {Types::UpdateBotLocaleResponse#failure_reasons #failure_reasons} => Array&lt;String&gt;
     #   * {Types::UpdateBotLocaleResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::UpdateBotLocaleResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::UpdateBotLocaleResponse#recommended_actions #recommended_actions} => Array&lt;String&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -4565,6 +7398,7 @@ module Aws::LexModelsV2
     #     nlu_intent_confidence_threshold: 1.0, # required
     #     voice_settings: {
     #       voice_id: "VoiceId", # required
+    #       engine: "standard", # accepts standard, neural
     #     },
     #   })
     #
@@ -4577,11 +7411,14 @@ module Aws::LexModelsV2
     #   resp.description #=> String
     #   resp.nlu_intent_confidence_threshold #=> Float
     #   resp.voice_settings.voice_id #=> String
-    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing"
+    #   resp.voice_settings.engine #=> String, one of "standard", "neural"
+    #   resp.bot_locale_status #=> String, one of "Creating", "Building", "Built", "ReadyExpressTesting", "Failed", "Deleting", "NotBuilt", "Importing", "Processing"
     #   resp.failure_reasons #=> Array
     #   resp.failure_reasons[0] #=> String
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #   resp.recommended_actions #=> Array
+    #   resp.recommended_actions[0] #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/UpdateBotLocale AWS API Documentation
     #
@@ -4592,7 +7429,98 @@ module Aws::LexModelsV2
       req.send_request(options)
     end
 
-    # Updates the password used to encrypt an export zip archive.
+    # Updates an existing bot recommendation request.
+    #
+    # @option params [required, String] :bot_id
+    #   The unique identifier of the bot containing the bot recommendation to
+    #   be updated.
+    #
+    # @option params [required, String] :bot_version
+    #   The version of the bot containing the bot recommendation to be
+    #   updated.
+    #
+    # @option params [required, String] :locale_id
+    #   The identifier of the language and locale of the bot recommendation to
+    #   update. The string must match one of the supported locales. For more
+    #   information, see [Supported languages][1]
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
+    #
+    # @option params [required, String] :bot_recommendation_id
+    #   The unique identifier of the bot recommendation to be updated.
+    #
+    # @option params [required, Types::EncryptionSetting] :encryption_setting
+    #   The object representing the passwords that will be used to encrypt the
+    #   data related to the bot recommendation results, as well as the KMS key
+    #   ARN used to encrypt the associated metadata.
+    #
+    # @return [Types::UpdateBotRecommendationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateBotRecommendationResponse#bot_id #bot_id} => String
+    #   * {Types::UpdateBotRecommendationResponse#bot_version #bot_version} => String
+    #   * {Types::UpdateBotRecommendationResponse#locale_id #locale_id} => String
+    #   * {Types::UpdateBotRecommendationResponse#bot_recommendation_status #bot_recommendation_status} => String
+    #   * {Types::UpdateBotRecommendationResponse#bot_recommendation_id #bot_recommendation_id} => String
+    #   * {Types::UpdateBotRecommendationResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::UpdateBotRecommendationResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::UpdateBotRecommendationResponse#transcript_source_setting #transcript_source_setting} => Types::TranscriptSourceSetting
+    #   * {Types::UpdateBotRecommendationResponse#encryption_setting #encryption_setting} => Types::EncryptionSetting
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_bot_recommendation({
+    #     bot_id: "Id", # required
+    #     bot_version: "DraftBotVersion", # required
+    #     locale_id: "LocaleId", # required
+    #     bot_recommendation_id: "Id", # required
+    #     encryption_setting: { # required
+    #       kms_key_arn: "KmsKeyArn",
+    #       bot_locale_export_password: "FilePassword",
+    #       associated_transcripts_password: "FilePassword",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bot_id #=> String
+    #   resp.bot_version #=> String
+    #   resp.locale_id #=> String
+    #   resp.bot_recommendation_status #=> String, one of "Processing", "Deleting", "Deleted", "Downloading", "Updating", "Available", "Failed", "Stopping", "Stopped"
+    #   resp.bot_recommendation_id #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.last_updated_date_time #=> Time
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.s3_bucket_name #=> String
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.path_format.object_prefixes #=> Array
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.path_format.object_prefixes[0] #=> String
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.transcript_format #=> String, one of "Lex"
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.transcript_filter.lex_transcript_filter.date_range_filter.start_date_time #=> Time
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.transcript_filter.lex_transcript_filter.date_range_filter.end_date_time #=> Time
+    #   resp.transcript_source_setting.s3_bucket_transcript_source.kms_key_arn #=> String
+    #   resp.encryption_setting.kms_key_arn #=> String
+    #   resp.encryption_setting.bot_locale_export_password #=> String
+    #   resp.encryption_setting.associated_transcripts_password #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/UpdateBotRecommendation AWS API Documentation
+    #
+    # @overload update_bot_recommendation(params = {})
+    # @param [Hash] params ({})
+    def update_bot_recommendation(params = {}, options = {})
+      req = build_request(:update_bot_recommendation, params)
+      req.send_request(options)
+    end
+
+    # Updates the password used to protect an export zip archive.
+    #
+    # The password is not required. If you don't supply a password, Amazon
+    # Lex generates a zip file that is not protected by a password. This is
+    # the archive that is available at the pre-signed S3 URL provided by the
+    # [DescribeExport][1] operation.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/lexv2/latest/APIReference/API_DescribeExport.html
     #
     # @option params [required, String] :export_id
     #   The unique identifier Amazon Lex assigned to the export.
@@ -4624,7 +7552,11 @@ module Aws::LexModelsV2
     #   resp.resource_specification.bot_locale_export_specification.bot_id #=> String
     #   resp.resource_specification.bot_locale_export_specification.bot_version #=> String
     #   resp.resource_specification.bot_locale_export_specification.locale_id #=> String
-    #   resp.file_format #=> String, one of "LexJson"
+    #   resp.resource_specification.custom_vocabulary_export_specification.bot_id #=> String
+    #   resp.resource_specification.custom_vocabulary_export_specification.bot_version #=> String
+    #   resp.resource_specification.custom_vocabulary_export_specification.locale_id #=> String
+    #   resp.resource_specification.test_set_export_specification.test_set_id #=> String
+    #   resp.file_format #=> String, one of "LexJson", "TSV", "CSV"
     #   resp.export_status #=> String, one of "InProgress", "Completed", "Failed", "Deleting"
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
@@ -4702,6 +7634,10 @@ module Aws::LexModelsV2
     #
     #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
     #
+    # @option params [Types::InitialResponseSetting] :initial_response_setting
+    #   Configuration settings for a response sent to the user before Amazon
+    #   Lex starts eliciting slots.
+    #
     # @return [Types::UpdateIntentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateIntentResponse#intent_id #intent_id} => String
@@ -4722,308 +7658,7 @@ module Aws::LexModelsV2
     #   * {Types::UpdateIntentResponse#locale_id #locale_id} => String
     #   * {Types::UpdateIntentResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::UpdateIntentResponse#last_updated_date_time #last_updated_date_time} => Time
-    #
-    # @example Request syntax with placeholder values
-    #
-    #   resp = client.update_intent({
-    #     intent_id: "Id", # required
-    #     intent_name: "Name", # required
-    #     description: "Description",
-    #     parent_intent_signature: "IntentSignature",
-    #     sample_utterances: [
-    #       {
-    #         utterance: "Utterance", # required
-    #       },
-    #     ],
-    #     dialog_code_hook: {
-    #       enabled: false, # required
-    #     },
-    #     fulfillment_code_hook: {
-    #       enabled: false, # required
-    #     },
-    #     slot_priorities: [
-    #       {
-    #         priority: 1, # required
-    #         slot_id: "Id", # required
-    #       },
-    #     ],
-    #     intent_confirmation_setting: {
-    #       prompt_specification: { # required
-    #         message_groups: [ # required
-    #           {
-    #             message: { # required
-    #               plain_text_message: {
-    #                 value: "PlainTextMessageValue", # required
-    #               },
-    #               custom_payload: {
-    #                 value: "CustomPayloadValue", # required
-    #               },
-    #               ssml_message: {
-    #                 value: "SSMLMessageValue", # required
-    #               },
-    #               image_response_card: {
-    #                 title: "AttachmentTitle", # required
-    #                 subtitle: "AttachmentTitle",
-    #                 image_url: "AttachmentUrl",
-    #                 buttons: [
-    #                   {
-    #                     text: "ButtonText", # required
-    #                     value: "ButtonValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #             variations: [
-    #               {
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         max_retries: 1, # required
-    #         allow_interrupt: false,
-    #       },
-    #       declination_response: { # required
-    #         message_groups: [ # required
-    #           {
-    #             message: { # required
-    #               plain_text_message: {
-    #                 value: "PlainTextMessageValue", # required
-    #               },
-    #               custom_payload: {
-    #                 value: "CustomPayloadValue", # required
-    #               },
-    #               ssml_message: {
-    #                 value: "SSMLMessageValue", # required
-    #               },
-    #               image_response_card: {
-    #                 title: "AttachmentTitle", # required
-    #                 subtitle: "AttachmentTitle",
-    #                 image_url: "AttachmentUrl",
-    #                 buttons: [
-    #                   {
-    #                     text: "ButtonText", # required
-    #                     value: "ButtonValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #             variations: [
-    #               {
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         allow_interrupt: false,
-    #       },
-    #     },
-    #     intent_closing_setting: {
-    #       closing_response: { # required
-    #         message_groups: [ # required
-    #           {
-    #             message: { # required
-    #               plain_text_message: {
-    #                 value: "PlainTextMessageValue", # required
-    #               },
-    #               custom_payload: {
-    #                 value: "CustomPayloadValue", # required
-    #               },
-    #               ssml_message: {
-    #                 value: "SSMLMessageValue", # required
-    #               },
-    #               image_response_card: {
-    #                 title: "AttachmentTitle", # required
-    #                 subtitle: "AttachmentTitle",
-    #                 image_url: "AttachmentUrl",
-    #                 buttons: [
-    #                   {
-    #                     text: "ButtonText", # required
-    #                     value: "ButtonValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #             variations: [
-    #               {
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         allow_interrupt: false,
-    #       },
-    #     },
-    #     input_contexts: [
-    #       {
-    #         name: "Name", # required
-    #       },
-    #     ],
-    #     output_contexts: [
-    #       {
-    #         name: "Name", # required
-    #         time_to_live_in_seconds: 1, # required
-    #         turns_to_live: 1, # required
-    #       },
-    #     ],
-    #     kendra_configuration: {
-    #       kendra_index: "KendraIndexArn", # required
-    #       query_filter_string_enabled: false,
-    #       query_filter_string: "QueryFilterString",
-    #     },
-    #     bot_id: "Id", # required
-    #     bot_version: "DraftBotVersion", # required
-    #     locale_id: "LocaleId", # required
-    #   })
-    #
-    # @example Response structure
-    #
-    #   resp.intent_id #=> String
-    #   resp.intent_name #=> String
-    #   resp.description #=> String
-    #   resp.parent_intent_signature #=> String
-    #   resp.sample_utterances #=> Array
-    #   resp.sample_utterances[0].utterance #=> String
-    #   resp.dialog_code_hook.enabled #=> Boolean
-    #   resp.fulfillment_code_hook.enabled #=> Boolean
-    #   resp.slot_priorities #=> Array
-    #   resp.slot_priorities[0].priority #=> Integer
-    #   resp.slot_priorities[0].slot_id #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.prompt_specification.max_retries #=> Integer
-    #   resp.intent_confirmation_setting.prompt_specification.allow_interrupt #=> Boolean
-    #   resp.intent_confirmation_setting.declination_response.message_groups #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].plain_text_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].custom_payload.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].ssml_message.value #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.title #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.image_url #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
-    #   resp.intent_confirmation_setting.declination_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
-    #   resp.intent_confirmation_setting.declination_response.allow_interrupt #=> Boolean
-    #   resp.intent_closing_setting.closing_response.message_groups #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.plain_text_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.custom_payload.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.ssml_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.title #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.subtitle #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.image_url #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.buttons #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].plain_text_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].custom_payload.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].ssml_message.value #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.title #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.image_url #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
-    #   resp.intent_closing_setting.closing_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
-    #   resp.intent_closing_setting.closing_response.allow_interrupt #=> Boolean
-    #   resp.input_contexts #=> Array
-    #   resp.input_contexts[0].name #=> String
-    #   resp.output_contexts #=> Array
-    #   resp.output_contexts[0].name #=> String
-    #   resp.output_contexts[0].time_to_live_in_seconds #=> Integer
-    #   resp.output_contexts[0].turns_to_live #=> Integer
-    #   resp.kendra_configuration.kendra_index #=> String
-    #   resp.kendra_configuration.query_filter_string_enabled #=> Boolean
-    #   resp.kendra_configuration.query_filter_string #=> String
-    #   resp.bot_id #=> String
-    #   resp.bot_version #=> String
-    #   resp.locale_id #=> String
-    #   resp.creation_date_time #=> Time
-    #   resp.last_updated_date_time #=> Time
+    #   * {Types::UpdateIntentResponse#initial_response_setting #initial_response_setting} => Types::InitialResponseSetting
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/UpdateIntent AWS API Documentation
     #
@@ -5101,7 +7736,7 @@ module Aws::LexModelsV2
     # @option params [String] :description
     #   The new description for the slot.
     #
-    # @option params [required, String] :slot_type_id
+    # @option params [String] :slot_type_id
     #   The unique identifier of the new slot type to associate with this
     #   slot.
     #
@@ -5131,6 +7766,19 @@ module Aws::LexModelsV2
     # @option params [required, String] :intent_id
     #   The identifier of the intent that contains the slot.
     #
+    # @option params [Types::MultipleValuesSetting] :multiple_values_setting
+    #   Determines whether the slot accepts multiple values in one response.
+    #   Multiple value slots are only available in the en-US locale. If you
+    #   set this value to `true` in any other locale, Amazon Lex throws a
+    #   `ValidationException`.
+    #
+    #   If the `multipleValuesSetting` is not set, the default value is
+    #   `false`.
+    #
+    # @option params [Types::SubSlotSetting] :sub_slot_setting
+    #   Specifications for the constituent sub slots and the expression for
+    #   the composite slot.
+    #
     # @return [Types::UpdateSlotResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateSlotResponse#slot_id #slot_id} => String
@@ -5145,254 +7793,8 @@ module Aws::LexModelsV2
     #   * {Types::UpdateSlotResponse#intent_id #intent_id} => String
     #   * {Types::UpdateSlotResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::UpdateSlotResponse#last_updated_date_time #last_updated_date_time} => Time
-    #
-    # @example Request syntax with placeholder values
-    #
-    #   resp = client.update_slot({
-    #     slot_id: "Id", # required
-    #     slot_name: "Name", # required
-    #     description: "Description",
-    #     slot_type_id: "BuiltInOrCustomSlotTypeId", # required
-    #     value_elicitation_setting: { # required
-    #       default_value_specification: {
-    #         default_value_list: [ # required
-    #           {
-    #             default_value: "SlotDefaultValueString", # required
-    #           },
-    #         ],
-    #       },
-    #       slot_constraint: "Required", # required, accepts Required, Optional
-    #       prompt_specification: {
-    #         message_groups: [ # required
-    #           {
-    #             message: { # required
-    #               plain_text_message: {
-    #                 value: "PlainTextMessageValue", # required
-    #               },
-    #               custom_payload: {
-    #                 value: "CustomPayloadValue", # required
-    #               },
-    #               ssml_message: {
-    #                 value: "SSMLMessageValue", # required
-    #               },
-    #               image_response_card: {
-    #                 title: "AttachmentTitle", # required
-    #                 subtitle: "AttachmentTitle",
-    #                 image_url: "AttachmentUrl",
-    #                 buttons: [
-    #                   {
-    #                     text: "ButtonText", # required
-    #                     value: "ButtonValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #             variations: [
-    #               {
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         max_retries: 1, # required
-    #         allow_interrupt: false,
-    #       },
-    #       sample_utterances: [
-    #         {
-    #           utterance: "Utterance", # required
-    #         },
-    #       ],
-    #       wait_and_continue_specification: {
-    #         waiting_response: { # required
-    #           message_groups: [ # required
-    #             {
-    #               message: { # required
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #               variations: [
-    #                 {
-    #                   plain_text_message: {
-    #                     value: "PlainTextMessageValue", # required
-    #                   },
-    #                   custom_payload: {
-    #                     value: "CustomPayloadValue", # required
-    #                   },
-    #                   ssml_message: {
-    #                     value: "SSMLMessageValue", # required
-    #                   },
-    #                   image_response_card: {
-    #                     title: "AttachmentTitle", # required
-    #                     subtitle: "AttachmentTitle",
-    #                     image_url: "AttachmentUrl",
-    #                     buttons: [
-    #                       {
-    #                         text: "ButtonText", # required
-    #                         value: "ButtonValue", # required
-    #                       },
-    #                     ],
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           ],
-    #           allow_interrupt: false,
-    #         },
-    #         continue_response: { # required
-    #           message_groups: [ # required
-    #             {
-    #               message: { # required
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #               variations: [
-    #                 {
-    #                   plain_text_message: {
-    #                     value: "PlainTextMessageValue", # required
-    #                   },
-    #                   custom_payload: {
-    #                     value: "CustomPayloadValue", # required
-    #                   },
-    #                   ssml_message: {
-    #                     value: "SSMLMessageValue", # required
-    #                   },
-    #                   image_response_card: {
-    #                     title: "AttachmentTitle", # required
-    #                     subtitle: "AttachmentTitle",
-    #                     image_url: "AttachmentUrl",
-    #                     buttons: [
-    #                       {
-    #                         text: "ButtonText", # required
-    #                         value: "ButtonValue", # required
-    #                       },
-    #                     ],
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           ],
-    #           allow_interrupt: false,
-    #         },
-    #         still_waiting_response: {
-    #           message_groups: [ # required
-    #             {
-    #               message: { # required
-    #                 plain_text_message: {
-    #                   value: "PlainTextMessageValue", # required
-    #                 },
-    #                 custom_payload: {
-    #                   value: "CustomPayloadValue", # required
-    #                 },
-    #                 ssml_message: {
-    #                   value: "SSMLMessageValue", # required
-    #                 },
-    #                 image_response_card: {
-    #                   title: "AttachmentTitle", # required
-    #                   subtitle: "AttachmentTitle",
-    #                   image_url: "AttachmentUrl",
-    #                   buttons: [
-    #                     {
-    #                       text: "ButtonText", # required
-    #                       value: "ButtonValue", # required
-    #                     },
-    #                   ],
-    #                 },
-    #               },
-    #               variations: [
-    #                 {
-    #                   plain_text_message: {
-    #                     value: "PlainTextMessageValue", # required
-    #                   },
-    #                   custom_payload: {
-    #                     value: "CustomPayloadValue", # required
-    #                   },
-    #                   ssml_message: {
-    #                     value: "SSMLMessageValue", # required
-    #                   },
-    #                   image_response_card: {
-    #                     title: "AttachmentTitle", # required
-    #                     subtitle: "AttachmentTitle",
-    #                     image_url: "AttachmentUrl",
-    #                     buttons: [
-    #                       {
-    #                         text: "ButtonText", # required
-    #                         value: "ButtonValue", # required
-    #                       },
-    #                     ],
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           ],
-    #           frequency_in_seconds: 1, # required
-    #           timeout_in_seconds: 1, # required
-    #           allow_interrupt: false,
-    #         },
-    #       },
-    #     },
-    #     obfuscation_setting: {
-    #       obfuscation_setting_type: "None", # required, accepts None, DefaultObfuscation
-    #     },
-    #     bot_id: "Id", # required
-    #     bot_version: "DraftBotVersion", # required
-    #     locale_id: "LocaleId", # required
-    #     intent_id: "Id", # required
-    #   })
+    #   * {Types::UpdateSlotResponse#multiple_values_setting #multiple_values_setting} => Types::MultipleValuesSetting
+    #   * {Types::UpdateSlotResponse#sub_slot_setting #sub_slot_setting} => Types::SubSlotSetting
     #
     # @example Response structure
     #
@@ -5425,6 +7827,19 @@ module Aws::LexModelsV2
     #   resp.value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
     #   resp.value_elicitation_setting.prompt_specification.max_retries #=> Integer
     #   resp.value_elicitation_setting.prompt_specification.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.message_selection_strategy #=> String, one of "Random", "Ordered"
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification #=> Hash
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_audio_input #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_dtmf_input #=> Boolean
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.start_timeout_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.max_length_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.end_timeout_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.max_length #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_timeout_ms #=> Integer
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.deletion_character #=> String
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_character #=> String
+    #   resp.value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].text_input_specification.start_timeout_ms #=> Integer
     #   resp.value_elicitation_setting.sample_utterances #=> Array
     #   resp.value_elicitation_setting.sample_utterances[0].utterance #=> String
     #   resp.value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups #=> Array
@@ -5492,6 +7907,512 @@ module Aws::LexModelsV2
     #   resp.value_elicitation_setting.wait_and_continue_specification.still_waiting_response.frequency_in_seconds #=> Integer
     #   resp.value_elicitation_setting.wait_and_continue_specification.still_waiting_response.timeout_in_seconds #=> Integer
     #   resp.value_elicitation_setting.wait_and_continue_specification.still_waiting_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.wait_and_continue_specification.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.capture_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.failure_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.enable_code_hook_invocation #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.invocation_label #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.success_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.failure_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.active #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].condition.expression_string #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.conditional_branches[0].response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.dialog_action.type #=> String, one of "ElicitIntent", "StartIntent", "ElicitSlot", "EvaluateConditional", "InvokeDialogCodeHook", "ConfirmIntent", "FulfillIntent", "CloseIntent", "EndConversation"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.dialog_action.slot_to_elicit #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.dialog_action.suppress_next_message #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.name #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].shape #=> String, one of "Scalar", "List"
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].value.interpreted_value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].values #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.intent.slots["Name"].values[0] #=> Types::SlotValueOverride
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.session_attributes #=> Hash
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.next_step.session_attributes["NonEmptyString"] #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.value_elicitation_setting.slot_capture_setting.code_hook.post_code_hook_specification.timeout_conditional.default_branch.response.allow_interrupt #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.elicitation_code_hook.enable_code_hook_invocation #=> Boolean
+    #   resp.value_elicitation_setting.slot_capture_setting.elicitation_code_hook.invocation_label #=> String
     #   resp.obfuscation_setting.obfuscation_setting_type #=> String, one of "None", "DefaultObfuscation"
     #   resp.bot_id #=> String
     #   resp.bot_version #=> String
@@ -5499,6 +8420,115 @@ module Aws::LexModelsV2
     #   resp.intent_id #=> String
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #   resp.multiple_values_setting.allow_multiple_values #=> Boolean
+    #   resp.sub_slot_setting.expression #=> String
+    #   resp.sub_slot_setting.slot_specifications #=> Hash
+    #   resp.sub_slot_setting.slot_specifications["Name"].slot_type_id #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.default_value_specification.default_value_list #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.default_value_specification.default_value_list[0].default_value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.max_retries #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.message_selection_strategy #=> String, one of "Random", "Ordered"
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification #=> Hash
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_audio_input #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].allowed_input_types.allow_dtmf_input #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.start_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.max_length_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.audio_specification.end_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.max_length #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.deletion_character #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].audio_and_dtmf_input_specification.dtmf_specification.end_character #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.prompt_specification.prompt_attempts_specification["PromptAttempt"].text_input_specification.start_timeout_ms #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.sample_utterances #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.sample_utterances[0].utterance #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.waiting_response.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.continue_response.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].message.image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].plain_text_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].custom_payload.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].ssml_message.value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.title #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.subtitle #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.image_url #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.buttons #=> Array
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].text #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.message_groups[0].variations[0].image_response_card.buttons[0].value #=> String
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.frequency_in_seconds #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.timeout_in_seconds #=> Integer
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.still_waiting_response.allow_interrupt #=> Boolean
+    #   resp.sub_slot_setting.slot_specifications["Name"].value_elicitation_setting.wait_and_continue_specification.active #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/UpdateSlot AWS API Documentation
     #
@@ -5524,7 +8554,7 @@ module Aws::LexModelsV2
     #   A new list of values and their optional synonyms that define the
     #   values that the slot type can take.
     #
-    # @option params [required, Types::SlotValueSelectionSetting] :value_selection_setting
+    # @option params [Types::SlotValueSelectionSetting] :value_selection_setting
     #   The strategy that Amazon Lex should use when deciding on a value from
     #   the list of slot type values.
     #
@@ -5547,6 +8577,13 @@ module Aws::LexModelsV2
     #
     #   [1]: https://docs.aws.amazon.com/lexv2/latest/dg/how-languages.html
     #
+    # @option params [Types::ExternalSourceSetting] :external_source_setting
+    #   Provides information about the external source of the slot type's
+    #   definition.
+    #
+    # @option params [Types::CompositeSlotTypeSetting] :composite_slot_type_setting
+    #   Specifications for a composite slot type.
+    #
     # @return [Types::UpdateSlotTypeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateSlotTypeResponse#slot_type_id #slot_type_id} => String
@@ -5560,6 +8597,8 @@ module Aws::LexModelsV2
     #   * {Types::UpdateSlotTypeResponse#locale_id #locale_id} => String
     #   * {Types::UpdateSlotTypeResponse#creation_date_time #creation_date_time} => Time
     #   * {Types::UpdateSlotTypeResponse#last_updated_date_time #last_updated_date_time} => Time
+    #   * {Types::UpdateSlotTypeResponse#external_source_setting #external_source_setting} => Types::ExternalSourceSetting
+    #   * {Types::UpdateSlotTypeResponse#composite_slot_type_setting #composite_slot_type_setting} => Types::CompositeSlotTypeSetting
     #
     # @example Request syntax with placeholder values
     #
@@ -5579,16 +8618,36 @@ module Aws::LexModelsV2
     #         ],
     #       },
     #     ],
-    #     value_selection_setting: { # required
-    #       resolution_strategy: "OriginalValue", # required, accepts OriginalValue, TopResolution
+    #     value_selection_setting: {
+    #       resolution_strategy: "OriginalValue", # required, accepts OriginalValue, TopResolution, Concatenation
     #       regex_filter: {
     #         pattern: "RegexPattern", # required
+    #       },
+    #       advanced_recognition_setting: {
+    #         audio_recognition_strategy: "UseSlotValuesAsCustomVocabulary", # accepts UseSlotValuesAsCustomVocabulary
     #       },
     #     },
     #     parent_slot_type_signature: "SlotTypeSignature",
     #     bot_id: "Id", # required
     #     bot_version: "DraftBotVersion", # required
     #     locale_id: "LocaleId", # required
+    #     external_source_setting: {
+    #       grammar_slot_type_setting: {
+    #         source: {
+    #           s3_bucket_name: "S3BucketName", # required
+    #           s3_object_key: "S3ObjectPath", # required
+    #           kms_key_arn: "KmsKeyArn",
+    #         },
+    #       },
+    #     },
+    #     composite_slot_type_setting: {
+    #       sub_slots: [
+    #         {
+    #           name: "Name", # required
+    #           slot_type_id: "BuiltInOrCustomSlotTypeId", # required
+    #         },
+    #       ],
+    #     },
     #   })
     #
     # @example Response structure
@@ -5600,14 +8659,21 @@ module Aws::LexModelsV2
     #   resp.slot_type_values[0].sample_value.value #=> String
     #   resp.slot_type_values[0].synonyms #=> Array
     #   resp.slot_type_values[0].synonyms[0].value #=> String
-    #   resp.value_selection_setting.resolution_strategy #=> String, one of "OriginalValue", "TopResolution"
+    #   resp.value_selection_setting.resolution_strategy #=> String, one of "OriginalValue", "TopResolution", "Concatenation"
     #   resp.value_selection_setting.regex_filter.pattern #=> String
+    #   resp.value_selection_setting.advanced_recognition_setting.audio_recognition_strategy #=> String, one of "UseSlotValuesAsCustomVocabulary"
     #   resp.parent_slot_type_signature #=> String
     #   resp.bot_id #=> String
     #   resp.bot_version #=> String
     #   resp.locale_id #=> String
     #   resp.creation_date_time #=> Time
     #   resp.last_updated_date_time #=> Time
+    #   resp.external_source_setting.grammar_slot_type_setting.source.s3_bucket_name #=> String
+    #   resp.external_source_setting.grammar_slot_type_setting.source.s3_object_key #=> String
+    #   resp.external_source_setting.grammar_slot_type_setting.source.kms_key_arn #=> String
+    #   resp.composite_slot_type_setting.sub_slots #=> Array
+    #   resp.composite_slot_type_setting.sub_slots[0].name #=> String
+    #   resp.composite_slot_type_setting.sub_slots[0].slot_type_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/UpdateSlotType AWS API Documentation
     #
@@ -5615,6 +8681,62 @@ module Aws::LexModelsV2
     # @param [Hash] params ({})
     def update_slot_type(params = {}, options = {})
       req = build_request(:update_slot_type, params)
+      req.send_request(options)
+    end
+
+    # The action to update the test set.
+    #
+    # @option params [required, String] :test_set_id
+    #   The test set Id for which update test operation to be performed.
+    #
+    # @option params [required, String] :test_set_name
+    #   The new test set name.
+    #
+    # @option params [String] :description
+    #   The new test set description.
+    #
+    # @return [Types::UpdateTestSetResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateTestSetResponse#test_set_id #test_set_id} => String
+    #   * {Types::UpdateTestSetResponse#test_set_name #test_set_name} => String
+    #   * {Types::UpdateTestSetResponse#description #description} => String
+    #   * {Types::UpdateTestSetResponse#modality #modality} => String
+    #   * {Types::UpdateTestSetResponse#status #status} => String
+    #   * {Types::UpdateTestSetResponse#role_arn #role_arn} => String
+    #   * {Types::UpdateTestSetResponse#num_turns #num_turns} => Integer
+    #   * {Types::UpdateTestSetResponse#storage_location #storage_location} => Types::TestSetStorageLocation
+    #   * {Types::UpdateTestSetResponse#creation_date_time #creation_date_time} => Time
+    #   * {Types::UpdateTestSetResponse#last_updated_date_time #last_updated_date_time} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_test_set({
+    #     test_set_id: "Id", # required
+    #     test_set_name: "Name", # required
+    #     description: "Description",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.test_set_id #=> String
+    #   resp.test_set_name #=> String
+    #   resp.description #=> String
+    #   resp.modality #=> String, one of "Text", "Audio"
+    #   resp.status #=> String, one of "Importing", "PendingAnnotation", "Deleting", "ValidationError", "Ready"
+    #   resp.role_arn #=> String
+    #   resp.num_turns #=> Integer
+    #   resp.storage_location.s3_bucket_name #=> String
+    #   resp.storage_location.s3_path #=> String
+    #   resp.storage_location.kms_key_arn #=> String
+    #   resp.creation_date_time #=> Time
+    #   resp.last_updated_date_time #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/models.lex.v2-2020-08-07/UpdateTestSet AWS API Documentation
+    #
+    # @overload update_test_set(params = {})
+    # @param [Hash] params ({})
+    def update_test_set(params = {}, options = {})
+      req = build_request(:update_test_set, params)
       req.send_request(options)
     end
 
@@ -5631,14 +8753,141 @@ module Aws::LexModelsV2
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-lexmodelsv2'
-      context[:gem_version] = '1.4.0'
+      context[:gem_version] = '1.37.0'
       Seahorse::Client::Request.new(handlers, context)
+    end
+
+    # Polls an API operation until a resource enters a desired state.
+    #
+    # ## Basic Usage
+    #
+    # A waiter will call an API operation until:
+    #
+    # * It is successful
+    # * It enters a terminal state
+    # * It makes the maximum number of attempts
+    #
+    # In between attempts, the waiter will sleep.
+    #
+    #     # polls in a loop, sleeping between attempts
+    #     client.wait_until(waiter_name, params)
+    #
+    # ## Configuration
+    #
+    # You can configure the maximum number of polling attempts, and the
+    # delay (in seconds) between each polling attempt. You can pass
+    # configuration as the final arguments hash.
+    #
+    #     # poll for ~25 seconds
+    #     client.wait_until(waiter_name, params, {
+    #       max_attempts: 5,
+    #       delay: 5,
+    #     })
+    #
+    # ## Callbacks
+    #
+    # You can be notified before each polling attempt and before each
+    # delay. If you throw `:success` or `:failure` from these callbacks,
+    # it will terminate the waiter.
+    #
+    #     started_at = Time.now
+    #     client.wait_until(waiter_name, params, {
+    #
+    #       # disable max attempts
+    #       max_attempts: nil,
+    #
+    #       # poll for 1 hour, instead of a number of attempts
+    #       before_wait: -> (attempts, response) do
+    #         throw :failure if Time.now - started_at > 3600
+    #       end
+    #     })
+    #
+    # ## Handling Errors
+    #
+    # When a waiter is unsuccessful, it will raise an error.
+    # All of the failure errors extend from
+    # {Aws::Waiters::Errors::WaiterFailed}.
+    #
+    #     begin
+    #       client.wait_until(...)
+    #     rescue Aws::Waiters::Errors::WaiterFailed
+    #       # resource did not enter the desired state in time
+    #     end
+    #
+    # ## Valid Waiters
+    #
+    # The following table lists the valid waiter names, the operations they call,
+    # and the default `:delay` and `:max_attempts` values.
+    #
+    # | waiter_name                          | params                        | :delay   | :max_attempts |
+    # | ------------------------------------ | ----------------------------- | -------- | ------------- |
+    # | bot_alias_available                  | {Client#describe_bot_alias}   | 10       | 35            |
+    # | bot_available                        | {Client#describe_bot}         | 10       | 35            |
+    # | bot_export_completed                 | {Client#describe_export}      | 10       | 35            |
+    # | bot_import_completed                 | {Client#describe_import}      | 10       | 35            |
+    # | bot_locale_built                     | {Client#describe_bot_locale}  | 10       | 35            |
+    # | bot_locale_created                   | {Client#describe_bot_locale}  | 10       | 35            |
+    # | bot_locale_express_testing_available | {Client#describe_bot_locale}  | 10       | 35            |
+    # | bot_version_available                | {Client#describe_bot_version} | 10       | 35            |
+    #
+    # @raise [Errors::FailureStateError] Raised when the waiter terminates
+    #   because the waiter has entered a state that it will not transition
+    #   out of, preventing success.
+    #
+    # @raise [Errors::TooManyAttemptsError] Raised when the configured
+    #   maximum number of attempts have been made, and the waiter is not
+    #   yet successful.
+    #
+    # @raise [Errors::UnexpectedError] Raised when an error is encounted
+    #   while polling for a resource that is not expected.
+    #
+    # @raise [Errors::NoSuchWaiterError] Raised when you request to wait
+    #   for an unknown state.
+    #
+    # @return [Boolean] Returns `true` if the waiter was successful.
+    # @param [Symbol] waiter_name
+    # @param [Hash] params ({})
+    # @param [Hash] options ({})
+    # @option options [Integer] :max_attempts
+    # @option options [Integer] :delay
+    # @option options [Proc] :before_attempt
+    # @option options [Proc] :before_wait
+    def wait_until(waiter_name, params = {}, options = {})
+      w = waiter(waiter_name, options)
+      yield(w.waiter) if block_given? # deprecated
+      w.wait(params)
     end
 
     # @api private
     # @deprecated
     def waiter_names
-      []
+      waiters.keys
+    end
+
+    private
+
+    # @param [Symbol] waiter_name
+    # @param [Hash] options ({})
+    def waiter(waiter_name, options = {})
+      waiter_class = waiters[waiter_name]
+      if waiter_class
+        waiter_class.new(options.merge(client: self))
+      else
+        raise Aws::Waiters::Errors::NoSuchWaiterError.new(waiter_name, waiters.keys)
+      end
+    end
+
+    def waiters
+      {
+        bot_alias_available: Waiters::BotAliasAvailable,
+        bot_available: Waiters::BotAvailable,
+        bot_export_completed: Waiters::BotExportCompleted,
+        bot_import_completed: Waiters::BotImportCompleted,
+        bot_locale_built: Waiters::BotLocaleBuilt,
+        bot_locale_created: Waiters::BotLocaleCreated,
+        bot_locale_express_testing_available: Waiters::BotLocaleExpressTestingAvailable,
+        bot_version_available: Waiters::BotVersionAvailable
+      }
     end
 
     class << self

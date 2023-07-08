@@ -215,6 +215,7 @@ module Aws::DeviceFarm
     NetworkProfile = Shapes::StructureShape.new(name: 'NetworkProfile')
     NetworkProfileType = Shapes::StringShape.new(name: 'NetworkProfileType')
     NetworkProfiles = Shapes::ListShape.new(name: 'NetworkProfiles')
+    NonEmptyString = Shapes::StringShape.new(name: 'NonEmptyString')
     NotEligibleException = Shapes::StructureShape.new(name: 'NotEligibleException')
     NotFoundException = Shapes::StructureShape.new(name: 'NotFoundException')
     Offering = Shapes::StructureShape.new(name: 'Offering')
@@ -264,6 +265,10 @@ module Aws::DeviceFarm
     ScheduleRunRequest = Shapes::StructureShape.new(name: 'ScheduleRunRequest')
     ScheduleRunResult = Shapes::StructureShape.new(name: 'ScheduleRunResult')
     ScheduleRunTest = Shapes::StructureShape.new(name: 'ScheduleRunTest')
+    SecurityGroupId = Shapes::StringShape.new(name: 'SecurityGroupId')
+    SecurityGroupIds = Shapes::ListShape.new(name: 'SecurityGroupIds')
+    SensitiveString = Shapes::StringShape.new(name: 'SensitiveString')
+    SensitiveURL = Shapes::StringShape.new(name: 'SensitiveURL')
     ServiceAccountException = Shapes::StructureShape.new(name: 'ServiceAccountException')
     ServiceDnsName = Shapes::StringShape.new(name: 'ServiceDnsName')
     SkipAppResign = Shapes::BooleanShape.new(name: 'SkipAppResign')
@@ -275,6 +280,8 @@ module Aws::DeviceFarm
     StopRunRequest = Shapes::StructureShape.new(name: 'StopRunRequest')
     StopRunResult = Shapes::StructureShape.new(name: 'StopRunResult')
     String = Shapes::StringShape.new(name: 'String')
+    SubnetId = Shapes::StringShape.new(name: 'SubnetId')
+    SubnetIds = Shapes::ListShape.new(name: 'SubnetIds')
     Suite = Shapes::StructureShape.new(name: 'Suite')
     Suites = Shapes::ListShape.new(name: 'Suites')
     Tag = Shapes::StructureShape.new(name: 'Tag')
@@ -299,6 +306,7 @@ module Aws::DeviceFarm
     TestGridSessionStatus = Shapes::StringShape.new(name: 'TestGridSessionStatus')
     TestGridSessions = Shapes::ListShape.new(name: 'TestGridSessions')
     TestGridUrlExpiresInSecondsInput = Shapes::IntegerShape.new(name: 'TestGridUrlExpiresInSecondsInput')
+    TestGridVpcConfig = Shapes::StructureShape.new(name: 'TestGridVpcConfig')
     TestParameters = Shapes::MapShape.new(name: 'TestParameters')
     TestType = Shapes::StringShape.new(name: 'TestType')
     Tests = Shapes::ListShape.new(name: 'Tests')
@@ -338,6 +346,9 @@ module Aws::DeviceFarm
     VPCEConfigurations = Shapes::ListShape.new(name: 'VPCEConfigurations')
     VPCEServiceName = Shapes::StringShape.new(name: 'VPCEServiceName')
     VideoCapture = Shapes::BooleanShape.new(name: 'VideoCapture')
+    VpcConfig = Shapes::StructureShape.new(name: 'VpcConfig')
+    VpcSecurityGroupIds = Shapes::ListShape.new(name: 'VpcSecurityGroupIds')
+    VpcSubnetIds = Shapes::ListShape.new(name: 'VpcSubnetIds')
 
     AccountSettings.add_member(:aws_account_number, Shapes::ShapeRef.new(shape: AWSAccountNumber, location_name: "awsAccountNumber"))
     AccountSettings.add_member(:unmetered_devices, Shapes::ShapeRef.new(shape: PurchasedDevicesMap, location_name: "unmeteredDevices"))
@@ -421,6 +432,7 @@ module Aws::DeviceFarm
 
     CreateProjectRequest.add_member(:name, Shapes::ShapeRef.new(shape: Name, required: true, location_name: "name"))
     CreateProjectRequest.add_member(:default_job_timeout_minutes, Shapes::ShapeRef.new(shape: JobTimeoutMinutes, location_name: "defaultJobTimeoutMinutes"))
+    CreateProjectRequest.add_member(:vpc_config, Shapes::ShapeRef.new(shape: VpcConfig, location_name: "vpcConfig"))
     CreateProjectRequest.struct_class = Types::CreateProjectRequest
 
     CreateProjectResult.add_member(:project, Shapes::ShapeRef.new(shape: Project, location_name: "project"))
@@ -449,6 +461,7 @@ module Aws::DeviceFarm
 
     CreateTestGridProjectRequest.add_member(:name, Shapes::ShapeRef.new(shape: ResourceName, required: true, location_name: "name"))
     CreateTestGridProjectRequest.add_member(:description, Shapes::ShapeRef.new(shape: ResourceDescription, location_name: "description"))
+    CreateTestGridProjectRequest.add_member(:vpc_config, Shapes::ShapeRef.new(shape: TestGridVpcConfig, location_name: "vpcConfig"))
     CreateTestGridProjectRequest.struct_class = Types::CreateTestGridProjectRequest
 
     CreateTestGridProjectResult.add_member(:test_grid_project, Shapes::ShapeRef.new(shape: TestGridProject, location_name: "testGridProject"))
@@ -458,7 +471,7 @@ module Aws::DeviceFarm
     CreateTestGridUrlRequest.add_member(:expires_in_seconds, Shapes::ShapeRef.new(shape: TestGridUrlExpiresInSecondsInput, required: true, location_name: "expiresInSeconds"))
     CreateTestGridUrlRequest.struct_class = Types::CreateTestGridUrlRequest
 
-    CreateTestGridUrlResult.add_member(:url, Shapes::ShapeRef.new(shape: String, location_name: "url"))
+    CreateTestGridUrlResult.add_member(:url, Shapes::ShapeRef.new(shape: SensitiveString, location_name: "url"))
     CreateTestGridUrlResult.add_member(:expires, Shapes::ShapeRef.new(shape: DateTime, location_name: "expires"))
     CreateTestGridUrlResult.struct_class = Types::CreateTestGridUrlResult
 
@@ -553,9 +566,9 @@ module Aws::DeviceFarm
     Device.add_member(:availability, Shapes::ShapeRef.new(shape: DeviceAvailability, location_name: "availability"))
     Device.struct_class = Types::Device
 
-    DeviceFilter.add_member(:attribute, Shapes::ShapeRef.new(shape: DeviceFilterAttribute, location_name: "attribute"))
-    DeviceFilter.add_member(:operator, Shapes::ShapeRef.new(shape: RuleOperator, location_name: "operator"))
-    DeviceFilter.add_member(:values, Shapes::ShapeRef.new(shape: DeviceFilterValues, location_name: "values"))
+    DeviceFilter.add_member(:attribute, Shapes::ShapeRef.new(shape: DeviceFilterAttribute, required: true, location_name: "attribute"))
+    DeviceFilter.add_member(:operator, Shapes::ShapeRef.new(shape: RuleOperator, required: true, location_name: "operator"))
+    DeviceFilter.add_member(:values, Shapes::ShapeRef.new(shape: DeviceFilterValues, required: true, location_name: "values"))
     DeviceFilter.struct_class = Types::DeviceFilter
 
     DeviceFilterValues.member = Shapes::ShapeRef.new(shape: String)
@@ -1076,12 +1089,13 @@ module Aws::DeviceFarm
     Project.add_member(:name, Shapes::ShapeRef.new(shape: Name, location_name: "name"))
     Project.add_member(:default_job_timeout_minutes, Shapes::ShapeRef.new(shape: JobTimeoutMinutes, location_name: "defaultJobTimeoutMinutes"))
     Project.add_member(:created, Shapes::ShapeRef.new(shape: DateTime, location_name: "created"))
+    Project.add_member(:vpc_config, Shapes::ShapeRef.new(shape: VpcConfig, location_name: "vpcConfig"))
     Project.struct_class = Types::Project
 
     Projects.member = Shapes::ShapeRef.new(shape: Project)
 
-    PurchaseOfferingRequest.add_member(:offering_id, Shapes::ShapeRef.new(shape: OfferingIdentifier, location_name: "offeringId"))
-    PurchaseOfferingRequest.add_member(:quantity, Shapes::ShapeRef.new(shape: Integer, location_name: "quantity"))
+    PurchaseOfferingRequest.add_member(:offering_id, Shapes::ShapeRef.new(shape: OfferingIdentifier, required: true, location_name: "offeringId"))
+    PurchaseOfferingRequest.add_member(:quantity, Shapes::ShapeRef.new(shape: Integer, required: true, location_name: "quantity"))
     PurchaseOfferingRequest.add_member(:offering_promotion_id, Shapes::ShapeRef.new(shape: OfferingPromotionIdentifier, location_name: "offeringPromotionId"))
     PurchaseOfferingRequest.struct_class = Types::PurchaseOfferingRequest
 
@@ -1124,12 +1138,13 @@ module Aws::DeviceFarm
     RemoteAccessSession.add_member(:device_udid, Shapes::ShapeRef.new(shape: String, location_name: "deviceUdid"))
     RemoteAccessSession.add_member(:interaction_mode, Shapes::ShapeRef.new(shape: InteractionMode, location_name: "interactionMode"))
     RemoteAccessSession.add_member(:skip_app_resign, Shapes::ShapeRef.new(shape: SkipAppResign, location_name: "skipAppResign"))
+    RemoteAccessSession.add_member(:vpc_config, Shapes::ShapeRef.new(shape: VpcConfig, location_name: "vpcConfig"))
     RemoteAccessSession.struct_class = Types::RemoteAccessSession
 
     RemoteAccessSessions.member = Shapes::ShapeRef.new(shape: RemoteAccessSession)
 
-    RenewOfferingRequest.add_member(:offering_id, Shapes::ShapeRef.new(shape: OfferingIdentifier, location_name: "offeringId"))
-    RenewOfferingRequest.add_member(:quantity, Shapes::ShapeRef.new(shape: Integer, location_name: "quantity"))
+    RenewOfferingRequest.add_member(:offering_id, Shapes::ShapeRef.new(shape: OfferingIdentifier, required: true, location_name: "offeringId"))
+    RenewOfferingRequest.add_member(:quantity, Shapes::ShapeRef.new(shape: Integer, required: true, location_name: "quantity"))
     RenewOfferingRequest.struct_class = Types::RenewOfferingRequest
 
     RenewOfferingResult.add_member(:offering_transaction, Shapes::ShapeRef.new(shape: OfferingTransaction, location_name: "offeringTransaction"))
@@ -1177,6 +1192,7 @@ module Aws::DeviceFarm
     Run.add_member(:skip_app_resign, Shapes::ShapeRef.new(shape: SkipAppResign, location_name: "skipAppResign"))
     Run.add_member(:test_spec_arn, Shapes::ShapeRef.new(shape: AmazonResourceName, location_name: "testSpecArn"))
     Run.add_member(:device_selection_result, Shapes::ShapeRef.new(shape: DeviceSelectionResult, location_name: "deviceSelectionResult"))
+    Run.add_member(:vpc_config, Shapes::ShapeRef.new(shape: VpcConfig, location_name: "vpcConfig"))
     Run.struct_class = Types::Run
 
     Runs.member = Shapes::ShapeRef.new(shape: Run)
@@ -1219,6 +1235,8 @@ module Aws::DeviceFarm
     ScheduleRunTest.add_member(:parameters, Shapes::ShapeRef.new(shape: TestParameters, location_name: "parameters"))
     ScheduleRunTest.struct_class = Types::ScheduleRunTest
 
+    SecurityGroupIds.member = Shapes::ShapeRef.new(shape: NonEmptyString)
+
     ServiceAccountException.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "message"))
     ServiceAccountException.struct_class = Types::ServiceAccountException
 
@@ -1239,6 +1257,8 @@ module Aws::DeviceFarm
 
     StopRunResult.add_member(:run, Shapes::ShapeRef.new(shape: Run, location_name: "run"))
     StopRunResult.struct_class = Types::StopRunResult
+
+    SubnetIds.member = Shapes::ShapeRef.new(shape: NonEmptyString)
 
     Suite.add_member(:arn, Shapes::ShapeRef.new(shape: AmazonResourceName, location_name: "arn"))
     Suite.add_member(:name, Shapes::ShapeRef.new(shape: Name, location_name: "name"))
@@ -1293,6 +1313,7 @@ module Aws::DeviceFarm
     TestGridProject.add_member(:arn, Shapes::ShapeRef.new(shape: DeviceFarmArn, location_name: "arn"))
     TestGridProject.add_member(:name, Shapes::ShapeRef.new(shape: String, location_name: "name"))
     TestGridProject.add_member(:description, Shapes::ShapeRef.new(shape: String, location_name: "description"))
+    TestGridProject.add_member(:vpc_config, Shapes::ShapeRef.new(shape: TestGridVpcConfig, location_name: "vpcConfig"))
     TestGridProject.add_member(:created, Shapes::ShapeRef.new(shape: DateTime, location_name: "created"))
     TestGridProject.struct_class = Types::TestGridProject
 
@@ -1317,12 +1338,17 @@ module Aws::DeviceFarm
 
     TestGridSessionArtifact.add_member(:filename, Shapes::ShapeRef.new(shape: String, location_name: "filename"))
     TestGridSessionArtifact.add_member(:type, Shapes::ShapeRef.new(shape: TestGridSessionArtifactType, location_name: "type"))
-    TestGridSessionArtifact.add_member(:url, Shapes::ShapeRef.new(shape: String, location_name: "url"))
+    TestGridSessionArtifact.add_member(:url, Shapes::ShapeRef.new(shape: SensitiveString, location_name: "url"))
     TestGridSessionArtifact.struct_class = Types::TestGridSessionArtifact
 
     TestGridSessionArtifacts.member = Shapes::ShapeRef.new(shape: TestGridSessionArtifact)
 
     TestGridSessions.member = Shapes::ShapeRef.new(shape: TestGridSession)
+
+    TestGridVpcConfig.add_member(:security_group_ids, Shapes::ShapeRef.new(shape: SecurityGroupIds, required: true, location_name: "securityGroupIds"))
+    TestGridVpcConfig.add_member(:subnet_ids, Shapes::ShapeRef.new(shape: SubnetIds, required: true, location_name: "subnetIds"))
+    TestGridVpcConfig.add_member(:vpc_id, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location_name: "vpcId"))
+    TestGridVpcConfig.struct_class = Types::TestGridVpcConfig
 
     TestParameters.key = Shapes::ShapeRef.new(shape: String)
     TestParameters.value = Shapes::ShapeRef.new(shape: String)
@@ -1402,6 +1428,7 @@ module Aws::DeviceFarm
     UpdateProjectRequest.add_member(:arn, Shapes::ShapeRef.new(shape: AmazonResourceName, required: true, location_name: "arn"))
     UpdateProjectRequest.add_member(:name, Shapes::ShapeRef.new(shape: Name, location_name: "name"))
     UpdateProjectRequest.add_member(:default_job_timeout_minutes, Shapes::ShapeRef.new(shape: JobTimeoutMinutes, location_name: "defaultJobTimeoutMinutes"))
+    UpdateProjectRequest.add_member(:vpc_config, Shapes::ShapeRef.new(shape: VpcConfig, location_name: "vpcConfig"))
     UpdateProjectRequest.struct_class = Types::UpdateProjectRequest
 
     UpdateProjectResult.add_member(:project, Shapes::ShapeRef.new(shape: Project, location_name: "project"))
@@ -1410,6 +1437,7 @@ module Aws::DeviceFarm
     UpdateTestGridProjectRequest.add_member(:project_arn, Shapes::ShapeRef.new(shape: DeviceFarmArn, required: true, location_name: "projectArn"))
     UpdateTestGridProjectRequest.add_member(:name, Shapes::ShapeRef.new(shape: ResourceName, location_name: "name"))
     UpdateTestGridProjectRequest.add_member(:description, Shapes::ShapeRef.new(shape: ResourceDescription, location_name: "description"))
+    UpdateTestGridProjectRequest.add_member(:vpc_config, Shapes::ShapeRef.new(shape: TestGridVpcConfig, location_name: "vpcConfig"))
     UpdateTestGridProjectRequest.struct_class = Types::UpdateTestGridProjectRequest
 
     UpdateTestGridProjectResult.add_member(:test_grid_project, Shapes::ShapeRef.new(shape: TestGridProject, location_name: "testGridProject"))
@@ -1439,7 +1467,7 @@ module Aws::DeviceFarm
     Upload.add_member(:created, Shapes::ShapeRef.new(shape: DateTime, location_name: "created"))
     Upload.add_member(:type, Shapes::ShapeRef.new(shape: UploadType, location_name: "type"))
     Upload.add_member(:status, Shapes::ShapeRef.new(shape: UploadStatus, location_name: "status"))
-    Upload.add_member(:url, Shapes::ShapeRef.new(shape: URL, location_name: "url"))
+    Upload.add_member(:url, Shapes::ShapeRef.new(shape: SensitiveURL, location_name: "url"))
     Upload.add_member(:metadata, Shapes::ShapeRef.new(shape: Metadata, location_name: "metadata"))
     Upload.add_member(:content_type, Shapes::ShapeRef.new(shape: ContentType, location_name: "contentType"))
     Upload.add_member(:message, Shapes::ShapeRef.new(shape: Message, location_name: "message"))
@@ -1456,6 +1484,15 @@ module Aws::DeviceFarm
     VPCEConfiguration.struct_class = Types::VPCEConfiguration
 
     VPCEConfigurations.member = Shapes::ShapeRef.new(shape: VPCEConfiguration)
+
+    VpcConfig.add_member(:security_group_ids, Shapes::ShapeRef.new(shape: VpcSecurityGroupIds, required: true, location_name: "securityGroupIds"))
+    VpcConfig.add_member(:subnet_ids, Shapes::ShapeRef.new(shape: VpcSubnetIds, required: true, location_name: "subnetIds"))
+    VpcConfig.add_member(:vpc_id, Shapes::ShapeRef.new(shape: NonEmptyString, required: true, location_name: "vpcId"))
+    VpcConfig.struct_class = Types::VpcConfig
+
+    VpcSecurityGroupIds.member = Shapes::ShapeRef.new(shape: SecurityGroupId)
+
+    VpcSubnetIds.member = Shapes::ShapeRef.new(shape: SubnetId)
 
 
     # @api private
@@ -1542,6 +1579,8 @@ module Aws::DeviceFarm
         o.http_request_uri = "/"
         o.input = Shapes::ShapeRef.new(shape: CreateTestGridProjectRequest)
         o.output = Shapes::ShapeRef.new(shape: CreateTestGridProjectResult)
+        o.errors << Shapes::ShapeRef.new(shape: ArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceException)
       end)
 
@@ -2457,6 +2496,7 @@ module Aws::DeviceFarm
         o.output = Shapes::ShapeRef.new(shape: UpdateTestGridProjectResult)
         o.errors << Shapes::ShapeRef.new(shape: NotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: ArgumentException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceException)
       end)
 

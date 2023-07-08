@@ -27,9 +27,12 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
-require 'aws-sdk-sso/plugins/content_type.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:sso)
 
@@ -74,9 +77,13 @@ module Aws::SSO
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
-    add_plugin(Aws::SSO::Plugins::ContentType)
+    add_plugin(Aws::SSO::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -121,7 +128,9 @@ module Aws::SSO
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -175,9 +184,17 @@ module Aws::SSO
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -218,6 +235,11 @@ module Aws::SSO
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -264,6 +286,11 @@ module Aws::SSO
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -277,9 +304,34 @@ module Aws::SSO
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::SSO::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::SSO::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -288,7 +340,7 @@ module Aws::SSO
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -303,6 +355,9 @@ module Aws::SSO
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -340,7 +395,8 @@ module Aws::SSO
     #
     # @option params [required, String] :access_token
     #   The token issued by the `CreateToken` API call. For more information,
-    #   see [CreateToken][1] in the *AWS SSO OIDC API Reference Guide*.
+    #   see [CreateToken][1] in the *IAM Identity Center OIDC API Reference
+    #   Guide*.
     #
     #
     #
@@ -385,7 +441,8 @@ module Aws::SSO
     #
     # @option params [required, String] :access_token
     #   The token issued by the `CreateToken` API call. For more information,
-    #   see [CreateToken][1] in the *AWS SSO OIDC API Reference Guide*.
+    #   see [CreateToken][1] in the *IAM Identity Center OIDC API Reference
+    #   Guide*.
     #
     #
     #
@@ -428,8 +485,8 @@ module Aws::SSO
 
     # Lists all AWS accounts assigned to the user. These AWS accounts are
     # assigned by the administrator of the account. For more information,
-    # see [Assign User Access][1] in the *AWS SSO User Guide*. This
-    # operation returns a paginated response.
+    # see [Assign User Access][1] in the *IAM Identity Center User Guide*.
+    # This operation returns a paginated response.
     #
     #
     #
@@ -444,7 +501,8 @@ module Aws::SSO
     #
     # @option params [required, String] :access_token
     #   The token issued by the `CreateToken` API call. For more information,
-    #   see [CreateToken][1] in the *AWS SSO OIDC API Reference Guide*.
+    #   see [CreateToken][1] in the *IAM Identity Center OIDC API Reference
+    #   Guide*.
     #
     #
     #
@@ -482,12 +540,32 @@ module Aws::SSO
       req.send_request(options)
     end
 
-    # Removes the client- and server-side session that is associated with
-    # the user.
+    # Removes the locally stored SSO tokens from the client-side cache and
+    # sends an API call to the IAM Identity Center service to invalidate the
+    # corresponding server-side IAM Identity Center sign in session.
+    #
+    # <note markdown="1"> If a user uses IAM Identity Center to access the AWS CLI, the user’s
+    # IAM Identity Center sign in session is used to obtain an IAM session,
+    # as specified in the corresponding IAM Identity Center permission set.
+    # More specifically, IAM Identity Center assumes an IAM role in the
+    # target account on behalf of the user, and the corresponding temporary
+    # AWS credentials are returned to the client.
+    #
+    #  After user logout, any existing IAM role sessions that were created by
+    # using IAM Identity Center permission sets continue based on the
+    # duration configured in the permission set. For more information, see
+    # [User authentications][1] in the *IAM Identity Center User Guide*.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/singlesignon/latest/userguide/authconcept.html
     #
     # @option params [required, String] :access_token
     #   The token issued by the `CreateToken` API call. For more information,
-    #   see [CreateToken][1] in the *AWS SSO OIDC API Reference Guide*.
+    #   see [CreateToken][1] in the *IAM Identity Center OIDC API Reference
+    #   Guide*.
     #
     #
     #
@@ -523,7 +601,7 @@ module Aws::SSO
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-core'
-      context[:gem_version] = '3.114.0'
+      context[:gem_version] = '3.177.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

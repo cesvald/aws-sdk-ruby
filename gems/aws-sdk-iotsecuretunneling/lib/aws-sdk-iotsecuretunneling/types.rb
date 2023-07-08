@@ -10,20 +10,12 @@
 module Aws::IoTSecureTunneling
   module Types
 
-    # @note When making an API call, you may pass CloseTunnelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         tunnel_id: "TunnelId", # required
-    #         delete: false,
-    #       }
-    #
     # @!attribute [rw] tunnel_id
     #   The ID of the tunnel to close.
     #   @return [String]
     #
     # @!attribute [rw] delete
-    #   When set to true, AWS IoT Secure Tunneling deletes the tunnel data
+    #   When set to true, IoT Secure Tunneling deletes the tunnel data
     #   immediately.
     #   @return [Boolean]
     #
@@ -54,13 +46,6 @@ module Aws::IoTSecureTunneling
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTunnelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         tunnel_id: "TunnelId", # required
-    #       }
-    #
     # @!attribute [rw] tunnel_id
     #   The tunnel to describe.
     #   @return [String]
@@ -83,24 +68,16 @@ module Aws::IoTSecureTunneling
 
     # The destination configuration.
     #
-    # @note When making an API call, you may pass DestinationConfig
-    #   data as a hash:
-    #
-    #       {
-    #         thing_name: "ThingName",
-    #         services: ["Service"], # required
-    #       }
-    #
     # @!attribute [rw] thing_name
     #   The name of the IoT thing to which you want to connect.
     #   @return [String]
     #
     # @!attribute [rw] services
-    #   A list of service names that identity the target application. The
-    #   AWS IoT client running on the destination device reads this value
-    #   and uses it to look up a port or an IP address and a port. The AWS
-    #   IoT client instantiates the local proxy which uses this information
-    #   to connect to the destination application.
+    #   A list of service names that identify the target application. The
+    #   IoT client running on the destination device reads this value and
+    #   uses it to look up a port or an IP address and a port. The IoT
+    #   client instantiates the local proxy, which uses this information to
+    #   connect to the destination application.
     #   @return [Array<String>]
     #
     class DestinationConfig < Struct.new(
@@ -121,13 +98,6 @@ module Aws::IoTSecureTunneling
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The resource ARN.
     #   @return [String]
@@ -148,15 +118,6 @@ module Aws::IoTSecureTunneling
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTunnelsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         thing_name: "ThingName",
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] thing_name
     #   The name of the IoT thing associated with the destination device.
     #   @return [String]
@@ -166,7 +127,9 @@ module Aws::IoTSecureTunneling
     #   @return [Integer]
     #
     # @!attribute [rw] next_token
-    #   A token to retrieve the next set of results.
+    #   To retrieve the next set of results, the nextToken value from a
+    #   previous response; otherwise null to receive the first set of
+    #   results.
     #   @return [String]
     #
     class ListTunnelsRequest < Struct.new(
@@ -178,11 +141,13 @@ module Aws::IoTSecureTunneling
     end
 
     # @!attribute [rw] tunnel_summaries
-    #   A short description of the tunnels in an AWS account.
+    #   A short description of the tunnels in an Amazon Web Services
+    #   account.
     #   @return [Array<Types::TunnelSummary>]
     #
     # @!attribute [rw] next_token
-    #   A token to used to retrieve the next set of results.
+    #   The token to use to get the next set of results, or null if there
+    #   are no additional results.
     #   @return [String]
     #
     class ListTunnelsResponse < Struct.new(
@@ -192,26 +157,6 @@ module Aws::IoTSecureTunneling
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass OpenTunnelRequest
-    #   data as a hash:
-    #
-    #       {
-    #         description: "Description",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #         destination_config: {
-    #           thing_name: "ThingName",
-    #           services: ["Service"], # required
-    #         },
-    #         timeout_config: {
-    #           max_lifetime_timeout_minutes: 1,
-    #         },
-    #       }
-    #
     # @!attribute [rw] description
     #   A short text description of the tunnel.
     #   @return [String]
@@ -242,18 +187,17 @@ module Aws::IoTSecureTunneling
     #   @return [String]
     #
     # @!attribute [rw] tunnel_arn
-    #   The Amazon Resource Name for the tunnel. The tunnel ARN format is
-    #   `arn:aws:tunnel:<region>:<account-id>:tunnel/<tunnel-id>`
+    #   The Amazon Resource Name for the tunnel.
     #   @return [String]
     #
     # @!attribute [rw] source_access_token
-    #   The access token the source local proxy uses to connect to AWS IoT
+    #   The access token the source local proxy uses to connect to IoT
     #   Secure Tunneling.
     #   @return [String]
     #
     # @!attribute [rw] destination_access_token
-    #   The access token the destination local proxy uses to connect to AWS
-    #   IoT Secure Tunneling.
+    #   The access token the destination local proxy uses to connect to IoT
+    #   Secure Tunneling.
     #   @return [String]
     #
     class OpenTunnelResponse < Struct.new(
@@ -277,16 +221,51 @@ module Aws::IoTSecureTunneling
       include Aws::Structure
     end
 
+    # @!attribute [rw] tunnel_id
+    #   The tunnel for which you want to rotate the access tokens.
+    #   @return [String]
+    #
+    # @!attribute [rw] client_mode
+    #   The mode of the client that will use the client token, which can be
+    #   either the source or destination, or both source and destination.
+    #   @return [String]
+    #
+    # @!attribute [rw] destination_config
+    #   The destination configuration.
+    #   @return [Types::DestinationConfig]
+    #
+    class RotateTunnelAccessTokenRequest < Struct.new(
+      :tunnel_id,
+      :client_mode,
+      :destination_config)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] tunnel_arn
+    #   The Amazon Resource Name for the tunnel.
+    #   @return [String]
+    #
+    # @!attribute [rw] source_access_token
+    #   The client access token that the source local proxy uses to connect
+    #   to IoT Secure Tunneling.
+    #   @return [String]
+    #
+    # @!attribute [rw] destination_access_token
+    #   The client access token that the destination local proxy uses to
+    #   connect to IoT Secure Tunneling.
+    #   @return [String]
+    #
+    class RotateTunnelAccessTokenResponse < Struct.new(
+      :tunnel_arn,
+      :source_access_token,
+      :destination_access_token)
+      SENSITIVE = [:source_access_token, :destination_access_token]
+      include Aws::Structure
+    end
+
     # An arbitary key/value pair used to add searchable metadata to secure
     # tunnel resources.
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
     #
     # @!attribute [rw] key
     #   The key of the tag.
@@ -303,19 +282,6 @@ module Aws::IoTSecureTunneling
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the resource.
     #   @return [String]
@@ -334,13 +300,6 @@ module Aws::IoTSecureTunneling
     class TagResourceResponse < Aws::EmptyStructure; end
 
     # Tunnel timeout configuration.
-    #
-    # @note When making an API call, you may pass TimeoutConfig
-    #   data as a hash:
-    #
-    #       {
-    #         max_lifetime_timeout_minutes: 1,
-    #       }
     #
     # @!attribute [rw] max_lifetime_timeout_minutes
     #   The maximum amount of time (in minutes) a tunnel can remain open. If
@@ -361,8 +320,7 @@ module Aws::IoTSecureTunneling
     #   @return [String]
     #
     # @!attribute [rw] tunnel_arn
-    #   The Amazon Resource Name (ARN) of a tunnel. The tunnel ARN format is
-    #   `arn:aws:tunnel:<region>:<account-id>:tunnel/<tunnel-id>`
+    #   The Amazon Resource Name (ARN) of a tunnel.
     #   @return [String]
     #
     # @!attribute [rw] status
@@ -426,8 +384,7 @@ module Aws::IoTSecureTunneling
     #   @return [String]
     #
     # @!attribute [rw] tunnel_arn
-    #   The Amazon Resource Name of the tunnel. The tunnel ARN format is
-    #   `arn:aws:tunnel:<region>:<account-id>:tunnel/<tunnel-id>`
+    #   The Amazon Resource Name of the tunnel.
     #   @return [String]
     #
     # @!attribute [rw] status
@@ -457,14 +414,6 @@ module Aws::IoTSecureTunneling
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The resource ARN.
     #   @return [String]

@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:acm)
@@ -73,8 +77,13 @@ module Aws::ACM
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::ACM::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::ACM
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::ACM
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::ACM
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::ACM
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::ACM
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::ACM::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::ACM::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::ACM
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::ACM
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -338,10 +395,10 @@ module Aws::ACM
     # @!group API Operations
 
     # Adds one or more tags to an ACM certificate. Tags are labels that you
-    # can use to identify and organize your AWS resources. Each tag consists
-    # of a `key` and an optional `value`. You specify the certificate on
-    # input by its Amazon Resource Name (ARN). You specify the tag by using
-    # a key-value pair.
+    # can use to identify and organize your Amazon Web Services resources.
+    # Each tag consists of a `key` and an optional `value`. You specify the
+    # certificate on input by its Amazon Resource Name (ARN). You specify
+    # the tag by using a key-value pair.
     #
     # You can apply a tag to just one certificate if you want to identify a
     # specific characteristic of that certificate, or you can apply the same
@@ -404,11 +461,11 @@ module Aws::ACM
     # succeeds, the certificate no longer appears in the list that can be
     # displayed by calling the ListCertificates action or be retrieved by
     # calling the GetCertificate action. The certificate will not be
-    # available for use by AWS services integrated with ACM.
+    # available for use by Amazon Web Services services integrated with ACM.
     #
-    # <note markdown="1"> You cannot delete an ACM certificate that is being used by another AWS
-    # service. To delete a certificate that is in use, the certificate
-    # association must first be removed.
+    # <note markdown="1"> You cannot delete an ACM certificate that is being used by another
+    # Amazon Web Services service. To delete a certificate that is in use,
+    # the certificate association must first be removed.
     #
     #  </note>
     #
@@ -443,6 +500,10 @@ module Aws::ACM
     end
 
     # Returns detailed metadata about the specified ACM certificate.
+    #
+    # If you have just created a certificate using the `RequestCertificate`
+    # action, there is a delay of several seconds before you can retrieve
+    # information about it.
     #
     # @option params [required, String] :certificate_arn
     #   The Amazon Resource Name (ARN) of the ACM certificate. The ARN must
@@ -494,7 +555,7 @@ module Aws::ACM
     #   resp.certificate.revocation_reason #=> String, one of "UNSPECIFIED", "KEY_COMPROMISE", "CA_COMPROMISE", "AFFILIATION_CHANGED", "SUPERCEDED", "CESSATION_OF_OPERATION", "CERTIFICATE_HOLD", "REMOVE_FROM_CRL", "PRIVILEGE_WITHDRAWN", "A_A_COMPROMISE"
     #   resp.certificate.not_before #=> Time
     #   resp.certificate.not_after #=> Time
-    #   resp.certificate.key_algorithm #=> String, one of "RSA_2048", "RSA_1024", "RSA_4096", "EC_prime256v1", "EC_secp384r1", "EC_secp521r1"
+    #   resp.certificate.key_algorithm #=> String, one of "RSA_1024", "RSA_2048", "RSA_3072", "RSA_4096", "EC_prime256v1", "EC_secp384r1", "EC_secp521r1"
     #   resp.certificate.signature_algorithm #=> String
     #   resp.certificate.in_use_by #=> Array
     #   resp.certificate.in_use_by[0] #=> String
@@ -557,10 +618,17 @@ module Aws::ACM
     #   `arn:aws:acm:region:account:certificate/12345678-1234-1234-1234-123456789012`
     #
     # @option params [required, String, StringIO, File] :passphrase
-    #   Passphrase to associate with the encrypted exported private key. If
-    #   you want to later decrypt the private key, you must have the
+    #   Passphrase to associate with the encrypted exported private key.
+    #
+    #   <note markdown="1"> When creating your passphrase, you can use any ASCII character except
+    #   #, $, or %.
+    #
+    #    </note>
+    #
+    #   If you want to later decrypt the private key, you must have the
     #   passphrase. You can use the following OpenSSL command to decrypt a
-    #   private key:
+    #   private key. After entering the command, you are prompted for the
+    #   passphrase.
     #
     #   `openssl rsa -in encrypted_key.pem -out decrypted_key.pem`
     #
@@ -592,8 +660,8 @@ module Aws::ACM
       req.send_request(options)
     end
 
-    # Returns the account configuration options associated with an AWS
-    # account.
+    # Returns the account configuration options associated with an Amazon
+    # Web Services account.
     #
     # @return [Types::GetAccountConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -659,14 +727,14 @@ module Aws::ACM
       req.send_request(options)
     end
 
-    # Imports a certificate into AWS Certificate Manager (ACM) to use with
+    # Imports a certificate into Certificate Manager (ACM) to use with
     # services that are integrated with ACM. Note that [integrated
     # services][1] allow only certificate types and keys they support to be
     # associated with their resources. Further, their support differs
     # depending on whether the certificate is imported into IAM or into ACM.
     # For more information, see the documentation for each service. For more
     # information about importing certificates into ACM, see [Importing
-    # Certificates][2] in the *AWS Certificate Manager User Guide*.
+    # Certificates][2] in the *Certificate Manager User Guide*.
     #
     # <note markdown="1"> ACM does not provide [managed renewal][3] for certificates that you
     # import.
@@ -808,6 +876,14 @@ module Aws::ACM
     #   response. Use this `NextToken` value in a subsequent request to
     #   retrieve additional items.
     #
+    # @option params [String] :sort_by
+    #   Specifies the field to sort results by. If you specify `SortBy`, you
+    #   must also specify `SortOrder`.
+    #
+    # @option params [String] :sort_order
+    #   Specifies the order of sorted results. If you specify `SortOrder`, you
+    #   must also specify `SortBy`.
+    #
     # @return [Types::ListCertificatesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::ListCertificatesResponse#next_token #next_token} => String
@@ -822,10 +898,12 @@ module Aws::ACM
     #     includes: {
     #       extended_key_usage: ["TLS_WEB_SERVER_AUTHENTICATION"], # accepts TLS_WEB_SERVER_AUTHENTICATION, TLS_WEB_CLIENT_AUTHENTICATION, CODE_SIGNING, EMAIL_PROTECTION, TIME_STAMPING, OCSP_SIGNING, IPSEC_END_SYSTEM, IPSEC_TUNNEL, IPSEC_USER, ANY, NONE, CUSTOM
     #       key_usage: ["DIGITAL_SIGNATURE"], # accepts DIGITAL_SIGNATURE, NON_REPUDIATION, KEY_ENCIPHERMENT, DATA_ENCIPHERMENT, KEY_AGREEMENT, CERTIFICATE_SIGNING, CRL_SIGNING, ENCIPHER_ONLY, DECIPHER_ONLY, ANY, CUSTOM
-    #       key_types: ["RSA_2048"], # accepts RSA_2048, RSA_1024, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1
+    #       key_types: ["RSA_1024"], # accepts RSA_1024, RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1
     #     },
     #     next_token: "NextToken",
     #     max_items: 1,
+    #     sort_by: "CREATED_AT", # accepts CREATED_AT
+    #     sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
     #   })
     #
     # @example Response structure
@@ -834,6 +912,25 @@ module Aws::ACM
     #   resp.certificate_summary_list #=> Array
     #   resp.certificate_summary_list[0].certificate_arn #=> String
     #   resp.certificate_summary_list[0].domain_name #=> String
+    #   resp.certificate_summary_list[0].subject_alternative_name_summaries #=> Array
+    #   resp.certificate_summary_list[0].subject_alternative_name_summaries[0] #=> String
+    #   resp.certificate_summary_list[0].has_additional_subject_alternative_names #=> Boolean
+    #   resp.certificate_summary_list[0].status #=> String, one of "PENDING_VALIDATION", "ISSUED", "INACTIVE", "EXPIRED", "VALIDATION_TIMED_OUT", "REVOKED", "FAILED"
+    #   resp.certificate_summary_list[0].type #=> String, one of "IMPORTED", "AMAZON_ISSUED", "PRIVATE"
+    #   resp.certificate_summary_list[0].key_algorithm #=> String, one of "RSA_1024", "RSA_2048", "RSA_3072", "RSA_4096", "EC_prime256v1", "EC_secp384r1", "EC_secp521r1"
+    #   resp.certificate_summary_list[0].key_usages #=> Array
+    #   resp.certificate_summary_list[0].key_usages[0] #=> String, one of "DIGITAL_SIGNATURE", "NON_REPUDIATION", "KEY_ENCIPHERMENT", "DATA_ENCIPHERMENT", "KEY_AGREEMENT", "CERTIFICATE_SIGNING", "CRL_SIGNING", "ENCIPHER_ONLY", "DECIPHER_ONLY", "ANY", "CUSTOM"
+    #   resp.certificate_summary_list[0].extended_key_usages #=> Array
+    #   resp.certificate_summary_list[0].extended_key_usages[0] #=> String, one of "TLS_WEB_SERVER_AUTHENTICATION", "TLS_WEB_CLIENT_AUTHENTICATION", "CODE_SIGNING", "EMAIL_PROTECTION", "TIME_STAMPING", "OCSP_SIGNING", "IPSEC_END_SYSTEM", "IPSEC_TUNNEL", "IPSEC_USER", "ANY", "NONE", "CUSTOM"
+    #   resp.certificate_summary_list[0].in_use #=> Boolean
+    #   resp.certificate_summary_list[0].exported #=> Boolean
+    #   resp.certificate_summary_list[0].renewal_eligibility #=> String, one of "ELIGIBLE", "INELIGIBLE"
+    #   resp.certificate_summary_list[0].not_before #=> Time
+    #   resp.certificate_summary_list[0].not_after #=> Time
+    #   resp.certificate_summary_list[0].created_at #=> Time
+    #   resp.certificate_summary_list[0].issued_at #=> Time
+    #   resp.certificate_summary_list[0].imported_at #=> Time
+    #   resp.certificate_summary_list[0].revoked_at #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/acm-2015-12-08/ListCertificates AWS API Documentation
     #
@@ -977,13 +1074,14 @@ module Aws::ACM
 
     # Renews an eligible ACM certificate. At this time, only exported
     # private certificates can be renewed with this operation. In order to
-    # renew your ACM PCA certificates with ACM, you must first [grant the
-    # ACM service principal permission to do so][1]. For more information,
-    # see [Testing Managed Renewal][2] in the ACM User Guide.
+    # renew your Amazon Web Services Private CA certificates with ACM, you
+    # must first [grant the ACM service principal permission to do so][1].
+    # For more information, see [Testing Managed Renewal][2] in the ACM User
+    # Guide.
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/acm-pca/latest/userguide/PcaPermissions.html
+    # [1]: https://docs.aws.amazon.com/privateca/latest/userguide/PcaPermissions.html
     # [2]: https://docs.aws.amazon.com/acm/latest/userguide/manual-renewal.html
     #
     # @option params [required, String] :certificate_arn
@@ -1016,10 +1114,11 @@ module Aws::ACM
       req.send_request(options)
     end
 
-    # Requests an ACM certificate for use with other AWS services. To
-    # request an ACM certificate, you must specify a fully qualified domain
-    # name (FQDN) in the `DomainName` parameter. You can also specify
-    # additional FQDNs in the `SubjectAlternativeNames` parameter.
+    # Requests an ACM certificate for use with other Amazon Web Services
+    # services. To request an ACM certificate, you must specify a fully
+    # qualified domain name (FQDN) in the `DomainName` parameter. You can
+    # also specify additional FQDNs in the `SubjectAlternativeNames`
+    # parameter.
     #
     # If you are requesting a private certificate, domain validation is not
     # required. If you are requesting a public certificate, each domain name
@@ -1028,10 +1127,21 @@ module Aws::ACM
     # We recommend that you use DNS validation. ACM issues public
     # certificates after receiving approval from the domain owner.
     #
+    # <note markdown="1"> ACM behavior differs from the [RFC 6125][3] specification of the
+    # certificate validation process. ACM first checks for a Subject
+    # Alternative Name, and, if it finds one, ignores the common name (CN).
+    #
+    #  </note>
+    #
+    # After successful completion of the `RequestCertificate` action, there
+    # is a delay of several seconds before you can retrieve information
+    # about the new certificate.
+    #
     #
     #
     # [1]: https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html
     # [2]: https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-email.html
+    # [3]: https://datatracker.ietf.org/doc/html/rfc6125#appendix-B.2
     #
     # @option params [required, String] :domain_name
     #   Fully qualified domain name (FQDN), such as www.example.com, that you
@@ -1040,9 +1150,15 @@ module Aws::ACM
     #   For example, *.example.com protects www.example.com,
     #   site.example.com, and images.example.com.
     #
-    #   The first domain name you enter cannot exceed 64 octets, including
-    #   periods. Each subsequent Subject Alternative Name (SAN), however, can
-    #   be up to 253 octets in length.
+    #   In compliance with [RFC 5280][1], the length of the domain name
+    #   (technically, the Common Name) that you provide cannot exceed 64
+    #   octets (characters), including periods. To add a longer domain name,
+    #   specify it in the Subject Alternative Name field, which supports names
+    #   up to 253 octets in length.
+    #
+    #
+    #
+    #   [1]: https://datatracker.ietf.org/doc/html/rfc5280
     #
     # @option params [String] :validation_method
     #   The method you want to use if you are requesting a public certificate
@@ -1115,17 +1231,31 @@ module Aws::ACM
     #   (CA) that will be used to issue the certificate. If you do not provide
     #   an ARN and you are trying to request a private certificate, ACM will
     #   attempt to issue a public certificate. For more information about
-    #   private CAs, see the [AWS Certificate Manager Private Certificate
-    #   Authority (PCA)][1] user guide. The ARN must have the following form:
+    #   private CAs, see the [Amazon Web Services Private Certificate
+    #   Authority][1] user guide. The ARN must have the following form:
     #
     #   `arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012`
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/acm-pca/latest/userguide/PcaWelcome.html
+    #   [1]: https://docs.aws.amazon.com/privateca/latest/userguide/PcaWelcome.html
     #
     # @option params [Array<Types::Tag>] :tags
     #   One or more resource tags to associate with the certificate.
+    #
+    # @option params [String] :key_algorithm
+    #   Specifies the algorithm of the public and private key pair that your
+    #   certificate uses to encrypt data. RSA is the default key algorithm for
+    #   ACM certificates. Elliptic Curve Digital Signature Algorithm (ECDSA)
+    #   keys are smaller, offering security comparable to RSA keys but with
+    #   greater computing efficiency. However, ECDSA is not supported by all
+    #   network clients. Some AWS services may require RSA keys, or only
+    #   support ECDSA keys of a particular size, while others allow the use of
+    #   either RSA and ECDSA keys to ensure that compatibility is not broken.
+    #   Check the requirements for the AWS service where you plan to deploy
+    #   your certificate.
+    #
+    #   Default: RSA\_2048
     #
     # @return [Types::RequestCertificateResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1147,13 +1277,14 @@ module Aws::ACM
     #     options: {
     #       certificate_transparency_logging_preference: "ENABLED", # accepts ENABLED, DISABLED
     #     },
-    #     certificate_authority_arn: "Arn",
+    #     certificate_authority_arn: "PcaArn",
     #     tags: [
     #       {
     #         key: "TagKey", # required
     #         value: "TagValue",
     #       },
     #     ],
+    #     key_algorithm: "RSA_1024", # accepts RSA_1024, RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1
     #   })
     #
     # @example Response structure
@@ -1294,7 +1425,7 @@ module Aws::ACM
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-acm'
-      context[:gem_version] = '1.41.0'
+      context[:gem_version] = '1.59.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

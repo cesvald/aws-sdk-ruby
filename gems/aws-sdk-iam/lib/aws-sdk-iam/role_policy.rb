@@ -46,8 +46,8 @@ module Aws::IAM
     # The policy document.
     #
     # IAM stores policies in JSON format. However, resources that were
-    # created using AWS CloudFormation templates can be formatted in YAML.
-    # AWS CloudFormation always converts a YAML policy to JSON format before
+    # created using CloudFormation templates can be formatted in YAML.
+    # CloudFormation always converts a YAML policy to JSON format before
     # submitting it to IAM.
     # @return [String]
     def policy_document
@@ -68,10 +68,12 @@ module Aws::IAM
     #
     # @return [self]
     def load
-      resp = @client.get_role_policy(
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_role_policy(
         role_name: @role_name,
         policy_name: @name
       )
+      end
       @data = resp.data
       self
     end
@@ -186,7 +188,9 @@ module Aws::IAM
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -201,7 +205,9 @@ module Aws::IAM
         role_name: @role_name,
         policy_name: @name
       )
-      resp = @client.delete_role_policy(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_role_policy(options)
+      end
       resp.data
     end
 
@@ -214,10 +220,10 @@ module Aws::IAM
     # @option options [required, String] :policy_document
     #   The policy document.
     #
-    #   You must provide policies in JSON format in IAM. However, for AWS
+    #   You must provide policies in JSON format in IAM. However, for
     #   CloudFormation templates formatted in YAML, you can provide the policy
-    #   in JSON or YAML format. AWS CloudFormation always converts a YAML
-    #   policy to JSON format before submitting it to IAM.
+    #   in JSON or YAML format. CloudFormation always converts a YAML policy
+    #   to JSON format before submitting it to IAM.
     #
     #   The [regex pattern][1] used to validate this parameter is a string of
     #   characters consisting of the following:
@@ -240,7 +246,9 @@ module Aws::IAM
         role_name: @role_name,
         policy_name: @name
       )
-      resp = @client.put_role_policy(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.put_role_policy(options)
+      end
       resp.data
     end
 

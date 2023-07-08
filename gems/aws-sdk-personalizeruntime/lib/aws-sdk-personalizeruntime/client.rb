@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:personalizeruntime)
@@ -73,8 +77,13 @@ module Aws::PersonalizeRuntime
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::PersonalizeRuntime::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::PersonalizeRuntime
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::PersonalizeRuntime
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::PersonalizeRuntime
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::PersonalizeRuntime
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::PersonalizeRuntime
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::PersonalizeRuntime::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::PersonalizeRuntime::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::PersonalizeRuntime
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::PersonalizeRuntime
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -408,6 +465,7 @@ module Aws::PersonalizeRuntime
     #   resp.personalized_ranking #=> Array
     #   resp.personalized_ranking[0].item_id #=> String
     #   resp.personalized_ranking[0].score #=> Float
+    #   resp.personalized_ranking[0].promotion_name #=> String
     #   resp.recommendation_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/personalize-runtime-2018-05-22/GetPersonalizedRanking AWS API Documentation
@@ -419,20 +477,30 @@ module Aws::PersonalizeRuntime
       req.send_request(options)
     end
 
-    # Returns a list of recommended items. The required input depends on the
-    # recipe type used to create the solution backing the campaign, as
-    # follows:
+    # Returns a list of recommended items. For campaigns, the campaign's
+    # Amazon Resource Name (ARN) is required and the required user and item
+    # input depends on the recipe type used to create the solution backing
+    # the campaign as follows:
+    #
+    # * USER\_PERSONALIZATION - `userId` required, `itemId` not used
     #
     # * RELATED\_ITEMS - `itemId` required, `userId` not used
-    #
-    # * USER\_PERSONALIZATION - `itemId` optional, `userId` required
     #
     # <note markdown="1"> Campaigns that are backed by a solution created using a recipe of type
     # PERSONALIZED\_RANKING use the API.
     #
     #  </note>
     #
-    # @option params [required, String] :campaign_arn
+    # For recommenders, the recommender's ARN is required and the required
+    # item and user input depends on the use case (domain-based recipe)
+    # backing the recommender. For information on use case requirements see
+    # [Choosing recommender use cases][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/personalize/latest/dg/domain-use-cases.html
+    #
+    # @option params [String] :campaign_arn
     #   The Amazon Resource Name (ARN) of the campaign to use for getting
     #   recommendations.
     #
@@ -479,11 +547,22 @@ module Aws::PersonalizeRuntime
     #   Amazon Personalize doesn't use that portion of the expression to
     #   filter recommendations.
     #
-    #   For more information, see [Filtering Recommendations][1].
+    #   For more information, see [Filtering recommendations and user
+    #   segments][1].
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/personalize/latest/dg/filter.html
+    #
+    # @option params [String] :recommender_arn
+    #   The Amazon Resource Name (ARN) of the recommender to use to get
+    #   recommendations. Provide a recommender ARN if you created a Domain
+    #   dataset group with a recommender for a domain use case.
+    #
+    # @option params [Array<Types::Promotion>] :promotions
+    #   The promotions to apply to the recommendation request. A promotion
+    #   defines additional business rules that apply to a configurable subset
+    #   of recommended items.
     #
     # @return [Types::GetRecommendationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -493,7 +572,7 @@ module Aws::PersonalizeRuntime
     # @example Request syntax with placeholder values
     #
     #   resp = client.get_recommendations({
-    #     campaign_arn: "Arn", # required
+    #     campaign_arn: "Arn",
     #     item_id: "ItemID",
     #     user_id: "UserID",
     #     num_results: 1,
@@ -504,6 +583,17 @@ module Aws::PersonalizeRuntime
     #     filter_values: {
     #       "FilterAttributeName" => "FilterAttributeValue",
     #     },
+    #     recommender_arn: "Arn",
+    #     promotions: [
+    #       {
+    #         name: "Name",
+    #         percent_promoted_items: 1,
+    #         filter_arn: "Arn",
+    #         filter_values: {
+    #           "FilterAttributeName" => "FilterAttributeValue",
+    #         },
+    #       },
+    #     ],
     #   })
     #
     # @example Response structure
@@ -511,6 +601,7 @@ module Aws::PersonalizeRuntime
     #   resp.item_list #=> Array
     #   resp.item_list[0].item_id #=> String
     #   resp.item_list[0].score #=> Float
+    #   resp.item_list[0].promotion_name #=> String
     #   resp.recommendation_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/personalize-runtime-2018-05-22/GetRecommendations AWS API Documentation
@@ -535,7 +626,7 @@ module Aws::PersonalizeRuntime
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-personalizeruntime'
-      context[:gem_version] = '1.22.0'
+      context[:gem_version] = '1.39.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

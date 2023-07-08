@@ -20,25 +20,43 @@ module Aws::DatabaseMigrationService
     AddTagsToResourceResponse = Shapes::StructureShape.new(name: 'AddTagsToResourceResponse')
     ApplyPendingMaintenanceActionMessage = Shapes::StructureShape.new(name: 'ApplyPendingMaintenanceActionMessage')
     ApplyPendingMaintenanceActionResponse = Shapes::StructureShape.new(name: 'ApplyPendingMaintenanceActionResponse')
+    ArnList = Shapes::ListShape.new(name: 'ArnList')
     AuthMechanismValue = Shapes::StringShape.new(name: 'AuthMechanismValue')
     AuthTypeValue = Shapes::StringShape.new(name: 'AuthTypeValue')
     AvailabilityZone = Shapes::StructureShape.new(name: 'AvailabilityZone')
     AvailabilityZonesList = Shapes::ListShape.new(name: 'AvailabilityZonesList')
+    BatchStartRecommendationsErrorEntry = Shapes::StructureShape.new(name: 'BatchStartRecommendationsErrorEntry')
+    BatchStartRecommendationsErrorEntryList = Shapes::ListShape.new(name: 'BatchStartRecommendationsErrorEntryList')
+    BatchStartRecommendationsRequest = Shapes::StructureShape.new(name: 'BatchStartRecommendationsRequest')
+    BatchStartRecommendationsResponse = Shapes::StructureShape.new(name: 'BatchStartRecommendationsResponse')
     Boolean = Shapes::BooleanShape.new(name: 'Boolean')
     BooleanOptional = Shapes::BooleanShape.new(name: 'BooleanOptional')
     CancelReplicationTaskAssessmentRunMessage = Shapes::StructureShape.new(name: 'CancelReplicationTaskAssessmentRunMessage')
     CancelReplicationTaskAssessmentRunResponse = Shapes::StructureShape.new(name: 'CancelReplicationTaskAssessmentRunResponse')
+    CannedAclForObjectsValue = Shapes::StringShape.new(name: 'CannedAclForObjectsValue')
     Certificate = Shapes::StructureShape.new(name: 'Certificate')
     CertificateList = Shapes::ListShape.new(name: 'CertificateList')
     CertificateWallet = Shapes::BlobShape.new(name: 'CertificateWallet')
     CharLengthSemantics = Shapes::StringShape.new(name: 'CharLengthSemantics')
+    CollectorHealthCheck = Shapes::StructureShape.new(name: 'CollectorHealthCheck')
+    CollectorNotFoundFault = Shapes::StructureShape.new(name: 'CollectorNotFoundFault')
+    CollectorResponse = Shapes::StructureShape.new(name: 'CollectorResponse')
+    CollectorResponses = Shapes::ListShape.new(name: 'CollectorResponses')
+    CollectorShortInfoResponse = Shapes::StructureShape.new(name: 'CollectorShortInfoResponse')
+    CollectorStatus = Shapes::StringShape.new(name: 'CollectorStatus')
+    CollectorsList = Shapes::ListShape.new(name: 'CollectorsList')
     CompressionTypeValue = Shapes::StringShape.new(name: 'CompressionTypeValue')
+    ComputeConfig = Shapes::StructureShape.new(name: 'ComputeConfig')
     Connection = Shapes::StructureShape.new(name: 'Connection')
     ConnectionList = Shapes::ListShape.new(name: 'ConnectionList')
     CreateEndpointMessage = Shapes::StructureShape.new(name: 'CreateEndpointMessage')
     CreateEndpointResponse = Shapes::StructureShape.new(name: 'CreateEndpointResponse')
     CreateEventSubscriptionMessage = Shapes::StructureShape.new(name: 'CreateEventSubscriptionMessage')
     CreateEventSubscriptionResponse = Shapes::StructureShape.new(name: 'CreateEventSubscriptionResponse')
+    CreateFleetAdvisorCollectorRequest = Shapes::StructureShape.new(name: 'CreateFleetAdvisorCollectorRequest')
+    CreateFleetAdvisorCollectorResponse = Shapes::StructureShape.new(name: 'CreateFleetAdvisorCollectorResponse')
+    CreateReplicationConfigMessage = Shapes::StructureShape.new(name: 'CreateReplicationConfigMessage')
+    CreateReplicationConfigResponse = Shapes::StructureShape.new(name: 'CreateReplicationConfigResponse')
     CreateReplicationInstanceMessage = Shapes::StructureShape.new(name: 'CreateReplicationInstanceMessage')
     CreateReplicationInstanceResponse = Shapes::StructureShape.new(name: 'CreateReplicationInstanceResponse')
     CreateReplicationSubnetGroupMessage = Shapes::StructureShape.new(name: 'CreateReplicationSubnetGroupMessage')
@@ -46,16 +64,25 @@ module Aws::DatabaseMigrationService
     CreateReplicationTaskMessage = Shapes::StructureShape.new(name: 'CreateReplicationTaskMessage')
     CreateReplicationTaskResponse = Shapes::StructureShape.new(name: 'CreateReplicationTaskResponse')
     DataFormatValue = Shapes::StringShape.new(name: 'DataFormatValue')
+    DatabaseInstanceSoftwareDetailsResponse = Shapes::StructureShape.new(name: 'DatabaseInstanceSoftwareDetailsResponse')
+    DatabaseList = Shapes::ListShape.new(name: 'DatabaseList')
+    DatabaseResponse = Shapes::StructureShape.new(name: 'DatabaseResponse')
+    DatabaseShortInfoResponse = Shapes::StructureShape.new(name: 'DatabaseShortInfoResponse')
     DatePartitionDelimiterValue = Shapes::StringShape.new(name: 'DatePartitionDelimiterValue')
     DatePartitionSequenceValue = Shapes::StringShape.new(name: 'DatePartitionSequenceValue')
     DeleteCertificateMessage = Shapes::StructureShape.new(name: 'DeleteCertificateMessage')
     DeleteCertificateResponse = Shapes::StructureShape.new(name: 'DeleteCertificateResponse')
+    DeleteCollectorRequest = Shapes::StructureShape.new(name: 'DeleteCollectorRequest')
     DeleteConnectionMessage = Shapes::StructureShape.new(name: 'DeleteConnectionMessage')
     DeleteConnectionResponse = Shapes::StructureShape.new(name: 'DeleteConnectionResponse')
     DeleteEndpointMessage = Shapes::StructureShape.new(name: 'DeleteEndpointMessage')
     DeleteEndpointResponse = Shapes::StructureShape.new(name: 'DeleteEndpointResponse')
     DeleteEventSubscriptionMessage = Shapes::StructureShape.new(name: 'DeleteEventSubscriptionMessage')
     DeleteEventSubscriptionResponse = Shapes::StructureShape.new(name: 'DeleteEventSubscriptionResponse')
+    DeleteFleetAdvisorDatabasesRequest = Shapes::StructureShape.new(name: 'DeleteFleetAdvisorDatabasesRequest')
+    DeleteFleetAdvisorDatabasesResponse = Shapes::StructureShape.new(name: 'DeleteFleetAdvisorDatabasesResponse')
+    DeleteReplicationConfigMessage = Shapes::StructureShape.new(name: 'DeleteReplicationConfigMessage')
+    DeleteReplicationConfigResponse = Shapes::StructureShape.new(name: 'DeleteReplicationConfigResponse')
     DeleteReplicationInstanceMessage = Shapes::StructureShape.new(name: 'DeleteReplicationInstanceMessage')
     DeleteReplicationInstanceResponse = Shapes::StructureShape.new(name: 'DeleteReplicationInstanceResponse')
     DeleteReplicationSubnetGroupMessage = Shapes::StructureShape.new(name: 'DeleteReplicationSubnetGroupMessage')
@@ -84,18 +111,36 @@ module Aws::DatabaseMigrationService
     DescribeEventSubscriptionsResponse = Shapes::StructureShape.new(name: 'DescribeEventSubscriptionsResponse')
     DescribeEventsMessage = Shapes::StructureShape.new(name: 'DescribeEventsMessage')
     DescribeEventsResponse = Shapes::StructureShape.new(name: 'DescribeEventsResponse')
+    DescribeFleetAdvisorCollectorsRequest = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorCollectorsRequest')
+    DescribeFleetAdvisorCollectorsResponse = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorCollectorsResponse')
+    DescribeFleetAdvisorDatabasesRequest = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorDatabasesRequest')
+    DescribeFleetAdvisorDatabasesResponse = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorDatabasesResponse')
+    DescribeFleetAdvisorLsaAnalysisRequest = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorLsaAnalysisRequest')
+    DescribeFleetAdvisorLsaAnalysisResponse = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorLsaAnalysisResponse')
+    DescribeFleetAdvisorSchemaObjectSummaryRequest = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorSchemaObjectSummaryRequest')
+    DescribeFleetAdvisorSchemaObjectSummaryResponse = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorSchemaObjectSummaryResponse')
+    DescribeFleetAdvisorSchemasRequest = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorSchemasRequest')
+    DescribeFleetAdvisorSchemasResponse = Shapes::StructureShape.new(name: 'DescribeFleetAdvisorSchemasResponse')
     DescribeOrderableReplicationInstancesMessage = Shapes::StructureShape.new(name: 'DescribeOrderableReplicationInstancesMessage')
     DescribeOrderableReplicationInstancesResponse = Shapes::StructureShape.new(name: 'DescribeOrderableReplicationInstancesResponse')
     DescribePendingMaintenanceActionsMessage = Shapes::StructureShape.new(name: 'DescribePendingMaintenanceActionsMessage')
     DescribePendingMaintenanceActionsResponse = Shapes::StructureShape.new(name: 'DescribePendingMaintenanceActionsResponse')
+    DescribeRecommendationLimitationsRequest = Shapes::StructureShape.new(name: 'DescribeRecommendationLimitationsRequest')
+    DescribeRecommendationLimitationsResponse = Shapes::StructureShape.new(name: 'DescribeRecommendationLimitationsResponse')
+    DescribeRecommendationsRequest = Shapes::StructureShape.new(name: 'DescribeRecommendationsRequest')
+    DescribeRecommendationsResponse = Shapes::StructureShape.new(name: 'DescribeRecommendationsResponse')
     DescribeRefreshSchemasStatusMessage = Shapes::StructureShape.new(name: 'DescribeRefreshSchemasStatusMessage')
     DescribeRefreshSchemasStatusResponse = Shapes::StructureShape.new(name: 'DescribeRefreshSchemasStatusResponse')
+    DescribeReplicationConfigsMessage = Shapes::StructureShape.new(name: 'DescribeReplicationConfigsMessage')
+    DescribeReplicationConfigsResponse = Shapes::StructureShape.new(name: 'DescribeReplicationConfigsResponse')
     DescribeReplicationInstanceTaskLogsMessage = Shapes::StructureShape.new(name: 'DescribeReplicationInstanceTaskLogsMessage')
     DescribeReplicationInstanceTaskLogsResponse = Shapes::StructureShape.new(name: 'DescribeReplicationInstanceTaskLogsResponse')
     DescribeReplicationInstancesMessage = Shapes::StructureShape.new(name: 'DescribeReplicationInstancesMessage')
     DescribeReplicationInstancesResponse = Shapes::StructureShape.new(name: 'DescribeReplicationInstancesResponse')
     DescribeReplicationSubnetGroupsMessage = Shapes::StructureShape.new(name: 'DescribeReplicationSubnetGroupsMessage')
     DescribeReplicationSubnetGroupsResponse = Shapes::StructureShape.new(name: 'DescribeReplicationSubnetGroupsResponse')
+    DescribeReplicationTableStatisticsMessage = Shapes::StructureShape.new(name: 'DescribeReplicationTableStatisticsMessage')
+    DescribeReplicationTableStatisticsResponse = Shapes::StructureShape.new(name: 'DescribeReplicationTableStatisticsResponse')
     DescribeReplicationTaskAssessmentResultsMessage = Shapes::StructureShape.new(name: 'DescribeReplicationTaskAssessmentResultsMessage')
     DescribeReplicationTaskAssessmentResultsResponse = Shapes::StructureShape.new(name: 'DescribeReplicationTaskAssessmentResultsResponse')
     DescribeReplicationTaskAssessmentRunsMessage = Shapes::StructureShape.new(name: 'DescribeReplicationTaskAssessmentRunsMessage')
@@ -104,6 +149,8 @@ module Aws::DatabaseMigrationService
     DescribeReplicationTaskIndividualAssessmentsResponse = Shapes::StructureShape.new(name: 'DescribeReplicationTaskIndividualAssessmentsResponse')
     DescribeReplicationTasksMessage = Shapes::StructureShape.new(name: 'DescribeReplicationTasksMessage')
     DescribeReplicationTasksResponse = Shapes::StructureShape.new(name: 'DescribeReplicationTasksResponse')
+    DescribeReplicationsMessage = Shapes::StructureShape.new(name: 'DescribeReplicationsMessage')
+    DescribeReplicationsResponse = Shapes::StructureShape.new(name: 'DescribeReplicationsResponse')
     DescribeSchemasMessage = Shapes::StructureShape.new(name: 'DescribeSchemasMessage')
     DescribeSchemasResponse = Shapes::StructureShape.new(name: 'DescribeSchemasResponse')
     DescribeTableStatisticsMessage = Shapes::StructureShape.new(name: 'DescribeTableStatisticsMessage')
@@ -111,6 +158,7 @@ module Aws::DatabaseMigrationService
     DmsSslModeValue = Shapes::StringShape.new(name: 'DmsSslModeValue')
     DmsTransferSettings = Shapes::StructureShape.new(name: 'DmsTransferSettings')
     DocDbSettings = Shapes::StructureShape.new(name: 'DocDbSettings')
+    DoubleOptional = Shapes::FloatShape.new(name: 'DoubleOptional')
     DynamoDbSettings = Shapes::StructureShape.new(name: 'DynamoDbSettings')
     ElasticsearchSettings = Shapes::StructureShape.new(name: 'ElasticsearchSettings')
     EncodingTypeValue = Shapes::StringShape.new(name: 'EncodingTypeValue')
@@ -133,6 +181,12 @@ module Aws::DatabaseMigrationService
     Filter = Shapes::StructureShape.new(name: 'Filter')
     FilterList = Shapes::ListShape.new(name: 'FilterList')
     FilterValueList = Shapes::ListShape.new(name: 'FilterValueList')
+    FleetAdvisorLsaAnalysisResponse = Shapes::StructureShape.new(name: 'FleetAdvisorLsaAnalysisResponse')
+    FleetAdvisorLsaAnalysisResponseList = Shapes::ListShape.new(name: 'FleetAdvisorLsaAnalysisResponseList')
+    FleetAdvisorSchemaList = Shapes::ListShape.new(name: 'FleetAdvisorSchemaList')
+    FleetAdvisorSchemaObjectList = Shapes::ListShape.new(name: 'FleetAdvisorSchemaObjectList')
+    FleetAdvisorSchemaObjectResponse = Shapes::StructureShape.new(name: 'FleetAdvisorSchemaObjectResponse')
+    GcpMySQLSettings = Shapes::StructureShape.new(name: 'GcpMySQLSettings')
     IBMDb2Settings = Shapes::StructureShape.new(name: 'IBMDb2Settings')
     ImportCertificateMessage = Shapes::StructureShape.new(name: 'ImportCertificateMessage')
     ImportCertificateResponse = Shapes::StructureShape.new(name: 'ImportCertificateResponse')
@@ -140,10 +194,13 @@ module Aws::DatabaseMigrationService
     IndividualAssessmentNameList = Shapes::ListShape.new(name: 'IndividualAssessmentNameList')
     InsufficientResourceCapacityFault = Shapes::StructureShape.new(name: 'InsufficientResourceCapacityFault')
     Integer = Shapes::IntegerShape.new(name: 'Integer')
+    IntegerList = Shapes::ListShape.new(name: 'IntegerList')
     IntegerOptional = Shapes::IntegerShape.new(name: 'IntegerOptional')
     InvalidCertificateFault = Shapes::StructureShape.new(name: 'InvalidCertificateFault')
+    InvalidOperationFault = Shapes::StructureShape.new(name: 'InvalidOperationFault')
     InvalidResourceStateFault = Shapes::StructureShape.new(name: 'InvalidResourceStateFault')
     InvalidSubnet = Shapes::StructureShape.new(name: 'InvalidSubnet')
+    InventoryData = Shapes::StructureShape.new(name: 'InventoryData')
     KMSAccessDeniedFault = Shapes::StructureShape.new(name: 'KMSAccessDeniedFault')
     KMSDisabledFault = Shapes::StructureShape.new(name: 'KMSDisabledFault')
     KMSFault = Shapes::StructureShape.new(name: 'KMSFault')
@@ -151,13 +208,19 @@ module Aws::DatabaseMigrationService
     KMSKeyNotAccessibleFault = Shapes::StructureShape.new(name: 'KMSKeyNotAccessibleFault')
     KMSNotFoundFault = Shapes::StructureShape.new(name: 'KMSNotFoundFault')
     KMSThrottlingFault = Shapes::StructureShape.new(name: 'KMSThrottlingFault')
+    KafkaSaslMechanism = Shapes::StringShape.new(name: 'KafkaSaslMechanism')
     KafkaSecurityProtocol = Shapes::StringShape.new(name: 'KafkaSecurityProtocol')
     KafkaSettings = Shapes::StructureShape.new(name: 'KafkaSettings')
+    KafkaSslEndpointIdentificationAlgorithm = Shapes::StringShape.new(name: 'KafkaSslEndpointIdentificationAlgorithm')
     KeyList = Shapes::ListShape.new(name: 'KeyList')
     KinesisSettings = Shapes::StructureShape.new(name: 'KinesisSettings')
+    Limitation = Shapes::StructureShape.new(name: 'Limitation')
+    LimitationList = Shapes::ListShape.new(name: 'LimitationList')
     ListTagsForResourceMessage = Shapes::StructureShape.new(name: 'ListTagsForResourceMessage')
     ListTagsForResourceResponse = Shapes::StructureShape.new(name: 'ListTagsForResourceResponse')
     Long = Shapes::IntegerShape.new(name: 'Long')
+    LongOptional = Shapes::IntegerShape.new(name: 'LongOptional')
+    LongVarcharMappingType = Shapes::StringShape.new(name: 'LongVarcharMappingType')
     MessageFormatValue = Shapes::StringShape.new(name: 'MessageFormatValue')
     MicrosoftSQLServerSettings = Shapes::StructureShape.new(name: 'MicrosoftSQLServerSettings')
     MigrationTypeValue = Shapes::StringShape.new(name: 'MigrationTypeValue')
@@ -165,6 +228,8 @@ module Aws::DatabaseMigrationService
     ModifyEndpointResponse = Shapes::StructureShape.new(name: 'ModifyEndpointResponse')
     ModifyEventSubscriptionMessage = Shapes::StructureShape.new(name: 'ModifyEventSubscriptionMessage')
     ModifyEventSubscriptionResponse = Shapes::StructureShape.new(name: 'ModifyEventSubscriptionResponse')
+    ModifyReplicationConfigMessage = Shapes::StructureShape.new(name: 'ModifyReplicationConfigMessage')
+    ModifyReplicationConfigResponse = Shapes::StructureShape.new(name: 'ModifyReplicationConfigResponse')
     ModifyReplicationInstanceMessage = Shapes::StructureShape.new(name: 'ModifyReplicationInstanceMessage')
     ModifyReplicationInstanceResponse = Shapes::StructureShape.new(name: 'ModifyReplicationInstanceResponse')
     ModifyReplicationSubnetGroupMessage = Shapes::StructureShape.new(name: 'ModifyReplicationSubnetGroupMessage')
@@ -184,9 +249,20 @@ module Aws::DatabaseMigrationService
     PendingMaintenanceAction = Shapes::StructureShape.new(name: 'PendingMaintenanceAction')
     PendingMaintenanceActionDetails = Shapes::ListShape.new(name: 'PendingMaintenanceActionDetails')
     PendingMaintenanceActions = Shapes::ListShape.new(name: 'PendingMaintenanceActions')
+    PluginNameValue = Shapes::StringShape.new(name: 'PluginNameValue')
     PostgreSQLSettings = Shapes::StructureShape.new(name: 'PostgreSQLSettings')
+    ProvisionData = Shapes::StructureShape.new(name: 'ProvisionData')
+    RdsConfiguration = Shapes::StructureShape.new(name: 'RdsConfiguration')
+    RdsRecommendation = Shapes::StructureShape.new(name: 'RdsRecommendation')
+    RdsRequirements = Shapes::StructureShape.new(name: 'RdsRequirements')
     RebootReplicationInstanceMessage = Shapes::StructureShape.new(name: 'RebootReplicationInstanceMessage')
     RebootReplicationInstanceResponse = Shapes::StructureShape.new(name: 'RebootReplicationInstanceResponse')
+    Recommendation = Shapes::StructureShape.new(name: 'Recommendation')
+    RecommendationData = Shapes::StructureShape.new(name: 'RecommendationData')
+    RecommendationList = Shapes::ListShape.new(name: 'RecommendationList')
+    RecommendationSettings = Shapes::StructureShape.new(name: 'RecommendationSettings')
+    RedisAuthTypeValue = Shapes::StringShape.new(name: 'RedisAuthTypeValue')
+    RedisSettings = Shapes::StructureShape.new(name: 'RedisSettings')
     RedshiftSettings = Shapes::StructureShape.new(name: 'RedshiftSettings')
     RefreshSchemasMessage = Shapes::StructureShape.new(name: 'RefreshSchemasMessage')
     RefreshSchemasResponse = Shapes::StructureShape.new(name: 'RefreshSchemasResponse')
@@ -194,21 +270,30 @@ module Aws::DatabaseMigrationService
     RefreshSchemasStatusTypeValue = Shapes::StringShape.new(name: 'RefreshSchemasStatusTypeValue')
     ReleaseStatusValues = Shapes::StringShape.new(name: 'ReleaseStatusValues')
     ReloadOptionValue = Shapes::StringShape.new(name: 'ReloadOptionValue')
+    ReloadReplicationTablesMessage = Shapes::StructureShape.new(name: 'ReloadReplicationTablesMessage')
+    ReloadReplicationTablesResponse = Shapes::StructureShape.new(name: 'ReloadReplicationTablesResponse')
     ReloadTablesMessage = Shapes::StructureShape.new(name: 'ReloadTablesMessage')
     ReloadTablesResponse = Shapes::StructureShape.new(name: 'ReloadTablesResponse')
     RemoveTagsFromResourceMessage = Shapes::StructureShape.new(name: 'RemoveTagsFromResourceMessage')
     RemoveTagsFromResourceResponse = Shapes::StructureShape.new(name: 'RemoveTagsFromResourceResponse')
+    Replication = Shapes::StructureShape.new(name: 'Replication')
+    ReplicationConfig = Shapes::StructureShape.new(name: 'ReplicationConfig')
+    ReplicationConfigList = Shapes::ListShape.new(name: 'ReplicationConfigList')
     ReplicationEndpointTypeValue = Shapes::StringShape.new(name: 'ReplicationEndpointTypeValue')
     ReplicationInstance = Shapes::StructureShape.new(name: 'ReplicationInstance')
+    ReplicationInstanceIpv6AddressList = Shapes::ListShape.new(name: 'ReplicationInstanceIpv6AddressList')
     ReplicationInstanceList = Shapes::ListShape.new(name: 'ReplicationInstanceList')
     ReplicationInstancePrivateIpAddressList = Shapes::ListShape.new(name: 'ReplicationInstancePrivateIpAddressList')
     ReplicationInstancePublicIpAddressList = Shapes::ListShape.new(name: 'ReplicationInstancePublicIpAddressList')
     ReplicationInstanceTaskLog = Shapes::StructureShape.new(name: 'ReplicationInstanceTaskLog')
     ReplicationInstanceTaskLogsList = Shapes::ListShape.new(name: 'ReplicationInstanceTaskLogsList')
+    ReplicationList = Shapes::ListShape.new(name: 'ReplicationList')
     ReplicationPendingModifiedValues = Shapes::StructureShape.new(name: 'ReplicationPendingModifiedValues')
+    ReplicationStats = Shapes::StructureShape.new(name: 'ReplicationStats')
     ReplicationSubnetGroup = Shapes::StructureShape.new(name: 'ReplicationSubnetGroup')
     ReplicationSubnetGroupDoesNotCoverEnoughAZs = Shapes::StructureShape.new(name: 'ReplicationSubnetGroupDoesNotCoverEnoughAZs')
     ReplicationSubnetGroups = Shapes::ListShape.new(name: 'ReplicationSubnetGroups')
+    ReplicationTableStatisticsList = Shapes::ListShape.new(name: 'ReplicationTableStatisticsList')
     ReplicationTask = Shapes::StructureShape.new(name: 'ReplicationTask')
     ReplicationTaskAssessmentResult = Shapes::StructureShape.new(name: 'ReplicationTaskAssessmentResult')
     ReplicationTaskAssessmentResultList = Shapes::ListShape.new(name: 'ReplicationTaskAssessmentResultList')
@@ -224,6 +309,7 @@ module Aws::DatabaseMigrationService
     ResourceNotFoundFault = Shapes::StructureShape.new(name: 'ResourceNotFoundFault')
     ResourcePendingMaintenanceActions = Shapes::StructureShape.new(name: 'ResourcePendingMaintenanceActions')
     ResourceQuotaExceededFault = Shapes::StructureShape.new(name: 'ResourceQuotaExceededFault')
+    RunFleetAdvisorLsaAnalysisResponse = Shapes::StructureShape.new(name: 'RunFleetAdvisorLsaAnalysisResponse')
     S3AccessDeniedFault = Shapes::StructureShape.new(name: 'S3AccessDeniedFault')
     S3ResourceNotFoundFault = Shapes::StructureShape.new(name: 'S3ResourceNotFoundFault')
     S3Settings = Shapes::StructureShape.new(name: 'S3Settings')
@@ -231,9 +317,18 @@ module Aws::DatabaseMigrationService
     SNSNoAuthorizationFault = Shapes::StructureShape.new(name: 'SNSNoAuthorizationFault')
     SafeguardPolicy = Shapes::StringShape.new(name: 'SafeguardPolicy')
     SchemaList = Shapes::ListShape.new(name: 'SchemaList')
+    SchemaResponse = Shapes::StructureShape.new(name: 'SchemaResponse')
+    SchemaShortInfoResponse = Shapes::StructureShape.new(name: 'SchemaShortInfoResponse')
     SecretString = Shapes::StringShape.new(name: 'SecretString')
+    ServerShortInfoResponse = Shapes::StructureShape.new(name: 'ServerShortInfoResponse')
     SourceIdsList = Shapes::ListShape.new(name: 'SourceIdsList')
     SourceType = Shapes::StringShape.new(name: 'SourceType')
+    SslSecurityProtocolValue = Shapes::StringShape.new(name: 'SslSecurityProtocolValue')
+    StartRecommendationsRequest = Shapes::StructureShape.new(name: 'StartRecommendationsRequest')
+    StartRecommendationsRequestEntry = Shapes::StructureShape.new(name: 'StartRecommendationsRequestEntry')
+    StartRecommendationsRequestEntryList = Shapes::ListShape.new(name: 'StartRecommendationsRequestEntryList')
+    StartReplicationMessage = Shapes::StructureShape.new(name: 'StartReplicationMessage')
+    StartReplicationResponse = Shapes::StructureShape.new(name: 'StartReplicationResponse')
     StartReplicationTaskAssessmentMessage = Shapes::StructureShape.new(name: 'StartReplicationTaskAssessmentMessage')
     StartReplicationTaskAssessmentResponse = Shapes::StructureShape.new(name: 'StartReplicationTaskAssessmentResponse')
     StartReplicationTaskAssessmentRunMessage = Shapes::StructureShape.new(name: 'StartReplicationTaskAssessmentRunMessage')
@@ -241,10 +336,13 @@ module Aws::DatabaseMigrationService
     StartReplicationTaskMessage = Shapes::StructureShape.new(name: 'StartReplicationTaskMessage')
     StartReplicationTaskResponse = Shapes::StructureShape.new(name: 'StartReplicationTaskResponse')
     StartReplicationTaskTypeValue = Shapes::StringShape.new(name: 'StartReplicationTaskTypeValue')
+    StopReplicationMessage = Shapes::StructureShape.new(name: 'StopReplicationMessage')
+    StopReplicationResponse = Shapes::StructureShape.new(name: 'StopReplicationResponse')
     StopReplicationTaskMessage = Shapes::StructureShape.new(name: 'StopReplicationTaskMessage')
     StopReplicationTaskResponse = Shapes::StructureShape.new(name: 'StopReplicationTaskResponse')
     StorageQuotaExceededFault = Shapes::StructureShape.new(name: 'StorageQuotaExceededFault')
     String = Shapes::StringShape.new(name: 'String')
+    StringList = Shapes::ListShape.new(name: 'StringList')
     Subnet = Shapes::StructureShape.new(name: 'Subnet')
     SubnetAlreadyInUse = Shapes::StructureShape.new(name: 'SubnetAlreadyInUse')
     SubnetIdentifierList = Shapes::ListShape.new(name: 'SubnetIdentifierList')
@@ -262,7 +360,12 @@ module Aws::DatabaseMigrationService
     TargetDbType = Shapes::StringShape.new(name: 'TargetDbType')
     TestConnectionMessage = Shapes::StructureShape.new(name: 'TestConnectionMessage')
     TestConnectionResponse = Shapes::StructureShape.new(name: 'TestConnectionResponse')
+    TimestreamSettings = Shapes::StructureShape.new(name: 'TimestreamSettings')
+    TlogAccessMode = Shapes::StringShape.new(name: 'TlogAccessMode')
+    UpdateSubscriptionsToEventBridgeMessage = Shapes::StructureShape.new(name: 'UpdateSubscriptionsToEventBridgeMessage')
+    UpdateSubscriptionsToEventBridgeResponse = Shapes::StructureShape.new(name: 'UpdateSubscriptionsToEventBridgeResponse')
     UpgradeDependencyFailureFault = Shapes::StructureShape.new(name: 'UpgradeDependencyFailureFault')
+    VersionStatus = Shapes::StringShape.new(name: 'VersionStatus')
     VpcSecurityGroupIdList = Shapes::ListShape.new(name: 'VpcSecurityGroupIdList')
     VpcSecurityGroupMembership = Shapes::StructureShape.new(name: 'VpcSecurityGroupMembership')
     VpcSecurityGroupMembershipList = Shapes::ListShape.new(name: 'VpcSecurityGroupMembershipList')
@@ -291,10 +394,25 @@ module Aws::DatabaseMigrationService
     ApplyPendingMaintenanceActionResponse.add_member(:resource_pending_maintenance_actions, Shapes::ShapeRef.new(shape: ResourcePendingMaintenanceActions, location_name: "ResourcePendingMaintenanceActions"))
     ApplyPendingMaintenanceActionResponse.struct_class = Types::ApplyPendingMaintenanceActionResponse
 
+    ArnList.member = Shapes::ShapeRef.new(shape: String)
+
     AvailabilityZone.add_member(:name, Shapes::ShapeRef.new(shape: String, location_name: "Name"))
     AvailabilityZone.struct_class = Types::AvailabilityZone
 
     AvailabilityZonesList.member = Shapes::ShapeRef.new(shape: String)
+
+    BatchStartRecommendationsErrorEntry.add_member(:database_id, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseId"))
+    BatchStartRecommendationsErrorEntry.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    BatchStartRecommendationsErrorEntry.add_member(:code, Shapes::ShapeRef.new(shape: String, location_name: "Code"))
+    BatchStartRecommendationsErrorEntry.struct_class = Types::BatchStartRecommendationsErrorEntry
+
+    BatchStartRecommendationsErrorEntryList.member = Shapes::ShapeRef.new(shape: BatchStartRecommendationsErrorEntry)
+
+    BatchStartRecommendationsRequest.add_member(:data, Shapes::ShapeRef.new(shape: StartRecommendationsRequestEntryList, location_name: "Data"))
+    BatchStartRecommendationsRequest.struct_class = Types::BatchStartRecommendationsRequest
+
+    BatchStartRecommendationsResponse.add_member(:error_entries, Shapes::ShapeRef.new(shape: BatchStartRecommendationsErrorEntryList, location_name: "ErrorEntries"))
+    BatchStartRecommendationsResponse.struct_class = Types::BatchStartRecommendationsResponse
 
     CancelReplicationTaskAssessmentRunMessage.add_member(:replication_task_assessment_run_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationTaskAssessmentRunArn"))
     CancelReplicationTaskAssessmentRunMessage.struct_class = Types::CancelReplicationTaskAssessmentRunMessage
@@ -315,6 +433,49 @@ module Aws::DatabaseMigrationService
     Certificate.struct_class = Types::Certificate
 
     CertificateList.member = Shapes::ShapeRef.new(shape: Certificate)
+
+    CollectorHealthCheck.add_member(:collector_status, Shapes::ShapeRef.new(shape: CollectorStatus, location_name: "CollectorStatus"))
+    CollectorHealthCheck.add_member(:local_collector_s3_access, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "LocalCollectorS3Access"))
+    CollectorHealthCheck.add_member(:web_collector_s3_access, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "WebCollectorS3Access"))
+    CollectorHealthCheck.add_member(:web_collector_granted_role_based_access, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "WebCollectorGrantedRoleBasedAccess"))
+    CollectorHealthCheck.struct_class = Types::CollectorHealthCheck
+
+    CollectorNotFoundFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
+    CollectorNotFoundFault.struct_class = Types::CollectorNotFoundFault
+
+    CollectorResponse.add_member(:collector_referenced_id, Shapes::ShapeRef.new(shape: String, location_name: "CollectorReferencedId"))
+    CollectorResponse.add_member(:collector_name, Shapes::ShapeRef.new(shape: String, location_name: "CollectorName"))
+    CollectorResponse.add_member(:collector_version, Shapes::ShapeRef.new(shape: String, location_name: "CollectorVersion"))
+    CollectorResponse.add_member(:version_status, Shapes::ShapeRef.new(shape: VersionStatus, location_name: "VersionStatus"))
+    CollectorResponse.add_member(:description, Shapes::ShapeRef.new(shape: String, location_name: "Description"))
+    CollectorResponse.add_member(:s3_bucket_name, Shapes::ShapeRef.new(shape: String, location_name: "S3BucketName"))
+    CollectorResponse.add_member(:service_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "ServiceAccessRoleArn"))
+    CollectorResponse.add_member(:collector_health_check, Shapes::ShapeRef.new(shape: CollectorHealthCheck, location_name: "CollectorHealthCheck"))
+    CollectorResponse.add_member(:last_data_received, Shapes::ShapeRef.new(shape: String, location_name: "LastDataReceived"))
+    CollectorResponse.add_member(:registered_date, Shapes::ShapeRef.new(shape: String, location_name: "RegisteredDate"))
+    CollectorResponse.add_member(:created_date, Shapes::ShapeRef.new(shape: String, location_name: "CreatedDate"))
+    CollectorResponse.add_member(:modified_date, Shapes::ShapeRef.new(shape: String, location_name: "ModifiedDate"))
+    CollectorResponse.add_member(:inventory_data, Shapes::ShapeRef.new(shape: InventoryData, location_name: "InventoryData"))
+    CollectorResponse.struct_class = Types::CollectorResponse
+
+    CollectorResponses.member = Shapes::ShapeRef.new(shape: CollectorResponse)
+
+    CollectorShortInfoResponse.add_member(:collector_referenced_id, Shapes::ShapeRef.new(shape: String, location_name: "CollectorReferencedId"))
+    CollectorShortInfoResponse.add_member(:collector_name, Shapes::ShapeRef.new(shape: String, location_name: "CollectorName"))
+    CollectorShortInfoResponse.struct_class = Types::CollectorShortInfoResponse
+
+    CollectorsList.member = Shapes::ShapeRef.new(shape: CollectorShortInfoResponse)
+
+    ComputeConfig.add_member(:availability_zone, Shapes::ShapeRef.new(shape: String, location_name: "AvailabilityZone"))
+    ComputeConfig.add_member(:dns_name_servers, Shapes::ShapeRef.new(shape: String, location_name: "DnsNameServers"))
+    ComputeConfig.add_member(:kms_key_id, Shapes::ShapeRef.new(shape: String, location_name: "KmsKeyId"))
+    ComputeConfig.add_member(:max_capacity_units, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxCapacityUnits"))
+    ComputeConfig.add_member(:min_capacity_units, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MinCapacityUnits"))
+    ComputeConfig.add_member(:multi_az, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "MultiAZ"))
+    ComputeConfig.add_member(:preferred_maintenance_window, Shapes::ShapeRef.new(shape: String, location_name: "PreferredMaintenanceWindow"))
+    ComputeConfig.add_member(:replication_subnet_group_id, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationSubnetGroupId"))
+    ComputeConfig.add_member(:vpc_security_group_ids, Shapes::ShapeRef.new(shape: StringList, location_name: "VpcSecurityGroupIds"))
+    ComputeConfig.struct_class = Types::ComputeConfig
 
     Connection.add_member(:replication_instance_arn, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationInstanceArn"))
     Connection.add_member(:endpoint_arn, Shapes::ShapeRef.new(shape: String, location_name: "EndpointArn"))
@@ -358,6 +519,9 @@ module Aws::DatabaseMigrationService
     CreateEndpointMessage.add_member(:ibm_db_2_settings, Shapes::ShapeRef.new(shape: IBMDb2Settings, location_name: "IBMDb2Settings"))
     CreateEndpointMessage.add_member(:resource_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ResourceIdentifier"))
     CreateEndpointMessage.add_member(:doc_db_settings, Shapes::ShapeRef.new(shape: DocDbSettings, location_name: "DocDbSettings"))
+    CreateEndpointMessage.add_member(:redis_settings, Shapes::ShapeRef.new(shape: RedisSettings, location_name: "RedisSettings"))
+    CreateEndpointMessage.add_member(:gcp_my_sql_settings, Shapes::ShapeRef.new(shape: GcpMySQLSettings, location_name: "GcpMySQLSettings"))
+    CreateEndpointMessage.add_member(:timestream_settings, Shapes::ShapeRef.new(shape: TimestreamSettings, location_name: "TimestreamSettings"))
     CreateEndpointMessage.struct_class = Types::CreateEndpointMessage
 
     CreateEndpointResponse.add_member(:endpoint, Shapes::ShapeRef.new(shape: Endpoint, location_name: "Endpoint"))
@@ -375,6 +539,34 @@ module Aws::DatabaseMigrationService
     CreateEventSubscriptionResponse.add_member(:event_subscription, Shapes::ShapeRef.new(shape: EventSubscription, location_name: "EventSubscription"))
     CreateEventSubscriptionResponse.struct_class = Types::CreateEventSubscriptionResponse
 
+    CreateFleetAdvisorCollectorRequest.add_member(:collector_name, Shapes::ShapeRef.new(shape: String, required: true, location_name: "CollectorName"))
+    CreateFleetAdvisorCollectorRequest.add_member(:description, Shapes::ShapeRef.new(shape: String, location_name: "Description"))
+    CreateFleetAdvisorCollectorRequest.add_member(:service_access_role_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ServiceAccessRoleArn"))
+    CreateFleetAdvisorCollectorRequest.add_member(:s3_bucket_name, Shapes::ShapeRef.new(shape: String, required: true, location_name: "S3BucketName"))
+    CreateFleetAdvisorCollectorRequest.struct_class = Types::CreateFleetAdvisorCollectorRequest
+
+    CreateFleetAdvisorCollectorResponse.add_member(:collector_referenced_id, Shapes::ShapeRef.new(shape: String, location_name: "CollectorReferencedId"))
+    CreateFleetAdvisorCollectorResponse.add_member(:collector_name, Shapes::ShapeRef.new(shape: String, location_name: "CollectorName"))
+    CreateFleetAdvisorCollectorResponse.add_member(:description, Shapes::ShapeRef.new(shape: String, location_name: "Description"))
+    CreateFleetAdvisorCollectorResponse.add_member(:service_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "ServiceAccessRoleArn"))
+    CreateFleetAdvisorCollectorResponse.add_member(:s3_bucket_name, Shapes::ShapeRef.new(shape: String, location_name: "S3BucketName"))
+    CreateFleetAdvisorCollectorResponse.struct_class = Types::CreateFleetAdvisorCollectorResponse
+
+    CreateReplicationConfigMessage.add_member(:replication_config_identifier, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationConfigIdentifier"))
+    CreateReplicationConfigMessage.add_member(:source_endpoint_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "SourceEndpointArn"))
+    CreateReplicationConfigMessage.add_member(:target_endpoint_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "TargetEndpointArn"))
+    CreateReplicationConfigMessage.add_member(:compute_config, Shapes::ShapeRef.new(shape: ComputeConfig, required: true, location_name: "ComputeConfig"))
+    CreateReplicationConfigMessage.add_member(:replication_type, Shapes::ShapeRef.new(shape: MigrationTypeValue, required: true, location_name: "ReplicationType"))
+    CreateReplicationConfigMessage.add_member(:table_mappings, Shapes::ShapeRef.new(shape: String, required: true, location_name: "TableMappings"))
+    CreateReplicationConfigMessage.add_member(:replication_settings, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationSettings"))
+    CreateReplicationConfigMessage.add_member(:supplemental_settings, Shapes::ShapeRef.new(shape: String, location_name: "SupplementalSettings"))
+    CreateReplicationConfigMessage.add_member(:resource_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ResourceIdentifier"))
+    CreateReplicationConfigMessage.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, location_name: "Tags"))
+    CreateReplicationConfigMessage.struct_class = Types::CreateReplicationConfigMessage
+
+    CreateReplicationConfigResponse.add_member(:replication_config, Shapes::ShapeRef.new(shape: ReplicationConfig, location_name: "ReplicationConfig"))
+    CreateReplicationConfigResponse.struct_class = Types::CreateReplicationConfigResponse
+
     CreateReplicationInstanceMessage.add_member(:replication_instance_identifier, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationInstanceIdentifier"))
     CreateReplicationInstanceMessage.add_member(:allocated_storage, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "AllocatedStorage"))
     CreateReplicationInstanceMessage.add_member(:replication_instance_class, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationInstanceClass"))
@@ -390,6 +582,7 @@ module Aws::DatabaseMigrationService
     CreateReplicationInstanceMessage.add_member(:publicly_accessible, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "PubliclyAccessible"))
     CreateReplicationInstanceMessage.add_member(:dns_name_servers, Shapes::ShapeRef.new(shape: String, location_name: "DnsNameServers"))
     CreateReplicationInstanceMessage.add_member(:resource_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ResourceIdentifier"))
+    CreateReplicationInstanceMessage.add_member(:network_type, Shapes::ShapeRef.new(shape: String, location_name: "NetworkType"))
     CreateReplicationInstanceMessage.struct_class = Types::CreateReplicationInstanceMessage
 
     CreateReplicationInstanceResponse.add_member(:replication_instance, Shapes::ShapeRef.new(shape: ReplicationInstance, location_name: "ReplicationInstance"))
@@ -422,11 +615,40 @@ module Aws::DatabaseMigrationService
     CreateReplicationTaskResponse.add_member(:replication_task, Shapes::ShapeRef.new(shape: ReplicationTask, location_name: "ReplicationTask"))
     CreateReplicationTaskResponse.struct_class = Types::CreateReplicationTaskResponse
 
+    DatabaseInstanceSoftwareDetailsResponse.add_member(:engine, Shapes::ShapeRef.new(shape: String, location_name: "Engine"))
+    DatabaseInstanceSoftwareDetailsResponse.add_member(:engine_version, Shapes::ShapeRef.new(shape: String, location_name: "EngineVersion"))
+    DatabaseInstanceSoftwareDetailsResponse.add_member(:engine_edition, Shapes::ShapeRef.new(shape: String, location_name: "EngineEdition"))
+    DatabaseInstanceSoftwareDetailsResponse.add_member(:service_pack, Shapes::ShapeRef.new(shape: String, location_name: "ServicePack"))
+    DatabaseInstanceSoftwareDetailsResponse.add_member(:support_level, Shapes::ShapeRef.new(shape: String, location_name: "SupportLevel"))
+    DatabaseInstanceSoftwareDetailsResponse.add_member(:os_architecture, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "OsArchitecture"))
+    DatabaseInstanceSoftwareDetailsResponse.add_member(:tooltip, Shapes::ShapeRef.new(shape: String, location_name: "Tooltip"))
+    DatabaseInstanceSoftwareDetailsResponse.struct_class = Types::DatabaseInstanceSoftwareDetailsResponse
+
+    DatabaseList.member = Shapes::ShapeRef.new(shape: DatabaseResponse)
+
+    DatabaseResponse.add_member(:database_id, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseId"))
+    DatabaseResponse.add_member(:database_name, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseName"))
+    DatabaseResponse.add_member(:ip_address, Shapes::ShapeRef.new(shape: String, location_name: "IpAddress"))
+    DatabaseResponse.add_member(:number_of_schemas, Shapes::ShapeRef.new(shape: LongOptional, location_name: "NumberOfSchemas"))
+    DatabaseResponse.add_member(:server, Shapes::ShapeRef.new(shape: ServerShortInfoResponse, location_name: "Server"))
+    DatabaseResponse.add_member(:software_details, Shapes::ShapeRef.new(shape: DatabaseInstanceSoftwareDetailsResponse, location_name: "SoftwareDetails"))
+    DatabaseResponse.add_member(:collectors, Shapes::ShapeRef.new(shape: CollectorsList, location_name: "Collectors"))
+    DatabaseResponse.struct_class = Types::DatabaseResponse
+
+    DatabaseShortInfoResponse.add_member(:database_id, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseId"))
+    DatabaseShortInfoResponse.add_member(:database_name, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseName"))
+    DatabaseShortInfoResponse.add_member(:database_ip_address, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseIpAddress"))
+    DatabaseShortInfoResponse.add_member(:database_engine, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseEngine"))
+    DatabaseShortInfoResponse.struct_class = Types::DatabaseShortInfoResponse
+
     DeleteCertificateMessage.add_member(:certificate_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "CertificateArn"))
     DeleteCertificateMessage.struct_class = Types::DeleteCertificateMessage
 
     DeleteCertificateResponse.add_member(:certificate, Shapes::ShapeRef.new(shape: Certificate, location_name: "Certificate"))
     DeleteCertificateResponse.struct_class = Types::DeleteCertificateResponse
+
+    DeleteCollectorRequest.add_member(:collector_referenced_id, Shapes::ShapeRef.new(shape: String, required: true, location_name: "CollectorReferencedId"))
+    DeleteCollectorRequest.struct_class = Types::DeleteCollectorRequest
 
     DeleteConnectionMessage.add_member(:endpoint_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "EndpointArn"))
     DeleteConnectionMessage.add_member(:replication_instance_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationInstanceArn"))
@@ -446,6 +668,18 @@ module Aws::DatabaseMigrationService
 
     DeleteEventSubscriptionResponse.add_member(:event_subscription, Shapes::ShapeRef.new(shape: EventSubscription, location_name: "EventSubscription"))
     DeleteEventSubscriptionResponse.struct_class = Types::DeleteEventSubscriptionResponse
+
+    DeleteFleetAdvisorDatabasesRequest.add_member(:database_ids, Shapes::ShapeRef.new(shape: StringList, required: true, location_name: "DatabaseIds"))
+    DeleteFleetAdvisorDatabasesRequest.struct_class = Types::DeleteFleetAdvisorDatabasesRequest
+
+    DeleteFleetAdvisorDatabasesResponse.add_member(:database_ids, Shapes::ShapeRef.new(shape: StringList, location_name: "DatabaseIds"))
+    DeleteFleetAdvisorDatabasesResponse.struct_class = Types::DeleteFleetAdvisorDatabasesResponse
+
+    DeleteReplicationConfigMessage.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationConfigArn"))
+    DeleteReplicationConfigMessage.struct_class = Types::DeleteReplicationConfigMessage
+
+    DeleteReplicationConfigResponse.add_member(:replication_config, Shapes::ShapeRef.new(shape: ReplicationConfig, location_name: "ReplicationConfig"))
+    DeleteReplicationConfigResponse.struct_class = Types::DeleteReplicationConfigResponse
 
     DeleteReplicationInstanceMessage.add_member(:replication_instance_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationInstanceArn"))
     DeleteReplicationInstanceMessage.struct_class = Types::DeleteReplicationInstanceMessage
@@ -566,6 +800,50 @@ module Aws::DatabaseMigrationService
     DescribeEventsResponse.add_member(:events, Shapes::ShapeRef.new(shape: EventList, location_name: "Events"))
     DescribeEventsResponse.struct_class = Types::DescribeEventsResponse
 
+    DescribeFleetAdvisorCollectorsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    DescribeFleetAdvisorCollectorsRequest.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeFleetAdvisorCollectorsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorCollectorsRequest.struct_class = Types::DescribeFleetAdvisorCollectorsRequest
+
+    DescribeFleetAdvisorCollectorsResponse.add_member(:collectors, Shapes::ShapeRef.new(shape: CollectorResponses, location_name: "Collectors"))
+    DescribeFleetAdvisorCollectorsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorCollectorsResponse.struct_class = Types::DescribeFleetAdvisorCollectorsResponse
+
+    DescribeFleetAdvisorDatabasesRequest.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    DescribeFleetAdvisorDatabasesRequest.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeFleetAdvisorDatabasesRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorDatabasesRequest.struct_class = Types::DescribeFleetAdvisorDatabasesRequest
+
+    DescribeFleetAdvisorDatabasesResponse.add_member(:databases, Shapes::ShapeRef.new(shape: DatabaseList, location_name: "Databases"))
+    DescribeFleetAdvisorDatabasesResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorDatabasesResponse.struct_class = Types::DescribeFleetAdvisorDatabasesResponse
+
+    DescribeFleetAdvisorLsaAnalysisRequest.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeFleetAdvisorLsaAnalysisRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorLsaAnalysisRequest.struct_class = Types::DescribeFleetAdvisorLsaAnalysisRequest
+
+    DescribeFleetAdvisorLsaAnalysisResponse.add_member(:analysis, Shapes::ShapeRef.new(shape: FleetAdvisorLsaAnalysisResponseList, location_name: "Analysis"))
+    DescribeFleetAdvisorLsaAnalysisResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorLsaAnalysisResponse.struct_class = Types::DescribeFleetAdvisorLsaAnalysisResponse
+
+    DescribeFleetAdvisorSchemaObjectSummaryRequest.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    DescribeFleetAdvisorSchemaObjectSummaryRequest.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeFleetAdvisorSchemaObjectSummaryRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorSchemaObjectSummaryRequest.struct_class = Types::DescribeFleetAdvisorSchemaObjectSummaryRequest
+
+    DescribeFleetAdvisorSchemaObjectSummaryResponse.add_member(:fleet_advisor_schema_objects, Shapes::ShapeRef.new(shape: FleetAdvisorSchemaObjectList, location_name: "FleetAdvisorSchemaObjects"))
+    DescribeFleetAdvisorSchemaObjectSummaryResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorSchemaObjectSummaryResponse.struct_class = Types::DescribeFleetAdvisorSchemaObjectSummaryResponse
+
+    DescribeFleetAdvisorSchemasRequest.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    DescribeFleetAdvisorSchemasRequest.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeFleetAdvisorSchemasRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorSchemasRequest.struct_class = Types::DescribeFleetAdvisorSchemasRequest
+
+    DescribeFleetAdvisorSchemasResponse.add_member(:fleet_advisor_schemas, Shapes::ShapeRef.new(shape: FleetAdvisorSchemaList, location_name: "FleetAdvisorSchemas"))
+    DescribeFleetAdvisorSchemasResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeFleetAdvisorSchemasResponse.struct_class = Types::DescribeFleetAdvisorSchemasResponse
+
     DescribeOrderableReplicationInstancesMessage.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
     DescribeOrderableReplicationInstancesMessage.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
     DescribeOrderableReplicationInstancesMessage.struct_class = Types::DescribeOrderableReplicationInstancesMessage
@@ -584,11 +862,38 @@ module Aws::DatabaseMigrationService
     DescribePendingMaintenanceActionsResponse.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
     DescribePendingMaintenanceActionsResponse.struct_class = Types::DescribePendingMaintenanceActionsResponse
 
+    DescribeRecommendationLimitationsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    DescribeRecommendationLimitationsRequest.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeRecommendationLimitationsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeRecommendationLimitationsRequest.struct_class = Types::DescribeRecommendationLimitationsRequest
+
+    DescribeRecommendationLimitationsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeRecommendationLimitationsResponse.add_member(:limitations, Shapes::ShapeRef.new(shape: LimitationList, location_name: "Limitations"))
+    DescribeRecommendationLimitationsResponse.struct_class = Types::DescribeRecommendationLimitationsResponse
+
+    DescribeRecommendationsRequest.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    DescribeRecommendationsRequest.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeRecommendationsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeRecommendationsRequest.struct_class = Types::DescribeRecommendationsRequest
+
+    DescribeRecommendationsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
+    DescribeRecommendationsResponse.add_member(:recommendations, Shapes::ShapeRef.new(shape: RecommendationList, location_name: "Recommendations"))
+    DescribeRecommendationsResponse.struct_class = Types::DescribeRecommendationsResponse
+
     DescribeRefreshSchemasStatusMessage.add_member(:endpoint_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "EndpointArn"))
     DescribeRefreshSchemasStatusMessage.struct_class = Types::DescribeRefreshSchemasStatusMessage
 
     DescribeRefreshSchemasStatusResponse.add_member(:refresh_schemas_status, Shapes::ShapeRef.new(shape: RefreshSchemasStatus, location_name: "RefreshSchemasStatus"))
     DescribeRefreshSchemasStatusResponse.struct_class = Types::DescribeRefreshSchemasStatusResponse
+
+    DescribeReplicationConfigsMessage.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    DescribeReplicationConfigsMessage.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeReplicationConfigsMessage.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
+    DescribeReplicationConfigsMessage.struct_class = Types::DescribeReplicationConfigsMessage
+
+    DescribeReplicationConfigsResponse.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
+    DescribeReplicationConfigsResponse.add_member(:replication_configs, Shapes::ShapeRef.new(shape: ReplicationConfigList, location_name: "ReplicationConfigs"))
+    DescribeReplicationConfigsResponse.struct_class = Types::DescribeReplicationConfigsResponse
 
     DescribeReplicationInstanceTaskLogsMessage.add_member(:replication_instance_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationInstanceArn"))
     DescribeReplicationInstanceTaskLogsMessage.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
@@ -617,6 +922,17 @@ module Aws::DatabaseMigrationService
     DescribeReplicationSubnetGroupsResponse.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
     DescribeReplicationSubnetGroupsResponse.add_member(:replication_subnet_groups, Shapes::ShapeRef.new(shape: ReplicationSubnetGroups, location_name: "ReplicationSubnetGroups"))
     DescribeReplicationSubnetGroupsResponse.struct_class = Types::DescribeReplicationSubnetGroupsResponse
+
+    DescribeReplicationTableStatisticsMessage.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationConfigArn"))
+    DescribeReplicationTableStatisticsMessage.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeReplicationTableStatisticsMessage.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
+    DescribeReplicationTableStatisticsMessage.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    DescribeReplicationTableStatisticsMessage.struct_class = Types::DescribeReplicationTableStatisticsMessage
+
+    DescribeReplicationTableStatisticsResponse.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationConfigArn"))
+    DescribeReplicationTableStatisticsResponse.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
+    DescribeReplicationTableStatisticsResponse.add_member(:replication_table_statistics, Shapes::ShapeRef.new(shape: ReplicationTableStatisticsList, location_name: "ReplicationTableStatistics"))
+    DescribeReplicationTableStatisticsResponse.struct_class = Types::DescribeReplicationTableStatisticsResponse
 
     DescribeReplicationTaskAssessmentResultsMessage.add_member(:replication_task_arn, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationTaskArn"))
     DescribeReplicationTaskAssessmentResultsMessage.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
@@ -656,6 +972,15 @@ module Aws::DatabaseMigrationService
     DescribeReplicationTasksResponse.add_member(:replication_tasks, Shapes::ShapeRef.new(shape: ReplicationTaskList, location_name: "ReplicationTasks"))
     DescribeReplicationTasksResponse.struct_class = Types::DescribeReplicationTasksResponse
 
+    DescribeReplicationsMessage.add_member(:filters, Shapes::ShapeRef.new(shape: FilterList, location_name: "Filters"))
+    DescribeReplicationsMessage.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
+    DescribeReplicationsMessage.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
+    DescribeReplicationsMessage.struct_class = Types::DescribeReplicationsMessage
+
+    DescribeReplicationsResponse.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
+    DescribeReplicationsResponse.add_member(:replications, Shapes::ShapeRef.new(shape: ReplicationList, location_name: "Replications"))
+    DescribeReplicationsResponse.struct_class = Types::DescribeReplicationsResponse
+
     DescribeSchemasMessage.add_member(:endpoint_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "EndpointArn"))
     DescribeSchemasMessage.add_member(:max_records, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxRecords"))
     DescribeSchemasMessage.add_member(:marker, Shapes::ShapeRef.new(shape: String, location_name: "Marker"))
@@ -691,6 +1016,8 @@ module Aws::DatabaseMigrationService
     DocDbSettings.add_member(:kms_key_id, Shapes::ShapeRef.new(shape: String, location_name: "KmsKeyId"))
     DocDbSettings.add_member(:secrets_manager_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerAccessRoleArn"))
     DocDbSettings.add_member(:secrets_manager_secret_id, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerSecretId"))
+    DocDbSettings.add_member(:use_update_look_up, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "UseUpdateLookUp"))
+    DocDbSettings.add_member(:replicate_shard_collections, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "ReplicateShardCollections"))
     DocDbSettings.struct_class = Types::DocDbSettings
 
     DynamoDbSettings.add_member(:service_access_role_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ServiceAccessRoleArn"))
@@ -700,6 +1027,7 @@ module Aws::DatabaseMigrationService
     ElasticsearchSettings.add_member(:endpoint_uri, Shapes::ShapeRef.new(shape: String, required: true, location_name: "EndpointUri"))
     ElasticsearchSettings.add_member(:full_load_error_percentage, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "FullLoadErrorPercentage"))
     ElasticsearchSettings.add_member(:error_retry_duration, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "ErrorRetryDuration"))
+    ElasticsearchSettings.add_member(:use_new_mapping_type, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "UseNewMappingType"))
     ElasticsearchSettings.struct_class = Types::ElasticsearchSettings
 
     Endpoint.add_member(:endpoint_identifier, Shapes::ShapeRef.new(shape: String, location_name: "EndpointIdentifier"))
@@ -735,6 +1063,9 @@ module Aws::DatabaseMigrationService
     Endpoint.add_member(:microsoft_sql_server_settings, Shapes::ShapeRef.new(shape: MicrosoftSQLServerSettings, location_name: "MicrosoftSQLServerSettings"))
     Endpoint.add_member(:ibm_db_2_settings, Shapes::ShapeRef.new(shape: IBMDb2Settings, location_name: "IBMDb2Settings"))
     Endpoint.add_member(:doc_db_settings, Shapes::ShapeRef.new(shape: DocDbSettings, location_name: "DocDbSettings"))
+    Endpoint.add_member(:redis_settings, Shapes::ShapeRef.new(shape: RedisSettings, location_name: "RedisSettings"))
+    Endpoint.add_member(:gcp_my_sql_settings, Shapes::ShapeRef.new(shape: GcpMySQLSettings, location_name: "GcpMySQLSettings"))
+    Endpoint.add_member(:timestream_settings, Shapes::ShapeRef.new(shape: TimestreamSettings, location_name: "TimestreamSettings"))
     Endpoint.struct_class = Types::Endpoint
 
     EndpointList.member = Shapes::ShapeRef.new(shape: Endpoint)
@@ -747,6 +1078,7 @@ module Aws::DatabaseMigrationService
     EndpointSetting.add_member(:applicability, Shapes::ShapeRef.new(shape: String, location_name: "Applicability"))
     EndpointSetting.add_member(:int_value_min, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "IntValueMin"))
     EndpointSetting.add_member(:int_value_max, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "IntValueMax"))
+    EndpointSetting.add_member(:default_value, Shapes::ShapeRef.new(shape: String, location_name: "DefaultValue"))
     EndpointSetting.struct_class = Types::EndpointSetting
 
     EndpointSettingEnumValues.member = Shapes::ShapeRef.new(shape: String)
@@ -793,6 +1125,39 @@ module Aws::DatabaseMigrationService
 
     FilterValueList.member = Shapes::ShapeRef.new(shape: String)
 
+    FleetAdvisorLsaAnalysisResponse.add_member(:lsa_analysis_id, Shapes::ShapeRef.new(shape: String, location_name: "LsaAnalysisId"))
+    FleetAdvisorLsaAnalysisResponse.add_member(:status, Shapes::ShapeRef.new(shape: String, location_name: "Status"))
+    FleetAdvisorLsaAnalysisResponse.struct_class = Types::FleetAdvisorLsaAnalysisResponse
+
+    FleetAdvisorLsaAnalysisResponseList.member = Shapes::ShapeRef.new(shape: FleetAdvisorLsaAnalysisResponse)
+
+    FleetAdvisorSchemaList.member = Shapes::ShapeRef.new(shape: SchemaResponse)
+
+    FleetAdvisorSchemaObjectList.member = Shapes::ShapeRef.new(shape: FleetAdvisorSchemaObjectResponse)
+
+    FleetAdvisorSchemaObjectResponse.add_member(:schema_id, Shapes::ShapeRef.new(shape: String, location_name: "SchemaId"))
+    FleetAdvisorSchemaObjectResponse.add_member(:object_type, Shapes::ShapeRef.new(shape: String, location_name: "ObjectType"))
+    FleetAdvisorSchemaObjectResponse.add_member(:number_of_objects, Shapes::ShapeRef.new(shape: LongOptional, location_name: "NumberOfObjects"))
+    FleetAdvisorSchemaObjectResponse.add_member(:code_line_count, Shapes::ShapeRef.new(shape: LongOptional, location_name: "CodeLineCount"))
+    FleetAdvisorSchemaObjectResponse.add_member(:code_size, Shapes::ShapeRef.new(shape: LongOptional, location_name: "CodeSize"))
+    FleetAdvisorSchemaObjectResponse.struct_class = Types::FleetAdvisorSchemaObjectResponse
+
+    GcpMySQLSettings.add_member(:after_connect_script, Shapes::ShapeRef.new(shape: String, location_name: "AfterConnectScript"))
+    GcpMySQLSettings.add_member(:clean_source_metadata_on_mismatch, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "CleanSourceMetadataOnMismatch"))
+    GcpMySQLSettings.add_member(:database_name, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseName"))
+    GcpMySQLSettings.add_member(:events_poll_interval, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "EventsPollInterval"))
+    GcpMySQLSettings.add_member(:target_db_type, Shapes::ShapeRef.new(shape: TargetDbType, location_name: "TargetDbType"))
+    GcpMySQLSettings.add_member(:max_file_size, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxFileSize"))
+    GcpMySQLSettings.add_member(:parallel_load_threads, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "ParallelLoadThreads"))
+    GcpMySQLSettings.add_member(:password, Shapes::ShapeRef.new(shape: SecretString, location_name: "Password"))
+    GcpMySQLSettings.add_member(:port, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "Port"))
+    GcpMySQLSettings.add_member(:server_name, Shapes::ShapeRef.new(shape: String, location_name: "ServerName"))
+    GcpMySQLSettings.add_member(:server_timezone, Shapes::ShapeRef.new(shape: String, location_name: "ServerTimezone"))
+    GcpMySQLSettings.add_member(:username, Shapes::ShapeRef.new(shape: String, location_name: "Username"))
+    GcpMySQLSettings.add_member(:secrets_manager_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerAccessRoleArn"))
+    GcpMySQLSettings.add_member(:secrets_manager_secret_id, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerSecretId"))
+    GcpMySQLSettings.struct_class = Types::GcpMySQLSettings
+
     IBMDb2Settings.add_member(:database_name, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseName"))
     IBMDb2Settings.add_member(:password, Shapes::ShapeRef.new(shape: SecretString, location_name: "Password"))
     IBMDb2Settings.add_member(:port, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "Port"))
@@ -821,14 +1186,23 @@ module Aws::DatabaseMigrationService
     InsufficientResourceCapacityFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     InsufficientResourceCapacityFault.struct_class = Types::InsufficientResourceCapacityFault
 
+    IntegerList.member = Shapes::ShapeRef.new(shape: Integer)
+
     InvalidCertificateFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     InvalidCertificateFault.struct_class = Types::InvalidCertificateFault
+
+    InvalidOperationFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
+    InvalidOperationFault.struct_class = Types::InvalidOperationFault
 
     InvalidResourceStateFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     InvalidResourceStateFault.struct_class = Types::InvalidResourceStateFault
 
     InvalidSubnet.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     InvalidSubnet.struct_class = Types::InvalidSubnet
+
+    InventoryData.add_member(:number_of_databases, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "NumberOfDatabases"))
+    InventoryData.add_member(:number_of_schemas, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "NumberOfSchemas"))
+    InventoryData.struct_class = Types::InventoryData
 
     KMSAccessDeniedFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     KMSAccessDeniedFault.struct_class = Types::KMSAccessDeniedFault
@@ -868,6 +1242,9 @@ module Aws::DatabaseMigrationService
     KafkaSettings.add_member(:ssl_ca_certificate_arn, Shapes::ShapeRef.new(shape: String, location_name: "SslCaCertificateArn"))
     KafkaSettings.add_member(:sasl_username, Shapes::ShapeRef.new(shape: String, location_name: "SaslUsername"))
     KafkaSettings.add_member(:sasl_password, Shapes::ShapeRef.new(shape: SecretString, location_name: "SaslPassword"))
+    KafkaSettings.add_member(:no_hex_prefix, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "NoHexPrefix"))
+    KafkaSettings.add_member(:sasl_mechanism, Shapes::ShapeRef.new(shape: KafkaSaslMechanism, location_name: "SaslMechanism"))
+    KafkaSettings.add_member(:ssl_endpoint_identification_algorithm, Shapes::ShapeRef.new(shape: KafkaSslEndpointIdentificationAlgorithm, location_name: "SslEndpointIdentificationAlgorithm"))
     KafkaSettings.struct_class = Types::KafkaSettings
 
     KeyList.member = Shapes::ShapeRef.new(shape: String)
@@ -881,9 +1258,21 @@ module Aws::DatabaseMigrationService
     KinesisSettings.add_member(:include_table_alter_operations, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "IncludeTableAlterOperations"))
     KinesisSettings.add_member(:include_control_details, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "IncludeControlDetails"))
     KinesisSettings.add_member(:include_null_and_empty, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "IncludeNullAndEmpty"))
+    KinesisSettings.add_member(:no_hex_prefix, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "NoHexPrefix"))
     KinesisSettings.struct_class = Types::KinesisSettings
 
-    ListTagsForResourceMessage.add_member(:resource_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ResourceArn"))
+    Limitation.add_member(:database_id, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseId"))
+    Limitation.add_member(:engine_name, Shapes::ShapeRef.new(shape: String, location_name: "EngineName"))
+    Limitation.add_member(:name, Shapes::ShapeRef.new(shape: String, location_name: "Name"))
+    Limitation.add_member(:description, Shapes::ShapeRef.new(shape: String, location_name: "Description"))
+    Limitation.add_member(:impact, Shapes::ShapeRef.new(shape: String, location_name: "Impact"))
+    Limitation.add_member(:type, Shapes::ShapeRef.new(shape: String, location_name: "Type"))
+    Limitation.struct_class = Types::Limitation
+
+    LimitationList.member = Shapes::ShapeRef.new(shape: Limitation)
+
+    ListTagsForResourceMessage.add_member(:resource_arn, Shapes::ShapeRef.new(shape: String, location_name: "ResourceArn"))
+    ListTagsForResourceMessage.add_member(:resource_arn_list, Shapes::ShapeRef.new(shape: ArnList, location_name: "ResourceArnList"))
     ListTagsForResourceMessage.struct_class = Types::ListTagsForResourceMessage
 
     ListTagsForResourceResponse.add_member(:tag_list, Shapes::ShapeRef.new(shape: TagList, location_name: "TagList"))
@@ -903,6 +1292,9 @@ module Aws::DatabaseMigrationService
     MicrosoftSQLServerSettings.add_member(:use_third_party_backup_device, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "UseThirdPartyBackupDevice"))
     MicrosoftSQLServerSettings.add_member(:secrets_manager_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerAccessRoleArn"))
     MicrosoftSQLServerSettings.add_member(:secrets_manager_secret_id, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerSecretId"))
+    MicrosoftSQLServerSettings.add_member(:trim_space_in_char, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "TrimSpaceInChar"))
+    MicrosoftSQLServerSettings.add_member(:tlog_access_mode, Shapes::ShapeRef.new(shape: TlogAccessMode, location_name: "TlogAccessMode"))
+    MicrosoftSQLServerSettings.add_member(:force_lob_lookup, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "ForceLobLookup"))
     MicrosoftSQLServerSettings.struct_class = Types::MicrosoftSQLServerSettings
 
     ModifyEndpointMessage.add_member(:endpoint_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "EndpointArn"))
@@ -935,6 +1327,10 @@ module Aws::DatabaseMigrationService
     ModifyEndpointMessage.add_member(:microsoft_sql_server_settings, Shapes::ShapeRef.new(shape: MicrosoftSQLServerSettings, location_name: "MicrosoftSQLServerSettings"))
     ModifyEndpointMessage.add_member(:ibm_db_2_settings, Shapes::ShapeRef.new(shape: IBMDb2Settings, location_name: "IBMDb2Settings"))
     ModifyEndpointMessage.add_member(:doc_db_settings, Shapes::ShapeRef.new(shape: DocDbSettings, location_name: "DocDbSettings"))
+    ModifyEndpointMessage.add_member(:redis_settings, Shapes::ShapeRef.new(shape: RedisSettings, location_name: "RedisSettings"))
+    ModifyEndpointMessage.add_member(:exact_settings, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "ExactSettings"))
+    ModifyEndpointMessage.add_member(:gcp_my_sql_settings, Shapes::ShapeRef.new(shape: GcpMySQLSettings, location_name: "GcpMySQLSettings"))
+    ModifyEndpointMessage.add_member(:timestream_settings, Shapes::ShapeRef.new(shape: TimestreamSettings, location_name: "TimestreamSettings"))
     ModifyEndpointMessage.struct_class = Types::ModifyEndpointMessage
 
     ModifyEndpointResponse.add_member(:endpoint, Shapes::ShapeRef.new(shape: Endpoint, location_name: "Endpoint"))
@@ -950,6 +1346,20 @@ module Aws::DatabaseMigrationService
     ModifyEventSubscriptionResponse.add_member(:event_subscription, Shapes::ShapeRef.new(shape: EventSubscription, location_name: "EventSubscription"))
     ModifyEventSubscriptionResponse.struct_class = Types::ModifyEventSubscriptionResponse
 
+    ModifyReplicationConfigMessage.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationConfigArn"))
+    ModifyReplicationConfigMessage.add_member(:replication_config_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationConfigIdentifier"))
+    ModifyReplicationConfigMessage.add_member(:replication_type, Shapes::ShapeRef.new(shape: MigrationTypeValue, location_name: "ReplicationType"))
+    ModifyReplicationConfigMessage.add_member(:table_mappings, Shapes::ShapeRef.new(shape: String, location_name: "TableMappings"))
+    ModifyReplicationConfigMessage.add_member(:replication_settings, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationSettings"))
+    ModifyReplicationConfigMessage.add_member(:supplemental_settings, Shapes::ShapeRef.new(shape: String, location_name: "SupplementalSettings"))
+    ModifyReplicationConfigMessage.add_member(:compute_config, Shapes::ShapeRef.new(shape: ComputeConfig, location_name: "ComputeConfig"))
+    ModifyReplicationConfigMessage.add_member(:source_endpoint_arn, Shapes::ShapeRef.new(shape: String, location_name: "SourceEndpointArn"))
+    ModifyReplicationConfigMessage.add_member(:target_endpoint_arn, Shapes::ShapeRef.new(shape: String, location_name: "TargetEndpointArn"))
+    ModifyReplicationConfigMessage.struct_class = Types::ModifyReplicationConfigMessage
+
+    ModifyReplicationConfigResponse.add_member(:replication_config, Shapes::ShapeRef.new(shape: ReplicationConfig, location_name: "ReplicationConfig"))
+    ModifyReplicationConfigResponse.struct_class = Types::ModifyReplicationConfigResponse
+
     ModifyReplicationInstanceMessage.add_member(:replication_instance_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationInstanceArn"))
     ModifyReplicationInstanceMessage.add_member(:allocated_storage, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "AllocatedStorage"))
     ModifyReplicationInstanceMessage.add_member(:apply_immediately, Shapes::ShapeRef.new(shape: Boolean, location_name: "ApplyImmediately"))
@@ -961,6 +1371,7 @@ module Aws::DatabaseMigrationService
     ModifyReplicationInstanceMessage.add_member(:allow_major_version_upgrade, Shapes::ShapeRef.new(shape: Boolean, location_name: "AllowMajorVersionUpgrade"))
     ModifyReplicationInstanceMessage.add_member(:auto_minor_version_upgrade, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "AutoMinorVersionUpgrade"))
     ModifyReplicationInstanceMessage.add_member(:replication_instance_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationInstanceIdentifier"))
+    ModifyReplicationInstanceMessage.add_member(:network_type, Shapes::ShapeRef.new(shape: String, location_name: "NetworkType"))
     ModifyReplicationInstanceMessage.struct_class = Types::ModifyReplicationInstanceMessage
 
     ModifyReplicationInstanceResponse.add_member(:replication_instance, Shapes::ShapeRef.new(shape: ReplicationInstance, location_name: "ReplicationInstance"))
@@ -1002,6 +1413,8 @@ module Aws::DatabaseMigrationService
     MongoDbSettings.add_member(:kms_key_id, Shapes::ShapeRef.new(shape: String, location_name: "KmsKeyId"))
     MongoDbSettings.add_member(:secrets_manager_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerAccessRoleArn"))
     MongoDbSettings.add_member(:secrets_manager_secret_id, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerSecretId"))
+    MongoDbSettings.add_member(:use_update_look_up, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "UseUpdateLookUp"))
+    MongoDbSettings.add_member(:replicate_shard_collections, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "ReplicateShardCollections"))
     MongoDbSettings.struct_class = Types::MongoDbSettings
 
     MoveReplicationTaskMessage.add_member(:replication_task_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationTaskArn"))
@@ -1039,6 +1452,7 @@ module Aws::DatabaseMigrationService
     OracleSettings.add_member(:add_supplemental_logging, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "AddSupplementalLogging"))
     OracleSettings.add_member(:archived_log_dest_id, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "ArchivedLogDestId"))
     OracleSettings.add_member(:additional_archived_log_dest_id, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "AdditionalArchivedLogDestId"))
+    OracleSettings.add_member(:extra_archived_log_dest_ids, Shapes::ShapeRef.new(shape: IntegerList, location_name: "ExtraArchivedLogDestIds"))
     OracleSettings.add_member(:allow_select_nested_tables, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "AllowSelectNestedTables"))
     OracleSettings.add_member(:parallel_asm_read_threads, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "ParallelAsmReadThreads"))
     OracleSettings.add_member(:read_ahead_blocks, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "ReadAheadBlocks"))
@@ -1066,11 +1480,18 @@ module Aws::DatabaseMigrationService
     OracleSettings.add_member(:security_db_encryption_name, Shapes::ShapeRef.new(shape: String, location_name: "SecurityDbEncryptionName"))
     OracleSettings.add_member(:server_name, Shapes::ShapeRef.new(shape: String, location_name: "ServerName"))
     OracleSettings.add_member(:spatial_data_option_to_geo_json_function_name, Shapes::ShapeRef.new(shape: String, location_name: "SpatialDataOptionToGeoJsonFunctionName"))
+    OracleSettings.add_member(:standby_delay_time, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "StandbyDelayTime"))
     OracleSettings.add_member(:username, Shapes::ShapeRef.new(shape: String, location_name: "Username"))
+    OracleSettings.add_member(:use_b_file, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "UseBFile"))
+    OracleSettings.add_member(:use_direct_path_full_load, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "UseDirectPathFullLoad"))
+    OracleSettings.add_member(:use_logminer_reader, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "UseLogminerReader"))
     OracleSettings.add_member(:secrets_manager_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerAccessRoleArn"))
     OracleSettings.add_member(:secrets_manager_secret_id, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerSecretId"))
     OracleSettings.add_member(:secrets_manager_oracle_asm_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerOracleAsmAccessRoleArn"))
     OracleSettings.add_member(:secrets_manager_oracle_asm_secret_id, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerOracleAsmSecretId"))
+    OracleSettings.add_member(:trim_space_in_char, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "TrimSpaceInChar"))
+    OracleSettings.add_member(:convert_timestamp_with_zone_to_utc, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "ConvertTimestampWithZoneToUTC"))
+    OracleSettings.add_member(:open_transaction_window, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "OpenTransactionWindow"))
     OracleSettings.struct_class = Types::OracleSettings
 
     OrderableReplicationInstance.add_member(:engine_version, Shapes::ShapeRef.new(shape: String, location_name: "EngineVersion"))
@@ -1105,21 +1526,89 @@ module Aws::DatabaseMigrationService
     PostgreSQLSettings.add_member(:ddl_artifacts_schema, Shapes::ShapeRef.new(shape: String, location_name: "DdlArtifactsSchema"))
     PostgreSQLSettings.add_member(:execute_timeout, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "ExecuteTimeout"))
     PostgreSQLSettings.add_member(:fail_tasks_on_lob_truncation, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "FailTasksOnLobTruncation"))
+    PostgreSQLSettings.add_member(:heartbeat_enable, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "HeartbeatEnable"))
+    PostgreSQLSettings.add_member(:heartbeat_schema, Shapes::ShapeRef.new(shape: String, location_name: "HeartbeatSchema"))
+    PostgreSQLSettings.add_member(:heartbeat_frequency, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "HeartbeatFrequency"))
     PostgreSQLSettings.add_member(:password, Shapes::ShapeRef.new(shape: SecretString, location_name: "Password"))
     PostgreSQLSettings.add_member(:port, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "Port"))
     PostgreSQLSettings.add_member(:server_name, Shapes::ShapeRef.new(shape: String, location_name: "ServerName"))
     PostgreSQLSettings.add_member(:username, Shapes::ShapeRef.new(shape: String, location_name: "Username"))
     PostgreSQLSettings.add_member(:slot_name, Shapes::ShapeRef.new(shape: String, location_name: "SlotName"))
+    PostgreSQLSettings.add_member(:plugin_name, Shapes::ShapeRef.new(shape: PluginNameValue, location_name: "PluginName"))
     PostgreSQLSettings.add_member(:secrets_manager_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerAccessRoleArn"))
     PostgreSQLSettings.add_member(:secrets_manager_secret_id, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerSecretId"))
+    PostgreSQLSettings.add_member(:trim_space_in_char, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "TrimSpaceInChar"))
+    PostgreSQLSettings.add_member(:map_boolean_as_boolean, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "MapBooleanAsBoolean"))
+    PostgreSQLSettings.add_member(:map_jsonb_as_clob, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "MapJsonbAsClob"))
+    PostgreSQLSettings.add_member(:map_long_varchar_as, Shapes::ShapeRef.new(shape: LongVarcharMappingType, location_name: "MapLongVarcharAs"))
     PostgreSQLSettings.struct_class = Types::PostgreSQLSettings
+
+    ProvisionData.add_member(:provision_state, Shapes::ShapeRef.new(shape: String, location_name: "ProvisionState"))
+    ProvisionData.add_member(:provisioned_capacity_units, Shapes::ShapeRef.new(shape: Integer, location_name: "ProvisionedCapacityUnits"))
+    ProvisionData.add_member(:date_provisioned, Shapes::ShapeRef.new(shape: TStamp, location_name: "DateProvisioned"))
+    ProvisionData.add_member(:is_new_provisioning_available, Shapes::ShapeRef.new(shape: Boolean, location_name: "IsNewProvisioningAvailable"))
+    ProvisionData.add_member(:date_new_provisioning_data_available, Shapes::ShapeRef.new(shape: TStamp, location_name: "DateNewProvisioningDataAvailable"))
+    ProvisionData.add_member(:reason_for_new_provisioning_data, Shapes::ShapeRef.new(shape: String, location_name: "ReasonForNewProvisioningData"))
+    ProvisionData.struct_class = Types::ProvisionData
+
+    RdsConfiguration.add_member(:engine_edition, Shapes::ShapeRef.new(shape: String, location_name: "EngineEdition"))
+    RdsConfiguration.add_member(:instance_type, Shapes::ShapeRef.new(shape: String, location_name: "InstanceType"))
+    RdsConfiguration.add_member(:instance_vcpu, Shapes::ShapeRef.new(shape: DoubleOptional, location_name: "InstanceVcpu"))
+    RdsConfiguration.add_member(:instance_memory, Shapes::ShapeRef.new(shape: DoubleOptional, location_name: "InstanceMemory"))
+    RdsConfiguration.add_member(:storage_type, Shapes::ShapeRef.new(shape: String, location_name: "StorageType"))
+    RdsConfiguration.add_member(:storage_size, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "StorageSize"))
+    RdsConfiguration.add_member(:storage_iops, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "StorageIops"))
+    RdsConfiguration.add_member(:deployment_option, Shapes::ShapeRef.new(shape: String, location_name: "DeploymentOption"))
+    RdsConfiguration.add_member(:engine_version, Shapes::ShapeRef.new(shape: String, location_name: "EngineVersion"))
+    RdsConfiguration.struct_class = Types::RdsConfiguration
+
+    RdsRecommendation.add_member(:requirements_to_target, Shapes::ShapeRef.new(shape: RdsRequirements, location_name: "RequirementsToTarget"))
+    RdsRecommendation.add_member(:target_configuration, Shapes::ShapeRef.new(shape: RdsConfiguration, location_name: "TargetConfiguration"))
+    RdsRecommendation.struct_class = Types::RdsRecommendation
+
+    RdsRequirements.add_member(:engine_edition, Shapes::ShapeRef.new(shape: String, location_name: "EngineEdition"))
+    RdsRequirements.add_member(:instance_vcpu, Shapes::ShapeRef.new(shape: DoubleOptional, location_name: "InstanceVcpu"))
+    RdsRequirements.add_member(:instance_memory, Shapes::ShapeRef.new(shape: DoubleOptional, location_name: "InstanceMemory"))
+    RdsRequirements.add_member(:storage_size, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "StorageSize"))
+    RdsRequirements.add_member(:storage_iops, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "StorageIops"))
+    RdsRequirements.add_member(:deployment_option, Shapes::ShapeRef.new(shape: String, location_name: "DeploymentOption"))
+    RdsRequirements.add_member(:engine_version, Shapes::ShapeRef.new(shape: String, location_name: "EngineVersion"))
+    RdsRequirements.struct_class = Types::RdsRequirements
 
     RebootReplicationInstanceMessage.add_member(:replication_instance_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationInstanceArn"))
     RebootReplicationInstanceMessage.add_member(:force_failover, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "ForceFailover"))
+    RebootReplicationInstanceMessage.add_member(:force_planned_failover, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "ForcePlannedFailover"))
     RebootReplicationInstanceMessage.struct_class = Types::RebootReplicationInstanceMessage
 
     RebootReplicationInstanceResponse.add_member(:replication_instance, Shapes::ShapeRef.new(shape: ReplicationInstance, location_name: "ReplicationInstance"))
     RebootReplicationInstanceResponse.struct_class = Types::RebootReplicationInstanceResponse
+
+    Recommendation.add_member(:database_id, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseId"))
+    Recommendation.add_member(:engine_name, Shapes::ShapeRef.new(shape: String, location_name: "EngineName"))
+    Recommendation.add_member(:created_date, Shapes::ShapeRef.new(shape: String, location_name: "CreatedDate"))
+    Recommendation.add_member(:status, Shapes::ShapeRef.new(shape: String, location_name: "Status"))
+    Recommendation.add_member(:preferred, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "Preferred"))
+    Recommendation.add_member(:settings, Shapes::ShapeRef.new(shape: RecommendationSettings, location_name: "Settings"))
+    Recommendation.add_member(:data, Shapes::ShapeRef.new(shape: RecommendationData, location_name: "Data"))
+    Recommendation.struct_class = Types::Recommendation
+
+    RecommendationData.add_member(:rds_engine, Shapes::ShapeRef.new(shape: RdsRecommendation, location_name: "RdsEngine"))
+    RecommendationData.struct_class = Types::RecommendationData
+
+    RecommendationList.member = Shapes::ShapeRef.new(shape: Recommendation)
+
+    RecommendationSettings.add_member(:instance_sizing_type, Shapes::ShapeRef.new(shape: String, required: true, location_name: "InstanceSizingType"))
+    RecommendationSettings.add_member(:workload_type, Shapes::ShapeRef.new(shape: String, required: true, location_name: "WorkloadType"))
+    RecommendationSettings.struct_class = Types::RecommendationSettings
+
+    RedisSettings.add_member(:server_name, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ServerName"))
+    RedisSettings.add_member(:port, Shapes::ShapeRef.new(shape: Integer, required: true, location_name: "Port"))
+    RedisSettings.add_member(:ssl_security_protocol, Shapes::ShapeRef.new(shape: SslSecurityProtocolValue, location_name: "SslSecurityProtocol"))
+    RedisSettings.add_member(:auth_type, Shapes::ShapeRef.new(shape: RedisAuthTypeValue, location_name: "AuthType"))
+    RedisSettings.add_member(:auth_user_name, Shapes::ShapeRef.new(shape: String, location_name: "AuthUserName"))
+    RedisSettings.add_member(:auth_password, Shapes::ShapeRef.new(shape: SecretString, location_name: "AuthPassword"))
+    RedisSettings.add_member(:ssl_ca_certificate_arn, Shapes::ShapeRef.new(shape: String, location_name: "SslCaCertificateArn"))
+    RedisSettings.struct_class = Types::RedisSettings
 
     RedshiftSettings.add_member(:accept_any_date, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "AcceptAnyDate"))
     RedshiftSettings.add_member(:after_connect_script, Shapes::ShapeRef.new(shape: String, location_name: "AfterConnectScript"))
@@ -1151,6 +1640,7 @@ module Aws::DatabaseMigrationService
     RedshiftSettings.add_member(:write_buffer_size, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "WriteBufferSize"))
     RedshiftSettings.add_member(:secrets_manager_access_role_arn, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerAccessRoleArn"))
     RedshiftSettings.add_member(:secrets_manager_secret_id, Shapes::ShapeRef.new(shape: String, location_name: "SecretsManagerSecretId"))
+    RedshiftSettings.add_member(:map_boolean_as_boolean, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "MapBooleanAsBoolean"))
     RedshiftSettings.struct_class = Types::RedshiftSettings
 
     RefreshSchemasMessage.add_member(:endpoint_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "EndpointArn"))
@@ -1167,6 +1657,14 @@ module Aws::DatabaseMigrationService
     RefreshSchemasStatus.add_member(:last_failure_message, Shapes::ShapeRef.new(shape: String, location_name: "LastFailureMessage"))
     RefreshSchemasStatus.struct_class = Types::RefreshSchemasStatus
 
+    ReloadReplicationTablesMessage.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationConfigArn"))
+    ReloadReplicationTablesMessage.add_member(:tables_to_reload, Shapes::ShapeRef.new(shape: TableListToReload, required: true, location_name: "TablesToReload"))
+    ReloadReplicationTablesMessage.add_member(:reload_option, Shapes::ShapeRef.new(shape: ReloadOptionValue, location_name: "ReloadOption"))
+    ReloadReplicationTablesMessage.struct_class = Types::ReloadReplicationTablesMessage
+
+    ReloadReplicationTablesResponse.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationConfigArn"))
+    ReloadReplicationTablesResponse.struct_class = Types::ReloadReplicationTablesResponse
+
     ReloadTablesMessage.add_member(:replication_task_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationTaskArn"))
     ReloadTablesMessage.add_member(:tables_to_reload, Shapes::ShapeRef.new(shape: TableListToReload, required: true, location_name: "TablesToReload"))
     ReloadTablesMessage.add_member(:reload_option, Shapes::ShapeRef.new(shape: ReloadOptionValue, location_name: "ReloadOption"))
@@ -1180,6 +1678,41 @@ module Aws::DatabaseMigrationService
     RemoveTagsFromResourceMessage.struct_class = Types::RemoveTagsFromResourceMessage
 
     RemoveTagsFromResourceResponse.struct_class = Types::RemoveTagsFromResourceResponse
+
+    Replication.add_member(:replication_config_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationConfigIdentifier"))
+    Replication.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationConfigArn"))
+    Replication.add_member(:source_endpoint_arn, Shapes::ShapeRef.new(shape: String, location_name: "SourceEndpointArn"))
+    Replication.add_member(:target_endpoint_arn, Shapes::ShapeRef.new(shape: String, location_name: "TargetEndpointArn"))
+    Replication.add_member(:replication_type, Shapes::ShapeRef.new(shape: MigrationTypeValue, location_name: "ReplicationType"))
+    Replication.add_member(:status, Shapes::ShapeRef.new(shape: String, location_name: "Status"))
+    Replication.add_member(:provision_data, Shapes::ShapeRef.new(shape: ProvisionData, location_name: "ProvisionData"))
+    Replication.add_member(:stop_reason, Shapes::ShapeRef.new(shape: String, location_name: "StopReason"))
+    Replication.add_member(:failure_messages, Shapes::ShapeRef.new(shape: StringList, location_name: "FailureMessages"))
+    Replication.add_member(:replication_stats, Shapes::ShapeRef.new(shape: ReplicationStats, location_name: "ReplicationStats"))
+    Replication.add_member(:start_replication_type, Shapes::ShapeRef.new(shape: String, location_name: "StartReplicationType"))
+    Replication.add_member(:cdc_start_time, Shapes::ShapeRef.new(shape: TStamp, location_name: "CdcStartTime"))
+    Replication.add_member(:cdc_start_position, Shapes::ShapeRef.new(shape: String, location_name: "CdcStartPosition"))
+    Replication.add_member(:cdc_stop_position, Shapes::ShapeRef.new(shape: String, location_name: "CdcStopPosition"))
+    Replication.add_member(:recovery_checkpoint, Shapes::ShapeRef.new(shape: String, location_name: "RecoveryCheckpoint"))
+    Replication.add_member(:replication_create_time, Shapes::ShapeRef.new(shape: TStamp, location_name: "ReplicationCreateTime"))
+    Replication.add_member(:replication_update_time, Shapes::ShapeRef.new(shape: TStamp, location_name: "ReplicationUpdateTime"))
+    Replication.add_member(:replication_last_stop_time, Shapes::ShapeRef.new(shape: TStamp, location_name: "ReplicationLastStopTime"))
+    Replication.struct_class = Types::Replication
+
+    ReplicationConfig.add_member(:replication_config_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationConfigIdentifier"))
+    ReplicationConfig.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationConfigArn"))
+    ReplicationConfig.add_member(:source_endpoint_arn, Shapes::ShapeRef.new(shape: String, location_name: "SourceEndpointArn"))
+    ReplicationConfig.add_member(:target_endpoint_arn, Shapes::ShapeRef.new(shape: String, location_name: "TargetEndpointArn"))
+    ReplicationConfig.add_member(:replication_type, Shapes::ShapeRef.new(shape: MigrationTypeValue, location_name: "ReplicationType"))
+    ReplicationConfig.add_member(:compute_config, Shapes::ShapeRef.new(shape: ComputeConfig, location_name: "ComputeConfig"))
+    ReplicationConfig.add_member(:replication_settings, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationSettings"))
+    ReplicationConfig.add_member(:supplemental_settings, Shapes::ShapeRef.new(shape: String, location_name: "SupplementalSettings"))
+    ReplicationConfig.add_member(:table_mappings, Shapes::ShapeRef.new(shape: String, location_name: "TableMappings"))
+    ReplicationConfig.add_member(:replication_config_create_time, Shapes::ShapeRef.new(shape: TStamp, location_name: "ReplicationConfigCreateTime"))
+    ReplicationConfig.add_member(:replication_config_update_time, Shapes::ShapeRef.new(shape: TStamp, location_name: "ReplicationConfigUpdateTime"))
+    ReplicationConfig.struct_class = Types::ReplicationConfig
+
+    ReplicationConfigList.member = Shapes::ShapeRef.new(shape: ReplicationConfig)
 
     ReplicationInstance.add_member(:replication_instance_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationInstanceIdentifier"))
     ReplicationInstance.add_member(:replication_instance_class, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationInstanceClass"))
@@ -1200,11 +1733,15 @@ module Aws::DatabaseMigrationService
     ReplicationInstance.add_member(:replication_instance_private_ip_address, Shapes::ShapeRef.new(shape: String, deprecated: true, location_name: "ReplicationInstancePrivateIpAddress"))
     ReplicationInstance.add_member(:replication_instance_public_ip_addresses, Shapes::ShapeRef.new(shape: ReplicationInstancePublicIpAddressList, location_name: "ReplicationInstancePublicIpAddresses"))
     ReplicationInstance.add_member(:replication_instance_private_ip_addresses, Shapes::ShapeRef.new(shape: ReplicationInstancePrivateIpAddressList, location_name: "ReplicationInstancePrivateIpAddresses"))
+    ReplicationInstance.add_member(:replication_instance_ipv_6_addresses, Shapes::ShapeRef.new(shape: ReplicationInstanceIpv6AddressList, location_name: "ReplicationInstanceIpv6Addresses"))
     ReplicationInstance.add_member(:publicly_accessible, Shapes::ShapeRef.new(shape: Boolean, location_name: "PubliclyAccessible"))
     ReplicationInstance.add_member(:secondary_availability_zone, Shapes::ShapeRef.new(shape: String, location_name: "SecondaryAvailabilityZone"))
     ReplicationInstance.add_member(:free_until, Shapes::ShapeRef.new(shape: TStamp, location_name: "FreeUntil"))
     ReplicationInstance.add_member(:dns_name_servers, Shapes::ShapeRef.new(shape: String, location_name: "DnsNameServers"))
+    ReplicationInstance.add_member(:network_type, Shapes::ShapeRef.new(shape: String, location_name: "NetworkType"))
     ReplicationInstance.struct_class = Types::ReplicationInstance
+
+    ReplicationInstanceIpv6AddressList.member = Shapes::ShapeRef.new(shape: String)
 
     ReplicationInstanceList.member = Shapes::ShapeRef.new(shape: ReplicationInstance)
 
@@ -1219,23 +1756,42 @@ module Aws::DatabaseMigrationService
 
     ReplicationInstanceTaskLogsList.member = Shapes::ShapeRef.new(shape: ReplicationInstanceTaskLog)
 
+    ReplicationList.member = Shapes::ShapeRef.new(shape: Replication)
+
     ReplicationPendingModifiedValues.add_member(:replication_instance_class, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationInstanceClass"))
     ReplicationPendingModifiedValues.add_member(:allocated_storage, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "AllocatedStorage"))
     ReplicationPendingModifiedValues.add_member(:multi_az, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "MultiAZ"))
     ReplicationPendingModifiedValues.add_member(:engine_version, Shapes::ShapeRef.new(shape: String, location_name: "EngineVersion"))
+    ReplicationPendingModifiedValues.add_member(:network_type, Shapes::ShapeRef.new(shape: String, location_name: "NetworkType"))
     ReplicationPendingModifiedValues.struct_class = Types::ReplicationPendingModifiedValues
+
+    ReplicationStats.add_member(:full_load_progress_percent, Shapes::ShapeRef.new(shape: Integer, location_name: "FullLoadProgressPercent"))
+    ReplicationStats.add_member(:elapsed_time_millis, Shapes::ShapeRef.new(shape: Long, location_name: "ElapsedTimeMillis"))
+    ReplicationStats.add_member(:tables_loaded, Shapes::ShapeRef.new(shape: Integer, location_name: "TablesLoaded"))
+    ReplicationStats.add_member(:tables_loading, Shapes::ShapeRef.new(shape: Integer, location_name: "TablesLoading"))
+    ReplicationStats.add_member(:tables_queued, Shapes::ShapeRef.new(shape: Integer, location_name: "TablesQueued"))
+    ReplicationStats.add_member(:tables_errored, Shapes::ShapeRef.new(shape: Integer, location_name: "TablesErrored"))
+    ReplicationStats.add_member(:fresh_start_date, Shapes::ShapeRef.new(shape: TStamp, location_name: "FreshStartDate"))
+    ReplicationStats.add_member(:start_date, Shapes::ShapeRef.new(shape: TStamp, location_name: "StartDate"))
+    ReplicationStats.add_member(:stop_date, Shapes::ShapeRef.new(shape: TStamp, location_name: "StopDate"))
+    ReplicationStats.add_member(:full_load_start_date, Shapes::ShapeRef.new(shape: TStamp, location_name: "FullLoadStartDate"))
+    ReplicationStats.add_member(:full_load_finish_date, Shapes::ShapeRef.new(shape: TStamp, location_name: "FullLoadFinishDate"))
+    ReplicationStats.struct_class = Types::ReplicationStats
 
     ReplicationSubnetGroup.add_member(:replication_subnet_group_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationSubnetGroupIdentifier"))
     ReplicationSubnetGroup.add_member(:replication_subnet_group_description, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationSubnetGroupDescription"))
     ReplicationSubnetGroup.add_member(:vpc_id, Shapes::ShapeRef.new(shape: String, location_name: "VpcId"))
     ReplicationSubnetGroup.add_member(:subnet_group_status, Shapes::ShapeRef.new(shape: String, location_name: "SubnetGroupStatus"))
     ReplicationSubnetGroup.add_member(:subnets, Shapes::ShapeRef.new(shape: SubnetList, location_name: "Subnets"))
+    ReplicationSubnetGroup.add_member(:supported_network_types, Shapes::ShapeRef.new(shape: StringList, location_name: "SupportedNetworkTypes"))
     ReplicationSubnetGroup.struct_class = Types::ReplicationSubnetGroup
 
     ReplicationSubnetGroupDoesNotCoverEnoughAZs.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     ReplicationSubnetGroupDoesNotCoverEnoughAZs.struct_class = Types::ReplicationSubnetGroupDoesNotCoverEnoughAZs
 
     ReplicationSubnetGroups.member = Shapes::ShapeRef.new(shape: ReplicationSubnetGroup)
+
+    ReplicationTableStatisticsList.member = Shapes::ShapeRef.new(shape: TableStatistics)
 
     ReplicationTask.add_member(:replication_task_identifier, Shapes::ShapeRef.new(shape: String, location_name: "ReplicationTaskIdentifier"))
     ReplicationTask.add_member(:source_endpoint_arn, Shapes::ShapeRef.new(shape: String, location_name: "SourceEndpointArn"))
@@ -1327,6 +1883,10 @@ module Aws::DatabaseMigrationService
     ResourceQuotaExceededFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     ResourceQuotaExceededFault.struct_class = Types::ResourceQuotaExceededFault
 
+    RunFleetAdvisorLsaAnalysisResponse.add_member(:lsa_analysis_id, Shapes::ShapeRef.new(shape: String, location_name: "LsaAnalysisId"))
+    RunFleetAdvisorLsaAnalysisResponse.add_member(:status, Shapes::ShapeRef.new(shape: String, location_name: "Status"))
+    RunFleetAdvisorLsaAnalysisResponse.struct_class = Types::RunFleetAdvisorLsaAnalysisResponse
+
     S3AccessDeniedFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     S3AccessDeniedFault.struct_class = Types::S3AccessDeniedFault
 
@@ -1361,6 +1921,19 @@ module Aws::DatabaseMigrationService
     S3Settings.add_member(:csv_no_sup_value, Shapes::ShapeRef.new(shape: String, location_name: "CsvNoSupValue"))
     S3Settings.add_member(:preserve_transactions, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "PreserveTransactions"))
     S3Settings.add_member(:cdc_path, Shapes::ShapeRef.new(shape: String, location_name: "CdcPath"))
+    S3Settings.add_member(:use_task_start_time_for_full_load_timestamp, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "UseTaskStartTimeForFullLoadTimestamp"))
+    S3Settings.add_member(:canned_acl_for_objects, Shapes::ShapeRef.new(shape: CannedAclForObjectsValue, location_name: "CannedAclForObjects"))
+    S3Settings.add_member(:add_column_name, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "AddColumnName"))
+    S3Settings.add_member(:cdc_max_batch_interval, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "CdcMaxBatchInterval"))
+    S3Settings.add_member(:cdc_min_file_size, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "CdcMinFileSize"))
+    S3Settings.add_member(:csv_null_value, Shapes::ShapeRef.new(shape: String, location_name: "CsvNullValue"))
+    S3Settings.add_member(:ignore_header_rows, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "IgnoreHeaderRows"))
+    S3Settings.add_member(:max_file_size, Shapes::ShapeRef.new(shape: IntegerOptional, location_name: "MaxFileSize"))
+    S3Settings.add_member(:rfc_4180, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "Rfc4180"))
+    S3Settings.add_member(:date_partition_timezone, Shapes::ShapeRef.new(shape: String, location_name: "DatePartitionTimezone"))
+    S3Settings.add_member(:add_trailing_padding_character, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "AddTrailingPaddingCharacter"))
+    S3Settings.add_member(:expected_bucket_owner, Shapes::ShapeRef.new(shape: String, location_name: "ExpectedBucketOwner"))
+    S3Settings.add_member(:glue_catalog_generation, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "GlueCatalogGeneration"))
     S3Settings.struct_class = Types::S3Settings
 
     SNSInvalidTopicFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
@@ -1371,7 +1944,50 @@ module Aws::DatabaseMigrationService
 
     SchemaList.member = Shapes::ShapeRef.new(shape: String)
 
+    SchemaResponse.add_member(:code_line_count, Shapes::ShapeRef.new(shape: LongOptional, location_name: "CodeLineCount"))
+    SchemaResponse.add_member(:code_size, Shapes::ShapeRef.new(shape: LongOptional, location_name: "CodeSize"))
+    SchemaResponse.add_member(:complexity, Shapes::ShapeRef.new(shape: String, location_name: "Complexity"))
+    SchemaResponse.add_member(:server, Shapes::ShapeRef.new(shape: ServerShortInfoResponse, location_name: "Server"))
+    SchemaResponse.add_member(:database_instance, Shapes::ShapeRef.new(shape: DatabaseShortInfoResponse, location_name: "DatabaseInstance"))
+    SchemaResponse.add_member(:schema_id, Shapes::ShapeRef.new(shape: String, location_name: "SchemaId"))
+    SchemaResponse.add_member(:schema_name, Shapes::ShapeRef.new(shape: String, location_name: "SchemaName"))
+    SchemaResponse.add_member(:original_schema, Shapes::ShapeRef.new(shape: SchemaShortInfoResponse, location_name: "OriginalSchema"))
+    SchemaResponse.add_member(:similarity, Shapes::ShapeRef.new(shape: DoubleOptional, location_name: "Similarity"))
+    SchemaResponse.struct_class = Types::SchemaResponse
+
+    SchemaShortInfoResponse.add_member(:schema_id, Shapes::ShapeRef.new(shape: String, location_name: "SchemaId"))
+    SchemaShortInfoResponse.add_member(:schema_name, Shapes::ShapeRef.new(shape: String, location_name: "SchemaName"))
+    SchemaShortInfoResponse.add_member(:database_id, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseId"))
+    SchemaShortInfoResponse.add_member(:database_name, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseName"))
+    SchemaShortInfoResponse.add_member(:database_ip_address, Shapes::ShapeRef.new(shape: String, location_name: "DatabaseIpAddress"))
+    SchemaShortInfoResponse.struct_class = Types::SchemaShortInfoResponse
+
+    ServerShortInfoResponse.add_member(:server_id, Shapes::ShapeRef.new(shape: String, location_name: "ServerId"))
+    ServerShortInfoResponse.add_member(:ip_address, Shapes::ShapeRef.new(shape: String, location_name: "IpAddress"))
+    ServerShortInfoResponse.add_member(:server_name, Shapes::ShapeRef.new(shape: String, location_name: "ServerName"))
+    ServerShortInfoResponse.struct_class = Types::ServerShortInfoResponse
+
     SourceIdsList.member = Shapes::ShapeRef.new(shape: String)
+
+    StartRecommendationsRequest.add_member(:database_id, Shapes::ShapeRef.new(shape: String, required: true, location_name: "DatabaseId"))
+    StartRecommendationsRequest.add_member(:settings, Shapes::ShapeRef.new(shape: RecommendationSettings, required: true, location_name: "Settings"))
+    StartRecommendationsRequest.struct_class = Types::StartRecommendationsRequest
+
+    StartRecommendationsRequestEntry.add_member(:database_id, Shapes::ShapeRef.new(shape: String, required: true, location_name: "DatabaseId"))
+    StartRecommendationsRequestEntry.add_member(:settings, Shapes::ShapeRef.new(shape: RecommendationSettings, required: true, location_name: "Settings"))
+    StartRecommendationsRequestEntry.struct_class = Types::StartRecommendationsRequestEntry
+
+    StartRecommendationsRequestEntryList.member = Shapes::ShapeRef.new(shape: StartRecommendationsRequestEntry)
+
+    StartReplicationMessage.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationConfigArn"))
+    StartReplicationMessage.add_member(:start_replication_type, Shapes::ShapeRef.new(shape: String, required: true, location_name: "StartReplicationType"))
+    StartReplicationMessage.add_member(:cdc_start_time, Shapes::ShapeRef.new(shape: TStamp, location_name: "CdcStartTime"))
+    StartReplicationMessage.add_member(:cdc_start_position, Shapes::ShapeRef.new(shape: String, location_name: "CdcStartPosition"))
+    StartReplicationMessage.add_member(:cdc_stop_position, Shapes::ShapeRef.new(shape: String, location_name: "CdcStopPosition"))
+    StartReplicationMessage.struct_class = Types::StartReplicationMessage
+
+    StartReplicationResponse.add_member(:replication, Shapes::ShapeRef.new(shape: Replication, location_name: "Replication"))
+    StartReplicationResponse.struct_class = Types::StartReplicationResponse
 
     StartReplicationTaskAssessmentMessage.add_member(:replication_task_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationTaskArn"))
     StartReplicationTaskAssessmentMessage.struct_class = Types::StartReplicationTaskAssessmentMessage
@@ -1403,6 +2019,12 @@ module Aws::DatabaseMigrationService
     StartReplicationTaskResponse.add_member(:replication_task, Shapes::ShapeRef.new(shape: ReplicationTask, location_name: "ReplicationTask"))
     StartReplicationTaskResponse.struct_class = Types::StartReplicationTaskResponse
 
+    StopReplicationMessage.add_member(:replication_config_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationConfigArn"))
+    StopReplicationMessage.struct_class = Types::StopReplicationMessage
+
+    StopReplicationResponse.add_member(:replication, Shapes::ShapeRef.new(shape: Replication, location_name: "Replication"))
+    StopReplicationResponse.struct_class = Types::StopReplicationResponse
+
     StopReplicationTaskMessage.add_member(:replication_task_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "ReplicationTaskArn"))
     StopReplicationTaskMessage.struct_class = Types::StopReplicationTaskMessage
 
@@ -1411,6 +2033,8 @@ module Aws::DatabaseMigrationService
 
     StorageQuotaExceededFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     StorageQuotaExceededFault.struct_class = Types::StorageQuotaExceededFault
+
+    StringList.member = Shapes::ShapeRef.new(shape: String)
 
     Subnet.add_member(:subnet_identifier, Shapes::ShapeRef.new(shape: String, location_name: "SubnetIdentifier"))
     Subnet.add_member(:subnet_availability_zone, Shapes::ShapeRef.new(shape: AvailabilityZone, location_name: "SubnetAvailabilityZone"))
@@ -1450,6 +2074,10 @@ module Aws::DatabaseMigrationService
     TableStatistics.add_member(:deletes, Shapes::ShapeRef.new(shape: Long, location_name: "Deletes"))
     TableStatistics.add_member(:updates, Shapes::ShapeRef.new(shape: Long, location_name: "Updates"))
     TableStatistics.add_member(:ddls, Shapes::ShapeRef.new(shape: Long, location_name: "Ddls"))
+    TableStatistics.add_member(:applied_inserts, Shapes::ShapeRef.new(shape: LongOptional, location_name: "AppliedInserts"))
+    TableStatistics.add_member(:applied_deletes, Shapes::ShapeRef.new(shape: LongOptional, location_name: "AppliedDeletes"))
+    TableStatistics.add_member(:applied_updates, Shapes::ShapeRef.new(shape: LongOptional, location_name: "AppliedUpdates"))
+    TableStatistics.add_member(:applied_ddls, Shapes::ShapeRef.new(shape: LongOptional, location_name: "AppliedDdls"))
     TableStatistics.add_member(:full_load_rows, Shapes::ShapeRef.new(shape: Long, location_name: "FullLoadRows"))
     TableStatistics.add_member(:full_load_condtnl_chk_failed_rows, Shapes::ShapeRef.new(shape: Long, location_name: "FullLoadCondtnlChkFailedRows"))
     TableStatistics.add_member(:full_load_error_rows, Shapes::ShapeRef.new(shape: Long, location_name: "FullLoadErrorRows"))
@@ -1473,6 +2101,7 @@ module Aws::DatabaseMigrationService
 
     Tag.add_member(:key, Shapes::ShapeRef.new(shape: String, location_name: "Key"))
     Tag.add_member(:value, Shapes::ShapeRef.new(shape: String, location_name: "Value"))
+    Tag.add_member(:resource_arn, Shapes::ShapeRef.new(shape: String, location_name: "ResourceArn"))
     Tag.struct_class = Types::Tag
 
     TagList.member = Shapes::ShapeRef.new(shape: Tag)
@@ -1483,6 +2112,19 @@ module Aws::DatabaseMigrationService
 
     TestConnectionResponse.add_member(:connection, Shapes::ShapeRef.new(shape: Connection, location_name: "Connection"))
     TestConnectionResponse.struct_class = Types::TestConnectionResponse
+
+    TimestreamSettings.add_member(:database_name, Shapes::ShapeRef.new(shape: String, required: true, location_name: "DatabaseName"))
+    TimestreamSettings.add_member(:memory_duration, Shapes::ShapeRef.new(shape: IntegerOptional, required: true, location_name: "MemoryDuration"))
+    TimestreamSettings.add_member(:magnetic_duration, Shapes::ShapeRef.new(shape: IntegerOptional, required: true, location_name: "MagneticDuration"))
+    TimestreamSettings.add_member(:cdc_inserts_and_updates, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "CdcInsertsAndUpdates"))
+    TimestreamSettings.add_member(:enable_magnetic_store_writes, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "EnableMagneticStoreWrites"))
+    TimestreamSettings.struct_class = Types::TimestreamSettings
+
+    UpdateSubscriptionsToEventBridgeMessage.add_member(:force_move, Shapes::ShapeRef.new(shape: BooleanOptional, location_name: "ForceMove"))
+    UpdateSubscriptionsToEventBridgeMessage.struct_class = Types::UpdateSubscriptionsToEventBridgeMessage
+
+    UpdateSubscriptionsToEventBridgeResponse.add_member(:result, Shapes::ShapeRef.new(shape: String, location_name: "Result"))
+    UpdateSubscriptionsToEventBridgeResponse.struct_class = Types::UpdateSubscriptionsToEventBridgeResponse
 
     UpgradeDependencyFailureFault.add_member(:message, Shapes::ShapeRef.new(shape: ExceptionMessage, location_name: "message"))
     UpgradeDependencyFailureFault.struct_class = Types::UpgradeDependencyFailureFault
@@ -1531,6 +2173,17 @@ module Aws::DatabaseMigrationService
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
       end)
 
+      api.add_operation(:batch_start_recommendations, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "BatchStartRecommendations"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: BatchStartRecommendationsRequest)
+        o.output = Shapes::ShapeRef.new(shape: BatchStartRecommendationsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+      end)
+
       api.add_operation(:cancel_replication_task_assessment_run, Seahorse::Model::Operation.new.tap do |o|
         o.name = "CancelReplicationTaskAssessmentRun"
         o.http_method = "POST"
@@ -1573,6 +2226,35 @@ module Aws::DatabaseMigrationService
         o.errors << Shapes::ShapeRef.new(shape: KMSInvalidStateFault)
         o.errors << Shapes::ShapeRef.new(shape: KMSNotFoundFault)
         o.errors << Shapes::ShapeRef.new(shape: KMSThrottlingFault)
+      end)
+
+      api.add_operation(:create_fleet_advisor_collector, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateFleetAdvisorCollector"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateFleetAdvisorCollectorRequest)
+        o.output = Shapes::ShapeRef.new(shape: CreateFleetAdvisorCollectorResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+        o.errors << Shapes::ShapeRef.new(shape: S3AccessDeniedFault)
+        o.errors << Shapes::ShapeRef.new(shape: S3ResourceNotFoundFault)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceQuotaExceededFault)
+      end)
+
+      api.add_operation(:create_replication_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateReplicationConfig"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateReplicationConfigMessage)
+        o.output = Shapes::ShapeRef.new(shape: CreateReplicationConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsFault)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: ReplicationSubnetGroupDoesNotCoverEnoughAZs)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidSubnet)
+        o.errors << Shapes::ShapeRef.new(shape: KMSKeyNotAccessibleFault)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceQuotaExceededFault)
       end)
 
       api.add_operation(:create_replication_instance, Seahorse::Model::Operation.new.tap do |o|
@@ -1658,6 +2340,37 @@ module Aws::DatabaseMigrationService
         o.http_request_uri = "/"
         o.input = Shapes::ShapeRef.new(shape: DeleteEventSubscriptionMessage)
         o.output = Shapes::ShapeRef.new(shape: DeleteEventSubscriptionResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+      end)
+
+      api.add_operation(:delete_fleet_advisor_collector, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteFleetAdvisorCollector"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteCollectorRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: CollectorNotFoundFault)
+      end)
+
+      api.add_operation(:delete_fleet_advisor_databases, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteFleetAdvisorDatabases"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteFleetAdvisorDatabasesRequest)
+        o.output = Shapes::ShapeRef.new(shape: DeleteFleetAdvisorDatabasesResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidOperationFault)
+      end)
+
+      api.add_operation(:delete_replication_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteReplicationConfig"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteReplicationConfigMessage)
+        o.output = Shapes::ShapeRef.new(shape: DeleteReplicationConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
         o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
       end)
@@ -1838,6 +2551,81 @@ module Aws::DatabaseMigrationService
         )
       end)
 
+      api.add_operation(:describe_fleet_advisor_collectors, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeFleetAdvisorCollectors"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorCollectorsRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorCollectorsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:describe_fleet_advisor_databases, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeFleetAdvisorDatabases"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorDatabasesRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorDatabasesResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:describe_fleet_advisor_lsa_analysis, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeFleetAdvisorLsaAnalysis"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorLsaAnalysisRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorLsaAnalysisResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:describe_fleet_advisor_schema_object_summary, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeFleetAdvisorSchemaObjectSummary"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorSchemaObjectSummaryRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorSchemaObjectSummaryResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:describe_fleet_advisor_schemas, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeFleetAdvisorSchemas"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorSchemasRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeFleetAdvisorSchemasResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
       api.add_operation(:describe_orderable_replication_instances, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DescribeOrderableReplicationInstances"
         o.http_method = "POST"
@@ -1867,6 +2655,38 @@ module Aws::DatabaseMigrationService
         )
       end)
 
+      api.add_operation(:describe_recommendation_limitations, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeRecommendationLimitations"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeRecommendationLimitationsRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeRecommendationLimitationsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:describe_recommendations, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeRecommendations"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeRecommendationsRequest)
+        o.output = Shapes::ShapeRef.new(shape: DescribeRecommendationsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
       api.add_operation(:describe_refresh_schemas_status, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DescribeRefreshSchemasStatus"
         o.http_method = "POST"
@@ -1875,6 +2695,21 @@ module Aws::DatabaseMigrationService
         o.output = Shapes::ShapeRef.new(shape: DescribeRefreshSchemasStatusResponse)
         o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+      end)
+
+      api.add_operation(:describe_replication_configs, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeReplicationConfigs"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeReplicationConfigsMessage)
+        o.output = Shapes::ShapeRef.new(shape: DescribeReplicationConfigsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "marker" => "marker"
+          }
+        )
       end)
 
       api.add_operation(:describe_replication_instance_task_logs, Seahorse::Model::Operation.new.tap do |o|
@@ -1915,6 +2750,22 @@ module Aws::DatabaseMigrationService
         o.input = Shapes::ShapeRef.new(shape: DescribeReplicationSubnetGroupsMessage)
         o.output = Shapes::ShapeRef.new(shape: DescribeReplicationSubnetGroupsResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "marker" => "marker"
+          }
+        )
+      end)
+
+      api.add_operation(:describe_replication_table_statistics, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeReplicationTableStatistics"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeReplicationTableStatisticsMessage)
+        o.output = Shapes::ShapeRef.new(shape: DescribeReplicationTableStatisticsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
         o[:pager] = Aws::Pager.new(
           limit_key: "max_records",
           tokens: {
@@ -1974,6 +2825,21 @@ module Aws::DatabaseMigrationService
         o.http_request_uri = "/"
         o.input = Shapes::ShapeRef.new(shape: DescribeReplicationTasksMessage)
         o.output = Shapes::ShapeRef.new(shape: DescribeReplicationTasksResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_records",
+          tokens: {
+            "marker" => "marker"
+          }
+        )
+      end)
+
+      api.add_operation(:describe_replications, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DescribeReplications"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DescribeReplicationsMessage)
+        o.output = Shapes::ShapeRef.new(shape: DescribeReplicationsResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
         o[:pager] = Aws::Pager.new(
           limit_key: "max_records",
@@ -2065,6 +2931,20 @@ module Aws::DatabaseMigrationService
         o.errors << Shapes::ShapeRef.new(shape: KMSThrottlingFault)
       end)
 
+      api.add_operation(:modify_replication_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ModifyReplicationConfig"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ModifyReplicationConfigMessage)
+        o.output = Shapes::ShapeRef.new(shape: ModifyReplicationConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o.errors << Shapes::ShapeRef.new(shape: ReplicationSubnetGroupDoesNotCoverEnoughAZs)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidSubnet)
+        o.errors << Shapes::ShapeRef.new(shape: KMSKeyNotAccessibleFault)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+      end)
+
       api.add_operation(:modify_replication_instance, Seahorse::Model::Operation.new.tap do |o|
         o.name = "ModifyReplicationInstance"
         o.http_method = "POST"
@@ -2116,6 +2996,7 @@ module Aws::DatabaseMigrationService
         o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
         o.errors << Shapes::ShapeRef.new(shape: KMSKeyNotAccessibleFault)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceQuotaExceededFault)
       end)
 
       api.add_operation(:reboot_replication_instance, Seahorse::Model::Operation.new.tap do |o|
@@ -2140,6 +3021,16 @@ module Aws::DatabaseMigrationService
         o.errors << Shapes::ShapeRef.new(shape: ResourceQuotaExceededFault)
       end)
 
+      api.add_operation(:reload_replication_tables, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ReloadReplicationTables"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ReloadReplicationTablesMessage)
+        o.output = Shapes::ShapeRef.new(shape: ReloadReplicationTablesResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+      end)
+
       api.add_operation(:reload_tables, Seahorse::Model::Operation.new.tap do |o|
         o.name = "ReloadTables"
         o.http_method = "POST"
@@ -2157,6 +3048,38 @@ module Aws::DatabaseMigrationService
         o.input = Shapes::ShapeRef.new(shape: RemoveTagsFromResourceMessage)
         o.output = Shapes::ShapeRef.new(shape: RemoveTagsFromResourceResponse)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+      end)
+
+      api.add_operation(:run_fleet_advisor_lsa_analysis, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "RunFleetAdvisorLsaAnalysis"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.output = Shapes::ShapeRef.new(shape: RunFleetAdvisorLsaAnalysisResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+      end)
+
+      api.add_operation(:start_recommendations, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "StartRecommendations"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: StartRecommendationsRequest)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+      end)
+
+      api.add_operation(:start_replication, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "StartReplication"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: StartReplicationMessage)
+        o.output = Shapes::ShapeRef.new(shape: StartReplicationResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
       end)
 
       api.add_operation(:start_replication_task, Seahorse::Model::Operation.new.tap do |o|
@@ -2200,6 +3123,17 @@ module Aws::DatabaseMigrationService
         o.errors << Shapes::ShapeRef.new(shape: ResourceAlreadyExistsFault)
       end)
 
+      api.add_operation(:stop_replication, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "StopReplication"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: StopReplicationMessage)
+        o.output = Shapes::ShapeRef.new(shape: StopReplicationResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundFault)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+      end)
+
       api.add_operation(:stop_replication_task, Seahorse::Model::Operation.new.tap do |o|
         o.name = "StopReplicationTask"
         o.http_method = "POST"
@@ -2221,6 +3155,16 @@ module Aws::DatabaseMigrationService
         o.errors << Shapes::ShapeRef.new(shape: KMSKeyNotAccessibleFault)
         o.errors << Shapes::ShapeRef.new(shape: ResourceQuotaExceededFault)
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+      end)
+
+      api.add_operation(:update_subscriptions_to_event_bridge, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UpdateSubscriptionsToEventBridge"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: UpdateSubscriptionsToEventBridgeMessage)
+        o.output = Shapes::ShapeRef.new(shape: UpdateSubscriptionsToEventBridgeResponse)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedFault)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidResourceStateFault)
       end)
     end
 

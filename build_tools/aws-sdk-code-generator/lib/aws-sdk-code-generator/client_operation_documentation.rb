@@ -3,6 +3,10 @@
 module AwsSdkCodeGenerator
   class ClientOperationDocumentation
 
+    # get all of the enumerable methods that may conflict with members
+    # count has special handling in UnsafeEnumerableMethods
+    ENUMERABLE_METHODS = Class.new.new.extend(Enumerable).methods - [:count]
+
     # @option options [required, String] :method_name
     # @option options [required, Hash] :operation
     # @option options [required, Hash] :api
@@ -57,7 +61,7 @@ module AwsSdkCodeGenerator
         : request_syntax_example(method_name, operation, api),
         response_structure_example(operation, api),
         waiters_tag(@waiters),
-        see_also_tag(operation, api),
+        see_also_tag(@name, api),
       ], block_comment: false)
     end
     alias to_s to_str
@@ -97,8 +101,14 @@ module AwsSdkCodeGenerator
           if member_ref['idempotencyToken']
             docstring = docstring.to_s + "<p><b>A suitable default value is auto-generated.** You should normally not need to pass this option.</b></p>"
           end
-          if member_ref['jsonvalue']
+          if member_ref['jsonvalue'] || member_shape['jsonvalue']
             docstring = docstring.to_s + "<p><b>SDK automatically handles json encoding and base64 encoding for you when the required value (Hash, Array, etc.) is provided according to the description.</b></p>"
+          end
+          if member_shape['document']
+            docstring = docstring.to_s + "<p>Document type used to carry open content (Hash,Array,String,Numeric,Boolean). A document type value is serialized using the same format as its surroundings and requires no additional encoding or escaping.</p>"
+          end
+          if member_ref['union']
+            docstring = docstring.to_s + "<p>This is a union type and you must set exactly one of the members.</p>"
           end
           YardOptionTag.new(
             name: Underscore.underscore(member_name),
@@ -130,7 +140,11 @@ module AwsSdkCodeGenerator
         methods = shape['members'].map do |member_name, member_ref|
           member_type = Docstring.escape_html(Api.ruby_type(member_ref, api))
           method_name = Underscore.underscore(member_name)
-          "#   * {#{type}##{method_name} ##{method_name}} => #{member_type}"
+          if ENUMERABLE_METHODS.include?(method_name.to_sym)
+            "#   * {#{type}##{method_name} #data.#{method_name}} => #{member_type} (This method conflicts with a method on Response, call it through the data member)"
+          else
+            "#   * {#{type}##{method_name} ##{method_name}} => #{member_type}"
+          end
         end
         "# @return [#{type}] Returns a {Seahorse::Client::Response response} object which responds to the following methods:\n#\n" + methods.join("\n")
       else
@@ -218,17 +232,19 @@ module AwsSdkCodeGenerator
     end
 
     def request_syntax_example(method_name, operation, api)
-      SyntaxExample.new(
+      example = SyntaxExample.new(
         api: api,
         shape: Api.shape(operation['input'], api),
         method_name: method_name,
         receiver: 'client',
         resp_var: 'resp',
       ).format
+      # TODO - QuickSight is breaking this
+      example if example && example.lines.count < 1000
     end
 
     def async_request_syntax_example(method_name, operation, api)
-      SyntaxExample.new(
+      example = SyntaxExample.new(
         api: api,
         shape: Api.shape(operation['input'], api),
         method_name: method_name,
@@ -236,15 +252,19 @@ module AwsSdkCodeGenerator
         resp_var: 'async_resp',
         async: true
       ).format
+      # TODO - QuickSight is breaking this
+      example if example && example.lines.count < 1000
     end
 
     def response_structure_example(operation, api)
       output = Api.shape(operation['output'], api) if operation['output']
       if output && output['members'] && output['members'].size > 0
-        Docstring.block_comment(ClientResponseStructureExample.new(
+        docstring = Docstring.block_comment(ClientResponseStructureExample.new(
           shape_ref: operation['output'],
           api: api
         ).to_s)
+        # TODO - QuickSight is breaking this
+        docstring if docstring && docstring.lines.count < 1000
       end
     end
 
@@ -260,7 +280,7 @@ module AwsSdkCodeGenerator
     def see_also_tag(operation, api)
       uid = api['metadata']['uid']
       if api['metadata']['protocol'] != 'api-gateway' && Crosslink.taggable?(uid)
-        "# " + Crosslink.tag_string(uid, operation['name'])
+        "# " + Crosslink.tag_string(uid, operation)
       end
     end
 

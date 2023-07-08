@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:firehose)
@@ -73,8 +77,13 @@ module Aws::Firehose
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::Firehose::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::Firehose
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::Firehose
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::Firehose
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::Firehose
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::Firehose
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::Firehose::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::Firehose::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::Firehose
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::Firehose
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -339,7 +396,8 @@ module Aws::Firehose
 
     # Creates a Kinesis Data Firehose delivery stream.
     #
-    # By default, you can create up to 50 delivery streams per AWS Region.
+    # By default, you can create up to 50 delivery streams per Amazon Web
+    # Services Region.
     #
     # This is an asynchronous operation that immediately returns. The
     # initial status of the delivery stream is `CREATING`. After the
@@ -418,19 +476,19 @@ module Aws::Firehose
     # [1]: https://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html#using-iam-s3
     #
     # @option params [required, String] :delivery_stream_name
-    #   The name of the delivery stream. This name must be unique per AWS
-    #   account in the same AWS Region. If the delivery streams are in
-    #   different accounts or different Regions, you can have multiple
-    #   delivery streams with the same name.
+    #   The name of the delivery stream. This name must be unique per Amazon
+    #   Web Services account in the same Amazon Web Services Region. If the
+    #   delivery streams are in different accounts or different Regions, you
+    #   can have multiple delivery streams with the same name.
     #
     # @option params [String] :delivery_stream_type
     #   The delivery stream type. This parameter can be one of the following
     #   values:
     #
-    #   * `DirectPut`\: Provider applications access the delivery stream
+    #   * `DirectPut`: Provider applications access the delivery stream
     #     directly.
     #
-    #   * `KinesisStreamAsSource`\: The delivery stream uses a Kinesis data
+    #   * `KinesisStreamAsSource`: The delivery stream uses a Kinesis data
     #     stream as a source.
     #
     # @option params [Types::KinesisStreamSourceConfiguration] :kinesis_stream_source_configuration
@@ -457,6 +515,10 @@ module Aws::Firehose
     # @option params [Types::ElasticsearchDestinationConfiguration] :elasticsearch_destination_configuration
     #   The destination in Amazon ES. You can specify only one destination.
     #
+    # @option params [Types::AmazonopensearchserviceDestinationConfiguration] :amazonopensearchservice_destination_configuration
+    #   The destination in Amazon OpenSearch Service. You can specify only one
+    #   destination.
+    #
     # @option params [Types::SplunkDestinationConfiguration] :splunk_destination_configuration
     #   The destination in Splunk. You can specify only one destination.
     #
@@ -466,17 +528,22 @@ module Aws::Firehose
     #
     # @option params [Array<Types::Tag>] :tags
     #   A set of tags to assign to the delivery stream. A tag is a key-value
-    #   pair that you can define and assign to AWS resources. Tags are
-    #   metadata. For example, you can add friendly names and descriptions or
-    #   other types of information that can help you distinguish the delivery
-    #   stream. For more information about tags, see [Using Cost Allocation
-    #   Tags][1] in the AWS Billing and Cost Management User Guide.
+    #   pair that you can define and assign to Amazon Web Services resources.
+    #   Tags are metadata. For example, you can add friendly names and
+    #   descriptions or other types of information that can help you
+    #   distinguish the delivery stream. For more information about tags, see
+    #   [Using Cost Allocation Tags][1] in the Amazon Web Services Billing and
+    #   Cost Management User Guide.
     #
     #   You can specify up to 50 tags when creating a delivery stream.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html
+    #
+    # @option params [Types::AmazonOpenSearchServerlessDestinationConfiguration] :amazon_open_search_serverless_destination_configuration
+    #   The destination in the Serverless offering for Amazon OpenSearch
+    #   Service. You can specify only one destination.
     #
     # @return [Types::CreateDeliveryStreamOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -542,10 +609,10 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -624,6 +691,12 @@ module Aws::Firehose
     #         },
     #         enabled: false,
     #       },
+    #       dynamic_partitioning_configuration: {
+    #         retry_options: {
+    #           duration_in_seconds: 1,
+    #         },
+    #         enabled: false,
+    #       },
     #     },
     #     redshift_destination_configuration: {
     #       role_arn: "RoleARN", # required
@@ -664,10 +737,10 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -744,10 +817,72 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
+    #                 parameter_value: "ProcessorParameterValue", # required
+    #               },
+    #             ],
+    #           },
+    #         ],
+    #       },
+    #       cloud_watch_logging_options: {
+    #         enabled: false,
+    #         log_group_name: "LogGroupName",
+    #         log_stream_name: "LogStreamName",
+    #       },
+    #       vpc_configuration: {
+    #         subnet_ids: ["NonEmptyStringWithoutWhitespace"], # required
+    #         role_arn: "RoleARN", # required
+    #         security_group_ids: ["NonEmptyStringWithoutWhitespace"], # required
+    #       },
+    #     },
+    #     amazonopensearchservice_destination_configuration: {
+    #       role_arn: "RoleARN", # required
+    #       domain_arn: "AmazonopensearchserviceDomainARN",
+    #       cluster_endpoint: "AmazonopensearchserviceClusterEndpoint",
+    #       index_name: "AmazonopensearchserviceIndexName", # required
+    #       type_name: "AmazonopensearchserviceTypeName",
+    #       index_rotation_period: "NoRotation", # accepts NoRotation, OneHour, OneDay, OneWeek, OneMonth
+    #       buffering_hints: {
+    #         interval_in_seconds: 1,
+    #         size_in_m_bs: 1,
+    #       },
+    #       retry_options: {
+    #         duration_in_seconds: 1,
+    #       },
+    #       s3_backup_mode: "FailedDocumentsOnly", # accepts FailedDocumentsOnly, AllDocuments
+    #       s3_configuration: { # required
+    #         role_arn: "RoleARN", # required
+    #         bucket_arn: "BucketARN", # required
+    #         prefix: "Prefix",
+    #         error_output_prefix: "ErrorOutputPrefix",
+    #         buffering_hints: {
+    #           size_in_m_bs: 1,
+    #           interval_in_seconds: 1,
+    #         },
+    #         compression_format: "UNCOMPRESSED", # accepts UNCOMPRESSED, GZIP, ZIP, Snappy, HADOOP_SNAPPY
+    #         encryption_configuration: {
+    #           no_encryption_config: "NoEncryption", # accepts NoEncryption
+    #           kms_encryption_config: {
+    #             awskms_key_arn: "AWSKMSKeyARN", # required
+    #           },
+    #         },
+    #         cloud_watch_logging_options: {
+    #           enabled: false,
+    #           log_group_name: "LogGroupName",
+    #           log_stream_name: "LogStreamName",
+    #         },
+    #       },
+    #       processing_configuration: {
+    #         enabled: false,
+    #         processors: [
+    #           {
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
+    #             parameters: [
+    #               {
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -800,10 +935,10 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -844,10 +979,10 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -888,6 +1023,65 @@ module Aws::Firehose
     #         value: "TagValue",
     #       },
     #     ],
+    #     amazon_open_search_serverless_destination_configuration: {
+    #       role_arn: "RoleARN", # required
+    #       collection_endpoint: "AmazonOpenSearchServerlessCollectionEndpoint",
+    #       index_name: "AmazonOpenSearchServerlessIndexName", # required
+    #       buffering_hints: {
+    #         interval_in_seconds: 1,
+    #         size_in_m_bs: 1,
+    #       },
+    #       retry_options: {
+    #         duration_in_seconds: 1,
+    #       },
+    #       s3_backup_mode: "FailedDocumentsOnly", # accepts FailedDocumentsOnly, AllDocuments
+    #       s3_configuration: { # required
+    #         role_arn: "RoleARN", # required
+    #         bucket_arn: "BucketARN", # required
+    #         prefix: "Prefix",
+    #         error_output_prefix: "ErrorOutputPrefix",
+    #         buffering_hints: {
+    #           size_in_m_bs: 1,
+    #           interval_in_seconds: 1,
+    #         },
+    #         compression_format: "UNCOMPRESSED", # accepts UNCOMPRESSED, GZIP, ZIP, Snappy, HADOOP_SNAPPY
+    #         encryption_configuration: {
+    #           no_encryption_config: "NoEncryption", # accepts NoEncryption
+    #           kms_encryption_config: {
+    #             awskms_key_arn: "AWSKMSKeyARN", # required
+    #           },
+    #         },
+    #         cloud_watch_logging_options: {
+    #           enabled: false,
+    #           log_group_name: "LogGroupName",
+    #           log_stream_name: "LogStreamName",
+    #         },
+    #       },
+    #       processing_configuration: {
+    #         enabled: false,
+    #         processors: [
+    #           {
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
+    #             parameters: [
+    #               {
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
+    #                 parameter_value: "ProcessorParameterValue", # required
+    #               },
+    #             ],
+    #           },
+    #         ],
+    #       },
+    #       cloud_watch_logging_options: {
+    #         enabled: false,
+    #         log_group_name: "LogGroupName",
+    #         log_stream_name: "LogStreamName",
+    #       },
+    #       vpc_configuration: {
+    #         subnet_ids: ["NonEmptyStringWithoutWhitespace"], # required
+    #         role_arn: "RoleARN", # required
+    #         security_group_ids: ["NonEmptyStringWithoutWhitespace"], # required
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -928,8 +1122,8 @@ module Aws::Firehose
     #   customer error, such as when the CMK or the grant are in an invalid
     #   state. If you force deletion, you can then use the [RevokeGrant][1]
     #   operation to revoke the grant you gave to Kinesis Data Firehose. If a
-    #   failure to retire the grant happens due to an AWS KMS issue, Kinesis
-    #   Data Firehose keeps retrying the delete operation.
+    #   failure to retire the grant happens due to an Amazon Web Services KMS
+    #   issue, Kinesis Data Firehose keeps retrying the delete operation.
     #
     #   The default value is false.
     #
@@ -1038,9 +1232,9 @@ module Aws::Firehose
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.cloud_watch_logging_options.log_stream_name #=> String
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.processing_configuration.enabled #=> Boolean
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.processing_configuration.processors #=> Array
-    #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.processing_configuration.processors[0].type #=> String, one of "Lambda"
+    #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.processing_configuration.processors[0].type #=> String, one of "RecordDeAggregation", "Lambda", "MetadataExtraction", "AppendDelimiterToRecord"
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.processing_configuration.processors[0].parameters #=> Array
-    #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds"
+    #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "MetadataExtractionQuery", "JsonParsingEngine", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds", "SubRecordType", "Delimiter"
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.processing_configuration.processors[0].parameters[0].parameter_value #=> String
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.s3_backup_mode #=> String, one of "Disabled", "Enabled"
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.s3_backup_description.role_arn #=> String
@@ -1085,6 +1279,8 @@ module Aws::Firehose
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.data_format_conversion_configuration.output_format_configuration.serializer.orc_ser_de.dictionary_key_threshold #=> Float
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.data_format_conversion_configuration.output_format_configuration.serializer.orc_ser_de.format_version #=> String, one of "V0_11", "V0_12"
     #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.data_format_conversion_configuration.enabled #=> Boolean
+    #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.dynamic_partitioning_configuration.retry_options.duration_in_seconds #=> Integer
+    #   resp.delivery_stream_description.destinations[0].extended_s3_destination_description.dynamic_partitioning_configuration.enabled #=> Boolean
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.role_arn #=> String
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.cluster_jdbc_url #=> String
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.copy_command.data_table_name #=> String
@@ -1106,9 +1302,9 @@ module Aws::Firehose
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.s3_destination_description.cloud_watch_logging_options.log_stream_name #=> String
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.processing_configuration.enabled #=> Boolean
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.processing_configuration.processors #=> Array
-    #   resp.delivery_stream_description.destinations[0].redshift_destination_description.processing_configuration.processors[0].type #=> String, one of "Lambda"
+    #   resp.delivery_stream_description.destinations[0].redshift_destination_description.processing_configuration.processors[0].type #=> String, one of "RecordDeAggregation", "Lambda", "MetadataExtraction", "AppendDelimiterToRecord"
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.processing_configuration.processors[0].parameters #=> Array
-    #   resp.delivery_stream_description.destinations[0].redshift_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds"
+    #   resp.delivery_stream_description.destinations[0].redshift_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "MetadataExtractionQuery", "JsonParsingEngine", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds", "SubRecordType", "Delimiter"
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.processing_configuration.processors[0].parameters[0].parameter_value #=> String
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.s3_backup_mode #=> String, one of "Disabled", "Enabled"
     #   resp.delivery_stream_description.destinations[0].redshift_destination_description.s3_backup_description.role_arn #=> String
@@ -1150,9 +1346,9 @@ module Aws::Firehose
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.s3_destination_description.cloud_watch_logging_options.log_stream_name #=> String
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.processing_configuration.enabled #=> Boolean
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.processing_configuration.processors #=> Array
-    #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.processing_configuration.processors[0].type #=> String, one of "Lambda"
+    #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.processing_configuration.processors[0].type #=> String, one of "RecordDeAggregation", "Lambda", "MetadataExtraction", "AppendDelimiterToRecord"
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.processing_configuration.processors[0].parameters #=> Array
-    #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds"
+    #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "MetadataExtractionQuery", "JsonParsingEngine", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds", "SubRecordType", "Delimiter"
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.processing_configuration.processors[0].parameters[0].parameter_value #=> String
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.cloud_watch_logging_options.enabled #=> Boolean
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.cloud_watch_logging_options.log_group_name #=> String
@@ -1163,6 +1359,43 @@ module Aws::Firehose
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.vpc_configuration_description.security_group_ids #=> Array
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.vpc_configuration_description.security_group_ids[0] #=> String
     #   resp.delivery_stream_description.destinations[0].elasticsearch_destination_description.vpc_configuration_description.vpc_id #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.role_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.domain_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.cluster_endpoint #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.index_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.type_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.index_rotation_period #=> String, one of "NoRotation", "OneHour", "OneDay", "OneWeek", "OneMonth"
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.buffering_hints.interval_in_seconds #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.buffering_hints.size_in_m_bs #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.retry_options.duration_in_seconds #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_backup_mode #=> String, one of "FailedDocumentsOnly", "AllDocuments"
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.role_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.bucket_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.prefix #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.error_output_prefix #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.buffering_hints.size_in_m_bs #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.buffering_hints.interval_in_seconds #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.compression_format #=> String, one of "UNCOMPRESSED", "GZIP", "ZIP", "Snappy", "HADOOP_SNAPPY"
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.encryption_configuration.no_encryption_config #=> String, one of "NoEncryption"
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.encryption_configuration.kms_encryption_config.awskms_key_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.cloud_watch_logging_options.enabled #=> Boolean
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.cloud_watch_logging_options.log_group_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.s3_destination_description.cloud_watch_logging_options.log_stream_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.processing_configuration.enabled #=> Boolean
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.processing_configuration.processors #=> Array
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.processing_configuration.processors[0].type #=> String, one of "RecordDeAggregation", "Lambda", "MetadataExtraction", "AppendDelimiterToRecord"
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.processing_configuration.processors[0].parameters #=> Array
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "MetadataExtractionQuery", "JsonParsingEngine", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds", "SubRecordType", "Delimiter"
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.processing_configuration.processors[0].parameters[0].parameter_value #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.cloud_watch_logging_options.enabled #=> Boolean
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.cloud_watch_logging_options.log_group_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.cloud_watch_logging_options.log_stream_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.vpc_configuration_description.subnet_ids #=> Array
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.vpc_configuration_description.subnet_ids[0] #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.vpc_configuration_description.role_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.vpc_configuration_description.security_group_ids #=> Array
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.vpc_configuration_description.security_group_ids[0] #=> String
+    #   resp.delivery_stream_description.destinations[0].amazonopensearchservice_destination_description.vpc_configuration_description.vpc_id #=> String
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.hec_endpoint #=> String
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.hec_endpoint_type #=> String, one of "Raw", "Event"
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.hec_token #=> String
@@ -1183,9 +1416,9 @@ module Aws::Firehose
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.s3_destination_description.cloud_watch_logging_options.log_stream_name #=> String
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.processing_configuration.enabled #=> Boolean
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.processing_configuration.processors #=> Array
-    #   resp.delivery_stream_description.destinations[0].splunk_destination_description.processing_configuration.processors[0].type #=> String, one of "Lambda"
+    #   resp.delivery_stream_description.destinations[0].splunk_destination_description.processing_configuration.processors[0].type #=> String, one of "RecordDeAggregation", "Lambda", "MetadataExtraction", "AppendDelimiterToRecord"
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.processing_configuration.processors[0].parameters #=> Array
-    #   resp.delivery_stream_description.destinations[0].splunk_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds"
+    #   resp.delivery_stream_description.destinations[0].splunk_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "MetadataExtractionQuery", "JsonParsingEngine", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds", "SubRecordType", "Delimiter"
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.processing_configuration.processors[0].parameters[0].parameter_value #=> String
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.cloud_watch_logging_options.enabled #=> Boolean
     #   resp.delivery_stream_description.destinations[0].splunk_destination_description.cloud_watch_logging_options.log_group_name #=> String
@@ -1203,9 +1436,9 @@ module Aws::Firehose
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.request_configuration.common_attributes[0].attribute_value #=> String
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.processing_configuration.enabled #=> Boolean
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.processing_configuration.processors #=> Array
-    #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.processing_configuration.processors[0].type #=> String, one of "Lambda"
+    #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.processing_configuration.processors[0].type #=> String, one of "RecordDeAggregation", "Lambda", "MetadataExtraction", "AppendDelimiterToRecord"
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.processing_configuration.processors[0].parameters #=> Array
-    #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds"
+    #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "MetadataExtractionQuery", "JsonParsingEngine", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds", "SubRecordType", "Delimiter"
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.processing_configuration.processors[0].parameters[0].parameter_value #=> String
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.role_arn #=> String
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.retry_options.duration_in_seconds #=> Integer
@@ -1222,6 +1455,40 @@ module Aws::Firehose
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.s3_destination_description.cloud_watch_logging_options.enabled #=> Boolean
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.s3_destination_description.cloud_watch_logging_options.log_group_name #=> String
     #   resp.delivery_stream_description.destinations[0].http_endpoint_destination_description.s3_destination_description.cloud_watch_logging_options.log_stream_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.role_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.collection_endpoint #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.index_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.buffering_hints.interval_in_seconds #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.buffering_hints.size_in_m_bs #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.retry_options.duration_in_seconds #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_backup_mode #=> String, one of "FailedDocumentsOnly", "AllDocuments"
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.role_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.bucket_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.prefix #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.error_output_prefix #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.buffering_hints.size_in_m_bs #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.buffering_hints.interval_in_seconds #=> Integer
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.compression_format #=> String, one of "UNCOMPRESSED", "GZIP", "ZIP", "Snappy", "HADOOP_SNAPPY"
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.encryption_configuration.no_encryption_config #=> String, one of "NoEncryption"
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.encryption_configuration.kms_encryption_config.awskms_key_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.cloud_watch_logging_options.enabled #=> Boolean
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.cloud_watch_logging_options.log_group_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.s3_destination_description.cloud_watch_logging_options.log_stream_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.processing_configuration.enabled #=> Boolean
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.processing_configuration.processors #=> Array
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.processing_configuration.processors[0].type #=> String, one of "RecordDeAggregation", "Lambda", "MetadataExtraction", "AppendDelimiterToRecord"
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.processing_configuration.processors[0].parameters #=> Array
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.processing_configuration.processors[0].parameters[0].parameter_name #=> String, one of "LambdaArn", "NumberOfRetries", "MetadataExtractionQuery", "JsonParsingEngine", "RoleArn", "BufferSizeInMBs", "BufferIntervalInSeconds", "SubRecordType", "Delimiter"
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.processing_configuration.processors[0].parameters[0].parameter_value #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.cloud_watch_logging_options.enabled #=> Boolean
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.cloud_watch_logging_options.log_group_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.cloud_watch_logging_options.log_stream_name #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.vpc_configuration_description.subnet_ids #=> Array
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.vpc_configuration_description.subnet_ids[0] #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.vpc_configuration_description.role_arn #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.vpc_configuration_description.security_group_ids #=> Array
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.vpc_configuration_description.security_group_ids[0] #=> String
+    #   resp.delivery_stream_description.destinations[0].amazon_open_search_serverless_destination_description.vpc_configuration_description.vpc_id #=> String
     #   resp.delivery_stream_description.has_more_destinations #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/firehose-2015-08-04/DescribeDeliveryStream AWS API Documentation
@@ -1251,10 +1518,10 @@ module Aws::Firehose
     # @option params [String] :delivery_stream_type
     #   The delivery stream type. This can be one of the following values:
     #
-    #   * `DirectPut`\: Provider applications access the delivery stream
+    #   * `DirectPut`: Provider applications access the delivery stream
     #     directly.
     #
-    #   * `KinesisStreamAsSource`\: The delivery stream uses a Kinesis data
+    #   * `KinesisStreamAsSource`: The delivery stream uses a Kinesis data
     #     stream as a source.
     #
     #   This parameter is optional. If this parameter is omitted, delivery
@@ -1354,7 +1621,7 @@ module Aws::Firehose
     #
     # You must specify the name of the delivery stream and the data record
     # when using PutRecord. The data record consists of a data blob that can
-    # be up to 1,000 KB in size, and any kind of data. For example, it can
+    # be up to 1,000 KiB in size, and any kind of data. For example, it can
     # be a segment from a log file, geographic location data, website
     # clickstream data, and so on.
     #
@@ -1430,7 +1697,7 @@ module Aws::Firehose
     # Quota][1].
     #
     # Each PutRecordBatch request supports up to 500 records. Each record in
-    # the request can be as large as 1,000 KB (before 64-bit encoding), up
+    # the request can be as large as 1,000 KB (before base64 encoding), up
     # to a limit of 4 MB for the entire request. These limits cannot be
     # changed.
     #
@@ -1661,13 +1928,14 @@ module Aws::Firehose
     end
 
     # Adds or updates tags for the specified delivery stream. A tag is a
-    # key-value pair that you can define and assign to AWS resources. If you
-    # specify a tag that already exists, the tag value is replaced with the
-    # value that you specify in the request. Tags are metadata. For example,
-    # you can add friendly names and descriptions or other types of
-    # information that can help you distinguish the delivery stream. For
-    # more information about tags, see [Using Cost Allocation Tags][1] in
-    # the *AWS Billing and Cost Management User Guide*.
+    # key-value pair that you can define and assign to Amazon Web Services
+    # resources. If you specify a tag that already exists, the tag value is
+    # replaced with the value that you specify in the request. Tags are
+    # metadata. For example, you can add friendly names and descriptions or
+    # other types of information that can help you distinguish the delivery
+    # stream. For more information about tags, see [Using Cost Allocation
+    # Tags][1] in the *Amazon Web Services Billing and Cost Management User
+    # Guide*.
     #
     # Each delivery stream can have up to 50 tags.
     #
@@ -1804,11 +2072,18 @@ module Aws::Firehose
     # @option params [Types::ElasticsearchDestinationUpdate] :elasticsearch_destination_update
     #   Describes an update for a destination in Amazon ES.
     #
+    # @option params [Types::AmazonopensearchserviceDestinationUpdate] :amazonopensearchservice_destination_update
+    #   Describes an update for a destination in Amazon OpenSearch Service.
+    #
     # @option params [Types::SplunkDestinationUpdate] :splunk_destination_update
     #   Describes an update for a destination in Splunk.
     #
     # @option params [Types::HttpEndpointDestinationUpdate] :http_endpoint_destination_update
     #   Describes an update to the specified HTTP endpoint destination.
+    #
+    # @option params [Types::AmazonOpenSearchServerlessDestinationUpdate] :amazon_open_search_serverless_destination_update
+    #   Describes an update for a destination in the Serverless offering for
+    #   Amazon OpenSearch Service.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1865,10 +2140,10 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -1947,6 +2222,12 @@ module Aws::Firehose
     #         },
     #         enabled: false,
     #       },
+    #       dynamic_partitioning_configuration: {
+    #         retry_options: {
+    #           duration_in_seconds: 1,
+    #         },
+    #         enabled: false,
+    #       },
     #     },
     #     redshift_destination_update: {
     #       role_arn: "RoleARN",
@@ -1987,10 +2268,10 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -2066,10 +2347,66 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
+    #                 parameter_value: "ProcessorParameterValue", # required
+    #               },
+    #             ],
+    #           },
+    #         ],
+    #       },
+    #       cloud_watch_logging_options: {
+    #         enabled: false,
+    #         log_group_name: "LogGroupName",
+    #         log_stream_name: "LogStreamName",
+    #       },
+    #     },
+    #     amazonopensearchservice_destination_update: {
+    #       role_arn: "RoleARN",
+    #       domain_arn: "AmazonopensearchserviceDomainARN",
+    #       cluster_endpoint: "AmazonopensearchserviceClusterEndpoint",
+    #       index_name: "AmazonopensearchserviceIndexName",
+    #       type_name: "AmazonopensearchserviceTypeName",
+    #       index_rotation_period: "NoRotation", # accepts NoRotation, OneHour, OneDay, OneWeek, OneMonth
+    #       buffering_hints: {
+    #         interval_in_seconds: 1,
+    #         size_in_m_bs: 1,
+    #       },
+    #       retry_options: {
+    #         duration_in_seconds: 1,
+    #       },
+    #       s3_update: {
+    #         role_arn: "RoleARN",
+    #         bucket_arn: "BucketARN",
+    #         prefix: "Prefix",
+    #         error_output_prefix: "ErrorOutputPrefix",
+    #         buffering_hints: {
+    #           size_in_m_bs: 1,
+    #           interval_in_seconds: 1,
+    #         },
+    #         compression_format: "UNCOMPRESSED", # accepts UNCOMPRESSED, GZIP, ZIP, Snappy, HADOOP_SNAPPY
+    #         encryption_configuration: {
+    #           no_encryption_config: "NoEncryption", # accepts NoEncryption
+    #           kms_encryption_config: {
+    #             awskms_key_arn: "AWSKMSKeyARN", # required
+    #           },
+    #         },
+    #         cloud_watch_logging_options: {
+    #           enabled: false,
+    #           log_group_name: "LogGroupName",
+    #           log_stream_name: "LogStreamName",
+    #         },
+    #       },
+    #       processing_configuration: {
+    #         enabled: false,
+    #         processors: [
+    #           {
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
+    #             parameters: [
+    #               {
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -2117,10 +2454,10 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -2161,10 +2498,10 @@ module Aws::Firehose
     #         enabled: false,
     #         processors: [
     #           {
-    #             type: "Lambda", # required, accepts Lambda
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
     #             parameters: [
     #               {
-    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
     #                 parameter_value: "ProcessorParameterValue", # required
     #               },
     #             ],
@@ -2199,6 +2536,59 @@ module Aws::Firehose
     #         },
     #       },
     #     },
+    #     amazon_open_search_serverless_destination_update: {
+    #       role_arn: "RoleARN",
+    #       collection_endpoint: "AmazonOpenSearchServerlessCollectionEndpoint",
+    #       index_name: "AmazonOpenSearchServerlessIndexName",
+    #       buffering_hints: {
+    #         interval_in_seconds: 1,
+    #         size_in_m_bs: 1,
+    #       },
+    #       retry_options: {
+    #         duration_in_seconds: 1,
+    #       },
+    #       s3_update: {
+    #         role_arn: "RoleARN",
+    #         bucket_arn: "BucketARN",
+    #         prefix: "Prefix",
+    #         error_output_prefix: "ErrorOutputPrefix",
+    #         buffering_hints: {
+    #           size_in_m_bs: 1,
+    #           interval_in_seconds: 1,
+    #         },
+    #         compression_format: "UNCOMPRESSED", # accepts UNCOMPRESSED, GZIP, ZIP, Snappy, HADOOP_SNAPPY
+    #         encryption_configuration: {
+    #           no_encryption_config: "NoEncryption", # accepts NoEncryption
+    #           kms_encryption_config: {
+    #             awskms_key_arn: "AWSKMSKeyARN", # required
+    #           },
+    #         },
+    #         cloud_watch_logging_options: {
+    #           enabled: false,
+    #           log_group_name: "LogGroupName",
+    #           log_stream_name: "LogStreamName",
+    #         },
+    #       },
+    #       processing_configuration: {
+    #         enabled: false,
+    #         processors: [
+    #           {
+    #             type: "RecordDeAggregation", # required, accepts RecordDeAggregation, Lambda, MetadataExtraction, AppendDelimiterToRecord
+    #             parameters: [
+    #               {
+    #                 parameter_name: "LambdaArn", # required, accepts LambdaArn, NumberOfRetries, MetadataExtractionQuery, JsonParsingEngine, RoleArn, BufferSizeInMBs, BufferIntervalInSeconds, SubRecordType, Delimiter
+    #                 parameter_value: "ProcessorParameterValue", # required
+    #               },
+    #             ],
+    #           },
+    #         ],
+    #       },
+    #       cloud_watch_logging_options: {
+    #         enabled: false,
+    #         log_group_name: "LogGroupName",
+    #         log_stream_name: "LogStreamName",
+    #       },
+    #     },
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/firehose-2015-08-04/UpdateDestination AWS API Documentation
@@ -2223,7 +2613,7 @@ module Aws::Firehose
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-firehose'
-      context[:gem_version] = '1.37.0'
+      context[:gem_version] = '1.55.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

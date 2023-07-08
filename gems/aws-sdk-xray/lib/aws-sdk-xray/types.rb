@@ -87,18 +87,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BackendConnectionErrors
-    #   data as a hash:
-    #
-    #       {
-    #         timeout_count: 1,
-    #         connection_refused_count: 1,
-    #         http_code_4_xx_count: 1,
-    #         http_code_5_xx_count: 1,
-    #         unknown_host_count: 1,
-    #         other_count: 1,
-    #       }
-    #
     # @!attribute [rw] timeout_count
     #   @return [Integer]
     #
@@ -130,14 +118,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchGetTracesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         trace_ids: ["TraceId"], # required
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] trace_ids
     #   Specify the trace IDs of requests for which to retrieve segments.
     #   @return [Array<String>]
@@ -177,24 +157,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         group_name: "GroupName", # required
-    #         filter_expression: "FilterExpression",
-    #         insights_configuration: {
-    #           insights_enabled: false,
-    #           notifications_enabled: false,
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] group_name
     #   The case-sensitive name of the new group. Default is a reserved name
     #   and names must be unique.
@@ -210,7 +172,7 @@ module Aws::XRay
     #   * The InsightsEnabled boolean can be set to true to enable insights
     #     for the new group or false to disable insights for the new group.
     #
-    #   * The NotifcationsEnabled boolean can be set to true to enable
+    #   * The NotificationsEnabled boolean can be set to true to enable
     #     insights notifications for the new group. Notifications may only
     #     be enabled on a group with InsightsEnabled set to true.
     #   @return [Types::InsightsConfiguration]
@@ -218,7 +180,8 @@ module Aws::XRay
     # @!attribute [rw] tags
     #   A map that contains one or more tag keys and tag values to attach to
     #   an X-Ray group. For more information about ways to use tags, see
-    #   [Tagging AWS resources][1] in the *AWS General Reference*.
+    #   [Tagging Amazon Web Services resources][1] in the *Amazon Web
+    #   Services General Reference*.
     #
     #   The following restrictions apply to tags:
     #
@@ -233,8 +196,8 @@ module Aws::XRay
     #
     #   * Tag keys and values are case sensitive.
     #
-    #   * Don't use `aws:` as a prefix for keys; it's reserved for AWS
-    #     use.
+    #   * Don't use `aws:` as a prefix for keys; it's reserved for Amazon
+    #     Web Services use.
     #
     #
     #
@@ -267,35 +230,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateSamplingRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         sampling_rule: { # required
-    #           rule_name: "RuleName",
-    #           rule_arn: "String",
-    #           resource_arn: "ResourceARN", # required
-    #           priority: 1, # required
-    #           fixed_rate: 1.0, # required
-    #           reservoir_size: 1, # required
-    #           service_name: "ServiceName", # required
-    #           service_type: "ServiceType", # required
-    #           host: "Host", # required
-    #           http_method: "HTTPMethod", # required
-    #           url_path: "URLPath", # required
-    #           version: 1, # required
-    #           attributes: {
-    #             "AttributeKey" => "AttributeValue",
-    #           },
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] sampling_rule
     #   The rule definition.
     #   @return [Types::SamplingRule]
@@ -303,7 +237,8 @@ module Aws::XRay
     # @!attribute [rw] tags
     #   A map that contains one or more tag keys and tag values to attach to
     #   an X-Ray sampling rule. For more information about ways to use tags,
-    #   see [Tagging AWS resources][1] in the *AWS General Reference*.
+    #   see [Tagging Amazon Web Services resources][1] in the *Amazon Web
+    #   Services General Reference*.
     #
     #   The following restrictions apply to tags:
     #
@@ -318,8 +253,8 @@ module Aws::XRay
     #
     #   * Tag keys and values are case sensitive.
     #
-    #   * Don't use `aws:` as a prefix for keys; it's reserved for AWS
-    #     use.
+    #   * Don't use `aws:` as a prefix for keys; it's reserved for Amazon
+    #     Web Services use.
     #
     #
     #
@@ -347,14 +282,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         group_name: "GroupName",
-    #         group_arn: "GroupARN",
-    #       }
-    #
     # @!attribute [rw] group_name
     #   The case-sensitive name of the group.
     #   @return [String]
@@ -376,14 +303,30 @@ module Aws::XRay
     #
     class DeleteGroupResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteSamplingRuleRequest
-    #   data as a hash:
+    # @!attribute [rw] policy_name
+    #   The name of the resource policy to delete.
+    #   @return [String]
     #
-    #       {
-    #         rule_name: "String",
-    #         rule_arn: "String",
-    #       }
+    # @!attribute [rw] policy_revision_id
+    #   Specifies a specific policy revision to delete. Provide a
+    #   `PolicyRevisionId` to ensure an atomic delete operation. If the
+    #   provided revision id does not match the latest policy revision id,
+    #   an `InvalidPolicyRevisionIdException` exception is returned.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/DeleteResourcePolicyRequest AWS API Documentation
+    #
+    class DeleteResourcePolicyRequest < Struct.new(
+      :policy_name,
+      :policy_revision_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/DeleteResourcePolicyResult AWS API Documentation
+    #
+    class DeleteResourcePolicyResult < Aws::EmptyStructure; end
+
     # @!attribute [rw] rule_name
     #   The name of the sampling rule. Specify a rule by either name or ARN,
     #   but not both.
@@ -415,7 +358,10 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # Information about a connection between two services.
+    # Information about a connection between two services. An edge can be a
+    # synchronous connection, such as typical call between client and
+    # service, or an asynchronous link, such as a Lambda function which
+    # retrieves an event from an SNS queue.
     #
     # @!attribute [rw] reference_id
     #   Identifier of the edge. Unique within a service map.
@@ -435,12 +381,22 @@ module Aws::XRay
     #
     # @!attribute [rw] response_time_histogram
     #   A histogram that maps the spread of client response times on an
-    #   edge.
+    #   edge. Only populated for synchronous edges.
     #   @return [Array<Types::HistogramEntry>]
     #
     # @!attribute [rw] aliases
     #   Aliases for the edge.
     #   @return [Array<Types::Alias>]
+    #
+    # @!attribute [rw] edge_type
+    #   Describes an asynchronous connection, with a value of `link`.
+    #   @return [String]
+    #
+    # @!attribute [rw] received_event_age_histogram
+    #   A histogram that maps the spread of event age when received by
+    #   consumers. Age is calculated each time an event is received. Only
+    #   populated when *EdgeType* is `link`.
+    #   @return [Array<Types::HistogramEntry>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/Edge AWS API Documentation
     #
@@ -450,7 +406,9 @@ module Aws::XRay
       :end_time,
       :summary_statistics,
       :response_time_histogram,
-      :aliases)
+      :aliases,
+      :edge_type,
+      :received_event_age_histogram)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -496,8 +454,7 @@ module Aws::XRay
     # settings.
     #
     # @!attribute [rw] key_id
-    #   The ID of the customer master key (CMK) used for encryption, if
-    #   applicable.
+    #   The ID of the KMS key used for encryption, if applicable.
     #   @return [String]
     #
     # @!attribute [rw] status
@@ -506,8 +463,8 @@ module Aws::XRay
     #   @return [String]
     #
     # @!attribute [rw] type
-    #   The type of encryption. Set to `KMS` for encryption with CMKs. Set
-    #   to `NONE` for default encryption.
+    #   The type of encryption. Set to `KMS` for encryption with KMS keys.
+    #   Set to `NONE` for default encryption.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/EncryptionConfig AWS API Documentation
@@ -780,14 +737,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         group_name: "GroupName",
-    #         group_arn: "GroupARN",
-    #       }
-    #
     # @!attribute [rw] group_name
     #   The case-sensitive name of the group.
     #   @return [String]
@@ -819,13 +768,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "GetGroupsNextToken",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   Pagination token.
     #   @return [String]
@@ -855,15 +797,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetInsightEventsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         insight_id: "InsightId", # required
-    #         max_results: 1,
-    #         next_token: "Token",
-    #       }
-    #
     # @!attribute [rw] insight_id
     #   The insight's unique identifier. Use the GetInsightSummaries action
     #   to retrieve an InsightId.
@@ -907,16 +840,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetInsightImpactGraphRequest
-    #   data as a hash:
-    #
-    #       {
-    #         insight_id: "InsightId", # required
-    #         start_time: Time.now, # required
-    #         end_time: Time.now, # required
-    #         next_token: "Token",
-    #       }
-    #
     # @!attribute [rw] insight_id
     #   The insight's unique identifier. Use the GetInsightSummaries action
     #   to retrieve an InsightId.
@@ -971,7 +894,8 @@ module Aws::XRay
     #   @return [Time]
     #
     # @!attribute [rw] services
-    #   The AWS instrumented services related to the insight.
+    #   The Amazon Web Services instrumented services related to the
+    #   insight.
     #   @return [Array<Types::InsightImpactGraphService>]
     #
     # @!attribute [rw] next_token
@@ -992,13 +916,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetInsightRequest
-    #   data as a hash:
-    #
-    #       {
-    #         insight_id: "InsightId", # required
-    #       }
-    #
     # @!attribute [rw] insight_id
     #   The insight's unique identifier. Use the GetInsightSummaries action
     #   to retrieve an InsightId.
@@ -1024,19 +941,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetInsightSummariesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         states: ["ACTIVE"], # accepts ACTIVE, CLOSED
-    #         group_arn: "GroupARN",
-    #         group_name: "GroupName",
-    #         start_time: Time.now, # required
-    #         end_time: Time.now, # required
-    #         max_results: 1,
-    #         next_token: "Token",
-    #       }
-    #
     # @!attribute [rw] states
     #   The list of insight states.
     #   @return [Array<String>]
@@ -1102,13 +1006,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetSamplingRulesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   Pagination token.
     #   @return [String]
@@ -1138,13 +1035,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetSamplingStatisticSummariesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] next_token
     #   Pagination token.
     #   @return [String]
@@ -1175,22 +1065,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetSamplingTargetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         sampling_statistics_documents: [ # required
-    #           {
-    #             rule_name: "RuleName", # required
-    #             client_id: "ClientID", # required
-    #             timestamp: Time.now, # required
-    #             request_count: 1, # required
-    #             sampled_count: 1, # required
-    #             borrow_count: 1,
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] sampling_statistics_documents
     #   Information about rules that the service is using to sample
     #   requests.
@@ -1211,13 +1085,21 @@ module Aws::XRay
     # @!attribute [rw] last_rule_modification
     #   The last time a user changed the sampling rule configuration. If the
     #   sampling rule configuration changed since the service last retrieved
-    #   it, the service should call GetSamplingRules to get the latest
+    #   it, the service should call [GetSamplingRules][1] to get the latest
     #   version.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingRules.html
     #   @return [Time]
     #
     # @!attribute [rw] unprocessed_statistics
-    #   Information about SamplingStatisticsDocument that X-Ray could not
-    #   process.
+    #   Information about [SamplingStatisticsDocument][1] that X-Ray could
+    #   not process.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/xray/latest/api/API_SamplingStatisticsDocument.html
     #   @return [Array<Types::UnprocessedStatistics>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/GetSamplingTargetsResult AWS API Documentation
@@ -1230,17 +1112,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetServiceGraphRequest
-    #   data as a hash:
-    #
-    #       {
-    #         start_time: Time.now, # required
-    #         end_time: Time.now, # required
-    #         group_name: "GroupName",
-    #         group_arn: "GroupARN",
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] start_time
     #   The start of the time frame for which to generate a graph.
     #   @return [Time]
@@ -1309,20 +1180,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTimeSeriesServiceStatisticsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         start_time: Time.now, # required
-    #         end_time: Time.now, # required
-    #         group_name: "GroupName",
-    #         group_arn: "GroupARN",
-    #         entity_selector_expression: "EntitySelectorExpression",
-    #         period: 1,
-    #         forecast_statistics: false,
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] start_time
     #   The start of the time frame for which to aggregate statistics.
     #   @return [Time]
@@ -1399,14 +1256,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTraceGraphRequest
-    #   data as a hash:
-    #
-    #       {
-    #         trace_ids: ["TraceId"], # required
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] trace_ids
     #   Trace IDs of requests for which to generate a service graph.
     #   @return [Array<String>]
@@ -1441,22 +1290,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTraceSummariesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         start_time: Time.now, # required
-    #         end_time: Time.now, # required
-    #         time_range_type: "TraceId", # accepts TraceId, Event
-    #         sampling: false,
-    #         sampling_strategy: {
-    #           name: "PartialScan", # accepts PartialScan, FixedRate
-    #           value: 1.0,
-    #         },
-    #         filter_expression: "FilterExpression",
-    #         next_token: "String",
-    #       }
-    #
     # @!attribute [rw] start_time
     #   The start of the time frame for which to retrieve traces.
     #   @return [Time]
@@ -1557,7 +1390,7 @@ module Aws::XRay
     #   * The InsightsEnabled boolean can be set to true to enable insights
     #     for the group or false to disable insights for the group.
     #
-    #   * The NotifcationsEnabled boolean can be set to true to enable
+    #   * The NotificationsEnabled boolean can be set to true to enable
     #     insights notifications through Amazon EventBridge for the group.
     #   @return [Types::InsightsConfiguration]
     #
@@ -1804,18 +1637,18 @@ module Aws::XRay
     # @!attribute [rw] type
     #   Identifier for the service. Unique within the service map.
     #
-    #   * AWS Resource - The type of an AWS resource. For example,
-    #     AWS::EC2::Instance for an application running on Amazon EC2 or
-    #     AWS::DynamoDB::Table for an Amazon DynamoDB table that the
-    #     application used.
+    #   * Amazon Web Services Resource - The type of an Amazon Web Services
+    #     resource. For example, AWS::EC2::Instance for an application
+    #     running on Amazon EC2 or AWS::DynamoDB::Table for an Amazon
+    #     DynamoDB table that the application used.
     #
-    #   * AWS Service - The type of an AWS service. For example,
-    #     AWS::DynamoDB for downstream calls to Amazon DynamoDB that didn't
-    #     target a specific table.
+    #   * Amazon Web Services Service - The type of an Amazon Web Services
+    #     service. For example, AWS::DynamoDB for downstream calls to Amazon
+    #     DynamoDB that didn't target a specific table.
     #
-    #   * AWS Service - The type of an AWS service. For example,
-    #     AWS::DynamoDB for downstream calls to Amazon DynamoDB that didn't
-    #     target a specific table.
+    #   * Amazon Web Services Service - The type of an Amazon Web Services
+    #     service. For example, AWS::DynamoDB for downstream calls to Amazon
+    #     DynamoDB that didn't target a specific table.
     #
     #   * remote - A downstream service of indeterminate type.
     #   @return [String]
@@ -1829,7 +1662,8 @@ module Aws::XRay
     #   @return [Array<String>]
     #
     # @!attribute [rw] account_id
-    #   Identifier of the AWS account in which the service runs.
+    #   Identifier of the Amazon Web Services account in which the service
+    #   runs.
     #   @return [String]
     #
     # @!attribute [rw] edges
@@ -1931,14 +1765,6 @@ module Aws::XRay
 
     # The structure containing configurations related to insights.
     #
-    # @note When making an API call, you may pass InsightsConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         insights_enabled: false,
-    #         notifications_enabled: false,
-    #       }
-    #
     # @!attribute [rw] insights_enabled
     #   Set the InsightsEnabled value to true to enable insights or false to
     #   disable insights.
@@ -1973,6 +1799,22 @@ module Aws::XRay
       include Aws::Structure
     end
 
+    # A policy revision id was provided which does not match the latest
+    # policy revision. This exception is also if a policy revision id of 0
+    # is provided via `PutResourcePolicy` and a policy with the same name
+    # already exists.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/InvalidPolicyRevisionIdException AWS API Documentation
+    #
+    class InvalidPolicyRevisionIdException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request is missing required parameters or has invalid parameters.
     #
     # @!attribute [rw] message
@@ -1986,14 +1828,36 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
+    # @!attribute [rw] next_token
+    #   Not currently supported.
+    #   @return [String]
     #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         next_token: "String",
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/ListResourcePoliciesRequest AWS API Documentation
     #
+    class ListResourcePoliciesRequest < Struct.new(
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_policies
+    #   The list of resource policies in the target Amazon Web Services
+    #   account.
+    #   @return [Array<Types::ResourcePolicy>]
+    #
+    # @!attribute [rw] next_token
+    #   Pagination token. Not currently supported.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/ListResourcePoliciesResult AWS API Documentation
+    #
+    class ListResourcePoliciesResult < Struct.new(
+      :resource_policies,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Number (ARN) of an X-Ray group or sampling rule.
     #   @return [String]
@@ -2033,23 +1897,68 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutEncryptionConfigRequest
-    #   data as a hash:
+    # The provided resource policy would prevent the caller of this request
+    # from calling PutResourcePolicy in the future.
     #
-    #       {
-    #         key_id: "EncryptionKeyId",
-    #         type: "NONE", # required, accepts NONE, KMS
-    #       }
+    # @!attribute [rw] message
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/LockoutPreventionException AWS API Documentation
+    #
+    class LockoutPreventionException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Invalid policy document provided in request.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/MalformedPolicyDocumentException AWS API Documentation
+    #
+    class MalformedPolicyDocumentException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Exceeded the maximum number of resource policies for a target Amazon
+    # Web Services account.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/PolicyCountLimitExceededException AWS API Documentation
+    #
+    class PolicyCountLimitExceededException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Exceeded the maximum size for a resource policy.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/PolicySizeLimitExceededException AWS API Documentation
+    #
+    class PolicySizeLimitExceededException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] key_id
-    #   An AWS KMS customer master key (CMK) in one of the following
-    #   formats:
+    #   An Amazon Web Services KMS key in one of the following formats:
     #
     #   * **Alias** - The name of the key. For example, `alias/MyKey`.
     #
     #   * **Key ID** - The KMS key ID of the key. For example,
-    #     `ae4aa6d49-a4d8-9df9-a475-4ff6d7898456`. AWS X-Ray does not
-    #     support asymmetric CMKs.
+    #     `ae4aa6d49-a4d8-9df9-a475-4ff6d7898456`. Amazon Web Services X-Ray
+    #     does not support asymmetric KMS keys.
     #
     #   * **ARN** - The full Amazon Resource Name of the key ID or alias.
     #     For example,
@@ -2085,32 +1994,68 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutTelemetryRecordsRequest
-    #   data as a hash:
+    # @!attribute [rw] policy_name
+    #   The name of the resource policy. Must be unique within a specific
+    #   Amazon Web Services account.
+    #   @return [String]
     #
-    #       {
-    #         telemetry_records: [ # required
-    #           {
-    #             timestamp: Time.now, # required
-    #             segments_received_count: 1,
-    #             segments_sent_count: 1,
-    #             segments_spillover_count: 1,
-    #             segments_rejected_count: 1,
-    #             backend_connection_errors: {
-    #               timeout_count: 1,
-    #               connection_refused_count: 1,
-    #               http_code_4_xx_count: 1,
-    #               http_code_5_xx_count: 1,
-    #               unknown_host_count: 1,
-    #               other_count: 1,
-    #             },
-    #           },
-    #         ],
-    #         ec2_instance_id: "EC2InstanceId",
-    #         hostname: "Hostname",
-    #         resource_arn: "ResourceARN",
-    #       }
+    # @!attribute [rw] policy_document
+    #   The resource policy document, which can be up to 5kb in size.
+    #   @return [String]
     #
+    # @!attribute [rw] policy_revision_id
+    #   Specifies a specific policy revision, to ensure an atomic create
+    #   operation. By default the resource policy is created if it does not
+    #   exist, or updated with an incremented revision id. The revision id
+    #   is unique to each policy in the account.
+    #
+    #   If the policy revision id does not match the latest revision id, the
+    #   operation will fail with an `InvalidPolicyRevisionIdException`
+    #   exception. You can also provide a `PolicyRevisionId` of 0. In this
+    #   case, the operation will fail with an
+    #   `InvalidPolicyRevisionIdException` exception if a resource policy
+    #   with the same name already exists.
+    #   @return [String]
+    #
+    # @!attribute [rw] bypass_policy_lockout_check
+    #   A flag to indicate whether to bypass the resource policy lockout
+    #   safety check.
+    #
+    #   Setting this value to true increases the risk that the policy
+    #   becomes unmanageable. Do not set this value to true
+    #   indiscriminately.
+    #
+    #   Use this parameter only when you include a policy in the request and
+    #   you intend to prevent the principal that is making the request from
+    #   making a subsequent `PutResourcePolicy` request.
+    #
+    #   The default value is false.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/PutResourcePolicyRequest AWS API Documentation
+    #
+    class PutResourcePolicyRequest < Struct.new(
+      :policy_name,
+      :policy_document,
+      :policy_revision_id,
+      :bypass_policy_lockout_check)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_policy
+    #   The resource policy document, as provided in the
+    #   `PutResourcePolicyRequest`.
+    #   @return [Types::ResourcePolicy]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/PutResourcePolicyResult AWS API Documentation
+    #
+    class PutResourcePolicyResult < Struct.new(
+      :resource_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] telemetry_records
     #   @return [Array<Types::TelemetryRecord>]
     #
@@ -2138,13 +2083,6 @@ module Aws::XRay
     #
     class PutTelemetryRecordsResult < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass PutTraceSegmentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         trace_segment_documents: ["TraceSegmentDocument"], # required
-    #       }
-    #
     # @!attribute [rw] trace_segment_documents
     #   A string containing a JSON document defining one or more segments or
     #   subsegments.
@@ -2222,6 +2160,38 @@ module Aws::XRay
     class ResourceNotFoundException < Struct.new(
       :message,
       :resource_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A resource policy grants one or more Amazon Web Services services and
+    # accounts permissions to access X-Ray. Each resource policy is
+    # associated with a specific Amazon Web Services account.
+    #
+    # @!attribute [rw] policy_name
+    #   The name of the resource policy. Must be unique within a specific
+    #   Amazon Web Services account.
+    #   @return [String]
+    #
+    # @!attribute [rw] policy_document
+    #   The resource policy document, which can be up to 5kb in size.
+    #   @return [String]
+    #
+    # @!attribute [rw] policy_revision_id
+    #   Returns the current policy revision id for this policy name.
+    #   @return [String]
+    #
+    # @!attribute [rw] last_updated_time
+    #   When the policy was last updated, in Unix time seconds.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/ResourcePolicy AWS API Documentation
+    #
+    class ResourcePolicy < Struct.new(
+      :policy_name,
+      :policy_document,
+      :policy_revision_id,
+      :last_updated_time)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2349,27 +2319,6 @@ module Aws::XRay
     # properties of a request. The service can ignore rules that don't
     # match its properties.
     #
-    # @note When making an API call, you may pass SamplingRule
-    #   data as a hash:
-    #
-    #       {
-    #         rule_name: "RuleName",
-    #         rule_arn: "String",
-    #         resource_arn: "ResourceARN", # required
-    #         priority: 1, # required
-    #         fixed_rate: 1.0, # required
-    #         reservoir_size: 1, # required
-    #         service_name: "ServiceName", # required
-    #         service_type: "ServiceType", # required
-    #         host: "Host", # required
-    #         http_method: "HTTPMethod", # required
-    #         url_path: "URLPath", # required
-    #         version: 1, # required
-    #         attributes: {
-    #           "AttributeKey" => "AttributeValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] rule_name
     #   The name of the sampling rule. Specify a rule by either name or ARN,
     #   but not both.
@@ -2381,7 +2330,8 @@ module Aws::XRay
     #   @return [String]
     #
     # @!attribute [rw] resource_arn
-    #   Matches the ARN of the AWS resource on which the service runs.
+    #   Matches the ARN of the Amazon Web Services resource on which the
+    #   service runs.
     #   @return [String]
     #
     # @!attribute [rw] priority
@@ -2449,7 +2399,11 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # A SamplingRule and its metadata.
+    # A [SamplingRule][1] and its metadata.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/xray/latest/api/API_SamplingRule.html
     #
     # @!attribute [rw] sampling_rule
     #   The sampling rule.
@@ -2475,26 +2429,6 @@ module Aws::XRay
 
     # A document specifying changes to a sampling rule's configuration.
     #
-    # @note When making an API call, you may pass SamplingRuleUpdate
-    #   data as a hash:
-    #
-    #       {
-    #         rule_name: "RuleName",
-    #         rule_arn: "String",
-    #         resource_arn: "ResourceARN",
-    #         priority: 1,
-    #         fixed_rate: 1.0,
-    #         reservoir_size: 1,
-    #         host: "Host",
-    #         service_name: "ServiceName",
-    #         service_type: "ServiceType",
-    #         http_method: "HTTPMethod",
-    #         url_path: "URLPath",
-    #         attributes: {
-    #           "AttributeKey" => "AttributeValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] rule_name
     #   The name of the sampling rule. Specify a rule by either name or ARN,
     #   but not both.
@@ -2506,7 +2440,8 @@ module Aws::XRay
     #   @return [String]
     #
     # @!attribute [rw] resource_arn
-    #   Matches the ARN of the AWS resource on which the service runs.
+    #   Matches the ARN of the Amazon Web Services resource on which the
+    #   service runs.
     #   @return [String]
     #
     # @!attribute [rw] priority
@@ -2606,19 +2541,11 @@ module Aws::XRay
 
     # Request sampling results for a single rule from a service. Results are
     # for the last 10 seconds unless the service has been assigned a longer
-    # reporting interval after a previous call to GetSamplingTargets.
+    # reporting interval after a previous call to [GetSamplingTargets][1].
     #
-    # @note When making an API call, you may pass SamplingStatisticsDocument
-    #   data as a hash:
     #
-    #       {
-    #         rule_name: "RuleName", # required
-    #         client_id: "ClientID", # required
-    #         timestamp: Time.now, # required
-    #         request_count: 1, # required
-    #         sampled_count: 1, # required
-    #         borrow_count: 1,
-    #       }
+    #
+    # [1]: https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingTargets.html
     #
     # @!attribute [rw] rule_name
     #   The name of the sampling rule.
@@ -2659,14 +2586,6 @@ module Aws::XRay
 
     # The name and value of a sampling rule to apply to a trace summary.
     #
-    # @note When making an API call, you may pass SamplingStrategy
-    #   data as a hash:
-    #
-    #       {
-    #         name: "PartialScan", # accepts PartialScan, FixedRate
-    #         value: 1.0,
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of a sampling rule.
     #   @return [String]
@@ -2687,7 +2606,11 @@ module Aws::XRay
     # Temporary changes to a sampling rule configuration. To meet the global
     # sampling target for a rule, X-Ray calculates a new reservoir for each
     # service based on the recent sampling results of all services that
-    # called GetSamplingTargets.
+    # called [GetSamplingTargets][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingTargets.html
     #
     # @!attribute [rw] rule_name
     #   The name of the sampling rule.
@@ -2726,15 +2649,18 @@ module Aws::XRay
 
     # A segment from a trace that has been ingested by the X-Ray service.
     # The segment can be compiled from documents uploaded with
-    # PutTraceSegments, or an `inferred` segment for a downstream service,
-    # generated from a subsegment sent by the service that called it.
+    # [PutTraceSegments][1], or an `inferred` segment for a downstream
+    # service, generated from a subsegment sent by the service that called
+    # it.
     #
-    # For the full segment document schema, see [AWS X-Ray Segment
-    # Documents][1] in the *AWS X-Ray Developer Guide*.
+    # For the full segment document schema, see [Amazon Web Services X-Ray
+    # Segment Documents][2] in the *Amazon Web Services X-Ray Developer
+    # Guide*.
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/xray/latest/devguide/xray-api-segmentdocuments.html
+    # [1]: https://docs.aws.amazon.com/xray/latest/api/API_PutTraceSegments.html
+    # [2]: https://docs.aws.amazon.com/xray/latest/devguide/xray-api-segmentdocuments.html
     #
     # @!attribute [rw] id
     #   The segment's ID.
@@ -2775,20 +2701,21 @@ module Aws::XRay
     #   @return [Boolean]
     #
     # @!attribute [rw] account_id
-    #   Identifier of the AWS account in which the service runs.
+    #   Identifier of the Amazon Web Services account in which the service
+    #   runs.
     #   @return [String]
     #
     # @!attribute [rw] type
     #   The type of service.
     #
-    #   * AWS Resource - The type of an AWS resource. For example,
-    #     `AWS::EC2::Instance` for an application running on Amazon EC2 or
-    #     `AWS::DynamoDB::Table` for an Amazon DynamoDB table that the
-    #     application used.
+    #   * Amazon Web Services Resource - The type of an Amazon Web Services
+    #     resource. For example, `AWS::EC2::Instance` for an application
+    #     running on Amazon EC2 or `AWS::DynamoDB::Table` for an Amazon
+    #     DynamoDB table that the application used.
     #
-    #   * AWS Service - The type of an AWS service. For example,
-    #     `AWS::DynamoDB` for downstream calls to Amazon DynamoDB that
-    #     didn't target a specific table.
+    #   * Amazon Web Services Service - The type of an Amazon Web Services
+    #     service. For example, `AWS::DynamoDB` for downstream calls to
+    #     Amazon DynamoDB that didn't target a specific table.
     #
     #   * `client` - Represents the clients that sent requests to a root
     #     service.
@@ -2904,9 +2831,10 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # A map that contains tag keys and tag values to attach to an AWS X-Ray
-    # group or sampling rule. For more information about ways to use tags,
-    # see [Tagging AWS resources][1] in the *AWS General Reference*.
+    # A map that contains tag keys and tag values to attach to an Amazon Web
+    # Services X-Ray group or sampling rule. For more information about ways
+    # to use tags, see [Tagging Amazon Web Services resources][1] in the
+    # *Amazon Web Services General Reference*.
     #
     # The following restrictions apply to tags:
     #
@@ -2914,20 +2842,12 @@ module Aws::XRay
     #
     # * Tag keys and values are case sensitive.
     #
-    # * Don't use `aws:` as a prefix for keys; it's reserved for AWS use.
-    #   You cannot edit or delete system tags.
+    # * Don't use `aws:` as a prefix for keys; it's reserved for Amazon
+    #   Web Services use. You cannot edit or delete system tags.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
     #
     # @!attribute [rw] key
     #   A tag key, such as `Stage` or `Name`. A tag key cannot be empty. The
@@ -2952,19 +2872,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Number (ARN) of an X-Ray group or sampling rule.
     #   @return [String]
@@ -2972,8 +2879,8 @@ module Aws::XRay
     # @!attribute [rw] tags
     #   A map that contains one or more tag keys and tag values to attach to
     #   an X-Ray group or sampling rule. For more information about ways to
-    #   use tags, see [Tagging AWS resources][1] in the *AWS General
-    #   Reference*.
+    #   use tags, see [Tagging Amazon Web Services resources][1] in the
+    #   *Amazon Web Services General Reference*.
     #
     #   The following restrictions apply to tags:
     #
@@ -2988,8 +2895,8 @@ module Aws::XRay
     #
     #   * Tag keys and values are case sensitive.
     #
-    #   * Don't use `aws:` as a prefix for keys; it's reserved for AWS
-    #     use. You cannot edit or delete system tags.
+    #   * Don't use `aws:` as a prefix for keys; it's reserved for Amazon
+    #     Web Services use. You cannot edit or delete system tags.
     #
     #
     #
@@ -3009,25 +2916,6 @@ module Aws::XRay
     #
     class TagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass TelemetryRecord
-    #   data as a hash:
-    #
-    #       {
-    #         timestamp: Time.now, # required
-    #         segments_received_count: 1,
-    #         segments_sent_count: 1,
-    #         segments_spillover_count: 1,
-    #         segments_rejected_count: 1,
-    #         backend_connection_errors: {
-    #           timeout_count: 1,
-    #           connection_refused_count: 1,
-    #           http_code_4_xx_count: 1,
-    #           http_code_5_xx_count: 1,
-    #           unknown_host_count: 1,
-    #           other_count: 1,
-    #         },
-    #       }
-    #
     # @!attribute [rw] timestamp
     #   @return [Time]
     #
@@ -3137,8 +3025,9 @@ module Aws::XRay
     #   @return [Float]
     #
     # @!attribute [rw] limit_exceeded
-    #   LimitExceeded is set to true when the trace has exceeded one of the
-    #   defined quotas. For more information about quotas, see [AWS X-Ray
+    #   LimitExceeded is set to true when the trace has exceeded the `Trace
+    #   document size` limit. For more information about this limit and
+    #   other X-Ray limits and quotas, see [Amazon Web Services X-Ray
     #   endpoints and quotas][1].
     #
     #
@@ -3302,8 +3191,12 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # Sampling statistics from a call to GetSamplingTargets that X-Ray could
-    # not process.
+    # Sampling statistics from a call to [GetSamplingTargets][1] that X-Ray
+    # could not process.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingTargets.html
     #
     # @!attribute [rw] rule_name
     #   The name of the sampling rule.
@@ -3351,14 +3244,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "AmazonResourceName", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Number (ARN) of an X-Ray group or sampling rule.
     #   @return [String]
@@ -3381,19 +3266,6 @@ module Aws::XRay
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         group_name: "GroupName",
-    #         group_arn: "GroupARN",
-    #         filter_expression: "FilterExpression",
-    #         insights_configuration: {
-    #           insights_enabled: false,
-    #           notifications_enabled: false,
-    #         },
-    #       }
-    #
     # @!attribute [rw] group_name
     #   The case-sensitive name of the group.
     #   @return [String]
@@ -3413,7 +3285,7 @@ module Aws::XRay
     #   * The InsightsEnabled boolean can be set to true to enable insights
     #     for the group or false to disable insights for the group.
     #
-    #   * The NotifcationsEnabled boolean can be set to true to enable
+    #   * The NotificationsEnabled boolean can be set to true to enable
     #     insights notifications for the group. Notifications can only be
     #     enabled on a group with InsightsEnabled set to true.
     #   @return [Types::InsightsConfiguration]
@@ -3444,28 +3316,6 @@ module Aws::XRay
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateSamplingRuleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         sampling_rule_update: { # required
-    #           rule_name: "RuleName",
-    #           rule_arn: "String",
-    #           resource_arn: "ResourceARN",
-    #           priority: 1,
-    #           fixed_rate: 1.0,
-    #           reservoir_size: 1,
-    #           host: "Host",
-    #           service_name: "ServiceName",
-    #           service_type: "ServiceType",
-    #           http_method: "HTTPMethod",
-    #           url_path: "URLPath",
-    #           attributes: {
-    #             "AttributeKey" => "AttributeValue",
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] sampling_rule_update
     #   The rule and fields to change.
     #   @return [Types::SamplingRuleUpdate]

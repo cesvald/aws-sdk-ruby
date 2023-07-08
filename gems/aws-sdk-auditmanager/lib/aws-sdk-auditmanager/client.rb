@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:auditmanager)
@@ -73,8 +77,13 @@ module Aws::AuditManager
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::AuditManager::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::AuditManager
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::AuditManager
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::AuditManager
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::AuditManager
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::AuditManager
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::AuditManager::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::AuditManager::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::AuditManager
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::AuditManager
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -327,14 +384,14 @@ module Aws::AuditManager
 
     # @!group API Operations
 
-    # Associates an evidence folder to the specified assessment report in
-    # AWS Audit Manager.
+    # Associates an evidence folder to an assessment report in an Audit
+    # Manager assessment.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The identifier for the assessment.
     #
     # @option params [required, String] :evidence_folder_id
-    #   The identifier for the folder in which evidence is stored.
+    #   The identifier for the folder that the evidence is stored in.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -354,14 +411,14 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Associates a list of evidence to an assessment report in an AWS Audit
+    # Associates a list of evidence to an assessment report in an Audit
     # Manager assessment.
     #
     # @option params [required, String] :assessment_id
-    #   The unique identifier for the specified assessment.
+    #   The identifier for the assessment.
     #
     # @option params [required, String] :evidence_folder_id
-    #   The identifier for the folder in which the evidence is stored.
+    #   The identifier for the folder that the evidence is stored in.
     #
     # @option params [required, Array<String>] :evidence_ids
     #   The list of evidence identifiers.
@@ -397,14 +454,13 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Create a batch of delegations for a specified assessment in AWS Audit
-    # Manager.
+    # Creates a batch of delegations for an assessment in Audit Manager.
     #
     # @option params [required, Array<Types::CreateDelegationRequest>] :create_delegation_requests
-    #   The API request to batch create delegations in AWS Audit Manager.
+    #   The API request to batch create delegations in Audit Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The identifier for the assessment.
     #
     # @return [Types::BatchCreateDelegationByAssessmentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -456,13 +512,13 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Deletes the delegations in the specified AWS Audit Manager assessment.
+    # Deletes a batch of delegations for an assessment in Audit Manager.
     #
     # @option params [required, Array<String>] :delegation_ids
-    #   The identifiers for the specified delegations.
+    #   The identifiers for the delegations.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The identifier for the assessment.
     #
     # @return [Types::BatchDeleteDelegationByAssessmentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -491,14 +547,14 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Disassociates a list of evidence from the specified assessment report
-    # in AWS Audit Manager.
+    # Disassociates a list of evidence from an assessment report in Audit
+    # Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The identifier for the assessment.
     #
     # @option params [required, String] :evidence_folder_id
-    #   The identifier for the folder in which evidence is stored.
+    #   The identifier for the folder that the evidence is stored in.
     #
     # @option params [required, Array<String>] :evidence_ids
     #   The list of evidence identifiers.
@@ -534,17 +590,41 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Uploads one or more pieces of evidence to the specified control in the
-    # assessment in AWS Audit Manager.
+    # Adds one or more pieces of evidence to a control in an Audit Manager
+    # assessment.
+    #
+    # You can import manual evidence from any S3 bucket by specifying the S3
+    # URI of the object. You can also upload a file from your browser, or
+    # enter plain text in response to a risk assessment question.
+    #
+    # The following restrictions apply to this action:
+    #
+    # * `manualEvidence` can be only one of the following:
+    #   `evidenceFileName`, `s3ResourcePath`, or `textResponse`
+    #
+    # * Maximum size of an individual evidence file: 100 MB
+    #
+    # * Number of daily manual evidence uploads per control: 100
+    #
+    # * Supported file formats: See [Supported file types for manual
+    #   evidence][1] in the *Audit Manager User Guide*
+    #
+    # For more information about Audit Manager service restrictions, see
+    # [Quotas and restrictions for Audit Manager][2].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/audit-manager/latest/userguide/upload-evidence.html#supported-manual-evidence-files
+    # [2]: https://docs.aws.amazon.com/audit-manager/latest/userguide/service-quotas.html
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The identifier for the assessment.
     #
     # @option params [required, String] :control_set_id
-    #   The identifier for the specified control set.
+    #   The identifier for the control set.
     #
     # @option params [required, String] :control_id
-    #   The identifier for the specified control.
+    #   The identifier for the control.
     #
     # @option params [required, Array<Types::ManualEvidence>] :manual_evidence
     #   The list of manual evidence objects.
@@ -562,6 +642,8 @@ module Aws::AuditManager
     #     manual_evidence: [ # required
     #       {
     #         s3_resource_path: "S3Url",
+    #         text_response: "ManualEvidenceTextResponse",
+    #         evidence_file_name: "ManualEvidenceLocalFileName",
     #       },
     #     ],
     #   })
@@ -570,6 +652,8 @@ module Aws::AuditManager
     #
     #   resp.errors #=> Array
     #   resp.errors[0].manual_evidence.s3_resource_path #=> String
+    #   resp.errors[0].manual_evidence.text_response #=> String
+    #   resp.errors[0].manual_evidence.evidence_file_name #=> String
     #   resp.errors[0].error_code #=> String
     #   resp.errors[0].error_message #=> String
     #
@@ -582,7 +666,7 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Creates an assessment in AWS Audit Manager.
+    # Creates an assessment in Audit Manager.
     #
     # @option params [required, String] :name
     #   The name of the assessment to be created.
@@ -591,21 +675,22 @@ module Aws::AuditManager
     #   The optional description of the assessment to be created.
     #
     # @option params [required, Types::AssessmentReportsDestination] :assessment_reports_destination
-    #   The assessment report storage destination for the specified assessment
-    #   that is being created.
+    #   The assessment report storage destination for the assessment that's
+    #   being created.
     #
     # @option params [required, Types::Scope] :scope
-    #   The wrapper that contains the AWS accounts and AWS services in scope
-    #   for the assessment.
+    #   The wrapper that contains the Amazon Web Services accounts and
+    #   services that are in scope for the assessment.
     #
     # @option params [required, Array<Types::Role>] :roles
-    #   The list of roles for the specified assessment.
+    #   The list of roles for the assessment.
     #
     # @option params [required, String] :framework_id
-    #   The identifier for the specified framework.
+    #   The identifier for the framework that the assessment will be created
+    #   from.
     #
     # @option params [Hash<String,String>] :tags
-    #   The tags associated with the assessment.
+    #   The tags that are associated with the assessment.
     #
     # @return [Types::CreateAssessmentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -636,8 +721,8 @@ module Aws::AuditManager
     #     },
     #     roles: [ # required
     #       {
-    #         role_type: "PROCESS_OWNER", # accepts PROCESS_OWNER, RESOURCE_OWNER
-    #         role_arn: "IamArn",
+    #         role_type: "PROCESS_OWNER", # required, accepts PROCESS_OWNER, RESOURCE_OWNER
+    #         role_arn: "IamArn", # required
     #       },
     #     ],
     #     framework_id: "UUID", # required
@@ -735,7 +820,7 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Creates a custom framework in AWS Audit Manager.
+    # Creates a custom framework in Audit Manager.
     #
     # @option params [required, String] :name
     #   The name of the new custom framework.
@@ -748,10 +833,10 @@ module Aws::AuditManager
     #   CIS or HIPAA.
     #
     # @option params [required, Array<Types::CreateAssessmentFrameworkControlSet>] :control_sets
-    #   The control sets to be associated with the framework.
+    #   The control sets that are associated with the framework.
     #
     # @option params [Hash<String,String>] :tags
-    #   The tags associated with the framework.
+    #   The tags that are associated with the framework.
     #
     # @return [Types::CreateAssessmentFrameworkResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -768,7 +853,7 @@ module Aws::AuditManager
     #         name: "ControlSetName", # required
     #         controls: [
     #           {
-    #             id: "UUID",
+    #             id: "UUID", # required
     #           },
     #         ],
     #       },
@@ -807,7 +892,7 @@ module Aws::AuditManager
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_description #=> String
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_set_up_option #=> String, one of "System_Controls_Mapping", "Procedural_Controls_Mapping"
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_type #=> String, one of "AWS_Cloudtrail", "AWS_Config", "AWS_Security_Hub", "AWS_API_Call", "MANUAL"
-    #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST"
+    #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST", "UPLOAD_FILE", "INPUT_TEXT"
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_keyword.keyword_value #=> String
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_frequency #=> String, one of "DAILY", "WEEKLY", "MONTHLY"
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].troubleshooting_text #=> String
@@ -842,7 +927,31 @@ module Aws::AuditManager
     #   The description of the assessment report.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The identifier for the assessment.
+    #
+    # @option params [String] :query_statement
+    #   A SQL statement that represents an evidence finder query.
+    #
+    #   Provide this parameter when you want to generate an assessment report
+    #   from the results of an evidence finder search query. When you use this
+    #   parameter, Audit Manager generates a one-time report using only the
+    #   evidence from the query output. This report does not include any
+    #   assessment evidence that was manually [added to a report using the
+    #   console][1], or [associated with a report using the API][2].
+    #
+    #   To use this parameter, the [enablementStatus][3] of evidence finder
+    #   must be `ENABLED`.
+    #
+    #   For examples and help resolving `queryStatement` validation
+    #   exceptions, see [Troubleshooting evidence finder issues][4] in the
+    #   *Audit Manager User Guide.*
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/audit-manager/latest/userguide/generate-assessment-report.html#generate-assessment-report-include-evidence
+    #   [2]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_BatchAssociateAssessmentReportEvidence.html
+    #   [3]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_EvidenceFinderEnablement.html#auditmanager-Type-EvidenceFinderEnablement-enablementStatus
+    #   [4]: https://docs.aws.amazon.com/audit-manager/latest/userguide/evidence-finder-issues.html#querystatement-exceptions
     #
     # @return [Types::CreateAssessmentReportResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -854,6 +963,7 @@ module Aws::AuditManager
     #     name: "AssessmentReportName", # required
     #     description: "AssessmentReportDescription",
     #     assessment_id: "UUID", # required
+    #     query_statement: "QueryStatement",
     #   })
     #
     # @example Response structure
@@ -877,7 +987,7 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Creates a new custom control in AWS Audit Manager.
+    # Creates a new custom control in Audit Manager.
     #
     # @option params [required, String] :name
     #   The name of the control.
@@ -886,19 +996,19 @@ module Aws::AuditManager
     #   The description of the control.
     #
     # @option params [String] :testing_information
-    #   The steps to follow to determine if the control has been satisfied.
+    #   The steps to follow to determine if the control is satisfied.
     #
     # @option params [String] :action_plan_title
     #   The title of the action plan for remediating the control.
     #
     # @option params [String] :action_plan_instructions
-    #   The recommended actions to carry out if the control is not fulfilled.
+    #   The recommended actions to carry out if the control isn't fulfilled.
     #
     # @option params [required, Array<Types::CreateControlMappingSource>] :control_mapping_sources
-    #   The data mapping sources for the specified control.
+    #   The data mapping sources for the control.
     #
     # @option params [Hash<String,String>] :tags
-    #   The tags associated with the control.
+    #   The tags that are associated with the control.
     #
     # @return [Types::CreateControlResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -919,7 +1029,7 @@ module Aws::AuditManager
     #         source_set_up_option: "System_Controls_Mapping", # accepts System_Controls_Mapping, Procedural_Controls_Mapping
     #         source_type: "AWS_Cloudtrail", # accepts AWS_Cloudtrail, AWS_Config, AWS_Security_Hub, AWS_API_Call, MANUAL
     #         source_keyword: {
-    #           keyword_input_type: "SELECT_FROM_LIST", # accepts SELECT_FROM_LIST
+    #           keyword_input_type: "SELECT_FROM_LIST", # accepts SELECT_FROM_LIST, UPLOAD_FILE, INPUT_TEXT
     #           keyword_value: "KeywordValue",
     #         },
     #         source_frequency: "DAILY", # accepts DAILY, WEEKLY, MONTHLY
@@ -948,7 +1058,7 @@ module Aws::AuditManager
     #   resp.control.control_mapping_sources[0].source_description #=> String
     #   resp.control.control_mapping_sources[0].source_set_up_option #=> String, one of "System_Controls_Mapping", "Procedural_Controls_Mapping"
     #   resp.control.control_mapping_sources[0].source_type #=> String, one of "AWS_Cloudtrail", "AWS_Config", "AWS_Security_Hub", "AWS_API_Call", "MANUAL"
-    #   resp.control.control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST"
+    #   resp.control.control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST", "UPLOAD_FILE", "INPUT_TEXT"
     #   resp.control.control_mapping_sources[0].source_keyword.keyword_value #=> String
     #   resp.control.control_mapping_sources[0].source_frequency #=> String, one of "DAILY", "WEEKLY", "MONTHLY"
     #   resp.control.control_mapping_sources[0].troubleshooting_text #=> String
@@ -968,10 +1078,10 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Deletes an assessment in AWS Audit Manager.
+    # Deletes an assessment in Audit Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The identifier for the assessment.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -990,10 +1100,10 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Deletes a custom framework in AWS Audit Manager.
+    # Deletes a custom framework in Audit Manager.
     #
     # @option params [required, String] :framework_id
-    #   The identifier for the specified framework.
+    #   The identifier for the custom framework.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1012,10 +1122,65 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Deletes an assessment report from an assessment in AWS Audit Manager.
+    # Deletes a share request for a custom framework in Audit Manager.
+    #
+    # @option params [required, String] :request_id
+    #   The unique identifier for the share request to be deleted.
+    #
+    # @option params [required, String] :request_type
+    #   Specifies whether the share request is a sent request or a received
+    #   request.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_assessment_framework_share({
+    #     request_id: "UUID", # required
+    #     request_type: "SENT", # required, accepts SENT, RECEIVED
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/DeleteAssessmentFrameworkShare AWS API Documentation
+    #
+    # @overload delete_assessment_framework_share(params = {})
+    # @param [Hash] params ({})
+    def delete_assessment_framework_share(params = {}, options = {})
+      req = build_request(:delete_assessment_framework_share, params)
+      req.send_request(options)
+    end
+
+    # Deletes an assessment report in Audit Manager.
+    #
+    # When you run the `DeleteAssessmentReport` operation, Audit Manager
+    # attempts to delete the following data:
+    #
+    # 1.  The specified assessment report that’s stored in your S3 bucket
+    #
+    # 2.  The associated metadata that’s stored in Audit Manager
+    #
+    # If Audit Manager can’t access the assessment report in your S3 bucket,
+    # the report isn’t deleted. In this event, the `DeleteAssessmentReport`
+    # operation doesn’t fail. Instead, it proceeds to delete the associated
+    # metadata only. You must then delete the assessment report from the S3
+    # bucket yourself.
+    #
+    # This scenario happens when Audit Manager receives a `403 (Forbidden)`
+    # or `404 (Not Found)` error from Amazon S3. To avoid this, make sure
+    # that your S3 bucket is available, and that you configured the correct
+    # permissions for Audit Manager to delete resources in your S3 bucket.
+    # For an example permissions policy that you can use, see [Assessment
+    # report destination permissions][1] in the *Audit Manager User Guide*.
+    # For information about the issues that could cause a `403 (Forbidden)`
+    # or `404 (Not Found`) error from Amazon S3, see [List of Error
+    # Codes][2] in the *Amazon Simple Storage Service API Reference*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/audit-manager/latest/userguide/security_iam_id-based-policy-examples.html#full-administrator-access-assessment-report-destination
+    # [2]: https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [required, String] :assessment_report_id
     #   The unique identifier for the assessment report.
@@ -1038,10 +1203,16 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Deletes a custom control in AWS Audit Manager.
+    # Deletes a custom control in Audit Manager.
+    #
+    # When you invoke this operation, the custom control is deleted from any
+    # frameworks or assessments that it’s currently part of. As a result,
+    # Audit Manager will stop collecting evidence for that custom control in
+    # all of your assessments. This includes assessments that you previously
+    # created before you deleted the custom control.
     #
     # @option params [required, String] :control_id
-    #   The identifier for the specified control.
+    #   The unique identifier for the control.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1060,7 +1231,23 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Deregisters an account in AWS Audit Manager.
+    # Deregisters an account in Audit Manager.
+    #
+    # <note markdown="1"> Before you deregister, you can use the [UpdateSettings][1] API
+    # operation to set your preferred data retention policy. By default,
+    # Audit Manager retains your data. If you want to delete your data, you
+    # can use the `DeregistrationPolicy` attribute to request the deletion
+    # of your data.
+    #
+    #  For more information about data retention, see [Data Protection][2] in
+    # the *Audit Manager User Guide*.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_UpdateSettings.html
+    # [2]: https://docs.aws.amazon.com/audit-manager/latest/userguide/data-protection.html
     #
     # @return [Types::DeregisterAccountResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1079,11 +1266,81 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Deregisters the delegated AWS administrator account from the AWS
-    # organization.
+    # Removes the specified Amazon Web Services account as a delegated
+    # administrator for Audit Manager.
+    #
+    # When you remove a delegated administrator from your Audit Manager
+    # settings, you continue to have access to the evidence that you
+    # previously collected under that account. This is also the case when
+    # you deregister a delegated administrator from Organizations. However,
+    # Audit Manager stops collecting and attaching evidence to that
+    # delegated administrator account moving forward.
+    #
+    # Keep in mind the following cleanup task if you use evidence finder:
+    #
+    #  Before you use your management account to remove a delegated
+    # administrator, make sure that the current delegated administrator
+    # account signs in to Audit Manager and disables evidence finder first.
+    # Disabling evidence finder automatically deletes the event data store
+    # that was created in their account when they enabled evidence finder.
+    # If this task isn’t completed, the event data store remains in their
+    # account. In this case, we recommend that the original delegated
+    # administrator goes to CloudTrail Lake and manually [deletes the event
+    # data store][1].
+    #
+    #  This cleanup task is necessary to ensure that you don't end up with
+    # multiple event data stores. Audit Manager ignores an unused event data
+    # store after you remove or change a delegated administrator account.
+    # However, the unused event data store continues to incur storage costs
+    # from CloudTrail Lake if you don't delete it.
+    #
+    # When you deregister a delegated administrator account for Audit
+    # Manager, the data for that account isn’t deleted. If you want to
+    # delete resource data for a delegated administrator account, you must
+    # perform that task separately before you deregister the account.
+    # Either, you can do this in the Audit Manager console. Or, you can use
+    # one of the delete API operations that are provided by Audit Manager.
+    #
+    # To delete your Audit Manager resource data, see the following
+    # instructions:
+    #
+    # * [DeleteAssessment][2] (see also: [Deleting an assessment][3] in the
+    #   *Audit Manager User Guide*)
+    #
+    # * [DeleteAssessmentFramework][4] (see also: [Deleting a custom
+    #   framework][5] in the *Audit Manager User Guide*)
+    #
+    # * [DeleteAssessmentFrameworkShare][6] (see also: [Deleting a share
+    #   request][7] in the *Audit Manager User Guide*)
+    #
+    # * [DeleteAssessmentReport][8] (see also: [Deleting an assessment
+    #   report][9] in the *Audit Manager User Guide*)
+    #
+    # * [DeleteControl][10] (see also: [Deleting a custom control][11] in
+    #   the *Audit Manager User Guide*)
+    #
+    # At this time, Audit Manager doesn't provide an option to delete
+    # evidence for a specific delegated administrator. Instead, when your
+    # management account deregisters Audit Manager, we perform a cleanup for
+    # the current delegated administrator account at the time of
+    # deregistration.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/query-eds-disable-termination.html
+    # [2]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_DeleteAssessment.html
+    # [3]: https://docs.aws.amazon.com/audit-manager/latest/userguide/delete-assessment.html
+    # [4]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_DeleteAssessmentFramework.html
+    # [5]: https://docs.aws.amazon.com/audit-manager/latest/userguide/delete-custom-framework.html
+    # [6]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_DeleteAssessmentFrameworkShare.html
+    # [7]: https://docs.aws.amazon.com/audit-manager/latest/userguide/deleting-shared-framework-requests.html
+    # [8]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_DeleteAssessmentReport.html
+    # [9]: https://docs.aws.amazon.com/audit-manager/latest/userguide/generate-assessment-report.html#delete-assessment-report-steps
+    # [10]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_DeleteControl.html
+    # [11]: https://docs.aws.amazon.com/audit-manager/latest/userguide/delete-controls.html
     #
     # @option params [String] :admin_account_id
-    #   The identifier for the specified administrator account.
+    #   The identifier for the administrator account.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1103,13 +1360,13 @@ module Aws::AuditManager
     end
 
     # Disassociates an evidence folder from the specified assessment report
-    # in AWS Audit Manager.
+    # in Audit Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [required, String] :evidence_folder_id
-    #   The identifier for the folder in which evidence is stored.
+    #   The unique identifier for the folder that the evidence is stored in.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1129,7 +1386,7 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns the registration status of an account in AWS Audit Manager.
+    # Gets the registration status of an account in Audit Manager.
     #
     # @return [Types::GetAccountStatusResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1148,10 +1405,10 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns an assessment from AWS Audit Manager.
+    # Gets information about a specified assessment.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @return [Types::GetAssessmentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1255,10 +1512,10 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a framework from AWS Audit Manager.
+    # Gets information about a specified framework.
     #
     # @option params [required, String] :framework_id
-    #   The identifier for the specified framework.
+    #   The identifier for the framework.
     #
     # @return [Types::GetAssessmentFrameworkResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1299,7 +1556,7 @@ module Aws::AuditManager
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_description #=> String
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_set_up_option #=> String, one of "System_Controls_Mapping", "Procedural_Controls_Mapping"
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_type #=> String, one of "AWS_Cloudtrail", "AWS_Config", "AWS_Security_Hub", "AWS_API_Call", "MANUAL"
-    #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST"
+    #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST", "UPLOAD_FILE", "INPUT_TEXT"
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_keyword.keyword_value #=> String
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_frequency #=> String, one of "DAILY", "WEEKLY", "MONTHLY"
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].troubleshooting_text #=> String
@@ -1325,13 +1582,13 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns the URL of a specified assessment report in AWS Audit Manager.
+    # Gets the URL of an assessment report in Audit Manager.
     #
     # @option params [required, String] :assessment_report_id
-    #   The identifier for the assessment report.
+    #   The unique identifier for the assessment report.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @return [Types::GetAssessmentReportUrlResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1358,23 +1615,23 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of changelogs from AWS Audit Manager.
+    # Gets a list of changelogs from Audit Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [String] :control_set_id
-    #   The identifier for the specified control set.
+    #   The unique identifier for the control set.
     #
     # @option params [String] :control_id
-    #   The identifier for the specified control.
+    #   The unique identifier for the control.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::GetChangeLogsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1412,10 +1669,10 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a control from AWS Audit Manager.
+    # Gets information about a specified control.
     #
     # @option params [required, String] :control_id
-    #   The identifier for the specified control.
+    #   The identifier for the control.
     #
     # @return [Types::GetControlResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1444,7 +1701,7 @@ module Aws::AuditManager
     #   resp.control.control_mapping_sources[0].source_description #=> String
     #   resp.control.control_mapping_sources[0].source_set_up_option #=> String, one of "System_Controls_Mapping", "Procedural_Controls_Mapping"
     #   resp.control.control_mapping_sources[0].source_type #=> String, one of "AWS_Cloudtrail", "AWS_Config", "AWS_Security_Hub", "AWS_API_Call", "MANUAL"
-    #   resp.control.control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST"
+    #   resp.control.control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST", "UPLOAD_FILE", "INPUT_TEXT"
     #   resp.control.control_mapping_sources[0].source_keyword.keyword_value #=> String
     #   resp.control.control_mapping_sources[0].source_frequency #=> String, one of "DAILY", "WEEKLY", "MONTHLY"
     #   resp.control.control_mapping_sources[0].troubleshooting_text #=> String
@@ -1464,14 +1721,14 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of delegations from an audit owner to a delegate.
+    # Gets a list of delegations from an audit owner to a delegate.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::GetDelegationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1508,19 +1765,19 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns evidence from AWS Audit Manager.
+    # Gets information about a specified evidence item.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [required, String] :control_set_id
-    #   The identifier for the specified control set.
+    #   The unique identifier for the control set.
     #
     # @option params [required, String] :evidence_folder_id
-    #   The identifier for the folder in which the evidence is stored.
+    #   The unique identifier for the folder that the evidence is stored in.
     #
     # @option params [required, String] :evidence_id
-    #   The identifier for the evidence.
+    #   The unique identifier for the evidence.
     #
     # @return [Types::GetEvidenceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1546,6 +1803,7 @@ module Aws::AuditManager
     #   resp.evidence.resources_included #=> Array
     #   resp.evidence.resources_included[0].arn #=> String
     #   resp.evidence.resources_included[0].value #=> String
+    #   resp.evidence.resources_included[0].compliance_check #=> String
     #   resp.evidence.attributes #=> Hash
     #   resp.evidence.attributes["EvidenceAttributeKey"] #=> String
     #   resp.evidence.iam_id #=> String
@@ -1565,24 +1823,23 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns all evidence from a specified evidence folder in AWS Audit
-    # Manager.
+    # Gets all evidence from a specified evidence folder in Audit Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The identifier for the assessment.
     #
     # @option params [required, String] :control_set_id
     #   The identifier for the control set.
     #
     # @option params [required, String] :evidence_folder_id
-    #   The unique identifier for the folder in which the evidence is stored.
+    #   The unique identifier for the folder that the evidence is stored in.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::GetEvidenceByEvidenceFolderResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1613,6 +1870,7 @@ module Aws::AuditManager
     #   resp.evidence[0].resources_included #=> Array
     #   resp.evidence[0].resources_included[0].arn #=> String
     #   resp.evidence[0].resources_included[0].value #=> String
+    #   resp.evidence[0].resources_included[0].compliance_check #=> String
     #   resp.evidence[0].attributes #=> Hash
     #   resp.evidence[0].attributes["EvidenceAttributeKey"] #=> String
     #   resp.evidence[0].iam_id #=> String
@@ -1633,17 +1891,73 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns an evidence folder from the specified assessment in AWS Audit
-    # Manager.
+    # Creates a presigned Amazon S3 URL that can be used to upload a file as
+    # manual evidence. For instructions on how to use this operation, see
+    # [Upload a file from your browser ][1] in the *Audit Manager User
+    # Guide*.
+    #
+    # The following restrictions apply to this operation:
+    #
+    # * Maximum size of an individual evidence file: 100 MB
+    #
+    # * Number of daily manual evidence uploads per control: 100
+    #
+    # * Supported file formats: See [Supported file types for manual
+    #   evidence][2] in the *Audit Manager User Guide*
+    #
+    # For more information about Audit Manager service restrictions, see
+    # [Quotas and restrictions for Audit Manager][3].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/audit-manager/latest/userguide/upload-evidence.html#how-to-upload-manual-evidence-files
+    # [2]: https://docs.aws.amazon.com/audit-manager/latest/userguide/upload-evidence.html#supported-manual-evidence-files
+    # [3]: https://docs.aws.amazon.com/audit-manager/latest/userguide/service-quotas.html
+    #
+    # @option params [required, String] :file_name
+    #   The file that you want to upload. For a list of supported file
+    #   formats, see [Supported file types for manual evidence][1] in the
+    #   *Audit Manager User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/audit-manager/latest/userguide/upload-evidence.html#supported-manual-evidence-files
+    #
+    # @return [Types::GetEvidenceFileUploadUrlResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetEvidenceFileUploadUrlResponse#evidence_file_name #evidence_file_name} => String
+    #   * {Types::GetEvidenceFileUploadUrlResponse#upload_url #upload_url} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_evidence_file_upload_url({
+    #     file_name: "ManualEvidenceLocalFileName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.evidence_file_name #=> String
+    #   resp.upload_url #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/GetEvidenceFileUploadUrl AWS API Documentation
+    #
+    # @overload get_evidence_file_upload_url(params = {})
+    # @param [Hash] params ({})
+    def get_evidence_file_upload_url(params = {}, options = {})
+      req = build_request(:get_evidence_file_upload_url, params)
+      req.send_request(options)
+    end
+
+    # Gets an evidence folder from a specified assessment in Audit Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [required, String] :control_set_id
-    #   The identifier for the specified control set.
+    #   The unique identifier for the control set.
     #
     # @option params [required, String] :evidence_folder_id
-    #   The identifier for the folder in which the evidence is stored.
+    #   The unique identifier for the folder that the evidence is stored in.
     #
     # @return [Types::GetEvidenceFolderResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1687,18 +2001,18 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns the evidence folders from a specified assessment in AWS Audit
+    # Gets the evidence folders from a specified assessment in Audit
     # Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::GetEvidenceFoldersByAssessmentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1747,24 +2061,24 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of evidence folders associated with a specified control
-    # of an assessment in AWS Audit Manager.
+    # Gets a list of evidence folders that are associated with a specified
+    # control in an Audit Manager assessment.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The identifier for the assessment.
     #
     # @option params [required, String] :control_set_id
-    #   The identifier for the specified control set.
+    #   The identifier for the control set.
     #
     # @option params [required, String] :control_id
-    #   The identifier for the specified control.
+    #   The identifier for the control.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::GetEvidenceFoldersByAssessmentControlResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1815,8 +2129,67 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns the name of the delegated AWS administrator account for the
-    # AWS organization.
+    # Gets the latest analytics data for all your current active
+    # assessments.
+    #
+    # @return [Types::GetInsightsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetInsightsResponse#insights #insights} => Types::Insights
+    #
+    # @example Response structure
+    #
+    #   resp.insights.active_assessments_count #=> Integer
+    #   resp.insights.noncompliant_evidence_count #=> Integer
+    #   resp.insights.compliant_evidence_count #=> Integer
+    #   resp.insights.inconclusive_evidence_count #=> Integer
+    #   resp.insights.assessment_controls_count_by_noncompliant_evidence #=> Integer
+    #   resp.insights.total_assessment_controls_count #=> Integer
+    #   resp.insights.last_updated #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/GetInsights AWS API Documentation
+    #
+    # @overload get_insights(params = {})
+    # @param [Hash] params ({})
+    def get_insights(params = {}, options = {})
+      req = build_request(:get_insights, params)
+      req.send_request(options)
+    end
+
+    # Gets the latest analytics data for a specific active assessment.
+    #
+    # @option params [required, String] :assessment_id
+    #   The unique identifier for the assessment.
+    #
+    # @return [Types::GetInsightsByAssessmentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetInsightsByAssessmentResponse#insights #insights} => Types::InsightsByAssessment
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_insights_by_assessment({
+    #     assessment_id: "UUID", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.insights.noncompliant_evidence_count #=> Integer
+    #   resp.insights.compliant_evidence_count #=> Integer
+    #   resp.insights.inconclusive_evidence_count #=> Integer
+    #   resp.insights.assessment_controls_count_by_noncompliant_evidence #=> Integer
+    #   resp.insights.total_assessment_controls_count #=> Integer
+    #   resp.insights.last_updated #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/GetInsightsByAssessment AWS API Documentation
+    #
+    # @overload get_insights_by_assessment(params = {})
+    # @param [Hash] params ({})
+    def get_insights_by_assessment(params = {}, options = {})
+      req = build_request(:get_insights_by_assessment, params)
+      req.send_request(options)
+    end
+
+    # Gets the name of the delegated Amazon Web Services administrator
+    # account for a specified organization.
     #
     # @return [Types::GetOrganizationAdminAccountResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1837,8 +2210,15 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of the in-scope AWS services for the specified
-    # assessment.
+    # Gets a list of all of the Amazon Web Services that you can choose to
+    # include in your assessment. When you [create an assessment][1],
+    # specify which of these services you want to include to narrow the
+    # assessment's [scope][2].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_CreateAssessment.html
+    # [2]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_Scope.html
     #
     # @return [Types::GetServicesInScopeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1861,10 +2241,10 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns the settings for the specified AWS account.
+    # Gets the settings for a specified Amazon Web Services account.
     #
     # @option params [required, String] :attribute
-    #   The list of `SettingAttribute` enum values.
+    #   The list of setting attribute enum values.
     #
     # @return [Types::GetSettingsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1873,7 +2253,7 @@ module Aws::AuditManager
     # @example Request syntax with placeholder values
     #
     #   resp = client.get_settings({
-    #     attribute: "ALL", # required, accepts ALL, IS_AWS_ORG_ENABLED, SNS_TOPIC, DEFAULT_ASSESSMENT_REPORTS_DESTINATION, DEFAULT_PROCESS_OWNERS
+    #     attribute: "ALL", # required, accepts ALL, IS_AWS_ORG_ENABLED, SNS_TOPIC, DEFAULT_ASSESSMENT_REPORTS_DESTINATION, DEFAULT_PROCESS_OWNERS, EVIDENCE_FINDER_ENABLEMENT, DEREGISTRATION_POLICY, DEFAULT_EXPORT_DESTINATION
     #   })
     #
     # @example Response structure
@@ -1886,6 +2266,13 @@ module Aws::AuditManager
     #   resp.settings.default_process_owners[0].role_type #=> String, one of "PROCESS_OWNER", "RESOURCE_OWNER"
     #   resp.settings.default_process_owners[0].role_arn #=> String
     #   resp.settings.kms_key #=> String
+    #   resp.settings.evidence_finder_enablement.event_data_store_arn #=> String
+    #   resp.settings.evidence_finder_enablement.enablement_status #=> String, one of "ENABLED", "DISABLED", "ENABLE_IN_PROGRESS", "DISABLE_IN_PROGRESS"
+    #   resp.settings.evidence_finder_enablement.backfill_status #=> String, one of "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
+    #   resp.settings.evidence_finder_enablement.error #=> String
+    #   resp.settings.deregistration_policy.delete_resources #=> String, one of "ALL", "DEFAULT"
+    #   resp.settings.default_export_destination.destination_type #=> String, one of "S3"
+    #   resp.settings.default_export_destination.destination #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/GetSettings AWS API Documentation
     #
@@ -1896,18 +2283,138 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of the frameworks available in the AWS Audit Manager
-    # framework library.
+    # Lists the latest analytics data for controls within a specific control
+    # domain and a specific active assessment.
     #
-    # @option params [required, String] :framework_type
-    #   The type of framework, such as standard or custom.
+    # <note markdown="1"> Control insights are listed only if the control belongs to the control
+    # domain and assessment that was specified. Moreover, the control must
+    # have collected evidence on the `lastUpdated` date of
+    # `controlInsightsByAssessment`. If neither of these conditions are met,
+    # no data is listed for that control.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :control_domain_id
+    #   The unique identifier for the control domain.
+    #
+    # @option params [required, String] :assessment_id
+    #   The unique identifier for the active assessment.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
+    #
+    # @return [Types::ListAssessmentControlInsightsByControlDomainResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListAssessmentControlInsightsByControlDomainResponse#control_insights_by_assessment #control_insights_by_assessment} => Array&lt;Types::ControlInsightsMetadataByAssessmentItem&gt;
+    #   * {Types::ListAssessmentControlInsightsByControlDomainResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_assessment_control_insights_by_control_domain({
+    #     control_domain_id: "UUID", # required
+    #     assessment_id: "UUID", # required
+    #     next_token: "Token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.control_insights_by_assessment #=> Array
+    #   resp.control_insights_by_assessment[0].name #=> String
+    #   resp.control_insights_by_assessment[0].id #=> String
+    #   resp.control_insights_by_assessment[0].evidence_insights.noncompliant_evidence_count #=> Integer
+    #   resp.control_insights_by_assessment[0].evidence_insights.compliant_evidence_count #=> Integer
+    #   resp.control_insights_by_assessment[0].evidence_insights.inconclusive_evidence_count #=> Integer
+    #   resp.control_insights_by_assessment[0].control_set_name #=> String
+    #   resp.control_insights_by_assessment[0].last_updated #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/ListAssessmentControlInsightsByControlDomain AWS API Documentation
+    #
+    # @overload list_assessment_control_insights_by_control_domain(params = {})
+    # @param [Hash] params ({})
+    def list_assessment_control_insights_by_control_domain(params = {}, options = {})
+      req = build_request(:list_assessment_control_insights_by_control_domain, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of sent or received share requests for custom
+    # frameworks in Audit Manager.
+    #
+    # @option params [required, String] :request_type
+    #   Specifies whether the share request is a sent request or a received
+    #   request.
+    #
+    # @option params [String] :next_token
+    #   The pagination token that's used to fetch the next set of results.
+    #
+    # @option params [Integer] :max_results
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
+    #
+    # @return [Types::ListAssessmentFrameworkShareRequestsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListAssessmentFrameworkShareRequestsResponse#assessment_framework_share_requests #assessment_framework_share_requests} => Array&lt;Types::AssessmentFrameworkShareRequest&gt;
+    #   * {Types::ListAssessmentFrameworkShareRequestsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_assessment_framework_share_requests({
+    #     request_type: "SENT", # required, accepts SENT, RECEIVED
+    #     next_token: "Token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.assessment_framework_share_requests #=> Array
+    #   resp.assessment_framework_share_requests[0].id #=> String
+    #   resp.assessment_framework_share_requests[0].framework_id #=> String
+    #   resp.assessment_framework_share_requests[0].framework_name #=> String
+    #   resp.assessment_framework_share_requests[0].framework_description #=> String
+    #   resp.assessment_framework_share_requests[0].status #=> String, one of "ACTIVE", "REPLICATING", "SHARED", "EXPIRING", "FAILED", "EXPIRED", "DECLINED", "REVOKED"
+    #   resp.assessment_framework_share_requests[0].source_account #=> String
+    #   resp.assessment_framework_share_requests[0].destination_account #=> String
+    #   resp.assessment_framework_share_requests[0].destination_region #=> String
+    #   resp.assessment_framework_share_requests[0].expiration_time #=> Time
+    #   resp.assessment_framework_share_requests[0].creation_time #=> Time
+    #   resp.assessment_framework_share_requests[0].last_updated #=> Time
+    #   resp.assessment_framework_share_requests[0].comment #=> String
+    #   resp.assessment_framework_share_requests[0].standard_controls_count #=> Integer
+    #   resp.assessment_framework_share_requests[0].custom_controls_count #=> Integer
+    #   resp.assessment_framework_share_requests[0].compliance_type #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/ListAssessmentFrameworkShareRequests AWS API Documentation
+    #
+    # @overload list_assessment_framework_share_requests(params = {})
+    # @param [Hash] params ({})
+    def list_assessment_framework_share_requests(params = {}, options = {})
+      req = build_request(:list_assessment_framework_share_requests, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of the frameworks that are available in the Audit
+    # Manager framework library.
+    #
+    # @option params [required, String] :framework_type
+    #   The type of framework, such as a standard framework or a custom
+    #   framework.
+    #
+    # @option params [String] :next_token
+    #   The pagination token that's used to fetch the next set of results.
+    #
+    # @option params [Integer] :max_results
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::ListAssessmentFrameworksResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1949,14 +2456,14 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of assessment reports created in AWS Audit Manager.
+    # Returns a list of assessment reports created in Audit Manager.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::ListAssessmentReportsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1994,14 +2501,17 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of current and past assessments from AWS Audit Manager.
+    # Returns a list of current and past assessments from Audit Manager.
+    #
+    # @option params [String] :status
+    #   The current status of the assessment.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::ListAssessmentsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2013,6 +2523,7 @@ module Aws::AuditManager
     # @example Request syntax with placeholder values
     #
     #   resp = client.list_assessments({
+    #     status: "ACTIVE", # accepts ACTIVE, INACTIVE
     #     next_token: "Token",
     #     max_results: 1,
     #   })
@@ -2052,17 +2563,182 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of controls from AWS Audit Manager.
+    # Lists the latest analytics data for control domains across all of your
+    # active assessments.
     #
-    # @option params [required, String] :control_type
-    #   The type of control, such as standard or custom.
+    # <note markdown="1"> A control domain is listed only if at least one of the controls within
+    # that domain collected evidence on the `lastUpdated` date of
+    # `controlDomainInsights`. If this condition isn’t met, no data is
+    # listed for that control domain.
+    #
+    #  </note>
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
+    #
+    # @return [Types::ListControlDomainInsightsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListControlDomainInsightsResponse#control_domain_insights #control_domain_insights} => Array&lt;Types::ControlDomainInsights&gt;
+    #   * {Types::ListControlDomainInsightsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_control_domain_insights({
+    #     next_token: "Token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.control_domain_insights #=> Array
+    #   resp.control_domain_insights[0].name #=> String
+    #   resp.control_domain_insights[0].id #=> String
+    #   resp.control_domain_insights[0].controls_count_by_noncompliant_evidence #=> Integer
+    #   resp.control_domain_insights[0].total_controls_count #=> Integer
+    #   resp.control_domain_insights[0].evidence_insights.noncompliant_evidence_count #=> Integer
+    #   resp.control_domain_insights[0].evidence_insights.compliant_evidence_count #=> Integer
+    #   resp.control_domain_insights[0].evidence_insights.inconclusive_evidence_count #=> Integer
+    #   resp.control_domain_insights[0].last_updated #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/ListControlDomainInsights AWS API Documentation
+    #
+    # @overload list_control_domain_insights(params = {})
+    # @param [Hash] params ({})
+    def list_control_domain_insights(params = {}, options = {})
+      req = build_request(:list_control_domain_insights, params)
+      req.send_request(options)
+    end
+
+    # Lists analytics data for control domains within a specified active
+    # assessment.
+    #
+    # <note markdown="1"> A control domain is listed only if at least one of the controls within
+    # that domain collected evidence on the `lastUpdated` date of
+    # `controlDomainInsights`. If this condition isn’t met, no data is
+    # listed for that domain.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :assessment_id
+    #   The unique identifier for the active assessment.
+    #
+    # @option params [String] :next_token
+    #   The pagination token that's used to fetch the next set of results.
+    #
+    # @option params [Integer] :max_results
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
+    #
+    # @return [Types::ListControlDomainInsightsByAssessmentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListControlDomainInsightsByAssessmentResponse#control_domain_insights #control_domain_insights} => Array&lt;Types::ControlDomainInsights&gt;
+    #   * {Types::ListControlDomainInsightsByAssessmentResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_control_domain_insights_by_assessment({
+    #     assessment_id: "UUID", # required
+    #     next_token: "Token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.control_domain_insights #=> Array
+    #   resp.control_domain_insights[0].name #=> String
+    #   resp.control_domain_insights[0].id #=> String
+    #   resp.control_domain_insights[0].controls_count_by_noncompliant_evidence #=> Integer
+    #   resp.control_domain_insights[0].total_controls_count #=> Integer
+    #   resp.control_domain_insights[0].evidence_insights.noncompliant_evidence_count #=> Integer
+    #   resp.control_domain_insights[0].evidence_insights.compliant_evidence_count #=> Integer
+    #   resp.control_domain_insights[0].evidence_insights.inconclusive_evidence_count #=> Integer
+    #   resp.control_domain_insights[0].last_updated #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/ListControlDomainInsightsByAssessment AWS API Documentation
+    #
+    # @overload list_control_domain_insights_by_assessment(params = {})
+    # @param [Hash] params ({})
+    def list_control_domain_insights_by_assessment(params = {}, options = {})
+      req = build_request(:list_control_domain_insights_by_assessment, params)
+      req.send_request(options)
+    end
+
+    # Lists the latest analytics data for controls within a specific control
+    # domain across all active assessments.
+    #
+    # <note markdown="1"> Control insights are listed only if the control belongs to the control
+    # domain that was specified and the control collected evidence on the
+    # `lastUpdated` date of `controlInsightsMetadata`. If neither of these
+    # conditions are met, no data is listed for that control.
+    #
+    #  </note>
+    #
+    # @option params [required, String] :control_domain_id
+    #   The unique identifier for the control domain.
+    #
+    # @option params [String] :next_token
+    #   The pagination token that's used to fetch the next set of results.
+    #
+    # @option params [Integer] :max_results
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
+    #
+    # @return [Types::ListControlInsightsByControlDomainResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListControlInsightsByControlDomainResponse#control_insights_metadata #control_insights_metadata} => Array&lt;Types::ControlInsightsMetadataItem&gt;
+    #   * {Types::ListControlInsightsByControlDomainResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_control_insights_by_control_domain({
+    #     control_domain_id: "UUID", # required
+    #     next_token: "Token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.control_insights_metadata #=> Array
+    #   resp.control_insights_metadata[0].name #=> String
+    #   resp.control_insights_metadata[0].id #=> String
+    #   resp.control_insights_metadata[0].evidence_insights.noncompliant_evidence_count #=> Integer
+    #   resp.control_insights_metadata[0].evidence_insights.compliant_evidence_count #=> Integer
+    #   resp.control_insights_metadata[0].evidence_insights.inconclusive_evidence_count #=> Integer
+    #   resp.control_insights_metadata[0].last_updated #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/ListControlInsightsByControlDomain AWS API Documentation
+    #
+    # @overload list_control_insights_by_control_domain(params = {})
+    # @param [Hash] params ({})
+    def list_control_insights_by_control_domain(params = {}, options = {})
+      req = build_request(:list_control_insights_by_control_domain, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of controls from Audit Manager.
+    #
+    # @option params [required, String] :control_type
+    #   The type of control, such as a standard control or a custom control.
+    #
+    # @option params [String] :next_token
+    #   The pagination token that's used to fetch the next set of results.
+    #
+    # @option params [Integer] :max_results
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::ListControlsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2099,18 +2775,18 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of keywords that pre-mapped to the specified control
-    # data source.
+    # Returns a list of keywords that are pre-mapped to the specified
+    # control data source.
     #
     # @option params [required, String] :source
-    #   The control mapping data source to which the keywords apply.
+    #   The control mapping data source that the keywords apply to.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::ListKeywordsForDataSourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2142,14 +2818,14 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of all AWS Audit Manager notifications.
+    # Returns a list of all Audit Manager notifications.
     #
     # @option params [String] :next_token
-    #   The pagination token used to fetch the next set of results.
+    #   The pagination token that's used to fetch the next set of results.
     #
     # @option params [Integer] :max_results
-    #   Represents the maximum number of results per page, or per API request
-    #   call.
+    #   Represents the maximum number of results on a page or for an API
+    #   request call.
     #
     # @return [Types::ListNotificationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2187,11 +2863,10 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Returns a list of tags for the specified resource in AWS Audit
-    # Manager.
+    # Returns a list of tags for the specified resource in Audit Manager.
     #
     # @option params [required, String] :resource_arn
-    #   The Amazon Resource Name (ARN) of the specified resource.
+    #   The Amazon Resource Name (ARN) of the resource.
     #
     # @return [Types::ListTagsForResourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2217,13 +2892,13 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Enables AWS Audit Manager for the specified AWS account.
+    # Enables Audit Manager for the specified Amazon Web Services account.
     #
     # @option params [String] :kms_key
-    #   The AWS KMS key details.
+    #   The KMS key details.
     #
     # @option params [String] :delegated_admin_account
-    #   The delegated administrator account for AWS Audit Manager.
+    #   The delegated administrator account for Audit Manager.
     #
     # @return [Types::RegisterAccountResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2249,11 +2924,11 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Enables an AWS account within the organization as the delegated
-    # administrator for AWS Audit Manager.
+    # Enables an Amazon Web Services account within the organization as the
+    # delegated administrator for Audit Manager.
     #
     # @option params [required, String] :admin_account_id
-    #   The identifier for the specified delegated administrator account.
+    #   The identifier for the delegated administrator account.
     #
     # @return [Types::RegisterOrganizationAdminAccountResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2280,13 +2955,111 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Tags the specified resource in AWS Audit Manager.
+    # Creates a share request for a custom framework in Audit Manager.
+    #
+    # The share request specifies a recipient and notifies them that a
+    # custom framework is available. Recipients have 120 days to accept or
+    # decline the request. If no action is taken, the share request expires.
+    #
+    # When you create a share request, Audit Manager stores a snapshot of
+    # your custom framework in the US East (N. Virginia) Amazon Web Services
+    # Region. Audit Manager also stores a backup of the same snapshot in the
+    # US West (Oregon) Amazon Web Services Region.
+    #
+    # Audit Manager deletes the snapshot and the backup snapshot when one of
+    # the following events occurs:
+    #
+    # * The sender revokes the share request.
+    #
+    # * The recipient declines the share request.
+    #
+    # * The recipient encounters an error and doesn't successfully accept
+    #   the share request.
+    #
+    # * The share request expires before the recipient responds to the
+    #   request.
+    #
+    # When a sender [resends a share request][1], the snapshot is replaced
+    # with an updated version that corresponds with the latest version of
+    # the custom framework.
+    #
+    # When a recipient accepts a share request, the snapshot is replicated
+    # into their Amazon Web Services account under the Amazon Web Services
+    # Region that was specified in the share request.
+    #
+    # When you invoke the `StartAssessmentFrameworkShare` API, you are about
+    # to share a custom framework with another Amazon Web Services account.
+    # You may not share a custom framework that is derived from a standard
+    # framework if the standard framework is designated as not eligible for
+    # sharing by Amazon Web Services, unless you have obtained permission to
+    # do so from the owner of the standard framework. To learn more about
+    # which standard frameworks are eligible for sharing, see [Framework
+    # sharing eligibility][2] in the *Audit Manager User Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/audit-manager/latest/userguide/framework-sharing.html#framework-sharing-resend
+    # [2]: https://docs.aws.amazon.com/audit-manager/latest/userguide/share-custom-framework-concepts-and-terminology.html#eligibility
+    #
+    # @option params [required, String] :framework_id
+    #   The unique identifier for the custom framework to be shared.
+    #
+    # @option params [required, String] :destination_account
+    #   The Amazon Web Services account of the recipient.
+    #
+    # @option params [required, String] :destination_region
+    #   The Amazon Web Services Region of the recipient.
+    #
+    # @option params [String] :comment
+    #   An optional comment from the sender about the share request.
+    #
+    # @return [Types::StartAssessmentFrameworkShareResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StartAssessmentFrameworkShareResponse#assessment_framework_share_request #assessment_framework_share_request} => Types::AssessmentFrameworkShareRequest
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.start_assessment_framework_share({
+    #     framework_id: "UUID", # required
+    #     destination_account: "AccountId", # required
+    #     destination_region: "Region", # required
+    #     comment: "ShareRequestComment",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.assessment_framework_share_request.id #=> String
+    #   resp.assessment_framework_share_request.framework_id #=> String
+    #   resp.assessment_framework_share_request.framework_name #=> String
+    #   resp.assessment_framework_share_request.framework_description #=> String
+    #   resp.assessment_framework_share_request.status #=> String, one of "ACTIVE", "REPLICATING", "SHARED", "EXPIRING", "FAILED", "EXPIRED", "DECLINED", "REVOKED"
+    #   resp.assessment_framework_share_request.source_account #=> String
+    #   resp.assessment_framework_share_request.destination_account #=> String
+    #   resp.assessment_framework_share_request.destination_region #=> String
+    #   resp.assessment_framework_share_request.expiration_time #=> Time
+    #   resp.assessment_framework_share_request.creation_time #=> Time
+    #   resp.assessment_framework_share_request.last_updated #=> Time
+    #   resp.assessment_framework_share_request.comment #=> String
+    #   resp.assessment_framework_share_request.standard_controls_count #=> Integer
+    #   resp.assessment_framework_share_request.custom_controls_count #=> Integer
+    #   resp.assessment_framework_share_request.compliance_type #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/StartAssessmentFrameworkShare AWS API Documentation
+    #
+    # @overload start_assessment_framework_share(params = {})
+    # @param [Hash] params ({})
+    def start_assessment_framework_share(params = {}, options = {})
+      req = build_request(:start_assessment_framework_share, params)
+      req.send_request(options)
+    end
+
+    # Tags the specified resource in Audit Manager.
     #
     # @option params [required, String] :resource_arn
-    #   The Amazon Resource Name (ARN) of the specified resource.
+    #   The Amazon Resource Name (ARN) of the resource.
     #
     # @option params [required, Hash<String,String>] :tags
-    #   The tags to be associated with the resource.
+    #   The tags that are associated with the resource.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -2308,7 +3081,7 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Removes a tag from a resource in AWS Audit Manager.
+    # Removes a tag from a resource in Audit Manager.
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) of the specified resource.
@@ -2334,26 +3107,26 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Edits an AWS Audit Manager assessment.
+    # Edits an Audit Manager assessment.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [String] :assessment_name
-    #   The name of the specified assessment to be updated.
+    #   The name of the assessment to be updated.
     #
     # @option params [String] :assessment_description
-    #   The description of the specified assessment.
+    #   The description of the assessment.
     #
     # @option params [required, Types::Scope] :scope
-    #   The scope of the specified assessment.
+    #   The scope of the assessment.
     #
     # @option params [Types::AssessmentReportsDestination] :assessment_reports_destination
-    #   The assessment report storage destination for the specified assessment
-    #   that is being updated.
+    #   The assessment report storage destination for the assessment that's
+    #   being updated.
     #
     # @option params [Array<Types::Role>] :roles
-    #   The list of roles for the specified assessment.
+    #   The list of roles for the assessment.
     #
     # @return [Types::UpdateAssessmentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2385,8 +3158,8 @@ module Aws::AuditManager
     #     },
     #     roles: [
     #       {
-    #         role_type: "PROCESS_OWNER", # accepts PROCESS_OWNER, RESOURCE_OWNER
-    #         role_arn: "IamArn",
+    #         role_type: "PROCESS_OWNER", # required, accepts PROCESS_OWNER, RESOURCE_OWNER
+    #         role_arn: "IamArn", # required
     #       },
     #     ],
     #   })
@@ -2480,22 +3253,22 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Updates a control within an assessment in AWS Audit Manager.
+    # Updates a control within an assessment in Audit Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [required, String] :control_set_id
-    #   The identifier for the specified control set.
+    #   The unique identifier for the control set.
     #
     # @option params [required, String] :control_id
-    #   The identifier for the specified control.
+    #   The unique identifier for the control.
     #
     # @option params [String] :control_status
-    #   The status of the specified control.
+    #   The status of the control.
     #
     # @option params [String] :comment_body
-    #   The comment body text for the specified control.
+    #   The comment body text for the control.
     #
     # @return [Types::UpdateAssessmentControlResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2536,20 +3309,19 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Updates the status of a control set in an AWS Audit Manager
-    # assessment.
+    # Updates the status of a control set in an Audit Manager assessment.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [required, String] :control_set_id
-    #   The identifier for the specified control set.
+    #   The unique identifier for the control set.
     #
     # @option params [required, String] :status
-    #   The status of the control set that is being updated.
+    #   The status of the control set that's being updated.
     #
     # @option params [required, String] :comment
-    #   The comment related to the status update.
+    #   The comment that's related to the status update.
     #
     # @return [Types::UpdateAssessmentControlSetStatusResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2610,23 +3382,23 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Updates a custom framework in AWS Audit Manager.
+    # Updates a custom framework in Audit Manager.
     #
     # @option params [required, String] :framework_id
-    #   The identifier for the specified framework.
+    #   The unique identifier for the framework.
     #
     # @option params [required, String] :name
     #   The name of the framework to be updated.
     #
     # @option params [String] :description
-    #   The description of the framework that is to be updated.
+    #   The description of the updated framework.
     #
     # @option params [String] :compliance_type
     #   The compliance type that the new custom framework supports, such as
     #   CIS or HIPAA.
     #
     # @option params [required, Array<Types::UpdateAssessmentFrameworkControlSet>] :control_sets
-    #   The control sets associated with the framework.
+    #   The control sets that are associated with the framework.
     #
     # @return [Types::UpdateAssessmentFrameworkResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2643,9 +3415,9 @@ module Aws::AuditManager
     #       {
     #         id: "ControlSetName",
     #         name: "ControlSetName", # required
-    #         controls: [
+    #         controls: [ # required
     #           {
-    #             id: "UUID",
+    #             id: "UUID", # required
     #           },
     #         ],
     #       },
@@ -2681,7 +3453,7 @@ module Aws::AuditManager
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_description #=> String
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_set_up_option #=> String, one of "System_Controls_Mapping", "Procedural_Controls_Mapping"
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_type #=> String, one of "AWS_Cloudtrail", "AWS_Config", "AWS_Security_Hub", "AWS_API_Call", "MANUAL"
-    #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST"
+    #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST", "UPLOAD_FILE", "INPUT_TEXT"
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_keyword.keyword_value #=> String
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].source_frequency #=> String, one of "DAILY", "WEEKLY", "MONTHLY"
     #   resp.framework.control_sets[0].controls[0].control_mapping_sources[0].troubleshooting_text #=> String
@@ -2707,13 +3479,64 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Updates the status of an assessment in AWS Audit Manager.
+    # Updates a share request for a custom framework in Audit Manager.
+    #
+    # @option params [required, String] :request_id
+    #   The unique identifier for the share request.
+    #
+    # @option params [required, String] :request_type
+    #   Specifies whether the share request is a sent request or a received
+    #   request.
+    #
+    # @option params [required, String] :action
+    #   Specifies the update action for the share request.
+    #
+    # @return [Types::UpdateAssessmentFrameworkShareResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateAssessmentFrameworkShareResponse#assessment_framework_share_request #assessment_framework_share_request} => Types::AssessmentFrameworkShareRequest
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_assessment_framework_share({
+    #     request_id: "UUID", # required
+    #     request_type: "SENT", # required, accepts SENT, RECEIVED
+    #     action: "ACCEPT", # required, accepts ACCEPT, DECLINE, REVOKE
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.assessment_framework_share_request.id #=> String
+    #   resp.assessment_framework_share_request.framework_id #=> String
+    #   resp.assessment_framework_share_request.framework_name #=> String
+    #   resp.assessment_framework_share_request.framework_description #=> String
+    #   resp.assessment_framework_share_request.status #=> String, one of "ACTIVE", "REPLICATING", "SHARED", "EXPIRING", "FAILED", "EXPIRED", "DECLINED", "REVOKED"
+    #   resp.assessment_framework_share_request.source_account #=> String
+    #   resp.assessment_framework_share_request.destination_account #=> String
+    #   resp.assessment_framework_share_request.destination_region #=> String
+    #   resp.assessment_framework_share_request.expiration_time #=> Time
+    #   resp.assessment_framework_share_request.creation_time #=> Time
+    #   resp.assessment_framework_share_request.last_updated #=> Time
+    #   resp.assessment_framework_share_request.comment #=> String
+    #   resp.assessment_framework_share_request.standard_controls_count #=> Integer
+    #   resp.assessment_framework_share_request.custom_controls_count #=> Integer
+    #   resp.assessment_framework_share_request.compliance_type #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/UpdateAssessmentFrameworkShare AWS API Documentation
+    #
+    # @overload update_assessment_framework_share(params = {})
+    # @param [Hash] params ({})
+    def update_assessment_framework_share(params = {}, options = {})
+      req = build_request(:update_assessment_framework_share, params)
+      req.send_request(options)
+    end
+
+    # Updates the status of an assessment in Audit Manager.
     #
     # @option params [required, String] :assessment_id
-    #   The identifier for the specified assessment.
+    #   The unique identifier for the assessment.
     #
     # @option params [required, String] :status
-    #   The current status of the specified assessment.
+    #   The current status of the assessment.
     #
     # @return [Types::UpdateAssessmentStatusResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2815,29 +3638,28 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Updates a custom control in AWS Audit Manager.
+    # Updates a custom control in Audit Manager.
     #
     # @option params [required, String] :control_id
-    #   The identifier for the specified control.
+    #   The identifier for the control.
     #
     # @option params [required, String] :name
-    #   The name of the control to be updated.
+    #   The name of the updated control.
     #
     # @option params [String] :description
     #   The optional description of the control.
     #
     # @option params [String] :testing_information
-    #   The steps that to follow to determine if the control has been
-    #   satisfied.
+    #   The steps that you should follow to determine if the control is met.
     #
     # @option params [String] :action_plan_title
     #   The title of the action plan for remediating the control.
     #
     # @option params [String] :action_plan_instructions
-    #   The recommended actions to carry out if the control is not fulfilled.
+    #   The recommended actions to carry out if the control isn't fulfilled.
     #
     # @option params [required, Array<Types::ControlMappingSource>] :control_mapping_sources
-    #   The data mapping sources for the specified control.
+    #   The data mapping sources for the control.
     #
     # @return [Types::UpdateControlResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2860,7 +3682,7 @@ module Aws::AuditManager
     #         source_set_up_option: "System_Controls_Mapping", # accepts System_Controls_Mapping, Procedural_Controls_Mapping
     #         source_type: "AWS_Cloudtrail", # accepts AWS_Cloudtrail, AWS_Config, AWS_Security_Hub, AWS_API_Call, MANUAL
     #         source_keyword: {
-    #           keyword_input_type: "SELECT_FROM_LIST", # accepts SELECT_FROM_LIST
+    #           keyword_input_type: "SELECT_FROM_LIST", # accepts SELECT_FROM_LIST, UPLOAD_FILE, INPUT_TEXT
     #           keyword_value: "KeywordValue",
     #         },
     #         source_frequency: "DAILY", # accepts DAILY, WEEKLY, MONTHLY
@@ -2886,7 +3708,7 @@ module Aws::AuditManager
     #   resp.control.control_mapping_sources[0].source_description #=> String
     #   resp.control.control_mapping_sources[0].source_set_up_option #=> String, one of "System_Controls_Mapping", "Procedural_Controls_Mapping"
     #   resp.control.control_mapping_sources[0].source_type #=> String, one of "AWS_Cloudtrail", "AWS_Config", "AWS_Security_Hub", "AWS_API_Call", "MANUAL"
-    #   resp.control.control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST"
+    #   resp.control.control_mapping_sources[0].source_keyword.keyword_input_type #=> String, one of "SELECT_FROM_LIST", "UPLOAD_FILE", "INPUT_TEXT"
     #   resp.control.control_mapping_sources[0].source_keyword.keyword_value #=> String
     #   resp.control.control_mapping_sources[0].source_frequency #=> String, one of "DAILY", "WEEKLY", "MONTHLY"
     #   resp.control.control_mapping_sources[0].troubleshooting_text #=> String
@@ -2906,20 +3728,43 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Updates AWS Audit Manager settings for the current user account.
+    # Updates Audit Manager settings for the current account.
     #
     # @option params [String] :sns_topic
-    #   The Amazon Simple Notification Service (Amazon SNS) topic to which AWS
-    #   Audit Manager sends notifications.
+    #   The Amazon Simple Notification Service (Amazon SNS) topic that Audit
+    #   Manager sends notifications to.
     #
     # @option params [Types::AssessmentReportsDestination] :default_assessment_reports_destination
-    #   The default storage destination for assessment reports.
+    #   The default S3 destination bucket for storing assessment reports.
     #
     # @option params [Array<Types::Role>] :default_process_owners
     #   A list of the default audit owners.
     #
     # @option params [String] :kms_key
-    #   The AWS KMS key details.
+    #   The KMS key details.
+    #
+    # @option params [Boolean] :evidence_finder_enabled
+    #   Specifies whether the evidence finder feature is enabled. Change this
+    #   attribute to enable or disable evidence finder.
+    #
+    #   When you use this attribute to disable evidence finder, Audit Manager
+    #   deletes the event data store that’s used to query your evidence data.
+    #   As a result, you can’t re-enable evidence finder and use the feature
+    #   again. Your only alternative is to [deregister][1] and then
+    #   [re-register][2] Audit Manager.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_DeregisterAccount.html
+    #   [2]: https://docs.aws.amazon.com/audit-manager/latest/APIReference/API_RegisterAccount.html
+    #
+    # @option params [Types::DeregistrationPolicy] :deregistration_policy
+    #   The deregistration policy for your Audit Manager data. You can use
+    #   this attribute to determine how your data is handled when you
+    #   deregister Audit Manager.
+    #
+    # @option params [Types::DefaultExportDestination] :default_export_destination
+    #   The default S3 destination bucket for storing evidence finder exports.
     #
     # @return [Types::UpdateSettingsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2935,11 +3780,19 @@ module Aws::AuditManager
     #     },
     #     default_process_owners: [
     #       {
-    #         role_type: "PROCESS_OWNER", # accepts PROCESS_OWNER, RESOURCE_OWNER
-    #         role_arn: "IamArn",
+    #         role_type: "PROCESS_OWNER", # required, accepts PROCESS_OWNER, RESOURCE_OWNER
+    #         role_arn: "IamArn", # required
     #       },
     #     ],
     #     kms_key: "KmsKey",
+    #     evidence_finder_enabled: false,
+    #     deregistration_policy: {
+    #       delete_resources: "ALL", # accepts ALL, DEFAULT
+    #     },
+    #     default_export_destination: {
+    #       destination_type: "S3", # accepts S3
+    #       destination: "S3Url",
+    #     },
     #   })
     #
     # @example Response structure
@@ -2952,6 +3805,13 @@ module Aws::AuditManager
     #   resp.settings.default_process_owners[0].role_type #=> String, one of "PROCESS_OWNER", "RESOURCE_OWNER"
     #   resp.settings.default_process_owners[0].role_arn #=> String
     #   resp.settings.kms_key #=> String
+    #   resp.settings.evidence_finder_enablement.event_data_store_arn #=> String
+    #   resp.settings.evidence_finder_enablement.enablement_status #=> String, one of "ENABLED", "DISABLED", "ENABLE_IN_PROGRESS", "DISABLE_IN_PROGRESS"
+    #   resp.settings.evidence_finder_enablement.backfill_status #=> String, one of "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
+    #   resp.settings.evidence_finder_enablement.error #=> String
+    #   resp.settings.deregistration_policy.delete_resources #=> String, one of "ALL", "DEFAULT"
+    #   resp.settings.default_export_destination.destination_type #=> String, one of "S3"
+    #   resp.settings.default_export_destination.destination #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/auditmanager-2017-07-25/UpdateSettings AWS API Documentation
     #
@@ -2962,11 +3822,11 @@ module Aws::AuditManager
       req.send_request(options)
     end
 
-    # Validates the integrity of an assessment report in AWS Audit Manager.
+    # Validates the integrity of an assessment report in Audit Manager.
     #
     # @option params [required, String] :s3_relative_path
-    #   The relative path of the specified Amazon S3 bucket in which the
-    #   assessment report is stored.
+    #   The relative path of the Amazon S3 bucket that the assessment report
+    #   is stored in.
     #
     # @return [Types::ValidateAssessmentReportIntegrityResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3013,7 +3873,7 @@ module Aws::AuditManager
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-auditmanager'
-      context[:gem_version] = '1.7.0'
+      context[:gem_version] = '1.35.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

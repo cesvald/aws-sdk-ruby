@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:iotdataplane)
@@ -73,8 +77,13 @@ module Aws::IoTDataPlane
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::IoTDataPlane::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::IoTDataPlane
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::IoTDataPlane
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::IoTDataPlane
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::IoTDataPlane
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::IoTDataPlane
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::IoTDataPlane::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::IoTDataPlane::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::IoTDataPlane
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::IoTDataPlane
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -329,12 +386,15 @@ module Aws::IoTDataPlane
 
     # Deletes the shadow for the specified thing.
     #
-    # For more information, see [DeleteThingShadow][1] in the AWS IoT
-    # Developer Guide.
+    # Requires permission to access the [DeleteThingShadow][1] action.
+    #
+    # For more information, see [DeleteThingShadow][2] in the IoT Developer
+    # Guide.
     #
     #
     #
-    # [1]: http://docs.aws.amazon.com/iot/latest/developerguide/API_DeleteThingShadow.html
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    # [2]: http://docs.aws.amazon.com/iot/latest/developerguide/API_DeleteThingShadow.html
     #
     # @option params [required, String] :thing_name
     #   The name of the thing.
@@ -364,14 +424,66 @@ module Aws::IoTDataPlane
       req.send_request(options)
     end
 
+    # Gets the details of a single retained message for the specified topic.
+    #
+    # This action returns the message payload of the retained message, which
+    # can incur messaging costs. To list only the topic names of the
+    # retained messages, call [ListRetainedMessages][1].
+    #
+    # Requires permission to access the [GetRetainedMessage][2] action.
+    #
+    # For more information about messaging costs, see [Amazon Web Services
+    # IoT Core pricing - Messaging][3].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/iot/latest/apireference/API_iotdata_ListRetainedMessages.html
+    # [2]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiotfleethubfordevicemanagement.html#awsiotfleethubfordevicemanagement-actions-as-permissions
+    # [3]: http://aws.amazon.com/iot-core/pricing/#Messaging
+    #
+    # @option params [required, String] :topic
+    #   The topic name of the retained message to retrieve.
+    #
+    # @return [Types::GetRetainedMessageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetRetainedMessageResponse#topic #topic} => String
+    #   * {Types::GetRetainedMessageResponse#payload #payload} => String
+    #   * {Types::GetRetainedMessageResponse#qos #qos} => Integer
+    #   * {Types::GetRetainedMessageResponse#last_modified_time #last_modified_time} => Integer
+    #   * {Types::GetRetainedMessageResponse#user_properties #user_properties} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_retained_message({
+    #     topic: "Topic", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.topic #=> String
+    #   resp.payload #=> String
+    #   resp.qos #=> Integer
+    #   resp.last_modified_time #=> Integer
+    #   resp.user_properties #=> String
+    #
+    # @overload get_retained_message(params = {})
+    # @param [Hash] params ({})
+    def get_retained_message(params = {}, options = {})
+      req = build_request(:get_retained_message, params)
+      req.send_request(options)
+    end
+
     # Gets the shadow for the specified thing.
     #
-    # For more information, see [GetThingShadow][1] in the AWS IoT Developer
+    # Requires permission to access the [GetThingShadow][1] action.
+    #
+    # For more information, see [GetThingShadow][2] in the IoT Developer
     # Guide.
     #
     #
     #
-    # [1]: http://docs.aws.amazon.com/iot/latest/developerguide/API_GetThingShadow.html
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    # [2]: http://docs.aws.amazon.com/iot/latest/developerguide/API_GetThingShadow.html
     #
     # @option params [required, String] :thing_name
     #   The name of the thing.
@@ -402,6 +514,13 @@ module Aws::IoTDataPlane
     end
 
     # Lists the shadows for the specified thing.
+    #
+    # Requires permission to access the [ListNamedShadowsForThing][1]
+    # action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
     #
     # @option params [required, String] :thing_name
     #   The name of the thing.
@@ -440,23 +559,151 @@ module Aws::IoTDataPlane
       req.send_request(options)
     end
 
-    # Publishes state information.
+    # Lists summary information about the retained messages stored for the
+    # account.
     #
-    # For more information, see [HTTP Protocol][1] in the AWS IoT Developer
-    # Guide.
+    # This action returns only the topic names of the retained messages. It
+    # doesn't return any message payloads. Although this action doesn't
+    # return a message payload, it can still incur messaging costs.
+    #
+    # To get the message payload of a retained message, call
+    # [GetRetainedMessage][1] with the topic name of the retained message.
+    #
+    # Requires permission to access the [ListRetainedMessages][2] action.
+    #
+    # For more information about messaging costs, see [Amazon Web Services
+    # IoT Core pricing - Messaging][3].
     #
     #
     #
-    # [1]: http://docs.aws.amazon.com/iot/latest/developerguide/protocols.html#http
+    # [1]: https://docs.aws.amazon.com/iot/latest/apireference/API_iotdata_GetRetainedMessage.html
+    # [2]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiotfleethubfordevicemanagement.html#awsiotfleethubfordevicemanagement-actions-as-permissions
+    # [3]: http://aws.amazon.com/iot-core/pricing/#Messaging
+    #
+    # @option params [String] :next_token
+    #   To retrieve the next set of results, the `nextToken` value from a
+    #   previous response; otherwise **null** to receive the first set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return at one time.
+    #
+    # @return [Types::ListRetainedMessagesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListRetainedMessagesResponse#retained_topics #retained_topics} => Array&lt;Types::RetainedMessageSummary&gt;
+    #   * {Types::ListRetainedMessagesResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_retained_messages({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.retained_topics #=> Array
+    #   resp.retained_topics[0].topic #=> String
+    #   resp.retained_topics[0].payload_size #=> Integer
+    #   resp.retained_topics[0].qos #=> Integer
+    #   resp.retained_topics[0].last_modified_time #=> Integer
+    #   resp.next_token #=> String
+    #
+    # @overload list_retained_messages(params = {})
+    # @param [Hash] params ({})
+    def list_retained_messages(params = {}, options = {})
+      req = build_request(:list_retained_messages, params)
+      req.send_request(options)
+    end
+
+    # Publishes an MQTT message.
+    #
+    # Requires permission to access the [Publish][1] action.
+    #
+    # For more information about MQTT messages, see [MQTT Protocol][2] in
+    # the IoT Developer Guide.
+    #
+    # For more information about messaging costs, see [Amazon Web Services
+    # IoT Core pricing - Messaging][3].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    # [2]: http://docs.aws.amazon.com/iot/latest/developerguide/mqtt.html
+    # [3]: http://aws.amazon.com/iot-core/pricing/#Messaging
     #
     # @option params [required, String] :topic
     #   The name of the MQTT topic.
     #
     # @option params [Integer] :qos
-    #   The Quality of Service (QoS) level.
+    #   The Quality of Service (QoS) level. The default QoS level is 0.
+    #
+    # @option params [Boolean] :retain
+    #   A Boolean value that determines whether to set the RETAIN flag when
+    #   the message is published.
+    #
+    #   Setting the RETAIN flag causes the message to be retained and sent to
+    #   new subscribers to the topic.
+    #
+    #   Valid values: `true` \| `false`
+    #
+    #   Default value: `false`
     #
     # @option params [String, StringIO, File] :payload
-    #   The state information, in JSON format.
+    #   The message body. MQTT accepts text, binary, and empty (null) message
+    #   payloads.
+    #
+    #   Publishing an empty (null) payload with **retain** = `true` deletes
+    #   the retained message identified by **topic** from Amazon Web Services
+    #   IoT Core.
+    #
+    # @option params [String] :user_properties
+    #   A JSON string that contains an array of JSON objects. If you don’t use
+    #   Amazon Web Services SDK or CLI, you must encode the JSON string to
+    #   base64 format before adding it to the HTTP header. `userProperties` is
+    #   an HTTP header value in the API.
+    #
+    #   The following example `userProperties` parameter is a JSON string
+    #   which represents two User Properties. Note that it needs to be
+    #   base64-encoded:
+    #
+    #   `[\{"deviceName": "alpha"\}, \{"deviceCnt": "45"\}]`
+    #
+    #   **SDK automatically handles json encoding and base64 encoding for you
+    #   when the required value (Hash, Array, etc.) is provided according to
+    #   the description.**
+    #
+    # @option params [String] :payload_format_indicator
+    #   An `Enum` string value that indicates whether the payload is formatted
+    #   as UTF-8. `payloadFormatIndicator` is an HTTP header value in the API.
+    #
+    # @option params [String] :content_type
+    #   A UTF-8 encoded string that describes the content of the publishing
+    #   message.
+    #
+    # @option params [String] :response_topic
+    #   A UTF-8 encoded string that's used as the topic name for a response
+    #   message. The response topic is used to describe the topic which the
+    #   receiver should publish to as part of the request-response flow. The
+    #   topic must not contain wildcard characters.
+    #
+    # @option params [String] :correlation_data
+    #   The base64-encoded binary data used by the sender of the request
+    #   message to identify which request the response message is for when
+    #   it's received. `correlationData` is an HTTP header value in the API.
+    #
+    # @option params [Integer] :message_expiry
+    #   A user-defined integer value that represents the message expiry
+    #   interval in seconds. If absent, the message doesn't expire. For more
+    #   information about the limits of `messageExpiry`, see [Amazon Web
+    #   Services IoT Core message broker and protocol limits and quotas ][1]
+    #   from the Amazon Web Services Reference Guide.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/general/latest/gr/iot-core.html#message-broker-limits
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -465,7 +712,14 @@ module Aws::IoTDataPlane
     #   resp = client.publish({
     #     topic: "Topic", # required
     #     qos: 1,
+    #     retain: false,
     #     payload: "data",
+    #     user_properties: "UserProperties",
+    #     payload_format_indicator: "UNSPECIFIED_BYTES", # accepts UNSPECIFIED_BYTES, UTF8_DATA
+    #     content_type: "ContentType",
+    #     response_topic: "ResponseTopic",
+    #     correlation_data: "CorrelationData",
+    #     message_expiry: 1,
     #   })
     #
     # @overload publish(params = {})
@@ -477,12 +731,15 @@ module Aws::IoTDataPlane
 
     # Updates the shadow for the specified thing.
     #
-    # For more information, see [UpdateThingShadow][1] in the AWS IoT
-    # Developer Guide.
+    # Requires permission to access the [UpdateThingShadow][1] action.
+    #
+    # For more information, see [UpdateThingShadow][2] in the IoT Developer
+    # Guide.
     #
     #
     #
-    # [1]: http://docs.aws.amazon.com/iot/latest/developerguide/API_UpdateThingShadow.html
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    # [2]: http://docs.aws.amazon.com/iot/latest/developerguide/API_UpdateThingShadow.html
     #
     # @option params [required, String] :thing_name
     #   The name of the thing.
@@ -529,7 +786,7 @@ module Aws::IoTDataPlane
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-iotdataplane'
-      context[:gem_version] = '1.28.0'
+      context[:gem_version] = '1.49.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

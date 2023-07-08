@@ -10,7 +10,7 @@
 module Aws::ManagedBlockchain
   module Types
 
-    # You do not have sufficient access to perform this action.
+    # You don't have sufficient access to perform this action.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -23,6 +23,117 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
+    # The properties of the Accessor.
+    #
+    # @!attribute [rw] id
+    #   The unique identifier of the accessor.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   The type of the accessor.
+    #
+    #   <note markdown="1"> Currently, accessor type is restricted to `BILLING_TOKEN`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] billing_token
+    #   The billing token is a property of the accessor. Use this token to
+    #   make Ethereum API calls to your Ethereum node. The billing token is
+    #   used to track your accessor object for billing Ethereum API requests
+    #   made to your Ethereum nodes.
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   The current status of the accessor.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_date
+    #   The creation date and time of the accessor.
+    #   @return [Time]
+    #
+    # @!attribute [rw] arn
+    #   The Amazon Resource Name (ARN) of the accessor. For more information
+    #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
+    #   in the *Amazon Web Services General Reference*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   The tags assigned to the Accessor.
+    #
+    #   For more information about tags, see [Tagging Resources][1] in the
+    #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
+    #   Resources][2] in the *Amazon Managed Blockchain Hyperledger Fabric
+    #   Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/ethereum-dev/tagging-resources.html
+    #   [2]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/tagging-resources.html
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/Accessor AWS API Documentation
+    #
+    class Accessor < Struct.new(
+      :id,
+      :type,
+      :billing_token,
+      :status,
+      :creation_date,
+      :arn,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A summary of accessor properties.
+    #
+    # @!attribute [rw] id
+    #   The unique identifier of the accessor.
+    #   @return [String]
+    #
+    # @!attribute [rw] type
+    #   The type of the accessor.
+    #
+    #   <note markdown="1"> Currently accessor type is restricted to `BILLING_TOKEN`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] status
+    #   The current status of the accessor.
+    #   @return [String]
+    #
+    # @!attribute [rw] creation_date
+    #   The creation date and time of the accessor.
+    #   @return [Time]
+    #
+    # @!attribute [rw] arn
+    #   The Amazon Resource Name (ARN) of the accessor. For more information
+    #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
+    #   in the *Amazon Web Services General Reference*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/AccessorSummary AWS API Documentation
+    #
+    class AccessorSummary < Struct.new(
+      :id,
+      :type,
+      :status,
+      :creation_date,
+      :arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A policy type that defines the voting rules for the network. The rules
     # decide if a proposal is approved. Approval may be based on criteria
     # such as the percentage of `YES` votes and the duration of the
@@ -30,15 +141,6 @@ module Aws::ManagedBlockchain
     # the network is created.
     #
     # Applies only to Hyperledger Fabric.
-    #
-    # @note When making an API call, you may pass ApprovalThresholdPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         threshold_percentage: 1,
-    #         proposal_duration_in_hours: 1,
-    #         threshold_comparator: "GREATER_THAN", # accepts GREATER_THAN, GREATER_THAN_OR_EQUAL_TO
-    #       }
     #
     # @!attribute [rw] threshold_percentage
     #   The percentage of votes among all members that must be `YES` for a
@@ -55,7 +157,7 @@ module Aws::ManagedBlockchain
     #   expires. If members cast neither the required number of `YES` votes
     #   to approve the proposal nor the number of `NO` votes required to
     #   reject it before the duration expires, the proposal is `EXPIRED` and
-    #   `ProposalActions` are not carried out.
+    #   `ProposalActions` aren't carried out.
     #   @return [Integer]
     #
     # @!attribute [rw] threshold_comparator
@@ -74,43 +176,80 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateMemberInput
-    #   data as a hash:
+    # @!attribute [rw] client_request_token
+    #   This is a unique, case-sensitive identifier that you provide to
+    #   ensure the idempotency of the operation. An idempotent operation
+    #   completes no more than once. This identifier is required only if you
+    #   make a service request directly using an HTTP client. It is
+    #   generated automatically if you use an Amazon Web Services SDK or the
+    #   Amazon Web Services CLI.
     #
-    #       {
-    #         client_request_token: "ClientRequestTokenString", # required
-    #         invitation_id: "ResourceIdString", # required
-    #         network_id: "ResourceIdString", # required
-    #         member_configuration: { # required
-    #           name: "NetworkMemberNameString", # required
-    #           description: "DescriptionString",
-    #           framework_configuration: { # required
-    #             fabric: {
-    #               admin_username: "UsernameString", # required
-    #               admin_password: "PasswordString", # required
-    #             },
-    #           },
-    #           log_publishing_configuration: {
-    #             fabric: {
-    #               ca_logs: {
-    #                 cloudwatch: {
-    #                   enabled: false,
-    #                 },
-    #               },
-    #             },
-    #           },
-    #           tags: {
-    #             "TagKey" => "TagValue",
-    #           },
-    #         },
-    #       }
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.
+    #   @return [String]
     #
+    # @!attribute [rw] accessor_type
+    #   The type of accessor.
+    #
+    #   <note markdown="1"> Currently, accessor type is restricted to `BILLING_TOKEN`.
+    #
+    #    </note>
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   Tags to assign to the Accessor.
+    #
+    #   Each tag consists of a key and an optional value. You can specify
+    #   multiple key-value pairs in a single request with an overall maximum
+    #   of 50 tags allowed per resource.
+    #
+    #   For more information about tags, see [Tagging Resources][1] in the
+    #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
+    #   Resources][2] in the *Amazon Managed Blockchain Hyperledger Fabric
+    #   Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/ethereum-dev/tagging-resources.html
+    #   [2]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/tagging-resources.html
+    #   @return [Hash<String,String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/CreateAccessorInput AWS API Documentation
+    #
+    class CreateAccessorInput < Struct.new(
+      :client_request_token,
+      :accessor_type,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] accessor_id
+    #   The unique identifier of the accessor.
+    #   @return [String]
+    #
+    # @!attribute [rw] billing_token
+    #   The billing token is a property of the Accessor. Use this token to
+    #   make Ethereum API calls to your Ethereum node. The billing token is
+    #   used to track your accessor object for billing Ethereum API requests
+    #   made to your Ethereum nodes.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/CreateAccessorOutput AWS API Documentation
+    #
+    class CreateAccessorOutput < Struct.new(
+      :accessor_id,
+      :billing_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] client_request_token
     #   A unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the operation. An idempotent operation completes no
     #   more than one time. This identifier is required only if you make a
     #   service request directly using an HTTP client. It is generated
-    #   automatically if you use an AWS SDK or the AWS CLI.
+    #   automatically if you use an Amazon Web Services SDK or the CLI.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
@@ -152,60 +291,13 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateNetworkInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_request_token: "ClientRequestTokenString", # required
-    #         name: "NameString", # required
-    #         description: "DescriptionString",
-    #         framework: "HYPERLEDGER_FABRIC", # required, accepts HYPERLEDGER_FABRIC, ETHEREUM
-    #         framework_version: "FrameworkVersionString", # required
-    #         framework_configuration: {
-    #           fabric: {
-    #             edition: "STARTER", # required, accepts STARTER, STANDARD
-    #           },
-    #         },
-    #         voting_policy: { # required
-    #           approval_threshold_policy: {
-    #             threshold_percentage: 1,
-    #             proposal_duration_in_hours: 1,
-    #             threshold_comparator: "GREATER_THAN", # accepts GREATER_THAN, GREATER_THAN_OR_EQUAL_TO
-    #           },
-    #         },
-    #         member_configuration: { # required
-    #           name: "NetworkMemberNameString", # required
-    #           description: "DescriptionString",
-    #           framework_configuration: { # required
-    #             fabric: {
-    #               admin_username: "UsernameString", # required
-    #               admin_password: "PasswordString", # required
-    #             },
-    #           },
-    #           log_publishing_configuration: {
-    #             fabric: {
-    #               ca_logs: {
-    #                 cloudwatch: {
-    #                   enabled: false,
-    #                 },
-    #               },
-    #             },
-    #           },
-    #           tags: {
-    #             "TagKey" => "TagValue",
-    #           },
-    #         },
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] client_request_token
-    #   A unique, case-sensitive identifier that you provide to ensure the
-    #   idempotency of the operation. An idempotent operation completes no
-    #   more than one time. This identifier is required only if you make a
-    #   service request directly using an HTTP client. It is generated
-    #   automatically if you use an AWS SDK or the AWS CLI.
+    #   This is a unique, case-sensitive identifier that you provide to
+    #   ensure the idempotency of the operation. An idempotent operation
+    #   completes no more than once. This identifier is required only if you
+    #   make a service request directly using an HTTP client. It is
+    #   generated automatically if you use an Amazon Web Services SDK or the
+    #   Amazon Web Services CLI.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
@@ -242,12 +334,11 @@ module Aws::ManagedBlockchain
     #   @return [Types::MemberConfiguration]
     #
     # @!attribute [rw] tags
-    #   Tags to assign to the network. Each tag consists of a key and
-    #   optional value.
+    #   Tags to assign to the network.
     #
-    #   When specifying tags during creation, you can specify multiple
-    #   key-value pairs in a single request, with an overall maximum of 50
-    #   tags added to each resource.
+    #   Each tag consists of a key and an optional value. You can specify
+    #   multiple key-value pairs in a single request with an overall maximum
+    #   of 50 tags allowed per resource.
     #
     #   For more information about tags, see [Tagging Resources][1] in the
     #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
@@ -293,43 +384,12 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateNodeInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_request_token: "ClientRequestTokenString", # required
-    #         network_id: "ResourceIdString", # required
-    #         member_id: "ResourceIdString",
-    #         node_configuration: { # required
-    #           instance_type: "InstanceTypeString", # required
-    #           availability_zone: "AvailabilityZoneString",
-    #           log_publishing_configuration: {
-    #             fabric: {
-    #               chaincode_logs: {
-    #                 cloudwatch: {
-    #                   enabled: false,
-    #                 },
-    #               },
-    #               peer_logs: {
-    #                 cloudwatch: {
-    #                   enabled: false,
-    #                 },
-    #               },
-    #             },
-    #           },
-    #           state_db: "LevelDB", # accepts LevelDB, CouchDB
-    #         },
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] client_request_token
     #   A unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the operation. An idempotent operation completes no
     #   more than one time. This identifier is required only if you make a
     #   service request directly using an HTTP client. It is generated
-    #   automatically if you use an AWS SDK or the AWS CLI.
+    #   automatically if you use an Amazon Web Services SDK or the CLI.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
@@ -342,9 +402,9 @@ module Aws::ManagedBlockchain
     #
     #   * `n-ethereum-mainnet`
     #
-    #   * `n-ethereum-rinkeby`
+    #   * `n-ethereum-goerli`
     #
-    #   * `n-ethereum-ropsten`
+    #   * `n-ethereum-rinkeby`
     #   @return [String]
     #
     # @!attribute [rw] member_id
@@ -358,12 +418,11 @@ module Aws::ManagedBlockchain
     #   @return [Types::NodeConfiguration]
     #
     # @!attribute [rw] tags
-    #   Tags to assign to the node. Each tag consists of a key and optional
-    #   value.
+    #   Tags to assign to the node.
     #
-    #   When specifying tags during creation, you can specify multiple
-    #   key-value pairs in a single request, with an overall maximum of 50
-    #   tags added to each resource.
+    #   Each tag consists of a key and an optional value. You can specify
+    #   multiple key-value pairs in a single request with an overall maximum
+    #   of 50 tags allowed per resource.
     #
     #   For more information about tags, see [Tagging Resources][1] in the
     #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
@@ -400,37 +459,12 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateProposalInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_request_token: "ClientRequestTokenString", # required
-    #         network_id: "ResourceIdString", # required
-    #         member_id: "ResourceIdString", # required
-    #         actions: { # required
-    #           invitations: [
-    #             {
-    #               principal: "PrincipalString", # required
-    #             },
-    #           ],
-    #           removals: [
-    #             {
-    #               member_id: "ResourceIdString", # required
-    #             },
-    #           ],
-    #         },
-    #         description: "DescriptionString",
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] client_request_token
     #   A unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the operation. An idempotent operation completes no
     #   more than one time. This identifier is required only if you make a
     #   service request directly using an HTTP client. It is generated
-    #   automatically if you use an AWS SDK or the AWS CLI.
+    #   automatically if you use an Amazon Web Services SDK or the CLI.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
@@ -443,8 +477,8 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] member_id
     #   The unique identifier of the member that is creating the proposal.
     #   This identifier is especially useful for identifying the member
-    #   making the proposal when multiple members exist in a single AWS
-    #   account.
+    #   making the proposal when multiple members exist in a single Amazon
+    #   Web Services account.
     #   @return [String]
     #
     # @!attribute [rw] actions
@@ -460,13 +494,11 @@ module Aws::ManagedBlockchain
     #   @return [String]
     #
     # @!attribute [rw] tags
-    #   Tags to assign to the proposal. Each tag consists of a key and
-    #   optional value.
+    #   Tags to assign to the proposal.
     #
-    #   When specifying tags during creation, you can specify multiple
-    #   key-value pairs in a single request, with an overall maximum of 50
-    #   tags added to each resource. If the proposal is for a network
-    #   invitation, the invitation inherits the tags added to the proposal.
+    #   Each tag consists of a key and an optional value. You can specify
+    #   multiple key-value pairs in a single request with an overall maximum
+    #   of 50 tags allowed per resource.
     #
     #   For more information about tags, see [Tagging Resources][1] in the
     #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
@@ -504,14 +536,22 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteMemberInput
-    #   data as a hash:
+    # @!attribute [rw] accessor_id
+    #   The unique identifier of the accessor.
+    #   @return [String]
     #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         member_id: "ResourceIdString", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/DeleteAccessorInput AWS API Documentation
     #
+    class DeleteAccessorInput < Struct.new(
+      :accessor_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/DeleteAccessorOutput AWS API Documentation
+    #
+    class DeleteAccessorOutput < Aws::EmptyStructure; end
+
     # @!attribute [rw] network_id
     #   The unique identifier of the network from which the member is
     #   removed.
@@ -534,15 +574,6 @@ module Aws::ManagedBlockchain
     #
     class DeleteMemberOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteNodeInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         member_id: "ResourceIdString",
-    #         node_id: "ResourceIdString", # required
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network that the node is on.
     #
@@ -550,9 +581,9 @@ module Aws::ManagedBlockchain
     #
     #   * `n-ethereum-mainnet`
     #
-    #   * `n-ethereum-rinkeby`
+    #   * `n-ethereum-goerli`
     #
-    #   * `n-ethereum-ropsten`
+    #   * `n-ethereum-rinkeby`
     #   @return [String]
     #
     # @!attribute [rw] member_id
@@ -580,14 +611,30 @@ module Aws::ManagedBlockchain
     #
     class DeleteNodeOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass GetMemberInput
-    #   data as a hash:
+    # @!attribute [rw] accessor_id
+    #   The unique identifier of the accessor.
+    #   @return [String]
     #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         member_id: "ResourceIdString", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/GetAccessorInput AWS API Documentation
     #
+    class GetAccessorInput < Struct.new(
+      :accessor_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] accessor
+    #   The properties of the accessor.
+    #   @return [Types::Accessor]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/GetAccessorOutput AWS API Documentation
+    #
+    class GetAccessorOutput < Struct.new(
+      :accessor)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] network_id
     #   The unique identifier of the network to which the member belongs.
     #   @return [String]
@@ -617,13 +664,6 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetNetworkInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network to get information about.
     #   @return [String]
@@ -648,15 +688,6 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetNodeInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         member_id: "ResourceIdString",
-    #         node_id: "ResourceIdString", # required
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network that the node is on.
     #   @return [String]
@@ -694,14 +725,6 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetProposalInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         proposal_id: "ResourceIdString", # required
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network for which the proposal is made.
     #   @return [String]
@@ -763,8 +786,8 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # An invitation to an AWS account to create a member and join the
-    # network.
+    # An invitation to an Amazon Web Services account to create a member and
+    # join the network.
     #
     # Applies only to Hyperledger Fabric.
     #
@@ -787,11 +810,11 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] status
     #   The status of the invitation:
     #
-    #   * `PENDING` - The invitee has not created a member to join the
-    #     network, and the invitation has not yet expired.
+    #   * `PENDING` - The invitee hasn't created a member to join the
+    #     network, and the invitation hasn't yet expired.
     #
     #   * `ACCEPTING` - The invitee has begun creating a member, and
-    #     creation has not yet completed.
+    #     creation hasn't yet completed.
     #
     #   * `ACCEPTED` - The invitee created a member and joined the network
     #     using the `InvitationID`.
@@ -809,7 +832,7 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the invitation. For more
     #   information about ARNs and their format, see [Amazon Resource Names
-    #   (ARNs)][1] in the *AWS General Reference*.
+    #   (ARNs)][1] in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -829,21 +852,14 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # An action to invite a specific AWS account to create a member and join
-    # the network. The `InviteAction` is carried out when a `Proposal` is
-    # `APPROVED`.
+    # An action to invite a specific Amazon Web Services account to create a
+    # member and join the network. The `InviteAction` is carried out when a
+    # `Proposal` is `APPROVED`.
     #
     # Applies only to Hyperledger Fabric.
     #
-    # @note When making an API call, you may pass InviteAction
-    #   data as a hash:
-    #
-    #       {
-    #         principal: "PrincipalString", # required
-    #       }
-    #
     # @!attribute [rw] principal
-    #   The AWS account ID to invite.
+    #   The Amazon Web Services account ID to invite.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/InviteAction AWS API Documentation
@@ -854,14 +870,43 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListInvitationsInput
-    #   data as a hash:
+    # @!attribute [rw] max_results
+    #   The maximum number of accessors to list.
+    #   @return [Integer]
     #
-    #       {
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
+    # @!attribute [rw] next_token
+    #   The pagination token that indicates the next set of results to
+    #   retrieve.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/ListAccessorsInput AWS API Documentation
+    #
+    class ListAccessorsInput < Struct.new(
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] accessors
+    #   An array of AccessorSummary objects that contain configuration
+    #   properties for each accessor.
+    #   @return [Array<Types::AccessorSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   The pagination token that indicates the next set of results to
+    #   retrieve.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/ListAccessorsOutput AWS API Documentation
+    #
+    class ListAccessorsOutput < Struct.new(
+      :accessors,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] max_results
     #   The maximum number of invitations to return.
     #   @return [Integer]
@@ -898,18 +943,6 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListMembersInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         name: "String",
-    #         status: "CREATING", # accepts CREATING, AVAILABLE, CREATE_FAILED, UPDATING, DELETING, DELETED
-    #         is_owned: false,
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network for which to list members.
     #   @return [String]
@@ -925,9 +958,9 @@ module Aws::ManagedBlockchain
     #
     # @!attribute [rw] is_owned
     #   An optional Boolean value. If provided, the request is limited
-    #   either to members that the current AWS account owns (`true`) or that
-    #   other AWS accounts own (`false`). If omitted, all members are
-    #   listed.
+    #   either to members that the current Amazon Web Services account owns
+    #   (`true`) or that other Amazon Web Services accountsn own (`false`).
+    #   If omitted, all members are listed.
     #   @return [Boolean]
     #
     # @!attribute [rw] max_results
@@ -971,17 +1004,6 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListNetworksInput
-    #   data as a hash:
-    #
-    #       {
-    #         name: "String",
-    #         framework: "HYPERLEDGER_FABRIC", # accepts HYPERLEDGER_FABRIC, ETHEREUM
-    #         status: "CREATING", # accepts CREATING, AVAILABLE, CREATE_FAILED, DELETING, DELETED
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the network.
     #   @return [String]
@@ -1038,17 +1060,6 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListNodesInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         member_id: "ResourceIdString",
-    #         status: "CREATING", # accepts CREATING, AVAILABLE, UNHEALTHY, CREATE_FAILED, UPDATING, DELETING, DELETED, FAILED
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network for which to list nodes.
     #   @return [String]
@@ -1105,16 +1116,6 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListProposalVotesInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         proposal_id: "ResourceIdString", # required
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network.
     #   @return [String]
@@ -1161,15 +1162,6 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListProposalsInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         max_results: 1,
-    #         next_token: "PaginationToken",
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network.
     #   @return [String]
@@ -1211,17 +1203,10 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ArnString", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -1250,13 +1235,6 @@ module Aws::ManagedBlockchain
 
     # A configuration for logging events.
     #
-    # @note When making an API call, you may pass LogConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         enabled: false,
-    #       }
-    #
     # @!attribute [rw] enabled
     #   Indicates whether logging is enabled.
     #   @return [Boolean]
@@ -1270,15 +1248,6 @@ module Aws::ManagedBlockchain
     end
 
     # A collection of log configurations.
-    #
-    # @note When making an API call, you may pass LogConfigurations
-    #   data as a hash:
-    #
-    #       {
-    #         cloudwatch: {
-    #           enabled: false,
-    #         },
-    #       }
     #
     # @!attribute [rw] cloudwatch
     #   Parameters for publishing logs to Amazon CloudWatch Logs.
@@ -1325,24 +1294,38 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] status
     #   The status of a member.
     #
-    #   * `CREATING` - The AWS account is in the process of creating a
-    #     member.
+    #   * `CREATING` - The Amazon Web Services account is in the process of
+    #     creating a member.
     #
     #   * `AVAILABLE` - The member has been created and can participate in
     #     the network.
     #
-    #   * `CREATE_FAILED` - The AWS account attempted to create a member and
-    #     creation failed.
+    #   * `CREATE_FAILED` - The Amazon Web Services account attempted to
+    #     create a member and creation failed.
+    #
+    #   * `UPDATING` - The member is in the process of being updated.
     #
     #   * `DELETING` - The member and all associated resources are in the
-    #     process of being deleted. Either the AWS account that owns the
-    #     member deleted it, or the member is being deleted as the result of
-    #     an `APPROVED` `PROPOSAL` to remove the member.
-    #
-    #   * `DELETED` - The member can no longer participate on the network
-    #     and all associated resources are deleted. Either the AWS account
+    #     process of being deleted. Either the Amazon Web Services account
     #     that owns the member deleted it, or the member is being deleted as
     #     the result of an `APPROVED` `PROPOSAL` to remove the member.
+    #
+    #   * `DELETED` - The member can no longer participate on the network
+    #     and all associated resources are deleted. Either the Amazon Web
+    #     Services account that owns the member deleted it, or the member is
+    #     being deleted as the result of an `APPROVED` `PROPOSAL` to remove
+    #     the member.
+    #
+    #   * `INACCESSIBLE_ENCRYPTION_KEY` - The member is impaired and might
+    #     not function as expected because it cannot access the specified
+    #     customer managed key in KMS for encryption at rest. Either the KMS
+    #     key was disabled or deleted, or the grants on the key were
+    #     revoked.
+    #
+    #     The effect of disabling or deleting a key or of revoking a grant
+    #     isn't immediate. It might take some time for the member resource
+    #     to discover that the key is inaccessible. When a resource is in
+    #     this state, we recommend deleting and recreating the resource.
     #   @return [String]
     #
     # @!attribute [rw] creation_date
@@ -1351,23 +1334,42 @@ module Aws::ManagedBlockchain
     #
     # @!attribute [rw] tags
     #   Tags assigned to the member. Tags consist of a key and optional
-    #   value. For more information about tags, see [Tagging Resources][1]
-    #   in the *Amazon Managed Blockchain Hyperledger Fabric Developer
-    #   Guide*.
+    #   value.
+    #
+    #   For more information about tags, see [Tagging Resources][1] in the
+    #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
+    #   Resources][2] in the *Amazon Managed Blockchain Hyperledger Fabric
+    #   Developer Guide*.
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/tagging-resources.html
+    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/ethereum-dev/tagging-resources.html
+    #   [2]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/tagging-resources.html
     #   @return [Hash<String,String>]
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the member. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   @return [String]
+    #
+    # @!attribute [rw] kms_key_arn
+    #   The Amazon Resource Name (ARN) of the customer managed key in Key
+    #   Management Service (KMS) that the member uses for encryption at
+    #   rest. If the value of this parameter is `"AWS Owned KMS Key"`, the
+    #   member uses an Amazon Web Services owned KMS key for encryption.
+    #   This parameter is inherited by the nodes that this member owns.
+    #
+    #   For more information, see [Encryption at Rest][1] in the *Amazon
+    #   Managed Blockchain Hyperledger Fabric Developer Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/managed-blockchain-encryption-at-rest.html
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/Member AWS API Documentation
@@ -1382,7 +1384,8 @@ module Aws::ManagedBlockchain
       :status,
       :creation_date,
       :tags,
-      :arn)
+      :arn,
+      :kms_key_arn)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1390,32 +1393,6 @@ module Aws::ManagedBlockchain
     # Configuration properties of the member.
     #
     # Applies only to Hyperledger Fabric.
-    #
-    # @note When making an API call, you may pass MemberConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         name: "NetworkMemberNameString", # required
-    #         description: "DescriptionString",
-    #         framework_configuration: { # required
-    #           fabric: {
-    #             admin_username: "UsernameString", # required
-    #             admin_password: "PasswordString", # required
-    #           },
-    #         },
-    #         log_publishing_configuration: {
-    #           fabric: {
-    #             ca_logs: {
-    #               cloudwatch: {
-    #                 enabled: false,
-    #               },
-    #             },
-    #           },
-    #         },
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the member.
@@ -1437,18 +1414,50 @@ module Aws::ManagedBlockchain
     #
     # @!attribute [rw] tags
     #   Tags assigned to the member. Tags consist of a key and optional
-    #   value. For more information about tags, see [Tagging Resources][1]
-    #   in the *Amazon Managed Blockchain Hyperledger Fabric Developer
-    #   Guide*.
+    #   value.
     #
     #   When specifying tags during creation, you can specify multiple
     #   key-value pairs in a single request, with an overall maximum of 50
     #   tags added to each resource.
     #
+    #   For more information about tags, see [Tagging Resources][1] in the
+    #   *Amazon Managed Blockchain Ethereum Developer Guide*, or [Tagging
+    #   Resources][2] in the *Amazon Managed Blockchain Hyperledger Fabric
+    #   Developer Guide*.
     #
     #
-    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/tagging-resources.html
+    #
+    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/ethereum-dev/tagging-resources.html
+    #   [2]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/tagging-resources.html
     #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] kms_key_arn
+    #   The Amazon Resource Name (ARN) of the customer managed key in Key
+    #   Management Service (KMS) to use for encryption at rest in the
+    #   member. This parameter is inherited by any nodes that this member
+    #   creates. For more information, see [Encryption at Rest][1] in the
+    #   *Amazon Managed Blockchain Hyperledger Fabric Developer Guide*.
+    #
+    #   Use one of the following options to specify this parameter:
+    #
+    #   * **Undefined or empty string** - By default, use an KMS key that is
+    #     owned and managed by Amazon Web Services on your behalf.
+    #
+    #   * **A valid symmetric customer managed KMS key** - Use the specified
+    #     KMS key in your account that you create, own, and manage.
+    #
+    #     Amazon Managed Blockchain doesn't support asymmetric keys. For
+    #     more information, see [Using symmetric and asymmetric keys][2] in
+    #     the *Key Management Service Developer Guide*.
+    #
+    #     The following is an example of a KMS key ARN:
+    #     `arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/managed-blockchain-encryption-at-rest.html
+    #   [2]: https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html
+    #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/MemberConfiguration AWS API Documentation
     #
@@ -1457,7 +1466,8 @@ module Aws::ManagedBlockchain
       :description,
       :framework_configuration,
       :log_publishing_configuration,
-      :tags)
+      :tags,
+      :kms_key_arn)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1483,15 +1493,8 @@ module Aws::ManagedBlockchain
     end
 
     # Configuration properties for Hyperledger Fabric for a member in a
-    # Managed Blockchain network using the Hyperledger Fabric framework.
-    #
-    # @note When making an API call, you may pass MemberFabricConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         admin_username: "UsernameString", # required
-    #         admin_password: "PasswordString", # required
-    #       }
+    # Managed Blockchain network that is using the Hyperledger Fabric
+    # framework.
     #
     # @!attribute [rw] admin_username
     #   The user name for the member's initial administrative user.
@@ -1499,11 +1502,11 @@ module Aws::ManagedBlockchain
     #
     # @!attribute [rw] admin_password
     #   The password for the member's initial administrative user. The
-    #   `AdminPassword` must be at least eight characters long and no more
-    #   than 32 characters. It must contain at least one uppercase letter,
-    #   one lowercase letter, and one digit. It cannot have a single
-    #   quotation mark (‘), a double quotation marks (“), a forward
-    #   slash(/), a backward slash(\\), @, or a space.
+    #   `AdminPassword` must be at least 8 characters long and no more than
+    #   32 characters. It must contain at least one uppercase letter, one
+    #   lowercase letter, and one digit. It cannot have a single quotation
+    #   mark (‘), a double quotation marks (“), a forward slash(/), a
+    #   backward slash(\\), @, or a space.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/MemberFabricConfiguration AWS API Documentation
@@ -1518,17 +1521,6 @@ module Aws::ManagedBlockchain
     # Configuration properties for logging events associated with a member
     # of a Managed Blockchain network using the Hyperledger Fabric
     # framework.
-    #
-    # @note When making an API call, you may pass MemberFabricLogPublishingConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         ca_logs: {
-    #           cloudwatch: {
-    #             enabled: false,
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] ca_logs
     #   Configuration properties for logging events associated with a
@@ -1564,16 +1556,6 @@ module Aws::ManagedBlockchain
     # Configuration properties relevant to a member for the blockchain
     # framework that the Managed Blockchain network uses.
     #
-    # @note When making an API call, you may pass MemberFrameworkConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         fabric: {
-    #           admin_username: "UsernameString", # required
-    #           admin_password: "PasswordString", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] fabric
     #   Attributes of Hyperledger Fabric for a member on a Managed
     #   Blockchain network that uses Hyperledger Fabric.
@@ -1589,19 +1571,6 @@ module Aws::ManagedBlockchain
 
     # Configuration properties for logging events associated with a member
     # of a Managed Blockchain network.
-    #
-    # @note When making an API call, you may pass MemberLogPublishingConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         fabric: {
-    #           ca_logs: {
-    #             cloudwatch: {
-    #               enabled: false,
-    #             },
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] fabric
     #   Configuration properties for logging events associated with a member
@@ -1636,24 +1605,38 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] status
     #   The status of the member.
     #
-    #   * `CREATING` - The AWS account is in the process of creating a
-    #     member.
+    #   * `CREATING` - The Amazon Web Services account is in the process of
+    #     creating a member.
     #
     #   * `AVAILABLE` - The member has been created and can participate in
     #     the network.
     #
-    #   * `CREATE_FAILED` - The AWS account attempted to create a member and
-    #     creation failed.
+    #   * `CREATE_FAILED` - The Amazon Web Services account attempted to
+    #     create a member and creation failed.
+    #
+    #   * `UPDATING` - The member is in the process of being updated.
     #
     #   * `DELETING` - The member and all associated resources are in the
-    #     process of being deleted. Either the AWS account that owns the
-    #     member deleted it, or the member is being deleted as the result of
-    #     an `APPROVED` `PROPOSAL` to remove the member.
-    #
-    #   * `DELETED` - The member can no longer participate on the network
-    #     and all associated resources are deleted. Either the AWS account
+    #     process of being deleted. Either the Amazon Web Services account
     #     that owns the member deleted it, or the member is being deleted as
     #     the result of an `APPROVED` `PROPOSAL` to remove the member.
+    #
+    #   * `DELETED` - The member can no longer participate on the network
+    #     and all associated resources are deleted. Either the Amazon Web
+    #     Services account that owns the member deleted it, or the member is
+    #     being deleted as the result of an `APPROVED` `PROPOSAL` to remove
+    #     the member.
+    #
+    #   * `INACCESSIBLE_ENCRYPTION_KEY` - The member is impaired and might
+    #     not function as expected because it cannot access the specified
+    #     customer managed key in Key Management Service (KMS) for
+    #     encryption at rest. Either the KMS key was disabled or deleted, or
+    #     the grants on the key were revoked.
+    #
+    #     The effect of disabling or deleting a key or of revoking a grant
+    #     isn't immediate. It might take some time for the member resource
+    #     to discover that the key is inaccessible. When a resource is in
+    #     this state, we recommend deleting and recreating the resource.
     #   @return [String]
     #
     # @!attribute [rw] creation_date
@@ -1661,14 +1644,14 @@ module Aws::ManagedBlockchain
     #   @return [Time]
     #
     # @!attribute [rw] is_owned
-    #   An indicator of whether the member is owned by your AWS account or a
-    #   different AWS account.
+    #   An indicator of whether the member is owned by your Amazon Web
+    #   Services account or a different Amazon Web Services account.
     #   @return [Boolean]
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the member. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -1722,7 +1705,7 @@ module Aws::ManagedBlockchain
     #   @return [String]
     #
     # @!attribute [rw] voting_policy
-    #   The voting rules for the network to decide if a proposal is
+    #   The voting rules that the network uses to decide if a proposal is
     #   accepted.
     #   @return [Types::VotingPolicy]
     #
@@ -1752,7 +1735,7 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the network. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -1786,9 +1769,9 @@ module Aws::ManagedBlockchain
     #
     #   * mainnet = `1`
     #
-    #   * rinkeby = `4`
+    #   * goerli = `5`
     #
-    #   * ropsten = `3`
+    #   * rinkeby = `4`
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/NetworkEthereumAttributes AWS API Documentation
@@ -1825,13 +1808,6 @@ module Aws::ManagedBlockchain
     end
 
     # Hyperledger Fabric configuration properties for the network.
-    #
-    # @note When making an API call, you may pass NetworkFabricConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         edition: "STARTER", # required, accepts STARTER, STANDARD
-    #       }
     #
     # @!attribute [rw] edition
     #   The edition of Amazon Managed Blockchain that the network uses. For
@@ -1874,15 +1850,6 @@ module Aws::ManagedBlockchain
 
     # Configuration properties relevant to the network for the blockchain
     # framework that the network uses.
-    #
-    # @note When making an API call, you may pass NetworkFrameworkConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         fabric: {
-    #           edition: "STARTER", # required, accepts STARTER, STANDARD
-    #         },
-    #       }
     #
     # @!attribute [rw] fabric
     #   Hyperledger Fabric configuration properties for a Managed Blockchain
@@ -1930,7 +1897,7 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the network. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -1995,6 +1962,40 @@ module Aws::ManagedBlockchain
     #
     # @!attribute [rw] status
     #   The status of the node.
+    #
+    #   * `CREATING` - The Amazon Web Services account is in the process of
+    #     creating a node.
+    #
+    #   * `AVAILABLE` - The node has been created and can participate in the
+    #     network.
+    #
+    #   * `UNHEALTHY` - The node is impaired and might not function as
+    #     expected. Amazon Managed Blockchain automatically finds nodes in
+    #     this state and tries to recover them. If a node is recoverable, it
+    #     returns to `AVAILABLE`. Otherwise, it moves to `FAILED` status.
+    #
+    #   * `CREATE_FAILED` - The Amazon Web Services account attempted to
+    #     create a node and creation failed.
+    #
+    #   * `UPDATING` - The node is in the process of being updated.
+    #
+    #   * `DELETING` - The node is in the process of being deleted.
+    #
+    #   * `DELETED` - The node can no longer participate on the network.
+    #
+    #   * `FAILED` - The node is no longer functional, cannot be recovered,
+    #     and must be deleted.
+    #
+    #   * `INACCESSIBLE_ENCRYPTION_KEY` - The node is impaired and might not
+    #     function as expected because it cannot access the specified
+    #     customer managed key in KMS for encryption at rest. Either the KMS
+    #     key was disabled or deleted, or the grants on the key were
+    #     revoked.
+    #
+    #     The effect of disabling or deleting a key or of revoking a grant
+    #     isn't immediate. It might take some time for the node resource to
+    #     discover that the key is inaccessible. When a resource is in this
+    #     state, we recommend deleting and recreating the resource.
     #   @return [String]
     #
     # @!attribute [rw] creation_date
@@ -2019,11 +2020,28 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the node. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    #   @return [String]
+    #
+    # @!attribute [rw] kms_key_arn
+    #   The Amazon Resource Name (ARN) of the customer managed key in Key
+    #   Management Service (KMS) that the node uses for encryption at rest.
+    #   If the value of this parameter is `"AWS Owned KMS Key"`, the node
+    #   uses an Amazon Web Services owned KMS key for encryption. The node
+    #   inherits this parameter from the member that it belongs to.
+    #
+    #   For more information, see [Encryption at Rest][1] in the *Amazon
+    #   Managed Blockchain Hyperledger Fabric Developer Guide*.
+    #
+    #   Applies only to Hyperledger Fabric.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/managed-blockchain/latest/hyperledger-fabric-dev/managed-blockchain-encryption-at-rest.html
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/Node AWS API Documentation
@@ -2040,35 +2058,13 @@ module Aws::ManagedBlockchain
       :status,
       :creation_date,
       :tags,
-      :arn)
+      :arn,
+      :kms_key_arn)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Configuration properties of a node.
-    #
-    # @note When making an API call, you may pass NodeConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         instance_type: "InstanceTypeString", # required
-    #         availability_zone: "AvailabilityZoneString",
-    #         log_publishing_configuration: {
-    #           fabric: {
-    #             chaincode_logs: {
-    #               cloudwatch: {
-    #                 enabled: false,
-    #               },
-    #             },
-    #             peer_logs: {
-    #               cloudwatch: {
-    #                 enabled: false,
-    #               },
-    #             },
-    #           },
-    #         },
-    #         state_db: "LevelDB", # accepts LevelDB, CouchDB
-    #       }
     #
     # @!attribute [rw] instance_type
     #   The Amazon Managed Blockchain instance type for the node.
@@ -2106,11 +2102,11 @@ module Aws::ManagedBlockchain
     # Attributes of an Ethereum node.
     #
     # @!attribute [rw] http_endpoint
-    #   The endpoint on which the Ethereum node listens to run Ethereum
-    #   JSON-RPC methods over HTTP connections from a client. Use this
-    #   endpoint in client code for smart contracts when using an HTTP
-    #   connection. Connections to this endpoint are authenticated using
-    #   [Signature Version 4][1].
+    #   The endpoint on which the Ethereum node listens to run Ethereum API
+    #   methods over HTTP connections from a client. Use this endpoint in
+    #   client code for smart contracts when using an HTTP connection.
+    #   Connections to this endpoint are authenticated using [Signature
+    #   Version 4][1].
     #
     #
     #
@@ -2119,8 +2115,8 @@ module Aws::ManagedBlockchain
     #
     # @!attribute [rw] web_socket_endpoint
     #   The endpoint on which the Ethereum node listens to run Ethereum
-    #   JSON-RPC methods over WebSockets connections from a client. Use this
-    #   endpoint in client code for smart contracts when using a WebSockets
+    #   JSON-RPC methods over WebSocket connections from a client. Use this
+    #   endpoint in client code for smart contracts when using a WebSocket
     #   connection. Connections to this endpoint are authenticated using
     #   [Signature Version 4][1].
     #
@@ -2162,22 +2158,6 @@ module Aws::ManagedBlockchain
 
     # Configuration properties for logging events associated with a peer
     # node owned by a member in a Managed Blockchain network.
-    #
-    # @note When making an API call, you may pass NodeFabricLogPublishingConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         chaincode_logs: {
-    #           cloudwatch: {
-    #             enabled: false,
-    #           },
-    #         },
-    #         peer_logs: {
-    #           cloudwatch: {
-    #             enabled: false,
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] chaincode_logs
     #   Configuration properties for logging events associated with
@@ -2229,24 +2209,6 @@ module Aws::ManagedBlockchain
     # Configuration properties for logging events associated with a peer
     # node on a Hyperledger Fabric network on Managed Blockchain.
     #
-    # @note When making an API call, you may pass NodeLogPublishingConfiguration
-    #   data as a hash:
-    #
-    #       {
-    #         fabric: {
-    #           chaincode_logs: {
-    #             cloudwatch: {
-    #               enabled: false,
-    #             },
-    #           },
-    #           peer_logs: {
-    #             cloudwatch: {
-    #               enabled: false,
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] fabric
     #   Configuration properties for logging events associated with a node
     #   that is owned by a member of a Managed Blockchain network using the
@@ -2286,7 +2248,7 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the node. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -2345,15 +2307,15 @@ module Aws::ManagedBlockchain
     #
     #   * `REJECTED` - The proposal was rejected with insufficient `YES`
     #     votes among members according to the `VotingPolicy` specified for
-    #     the `Network`. The specified `ProposalActions` are not carried
+    #     the `Network`. The specified `ProposalActions` aren't carried
     #     out.
     #
-    #   * `EXPIRED` - Members did not cast the number of votes required to
+    #   * `EXPIRED` - Members didn't cast the number of votes required to
     #     determine the proposal outcome before the proposal expired. The
-    #     specified `ProposalActions` are not carried out.
+    #     specified `ProposalActions` aren't carried out.
     #
     #   * `ACTION_FAILED` - One or more of the specified `ProposalActions`
-    #     in a proposal that was approved could not be completed because of
+    #     in a proposal that was approved couldn't be completed because of
     #     an error. The `ACTION_FAILED` status occurs even if only one
     #     ProposalAction fails and other actions are successful.
     #   @return [String]
@@ -2366,9 +2328,9 @@ module Aws::ManagedBlockchain
     #   The date and time that the proposal expires. This is the
     #   `CreationDate` plus the `ProposalDurationInHours` that is specified
     #   in the `ProposalThresholdPolicy`. After this date and time, if
-    #   members have not cast enough votes to determine the outcome
+    #   members haven't cast enough votes to determine the outcome
     #   according to the voting policy, the proposal is `EXPIRED` and
-    #   `Actions` are not carried out.
+    #   `Actions` aren't carried out.
     #   @return [Time]
     #
     # @!attribute [rw] yes_vote_count
@@ -2403,7 +2365,7 @@ module Aws::ManagedBlockchain
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the proposal. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -2435,25 +2397,9 @@ module Aws::ManagedBlockchain
     #
     # Applies only to Hyperledger Fabric.
     #
-    # @note When making an API call, you may pass ProposalActions
-    #   data as a hash:
-    #
-    #       {
-    #         invitations: [
-    #           {
-    #             principal: "PrincipalString", # required
-    #           },
-    #         ],
-    #         removals: [
-    #           {
-    #             member_id: "ResourceIdString", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] invitations
-    #   The actions to perform for an `APPROVED` proposal to invite an AWS
-    #   account to create a member and join the network.
+    #   The actions to perform for an `APPROVED` proposal to invite an
+    #   Amazon Web Services account to create a member and join the network.
     #   @return [Array<Types::InviteAction>]
     #
     # @!attribute [rw] removals
@@ -2502,15 +2448,15 @@ module Aws::ManagedBlockchain
     #
     #   * `REJECTED` - The proposal was rejected with insufficient `YES`
     #     votes among members according to the `VotingPolicy` specified for
-    #     the `Network`. The specified `ProposalActions` are not carried
+    #     the `Network`. The specified `ProposalActions` aren't carried
     #     out.
     #
-    #   * `EXPIRED` - Members did not cast the number of votes required to
+    #   * `EXPIRED` - Members didn't cast the number of votes required to
     #     determine the proposal outcome before the proposal expired. The
-    #     specified `ProposalActions` are not carried out.
+    #     specified `ProposalActions` aren't carried out.
     #
     #   * `ACTION_FAILED` - One or more of the specified `ProposalActions`
-    #     in a proposal that was approved could not be completed because of
+    #     in a proposal that was approved couldn't be completed because of
     #     an error.
     #   @return [String]
     #
@@ -2522,15 +2468,15 @@ module Aws::ManagedBlockchain
     #   The date and time that the proposal expires. This is the
     #   `CreationDate` plus the `ProposalDurationInHours` that is specified
     #   in the `ProposalThresholdPolicy`. After this date and time, if
-    #   members have not cast enough votes to determine the outcome
+    #   members haven't cast enough votes to determine the outcome
     #   according to the voting policy, the proposal is `EXPIRED` and
-    #   `Actions` are not carried out.
+    #   `Actions` aren't carried out.
     #   @return [Time]
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the proposal. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -2552,13 +2498,6 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RejectInvitationInput
-    #   data as a hash:
-    #
-    #       {
-    #         invitation_id: "ResourceIdString", # required
-    #       }
-    #
     # @!attribute [rw] invitation_id
     #   The unique identifier of the invitation to reject.
     #   @return [String]
@@ -2580,13 +2519,6 @@ module Aws::ManagedBlockchain
     # associated resources are deleted from the network.
     #
     # Applies only to Hyperledger Fabric.
-    #
-    # @note When making an API call, you may pass RemoveAction
-    #   data as a hash:
-    #
-    #       {
-    #         member_id: "ResourceIdString", # required
-    #       }
     #
     # @!attribute [rw] member_id
     #   The unique identifier of the member to remove.
@@ -2628,14 +2560,14 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # A requested resource does not exist. It may have been deleted or
-    # referenced inaccurately.
+    # A requested resource doesn't exist. It may have been deleted or
+    # referenced incorrectly.
     #
     # @!attribute [rw] message
     #   @return [String]
     #
     # @!attribute [rw] resource_name
-    #   A requested resource does not exist. It may have been deleted or
+    #   A requested resource doesn't exist. It may have been deleted or
     #   referenced inaccurately.
     #   @return [String]
     #
@@ -2648,7 +2580,7 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # The requested resource exists but is not in a status that can complete
+    # The requested resource exists but isn't in a status that can complete
     # the operation.
     #
     # @!attribute [rw] message
@@ -2662,20 +2594,10 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ArnString", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -2702,11 +2624,10 @@ module Aws::ManagedBlockchain
     #
     class TagResourceResponse < Aws::EmptyStructure; end
 
-    # The request or operation could not be performed because a service is
+    # The request or operation couldn't be performed because a service is
     # throttling requests. The most common source of throttling errors is
-    # launching EC2 instances such that your service limit for EC2 instances
-    # is exceeded. Request a limit increase or delete unused resources if
-    # possible.
+    # creating resources that exceed your service limit for this resource
+    # type. Request a limit increase or delete unused resources if possible.
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/managedblockchain-2018-09-24/ThrottlingException AWS API Documentation
     #
@@ -2727,18 +2648,10 @@ module Aws::ManagedBlockchain
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ArnString", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource. For more information
     #   about ARNs and their format, see [Amazon Resource Names (ARNs)][1]
-    #   in the *AWS General Reference*.
+    #   in the *Amazon Web Services General Reference*.
     #
     #
     #
@@ -2762,23 +2675,6 @@ module Aws::ManagedBlockchain
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateMemberInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         member_id: "ResourceIdString", # required
-    #         log_publishing_configuration: {
-    #           fabric: {
-    #             ca_logs: {
-    #               cloudwatch: {
-    #                 enabled: false,
-    #               },
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the Managed Blockchain network to which the
     #   member belongs.
@@ -2806,29 +2702,6 @@ module Aws::ManagedBlockchain
     #
     class UpdateMemberOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateNodeInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         member_id: "ResourceIdString",
-    #         node_id: "ResourceIdString", # required
-    #         log_publishing_configuration: {
-    #           fabric: {
-    #             chaincode_logs: {
-    #               cloudwatch: {
-    #                 enabled: false,
-    #               },
-    #             },
-    #             peer_logs: {
-    #               cloudwatch: {
-    #                 enabled: false,
-    #               },
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network that the node is on.
     #   @return [String]
@@ -2862,16 +2735,6 @@ module Aws::ManagedBlockchain
     #
     class UpdateNodeOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass VoteOnProposalInput
-    #   data as a hash:
-    #
-    #       {
-    #         network_id: "ResourceIdString", # required
-    #         proposal_id: "ResourceIdString", # required
-    #         voter_member_id: "ResourceIdString", # required
-    #         vote: "YES", # required, accepts YES, NO
-    #       }
-    #
     # @!attribute [rw] network_id
     #   The unique identifier of the network.
     #   @return [String]
@@ -2932,17 +2795,6 @@ module Aws::ManagedBlockchain
     # The voting rules for the network to decide if a proposal is accepted
     #
     # Applies only to Hyperledger Fabric.
-    #
-    # @note When making an API call, you may pass VotingPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         approval_threshold_policy: {
-    #           threshold_percentage: 1,
-    #           proposal_duration_in_hours: 1,
-    #           threshold_comparator: "GREATER_THAN", # accepts GREATER_THAN, GREATER_THAN_OR_EQUAL_TO
-    #         },
-    #       }
     #
     # @!attribute [rw] approval_threshold_policy
     #   Defines the rules for the network for voting on proposals, such as

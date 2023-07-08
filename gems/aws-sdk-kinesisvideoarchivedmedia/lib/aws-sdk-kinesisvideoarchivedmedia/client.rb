@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:kinesisvideoarchivedmedia)
@@ -73,8 +77,13 @@ module Aws::KinesisVideoArchivedMedia
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::KinesisVideoArchivedMedia::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::KinesisVideoArchivedMedia
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::KinesisVideoArchivedMedia
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::KinesisVideoArchivedMedia
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::KinesisVideoArchivedMedia
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::KinesisVideoArchivedMedia
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::KinesisVideoArchivedMedia::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::KinesisVideoArchivedMedia::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::KinesisVideoArchivedMedia
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::KinesisVideoArchivedMedia
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -573,13 +630,13 @@ module Aws::KinesisVideoArchivedMedia
     #
     #   Features of the three types of sessions include the following:
     #
-    #   * <b> <code>LIVE</code> </b>\: For sessions of this type, the
-    #     MPEG-DASH manifest is continually updated with the latest fragments
-    #     as they become available. We recommend that the media player
-    #     retrieve a new manifest on a one-second interval. When this type of
-    #     session is played in a media player, the user interface typically
-    #     displays a "live" notification, with no scrubber control for
-    #     choosing the position in the playback window to display.
+    #   * <b> <code>LIVE</code> </b>: For sessions of this type, the MPEG-DASH
+    #     manifest is continually updated with the latest fragments as they
+    #     become available. We recommend that the media player retrieve a new
+    #     manifest on a one-second interval. When this type of session is
+    #     played in a media player, the user interface typically displays a
+    #     "live" notification, with no scrubber control for choosing the
+    #     position in the playback window to display.
     #
     #     <note markdown="1"> In `LIVE` mode, the newest available fragments are included in an
     #     MPEG-DASH manifest, even if there is a gap between fragments (that
@@ -592,7 +649,7 @@ module Aws::KinesisVideoArchivedMedia
     #
     #      </note>
     #
-    #   * <b> <code>LIVE_REPLAY</code> </b>\: For sessions of this type, the
+    #   * <b> <code>LIVE_REPLAY</code> </b>: For sessions of this type, the
     #     MPEG-DASH manifest is updated similarly to how it is updated for
     #     `LIVE` mode except that it starts by including fragments from a
     #     given start time. Instead of fragments being added as they are
@@ -605,7 +662,7 @@ module Aws::KinesisVideoArchivedMedia
     #     is also useful to stream previously archived media without being
     #     limited by the 1,000 fragment limit in the `ON_DEMAND` mode.
     #
-    #   * <b> <code>ON_DEMAND</code> </b>\: For sessions of this type, the
+    #   * <b> <code>ON_DEMAND</code> </b>: For sessions of this type, the
     #     MPEG-DASH manifest contains all the fragments for the session, up to
     #     the number that is specified in `MaxManifestFragmentResults`. The
     #     manifest must be retrieved only once for each session. When this
@@ -933,10 +990,10 @@ module Aws::KinesisVideoArchivedMedia
     #
     #   Features of the three types of sessions include the following:
     #
-    #   * <b> <code>LIVE</code> </b>\: For sessions of this type, the HLS
-    #     media playlist is continually updated with the latest fragments as
-    #     they become available. We recommend that the media player retrieve a
-    #     new playlist on a one-second interval. When this type of session is
+    #   * <b> <code>LIVE</code> </b>: For sessions of this type, the HLS media
+    #     playlist is continually updated with the latest fragments as they
+    #     become available. We recommend that the media player retrieve a new
+    #     playlist on a one-second interval. When this type of session is
     #     played in a media player, the user interface typically displays a
     #     "live" notification, with no scrubber control for choosing the
     #     position in the playback window to display.
@@ -952,7 +1009,7 @@ module Aws::KinesisVideoArchivedMedia
     #
     #      </note>
     #
-    #   * <b> <code>LIVE_REPLAY</code> </b>\: For sessions of this type, the
+    #   * <b> <code>LIVE_REPLAY</code> </b>: For sessions of this type, the
     #     HLS media playlist is updated similarly to how it is updated for
     #     `LIVE` mode except that it starts by including fragments from a
     #     given start time. Instead of fragments being added as they are
@@ -966,7 +1023,7 @@ module Aws::KinesisVideoArchivedMedia
     #     media without being limited by the 1,000 fragment limit in the
     #     `ON_DEMAND` mode.
     #
-    #   * <b> <code>ON_DEMAND</code> </b>\: For sessions of this type, the HLS
+    #   * <b> <code>ON_DEMAND</code> </b>: For sessions of this type, the HLS
     #     media playlist contains all the fragments for the session, up to the
     #     number that is specified in `MaxMediaPlaylistFragmentResults`. The
     #     playlist must be retrieved only once for each session. When this
@@ -1027,15 +1084,15 @@ module Aws::KinesisVideoArchivedMedia
     #
     #   The following modes are supported:
     #
-    #   * `ALWAYS`\: a discontinuity marker is placed between every fragment
-    #     in the HLS media playlist. It is recommended to use a value of
-    #     `ALWAYS` if the fragment timestamps are not accurate.
+    #   * `ALWAYS`: a discontinuity marker is placed between every fragment in
+    #     the HLS media playlist. It is recommended to use a value of `ALWAYS`
+    #     if the fragment timestamps are not accurate.
     #
-    #   * `NEVER`\: no discontinuity markers are placed anywhere. It is
+    #   * `NEVER`: no discontinuity markers are placed anywhere. It is
     #     recommended to use a value of `NEVER` to ensure the media player
     #     timeline most accurately maps to the producer timestamps.
     #
-    #   * `ON_DISCONTINUITY`\: a discontinuity marker is placed between
+    #   * `ON_DISCONTINUITY`: a discontinuity marker is placed between
     #     fragments that have a gap or overlap of more than 50 milliseconds.
     #     For most playback scenarios, it is recommended to use a value of
     #     `ON_DISCONTINUITY` so that the media player timeline is only reset
@@ -1128,6 +1185,129 @@ module Aws::KinesisVideoArchivedMedia
     # @param [Hash] params ({})
     def get_hls_streaming_session_url(params = {}, options = {})
       req = build_request(:get_hls_streaming_session_url, params)
+      req.send_request(options)
+    end
+
+    # Retrieves a list of Images corresponding to each timestamp for a given
+    # time range, sampling interval, and image format configuration.
+    #
+    # @option params [String] :stream_name
+    #   The name of the stream from which to retrieve the images. You must
+    #   specify either the `StreamName` or the `StreamARN`.
+    #
+    # @option params [String] :stream_arn
+    #   The Amazon Resource Name (ARN) of the stream from which to retrieve
+    #   the images. You must specify either the `StreamName` or the
+    #   `StreamARN`.
+    #
+    # @option params [required, String] :image_selector_type
+    #   The origin of the Server or Producer timestamps to use to generate the
+    #   images.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :start_timestamp
+    #   The starting point from which the images should be generated. This
+    #   `StartTimestamp` must be within an inclusive range of timestamps for
+    #   an image to be returned.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :end_timestamp
+    #   The end timestamp for the range of images to be generated.
+    #
+    # @option params [required, Integer] :sampling_interval
+    #   The time interval in milliseconds (ms) at which the images need to be
+    #   generated from the stream. The minimum value that can be provided is
+    #   3000 ms. If the timestamp range is less than the sampling interval,
+    #   the Image from the `startTimestamp` will be returned if available.
+    #
+    #   <note markdown="1"> The minimum value of 3000 ms is a soft limit. If needed, a lower
+    #   sampling frequency can be requested.
+    #
+    #    </note>
+    #
+    # @option params [required, String] :format
+    #   The format that will be used to encode the image.
+    #
+    # @option params [Hash<String,String>] :format_config
+    #   The list of a key-value pair structure that contains extra parameters
+    #   that can be applied when the image is generated. The `FormatConfig`
+    #   key is the `JPEGQuality`, which indicates the JPEG quality key to be
+    #   used to generate the image. The `FormatConfig` value accepts ints from
+    #   1 to 100. If the value is 1, the image will be generated with less
+    #   quality and the best compression. If the value is 100, the image will
+    #   be generated with the best quality and less compression. If no value
+    #   is provided, the default value of the `JPEGQuality` key will be set to
+    #   80.
+    #
+    # @option params [Integer] :width_pixels
+    #   The width of the output image that is used in conjunction with the
+    #   `HeightPixels` parameter. When both `WidthPixels` and `HeightPixels`
+    #   parameters are provided, the image will be stretched to fit the
+    #   specified aspect ratio. If only the `WidthPixels` parameter is
+    #   provided or if only the `HeightPixels` is provided, a
+    #   `ValidationException` will be thrown. If neither parameter is
+    #   provided, the original image size from the stream will be returned.
+    #
+    # @option params [Integer] :height_pixels
+    #   The height of the output image that is used in conjunction with the
+    #   `WidthPixels` parameter. When both `HeightPixels` and `WidthPixels`
+    #   parameters are provided, the image will be stretched to fit the
+    #   specified aspect ratio. If only the `HeightPixels` parameter is
+    #   provided, its original aspect ratio will be used to calculate the
+    #   `WidthPixels` ratio. If neither parameter is provided, the original
+    #   image size will be returned.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of images to be returned by the API.
+    #
+    #   <note markdown="1"> The default limit is 100 images per API response. The additional
+    #   results will be paginated.
+    #
+    #    </note>
+    #
+    # @option params [String] :next_token
+    #   A token that specifies where to start paginating the next set of
+    #   Images. This is the `GetImages:NextToken` from a previously truncated
+    #   response.
+    #
+    # @return [Types::GetImagesOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetImagesOutput#images #images} => Array&lt;Types::Image&gt;
+    #   * {Types::GetImagesOutput#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_images({
+    #     stream_name: "StreamName",
+    #     stream_arn: "ResourceARN",
+    #     image_selector_type: "PRODUCER_TIMESTAMP", # required, accepts PRODUCER_TIMESTAMP, SERVER_TIMESTAMP
+    #     start_timestamp: Time.now, # required
+    #     end_timestamp: Time.now, # required
+    #     sampling_interval: 1, # required
+    #     format: "JPEG", # required, accepts JPEG, PNG
+    #     format_config: {
+    #       "JPEGQuality" => "FormatConfigValue",
+    #     },
+    #     width_pixels: 1,
+    #     height_pixels: 1,
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.images #=> Array
+    #   resp.images[0].time_stamp #=> Time
+    #   resp.images[0].error #=> String, one of "NO_MEDIA", "MEDIA_ERROR"
+    #   resp.images[0].image_content #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/kinesis-video-archived-media-2017-09-30/GetImages AWS API Documentation
+    #
+    # @overload get_images(params = {})
+    # @param [Hash] params ({})
+    def get_images(params = {}, options = {})
+      req = build_request(:get_images, params)
       req.send_request(options)
     end
 
@@ -1328,7 +1508,7 @@ module Aws::KinesisVideoArchivedMedia
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-kinesisvideoarchivedmedia'
-      context[:gem_version] = '1.34.0'
+      context[:gem_version] = '1.50.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

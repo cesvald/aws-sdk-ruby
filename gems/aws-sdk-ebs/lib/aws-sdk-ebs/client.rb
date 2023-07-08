@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:ebs)
@@ -73,8 +77,13 @@ module Aws::EBS
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::EBS::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::EBS
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::EBS
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::EBS
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::EBS
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::EBS
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::EBS::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::EBS::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::EBS
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::EBS
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -388,16 +445,25 @@ module Aws::EBS
     # @option params [required, String] :snapshot_id
     #   The ID of the snapshot containing the block from which to get data.
     #
-    # @option params [required, Integer] :block_index
-    #   The block index of the block from which to get data.
+    #   If the specified snapshot is encrypted, you must have permission to
+    #   use the KMS key that was used to encrypt the snapshot. For more
+    #   information, see [ Using encryption][1] in the *Amazon Elastic Compute
+    #   Cloud User Guide*.
     #
-    #   Obtain the `BlockIndex` by running the `ListChangedBlocks` or
-    #   `ListSnapshotBlocks` operations.
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebsapis-using-encryption.html
+    #
+    # @option params [required, Integer] :block_index
+    #   The block index of the block in which to read the data. A block index
+    #   is a logical index in units of `512` KiB blocks. To identify the block
+    #   index, divide the logical offset of the data in the logical volume by
+    #   the block size (logical offset of data/`524288`). The logical offset
+    #   of the data must be `512` KiB aligned.
     #
     # @option params [required, String] :block_token
-    #   The block token of the block from which to get data.
-    #
-    #   Obtain the `BlockToken` by running the `ListChangedBlocks` or
+    #   The block token of the block from which to get data. You can obtain
+    #   the `BlockToken` by running the `ListChangedBlocks` or
     #   `ListSnapshotBlocks` operations.
     #
     # @return [Types::GetSnapshotBlockResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -450,14 +516,26 @@ module Aws::EBS
     # @option params [String] :next_token
     #   The token to request the next page of results.
     #
+    #   If you specify **NextToken**, then **StartingBlockIndex** is ignored.
+    #
     # @option params [Integer] :max_results
-    #   The number of results to return.
+    #   The maximum number of blocks to be returned by the request.
+    #
+    #   Even if additional blocks can be retrieved from the snapshot, the
+    #   request can return less blocks than **MaxResults** or an empty array
+    #   of blocks.
+    #
+    #   To retrieve the next set of blocks from the snapshot, make another
+    #   request with the returned **NextToken** value. The value of
+    #   **NextToken** is `null` when there are no more blocks to return.
     #
     # @option params [Integer] :starting_block_index
     #   The block index from which the comparison should start.
     #
     #   The list in the response will start from this block index or the next
     #   valid block index in the snapshots.
+    #
+    #   If you specify **NextToken**, then **StartingBlockIndex** is ignored.
     #
     # @return [Types::ListChangedBlocksResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -509,13 +587,25 @@ module Aws::EBS
     # @option params [String] :next_token
     #   The token to request the next page of results.
     #
+    #   If you specify **NextToken**, then **StartingBlockIndex** is ignored.
+    #
     # @option params [Integer] :max_results
-    #   The number of results to return.
+    #   The maximum number of blocks to be returned by the request.
+    #
+    #   Even if additional blocks can be retrieved from the snapshot, the
+    #   request can return less blocks than **MaxResults** or an empty array
+    #   of blocks.
+    #
+    #   To retrieve the next set of blocks from the snapshot, make another
+    #   request with the returned **NextToken** value. The value of
+    #   **NextToken** is `null` when there are no more blocks to return.
     #
     # @option params [Integer] :starting_block_index
     #   The block index from which the list should start. The list in the
     #   response will start from this block index or the next valid block
     #   index in the snapshot.
+    #
+    #   If you specify **NextToken**, then **StartingBlockIndex** is ignored.
     #
     # @return [Types::ListSnapshotBlocksResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -559,10 +649,19 @@ module Aws::EBS
     # data, the existing data is overwritten. The target snapshot must be in
     # the `pending` state.
     #
-    # Data written to a snapshot must be aligned with 512-byte sectors.
+    # Data written to a snapshot must be aligned with 512-KiB sectors.
     #
     # @option params [required, String] :snapshot_id
     #   The ID of the snapshot.
+    #
+    #   If the specified snapshot is encrypted, you must have permission to
+    #   use the KMS key that was used to encrypt the snapshot. For more
+    #   information, see [ Using encryption][1] in the *Amazon Elastic Compute
+    #   Cloud User Guide*..
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebsapis-using-encryption.html
     #
     # @option params [required, Integer] :block_index
     #   The block index of the block in which to write the data. A block index
@@ -592,7 +691,7 @@ module Aws::EBS
     #
     # @option params [required, Integer] :data_length
     #   The size of the data to write to the block, in bytes. Currently, the
-    #   only supported size is `524288`.
+    #   only supported size is `524288` bytes.
     #
     #   Valid values: `524288`
     #
@@ -649,7 +748,7 @@ module Aws::EBS
     # [1]: https://docs.aws.amazon.com/ebs/latest/APIReference/API_PutSnapshotBlock.html
     #
     # @option params [required, Integer] :volume_size
-    #   The size of the volume, in GiB. The maximum size is `16384` GiB (16
+    #   The size of the volume, in GiB. The maximum size is `65536` GiB (64
     #   TiB).
     #
     # @option params [String] :parent_snapshot_id
@@ -657,13 +756,26 @@ module Aws::EBS
     #   you are creating the first snapshot for an on-premises volume, omit
     #   this parameter.
     #
-    #   If your account is enabled for encryption by default, you cannot use
-    #   an unencrypted snapshot as a parent snapshot. You must first create an
-    #   encrypted copy of the parent snapshot using [CopySnapshot][1].
+    #   You can't specify **ParentSnapshotId** and **Encrypted** in the same
+    #   request. If you specify both parameters, the request fails with
+    #   `ValidationException`.
+    #
+    #   The encryption status of the snapshot depends on the values that you
+    #   specify for **Encrypted**, **KmsKeyArn**, and **ParentSnapshotId**,
+    #   and whether your Amazon Web Services account is enabled for [
+    #   encryption by default][1]. For more information, see [ Using
+    #   encryption][2] in the *Amazon Elastic Compute Cloud User Guide*.
+    #
+    #   If you specify an encrypted parent snapshot, you must have permission
+    #   to use the KMS key that was used to encrypt the parent snapshot. For
+    #   more information, see [ Permissions to use Key Management Service
+    #   keys][3] in the *Amazon Elastic Compute Cloud User Guide*.
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CopySnapshot.html
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-by-default
+    #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebsapis-using-encryption.html
+    #   [3]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebsapi-permissions.html#ebsapi-kms-permissions
     #
     # @option params [Array<Types::Tag>] :tags
     #   The tags to apply to the snapshot.
@@ -680,7 +792,7 @@ module Aws::EBS
     #   and they have no additional effect.
     #
     #   If you do not specify a client token, one is automatically generated
-    #   by the AWS SDK.
+    #   by the Amazon Web Services SDK.
     #
     #   For more information, see [ Idempotency for StartSnapshot API][1] in
     #   the *Amazon Elastic Compute Cloud User Guide*.
@@ -693,40 +805,47 @@ module Aws::EBS
     #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-direct-api-idempotency.html
     #
     # @option params [Boolean] :encrypted
-    #   Indicates whether to encrypt the snapshot. To create an encrypted
-    #   snapshot, specify `true`. To create an unencrypted snapshot, omit this
-    #   parameter.
+    #   Indicates whether to encrypt the snapshot.
     #
-    #   If you specify a value for **ParentSnapshotId**, omit this parameter.
+    #   You can't specify **Encrypted** and <b> ParentSnapshotId</b> in the
+    #   same request. If you specify both parameters, the request fails with
+    #   `ValidationException`.
     #
-    #   If you specify `true`, the snapshot is encrypted using the CMK
-    #   specified using the **KmsKeyArn** parameter. If no value is specified
-    #   for **KmsKeyArn**, the default CMK for your account is used. If no
-    #   default CMK has been specified for your account, the AWS managed CMK
-    #   is used. To set a default CMK for your account, use [
-    #   ModifyEbsDefaultKmsKeyId][1].
+    #   The encryption status of the snapshot depends on the values that you
+    #   specify for **Encrypted**, **KmsKeyArn**, and **ParentSnapshotId**,
+    #   and whether your Amazon Web Services account is enabled for [
+    #   encryption by default][1]. For more information, see [ Using
+    #   encryption][2] in the *Amazon Elastic Compute Cloud User Guide*.
     #
-    #   If your account is enabled for encryption by default, you cannot set
-    #   this parameter to `false`. In this case, you can omit this parameter.
-    #
-    #   For more information, see [ Using encryption][2] in the *Amazon
-    #   Elastic Compute Cloud User Guide*.
+    #   To create an encrypted snapshot, you must have permission to use the
+    #   KMS key. For more information, see [ Permissions to use Key Management
+    #   Service keys][3] in the *Amazon Elastic Compute Cloud User Guide*.
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyEbsDefaultKmsKeyId.html
-    #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-accessing-snapshot.html#ebsapis-using-encryption
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-by-default
+    #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebsapis-using-encryption.html
+    #   [3]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebsapi-permissions.html#ebsapi-kms-permissions
     #
     # @option params [String] :kms_key_arn
-    #   The Amazon Resource Name (ARN) of the AWS Key Management Service (AWS
-    #   KMS) customer master key (CMK) to be used to encrypt the snapshot. If
-    #   you do not specify a CMK, the default AWS managed CMK is used.
+    #   The Amazon Resource Name (ARN) of the Key Management Service (KMS) key
+    #   to be used to encrypt the snapshot.
     #
-    #   If you specify a **ParentSnapshotId**, omit this parameter; the
-    #   snapshot will be encrypted using the same CMK that was used to encrypt
-    #   the parent snapshot.
+    #   The encryption status of the snapshot depends on the values that you
+    #   specify for **Encrypted**, **KmsKeyArn**, and **ParentSnapshotId**,
+    #   and whether your Amazon Web Services account is enabled for [
+    #   encryption by default][1]. For more information, see [ Using
+    #   encryption][2] in the *Amazon Elastic Compute Cloud User Guide*.
     #
-    #   If **Encrypted** is set to `true`, you must specify a CMK ARN.
+    #   To create an encrypted snapshot, you must have permission to use the
+    #   KMS key. For more information, see [ Permissions to use Key Management
+    #   Service keys][3] in the *Amazon Elastic Compute Cloud User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-by-default
+    #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebsapis-using-encryption.html
+    #   [3]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebsapi-permissions.html#ebsapi-kms-permissions
     #
     # @option params [Integer] :timeout
     #   The amount of time (in minutes) after which the snapshot is
@@ -806,7 +925,7 @@ module Aws::EBS
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-ebs'
-      context[:gem_version] = '1.13.0'
+      context[:gem_version] = '1.32.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:guardduty)
@@ -73,8 +77,13 @@ module Aws::GuardDuty
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::GuardDuty::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::GuardDuty
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::GuardDuty
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::GuardDuty
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::GuardDuty
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::GuardDuty
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::GuardDuty::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::GuardDuty::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::GuardDuty
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::GuardDuty
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -326,6 +383,39 @@ module Aws::GuardDuty
     end
 
     # @!group API Operations
+
+    # Accepts the invitation to be a member account and get monitored by a
+    # GuardDuty administrator account that sent the invitation.
+    #
+    # @option params [required, String] :detector_id
+    #   The unique ID of the detector of the GuardDuty member account.
+    #
+    # @option params [required, String] :administrator_id
+    #   The account ID of the GuardDuty administrator account whose invitation
+    #   you're accepting.
+    #
+    # @option params [required, String] :invitation_id
+    #   The value that is used to validate the administrator account to the
+    #   member account.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.accept_administrator_invitation({
+    #     detector_id: "DetectorId", # required
+    #     administrator_id: "String", # required
+    #     invitation_id: "String", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/AcceptAdministratorInvitation AWS API Documentation
+    #
+    # @overload accept_administrator_invitation(params = {})
+    # @param [Hash] params ({})
+    def accept_administrator_invitation(params = {}, options = {})
+      req = build_request(:accept_administrator_invitation, params)
+      req.send_request(options)
+    end
 
     # Accepts the invitation to be monitored by a GuardDuty administrator
     # account.
@@ -399,6 +489,15 @@ module Aws::GuardDuty
     # You can have only one detector per account per Region. All data
     # sources are enabled in a new detector by default.
     #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
+    #
     # @option params [required, Boolean] :enable
     #   A Boolean value that specifies whether the detector is to be enabled.
     #
@@ -414,12 +513,25 @@ module Aws::GuardDuty
     # @option params [Types::DataSourceConfigurations] :data_sources
     #   Describes which data sources will be enabled for the detector.
     #
+    #   There might be regional differences because some data sources might
+    #   not be available in all the Amazon Web Services Regions where
+    #   GuardDuty is presently supported. For more information, see [Regions
+    #   and endpoints][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
+    #
     # @option params [Hash<String,String>] :tags
     #   The tags to be added to a new detector resource.
+    #
+    # @option params [Array<Types::DetectorFeatureConfiguration>] :features
+    #   A list of features that will be configured for the detector.
     #
     # @return [Types::CreateDetectorResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateDetectorResponse#detector_id #detector_id} => String
+    #   * {Types::CreateDetectorResponse#unprocessed_data_sources #unprocessed_data_sources} => Types::UnprocessedDataSourcesResult
     #
     # @example Request syntax with placeholder values
     #
@@ -431,15 +543,40 @@ module Aws::GuardDuty
     #       s3_logs: {
     #         enable: false, # required
     #       },
+    #       kubernetes: {
+    #         audit_logs: { # required
+    #           enable: false, # required
+    #         },
+    #       },
+    #       malware_protection: {
+    #         scan_ec2_instance_with_findings: {
+    #           ebs_volumes: false,
+    #         },
+    #       },
     #     },
     #     tags: {
     #       "TagKey" => "TagValue",
     #     },
+    #     features: [
+    #       {
+    #         name: "S3_DATA_EVENTS", # accepts S3_DATA_EVENTS, EKS_AUDIT_LOGS, EBS_MALWARE_PROTECTION, RDS_LOGIN_EVENTS, EKS_RUNTIME_MONITORING, LAMBDA_NETWORK_LOGS
+    #         status: "ENABLED", # accepts ENABLED, DISABLED
+    #         additional_configuration: [
+    #           {
+    #             name: "EKS_ADDON_MANAGEMENT", # accepts EKS_ADDON_MANAGEMENT
+    #             status: "ENABLED", # accepts ENABLED, DISABLED
+    #           },
+    #         ],
+    #       },
+    #     ],
     #   })
     #
     # @example Response structure
     #
     #   resp.detector_id #=> String
+    #   resp.unprocessed_data_sources.malware_protection.scan_ec2_instance_with_findings.ebs_volumes.status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.unprocessed_data_sources.malware_protection.scan_ec2_instance_with_findings.ebs_volumes.reason #=> String
+    #   resp.unprocessed_data_sources.malware_protection.service_role #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/CreateDetector AWS API Documentation
     #
@@ -450,19 +587,29 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Creates a filter using the specified finding criteria.
+    # Creates a filter using the specified finding criteria. The maximum
+    # number of saved filters per Amazon Web Services account per Region is
+    # 100. For more information, see [Quotas for GuardDuty][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_limits.html
     #
     # @option params [required, String] :detector_id
     #   The ID of the detector belonging to the GuardDuty account that you
     #   want to create a filter for.
     #
     # @option params [required, String] :name
-    #   The name of the filter. Minimum length of 3. Maximum length of 64.
-    #   Valid characters include alphanumeric characters, dot (.), underscore
-    #   (\_), and dash (-). Spaces are not allowed.
+    #   The name of the filter. Valid characters include period (.),
+    #   underscore (\_), dash (-), and alphanumeric characters. A whitespace
+    #   is considered to be an invalid character.
     #
     # @option params [String] :description
-    #   The description of the filter.
+    #   The description of the filter. Valid characters include alphanumeric
+    #   characters, and special characters such as hyphen, period, colon,
+    #   underscore, parentheses (`\{ \}`, `[ ]`, and `( )`), forward slash,
+    #   horizontal tab, vertical tab, newline, form feed, return, and
+    #   whitespace.
     #
     # @option params [String] :action
     #   Specifies the action that is to be applied to the findings that match
@@ -482,8 +629,6 @@ module Aws::GuardDuty
     #   * accountId
     #
     #   * region
-    #
-    #   * confidence
     #
     #   * id
     #
@@ -533,6 +678,8 @@ module Aws::GuardDuty
     #
     #   * service.action.awsApiCallAction.errorCode
     #
+    #   * service.action.awsApiCallAction.userAgent
+    #
     #   * service.action.awsApiCallAction.remoteIpDetails.city.cityName
     #
     #   * service.action.awsApiCallAction.remoteIpDetails.country.countryName
@@ -571,12 +718,15 @@ module Aws::GuardDuty
     #
     #   * service.additionalInfo.threatListName
     #
-    #   * service.archived
+    #   * resource.s3BucketDetails.publicAccess.effectivePermissions
     #
-    #     When this attribute is set to TRUE, only archived findings are
-    #     listed. When it's set to FALSE, only unarchived findings are
-    #     listed. When this attribute is not set, all existing findings are
-    #     listed.
+    #   * resource.s3BucketDetails.name
+    #
+    #   * resource.s3BucketDetails.tags.key
+    #
+    #   * resource.s3BucketDetails.tags.value
+    #
+    #   * resource.s3BucketDetails.type
     #
     #   * service.resourceRole
     #
@@ -650,10 +800,10 @@ module Aws::GuardDuty
 
     # Creates a new IPSet, which is called a trusted IP list in the console
     # user interface. An IPSet is a list of IP addresses that are trusted
-    # for secure communication with AWS infrastructure and applications.
-    # GuardDuty doesn't generate findings for IP addresses that are
-    # included in IPSets. Only users from the administrator account can use
-    # this operation.
+    # for secure communication with Amazon Web Services infrastructure and
+    # applications. GuardDuty doesn't generate findings for IP addresses
+    # that are included in IPSets. Only users from the administrator account
+    # can use this operation.
     #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector of the GuardDuty account that you want
@@ -662,15 +812,14 @@ module Aws::GuardDuty
     # @option params [required, String] :name
     #   The user-friendly name to identify the IPSet.
     #
-    #   Allowed characters are alphanumerics, spaces, hyphens (-), and
+    #   Allowed characters are alphanumeric, whitespace, dash (-), and
     #   underscores (\_).
     #
     # @option params [required, String] :format
     #   The format of the file that contains the IPSet.
     #
     # @option params [required, String] :location
-    #   The URI of the file that contains the IPSet. For example:
-    #   https://s3.us-west-2.amazonaws.com/my-bucket/my-object-key.
+    #   The URI of the file that contains the IPSet.
     #
     # @option params [required, Boolean] :activate
     #   A Boolean value that indicates whether GuardDuty is to start using the
@@ -716,24 +865,32 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Creates member accounts of the current AWS account by specifying a
-    # list of AWS account IDs. This step is a prerequisite for managing the
-    # associated member accounts either by invitation or through an
-    # organization.
+    # Creates member accounts of the current Amazon Web Services account by
+    # specifying a list of Amazon Web Services account IDs. This step is a
+    # prerequisite for managing the associated member accounts either by
+    # invitation or through an organization.
     #
-    # When using `Create Members` as an organizations delegated
-    # administrator this action will enable GuardDuty in the added member
-    # accounts, with the exception of the organization delegated
-    # administrator account, which must enable GuardDuty prior to being
-    # added as a member.
+    # As a delegated administrator, using `CreateMembers` will enable
+    # GuardDuty in the added member accounts, with the exception of the
+    # organization delegated administrator account. A delegated
+    # administrator must enable GuardDuty prior to being added as a member.
     #
-    # If you are adding accounts by invitation use this action after
-    # GuardDuty has been enabled in potential member accounts and before
-    # using [ `Invite Members` ][1].
+    # If you are adding accounts by invitation, before using
+    # [InviteMembers][1], use `CreateMembers` after GuardDuty has been
+    # enabled in potential member accounts.
+    #
+    # If you disassociate a member from a GuardDuty delegated administrator,
+    # the member account details obtained from this API, including the
+    # associated email addresses, will be retained. This is done so that the
+    # delegated administrator can invoke the [InviteMembers][1] API without
+    # the need to invoke the CreateMembers API again. To remove the details
+    # associated with a member account, the delegated administrator must
+    # invoke the [DeleteMembers][2] API.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_InviteMembers.html
+    # [2]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DeleteMembers.html
     #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector of the GuardDuty account that you want
@@ -824,9 +981,9 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Generates example findings of types specified by the list of finding
+    # Generates sample findings of types specified by the list of finding
     # types. If 'NULL' is specified for `findingTypes`, the API generates
-    # example findings of all supported finding types.
+    # sample findings of all supported finding types.
     #
     # @option params [required, String] :detector_id
     #   The ID of the detector to create sample findings for.
@@ -870,8 +1027,7 @@ module Aws::GuardDuty
     #   The format of the file that contains the ThreatIntelSet.
     #
     # @option params [required, String] :location
-    #   The URI of the file that contains the ThreatIntelSet. For example:
-    #   https://s3.us-west-2.amazonaws.com/my-bucket/my-object-key.
+    #   The URI of the file that contains the ThreatIntelSet.
     #
     # @option params [required, Boolean] :activate
     #   A Boolean value that indicates whether GuardDuty is to start using the
@@ -917,12 +1073,13 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Declines invitations sent to the current member account by AWS
-    # accounts specified by their account IDs.
+    # Declines invitations sent to the current member account by Amazon Web
+    # Services accounts specified by their account IDs.
     #
     # @option params [required, Array<String>] :account_ids
-    #   A list of account IDs of the AWS accounts that sent invitations to the
-    #   current member account that you want to decline invitations from.
+    #   A list of account IDs of the Amazon Web Services accounts that sent
+    #   invitations to the current member account that you want to decline
+    #   invitations from.
     #
     # @return [Types::DeclineInvitationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1025,12 +1182,13 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Deletes invitations sent to the current member account by AWS accounts
-    # specified by their account IDs.
+    # Deletes invitations sent to the current member account by Amazon Web
+    # Services accounts specified by their account IDs.
     #
     # @option params [required, Array<String>] :account_ids
-    #   A list of account IDs of the AWS accounts that sent invitations to the
-    #   current member account that you want to delete invitations from.
+    #   A list of account IDs of the Amazon Web Services accounts that sent
+    #   invitations to the current member account that you want to delete
+    #   invitations from.
     #
     # @return [Types::DeleteInvitationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1059,6 +1217,10 @@ module Aws::GuardDuty
 
     # Deletes GuardDuty member accounts (to the current GuardDuty
     # administrator account) specified by the account IDs.
+    #
+    # With `autoEnableOrganizationMembers` configuration for your
+    # organization set to `ALL`, you'll receive an error if you attempt to
+    # disable GuardDuty for a member account in your organization.
     #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector of the GuardDuty account whose members
@@ -1148,23 +1310,158 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
+    # Returns a list of malware scans. Each member account can view the
+    # malware scans for their own accounts. An administrator can view the
+    # malware scans for all the member accounts.
+    #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
+    #
+    # @option params [required, String] :detector_id
+    #   The unique ID of the detector that the request is associated with.
+    #
+    # @option params [String] :next_token
+    #   You can use this parameter when paginating results. Set the value of
+    #   this parameter to null on your first call to the list action. For
+    #   subsequent calls to the action, fill nextToken in the request with the
+    #   value of NextToken from the previous response to continue listing
+    #   data.
+    #
+    # @option params [Integer] :max_results
+    #   You can use this parameter to indicate the maximum number of items
+    #   that you want in the response. The default value is 50. The maximum
+    #   value is 50.
+    #
+    # @option params [Types::FilterCriteria] :filter_criteria
+    #   Represents the criteria to be used in the filter for describing scan
+    #   entries.
+    #
+    # @option params [Types::SortCriteria] :sort_criteria
+    #   Represents the criteria used for sorting scan entries. The [
+    #   `attributeName` ][1] is required and it must be `scanStartTime`.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_SortCriteria.html#guardduty-Type-SortCriteria-attributeName
+    #
+    # @return [Types::DescribeMalwareScansResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeMalwareScansResponse#scans #scans} => Array&lt;Types::Scan&gt;
+    #   * {Types::DescribeMalwareScansResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_malware_scans({
+    #     detector_id: "DetectorId", # required
+    #     next_token: "String",
+    #     max_results: 1,
+    #     filter_criteria: {
+    #       filter_criterion: [
+    #         {
+    #           criterion_key: "EC2_INSTANCE_ARN", # accepts EC2_INSTANCE_ARN, SCAN_ID, ACCOUNT_ID, GUARDDUTY_FINDING_ID, SCAN_START_TIME, SCAN_STATUS, SCAN_TYPE
+    #           filter_condition: {
+    #             equals_value: "NonEmptyString",
+    #             greater_than: 1,
+    #             less_than: 1,
+    #           },
+    #         },
+    #       ],
+    #     },
+    #     sort_criteria: {
+    #       attribute_name: "String",
+    #       order_by: "ASC", # accepts ASC, DESC
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.scans #=> Array
+    #   resp.scans[0].detector_id #=> String
+    #   resp.scans[0].admin_detector_id #=> String
+    #   resp.scans[0].scan_id #=> String
+    #   resp.scans[0].scan_status #=> String, one of "RUNNING", "COMPLETED", "FAILED", "SKIPPED"
+    #   resp.scans[0].failure_reason #=> String
+    #   resp.scans[0].scan_start_time #=> Time
+    #   resp.scans[0].scan_end_time #=> Time
+    #   resp.scans[0].trigger_details.guard_duty_finding_id #=> String
+    #   resp.scans[0].trigger_details.description #=> String
+    #   resp.scans[0].resource_details.instance_arn #=> String
+    #   resp.scans[0].scan_result_details.scan_result #=> String, one of "CLEAN", "INFECTED"
+    #   resp.scans[0].account_id #=> String
+    #   resp.scans[0].total_bytes #=> Integer
+    #   resp.scans[0].file_count #=> Integer
+    #   resp.scans[0].attached_volumes #=> Array
+    #   resp.scans[0].attached_volumes[0].volume_arn #=> String
+    #   resp.scans[0].attached_volumes[0].volume_type #=> String
+    #   resp.scans[0].attached_volumes[0].device_name #=> String
+    #   resp.scans[0].attached_volumes[0].volume_size_in_gb #=> Integer
+    #   resp.scans[0].attached_volumes[0].encryption_type #=> String
+    #   resp.scans[0].attached_volumes[0].snapshot_arn #=> String
+    #   resp.scans[0].attached_volumes[0].kms_key_arn #=> String
+    #   resp.scans[0].scan_type #=> String, one of "GUARDDUTY_INITIATED", "ON_DEMAND"
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/DescribeMalwareScans AWS API Documentation
+    #
+    # @overload describe_malware_scans(params = {})
+    # @param [Hash] params ({})
+    def describe_malware_scans(params = {}, options = {})
+      req = build_request(:describe_malware_scans, params)
+      req.send_request(options)
+    end
+
     # Returns information about the account selected as the delegated
     # administrator for GuardDuty.
+    #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
     #
     # @option params [required, String] :detector_id
     #   The ID of the detector to retrieve information about the delegated
     #   administrator from.
+    #
+    # @option params [Integer] :max_results
+    #   You can use this parameter to indicate the maximum number of items
+    #   that you want in the response.
+    #
+    # @option params [String] :next_token
+    #   You can use this parameter when paginating results. Set the value of
+    #   this parameter to null on your first call to the list action. For
+    #   subsequent calls to the action, fill `nextToken` in the request with
+    #   the value of `NextToken` from the previous response to continue
+    #   listing data.
     #
     # @return [Types::DescribeOrganizationConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::DescribeOrganizationConfigurationResponse#auto_enable #auto_enable} => Boolean
     #   * {Types::DescribeOrganizationConfigurationResponse#member_account_limit_reached #member_account_limit_reached} => Boolean
     #   * {Types::DescribeOrganizationConfigurationResponse#data_sources #data_sources} => Types::OrganizationDataSourceConfigurationsResult
+    #   * {Types::DescribeOrganizationConfigurationResponse#features #features} => Array&lt;Types::OrganizationFeatureConfigurationResult&gt;
+    #   * {Types::DescribeOrganizationConfigurationResponse#next_token #next_token} => String
+    #   * {Types::DescribeOrganizationConfigurationResponse#auto_enable_organization_members #auto_enable_organization_members} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
     #
     # @example Request syntax with placeholder values
     #
     #   resp = client.describe_organization_configuration({
     #     detector_id: "DetectorId", # required
+    #     max_results: 1,
+    #     next_token: "String",
     #   })
     #
     # @example Response structure
@@ -1172,6 +1469,16 @@ module Aws::GuardDuty
     #   resp.auto_enable #=> Boolean
     #   resp.member_account_limit_reached #=> Boolean
     #   resp.data_sources.s3_logs.auto_enable #=> Boolean
+    #   resp.data_sources.kubernetes.audit_logs.auto_enable #=> Boolean
+    #   resp.data_sources.malware_protection.scan_ec2_instance_with_findings.ebs_volumes.auto_enable #=> Boolean
+    #   resp.features #=> Array
+    #   resp.features[0].name #=> String, one of "S3_DATA_EVENTS", "EKS_AUDIT_LOGS", "EBS_MALWARE_PROTECTION", "RDS_LOGIN_EVENTS", "EKS_RUNTIME_MONITORING", "LAMBDA_NETWORK_LOGS"
+    #   resp.features[0].auto_enable #=> String, one of "NEW", "NONE"
+    #   resp.features[0].additional_configuration #=> Array
+    #   resp.features[0].additional_configuration[0].name #=> String, one of "EKS_ADDON_MANAGEMENT"
+    #   resp.features[0].additional_configuration[0].auto_enable #=> String, one of "NEW", "NONE"
+    #   resp.next_token #=> String
+    #   resp.auto_enable_organization_members #=> String, one of "NEW", "ALL", "NONE"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/DescribeOrganizationConfiguration AWS API Documentation
     #
@@ -1225,12 +1532,12 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Disables an AWS account within the Organization as the GuardDuty
-    # delegated administrator.
+    # Disables an Amazon Web Services account within the Organization as the
+    # GuardDuty delegated administrator.
     #
     # @option params [required, String] :admin_account_id
-    #   The AWS Account ID for the organizations account to be disabled as a
-    #   GuardDuty delegated administrator.
+    #   The Amazon Web Services Account ID for the organizations account to be
+    #   disabled as a GuardDuty delegated administrator.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1252,6 +1559,63 @@ module Aws::GuardDuty
     # Disassociates the current GuardDuty member account from its
     # administrator account.
     #
+    # When you disassociate an invited member from a GuardDuty delegated
+    # administrator, the member account details obtained from the
+    # [CreateMembers][1] API, including the associated email addresses, are
+    # retained. This is done so that the delegated administrator can invoke
+    # the [InviteMembers][2] API without the need to invoke the
+    # CreateMembers API again. To remove the details associated with a
+    # member account, the delegated administrator must invoke the
+    # [DeleteMembers][3] API.
+    #
+    # With `autoEnableOrganizationMembers` configuration for your
+    # organization set to `ALL`, you'll receive an error if you attempt to
+    # disable GuardDuty in a member account.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_CreateMembers.html
+    # [2]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_InviteMembers.html
+    # [3]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DeleteMembers.html
+    #
+    # @option params [required, String] :detector_id
+    #   The unique ID of the detector of the GuardDuty member account.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.disassociate_from_administrator_account({
+    #     detector_id: "DetectorId", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/DisassociateFromAdministratorAccount AWS API Documentation
+    #
+    # @overload disassociate_from_administrator_account(params = {})
+    # @param [Hash] params ({})
+    def disassociate_from_administrator_account(params = {}, options = {})
+      req = build_request(:disassociate_from_administrator_account, params)
+      req.send_request(options)
+    end
+
+    # Disassociates the current GuardDuty member account from its
+    # administrator account.
+    #
+    # When you disassociate an invited member from a GuardDuty delegated
+    # administrator, the member account details obtained from the
+    # [CreateMembers][1] API, including the associated email addresses, are
+    # retained. This is done so that the delegated administrator can invoke
+    # the [InviteMembers][2] API without the need to invoke the
+    # CreateMembers API again. To remove the details associated with a
+    # member account, the delegated administrator must invoke the
+    # [DeleteMembers][3] API.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_CreateMembers.html
+    # [2]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_InviteMembers.html
+    # [3]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DeleteMembers.html
+    #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector of the GuardDuty member account.
     #
@@ -1272,8 +1636,28 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Disassociates GuardDuty member accounts (to the current GuardDuty
+    # Disassociates GuardDuty member accounts (from the current
     # administrator account) specified by the account IDs.
+    #
+    # When you disassociate an invited member from a GuardDuty delegated
+    # administrator, the member account details obtained from the
+    # [CreateMembers][1] API, including the associated email addresses, are
+    # retained. This is done so that the delegated administrator can invoke
+    # the [InviteMembers][2] API without the need to invoke the
+    # CreateMembers API again. To remove the details associated with a
+    # member account, the delegated administrator must invoke the
+    # [DeleteMembers][3] API.
+    #
+    # With `autoEnableOrganizationMembers` configuration for your
+    # organization set to `ALL`, you'll receive an error if you attempt to
+    # disassociate a member account before removing them from your Amazon
+    # Web Services organization.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_CreateMembers.html
+    # [2]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_InviteMembers.html
+    # [3]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DeleteMembers.html
     #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector of the GuardDuty account whose members
@@ -1309,12 +1693,12 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Enables an AWS account within the organization as the GuardDuty
-    # delegated administrator.
+    # Enables an Amazon Web Services account within the organization as the
+    # GuardDuty delegated administrator.
     #
     # @option params [required, String] :admin_account_id
-    #   The AWS Account ID for the organization account to be enabled as a
-    #   GuardDuty delegated administrator.
+    #   The Amazon Web Services Account ID for the organization account to be
+    #   enabled as a GuardDuty delegated administrator.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -1333,7 +1717,102 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
+    # Provides the details for the GuardDuty administrator account
+    # associated with the current GuardDuty member account.
+    #
+    # @option params [required, String] :detector_id
+    #   The unique ID of the detector of the GuardDuty member account.
+    #
+    # @return [Types::GetAdministratorAccountResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetAdministratorAccountResponse#administrator #administrator} => Types::Administrator
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_administrator_account({
+    #     detector_id: "DetectorId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.administrator.account_id #=> String
+    #   resp.administrator.invitation_id #=> String
+    #   resp.administrator.relationship_status #=> String
+    #   resp.administrator.invited_at #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/GetAdministratorAccount AWS API Documentation
+    #
+    # @overload get_administrator_account(params = {})
+    # @param [Hash] params ({})
+    def get_administrator_account(params = {}, options = {})
+      req = build_request(:get_administrator_account, params)
+      req.send_request(options)
+    end
+
+    # Retrieves aggregated statistics for your account. If you are a
+    # GuardDuty administrator, you can retrieve the statistics for all the
+    # resources associated with the active member accounts in your
+    # organization who have enabled EKS Runtime Monitoring and have the
+    # GuardDuty agent running on their EKS nodes.
+    #
+    # @option params [required, String] :detector_id
+    #   The unique ID of the GuardDuty detector associated to the coverage
+    #   statistics.
+    #
+    # @option params [Types::CoverageFilterCriteria] :filter_criteria
+    #   Represents the criteria used to filter the coverage statistics
+    #
+    # @option params [required, Array<String>] :statistics_type
+    #   Represents the statistics type used to aggregate the coverage details.
+    #
+    # @return [Types::GetCoverageStatisticsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetCoverageStatisticsResponse#coverage_statistics #coverage_statistics} => Types::CoverageStatistics
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_coverage_statistics({
+    #     detector_id: "DetectorId", # required
+    #     filter_criteria: {
+    #       filter_criterion: [
+    #         {
+    #           criterion_key: "ACCOUNT_ID", # accepts ACCOUNT_ID, CLUSTER_NAME, RESOURCE_TYPE, COVERAGE_STATUS, ADDON_VERSION
+    #           filter_condition: {
+    #             equals: ["String"],
+    #             not_equals: ["String"],
+    #           },
+    #         },
+    #       ],
+    #     },
+    #     statistics_type: ["COUNT_BY_RESOURCE_TYPE"], # required, accepts COUNT_BY_RESOURCE_TYPE, COUNT_BY_COVERAGE_STATUS
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.coverage_statistics.count_by_resource_type #=> Hash
+    #   resp.coverage_statistics.count_by_resource_type["ResourceType"] #=> Integer
+    #   resp.coverage_statistics.count_by_coverage_status #=> Hash
+    #   resp.coverage_statistics.count_by_coverage_status["CoverageStatus"] #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/GetCoverageStatistics AWS API Documentation
+    #
+    # @overload get_coverage_statistics(params = {})
+    # @param [Hash] params ({})
+    def get_coverage_statistics(params = {}, options = {})
+      req = build_request(:get_coverage_statistics, params)
+      req.send_request(options)
+    end
+
     # Retrieves an Amazon GuardDuty detector specified by the detectorId.
+    #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
     #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector that you want to get.
@@ -1347,6 +1826,7 @@ module Aws::GuardDuty
     #   * {Types::GetDetectorResponse#updated_at #updated_at} => String
     #   * {Types::GetDetectorResponse#data_sources #data_sources} => Types::DataSourceConfigurationsResult
     #   * {Types::GetDetectorResponse#tags #tags} => Hash&lt;String,String&gt;
+    #   * {Types::GetDetectorResponse#features #features} => Array&lt;Types::DetectorFeatureConfigurationResult&gt;
     #
     # @example Request syntax with placeholder values
     #
@@ -1365,8 +1845,20 @@ module Aws::GuardDuty
     #   resp.data_sources.dns_logs.status #=> String, one of "ENABLED", "DISABLED"
     #   resp.data_sources.flow_logs.status #=> String, one of "ENABLED", "DISABLED"
     #   resp.data_sources.s3_logs.status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.data_sources.kubernetes.audit_logs.status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.data_sources.malware_protection.scan_ec2_instance_with_findings.ebs_volumes.status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.data_sources.malware_protection.scan_ec2_instance_with_findings.ebs_volumes.reason #=> String
+    #   resp.data_sources.malware_protection.service_role #=> String
     #   resp.tags #=> Hash
     #   resp.tags["TagKey"] #=> String
+    #   resp.features #=> Array
+    #   resp.features[0].name #=> String, one of "FLOW_LOGS", "CLOUD_TRAIL", "DNS_LOGS", "S3_DATA_EVENTS", "EKS_AUDIT_LOGS", "EBS_MALWARE_PROTECTION", "RDS_LOGIN_EVENTS", "EKS_RUNTIME_MONITORING", "LAMBDA_NETWORK_LOGS"
+    #   resp.features[0].status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.features[0].updated_at #=> Time
+    #   resp.features[0].additional_configuration #=> Array
+    #   resp.features[0].additional_configuration[0].name #=> String, one of "EKS_ADDON_MANAGEMENT"
+    #   resp.features[0].additional_configuration[0].status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.features[0].additional_configuration[0].updated_at #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/GetDetector AWS API Documentation
     #
@@ -1535,13 +2027,132 @@ module Aws::GuardDuty
     #   resp.findings[0].resource.instance_details.tags #=> Array
     #   resp.findings[0].resource.instance_details.tags[0].key #=> String
     #   resp.findings[0].resource.instance_details.tags[0].value #=> String
+    #   resp.findings[0].resource.eks_cluster_details.name #=> String
+    #   resp.findings[0].resource.eks_cluster_details.arn #=> String
+    #   resp.findings[0].resource.eks_cluster_details.vpc_id #=> String
+    #   resp.findings[0].resource.eks_cluster_details.status #=> String
+    #   resp.findings[0].resource.eks_cluster_details.tags #=> Array
+    #   resp.findings[0].resource.eks_cluster_details.tags[0].key #=> String
+    #   resp.findings[0].resource.eks_cluster_details.tags[0].value #=> String
+    #   resp.findings[0].resource.eks_cluster_details.created_at #=> Time
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_user_details.username #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_user_details.uid #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_user_details.groups #=> Array
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_user_details.groups[0] #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_user_details.session_name #=> Array
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_user_details.session_name[0] #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.name #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.type #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.uid #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.namespace #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.host_network #=> Boolean
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers #=> Array
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers[0].container_runtime #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers[0].id #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers[0].name #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers[0].image #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers[0].image_prefix #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers[0].volume_mounts #=> Array
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers[0].volume_mounts[0].name #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers[0].volume_mounts[0].mount_path #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.containers[0].security_context.privileged #=> Boolean
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.volumes #=> Array
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.volumes[0].name #=> String
+    #   resp.findings[0].resource.kubernetes_details.kubernetes_workload_details.volumes[0].host_path.path #=> String
     #   resp.findings[0].resource.resource_type #=> String
+    #   resp.findings[0].resource.ebs_volume_details.scanned_volume_details #=> Array
+    #   resp.findings[0].resource.ebs_volume_details.scanned_volume_details[0].volume_arn #=> String
+    #   resp.findings[0].resource.ebs_volume_details.scanned_volume_details[0].volume_type #=> String
+    #   resp.findings[0].resource.ebs_volume_details.scanned_volume_details[0].device_name #=> String
+    #   resp.findings[0].resource.ebs_volume_details.scanned_volume_details[0].volume_size_in_gb #=> Integer
+    #   resp.findings[0].resource.ebs_volume_details.scanned_volume_details[0].encryption_type #=> String
+    #   resp.findings[0].resource.ebs_volume_details.scanned_volume_details[0].snapshot_arn #=> String
+    #   resp.findings[0].resource.ebs_volume_details.scanned_volume_details[0].kms_key_arn #=> String
+    #   resp.findings[0].resource.ebs_volume_details.skipped_volume_details #=> Array
+    #   resp.findings[0].resource.ebs_volume_details.skipped_volume_details[0].volume_arn #=> String
+    #   resp.findings[0].resource.ebs_volume_details.skipped_volume_details[0].volume_type #=> String
+    #   resp.findings[0].resource.ebs_volume_details.skipped_volume_details[0].device_name #=> String
+    #   resp.findings[0].resource.ebs_volume_details.skipped_volume_details[0].volume_size_in_gb #=> Integer
+    #   resp.findings[0].resource.ebs_volume_details.skipped_volume_details[0].encryption_type #=> String
+    #   resp.findings[0].resource.ebs_volume_details.skipped_volume_details[0].snapshot_arn #=> String
+    #   resp.findings[0].resource.ebs_volume_details.skipped_volume_details[0].kms_key_arn #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.name #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.arn #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.status #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.active_services_count #=> Integer
+    #   resp.findings[0].resource.ecs_cluster_details.registered_container_instances_count #=> Integer
+    #   resp.findings[0].resource.ecs_cluster_details.running_tasks_count #=> Integer
+    #   resp.findings[0].resource.ecs_cluster_details.tags #=> Array
+    #   resp.findings[0].resource.ecs_cluster_details.tags[0].key #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.tags[0].value #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.arn #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.definition_arn #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.version #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.task_created_at #=> Time
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.started_at #=> Time
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.started_by #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.tags #=> Array
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.tags[0].key #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.tags[0].value #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.volumes #=> Array
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.volumes[0].name #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.volumes[0].host_path.path #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers #=> Array
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers[0].container_runtime #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers[0].id #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers[0].name #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers[0].image #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers[0].image_prefix #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers[0].volume_mounts #=> Array
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers[0].volume_mounts[0].name #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers[0].volume_mounts[0].mount_path #=> String
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.containers[0].security_context.privileged #=> Boolean
+    #   resp.findings[0].resource.ecs_cluster_details.task_details.group #=> String
+    #   resp.findings[0].resource.container_details.container_runtime #=> String
+    #   resp.findings[0].resource.container_details.id #=> String
+    #   resp.findings[0].resource.container_details.name #=> String
+    #   resp.findings[0].resource.container_details.image #=> String
+    #   resp.findings[0].resource.container_details.image_prefix #=> String
+    #   resp.findings[0].resource.container_details.volume_mounts #=> Array
+    #   resp.findings[0].resource.container_details.volume_mounts[0].name #=> String
+    #   resp.findings[0].resource.container_details.volume_mounts[0].mount_path #=> String
+    #   resp.findings[0].resource.container_details.security_context.privileged #=> Boolean
+    #   resp.findings[0].resource.rds_db_instance_details.db_instance_identifier #=> String
+    #   resp.findings[0].resource.rds_db_instance_details.engine #=> String
+    #   resp.findings[0].resource.rds_db_instance_details.engine_version #=> String
+    #   resp.findings[0].resource.rds_db_instance_details.db_cluster_identifier #=> String
+    #   resp.findings[0].resource.rds_db_instance_details.db_instance_arn #=> String
+    #   resp.findings[0].resource.rds_db_instance_details.tags #=> Array
+    #   resp.findings[0].resource.rds_db_instance_details.tags[0].key #=> String
+    #   resp.findings[0].resource.rds_db_instance_details.tags[0].value #=> String
+    #   resp.findings[0].resource.rds_db_user_details.user #=> String
+    #   resp.findings[0].resource.rds_db_user_details.application #=> String
+    #   resp.findings[0].resource.rds_db_user_details.database #=> String
+    #   resp.findings[0].resource.rds_db_user_details.ssl #=> String
+    #   resp.findings[0].resource.rds_db_user_details.auth_method #=> String
+    #   resp.findings[0].resource.lambda_details.function_arn #=> String
+    #   resp.findings[0].resource.lambda_details.function_name #=> String
+    #   resp.findings[0].resource.lambda_details.description #=> String
+    #   resp.findings[0].resource.lambda_details.last_modified_at #=> Time
+    #   resp.findings[0].resource.lambda_details.revision_id #=> String
+    #   resp.findings[0].resource.lambda_details.function_version #=> String
+    #   resp.findings[0].resource.lambda_details.role #=> String
+    #   resp.findings[0].resource.lambda_details.vpc_config.subnet_ids #=> Array
+    #   resp.findings[0].resource.lambda_details.vpc_config.subnet_ids[0] #=> String
+    #   resp.findings[0].resource.lambda_details.vpc_config.vpc_id #=> String
+    #   resp.findings[0].resource.lambda_details.vpc_config.security_groups #=> Array
+    #   resp.findings[0].resource.lambda_details.vpc_config.security_groups[0].group_id #=> String
+    #   resp.findings[0].resource.lambda_details.vpc_config.security_groups[0].group_name #=> String
+    #   resp.findings[0].resource.lambda_details.tags #=> Array
+    #   resp.findings[0].resource.lambda_details.tags[0].key #=> String
+    #   resp.findings[0].resource.lambda_details.tags[0].value #=> String
     #   resp.findings[0].schema_version #=> String
     #   resp.findings[0].service.action.action_type #=> String
     #   resp.findings[0].service.action.aws_api_call_action.api #=> String
     #   resp.findings[0].service.action.aws_api_call_action.caller_type #=> String
     #   resp.findings[0].service.action.aws_api_call_action.domain_details.domain #=> String
     #   resp.findings[0].service.action.aws_api_call_action.error_code #=> String
+    #   resp.findings[0].service.action.aws_api_call_action.user_agent #=> String
     #   resp.findings[0].service.action.aws_api_call_action.remote_ip_details.city.city_name #=> String
     #   resp.findings[0].service.action.aws_api_call_action.remote_ip_details.country.country_code #=> String
     #   resp.findings[0].service.action.aws_api_call_action.remote_ip_details.country.country_name #=> String
@@ -1553,7 +2164,13 @@ module Aws::GuardDuty
     #   resp.findings[0].service.action.aws_api_call_action.remote_ip_details.organization.isp #=> String
     #   resp.findings[0].service.action.aws_api_call_action.remote_ip_details.organization.org #=> String
     #   resp.findings[0].service.action.aws_api_call_action.service_name #=> String
+    #   resp.findings[0].service.action.aws_api_call_action.remote_account_details.account_id #=> String
+    #   resp.findings[0].service.action.aws_api_call_action.remote_account_details.affiliated #=> Boolean
+    #   resp.findings[0].service.action.aws_api_call_action.affected_resources #=> Hash
+    #   resp.findings[0].service.action.aws_api_call_action.affected_resources["String"] #=> String
     #   resp.findings[0].service.action.dns_request_action.domain #=> String
+    #   resp.findings[0].service.action.dns_request_action.protocol #=> String
+    #   resp.findings[0].service.action.dns_request_action.blocked #=> Boolean
     #   resp.findings[0].service.action.network_connection_action.blocked #=> Boolean
     #   resp.findings[0].service.action.network_connection_action.connection_direction #=> String
     #   resp.findings[0].service.action.network_connection_action.local_port_details.port #=> Integer
@@ -1587,6 +2204,38 @@ module Aws::GuardDuty
     #   resp.findings[0].service.action.port_probe_action.port_probe_details[0].remote_ip_details.organization.asn_org #=> String
     #   resp.findings[0].service.action.port_probe_action.port_probe_details[0].remote_ip_details.organization.isp #=> String
     #   resp.findings[0].service.action.port_probe_action.port_probe_details[0].remote_ip_details.organization.org #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.request_uri #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.verb #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.source_ips #=> Array
+    #   resp.findings[0].service.action.kubernetes_api_call_action.source_ips[0] #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.user_agent #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.city.city_name #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.country.country_code #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.country.country_name #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.geo_location.lat #=> Float
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.geo_location.lon #=> Float
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.ip_address_v4 #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.organization.asn #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.organization.asn_org #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.organization.isp #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.remote_ip_details.organization.org #=> String
+    #   resp.findings[0].service.action.kubernetes_api_call_action.status_code #=> Integer
+    #   resp.findings[0].service.action.kubernetes_api_call_action.parameters #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.city.city_name #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.country.country_code #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.country.country_name #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.geo_location.lat #=> Float
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.geo_location.lon #=> Float
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.ip_address_v4 #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.organization.asn #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.organization.asn_org #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.organization.isp #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.remote_ip_details.organization.org #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.login_attributes #=> Array
+    #   resp.findings[0].service.action.rds_login_attempt_action.login_attributes[0].user #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.login_attributes[0].application #=> String
+    #   resp.findings[0].service.action.rds_login_attempt_action.login_attributes[0].failed_login_attempts #=> Integer
+    #   resp.findings[0].service.action.rds_login_attempt_action.login_attributes[0].successful_login_attempts #=> Integer
     #   resp.findings[0].service.evidence.threat_intelligence_details #=> Array
     #   resp.findings[0].service.evidence.threat_intelligence_details[0].threat_list_name #=> String
     #   resp.findings[0].service.evidence.threat_intelligence_details[0].threat_names #=> Array
@@ -1599,6 +2248,121 @@ module Aws::GuardDuty
     #   resp.findings[0].service.resource_role #=> String
     #   resp.findings[0].service.service_name #=> String
     #   resp.findings[0].service.user_feedback #=> String
+    #   resp.findings[0].service.additional_info.value #=> String
+    #   resp.findings[0].service.additional_info.type #=> String
+    #   resp.findings[0].service.feature_name #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_id #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_started_at #=> Time
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_completed_at #=> Time
+    #   resp.findings[0].service.ebs_volume_scan_details.trigger_finding_id #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.sources #=> Array
+    #   resp.findings[0].service.ebs_volume_scan_details.sources[0] #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.scanned_item_count.total_gb #=> Integer
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.scanned_item_count.files #=> Integer
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.scanned_item_count.volumes #=> Integer
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threats_detected_item_count.files #=> Integer
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.highest_severity_threat_details.severity #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.highest_severity_threat_details.threat_name #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.highest_severity_threat_details.count #=> Integer
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.item_count #=> Integer
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.unique_threat_name_count #=> Integer
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.shortened #=> Boolean
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.threat_names #=> Array
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.threat_names[0].name #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.threat_names[0].severity #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.threat_names[0].item_count #=> Integer
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.threat_names[0].file_paths #=> Array
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.threat_names[0].file_paths[0].file_path #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.threat_names[0].file_paths[0].volume_arn #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.threat_names[0].file_paths[0].hash #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_detections.threat_detected_by_name.threat_names[0].file_paths[0].file_name #=> String
+    #   resp.findings[0].service.ebs_volume_scan_details.scan_type #=> String, one of "GUARDDUTY_INITIATED", "ON_DEMAND"
+    #   resp.findings[0].service.runtime_details.process.name #=> String
+    #   resp.findings[0].service.runtime_details.process.executable_path #=> String
+    #   resp.findings[0].service.runtime_details.process.executable_sha_256 #=> String
+    #   resp.findings[0].service.runtime_details.process.namespace_pid #=> Integer
+    #   resp.findings[0].service.runtime_details.process.pwd #=> String
+    #   resp.findings[0].service.runtime_details.process.pid #=> Integer
+    #   resp.findings[0].service.runtime_details.process.start_time #=> Time
+    #   resp.findings[0].service.runtime_details.process.uuid #=> String
+    #   resp.findings[0].service.runtime_details.process.parent_uuid #=> String
+    #   resp.findings[0].service.runtime_details.process.user #=> String
+    #   resp.findings[0].service.runtime_details.process.user_id #=> Integer
+    #   resp.findings[0].service.runtime_details.process.euid #=> Integer
+    #   resp.findings[0].service.runtime_details.process.lineage #=> Array
+    #   resp.findings[0].service.runtime_details.process.lineage[0].start_time #=> Time
+    #   resp.findings[0].service.runtime_details.process.lineage[0].namespace_pid #=> Integer
+    #   resp.findings[0].service.runtime_details.process.lineage[0].user_id #=> Integer
+    #   resp.findings[0].service.runtime_details.process.lineage[0].name #=> String
+    #   resp.findings[0].service.runtime_details.process.lineage[0].pid #=> Integer
+    #   resp.findings[0].service.runtime_details.process.lineage[0].uuid #=> String
+    #   resp.findings[0].service.runtime_details.process.lineage[0].executable_path #=> String
+    #   resp.findings[0].service.runtime_details.process.lineage[0].euid #=> Integer
+    #   resp.findings[0].service.runtime_details.process.lineage[0].parent_uuid #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.name #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.executable_path #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.executable_sha_256 #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.namespace_pid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.modifying_process.pwd #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.pid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.modifying_process.start_time #=> Time
+    #   resp.findings[0].service.runtime_details.context.modifying_process.uuid #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.parent_uuid #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.user #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.user_id #=> Integer
+    #   resp.findings[0].service.runtime_details.context.modifying_process.euid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage #=> Array
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage[0].start_time #=> Time
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage[0].namespace_pid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage[0].user_id #=> Integer
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage[0].name #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage[0].pid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage[0].uuid #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage[0].executable_path #=> String
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage[0].euid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.modifying_process.lineage[0].parent_uuid #=> String
+    #   resp.findings[0].service.runtime_details.context.modified_at #=> Time
+    #   resp.findings[0].service.runtime_details.context.script_path #=> String
+    #   resp.findings[0].service.runtime_details.context.library_path #=> String
+    #   resp.findings[0].service.runtime_details.context.ld_preload_value #=> String
+    #   resp.findings[0].service.runtime_details.context.socket_path #=> String
+    #   resp.findings[0].service.runtime_details.context.runc_binary_path #=> String
+    #   resp.findings[0].service.runtime_details.context.release_agent_path #=> String
+    #   resp.findings[0].service.runtime_details.context.mount_source #=> String
+    #   resp.findings[0].service.runtime_details.context.mount_target #=> String
+    #   resp.findings[0].service.runtime_details.context.file_system_type #=> String
+    #   resp.findings[0].service.runtime_details.context.flags #=> Array
+    #   resp.findings[0].service.runtime_details.context.flags[0] #=> String
+    #   resp.findings[0].service.runtime_details.context.module_name #=> String
+    #   resp.findings[0].service.runtime_details.context.module_file_path #=> String
+    #   resp.findings[0].service.runtime_details.context.module_sha_256 #=> String
+    #   resp.findings[0].service.runtime_details.context.shell_history_file_path #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.name #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.executable_path #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.executable_sha_256 #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.namespace_pid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.target_process.pwd #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.pid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.target_process.start_time #=> Time
+    #   resp.findings[0].service.runtime_details.context.target_process.uuid #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.parent_uuid #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.user #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.user_id #=> Integer
+    #   resp.findings[0].service.runtime_details.context.target_process.euid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage #=> Array
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage[0].start_time #=> Time
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage[0].namespace_pid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage[0].user_id #=> Integer
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage[0].name #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage[0].pid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage[0].uuid #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage[0].executable_path #=> String
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage[0].euid #=> Integer
+    #   resp.findings[0].service.runtime_details.context.target_process.lineage[0].parent_uuid #=> String
+    #   resp.findings[0].service.runtime_details.context.address_family #=> String
+    #   resp.findings[0].service.runtime_details.context.iana_protocol_number #=> Integer
+    #   resp.findings[0].service.runtime_details.context.memory_regions #=> Array
+    #   resp.findings[0].service.runtime_details.context.memory_regions[0] #=> String
     #   resp.findings[0].severity #=> Float
     #   resp.findings[0].title #=> String
     #   resp.findings[0].type #=> String
@@ -1731,6 +2495,53 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
+    # Returns the details of the malware scan settings.
+    #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
+    #
+    # @option params [required, String] :detector_id
+    #   The unique ID of the detector that the scan setting is associated
+    #   with.
+    #
+    # @return [Types::GetMalwareScanSettingsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetMalwareScanSettingsResponse#scan_resource_criteria #scan_resource_criteria} => Types::ScanResourceCriteria
+    #   * {Types::GetMalwareScanSettingsResponse#ebs_snapshot_preservation #ebs_snapshot_preservation} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_malware_scan_settings({
+    #     detector_id: "DetectorId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.scan_resource_criteria.include #=> Hash
+    #   resp.scan_resource_criteria.include["ScanCriterionKey"].map_equals #=> Array
+    #   resp.scan_resource_criteria.include["ScanCriterionKey"].map_equals[0].key #=> String
+    #   resp.scan_resource_criteria.include["ScanCriterionKey"].map_equals[0].value #=> String
+    #   resp.scan_resource_criteria.exclude #=> Hash
+    #   resp.scan_resource_criteria.exclude["ScanCriterionKey"].map_equals #=> Array
+    #   resp.scan_resource_criteria.exclude["ScanCriterionKey"].map_equals[0].key #=> String
+    #   resp.scan_resource_criteria.exclude["ScanCriterionKey"].map_equals[0].value #=> String
+    #   resp.ebs_snapshot_preservation #=> String, one of "NO_RETENTION", "RETENTION_WITH_FINDING"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/GetMalwareScanSettings AWS API Documentation
+    #
+    # @overload get_malware_scan_settings(params = {})
+    # @param [Hash] params ({})
+    def get_malware_scan_settings(params = {}, options = {})
+      req = build_request(:get_malware_scan_settings, params)
+      req.send_request(options)
+    end
+
     # Provides the details for the GuardDuty administrator account
     # associated with the current GuardDuty member account.
     #
@@ -1766,6 +2577,15 @@ module Aws::GuardDuty
     # Describes which data sources are enabled for the member account's
     # detector.
     #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
+    #
     # @option params [required, String] :detector_id
     #   The detector ID for the administrator account.
     #
@@ -1792,6 +2612,18 @@ module Aws::GuardDuty
     #   resp.member_data_source_configurations[0].data_sources.dns_logs.status #=> String, one of "ENABLED", "DISABLED"
     #   resp.member_data_source_configurations[0].data_sources.flow_logs.status #=> String, one of "ENABLED", "DISABLED"
     #   resp.member_data_source_configurations[0].data_sources.s3_logs.status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.member_data_source_configurations[0].data_sources.kubernetes.audit_logs.status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.member_data_source_configurations[0].data_sources.malware_protection.scan_ec2_instance_with_findings.ebs_volumes.status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.member_data_source_configurations[0].data_sources.malware_protection.scan_ec2_instance_with_findings.ebs_volumes.reason #=> String
+    #   resp.member_data_source_configurations[0].data_sources.malware_protection.service_role #=> String
+    #   resp.member_data_source_configurations[0].features #=> Array
+    #   resp.member_data_source_configurations[0].features[0].name #=> String, one of "S3_DATA_EVENTS", "EKS_AUDIT_LOGS", "EBS_MALWARE_PROTECTION", "RDS_LOGIN_EVENTS", "EKS_RUNTIME_MONITORING", "LAMBDA_NETWORK_LOGS"
+    #   resp.member_data_source_configurations[0].features[0].status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.member_data_source_configurations[0].features[0].updated_at #=> Time
+    #   resp.member_data_source_configurations[0].features[0].additional_configuration #=> Array
+    #   resp.member_data_source_configurations[0].features[0].additional_configuration[0].name #=> String, one of "EKS_ADDON_MANAGEMENT"
+    #   resp.member_data_source_configurations[0].features[0].additional_configuration[0].status #=> String, one of "ENABLED", "DISABLED"
+    #   resp.member_data_source_configurations[0].features[0].additional_configuration[0].updated_at #=> Time
     #   resp.unprocessed_accounts #=> Array
     #   resp.unprocessed_accounts[0].account_id #=> String
     #   resp.unprocessed_accounts[0].result #=> String
@@ -1838,6 +2670,7 @@ module Aws::GuardDuty
     #   resp.members[0].relationship_status #=> String
     #   resp.members[0].invited_at #=> String
     #   resp.members[0].updated_at #=> String
+    #   resp.members[0].administrator_id #=> String
     #   resp.unprocessed_accounts #=> Array
     #   resp.unprocessed_accounts[0].account_id #=> String
     #   resp.unprocessed_accounts[0].result #=> String
@@ -1848,6 +2681,53 @@ module Aws::GuardDuty
     # @param [Hash] params ({})
     def get_members(params = {}, options = {})
       req = build_request(:get_members, params)
+      req.send_request(options)
+    end
+
+    # Provides the number of days left for each data source used in the free
+    # trial period.
+    #
+    # @option params [required, String] :detector_id
+    #   The unique ID of the detector of the GuardDuty member account.
+    #
+    # @option params [Array<String>] :account_ids
+    #   A list of account identifiers of the GuardDuty member account.
+    #
+    # @return [Types::GetRemainingFreeTrialDaysResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetRemainingFreeTrialDaysResponse#accounts #accounts} => Array&lt;Types::AccountFreeTrialInfo&gt;
+    #   * {Types::GetRemainingFreeTrialDaysResponse#unprocessed_accounts #unprocessed_accounts} => Array&lt;Types::UnprocessedAccount&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_remaining_free_trial_days({
+    #     detector_id: "DetectorId", # required
+    #     account_ids: ["AccountId"],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.accounts #=> Array
+    #   resp.accounts[0].account_id #=> String
+    #   resp.accounts[0].data_sources.cloud_trail.free_trial_days_remaining #=> Integer
+    #   resp.accounts[0].data_sources.dns_logs.free_trial_days_remaining #=> Integer
+    #   resp.accounts[0].data_sources.flow_logs.free_trial_days_remaining #=> Integer
+    #   resp.accounts[0].data_sources.s3_logs.free_trial_days_remaining #=> Integer
+    #   resp.accounts[0].data_sources.kubernetes.audit_logs.free_trial_days_remaining #=> Integer
+    #   resp.accounts[0].data_sources.malware_protection.scan_ec2_instance_with_findings.free_trial_days_remaining #=> Integer
+    #   resp.accounts[0].features #=> Array
+    #   resp.accounts[0].features[0].name #=> String, one of "FLOW_LOGS", "CLOUD_TRAIL", "DNS_LOGS", "S3_DATA_EVENTS", "EKS_AUDIT_LOGS", "EBS_MALWARE_PROTECTION", "RDS_LOGIN_EVENTS", "EKS_RUNTIME_MONITORING", "LAMBDA_NETWORK_LOGS"
+    #   resp.accounts[0].features[0].free_trial_days_remaining #=> Integer
+    #   resp.unprocessed_accounts #=> Array
+    #   resp.unprocessed_accounts[0].account_id #=> String
+    #   resp.unprocessed_accounts[0].result #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/GetRemainingFreeTrialDays AWS API Documentation
+    #
+    # @overload get_remaining_free_trial_days(params = {})
+    # @param [Hash] params ({})
+    def get_remaining_free_trial_days(params = {}, options = {})
+      req = build_request(:get_remaining_free_trial_days, params)
       req.send_request(options)
     end
 
@@ -1895,11 +2775,11 @@ module Aws::GuardDuty
     end
 
     # Lists Amazon GuardDuty usage statistics over the last 30 days for the
-    # specified detector ID. For newly enabled detectors or data sources the
-    # cost returned will include only the usage so far under 30 days, this
-    # may differ from the cost metrics in the console, which projects usage
-    # over 30 days to provide a monthly cost estimate. For more information
-    # see [Understanding How Usage Costs are Calculated][1].
+    # specified detector ID. For newly enabled detectors or data sources,
+    # the cost returned will include only the usage so far under 30 days.
+    # This may differ from the cost metrics in the console, which project
+    # usage over 30 days to provide a monthly cost estimate. For more
+    # information, see [Understanding How Usage Costs are Calculated][1].
     #
     #
     #
@@ -1940,11 +2820,12 @@ module Aws::GuardDuty
     #
     #   resp = client.get_usage_statistics({
     #     detector_id: "DetectorId", # required
-    #     usage_statistic_type: "SUM_BY_ACCOUNT", # required, accepts SUM_BY_ACCOUNT, SUM_BY_DATA_SOURCE, SUM_BY_RESOURCE, TOP_RESOURCES
+    #     usage_statistic_type: "SUM_BY_ACCOUNT", # required, accepts SUM_BY_ACCOUNT, SUM_BY_DATA_SOURCE, SUM_BY_RESOURCE, TOP_RESOURCES, SUM_BY_FEATURES
     #     usage_criteria: { # required
     #       account_ids: ["AccountId"],
-    #       data_sources: ["FLOW_LOGS"], # required, accepts FLOW_LOGS, CLOUD_TRAIL, DNS_LOGS, S3_LOGS
+    #       data_sources: ["FLOW_LOGS"], # accepts FLOW_LOGS, CLOUD_TRAIL, DNS_LOGS, S3_LOGS, KUBERNETES_AUDIT_LOGS, EC2_MALWARE_SCAN
     #       resources: ["String"],
+    #       features: ["FLOW_LOGS"], # accepts FLOW_LOGS, CLOUD_TRAIL, DNS_LOGS, S3_DATA_EVENTS, EKS_AUDIT_LOGS, EBS_MALWARE_PROTECTION, RDS_LOGIN_EVENTS, LAMBDA_NETWORK_LOGS, EKS_RUNTIME_MONITORING
     #     },
     #     unit: "String",
     #     max_results: 1,
@@ -1958,7 +2839,7 @@ module Aws::GuardDuty
     #   resp.usage_statistics.sum_by_account[0].total.amount #=> String
     #   resp.usage_statistics.sum_by_account[0].total.unit #=> String
     #   resp.usage_statistics.sum_by_data_source #=> Array
-    #   resp.usage_statistics.sum_by_data_source[0].data_source #=> String, one of "FLOW_LOGS", "CLOUD_TRAIL", "DNS_LOGS", "S3_LOGS"
+    #   resp.usage_statistics.sum_by_data_source[0].data_source #=> String, one of "FLOW_LOGS", "CLOUD_TRAIL", "DNS_LOGS", "S3_LOGS", "KUBERNETES_AUDIT_LOGS", "EC2_MALWARE_SCAN"
     #   resp.usage_statistics.sum_by_data_source[0].total.amount #=> String
     #   resp.usage_statistics.sum_by_data_source[0].total.unit #=> String
     #   resp.usage_statistics.sum_by_resource #=> Array
@@ -1969,6 +2850,10 @@ module Aws::GuardDuty
     #   resp.usage_statistics.top_resources[0].resource #=> String
     #   resp.usage_statistics.top_resources[0].total.amount #=> String
     #   resp.usage_statistics.top_resources[0].total.unit #=> String
+    #   resp.usage_statistics.sum_by_feature #=> Array
+    #   resp.usage_statistics.sum_by_feature[0].feature #=> String, one of "FLOW_LOGS", "CLOUD_TRAIL", "DNS_LOGS", "S3_DATA_EVENTS", "EKS_AUDIT_LOGS", "EBS_MALWARE_PROTECTION", "RDS_LOGIN_EVENTS", "LAMBDA_NETWORK_LOGS", "EKS_RUNTIME_MONITORING"
+    #   resp.usage_statistics.sum_by_feature[0].total.amount #=> String
+    #   resp.usage_statistics.sum_by_feature[0].total.unit #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/GetUsageStatistics AWS API Documentation
@@ -1980,10 +2865,38 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Invites other AWS accounts (created as members of the current AWS
-    # account by CreateMembers) to enable GuardDuty, and allow the current
-    # AWS account to view and manage these accounts' findings on their
-    # behalf as the GuardDuty administrator account.
+    # Invites Amazon Web Services accounts to become members of an
+    # organization administered by the Amazon Web Services account that
+    # invokes this API. If you are using Amazon Web Services Organizations
+    # to manager your GuardDuty environment, this step is not needed. For
+    # more information, see [Managing accounts with Amazon Web Services
+    # Organizations][1].
+    #
+    # To invite Amazon Web Services accounts, the first step is to ensure
+    # that GuardDuty has been enabled in the potential member accounts. You
+    # can now invoke this API to add accounts by invitation. The invited
+    # accounts can either accept or decline the invitation from their
+    # GuardDuty accounts. Each invited Amazon Web Services account can
+    # choose to accept the invitation from only one Amazon Web Services
+    # account. For more information, see [Managing GuardDuty accounts by
+    # invitation][2].
+    #
+    # After the invite has been accepted and you choose to disassociate a
+    # member account (by using [DisassociateMembers][3]) from your account,
+    # the details of the member account obtained by invoking
+    # [CreateMembers][4], including the associated email addresses, will be
+    # retained. This is done so that you can invoke InviteMembers without
+    # the need to invoke [CreateMembers][4] again. To remove the details
+    # associated with a member account, you must also invoke
+    # [DeleteMembers][5].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_organizations.html
+    # [2]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_invitations.html
+    # [3]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DisassociateMembers.html
+    # [4]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_CreateMembers.html
+    # [5]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DeleteMembers.html
     #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector of the GuardDuty account that you want
@@ -2027,6 +2940,89 @@ module Aws::GuardDuty
     # @param [Hash] params ({})
     def invite_members(params = {}, options = {})
       req = build_request(:invite_members, params)
+      req.send_request(options)
+    end
+
+    # Lists coverage details for your GuardDuty account. If you're a
+    # GuardDuty administrator, you can retrieve all resources associated
+    # with the active member accounts in your organization.
+    #
+    # Make sure the accounts have EKS Runtime Monitoring enabled and
+    # GuardDuty agent running on their EKS nodes.
+    #
+    # @option params [required, String] :detector_id
+    #   The unique ID of the detector whose coverage details you want to
+    #   retrieve.
+    #
+    # @option params [String] :next_token
+    #   A token to use for paginating results that are returned in the
+    #   response. Set the value of this parameter to null for the first
+    #   request to a list action. For subsequent calls, use the NextToken
+    #   value returned from the previous request to continue listing results
+    #   after the first page.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return in the response.
+    #
+    # @option params [Types::CoverageFilterCriteria] :filter_criteria
+    #   Represents the criteria used to filter the coverage details.
+    #
+    # @option params [Types::CoverageSortCriteria] :sort_criteria
+    #   Represents the criteria used to sort the coverage details.
+    #
+    # @return [Types::ListCoverageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListCoverageResponse#resources #resources} => Array&lt;Types::CoverageResource&gt;
+    #   * {Types::ListCoverageResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_coverage({
+    #     detector_id: "DetectorId", # required
+    #     next_token: "String",
+    #     max_results: 1,
+    #     filter_criteria: {
+    #       filter_criterion: [
+    #         {
+    #           criterion_key: "ACCOUNT_ID", # accepts ACCOUNT_ID, CLUSTER_NAME, RESOURCE_TYPE, COVERAGE_STATUS, ADDON_VERSION
+    #           filter_condition: {
+    #             equals: ["String"],
+    #             not_equals: ["String"],
+    #           },
+    #         },
+    #       ],
+    #     },
+    #     sort_criteria: {
+    #       attribute_name: "ACCOUNT_ID", # accepts ACCOUNT_ID, CLUSTER_NAME, COVERAGE_STATUS, ISSUE, ADDON_VERSION, UPDATED_AT
+    #       order_by: "ASC", # accepts ASC, DESC
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.resources #=> Array
+    #   resp.resources[0].resource_id #=> String
+    #   resp.resources[0].detector_id #=> String
+    #   resp.resources[0].account_id #=> String
+    #   resp.resources[0].resource_details.eks_cluster_details.cluster_name #=> String
+    #   resp.resources[0].resource_details.eks_cluster_details.covered_nodes #=> Integer
+    #   resp.resources[0].resource_details.eks_cluster_details.compatible_nodes #=> Integer
+    #   resp.resources[0].resource_details.eks_cluster_details.addon_details.addon_version #=> String
+    #   resp.resources[0].resource_details.eks_cluster_details.addon_details.addon_status #=> String
+    #   resp.resources[0].resource_details.resource_type #=> String, one of "EKS"
+    #   resp.resources[0].coverage_status #=> String, one of "HEALTHY", "UNHEALTHY"
+    #   resp.resources[0].issue #=> String
+    #   resp.resources[0].updated_at #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/ListCoverage AWS API Documentation
+    #
+    # @overload list_coverage(params = {})
+    # @param [Hash] params ({})
+    def list_coverage(params = {}, options = {})
+      req = build_request(:list_coverage, params)
       req.send_request(options)
     end
 
@@ -2205,8 +3201,6 @@ module Aws::GuardDuty
     #
     #   * service.action.networkConnectionAction.protocol
     #
-    #   * service.action.networkConnectionAction.remoteIpDetails.city.cityName
-    #
     #   * service.action.networkConnectionAction.remoteIpDetails.country.countryName
     #
     #   * service.action.networkConnectionAction.remoteIpDetails.ipAddressV4
@@ -2353,7 +3347,7 @@ module Aws::GuardDuty
     end
 
     # Lists all GuardDuty membership invitations that were sent to the
-    # current AWS account.
+    # current Amazon Web Services account.
     #
     # @option params [Integer] :max_results
     #   You can use this parameter to indicate the maximum number of items
@@ -2420,7 +3414,13 @@ module Aws::GuardDuty
     # @option params [String] :only_associated
     #   Specifies whether to only return associated members or to return all
     #   members (including members who haven't been invited yet or have been
-    #   disassociated).
+    #   disassociated). Member accounts must have been previously associated
+    #   with the GuardDuty administrator account using [ `Create Members`
+    #   ][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_CreateMembers.html
     #
     # @return [Types::ListMembersResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2448,6 +3448,7 @@ module Aws::GuardDuty
     #   resp.members[0].relationship_status #=> String
     #   resp.members[0].invited_at #=> String
     #   resp.members[0].updated_at #=> String
+    #   resp.members[0].administrator_id #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/ListMembers AWS API Documentation
@@ -2502,7 +3503,7 @@ module Aws::GuardDuty
     end
 
     # Returns a list of publishing destinations associated with the
-    # specified `dectectorId`.
+    # specified `detectorId`.
     #
     # @option params [required, String] :detector_id
     #   The ID of the detector to retrieve publishing destinations for.
@@ -2550,9 +3551,9 @@ module Aws::GuardDuty
     end
 
     # Lists tags for a resource. Tagging is currently supported for
-    # detectors, finding filters, IP sets, and threat intel sets, with a
-    # limit of 50 tags per resource. When invoked, this operation returns
-    # all assigned tags for a given resource.
+    # detectors, finding filters, IP sets, threat intel sets, publishing
+    # destination, with a limit of 50 tags per resource. When invoked, this
+    # operation returns all assigned tags for a given resource.
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Name (ARN) for the given GuardDuty resource.
@@ -2632,9 +3633,47 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
+    # Initiates the malware scan. Invoking this API will automatically
+    # create the [Service-linked role ][1] in the corresponding account.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/slr-permissions-malware-protection.html
+    #
+    # @option params [required, String] :resource_arn
+    #   Amazon Resource Name (ARN) of the resource for which you invoked the
+    #   API.
+    #
+    # @return [Types::StartMalwareScanResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::StartMalwareScanResponse#scan_id #scan_id} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.start_malware_scan({
+    #     resource_arn: "ResourceArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.scan_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/StartMalwareScan AWS API Documentation
+    #
+    # @overload start_malware_scan(params = {})
+    # @param [Hash] params ({})
+    def start_malware_scan(params = {}, options = {})
+      req = build_request(:start_malware_scan, params)
+      req.send_request(options)
+    end
+
     # Turns on GuardDuty monitoring of the specified member accounts. Use
     # this operation to restart monitoring of accounts that you stopped
-    # monitoring with the `StopMonitoringMembers` operation.
+    # monitoring with the [StopMonitoringMembers][1] operation.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/APIReference/API_StopMonitoringMembers.html
     #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector of the GuardDuty administrator account
@@ -2673,6 +3712,10 @@ module Aws::GuardDuty
     # Stops GuardDuty monitoring for the specified member accounts. Use the
     # `StartMonitoringMembers` operation to restart monitoring for those
     # accounts.
+    #
+    # With `autoEnableOrganizationMembers` configuration for your
+    # organization set to `ALL`, you'll receive an error if you attempt to
+    # stop monitoring the member accounts in your organization.
     #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector associated with the GuardDuty
@@ -2790,6 +3833,15 @@ module Aws::GuardDuty
 
     # Updates the Amazon GuardDuty detector specified by the detectorId.
     #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
+    #
     # @option params [required, String] :detector_id
     #   The unique ID of the detector to update.
     #
@@ -2803,6 +3855,18 @@ module Aws::GuardDuty
     # @option params [Types::DataSourceConfigurations] :data_sources
     #   Describes which data sources will be updated.
     #
+    #   There might be regional differences because some data sources might
+    #   not be available in all the Amazon Web Services Regions where
+    #   GuardDuty is presently supported. For more information, see [Regions
+    #   and endpoints][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
+    #
+    # @option params [Array<Types::DetectorFeatureConfiguration>] :features
+    #   Provides the features that will be updated for the detector.
+    #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
     # @example Request syntax with placeholder values
@@ -2815,7 +3879,29 @@ module Aws::GuardDuty
     #       s3_logs: {
     #         enable: false, # required
     #       },
+    #       kubernetes: {
+    #         audit_logs: { # required
+    #           enable: false, # required
+    #         },
+    #       },
+    #       malware_protection: {
+    #         scan_ec2_instance_with_findings: {
+    #           ebs_volumes: false,
+    #         },
+    #       },
     #     },
+    #     features: [
+    #       {
+    #         name: "S3_DATA_EVENTS", # accepts S3_DATA_EVENTS, EKS_AUDIT_LOGS, EBS_MALWARE_PROTECTION, RDS_LOGIN_EVENTS, EKS_RUNTIME_MONITORING, LAMBDA_NETWORK_LOGS
+    #         status: "ENABLED", # accepts ENABLED, DISABLED
+    #         additional_configuration: [
+    #           {
+    #             name: "EKS_ADDON_MANAGEMENT", # accepts EKS_ADDON_MANAGEMENT
+    #             status: "ENABLED", # accepts ENABLED, DISABLED
+    #           },
+    #         ],
+    #       },
+    #     ],
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/UpdateDetector AWS API Documentation
@@ -2837,7 +3923,11 @@ module Aws::GuardDuty
     #   The name of the filter.
     #
     # @option params [String] :description
-    #   The description of the filter.
+    #   The description of the filter. Valid characters include alphanumeric
+    #   characters, and special characters such as hyphen, period, colon,
+    #   underscore, parentheses (`\{ \}`, `[ ]`, and `( )`), forward slash,
+    #   horizontal tab, vertical tab, newline, form feed, return, and
+    #   whitespace.
     #
     # @option params [String] :action
     #   Specifies the action that is to be applied to the findings that match
@@ -2945,8 +4035,7 @@ module Aws::GuardDuty
     #   The unique ID that specifies the IPSet that you want to update.
     #
     # @option params [String] :location
-    #   The updated URI of the file that contains the IPSet. For example:
-    #   https://s3.us-west-2.amazonaws.com/my-bucket/my-object-key.
+    #   The updated URI of the file that contains the IPSet.
     #
     # @option params [Boolean] :activate
     #   The updated Boolean value that specifies whether the IPSet is active
@@ -2973,7 +4062,78 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
+    # Updates the malware scan settings.
+    #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
+    #
+    # @option params [required, String] :detector_id
+    #   The unique ID of the detector that specifies the GuardDuty service
+    #   where you want to update scan settings.
+    #
+    # @option params [Types::ScanResourceCriteria] :scan_resource_criteria
+    #   Represents the criteria to be used in the filter for selecting
+    #   resources to scan.
+    #
+    # @option params [String] :ebs_snapshot_preservation
+    #   An enum value representing possible snapshot preservation settings.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_malware_scan_settings({
+    #     detector_id: "DetectorId", # required
+    #     scan_resource_criteria: {
+    #       include: {
+    #         "EC2_INSTANCE_TAG" => {
+    #           map_equals: [ # required
+    #             {
+    #               key: "TagKey", # required
+    #               value: "TagValue",
+    #             },
+    #           ],
+    #         },
+    #       },
+    #       exclude: {
+    #         "EC2_INSTANCE_TAG" => {
+    #           map_equals: [ # required
+    #             {
+    #               key: "TagKey", # required
+    #               value: "TagValue",
+    #             },
+    #           ],
+    #         },
+    #       },
+    #     },
+    #     ebs_snapshot_preservation: "NO_RETENTION", # accepts NO_RETENTION, RETENTION_WITH_FINDING
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/UpdateMalwareScanSettings AWS API Documentation
+    #
+    # @overload update_malware_scan_settings(params = {})
+    # @param [Hash] params ({})
+    def update_malware_scan_settings(params = {}, options = {})
+      req = build_request(:update_malware_scan_settings, params)
+      req.send_request(options)
+    end
+
     # Contains information on member accounts to be updated.
+    #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
     #
     # @option params [required, String] :detector_id
     #   The detector ID of the administrator account.
@@ -2983,6 +4143,10 @@ module Aws::GuardDuty
     #
     # @option params [Types::DataSourceConfigurations] :data_sources
     #   Describes which data sources will be updated.
+    #
+    # @option params [Array<Types::MemberFeaturesConfiguration>] :features
+    #   A list of features that will be updated for the specified member
+    #   accounts.
     #
     # @return [Types::UpdateMemberDetectorsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2997,7 +4161,29 @@ module Aws::GuardDuty
     #       s3_logs: {
     #         enable: false, # required
     #       },
+    #       kubernetes: {
+    #         audit_logs: { # required
+    #           enable: false, # required
+    #         },
+    #       },
+    #       malware_protection: {
+    #         scan_ec2_instance_with_findings: {
+    #           ebs_volumes: false,
+    #         },
+    #       },
     #     },
+    #     features: [
+    #       {
+    #         name: "S3_DATA_EVENTS", # accepts S3_DATA_EVENTS, EKS_AUDIT_LOGS, EBS_MALWARE_PROTECTION, RDS_LOGIN_EVENTS, EKS_RUNTIME_MONITORING, LAMBDA_NETWORK_LOGS
+    #         status: "ENABLED", # accepts ENABLED, DISABLED
+    #         additional_configuration: [
+    #           {
+    #             name: "EKS_ADDON_MANAGEMENT", # accepts EKS_ADDON_MANAGEMENT
+    #             status: "ENABLED", # accepts ENABLED, DISABLED
+    #           },
+    #         ],
+    #       },
+    #     ],
     #   })
     #
     # @example Response structure
@@ -3015,17 +4201,50 @@ module Aws::GuardDuty
       req.send_request(options)
     end
 
-    # Updates the delegated administrator account with the values provided.
+    # Configures the delegated administrator account with the provided
+    # values. You must provide the value for either
+    # `autoEnableOrganizationMembers` or `autoEnable`.
+    #
+    # There might be regional differences because some data sources might
+    # not be available in all the Amazon Web Services Regions where
+    # GuardDuty is presently supported. For more information, see [Regions
+    # and endpoints][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_regions.html
     #
     # @option params [required, String] :detector_id
-    #   The ID of the detector to update the delegated administrator for.
+    #   The ID of the detector that configures the delegated administrator.
     #
-    # @option params [required, Boolean] :auto_enable
+    # @option params [Boolean] :auto_enable
     #   Indicates whether to automatically enable member accounts in the
     #   organization.
     #
+    #   Even though this is still supported, we recommend using
+    #   `AutoEnableOrganizationMembers` to achieve the similar results.
+    #
     # @option params [Types::OrganizationDataSourceConfigurations] :data_sources
     #   Describes which data sources will be updated.
+    #
+    # @option params [Array<Types::OrganizationFeatureConfiguration>] :features
+    #   A list of features that will be configured for the organization.
+    #
+    # @option params [String] :auto_enable_organization_members
+    #   Indicates the auto-enablement configuration of GuardDuty for the
+    #   member accounts in the organization.
+    #
+    #   * `NEW`: Indicates that when a new account joins the organization,
+    #     they will have GuardDuty enabled automatically.
+    #
+    #   * `ALL`: Indicates that all accounts in the Amazon Web Services
+    #     Organization have GuardDuty enabled automatically. This includes
+    #     `NEW` accounts that join the organization and accounts that may have
+    #     been suspended or removed from the organization in GuardDuty.
+    #
+    #   * `NONE`: Indicates that GuardDuty will not be automatically enabled
+    #     for any accounts in the organization. GuardDuty must be managed for
+    #     each account individually by the administrator.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -3033,12 +4252,37 @@ module Aws::GuardDuty
     #
     #   resp = client.update_organization_configuration({
     #     detector_id: "DetectorId", # required
-    #     auto_enable: false, # required
+    #     auto_enable: false,
     #     data_sources: {
     #       s3_logs: {
     #         auto_enable: false, # required
     #       },
+    #       kubernetes: {
+    #         audit_logs: { # required
+    #           auto_enable: false, # required
+    #         },
+    #       },
+    #       malware_protection: {
+    #         scan_ec2_instance_with_findings: {
+    #           ebs_volumes: {
+    #             auto_enable: false,
+    #           },
+    #         },
+    #       },
     #     },
+    #     features: [
+    #       {
+    #         name: "S3_DATA_EVENTS", # accepts S3_DATA_EVENTS, EKS_AUDIT_LOGS, EBS_MALWARE_PROTECTION, RDS_LOGIN_EVENTS, EKS_RUNTIME_MONITORING, LAMBDA_NETWORK_LOGS
+    #         auto_enable: "NEW", # accepts NEW, NONE
+    #         additional_configuration: [
+    #           {
+    #             name: "EKS_ADDON_MANAGEMENT", # accepts EKS_ADDON_MANAGEMENT
+    #             auto_enable: "NEW", # accepts NEW, NONE
+    #           },
+    #         ],
+    #       },
+    #     ],
+    #     auto_enable_organization_members: "NEW", # accepts NEW, ALL, NONE
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/UpdateOrganizationConfiguration AWS API Documentation
@@ -3141,7 +4385,7 @@ module Aws::GuardDuty
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-guardduty'
-      context[:gem_version] = '1.45.0'
+      context[:gem_version] = '1.75.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

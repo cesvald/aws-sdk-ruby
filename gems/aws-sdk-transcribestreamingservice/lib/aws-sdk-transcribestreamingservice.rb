@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-transcribestreamingservice/types'
 require_relative 'aws-sdk-transcribestreamingservice/client_api'
+require_relative 'aws-sdk-transcribestreamingservice/plugins/endpoints.rb'
 require_relative 'aws-sdk-transcribestreamingservice/client'
 require_relative 'aws-sdk-transcribestreamingservice/errors'
 require_relative 'aws-sdk-transcribestreamingservice/resource'
+require_relative 'aws-sdk-transcribestreamingservice/endpoint_parameters'
+require_relative 'aws-sdk-transcribestreamingservice/endpoint_provider'
+require_relative 'aws-sdk-transcribestreamingservice/endpoints'
 require_relative 'aws-sdk-transcribestreamingservice/customizations'
 require_relative 'aws-sdk-transcribestreamingservice/async_client'
 require_relative 'aws-sdk-transcribestreamingservice/event_streams'
@@ -30,7 +34,7 @@ require_relative 'aws-sdk-transcribestreamingservice/event_streams'
 # structure.
 #
 #     transcribe_streaming_service = Aws::TranscribeStreamingService::Client.new
-#     resp = transcribe_streaming_service.start_medical_stream_transcription(params)
+#     resp = transcribe_streaming_service.start_call_analytics_stream_transcription(params)
 #
 # See {Client} for more information.
 #
@@ -50,6 +54,6 @@ require_relative 'aws-sdk-transcribestreamingservice/event_streams'
 # @!group service
 module Aws::TranscribeStreamingService
 
-  GEM_VERSION = '1.29.0'
+  GEM_VERSION = '1.50.0'
 
 end

@@ -25,24 +25,6 @@ module Aws::ElasticTranscoder
     # "Prepend", "Append", or "Fallback", and use an empty `Artwork`
     # array.
     #
-    # @note When making an API call, you may pass Artwork
-    #   data as a hash:
-    #
-    #       {
-    #         input_key: "WatermarkKey",
-    #         max_width: "DigitsOrAuto",
-    #         max_height: "DigitsOrAuto",
-    #         sizing_policy: "SizingPolicy",
-    #         padding_policy: "PaddingPolicy",
-    #         album_art_format: "JpgOrPng",
-    #         encryption: {
-    #           mode: "EncryptionMode",
-    #           key: "Base64EncodedString",
-    #           key_md_5: "Base64EncodedString",
-    #           initialization_vector: "ZeroTo255String",
-    #         },
-    #       }
-    #
     # @!attribute [rw] input_key
     #   The name of the file to be used as album art. To determine which
     #   Amazon S3 bucket contains the specified file, Elastic Transcoder
@@ -136,16 +118,6 @@ module Aws::ElasticTranscoder
 
     # Options associated with your audio codec.
     #
-    # @note When making an API call, you may pass AudioCodecOptions
-    #   data as a hash:
-    #
-    #       {
-    #         profile: "AudioCodecProfile",
-    #         bit_depth: "AudioBitDepth",
-    #         bit_order: "AudioBitOrder",
-    #         signed: "AudioSigned",
-    #       }
-    #
     # @!attribute [rw] profile
     #   You can only choose an audio profile when you specify AAC for the
     #   value of Audio:Codec.
@@ -153,17 +125,17 @@ module Aws::ElasticTranscoder
     #   Specify the AAC profile for the output file. Elastic Transcoder
     #   supports the following profiles:
     #
-    #   * `auto`\: If you specify `auto`, Elastic Transcoder selects the
+    #   * `auto`: If you specify `auto`, Elastic Transcoder selects the
     #     profile based on the bit rate selected for the output file.
     #
-    #   * `AAC-LC`\: The most common AAC profile. Use for bit rates larger
+    #   * `AAC-LC`: The most common AAC profile. Use for bit rates larger
     #     than 64 kbps.
     #
-    #   * `HE-AAC`\: Not supported on some older players and devices. Use
-    #     for bit rates between 40 and 80 kbps.
+    #   * `HE-AAC`: Not supported on some older players and devices. Use for
+    #     bit rates between 40 and 80 kbps.
     #
-    #   * `HE-AACv2`\: Not supported on some players and devices. Use for
-    #     bit rates less than 48 kbps.
+    #   * `HE-AACv2`: Not supported on some players and devices. Use for bit
+    #     rates less than 48 kbps.
     #
     #   All outputs in a `Smooth` playlist must have the same value for
     #   `Profile`.
@@ -217,23 +189,6 @@ module Aws::ElasticTranscoder
     end
 
     # Parameters required for transcoding audio.
-    #
-    # @note When making an API call, you may pass AudioParameters
-    #   data as a hash:
-    #
-    #       {
-    #         codec: "AudioCodec",
-    #         sample_rate: "AudioSampleRate",
-    #         bit_rate: "AudioBitRate",
-    #         channels: "AudioChannels",
-    #         audio_packing_mode: "AudioPackingMode",
-    #         codec_options: {
-    #           profile: "AudioCodecProfile",
-    #           bit_depth: "AudioBitDepth",
-    #           bit_order: "AudioBitOrder",
-    #           signed: "AudioSigned",
-    #         },
-    #       }
     #
     # @!attribute [rw] codec
     #   The audio codec for the output file. Valid values include `aac`,
@@ -424,13 +379,6 @@ module Aws::ElasticTranscoder
 
     # The `CancelJobRequest` structure.
     #
-    # @note When making an API call, you may pass CancelJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "Id", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the job that you want to cancel.
     #
@@ -452,46 +400,32 @@ module Aws::ElasticTranscoder
     # The file format of the output captions. If you leave this value blank,
     # Elastic Transcoder returns an error.
     #
-    # @note When making an API call, you may pass CaptionFormat
-    #   data as a hash:
-    #
-    #       {
-    #         format: "CaptionFormatFormat",
-    #         pattern: "CaptionFormatPattern",
-    #         encryption: {
-    #           mode: "EncryptionMode",
-    #           key: "Base64EncodedString",
-    #           key_md_5: "Base64EncodedString",
-    #           initialization_vector: "ZeroTo255String",
-    #         },
-    #       }
-    #
     # @!attribute [rw] format
     #   The format you specify determines whether Elastic Transcoder
     #   generates an embedded or sidecar caption for this output.
     #
     #   * **Valid Embedded Caption Formats:**
     #
-    #     * **for FLAC**\: None
+    #     * **for FLAC**: None
     #
-    #     * **For MP3**\: None
+    #     * **For MP3**: None
     #
-    #     * **For MP4**\: mov-text
+    #     * **For MP4**: mov-text
     #
-    #     * **For MPEG-TS**\: None
+    #     * **For MPEG-TS**: None
     #
-    #     * **For ogg**\: None
+    #     * **For ogg**: None
     #
-    #     * **For webm**\: None
+    #     * **For webm**: None
     #
     #   * **Valid Sidecar Caption Formats:** Elastic Transcoder supports
     #     dfxp (first div element only), scc, srt, and webvtt. If you want
     #     ttml or smpte-tt compatible captions, specify dfxp as your output
     #     format.
     #
-    #     * **For FMP4**\: dfxp
+    #     * **For FMP4**: dfxp
     #
-    #     * **Non-FMP4 outputs**\: All sidecar types
+    #     * **Non-FMP4 outputs**: All sidecar types
     #
     #     `fmp4` captions have an extension of `.ismt`
     #   @return [String]
@@ -533,22 +467,6 @@ module Aws::ElasticTranscoder
 
     # A source file for the input sidecar captions used during the
     # transcoding process.
-    #
-    # @note When making an API call, you may pass CaptionSource
-    #   data as a hash:
-    #
-    #       {
-    #         key: "LongKey",
-    #         language: "Key",
-    #         time_offset: "TimeOffset",
-    #         label: "Name",
-    #         encryption: {
-    #           mode: "EncryptionMode",
-    #           key: "Base64EncodedString",
-    #           key_md_5: "Base64EncodedString",
-    #           initialization_vector: "ZeroTo255String",
-    #         },
-    #       }
     #
     # @!attribute [rw] key
     #   The name of the sidecar caption file that you want Elastic
@@ -602,39 +520,6 @@ module Aws::ElasticTranscoder
 
     # The captions to be created, if any.
     #
-    # @note When making an API call, you may pass Captions
-    #   data as a hash:
-    #
-    #       {
-    #         merge_policy: "CaptionMergePolicy",
-    #         caption_sources: [
-    #           {
-    #             key: "LongKey",
-    #             language: "Key",
-    #             time_offset: "TimeOffset",
-    #             label: "Name",
-    #             encryption: {
-    #               mode: "EncryptionMode",
-    #               key: "Base64EncodedString",
-    #               key_md_5: "Base64EncodedString",
-    #               initialization_vector: "ZeroTo255String",
-    #             },
-    #           },
-    #         ],
-    #         caption_formats: [
-    #           {
-    #             format: "CaptionFormatFormat",
-    #             pattern: "CaptionFormatPattern",
-    #             encryption: {
-    #               mode: "EncryptionMode",
-    #               key: "Base64EncodedString",
-    #               key_md_5: "Base64EncodedString",
-    #               initialization_vector: "ZeroTo255String",
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] merge_policy
     #   A policy that determines how Elastic Transcoder handles the
     #   existence of multiple captions.
@@ -681,16 +566,6 @@ module Aws::ElasticTranscoder
     # Settings for one clip in a composition. All jobs in a playlist must
     # have the same clip settings.
     #
-    # @note When making an API call, you may pass Clip
-    #   data as a hash:
-    #
-    #       {
-    #         time_span: {
-    #           start_time: "Time",
-    #           duration: "Time",
-    #         },
-    #       }
-    #
     # @!attribute [rw] time_span
     #   Settings that determine when a clip begins and how long it lasts.
     #   @return [Types::TimeSpan]
@@ -702,97 +577,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `CreateJobOutput` structure.
-    #
-    # @note When making an API call, you may pass CreateJobOutput
-    #   data as a hash:
-    #
-    #       {
-    #         key: "Key",
-    #         thumbnail_pattern: "ThumbnailPattern",
-    #         thumbnail_encryption: {
-    #           mode: "EncryptionMode",
-    #           key: "Base64EncodedString",
-    #           key_md_5: "Base64EncodedString",
-    #           initialization_vector: "ZeroTo255String",
-    #         },
-    #         rotate: "Rotate",
-    #         preset_id: "Id",
-    #         segment_duration: "FloatString",
-    #         watermarks: [
-    #           {
-    #             preset_watermark_id: "PresetWatermarkId",
-    #             input_key: "WatermarkKey",
-    #             encryption: {
-    #               mode: "EncryptionMode",
-    #               key: "Base64EncodedString",
-    #               key_md_5: "Base64EncodedString",
-    #               initialization_vector: "ZeroTo255String",
-    #             },
-    #           },
-    #         ],
-    #         album_art: {
-    #           merge_policy: "MergePolicy",
-    #           artwork: [
-    #             {
-    #               input_key: "WatermarkKey",
-    #               max_width: "DigitsOrAuto",
-    #               max_height: "DigitsOrAuto",
-    #               sizing_policy: "SizingPolicy",
-    #               padding_policy: "PaddingPolicy",
-    #               album_art_format: "JpgOrPng",
-    #               encryption: {
-    #                 mode: "EncryptionMode",
-    #                 key: "Base64EncodedString",
-    #                 key_md_5: "Base64EncodedString",
-    #                 initialization_vector: "ZeroTo255String",
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         composition: [
-    #           {
-    #             time_span: {
-    #               start_time: "Time",
-    #               duration: "Time",
-    #             },
-    #           },
-    #         ],
-    #         captions: {
-    #           merge_policy: "CaptionMergePolicy",
-    #           caption_sources: [
-    #             {
-    #               key: "LongKey",
-    #               language: "Key",
-    #               time_offset: "TimeOffset",
-    #               label: "Name",
-    #               encryption: {
-    #                 mode: "EncryptionMode",
-    #                 key: "Base64EncodedString",
-    #                 key_md_5: "Base64EncodedString",
-    #                 initialization_vector: "ZeroTo255String",
-    #               },
-    #             },
-    #           ],
-    #           caption_formats: [
-    #             {
-    #               format: "CaptionFormatFormat",
-    #               pattern: "CaptionFormatPattern",
-    #               encryption: {
-    #                 mode: "EncryptionMode",
-    #                 key: "Base64EncodedString",
-    #                 key_md_5: "Base64EncodedString",
-    #                 initialization_vector: "ZeroTo255String",
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         encryption: {
-    #           mode: "EncryptionMode",
-    #           key: "Base64EncodedString",
-    #           key_md_5: "Base64EncodedString",
-    #           initialization_vector: "ZeroTo255String",
-    #         },
-    #       }
     #
     # @!attribute [rw] key
     #   The name to assign to the transcoded file. Elastic Transcoder saves
@@ -814,7 +598,7 @@ module Aws::ElasticTranscoder
     #   information that you want to include in the file name for each
     #   thumbnail. You can specify the following values in any sequence:
     #
-    #   * <b> <code>\{count\}</code> (Required)</b>\: If you want to create
+    #   * <b> <code>\{count\}</code> (Required)</b>: If you want to create
     #     thumbnails, you must include `\{count\}` in the `ThumbnailPattern`
     #     object. Wherever you specify `\{count\}`, Elastic Transcoder adds
     #     a five-digit sequence number (beginning with **00001**) to
@@ -825,12 +609,12 @@ module Aws::ElasticTranscoder
     #     omit `\{count\}`, Elastic Transcoder returns a validation error
     #     and does not create the job.
     #
-    #   * **Literal values (Optional)**\: You can specify literal values
+    #   * **Literal values (Optional)**: You can specify literal values
     #     anywhere in the `ThumbnailPattern` object. For example, you can
     #     include them as a file name prefix or as a delimiter between
     #     `\{resolution\}` and `\{count\}`.
     #
-    #   * <b> <code>\{resolution\}</code> (Optional)</b>\: If you want
+    #   * <b> <code>\{resolution\}</code> (Optional)</b>: If you want
     #     Elastic Transcoder to include the resolution in the file name,
     #     include `\{resolution\}` in the `ThumbnailPattern` object.
     #
@@ -984,31 +768,6 @@ module Aws::ElasticTranscoder
 
     # Information about the master playlist.
     #
-    # @note When making an API call, you may pass CreateJobPlaylist
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Filename",
-    #         format: "PlaylistFormat",
-    #         output_keys: ["Key"],
-    #         hls_content_protection: {
-    #           method: "HlsContentProtectionMethod",
-    #           key: "Base64EncodedString",
-    #           key_md_5: "Base64EncodedString",
-    #           initialization_vector: "ZeroTo255String",
-    #           license_acquisition_url: "ZeroTo512String",
-    #           key_storage_policy: "KeyStoragePolicy",
-    #         },
-    #         play_ready_drm: {
-    #           format: "PlayReadyDrmFormatString",
-    #           key: "NonEmptyBase64EncodedString",
-    #           key_md_5: "NonEmptyBase64EncodedString",
-    #           key_id: "KeyIdGuid",
-    #           initialization_vector: "ZeroTo255String",
-    #           license_acquisition_url: "OneTo512String",
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   The name that you want Elastic Transcoder to assign to the master
     #   playlist, for example, nyc-vacation.m3u8. If the name includes a `/`
@@ -1035,7 +794,7 @@ module Aws::ElasticTranscoder
     #
     #   * If your output is not `HLS` or does not have a segment duration
     #     set, the name of the output file is a concatenation of
-    #     `OutputKeyPrefix` and `Outputs:Key`\:
+    #     `OutputKeyPrefix` and `Outputs:Key`:
     #
     #     OutputKeyPrefix`Outputs:Key`
     #
@@ -1053,7 +812,7 @@ module Aws::ElasticTranscoder
     #     included in an `HLSv4` playlist, Elastic Transcoder creates an
     #     output playlist file with a file extension of `_v4.m3u8`. If the
     #     output is video, Elastic Transcoder also creates an output file
-    #     with an extension of `_iframe.m3u8`\:
+    #     with an extension of `_iframe.m3u8`:
     #
     #     OutputKeyPrefix`Outputs:Key`\_v4.m3u8
     #
@@ -1094,302 +853,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `CreateJobRequest` structure.
-    #
-    # @note When making an API call, you may pass CreateJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_id: "Id", # required
-    #         input: {
-    #           key: "LongKey",
-    #           frame_rate: "FrameRate",
-    #           resolution: "Resolution",
-    #           aspect_ratio: "AspectRatio",
-    #           interlaced: "Interlaced",
-    #           container: "JobContainer",
-    #           encryption: {
-    #             mode: "EncryptionMode",
-    #             key: "Base64EncodedString",
-    #             key_md_5: "Base64EncodedString",
-    #             initialization_vector: "ZeroTo255String",
-    #           },
-    #           time_span: {
-    #             start_time: "Time",
-    #             duration: "Time",
-    #           },
-    #           input_captions: {
-    #             merge_policy: "CaptionMergePolicy",
-    #             caption_sources: [
-    #               {
-    #                 key: "LongKey",
-    #                 language: "Key",
-    #                 time_offset: "TimeOffset",
-    #                 label: "Name",
-    #                 encryption: {
-    #                   mode: "EncryptionMode",
-    #                   key: "Base64EncodedString",
-    #                   key_md_5: "Base64EncodedString",
-    #                   initialization_vector: "ZeroTo255String",
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           detected_properties: {
-    #             width: 1,
-    #             height: 1,
-    #             frame_rate: "FloatString",
-    #             file_size: 1,
-    #             duration_millis: 1,
-    #           },
-    #         },
-    #         inputs: [
-    #           {
-    #             key: "LongKey",
-    #             frame_rate: "FrameRate",
-    #             resolution: "Resolution",
-    #             aspect_ratio: "AspectRatio",
-    #             interlaced: "Interlaced",
-    #             container: "JobContainer",
-    #             encryption: {
-    #               mode: "EncryptionMode",
-    #               key: "Base64EncodedString",
-    #               key_md_5: "Base64EncodedString",
-    #               initialization_vector: "ZeroTo255String",
-    #             },
-    #             time_span: {
-    #               start_time: "Time",
-    #               duration: "Time",
-    #             },
-    #             input_captions: {
-    #               merge_policy: "CaptionMergePolicy",
-    #               caption_sources: [
-    #                 {
-    #                   key: "LongKey",
-    #                   language: "Key",
-    #                   time_offset: "TimeOffset",
-    #                   label: "Name",
-    #                   encryption: {
-    #                     mode: "EncryptionMode",
-    #                     key: "Base64EncodedString",
-    #                     key_md_5: "Base64EncodedString",
-    #                     initialization_vector: "ZeroTo255String",
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #             detected_properties: {
-    #               width: 1,
-    #               height: 1,
-    #               frame_rate: "FloatString",
-    #               file_size: 1,
-    #               duration_millis: 1,
-    #             },
-    #           },
-    #         ],
-    #         output: {
-    #           key: "Key",
-    #           thumbnail_pattern: "ThumbnailPattern",
-    #           thumbnail_encryption: {
-    #             mode: "EncryptionMode",
-    #             key: "Base64EncodedString",
-    #             key_md_5: "Base64EncodedString",
-    #             initialization_vector: "ZeroTo255String",
-    #           },
-    #           rotate: "Rotate",
-    #           preset_id: "Id",
-    #           segment_duration: "FloatString",
-    #           watermarks: [
-    #             {
-    #               preset_watermark_id: "PresetWatermarkId",
-    #               input_key: "WatermarkKey",
-    #               encryption: {
-    #                 mode: "EncryptionMode",
-    #                 key: "Base64EncodedString",
-    #                 key_md_5: "Base64EncodedString",
-    #                 initialization_vector: "ZeroTo255String",
-    #               },
-    #             },
-    #           ],
-    #           album_art: {
-    #             merge_policy: "MergePolicy",
-    #             artwork: [
-    #               {
-    #                 input_key: "WatermarkKey",
-    #                 max_width: "DigitsOrAuto",
-    #                 max_height: "DigitsOrAuto",
-    #                 sizing_policy: "SizingPolicy",
-    #                 padding_policy: "PaddingPolicy",
-    #                 album_art_format: "JpgOrPng",
-    #                 encryption: {
-    #                   mode: "EncryptionMode",
-    #                   key: "Base64EncodedString",
-    #                   key_md_5: "Base64EncodedString",
-    #                   initialization_vector: "ZeroTo255String",
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           composition: [
-    #             {
-    #               time_span: {
-    #                 start_time: "Time",
-    #                 duration: "Time",
-    #               },
-    #             },
-    #           ],
-    #           captions: {
-    #             merge_policy: "CaptionMergePolicy",
-    #             caption_sources: [
-    #               {
-    #                 key: "LongKey",
-    #                 language: "Key",
-    #                 time_offset: "TimeOffset",
-    #                 label: "Name",
-    #                 encryption: {
-    #                   mode: "EncryptionMode",
-    #                   key: "Base64EncodedString",
-    #                   key_md_5: "Base64EncodedString",
-    #                   initialization_vector: "ZeroTo255String",
-    #                 },
-    #               },
-    #             ],
-    #             caption_formats: [
-    #               {
-    #                 format: "CaptionFormatFormat",
-    #                 pattern: "CaptionFormatPattern",
-    #                 encryption: {
-    #                   mode: "EncryptionMode",
-    #                   key: "Base64EncodedString",
-    #                   key_md_5: "Base64EncodedString",
-    #                   initialization_vector: "ZeroTo255String",
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           encryption: {
-    #             mode: "EncryptionMode",
-    #             key: "Base64EncodedString",
-    #             key_md_5: "Base64EncodedString",
-    #             initialization_vector: "ZeroTo255String",
-    #           },
-    #         },
-    #         outputs: [
-    #           {
-    #             key: "Key",
-    #             thumbnail_pattern: "ThumbnailPattern",
-    #             thumbnail_encryption: {
-    #               mode: "EncryptionMode",
-    #               key: "Base64EncodedString",
-    #               key_md_5: "Base64EncodedString",
-    #               initialization_vector: "ZeroTo255String",
-    #             },
-    #             rotate: "Rotate",
-    #             preset_id: "Id",
-    #             segment_duration: "FloatString",
-    #             watermarks: [
-    #               {
-    #                 preset_watermark_id: "PresetWatermarkId",
-    #                 input_key: "WatermarkKey",
-    #                 encryption: {
-    #                   mode: "EncryptionMode",
-    #                   key: "Base64EncodedString",
-    #                   key_md_5: "Base64EncodedString",
-    #                   initialization_vector: "ZeroTo255String",
-    #                 },
-    #               },
-    #             ],
-    #             album_art: {
-    #               merge_policy: "MergePolicy",
-    #               artwork: [
-    #                 {
-    #                   input_key: "WatermarkKey",
-    #                   max_width: "DigitsOrAuto",
-    #                   max_height: "DigitsOrAuto",
-    #                   sizing_policy: "SizingPolicy",
-    #                   padding_policy: "PaddingPolicy",
-    #                   album_art_format: "JpgOrPng",
-    #                   encryption: {
-    #                     mode: "EncryptionMode",
-    #                     key: "Base64EncodedString",
-    #                     key_md_5: "Base64EncodedString",
-    #                     initialization_vector: "ZeroTo255String",
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #             composition: [
-    #               {
-    #                 time_span: {
-    #                   start_time: "Time",
-    #                   duration: "Time",
-    #                 },
-    #               },
-    #             ],
-    #             captions: {
-    #               merge_policy: "CaptionMergePolicy",
-    #               caption_sources: [
-    #                 {
-    #                   key: "LongKey",
-    #                   language: "Key",
-    #                   time_offset: "TimeOffset",
-    #                   label: "Name",
-    #                   encryption: {
-    #                     mode: "EncryptionMode",
-    #                     key: "Base64EncodedString",
-    #                     key_md_5: "Base64EncodedString",
-    #                     initialization_vector: "ZeroTo255String",
-    #                   },
-    #                 },
-    #               ],
-    #               caption_formats: [
-    #                 {
-    #                   format: "CaptionFormatFormat",
-    #                   pattern: "CaptionFormatPattern",
-    #                   encryption: {
-    #                     mode: "EncryptionMode",
-    #                     key: "Base64EncodedString",
-    #                     key_md_5: "Base64EncodedString",
-    #                     initialization_vector: "ZeroTo255String",
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #             encryption: {
-    #               mode: "EncryptionMode",
-    #               key: "Base64EncodedString",
-    #               key_md_5: "Base64EncodedString",
-    #               initialization_vector: "ZeroTo255String",
-    #             },
-    #           },
-    #         ],
-    #         output_key_prefix: "Key",
-    #         playlists: [
-    #           {
-    #             name: "Filename",
-    #             format: "PlaylistFormat",
-    #             output_keys: ["Key"],
-    #             hls_content_protection: {
-    #               method: "HlsContentProtectionMethod",
-    #               key: "Base64EncodedString",
-    #               key_md_5: "Base64EncodedString",
-    #               initialization_vector: "ZeroTo255String",
-    #               license_acquisition_url: "ZeroTo512String",
-    #               key_storage_policy: "KeyStoragePolicy",
-    #             },
-    #             play_ready_drm: {
-    #               format: "PlayReadyDrmFormatString",
-    #               key: "NonEmptyBase64EncodedString",
-    #               key_md_5: "NonEmptyBase64EncodedString",
-    #               key_id: "KeyIdGuid",
-    #               initialization_vector: "ZeroTo255String",
-    #               license_acquisition_url: "OneTo512String",
-    #             },
-    #           },
-    #         ],
-    #         user_metadata: {
-    #           "String" => "String",
-    #         },
-    #       }
     #
     # @!attribute [rw] pipeline_id
     #   The `Id` of the pipeline that you want Elastic Transcoder to use for
@@ -1472,45 +935,6 @@ module Aws::ElasticTranscoder
 
     # The `CreatePipelineRequest` structure.
     #
-    # @note When making an API call, you may pass CreatePipelineRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         input_bucket: "BucketName", # required
-    #         output_bucket: "BucketName",
-    #         role: "Role", # required
-    #         aws_kms_key_arn: "KeyArn",
-    #         notifications: {
-    #           progressing: "SnsTopic",
-    #           completed: "SnsTopic",
-    #           warning: "SnsTopic",
-    #           error: "SnsTopic",
-    #         },
-    #         content_config: {
-    #           bucket: "BucketName",
-    #           storage_class: "StorageClass",
-    #           permissions: [
-    #             {
-    #               grantee_type: "GranteeType",
-    #               grantee: "Grantee",
-    #               access: ["AccessControl"],
-    #             },
-    #           ],
-    #         },
-    #         thumbnail_config: {
-    #           bucket: "BucketName",
-    #           storage_class: "StorageClass",
-    #           permissions: [
-    #             {
-    #               grantee_type: "GranteeType",
-    #               grantee: "Grantee",
-    #               access: ["AccessControl"],
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the pipeline. We recommend that the name be unique
     #   within the AWS account, but uniqueness is not enforced.
@@ -1577,27 +1001,27 @@ module Aws::ElasticTranscoder
     #   To receive notifications, you must also subscribe to the new topic
     #   in the Amazon SNS console.
     #
-    #   * **Progressing**\: The topic ARN for the Amazon Simple Notification
+    #   * **Progressing**: The topic ARN for the Amazon Simple Notification
     #     Service (Amazon SNS) topic that you want to notify when Elastic
     #     Transcoder has started to process a job in this pipeline. This is
     #     the ARN that Amazon SNS returned when you created the topic. For
     #     more information, see Create a Topic in the Amazon Simple
     #     Notification Service Developer Guide.
     #
-    #   * **Complete**\: The topic ARN for the Amazon SNS topic that you
-    #     want to notify when Elastic Transcoder has finished processing a
-    #     job in this pipeline. This is the ARN that Amazon SNS returned
-    #     when you created the topic.
+    #   * **Complete**: The topic ARN for the Amazon SNS topic that you want
+    #     to notify when Elastic Transcoder has finished processing a job in
+    #     this pipeline. This is the ARN that Amazon SNS returned when you
+    #     created the topic.
     #
-    #   * **Warning**\: The topic ARN for the Amazon SNS topic that you want
+    #   * **Warning**: The topic ARN for the Amazon SNS topic that you want
     #     to notify when Elastic Transcoder encounters a warning condition
     #     while processing a job in this pipeline. This is the ARN that
     #     Amazon SNS returned when you created the topic.
     #
-    #   * **Error**\: The topic ARN for the Amazon SNS topic that you want
-    #     to notify when Elastic Transcoder encounters an error condition
-    #     while processing a job in this pipeline. This is the ARN that
-    #     Amazon SNS returned when you created the topic.
+    #   * **Error**: The topic ARN for the Amazon SNS topic that you want to
+    #     notify when Elastic Transcoder encounters an error condition while
+    #     processing a job in this pipeline. This is the ARN that Amazon SNS
+    #     returned when you created the topic.
     #   @return [Types::Notifications]
     #
     # @!attribute [rw] content_config
@@ -1613,7 +1037,7 @@ module Aws::ElasticTranscoder
     #   If you specify values for `ContentConfig` and `ThumbnailConfig`,
     #   omit the `OutputBucket` object.
     #
-    #   * **Bucket**\: The Amazon S3 bucket in which you want Elastic
+    #   * **Bucket**: The Amazon S3 bucket in which you want Elastic
     #     Transcoder to save transcoded files and playlists.
     #
     #   * **Permissions** (Optional): The Permissions object specifies which
@@ -1621,10 +1045,10 @@ module Aws::ElasticTranscoder
     #     access you want them to have. You can grant permissions to a
     #     maximum of 30 users and/or predefined Amazon S3 groups.
     #
-    #   * **Grantee Type**\: Specify the type of value that appears in the
+    #   * **Grantee Type**: Specify the type of value that appears in the
     #     `Grantee` object:
     #
-    #     * **Canonical**\: The value in the `Grantee` object is either the
+    #     * **Canonical**: The value in the `Grantee` object is either the
     #       canonical user ID for an AWS account or an origin access
     #       identity for an Amazon CloudFront distribution. For more
     #       information about canonical user IDs, see Access Control List
@@ -1636,39 +1060,38 @@ module Aws::ElasticTranscoder
     #
     #       A canonical user ID is not the same as an AWS account number.
     #
-    #     * **Email**\: The value in the `Grantee` object is the registered
+    #     * **Email**: The value in the `Grantee` object is the registered
     #       email address of an AWS account.
     #
-    #     * **Group**\: The value in the `Grantee` object is one of the
+    #     * **Group**: The value in the `Grantee` object is one of the
     #       following predefined Amazon S3 groups: `AllUsers`,
     #       `AuthenticatedUsers`, or `LogDelivery`.
     #
-    #   * **Grantee**\: The AWS user or group that you want to have access
-    #     to transcoded files and playlists. To identify the user or group,
-    #     you can specify the canonical user ID for an AWS account, an
-    #     origin access identity for a CloudFront distribution, the
-    #     registered email address of an AWS account, or a predefined Amazon
-    #     S3 group
+    #   * **Grantee**: The AWS user or group that you want to have access to
+    #     transcoded files and playlists. To identify the user or group, you
+    #     can specify the canonical user ID for an AWS account, an origin
+    #     access identity for a CloudFront distribution, the registered
+    #     email address of an AWS account, or a predefined Amazon S3 group
     #
-    #   * **Access**\: The permission that you want to give to the AWS user
+    #   * **Access**: The permission that you want to give to the AWS user
     #     that you specified in `Grantee`. Permissions are granted on the
     #     files that Elastic Transcoder adds to the bucket, including
     #     playlists and video files. Valid values include:
     #
-    #     * `READ`\: The grantee can read the objects and metadata for
+    #     * `READ`: The grantee can read the objects and metadata for
     #       objects that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `READ_ACP`\: The grantee can read the object ACL for objects
-    #       that Elastic Transcoder adds to the Amazon S3 bucket.
-    #
-    #     * `WRITE_ACP`\: The grantee can write the ACL for the objects that
+    #     * `READ_ACP`: The grantee can read the object ACL for objects that
     #       Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `FULL_CONTROL`\: The grantee has `READ`, `READ_ACP`, and
+    #     * `WRITE_ACP`: The grantee can write the ACL for the objects that
+    #       Elastic Transcoder adds to the Amazon S3 bucket.
+    #
+    #     * `FULL_CONTROL`: The grantee has `READ`, `READ_ACP`, and
     #       `WRITE_ACP` permissions for the objects that Elastic Transcoder
     #       adds to the Amazon S3 bucket.
     #
-    #   * **StorageClass**\: The Amazon S3 storage class, `Standard` or
+    #   * **StorageClass**: The Amazon S3 storage class, `Standard` or
     #     `ReducedRedundancy`, that you want Elastic Transcoder to assign to
     #     the video files and playlists that it stores in your Amazon S3
     #     bucket.
@@ -1688,7 +1111,7 @@ module Aws::ElasticTranscoder
     #   If you specify values for `ContentConfig` and `ThumbnailConfig`,
     #   omit the `OutputBucket` object.
     #
-    #   * **Bucket**\: The Amazon S3 bucket in which you want Elastic
+    #   * **Bucket**: The Amazon S3 bucket in which you want Elastic
     #     Transcoder to save thumbnail files.
     #
     #   * **Permissions** (Optional): The `Permissions` object specifies
@@ -1697,47 +1120,47 @@ module Aws::ElasticTranscoder
     #     have. You can grant permissions to a maximum of 30 users and/or
     #     predefined Amazon S3 groups.
     #
-    #   * **GranteeType**\: Specify the type of value that appears in the
+    #   * **GranteeType**: Specify the type of value that appears in the
     #     Grantee object:
     #
-    #     * **Canonical**\: The value in the `Grantee` object is either the
+    #     * **Canonical**: The value in the `Grantee` object is either the
     #       canonical user ID for an AWS account or an origin access
     #       identity for an Amazon CloudFront distribution.
     #
     #       A canonical user ID is not the same as an AWS account number.
     #
-    #     * **Email**\: The value in the `Grantee` object is the registered
+    #     * **Email**: The value in the `Grantee` object is the registered
     #       email address of an AWS account.
     #
-    #     * **Group**\: The value in the `Grantee` object is one of the
+    #     * **Group**: The value in the `Grantee` object is one of the
     #       following predefined Amazon S3 groups: `AllUsers`,
     #       `AuthenticatedUsers`, or `LogDelivery`.
     #
-    #   * **Grantee**\: The AWS user or group that you want to have access
-    #     to thumbnail files. To identify the user or group, you can specify
+    #   * **Grantee**: The AWS user or group that you want to have access to
+    #     thumbnail files. To identify the user or group, you can specify
     #     the canonical user ID for an AWS account, an origin access
     #     identity for a CloudFront distribution, the registered email
     #     address of an AWS account, or a predefined Amazon S3 group.
     #
-    #   * **Access**\: The permission that you want to give to the AWS user
+    #   * **Access**: The permission that you want to give to the AWS user
     #     that you specified in `Grantee`. Permissions are granted on the
     #     thumbnail files that Elastic Transcoder adds to the bucket. Valid
     #     values include:
     #
-    #     * `READ`\: The grantee can read the thumbnails and metadata for
+    #     * `READ`: The grantee can read the thumbnails and metadata for
     #       objects that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `READ_ACP`\: The grantee can read the object ACL for thumbnails
+    #     * `READ_ACP`: The grantee can read the object ACL for thumbnails
     #       that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `WRITE_ACP`\: The grantee can write the ACL for the thumbnails
+    #     * `WRITE_ACP`: The grantee can write the ACL for the thumbnails
     #       that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `FULL_CONTROL`\: The grantee has `READ`, `READ_ACP`, and
+    #     * `FULL_CONTROL`: The grantee has `READ`, `READ_ACP`, and
     #       `WRITE_ACP` permissions for the thumbnails that Elastic
     #       Transcoder adds to the Amazon S3 bucket.
     #
-    #   * **StorageClass**\: The Amazon S3 storage class, `Standard` or
+    #   * **StorageClass**: The Amazon S3 storage class, `Standard` or
     #     `ReducedRedundancy`, that you want Elastic Transcoder to assign to
     #     the thumbnails that it stores in your Amazon S3 bucket.
     #   @return [Types::PipelineOutputConfig]
@@ -1780,70 +1203,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `CreatePresetRequest` structure.
-    #
-    # @note When making an API call, you may pass CreatePresetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         description: "Description",
-    #         container: "PresetContainer", # required
-    #         video: {
-    #           codec: "VideoCodec",
-    #           codec_options: {
-    #             "CodecOption" => "CodecOption",
-    #           },
-    #           keyframes_max_dist: "KeyframesMaxDist",
-    #           fixed_gop: "FixedGOP",
-    #           bit_rate: "VideoBitRate",
-    #           frame_rate: "FrameRate",
-    #           max_frame_rate: "MaxFrameRate",
-    #           resolution: "Resolution",
-    #           aspect_ratio: "AspectRatio",
-    #           max_width: "DigitsOrAuto",
-    #           max_height: "DigitsOrAuto",
-    #           display_aspect_ratio: "AspectRatio",
-    #           sizing_policy: "SizingPolicy",
-    #           padding_policy: "PaddingPolicy",
-    #           watermarks: [
-    #             {
-    #               id: "PresetWatermarkId",
-    #               max_width: "PixelsOrPercent",
-    #               max_height: "PixelsOrPercent",
-    #               sizing_policy: "WatermarkSizingPolicy",
-    #               horizontal_align: "HorizontalAlign",
-    #               horizontal_offset: "PixelsOrPercent",
-    #               vertical_align: "VerticalAlign",
-    #               vertical_offset: "PixelsOrPercent",
-    #               opacity: "Opacity",
-    #               target: "Target",
-    #             },
-    #           ],
-    #         },
-    #         audio: {
-    #           codec: "AudioCodec",
-    #           sample_rate: "AudioSampleRate",
-    #           bit_rate: "AudioBitRate",
-    #           channels: "AudioChannels",
-    #           audio_packing_mode: "AudioPackingMode",
-    #           codec_options: {
-    #             profile: "AudioCodecProfile",
-    #             bit_depth: "AudioBitDepth",
-    #             bit_order: "AudioBitOrder",
-    #             signed: "AudioSigned",
-    #           },
-    #         },
-    #         thumbnails: {
-    #           format: "JpgOrPng",
-    #           interval: "Digits",
-    #           resolution: "ThumbnailResolution",
-    #           aspect_ratio: "AspectRatio",
-    #           max_width: "DigitsOrAuto",
-    #           max_height: "DigitsOrAuto",
-    #           sizing_policy: "SizingPolicy",
-    #           padding_policy: "PaddingPolicy",
-    #         },
-    #       }
     #
     # @!attribute [rw] name
     #   The name of the preset. We recommend that the name be unique within
@@ -1908,13 +1267,6 @@ module Aws::ElasticTranscoder
 
     # The `DeletePipelineRequest` structure.
     #
-    # @note When making an API call, you may pass DeletePipelineRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "Id", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the pipeline that you want to delete.
     #   @return [String]
@@ -1930,13 +1282,6 @@ module Aws::ElasticTranscoder
     class DeletePipelineResponse < Aws::EmptyStructure; end
 
     # The `DeletePresetRequest` structure.
-    #
-    # @note When making an API call, you may pass DeletePresetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "Id", # required
-    #       }
     #
     # @!attribute [rw] id
     #   The identifier of the preset for which you want to get detailed
@@ -1955,17 +1300,6 @@ module Aws::ElasticTranscoder
 
     # The detected properties of the input file. Elastic Transcoder
     # identifies these values from the input file.
-    #
-    # @note When making an API call, you may pass DetectedProperties
-    #   data as a hash:
-    #
-    #       {
-    #         width: 1,
-    #         height: 1,
-    #         frame_rate: "FloatString",
-    #         file_size: 1,
-    #         duration_millis: 1,
-    #       }
     #
     # @!attribute [rw] width
     #   The detected width of the input file, in pixels.
@@ -2002,16 +1336,6 @@ module Aws::ElasticTranscoder
     # encrypted, you must specify the mode that Elastic Transcoder uses to
     # decrypt your file, otherwise you must specify the mode you want
     # Elastic Transcoder to use to encrypt your output files.
-    #
-    # @note When making an API call, you may pass Encryption
-    #   data as a hash:
-    #
-    #       {
-    #         mode: "EncryptionMode",
-    #         key: "Base64EncodedString",
-    #         key_md_5: "Base64EncodedString",
-    #         initialization_vector: "ZeroTo255String",
-    #       }
     #
     # @!attribute [rw] mode
     #   The specific server-side encryption mode that you want Elastic
@@ -2094,18 +1418,6 @@ module Aws::ElasticTranscoder
     # The HLS content protection settings, if any, that you want Elastic
     # Transcoder to apply to your output files.
     #
-    # @note When making an API call, you may pass HlsContentProtection
-    #   data as a hash:
-    #
-    #       {
-    #         method: "HlsContentProtectionMethod",
-    #         key: "Base64EncodedString",
-    #         key_md_5: "Base64EncodedString",
-    #         initialization_vector: "ZeroTo255String",
-    #         license_acquisition_url: "ZeroTo512String",
-    #         key_storage_policy: "KeyStoragePolicy",
-    #       }
-    #
     # @!attribute [rw] method
     #   The content protection method for your output. The only valid value
     #   is: `aes-128`.
@@ -2175,27 +1487,6 @@ module Aws::ElasticTranscoder
     class IncompatibleVersionException < Aws::EmptyStructure; end
 
     # The captions to be created, if any.
-    #
-    # @note When making an API call, you may pass InputCaptions
-    #   data as a hash:
-    #
-    #       {
-    #         merge_policy: "CaptionMergePolicy",
-    #         caption_sources: [
-    #           {
-    #             key: "LongKey",
-    #             language: "Key",
-    #             time_offset: "TimeOffset",
-    #             label: "Name",
-    #             encryption: {
-    #               mode: "EncryptionMode",
-    #               key: "Base64EncodedString",
-    #               key_md_5: "Base64EncodedString",
-    #               initialization_vector: "ZeroTo255String",
-    #             },
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] merge_policy
     #   A policy that determines how Elastic Transcoder handles the
@@ -2360,29 +1651,6 @@ module Aws::ElasticTranscoder
 
     # The .jpg or .png file associated with an audio file.
     #
-    # @note When making an API call, you may pass JobAlbumArt
-    #   data as a hash:
-    #
-    #       {
-    #         merge_policy: "MergePolicy",
-    #         artwork: [
-    #           {
-    #             input_key: "WatermarkKey",
-    #             max_width: "DigitsOrAuto",
-    #             max_height: "DigitsOrAuto",
-    #             sizing_policy: "SizingPolicy",
-    #             padding_policy: "PaddingPolicy",
-    #             album_art_format: "JpgOrPng",
-    #             encryption: {
-    #               mode: "EncryptionMode",
-    #               key: "Base64EncodedString",
-    #               key_md_5: "Base64EncodedString",
-    #               initialization_vector: "ZeroTo255String",
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] merge_policy
     #   A policy that determines how Elastic Transcoder handles the
     #   existence of multiple album artwork files.
@@ -2416,52 +1684,6 @@ module Aws::ElasticTranscoder
     end
 
     # Information about the file that you're transcoding.
-    #
-    # @note When making an API call, you may pass JobInput
-    #   data as a hash:
-    #
-    #       {
-    #         key: "LongKey",
-    #         frame_rate: "FrameRate",
-    #         resolution: "Resolution",
-    #         aspect_ratio: "AspectRatio",
-    #         interlaced: "Interlaced",
-    #         container: "JobContainer",
-    #         encryption: {
-    #           mode: "EncryptionMode",
-    #           key: "Base64EncodedString",
-    #           key_md_5: "Base64EncodedString",
-    #           initialization_vector: "ZeroTo255String",
-    #         },
-    #         time_span: {
-    #           start_time: "Time",
-    #           duration: "Time",
-    #         },
-    #         input_captions: {
-    #           merge_policy: "CaptionMergePolicy",
-    #           caption_sources: [
-    #             {
-    #               key: "LongKey",
-    #               language: "Key",
-    #               time_offset: "TimeOffset",
-    #               label: "Name",
-    #               encryption: {
-    #                 mode: "EncryptionMode",
-    #                 key: "Base64EncodedString",
-    #                 key_md_5: "Base64EncodedString",
-    #                 initialization_vector: "ZeroTo255String",
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         detected_properties: {
-    #           width: 1,
-    #           height: 1,
-    #           frame_rate: "FloatString",
-    #           file_size: 1,
-    #           duration_millis: 1,
-    #         },
-    #       }
     #
     # @!attribute [rw] key
     #   The name of the file to transcode. Elsewhere in the body of the JSON
@@ -2641,7 +1863,7 @@ module Aws::ElasticTranscoder
     #   information that you want to include in the file name for each
     #   thumbnail. You can specify the following values in any sequence:
     #
-    #   * <b> <code>\{count\}</code> (Required)</b>\: If you want to create
+    #   * <b> <code>\{count\}</code> (Required)</b>: If you want to create
     #     thumbnails, you must include `\{count\}` in the `ThumbnailPattern`
     #     object. Wherever you specify `\{count\}`, Elastic Transcoder adds
     #     a five-digit sequence number (beginning with **00001**) to
@@ -2652,12 +1874,12 @@ module Aws::ElasticTranscoder
     #     omit `\{count\}`, Elastic Transcoder returns a validation error
     #     and does not create the job.
     #
-    #   * **Literal values (Optional)**\: You can specify literal values
+    #   * **Literal values (Optional)**: You can specify literal values
     #     anywhere in the `ThumbnailPattern` object. For example, you can
     #     include them as a file name prefix or as a delimiter between
     #     `\{resolution\}` and `\{count\}`.
     #
-    #   * <b> <code>\{resolution\}</code> (Optional)</b>\: If you want
+    #   * <b> <code>\{resolution\}</code> (Optional)</b>: If you want
     #     Elastic Transcoder to include the resolution in the file name,
     #     include `\{resolution\}` in the `ThumbnailPattern` object.
     #
@@ -2901,20 +2123,6 @@ module Aws::ElasticTranscoder
     # watermark that is not rectangular, use the .png format, which supports
     # transparency.
     #
-    # @note When making an API call, you may pass JobWatermark
-    #   data as a hash:
-    #
-    #       {
-    #         preset_watermark_id: "PresetWatermarkId",
-    #         input_key: "WatermarkKey",
-    #         encryption: {
-    #           mode: "EncryptionMode",
-    #           key: "Base64EncodedString",
-    #           key_md_5: "Base64EncodedString",
-    #           initialization_vector: "ZeroTo255String",
-    #         },
-    #       }
-    #
     # @!attribute [rw] preset_watermark_id
     #   The ID of the watermark settings that Elastic Transcoder uses to add
     #   watermarks to the video during transcoding. The settings are in the
@@ -2954,15 +2162,6 @@ module Aws::ElasticTranscoder
     class LimitExceededException < Aws::EmptyStructure; end
 
     # The `ListJobsByPipelineRequest` structure.
-    #
-    # @note When making an API call, you may pass ListJobsByPipelineRequest
-    #   data as a hash:
-    #
-    #       {
-    #         pipeline_id: "Id", # required
-    #         ascending: "Ascending",
-    #         page_token: "Id",
-    #       }
     #
     # @!attribute [rw] pipeline_id
     #   The ID of the pipeline for which you want to get job information.
@@ -3009,15 +2208,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `ListJobsByStatusRequest` structure.
-    #
-    # @note When making an API call, you may pass ListJobsByStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         status: "JobStatus", # required
-    #         ascending: "Ascending",
-    #         page_token: "Id",
-    #       }
     #
     # @!attribute [rw] status
     #   To get information about all of the jobs associated with the current
@@ -3067,14 +2257,6 @@ module Aws::ElasticTranscoder
 
     # The `ListPipelineRequest` structure.
     #
-    # @note When making an API call, you may pass ListPipelinesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         ascending: "Ascending",
-    #         page_token: "Id",
-    #       }
-    #
     # @!attribute [rw] ascending
     #   To list pipelines in chronological order by the date and time that
     #   they were created, enter `true`. To list pipelines in reverse
@@ -3115,14 +2297,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `ListPresetsRequest` structure.
-    #
-    # @note When making an API call, you may pass ListPresetsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         ascending: "Ascending",
-    #         page_token: "Id",
-    #       }
     #
     # @!attribute [rw] ascending
     #   To list presets in chronological order by the date and time that
@@ -3169,16 +2343,6 @@ module Aws::ElasticTranscoder
     # To receive notifications, you must also subscribe to the new topic in
     # the Amazon SNS console.
     #
-    # @note When making an API call, you may pass Notifications
-    #   data as a hash:
-    #
-    #       {
-    #         progressing: "SnsTopic",
-    #         completed: "SnsTopic",
-    #         warning: "SnsTopic",
-    #         error: "SnsTopic",
-    #       }
-    #
     # @!attribute [rw] progressing
     #   The Amazon Simple Notification Service (Amazon SNS) topic that you
     #   want to notify when Elastic Transcoder has started to process the
@@ -3211,26 +2375,17 @@ module Aws::ElasticTranscoder
 
     # The `Permission` structure.
     #
-    # @note When making an API call, you may pass Permission
-    #   data as a hash:
-    #
-    #       {
-    #         grantee_type: "GranteeType",
-    #         grantee: "Grantee",
-    #         access: ["AccessControl"],
-    #       }
-    #
     # @!attribute [rw] grantee_type
     #   The type of value that appears in the Grantee object:
     #
-    #   * `Canonical`\: Either the canonical user ID for an AWS account or
-    #     an origin access identity for an Amazon CloudFront distribution.
+    #   * `Canonical`: Either the canonical user ID for an AWS account or an
+    #     origin access identity for an Amazon CloudFront distribution.
     #
     #     A canonical user ID is not the same as an AWS account number.
     #
-    #   * `Email`\: The registered email address of an AWS account.
+    #   * `Email`: The registered email address of an AWS account.
     #
-    #   * `Group`\: One of the following predefined Amazon S3 groups:
+    #   * `Group`: One of the following predefined Amazon S3 groups:
     #     `AllUsers`, `AuthenticatedUsers`, or `LogDelivery`.
     #   @return [String]
     #
@@ -3246,16 +2401,16 @@ module Aws::ElasticTranscoder
     #   The permission that you want to give to the AWS user that is listed
     #   in Grantee. Valid values include:
     #
-    #   * `READ`\: The grantee can read the thumbnails and metadata for
+    #   * `READ`: The grantee can read the thumbnails and metadata for
     #     thumbnails that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #   * `READ_ACP`\: The grantee can read the object ACL for thumbnails
+    #   * `READ_ACP`: The grantee can read the object ACL for thumbnails
     #     that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #   * `WRITE_ACP`\: The grantee can write the ACL for the thumbnails
-    #     that Elastic Transcoder adds to the Amazon S3 bucket.
+    #   * `WRITE_ACP`: The grantee can write the ACL for the thumbnails that
+    #     Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #   * `FULL_CONTROL`\: The grantee has READ, READ\_ACP, and WRITE\_ACP
+    #   * `FULL_CONTROL`: The grantee has READ, READ\_ACP, and WRITE\_ACP
     #     permissions for the thumbnails that Elastic Transcoder adds to the
     #     Amazon S3 bucket.
     #   @return [Array<String>]
@@ -3290,9 +2445,9 @@ module Aws::ElasticTranscoder
     # @!attribute [rw] status
     #   The current status of the pipeline:
     #
-    #   * `Active`\: The pipeline is processing jobs.
+    #   * `Active`: The pipeline is processing jobs.
     #
-    #   * `Paused`\: The pipeline is not currently processing jobs.
+    #   * `Paused`: The pipeline is not currently processing jobs.
     #   @return [String]
     #
     # @!attribute [rw] input_bucket
@@ -3351,45 +2506,45 @@ module Aws::ElasticTranscoder
     #   specify both `ContentConfig` and `ThumbnailConfig`, or you specify
     #   `OutputBucket`.
     #
-    #   * **Bucket**\: The Amazon S3 bucket in which you want Elastic
+    #   * **Bucket**: The Amazon S3 bucket in which you want Elastic
     #     Transcoder to save transcoded files and playlists.
     #
-    #   * **Permissions**\: A list of the users and/or predefined Amazon S3
+    #   * **Permissions**: A list of the users and/or predefined Amazon S3
     #     groups you want to have access to transcoded files and playlists,
     #     and the type of access that you want them to have.
     #
     #     * GranteeType: The type of value that appears in the `Grantee`
     #       object:
     #
-    #       * `Canonical`\: Either the canonical user ID for an AWS account
+    #       * `Canonical`: Either the canonical user ID for an AWS account
     #         or an origin access identity for an Amazon CloudFront
     #         distribution.
     #
-    #       * `Email`\: The registered email address of an AWS account.
+    #       * `Email`: The registered email address of an AWS account.
     #
-    #       * `Group`\: One of the following predefined Amazon S3 groups:
+    #       * `Group`: One of the following predefined Amazon S3 groups:
     #         `AllUsers`, `AuthenticatedUsers`, or `LogDelivery`.
     #
-    #     * `Grantee`\: The AWS user or group that you want to have access
-    #       to transcoded files and playlists.
+    #     * `Grantee`: The AWS user or group that you want to have access to
+    #       transcoded files and playlists.
     #
-    #     * `Access`\: The permission that you want to give to the AWS user
+    #     * `Access`: The permission that you want to give to the AWS user
     #       that is listed in `Grantee`. Valid values include:
     #
-    #       * `READ`\: The grantee can read the objects and metadata for
+    #       * `READ`: The grantee can read the objects and metadata for
     #         objects that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #       * `READ_ACP`\: The grantee can read the object ACL for objects
+    #       * `READ_ACP`: The grantee can read the object ACL for objects
     #         that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #       * `WRITE_ACP`\: The grantee can write the ACL for the objects
+    #       * `WRITE_ACP`: The grantee can write the ACL for the objects
     #         that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #       * `FULL_CONTROL`\: The grantee has `READ`, `READ_ACP`, and
+    #       * `FULL_CONTROL`: The grantee has `READ`, `READ_ACP`, and
     #         `WRITE_ACP` permissions for the objects that Elastic
     #         Transcoder adds to the Amazon S3 bucket.
     #
-    #   * **StorageClass**\: The Amazon S3 storage class, Standard or
+    #   * **StorageClass**: The Amazon S3 storage class, Standard or
     #     ReducedRedundancy, that you want Elastic Transcoder to assign to
     #     the video files and playlists that it stores in your Amazon S3
     #     bucket.
@@ -3401,49 +2556,48 @@ module Aws::ElasticTranscoder
     #   `ContentConfig` and `ThumbnailConfig`, or you specify
     #   `OutputBucket`.
     #
-    #   * `Bucket`\: The Amazon S3 bucket in which you want Elastic
+    #   * `Bucket`: The Amazon S3 bucket in which you want Elastic
     #     Transcoder to save thumbnail files.
     #
-    #   * `Permissions`\: A list of the users and/or predefined Amazon S3
+    #   * `Permissions`: A list of the users and/or predefined Amazon S3
     #     groups you want to have access to thumbnail files, and the type of
     #     access that you want them to have.
     #
     #     * GranteeType: The type of value that appears in the Grantee
     #       object:
     #
-    #       * `Canonical`\: Either the canonical user ID for an AWS account
+    #       * `Canonical`: Either the canonical user ID for an AWS account
     #         or an origin access identity for an Amazon CloudFront
     #         distribution.
     #
     #         A canonical user ID is not the same as an AWS account number.
     #
-    #       * `Email`\: The registered email address of an AWS account.
+    #       * `Email`: The registered email address of an AWS account.
     #
-    #       * `Group`\: One of the following predefined Amazon S3 groups:
+    #       * `Group`: One of the following predefined Amazon S3 groups:
     #         `AllUsers`, `AuthenticatedUsers`, or `LogDelivery`.
     #
-    #     * `Grantee`\: The AWS user or group that you want to have access
-    #       to thumbnail files.
+    #     * `Grantee`: The AWS user or group that you want to have access to
+    #       thumbnail files.
     #
     #     * Access: The permission that you want to give to the AWS user
     #       that is listed in Grantee. Valid values include:
     #
-    #       * `READ`\: The grantee can read the thumbnails and metadata for
+    #       * `READ`: The grantee can read the thumbnails and metadata for
     #         thumbnails that Elastic Transcoder adds to the Amazon S3
     #         bucket.
     #
-    #       * `READ_ACP`\: The grantee can read the object ACL for
-    #         thumbnails that Elastic Transcoder adds to the Amazon S3
-    #         bucket.
-    #
-    #       * `WRITE_ACP`\: The grantee can write the ACL for the thumbnails
+    #       * `READ_ACP`: The grantee can read the object ACL for thumbnails
     #         that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #       * `FULL_CONTROL`\: The grantee has READ, READ\_ACP, and
+    #       * `WRITE_ACP`: The grantee can write the ACL for the thumbnails
+    #         that Elastic Transcoder adds to the Amazon S3 bucket.
+    #
+    #       * `FULL_CONTROL`: The grantee has READ, READ\_ACP, and
     #         WRITE\_ACP permissions for the thumbnails that Elastic
     #         Transcoder adds to the Amazon S3 bucket.
     #
-    #   * `StorageClass`\: The Amazon S3 storage class, `Standard` or
+    #   * `StorageClass`: The Amazon S3 storage class, `Standard` or
     #     `ReducedRedundancy`, that you want Elastic Transcoder to assign to
     #     the thumbnails that it stores in your Amazon S3 bucket.
     #   @return [Types::PipelineOutputConfig]
@@ -3465,21 +2619,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `PipelineOutputConfig` structure.
-    #
-    # @note When making an API call, you may pass PipelineOutputConfig
-    #   data as a hash:
-    #
-    #       {
-    #         bucket: "BucketName",
-    #         storage_class: "StorageClass",
-    #         permissions: [
-    #           {
-    #             grantee_type: "GranteeType",
-    #             grantee: "Grantee",
-    #             access: ["AccessControl"],
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] bucket
     #   The Amazon S3 bucket in which you want Elastic Transcoder to save
@@ -3545,18 +2684,6 @@ module Aws::ElasticTranscoder
     #
     # If you use DRM for an `HLSv3` playlist, your outputs must have a
     # master playlist.
-    #
-    # @note When making an API call, you may pass PlayReadyDrm
-    #   data as a hash:
-    #
-    #       {
-    #         format: "PlayReadyDrmFormatString",
-    #         key: "NonEmptyBase64EncodedString",
-    #         key_md_5: "NonEmptyBase64EncodedString",
-    #         key_id: "KeyIdGuid",
-    #         initialization_vector: "ZeroTo255String",
-    #         license_acquisition_url: "OneTo512String",
-    #       }
     #
     # @!attribute [rw] format
     #   The type of DRM, if any, that you want Elastic Transcoder to apply
@@ -3653,7 +2780,7 @@ module Aws::ElasticTranscoder
     #
     #   * If your output is not `HLS` or does not have a segment duration
     #     set, the name of the output file is a concatenation of
-    #     `OutputKeyPrefix` and `Outputs:Key`\:
+    #     `OutputKeyPrefix` and `Outputs:Key`:
     #
     #     OutputKeyPrefix`Outputs:Key`
     #
@@ -3671,7 +2798,7 @@ module Aws::ElasticTranscoder
     #     included in an `HLSv4` playlist, Elastic Transcoder creates an
     #     output playlist file with a file extension of `_v4.m3u8`. If the
     #     output is video, Elastic Transcoder also creates an output file
-    #     with an extension of `_iframe.m3u8`\:
+    #     with an extension of `_iframe.m3u8`:
     #
     #     OutputKeyPrefix`Outputs:Key`\_v4.m3u8
     #
@@ -3801,22 +2928,6 @@ module Aws::ElasticTranscoder
     # specify watermark settings in the preset, which allows you to use the
     # same preset for up to four watermarks that have different dimensions.
     #
-    # @note When making an API call, you may pass PresetWatermark
-    #   data as a hash:
-    #
-    #       {
-    #         id: "PresetWatermarkId",
-    #         max_width: "PixelsOrPercent",
-    #         max_height: "PixelsOrPercent",
-    #         sizing_policy: "WatermarkSizingPolicy",
-    #         horizontal_align: "HorizontalAlign",
-    #         horizontal_offset: "PixelsOrPercent",
-    #         vertical_align: "VerticalAlign",
-    #         vertical_offset: "PixelsOrPercent",
-    #         opacity: "Opacity",
-    #         target: "Target",
-    #       }
-    #
     # @!attribute [rw] id
     #   A unique identifier for the settings for one watermark. The value of
     #   `Id` can be up to 40 characters long.
@@ -3855,17 +2966,17 @@ module Aws::ElasticTranscoder
     # @!attribute [rw] sizing_policy
     #   A value that controls scaling of the watermark:
     #
-    #   * **Fit**\: Elastic Transcoder scales the watermark so it matches
-    #     the value that you specified in either `MaxWidth` or `MaxHeight`
+    #   * **Fit**: Elastic Transcoder scales the watermark so it matches the
+    #     value that you specified in either `MaxWidth` or `MaxHeight`
     #     without exceeding the other value.
     #
-    #   * **Stretch**\: Elastic Transcoder stretches the watermark to match
+    #   * **Stretch**: Elastic Transcoder stretches the watermark to match
     #     the values that you specified for `MaxWidth` and `MaxHeight`. If
     #     the relative proportions of the watermark and the values of
     #     `MaxWidth` and `MaxHeight` are different, the watermark will be
     #     distorted.
     #
-    #   * **ShrinkToFit**\: Elastic Transcoder scales the watermark down so
+    #   * **ShrinkToFit**: Elastic Transcoder scales the watermark down so
     #     that its dimensions match the values that you specified for at
     #     least one of `MaxWidth` and `MaxHeight` without exceeding either
     #     value. If you specify this option, Elastic Transcoder does not
@@ -3874,15 +2985,15 @@ module Aws::ElasticTranscoder
     #
     # @!attribute [rw] horizontal_align
     #   The horizontal position of the watermark unless you specify a
-    #   non-zero value for `HorizontalOffset`\:
+    #   non-zero value for `HorizontalOffset`:
     #
-    #   * **Left**\: The left edge of the watermark is aligned with the left
+    #   * **Left**: The left edge of the watermark is aligned with the left
     #     border of the video.
     #
-    #   * **Right**\: The right edge of the watermark is aligned with the
+    #   * **Right**: The right edge of the watermark is aligned with the
     #     right border of the video.
     #
-    #   * **Center**\: The watermark is centered between the left and right
+    #   * **Center**: The watermark is centered between the left and right
     #     borders.
     #   @return [String]
     #
@@ -3915,15 +3026,15 @@ module Aws::ElasticTranscoder
     #
     # @!attribute [rw] vertical_align
     #   The vertical position of the watermark unless you specify a non-zero
-    #   value for `VerticalOffset`\:
+    #   value for `VerticalOffset`:
     #
-    #   * **Top**\: The top edge of the watermark is aligned with the top
+    #   * **Top**: The top edge of the watermark is aligned with the top
     #     border of the video.
     #
-    #   * **Bottom**\: The bottom edge of the watermark is aligned with the
+    #   * **Bottom**: The bottom edge of the watermark is aligned with the
     #     bottom border of the video.
     #
-    #   * **Center**\: The watermark is centered between the top and bottom
+    #   * **Center**: The watermark is centered between the top and bottom
     #     borders.
     #   @return [String]
     #
@@ -3972,16 +3083,16 @@ module Aws::ElasticTranscoder
     # @!attribute [rw] target
     #   A value that determines how Elastic Transcoder interprets values
     #   that you specified for `HorizontalOffset`, `VerticalOffset`,
-    #   `MaxWidth`, and `MaxHeight`\:
+    #   `MaxWidth`, and `MaxHeight`:
     #
-    #   * **Content**\: `HorizontalOffset` and `VerticalOffset` values are
+    #   * **Content**: `HorizontalOffset` and `VerticalOffset` values are
     #     calculated based on the borders of the video excluding black bars
     #     added by Elastic Transcoder, if any. In addition, `MaxWidth` and
     #     `MaxHeight`, if specified as a percentage, are calculated based on
     #     the borders of the video excluding black bars added by Elastic
     #     Transcoder, if any.
     #
-    #   * **Frame**\: `HorizontalOffset` and `VerticalOffset` values are
+    #   * **Frame**: `HorizontalOffset` and `VerticalOffset` values are
     #     calculated based on the borders of the video including black bars
     #     added by Elastic Transcoder, if any. In addition, `MaxWidth` and
     #     `MaxHeight`, if specified as a percentage, are calculated based on
@@ -4005,13 +3116,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `ReadJobRequest` structure.
-    #
-    # @note When making an API call, you may pass ReadJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "Id", # required
-    #       }
     #
     # @!attribute [rw] id
     #   The identifier of the job for which you want to get detailed
@@ -4038,13 +3142,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `ReadPipelineRequest` structure.
-    #
-    # @note When making an API call, you may pass ReadPipelineRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "Id", # required
-    #       }
     #
     # @!attribute [rw] id
     #   The identifier of the pipeline to read.
@@ -4080,13 +3177,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `ReadPresetRequest` structure.
-    #
-    # @note When making an API call, you may pass ReadPresetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "Id", # required
-    #       }
     #
     # @!attribute [rw] id
     #   The identifier of the preset for which you want to get detailed
@@ -4124,16 +3214,6 @@ module Aws::ElasticTranscoder
     class ResourceNotFoundException < Aws::EmptyStructure; end
 
     # The `TestRoleRequest` structure.
-    #
-    # @note When making an API call, you may pass TestRoleRequest
-    #   data as a hash:
-    #
-    #       {
-    #         role: "Role", # required
-    #         input_bucket: "BucketName", # required
-    #         output_bucket: "BucketName", # required
-    #         topics: ["SnsTopic"], # required
-    #       }
     #
     # @!attribute [rw] role
     #   The IAM Amazon Resource Name (ARN) for the role that you want
@@ -4185,20 +3265,6 @@ module Aws::ElasticTranscoder
     end
 
     # Thumbnails for videos.
-    #
-    # @note When making an API call, you may pass Thumbnails
-    #   data as a hash:
-    #
-    #       {
-    #         format: "JpgOrPng",
-    #         interval: "Digits",
-    #         resolution: "ThumbnailResolution",
-    #         aspect_ratio: "AspectRatio",
-    #         max_width: "DigitsOrAuto",
-    #         max_height: "DigitsOrAuto",
-    #         sizing_policy: "SizingPolicy",
-    #         padding_policy: "PaddingPolicy",
-    #       }
     #
     # @!attribute [rw] format
     #   The format of thumbnails, if any. Valid values are `jpg` and `png`.
@@ -4256,33 +3322,33 @@ module Aws::ElasticTranscoder
     #   Specify one of the following values to control scaling of
     #   thumbnails:
     #
-    #   * `Fit`\: Elastic Transcoder scales thumbnails so they match the
+    #   * `Fit`: Elastic Transcoder scales thumbnails so they match the
     #     value that you specified in thumbnail MaxWidth or MaxHeight
     #     settings without exceeding the other value.
     #
-    #   * `Fill`\: Elastic Transcoder scales thumbnails so they match the
+    #   * `Fill`: Elastic Transcoder scales thumbnails so they match the
     #     value that you specified in thumbnail `MaxWidth` or `MaxHeight`
     #     settings and matches or exceeds the other value. Elastic
     #     Transcoder centers the image in thumbnails and then crops in the
     #     dimension (if any) that exceeds the maximum value.
     #
-    #   * `Stretch`\: Elastic Transcoder stretches thumbnails to match the
+    #   * `Stretch`: Elastic Transcoder stretches thumbnails to match the
     #     values that you specified for thumbnail `MaxWidth` and `MaxHeight`
     #     settings. If the relative proportions of the input video and
     #     thumbnails are different, the thumbnails will be distorted.
     #
-    #   * `Keep`\: Elastic Transcoder does not scale thumbnails. If either
+    #   * `Keep`: Elastic Transcoder does not scale thumbnails. If either
     #     dimension of the input video exceeds the values that you specified
     #     for thumbnail `MaxWidth` and `MaxHeight` settings, Elastic
     #     Transcoder crops the thumbnails.
     #
-    #   * `ShrinkToFit`\: Elastic Transcoder scales thumbnails down so that
+    #   * `ShrinkToFit`: Elastic Transcoder scales thumbnails down so that
     #     their dimensions match the values that you specified for at least
     #     one of thumbnail `MaxWidth` and `MaxHeight` without exceeding
     #     either value. If you specify this option, Elastic Transcoder does
     #     not scale thumbnails up.
     #
-    #   * `ShrinkToFill`\: Elastic Transcoder scales thumbnails down so that
+    #   * `ShrinkToFill`: Elastic Transcoder scales thumbnails down so that
     #     their dimensions match the values that you specified for at least
     #     one of `MaxWidth` and `MaxHeight` without dropping below either
     #     value. If you specify this option, Elastic Transcoder does not
@@ -4311,14 +3377,6 @@ module Aws::ElasticTranscoder
     end
 
     # Settings that determine when a clip begins and how long it lasts.
-    #
-    # @note When making an API call, you may pass TimeSpan
-    #   data as a hash:
-    #
-    #       {
-    #         start_time: "Time",
-    #         duration: "Time",
-    #       }
     #
     # @!attribute [rw] start_time
     #   The place in the input file where you want a clip to start. The
@@ -4372,19 +3430,6 @@ module Aws::ElasticTranscoder
 
     # The `UpdatePipelineNotificationsRequest` structure.
     #
-    # @note When making an API call, you may pass UpdatePipelineNotificationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "Id", # required
-    #         notifications: { # required
-    #           progressing: "SnsTopic",
-    #           completed: "SnsTopic",
-    #           warning: "SnsTopic",
-    #           error: "SnsTopic",
-    #         },
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the pipeline for which you want to change
     #   notification settings.
@@ -4397,26 +3442,25 @@ module Aws::ElasticTranscoder
     #   To receive notifications, you must also subscribe to the new topic
     #   in the Amazon SNS console.
     #
-    #   * **Progressing**\: The topic ARN for the Amazon Simple Notification
+    #   * **Progressing**: The topic ARN for the Amazon Simple Notification
     #     Service (Amazon SNS) topic that you want to notify when Elastic
     #     Transcoder has started to process jobs that are added to this
     #     pipeline. This is the ARN that Amazon SNS returned when you
     #     created the topic.
     #
-    #   * **Complete**\: The topic ARN for the Amazon SNS topic that you
-    #     want to notify when Elastic Transcoder has finished processing a
-    #     job. This is the ARN that Amazon SNS returned when you created the
+    #   * **Complete**: The topic ARN for the Amazon SNS topic that you want
+    #     to notify when Elastic Transcoder has finished processing a job.
+    #     This is the ARN that Amazon SNS returned when you created the
     #     topic.
     #
-    #   * **Warning**\: The topic ARN for the Amazon SNS topic that you want
+    #   * **Warning**: The topic ARN for the Amazon SNS topic that you want
     #     to notify when Elastic Transcoder encounters a warning condition.
     #     This is the ARN that Amazon SNS returned when you created the
     #     topic.
     #
-    #   * **Error**\: The topic ARN for the Amazon SNS topic that you want
-    #     to notify when Elastic Transcoder encounters an error condition.
-    #     This is the ARN that Amazon SNS returned when you created the
-    #     topic.
+    #   * **Error**: The topic ARN for the Amazon SNS topic that you want to
+    #     notify when Elastic Transcoder encounters an error condition. This
+    #     is the ARN that Amazon SNS returned when you created the topic.
     #   @return [Types::Notifications]
     #
     class UpdatePipelineNotificationsRequest < Struct.new(
@@ -4440,45 +3484,6 @@ module Aws::ElasticTranscoder
     end
 
     # The `UpdatePipelineRequest` structure.
-    #
-    # @note When making an API call, you may pass UpdatePipelineRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "Id", # required
-    #         name: "Name",
-    #         input_bucket: "BucketName",
-    #         role: "Role",
-    #         aws_kms_key_arn: "KeyArn",
-    #         notifications: {
-    #           progressing: "SnsTopic",
-    #           completed: "SnsTopic",
-    #           warning: "SnsTopic",
-    #           error: "SnsTopic",
-    #         },
-    #         content_config: {
-    #           bucket: "BucketName",
-    #           storage_class: "StorageClass",
-    #           permissions: [
-    #             {
-    #               grantee_type: "GranteeType",
-    #               grantee: "Grantee",
-    #               access: ["AccessControl"],
-    #             },
-    #           ],
-    #         },
-    #         thumbnail_config: {
-    #           bucket: "BucketName",
-    #           storage_class: "StorageClass",
-    #           permissions: [
-    #             {
-    #               grantee_type: "GranteeType",
-    #               grantee: "Grantee",
-    #               access: ["AccessControl"],
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] id
     #   The ID of the pipeline that you want to update.
@@ -4521,26 +3526,25 @@ module Aws::ElasticTranscoder
     #   To receive notifications, you must also subscribe to the new topic
     #   in the Amazon SNS console.
     #
-    #   * **Progressing**\: The topic ARN for the Amazon Simple Notification
+    #   * **Progressing**: The topic ARN for the Amazon Simple Notification
     #     Service (Amazon SNS) topic that you want to notify when Elastic
     #     Transcoder has started to process jobs that are added to this
     #     pipeline. This is the ARN that Amazon SNS returned when you
     #     created the topic.
     #
-    #   * **Complete**\: The topic ARN for the Amazon SNS topic that you
-    #     want to notify when Elastic Transcoder has finished processing a
-    #     job. This is the ARN that Amazon SNS returned when you created the
+    #   * **Complete**: The topic ARN for the Amazon SNS topic that you want
+    #     to notify when Elastic Transcoder has finished processing a job.
+    #     This is the ARN that Amazon SNS returned when you created the
     #     topic.
     #
-    #   * **Warning**\: The topic ARN for the Amazon SNS topic that you want
+    #   * **Warning**: The topic ARN for the Amazon SNS topic that you want
     #     to notify when Elastic Transcoder encounters a warning condition.
     #     This is the ARN that Amazon SNS returned when you created the
     #     topic.
     #
-    #   * **Error**\: The topic ARN for the Amazon SNS topic that you want
-    #     to notify when Elastic Transcoder encounters an error condition.
-    #     This is the ARN that Amazon SNS returned when you created the
-    #     topic.
+    #   * **Error**: The topic ARN for the Amazon SNS topic that you want to
+    #     notify when Elastic Transcoder encounters an error condition. This
+    #     is the ARN that Amazon SNS returned when you created the topic.
     #   @return [Types::Notifications]
     #
     # @!attribute [rw] content_config
@@ -4556,7 +3560,7 @@ module Aws::ElasticTranscoder
     #   If you specify values for `ContentConfig` and `ThumbnailConfig`,
     #   omit the `OutputBucket` object.
     #
-    #   * **Bucket**\: The Amazon S3 bucket in which you want Elastic
+    #   * **Bucket**: The Amazon S3 bucket in which you want Elastic
     #     Transcoder to save transcoded files and playlists.
     #
     #   * **Permissions** (Optional): The Permissions object specifies which
@@ -4564,10 +3568,10 @@ module Aws::ElasticTranscoder
     #     access you want them to have. You can grant permissions to a
     #     maximum of 30 users and/or predefined Amazon S3 groups.
     #
-    #   * **Grantee Type**\: Specify the type of value that appears in the
+    #   * **Grantee Type**: Specify the type of value that appears in the
     #     `Grantee` object:
     #
-    #     * **Canonical**\: The value in the `Grantee` object is either the
+    #     * **Canonical**: The value in the `Grantee` object is either the
     #       canonical user ID for an AWS account or an origin access
     #       identity for an Amazon CloudFront distribution. For more
     #       information about canonical user IDs, see Access Control List
@@ -4579,39 +3583,38 @@ module Aws::ElasticTranscoder
     #
     #       A canonical user ID is not the same as an AWS account number.
     #
-    #     * **Email**\: The value in the `Grantee` object is the registered
+    #     * **Email**: The value in the `Grantee` object is the registered
     #       email address of an AWS account.
     #
-    #     * **Group**\: The value in the `Grantee` object is one of the
+    #     * **Group**: The value in the `Grantee` object is one of the
     #       following predefined Amazon S3 groups: `AllUsers`,
     #       `AuthenticatedUsers`, or `LogDelivery`.
     #
-    #   * **Grantee**\: The AWS user or group that you want to have access
-    #     to transcoded files and playlists. To identify the user or group,
-    #     you can specify the canonical user ID for an AWS account, an
-    #     origin access identity for a CloudFront distribution, the
-    #     registered email address of an AWS account, or a predefined Amazon
-    #     S3 group
+    #   * **Grantee**: The AWS user or group that you want to have access to
+    #     transcoded files and playlists. To identify the user or group, you
+    #     can specify the canonical user ID for an AWS account, an origin
+    #     access identity for a CloudFront distribution, the registered
+    #     email address of an AWS account, or a predefined Amazon S3 group
     #
-    #   * **Access**\: The permission that you want to give to the AWS user
+    #   * **Access**: The permission that you want to give to the AWS user
     #     that you specified in `Grantee`. Permissions are granted on the
     #     files that Elastic Transcoder adds to the bucket, including
     #     playlists and video files. Valid values include:
     #
-    #     * `READ`\: The grantee can read the objects and metadata for
+    #     * `READ`: The grantee can read the objects and metadata for
     #       objects that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `READ_ACP`\: The grantee can read the object ACL for objects
-    #       that Elastic Transcoder adds to the Amazon S3 bucket.
-    #
-    #     * `WRITE_ACP`\: The grantee can write the ACL for the objects that
+    #     * `READ_ACP`: The grantee can read the object ACL for objects that
     #       Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `FULL_CONTROL`\: The grantee has `READ`, `READ_ACP`, and
+    #     * `WRITE_ACP`: The grantee can write the ACL for the objects that
+    #       Elastic Transcoder adds to the Amazon S3 bucket.
+    #
+    #     * `FULL_CONTROL`: The grantee has `READ`, `READ_ACP`, and
     #       `WRITE_ACP` permissions for the objects that Elastic Transcoder
     #       adds to the Amazon S3 bucket.
     #
-    #   * **StorageClass**\: The Amazon S3 storage class, `Standard` or
+    #   * **StorageClass**: The Amazon S3 storage class, `Standard` or
     #     `ReducedRedundancy`, that you want Elastic Transcoder to assign to
     #     the video files and playlists that it stores in your Amazon S3
     #     bucket.
@@ -4631,7 +3634,7 @@ module Aws::ElasticTranscoder
     #   If you specify values for `ContentConfig` and `ThumbnailConfig`,
     #   omit the `OutputBucket` object.
     #
-    #   * **Bucket**\: The Amazon S3 bucket in which you want Elastic
+    #   * **Bucket**: The Amazon S3 bucket in which you want Elastic
     #     Transcoder to save thumbnail files.
     #
     #   * **Permissions** (Optional): The `Permissions` object specifies
@@ -4640,47 +3643,47 @@ module Aws::ElasticTranscoder
     #     have. You can grant permissions to a maximum of 30 users and/or
     #     predefined Amazon S3 groups.
     #
-    #   * **GranteeType**\: Specify the type of value that appears in the
+    #   * **GranteeType**: Specify the type of value that appears in the
     #     Grantee object:
     #
-    #     * **Canonical**\: The value in the `Grantee` object is either the
+    #     * **Canonical**: The value in the `Grantee` object is either the
     #       canonical user ID for an AWS account or an origin access
     #       identity for an Amazon CloudFront distribution.
     #
     #       A canonical user ID is not the same as an AWS account number.
     #
-    #     * **Email**\: The value in the `Grantee` object is the registered
+    #     * **Email**: The value in the `Grantee` object is the registered
     #       email address of an AWS account.
     #
-    #     * **Group**\: The value in the `Grantee` object is one of the
+    #     * **Group**: The value in the `Grantee` object is one of the
     #       following predefined Amazon S3 groups: `AllUsers`,
     #       `AuthenticatedUsers`, or `LogDelivery`.
     #
-    #   * **Grantee**\: The AWS user or group that you want to have access
-    #     to thumbnail files. To identify the user or group, you can specify
+    #   * **Grantee**: The AWS user or group that you want to have access to
+    #     thumbnail files. To identify the user or group, you can specify
     #     the canonical user ID for an AWS account, an origin access
     #     identity for a CloudFront distribution, the registered email
     #     address of an AWS account, or a predefined Amazon S3 group.
     #
-    #   * **Access**\: The permission that you want to give to the AWS user
+    #   * **Access**: The permission that you want to give to the AWS user
     #     that you specified in `Grantee`. Permissions are granted on the
     #     thumbnail files that Elastic Transcoder adds to the bucket. Valid
     #     values include:
     #
-    #     * `READ`\: The grantee can read the thumbnails and metadata for
+    #     * `READ`: The grantee can read the thumbnails and metadata for
     #       objects that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `READ_ACP`\: The grantee can read the object ACL for thumbnails
+    #     * `READ_ACP`: The grantee can read the object ACL for thumbnails
     #       that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `WRITE_ACP`\: The grantee can write the ACL for the thumbnails
+    #     * `WRITE_ACP`: The grantee can write the ACL for the thumbnails
     #       that Elastic Transcoder adds to the Amazon S3 bucket.
     #
-    #     * `FULL_CONTROL`\: The grantee has `READ`, `READ_ACP`, and
+    #     * `FULL_CONTROL`: The grantee has `READ`, `READ_ACP`, and
     #       `WRITE_ACP` permissions for the thumbnails that Elastic
     #       Transcoder adds to the Amazon S3 bucket.
     #
-    #   * **StorageClass**\: The Amazon S3 storage class, `Standard` or
+    #   * **StorageClass**: The Amazon S3 storage class, `Standard` or
     #     `ReducedRedundancy`, that you want Elastic Transcoder to assign to
     #     the thumbnails that it stores in your Amazon S3 bucket.
     #   @return [Types::PipelineOutputConfig]
@@ -4723,14 +3726,6 @@ module Aws::ElasticTranscoder
 
     # The `UpdatePipelineStatusRequest` structure.
     #
-    # @note When making an API call, you may pass UpdatePipelineStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "Id", # required
-    #         status: "PipelineStatus", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The identifier of the pipeline to update.
     #   @return [String]
@@ -4738,9 +3733,9 @@ module Aws::ElasticTranscoder
     # @!attribute [rw] status
     #   The desired status of the pipeline:
     #
-    #   * `Active`\: The pipeline is processing jobs.
+    #   * `Active`: The pipeline is processing jobs.
     #
-    #   * `Paused`\: The pipeline is not currently processing jobs.
+    #   * `Paused`: The pipeline is not currently processing jobs.
     #   @return [String]
     #
     class UpdatePipelineStatusRequest < Struct.new(
@@ -4771,42 +3766,6 @@ module Aws::ElasticTranscoder
 
     # The `VideoParameters` structure.
     #
-    # @note When making an API call, you may pass VideoParameters
-    #   data as a hash:
-    #
-    #       {
-    #         codec: "VideoCodec",
-    #         codec_options: {
-    #           "CodecOption" => "CodecOption",
-    #         },
-    #         keyframes_max_dist: "KeyframesMaxDist",
-    #         fixed_gop: "FixedGOP",
-    #         bit_rate: "VideoBitRate",
-    #         frame_rate: "FrameRate",
-    #         max_frame_rate: "MaxFrameRate",
-    #         resolution: "Resolution",
-    #         aspect_ratio: "AspectRatio",
-    #         max_width: "DigitsOrAuto",
-    #         max_height: "DigitsOrAuto",
-    #         display_aspect_ratio: "AspectRatio",
-    #         sizing_policy: "SizingPolicy",
-    #         padding_policy: "PaddingPolicy",
-    #         watermarks: [
-    #           {
-    #             id: "PresetWatermarkId",
-    #             max_width: "PixelsOrPercent",
-    #             max_height: "PixelsOrPercent",
-    #             sizing_policy: "WatermarkSizingPolicy",
-    #             horizontal_align: "HorizontalAlign",
-    #             horizontal_offset: "PixelsOrPercent",
-    #             vertical_align: "VerticalAlign",
-    #             vertical_offset: "PixelsOrPercent",
-    #             opacity: "Opacity",
-    #             target: "Target",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] codec
     #   The video codec for the output file. Valid values include `gif`,
     #   `H.264`, `mpeg2`, `vp8`, and `vp9`. You can only specify `vp8` and
@@ -4820,14 +3779,14 @@ module Aws::ElasticTranscoder
     #   The H.264 profile that you want to use for the output file. Elastic
     #   Transcoder supports the following profiles:
     #
-    #   * `baseline`\: The profile most commonly used for videoconferencing
+    #   * `baseline`: The profile most commonly used for videoconferencing
     #     and for mobile applications.
     #
-    #   * `main`\: The profile used for standard-definition digital TV
+    #   * `main`: The profile used for standard-definition digital TV
     #     broadcasts.
     #
-    #   * `high`\: The profile used for high-definition digital TV
-    #     broadcasts and for Blu-ray discs.
+    #   * `high`: The profile used for high-definition digital TV broadcasts
+    #     and for Blu-ray discs.
     #
     #   **Level (H.264 Only)**
     #
@@ -5003,13 +3962,13 @@ module Aws::ElasticTranscoder
     #   `MPEG2`, or `VP8`.
     #
     #   Whether to use a fixed value for `FixedGOP`. Valid values are `true`
-    #   and `false`\:
+    #   and `false`:
     #
-    #   * `true`\: Elastic Transcoder uses the value of `KeyframesMaxDist`
+    #   * `true`: Elastic Transcoder uses the value of `KeyframesMaxDist`
     #     for the distance between key frames (the number of frames in a
     #     group of pictures, or GOP).
     #
-    #   * `false`\: The distance between key frames can vary.
+    #   * `false`: The distance between key frames can vary.
     #
     #   `FixedGOP` must be set to `true` for `fmp4` containers.
     #   @return [String]
@@ -5121,12 +4080,12 @@ module Aws::ElasticTranscoder
     #   mutually exclusive. Do not use them together.
     #
     #   The width and height of the video in the output file, in pixels.
-    #   Valid values are `auto` and *width* x *height*\:
+    #   Valid values are `auto` and *width* x *height*:
     #
-    #   * `auto`\: Elastic Transcoder attempts to preserve the width and
+    #   * `auto`: Elastic Transcoder attempts to preserve the width and
     #     height of the input file, subject to the following rules.
     #
-    #   * ` width x height `\: The width and height of the output video in
+    #   * ` width x height `: The width and height of the output video in
     #     pixels.
     #
     #   Note the following about specifying the width and height:
@@ -5219,34 +4178,34 @@ module Aws::ElasticTranscoder
     #   Specify one of the following values to control scaling of the output
     #   video:
     #
-    #   * `Fit`\: Elastic Transcoder scales the output video so it matches
+    #   * `Fit`: Elastic Transcoder scales the output video so it matches
     #     the value that you specified in either `MaxWidth` or `MaxHeight`
     #     without exceeding the other value.
     #
-    #   * `Fill`\: Elastic Transcoder scales the output video so it matches
+    #   * `Fill`: Elastic Transcoder scales the output video so it matches
     #     the value that you specified in either `MaxWidth` or `MaxHeight`
     #     and matches or exceeds the other value. Elastic Transcoder centers
     #     the output video and then crops it in the dimension (if any) that
     #     exceeds the maximum value.
     #
-    #   * `Stretch`\: Elastic Transcoder stretches the output video to match
+    #   * `Stretch`: Elastic Transcoder stretches the output video to match
     #     the values that you specified for `MaxWidth` and `MaxHeight`. If
     #     the relative proportions of the input video and the output video
     #     are different, the output video will be distorted.
     #
-    #   * `Keep`\: Elastic Transcoder does not scale the output video. If
+    #   * `Keep`: Elastic Transcoder does not scale the output video. If
     #     either dimension of the input video exceeds the values that you
     #     specified for `MaxWidth` and `MaxHeight`, Elastic Transcoder crops
     #     the output video.
     #
-    #   * `ShrinkToFit`\: Elastic Transcoder scales the output video down so
+    #   * `ShrinkToFit`: Elastic Transcoder scales the output video down so
     #     that its dimensions match the values that you specified for at
     #     least one of `MaxWidth` and `MaxHeight` without exceeding either
     #     value. If you specify this option, Elastic Transcoder does not
     #     scale the video up.
     #
-    #   * `ShrinkToFill`\: Elastic Transcoder scales the output video down
-    #     so that its dimensions match the values that you specified for at
+    #   * `ShrinkToFill`: Elastic Transcoder scales the output video down so
+    #     that its dimensions match the values that you specified for at
     #     least one of `MaxWidth` and `MaxHeight` without dropping below
     #     either value. If you specify this option, Elastic Transcoder does
     #     not scale the video up.

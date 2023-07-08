@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-kendra/types'
 require_relative 'aws-sdk-kendra/client_api'
+require_relative 'aws-sdk-kendra/plugins/endpoints.rb'
 require_relative 'aws-sdk-kendra/client'
 require_relative 'aws-sdk-kendra/errors'
 require_relative 'aws-sdk-kendra/resource'
+require_relative 'aws-sdk-kendra/endpoint_parameters'
+require_relative 'aws-sdk-kendra/endpoint_provider'
+require_relative 'aws-sdk-kendra/endpoints'
 require_relative 'aws-sdk-kendra/customizations'
 
 # This module provides support for AWSKendraFrontendService. This module is available in the
@@ -28,7 +32,7 @@ require_relative 'aws-sdk-kendra/customizations'
 # structure.
 #
 #     kendra = Aws::Kendra::Client.new
-#     resp = kendra.batch_delete_document(params)
+#     resp = kendra.associate_entities_to_experience(params)
 #
 # See {Client} for more information.
 #
@@ -48,6 +52,6 @@ require_relative 'aws-sdk-kendra/customizations'
 # @!group service
 module Aws::Kendra
 
-  GEM_VERSION = '1.24.0'
+  GEM_VERSION = '1.70.0'
 
 end

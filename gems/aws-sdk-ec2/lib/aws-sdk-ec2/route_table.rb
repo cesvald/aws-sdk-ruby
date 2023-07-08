@@ -53,7 +53,7 @@ module Aws::EC2
       data[:vpc_id]
     end
 
-    # The ID of the AWS account that owns the route table.
+    # The ID of the Amazon Web Services account that owns the route table.
     # @return [String]
     def owner_id
       data[:owner_id]
@@ -73,7 +73,9 @@ module Aws::EC2
     #
     # @return [self]
     def load
-      resp = @client.describe_route_tables(route_table_ids: [@id])
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_route_tables(route_table_ids: [@id])
+      end
       @data = resp.route_tables[0]
       self
     end
@@ -188,7 +190,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -213,7 +217,9 @@ module Aws::EC2
     # @return [RouteTableAssociation]
     def associate_with_subnet(options = {})
       options = options.merge(route_table_id: @id)
-      resp = @client.associate_route_table(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.associate_route_table(options)
+      end
       RouteTableAssociation.new(
         id: resp.data.association_id,
         client: @client
@@ -237,6 +243,7 @@ module Aws::EC2
     #     carrier_gateway_id: "CarrierGatewayId",
     #     network_interface_id: "NetworkInterfaceId",
     #     vpc_peering_connection_id: "VpcPeeringConnectionId",
+    #     core_network_arn: "CoreNetworkArn",
     #   })
     # @param [Hash] options ({})
     # @option options [String] :destination_cidr_block
@@ -281,10 +288,14 @@ module Aws::EC2
     #   The ID of a network interface.
     # @option options [String] :vpc_peering_connection_id
     #   The ID of a VPC peering connection.
+    # @option options [String] :core_network_arn
+    #   The Amazon Resource Name (ARN) of the core network.
     # @return [Route]
     def create_route(options = {})
       options = options.merge(route_table_id: @id)
-      @client.create_route(options)
+      Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_route(options)
+      end
       Route.new(
         route_table_id: @id,
         destination_cidr_block: options[:destination_cidr_block],
@@ -317,7 +328,9 @@ module Aws::EC2
     def create_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.create_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -354,13 +367,17 @@ module Aws::EC2
     #   if its value is an empty string.
     #
     #   If you omit this parameter, we delete all user-defined tags for the
-    #   specified resources. We do not delete AWS-generated tags (tags that
-    #   have the `aws:` prefix).
+    #   specified resources. We do not delete Amazon Web Services-generated
+    #   tags (tags that have the `aws:` prefix).
+    #
+    #   Constraints: Up to 1000 tags.
     # @return [Tag::Collection]
     def delete_tags(options = {})
       batch = []
       options = Aws::Util.deep_merge(options, resources: [@id])
-      resp = @client.delete_tags(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_tags(options)
+      end
       options[:tags].each do |t|
         batch << Tag.new(
           resource_id: @id,
@@ -386,7 +403,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(route_table_id: @id)
-      resp = @client.delete_route_table(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_route_table(options)
+      end
       resp.data
     end
 

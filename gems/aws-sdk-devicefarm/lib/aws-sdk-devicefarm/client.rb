@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:devicefarm)
@@ -73,8 +77,13 @@ module Aws::DeviceFarm
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::DeviceFarm::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::DeviceFarm
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::DeviceFarm
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::DeviceFarm
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::DeviceFarm
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::DeviceFarm
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::DeviceFarm::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::DeviceFarm::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::DeviceFarm
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::DeviceFarm
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -580,6 +637,9 @@ module Aws::DeviceFarm
     #   runs in this project use the specified execution timeout value unless
     #   overridden when scheduling a run.
     #
+    # @option params [Types::VpcConfig] :vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #
     # @return [Types::CreateProjectResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateProjectResult#project #project} => Types::Project
@@ -607,6 +667,11 @@ module Aws::DeviceFarm
     #   resp = client.create_project({
     #     name: "Name", # required
     #     default_job_timeout_minutes: 1,
+    #     vpc_config: {
+    #       security_group_ids: ["SecurityGroupId"], # required
+    #       subnet_ids: ["SubnetId"], # required
+    #       vpc_id: "NonEmptyString", # required
+    #     },
     #   })
     #
     # @example Response structure
@@ -615,6 +680,11 @@ module Aws::DeviceFarm
     #   resp.project.name #=> String
     #   resp.project.default_job_timeout_minutes #=> Integer
     #   resp.project.created #=> Time
+    #   resp.project.vpc_config.security_group_ids #=> Array
+    #   resp.project.vpc_config.security_group_ids[0] #=> String
+    #   resp.project.vpc_config.subnet_ids #=> Array
+    #   resp.project.vpc_config.subnet_ids[0] #=> String
+    #   resp.project.vpc_config.vpc_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateProject AWS API Documentation
     #
@@ -711,7 +781,7 @@ module Aws::DeviceFarm
     #
     #
     #
-    #   [1]: https://aws.amazon.com/device-farm/faq/
+    #   [1]: http://aws.amazon.com/device-farm/faqs/
     #
     # @return [Types::CreateRemoteAccessSessionResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -818,6 +888,11 @@ module Aws::DeviceFarm
     #   resp.remote_access_session.device_udid #=> String
     #   resp.remote_access_session.interaction_mode #=> String, one of "INTERACTIVE", "NO_VIDEO", "VIDEO_ONLY"
     #   resp.remote_access_session.skip_app_resign #=> Boolean
+    #   resp.remote_access_session.vpc_config.security_group_ids #=> Array
+    #   resp.remote_access_session.vpc_config.security_group_ids[0] #=> String
+    #   resp.remote_access_session.vpc_config.subnet_ids #=> Array
+    #   resp.remote_access_session.vpc_config.subnet_ids[0] #=> String
+    #   resp.remote_access_session.vpc_config.vpc_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateRemoteAccessSession AWS API Documentation
     #
@@ -837,6 +912,9 @@ module Aws::DeviceFarm
     # @option params [String] :description
     #   Human-readable description of the project.
     #
+    # @option params [Types::TestGridVpcConfig] :vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #
     # @return [Types::CreateTestGridProjectResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateTestGridProjectResult#test_grid_project #test_grid_project} => Types::TestGridProject
@@ -846,6 +924,11 @@ module Aws::DeviceFarm
     #   resp = client.create_test_grid_project({
     #     name: "ResourceName", # required
     #     description: "ResourceDescription",
+    #     vpc_config: {
+    #       security_group_ids: ["NonEmptyString"], # required
+    #       subnet_ids: ["NonEmptyString"], # required
+    #       vpc_id: "NonEmptyString", # required
+    #     },
     #   })
     #
     # @example Response structure
@@ -853,6 +936,11 @@ module Aws::DeviceFarm
     #   resp.test_grid_project.arn #=> String
     #   resp.test_grid_project.name #=> String
     #   resp.test_grid_project.description #=> String
+    #   resp.test_grid_project.vpc_config.security_group_ids #=> Array
+    #   resp.test_grid_project.vpc_config.security_group_ids[0] #=> String
+    #   resp.test_grid_project.vpc_config.subnet_ids #=> Array
+    #   resp.test_grid_project.vpc_config.subnet_ids[0] #=> String
+    #   resp.test_grid_project.vpc_config.vpc_id #=> String
     #   resp.test_grid_project.created #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateTestGridProject AWS API Documentation
@@ -2148,6 +2236,11 @@ module Aws::DeviceFarm
     #   resp.project.name #=> String
     #   resp.project.default_job_timeout_minutes #=> Integer
     #   resp.project.created #=> Time
+    #   resp.project.vpc_config.security_group_ids #=> Array
+    #   resp.project.vpc_config.security_group_ids[0] #=> String
+    #   resp.project.vpc_config.subnet_ids #=> Array
+    #   resp.project.vpc_config.subnet_ids[0] #=> String
+    #   resp.project.vpc_config.vpc_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetProject AWS API Documentation
     #
@@ -2250,6 +2343,11 @@ module Aws::DeviceFarm
     #   resp.remote_access_session.device_udid #=> String
     #   resp.remote_access_session.interaction_mode #=> String, one of "INTERACTIVE", "NO_VIDEO", "VIDEO_ONLY"
     #   resp.remote_access_session.skip_app_resign #=> Boolean
+    #   resp.remote_access_session.vpc_config.security_group_ids #=> Array
+    #   resp.remote_access_session.vpc_config.security_group_ids[0] #=> String
+    #   resp.remote_access_session.vpc_config.subnet_ids #=> Array
+    #   resp.remote_access_session.vpc_config.subnet_ids[0] #=> String
+    #   resp.remote_access_session.vpc_config.vpc_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRemoteAccessSession AWS API Documentation
     #
@@ -2381,6 +2479,11 @@ module Aws::DeviceFarm
     #   resp.run.device_selection_result.filters[0].values[0] #=> String
     #   resp.run.device_selection_result.matched_devices_count #=> Integer
     #   resp.run.device_selection_result.max_devices #=> Integer
+    #   resp.run.vpc_config.security_group_ids #=> Array
+    #   resp.run.vpc_config.security_group_ids[0] #=> String
+    #   resp.run.vpc_config.subnet_ids #=> Array
+    #   resp.run.vpc_config.subnet_ids[0] #=> String
+    #   resp.run.vpc_config.vpc_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRun AWS API Documentation
     #
@@ -2534,6 +2637,11 @@ module Aws::DeviceFarm
     #   resp.test_grid_project.arn #=> String
     #   resp.test_grid_project.name #=> String
     #   resp.test_grid_project.description #=> String
+    #   resp.test_grid_project.vpc_config.security_group_ids #=> Array
+    #   resp.test_grid_project.vpc_config.security_group_ids[0] #=> String
+    #   resp.test_grid_project.vpc_config.subnet_ids #=> Array
+    #   resp.test_grid_project.vpc_config.subnet_ids[0] #=> String
+    #   resp.test_grid_project.vpc_config.vpc_id #=> String
     #   resp.test_grid_project.created #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetTestGridProject AWS API Documentation
@@ -3064,9 +3172,9 @@ module Aws::DeviceFarm
     #     next_token: "PaginationToken",
     #     filters: [
     #       {
-    #         attribute: "ARN", # accepts ARN, PLATFORM, OS_VERSION, MODEL, AVAILABILITY, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE
-    #         operator: "EQUALS", # accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
-    #         values: ["String"],
+    #         attribute: "ARN", # required, accepts ARN, PLATFORM, OS_VERSION, MODEL, AVAILABILITY, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE
+    #         operator: "EQUALS", # required, accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
+    #         values: ["String"], # required
     #       },
     #     ],
     #   })
@@ -3693,6 +3801,11 @@ module Aws::DeviceFarm
     #   resp.projects[0].name #=> String
     #   resp.projects[0].default_job_timeout_minutes #=> Integer
     #   resp.projects[0].created #=> Time
+    #   resp.projects[0].vpc_config.security_group_ids #=> Array
+    #   resp.projects[0].vpc_config.security_group_ids[0] #=> String
+    #   resp.projects[0].vpc_config.subnet_ids #=> Array
+    #   resp.projects[0].vpc_config.subnet_ids[0] #=> String
+    #   resp.projects[0].vpc_config.vpc_id #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListProjects AWS API Documentation
@@ -3805,6 +3918,11 @@ module Aws::DeviceFarm
     #   resp.remote_access_sessions[0].device_udid #=> String
     #   resp.remote_access_sessions[0].interaction_mode #=> String, one of "INTERACTIVE", "NO_VIDEO", "VIDEO_ONLY"
     #   resp.remote_access_sessions[0].skip_app_resign #=> Boolean
+    #   resp.remote_access_sessions[0].vpc_config.security_group_ids #=> Array
+    #   resp.remote_access_sessions[0].vpc_config.security_group_ids[0] #=> String
+    #   resp.remote_access_sessions[0].vpc_config.subnet_ids #=> Array
+    #   resp.remote_access_sessions[0].vpc_config.subnet_ids[0] #=> String
+    #   resp.remote_access_sessions[0].vpc_config.vpc_id #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRemoteAccessSessions AWS API Documentation
@@ -3951,6 +4069,11 @@ module Aws::DeviceFarm
     #   resp.runs[0].device_selection_result.filters[0].values[0] #=> String
     #   resp.runs[0].device_selection_result.matched_devices_count #=> Integer
     #   resp.runs[0].device_selection_result.max_devices #=> Integer
+    #   resp.runs[0].vpc_config.security_group_ids #=> Array
+    #   resp.runs[0].vpc_config.security_group_ids[0] #=> String
+    #   resp.runs[0].vpc_config.subnet_ids #=> Array
+    #   resp.runs[0].vpc_config.subnet_ids[0] #=> String
+    #   resp.runs[0].vpc_config.vpc_id #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRuns AWS API Documentation
@@ -4154,6 +4277,11 @@ module Aws::DeviceFarm
     #   resp.test_grid_projects[0].arn #=> String
     #   resp.test_grid_projects[0].name #=> String
     #   resp.test_grid_projects[0].description #=> String
+    #   resp.test_grid_projects[0].vpc_config.security_group_ids #=> Array
+    #   resp.test_grid_projects[0].vpc_config.security_group_ids[0] #=> String
+    #   resp.test_grid_projects[0].vpc_config.subnet_ids #=> Array
+    #   resp.test_grid_projects[0].vpc_config.subnet_ids[0] #=> String
+    #   resp.test_grid_projects[0].vpc_config.vpc_id #=> String
     #   resp.test_grid_projects[0].created #=> Time
     #   resp.next_token #=> String
     #
@@ -4692,10 +4820,10 @@ module Aws::DeviceFarm
     # invoke this operation, contact
     # [aws-devicefarm-support@amazon.com](mailto:aws-devicefarm-support@amazon.com).
     #
-    # @option params [String] :offering_id
+    # @option params [required, String] :offering_id
     #   The ID of the offering.
     #
-    # @option params [Integer] :quantity
+    # @option params [required, Integer] :quantity
     #   The number of device slots to purchase in an offering request.
     #
     # @option params [String] :offering_promotion_id
@@ -4741,8 +4869,8 @@ module Aws::DeviceFarm
     # @example Request syntax with placeholder values
     #
     #   resp = client.purchase_offering({
-    #     offering_id: "OfferingIdentifier",
-    #     quantity: 1,
+    #     offering_id: "OfferingIdentifier", # required
+    #     quantity: 1, # required
     #     offering_promotion_id: "OfferingPromotionIdentifier",
     #   })
     #
@@ -4780,10 +4908,10 @@ module Aws::DeviceFarm
     # operation. If you must be able to invoke this operation, contact
     # [aws-devicefarm-support@amazon.com](mailto:aws-devicefarm-support@amazon.com).
     #
-    # @option params [String] :offering_id
+    # @option params [required, String] :offering_id
     #   The ID of a request to renew an offering.
     #
-    # @option params [Integer] :quantity
+    # @option params [required, Integer] :quantity
     #   The quantity requested in an offering renewal.
     #
     # @return [Types::RenewOfferingResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -4826,8 +4954,8 @@ module Aws::DeviceFarm
     # @example Request syntax with placeholder values
     #
     #   resp = client.renew_offering({
-    #     offering_id: "OfferingIdentifier",
-    #     quantity: 1,
+    #     offering_id: "OfferingIdentifier", # required
+    #     quantity: 1, # required
     #   })
     #
     # @example Response structure
@@ -4925,9 +5053,9 @@ module Aws::DeviceFarm
     #     device_selection_configuration: {
     #       filters: [ # required
     #         {
-    #           attribute: "ARN", # accepts ARN, PLATFORM, OS_VERSION, MODEL, AVAILABILITY, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE
-    #           operator: "EQUALS", # accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
-    #           values: ["String"],
+    #           attribute: "ARN", # required, accepts ARN, PLATFORM, OS_VERSION, MODEL, AVAILABILITY, FORM_FACTOR, MANUFACTURER, REMOTE_ACCESS_ENABLED, REMOTE_DEBUG_ENABLED, INSTANCE_ARN, INSTANCE_LABELS, FLEET_TYPE
+    #           operator: "EQUALS", # required, accepts EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, NOT_IN, CONTAINS
+    #           values: ["String"], # required
     #         },
     #       ],
     #       max_devices: 1, # required
@@ -5041,6 +5169,11 @@ module Aws::DeviceFarm
     #   resp.run.device_selection_result.filters[0].values[0] #=> String
     #   resp.run.device_selection_result.matched_devices_count #=> Integer
     #   resp.run.device_selection_result.max_devices #=> Integer
+    #   resp.run.vpc_config.security_group_ids #=> Array
+    #   resp.run.vpc_config.security_group_ids[0] #=> String
+    #   resp.run.vpc_config.subnet_ids #=> Array
+    #   resp.run.vpc_config.subnet_ids[0] #=> String
+    #   resp.run.vpc_config.vpc_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ScheduleRun AWS API Documentation
     #
@@ -5219,6 +5352,11 @@ module Aws::DeviceFarm
     #   resp.remote_access_session.device_udid #=> String
     #   resp.remote_access_session.interaction_mode #=> String, one of "INTERACTIVE", "NO_VIDEO", "VIDEO_ONLY"
     #   resp.remote_access_session.skip_app_resign #=> Boolean
+    #   resp.remote_access_session.vpc_config.security_group_ids #=> Array
+    #   resp.remote_access_session.vpc_config.security_group_ids[0] #=> String
+    #   resp.remote_access_session.vpc_config.subnet_ids #=> Array
+    #   resp.remote_access_session.vpc_config.subnet_ids[0] #=> String
+    #   resp.remote_access_session.vpc_config.vpc_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRemoteAccessSession AWS API Documentation
     #
@@ -5332,6 +5470,11 @@ module Aws::DeviceFarm
     #   resp.run.device_selection_result.filters[0].values[0] #=> String
     #   resp.run.device_selection_result.matched_devices_count #=> Integer
     #   resp.run.device_selection_result.max_devices #=> Integer
+    #   resp.run.vpc_config.security_group_ids #=> Array
+    #   resp.run.vpc_config.security_group_ids[0] #=> String
+    #   resp.run.vpc_config.subnet_ids #=> Array
+    #   resp.run.vpc_config.subnet_ids[0] #=> String
+    #   resp.run.vpc_config.vpc_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRun AWS API Documentation
     #
@@ -5741,6 +5884,9 @@ module Aws::DeviceFarm
     #   The number of minutes a test run in the project executes before it
     #   times out.
     #
+    # @option params [Types::VpcConfig] :vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #
     # @return [Types::UpdateProjectResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateProjectResult#project #project} => Types::Project
@@ -5770,6 +5916,11 @@ module Aws::DeviceFarm
     #     arn: "AmazonResourceName", # required
     #     name: "Name",
     #     default_job_timeout_minutes: 1,
+    #     vpc_config: {
+    #       security_group_ids: ["SecurityGroupId"], # required
+    #       subnet_ids: ["SubnetId"], # required
+    #       vpc_id: "NonEmptyString", # required
+    #     },
     #   })
     #
     # @example Response structure
@@ -5778,6 +5929,11 @@ module Aws::DeviceFarm
     #   resp.project.name #=> String
     #   resp.project.default_job_timeout_minutes #=> Integer
     #   resp.project.created #=> Time
+    #   resp.project.vpc_config.security_group_ids #=> Array
+    #   resp.project.vpc_config.security_group_ids[0] #=> String
+    #   resp.project.vpc_config.subnet_ids #=> Array
+    #   resp.project.vpc_config.subnet_ids[0] #=> String
+    #   resp.project.vpc_config.vpc_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateProject AWS API Documentation
     #
@@ -5799,6 +5955,9 @@ module Aws::DeviceFarm
     # @option params [String] :description
     #   Human-readable description for the project.
     #
+    # @option params [Types::TestGridVpcConfig] :vpc_config
+    #   The VPC security groups and subnets that are attached to a project.
+    #
     # @return [Types::UpdateTestGridProjectResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateTestGridProjectResult#test_grid_project #test_grid_project} => Types::TestGridProject
@@ -5809,6 +5968,11 @@ module Aws::DeviceFarm
     #     project_arn: "DeviceFarmArn", # required
     #     name: "ResourceName",
     #     description: "ResourceDescription",
+    #     vpc_config: {
+    #       security_group_ids: ["NonEmptyString"], # required
+    #       subnet_ids: ["NonEmptyString"], # required
+    #       vpc_id: "NonEmptyString", # required
+    #     },
     #   })
     #
     # @example Response structure
@@ -5816,6 +5980,11 @@ module Aws::DeviceFarm
     #   resp.test_grid_project.arn #=> String
     #   resp.test_grid_project.name #=> String
     #   resp.test_grid_project.description #=> String
+    #   resp.test_grid_project.vpc_config.security_group_ids #=> Array
+    #   resp.test_grid_project.vpc_config.security_group_ids[0] #=> String
+    #   resp.test_grid_project.vpc_config.subnet_ids #=> Array
+    #   resp.test_grid_project.vpc_config.subnet_ids[0] #=> String
+    #   resp.test_grid_project.vpc_config.vpc_id #=> String
     #   resp.test_grid_project.created #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateTestGridProject AWS API Documentation
@@ -5946,7 +6115,7 @@ module Aws::DeviceFarm
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-devicefarm'
-      context[:gem_version] = '1.41.0'
+      context[:gem_version] = '1.58.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

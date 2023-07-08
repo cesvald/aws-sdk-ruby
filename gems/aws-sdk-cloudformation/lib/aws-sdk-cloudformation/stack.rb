@@ -78,7 +78,7 @@ module Aws::CloudFormation
       data[:last_updated_time]
     end
 
-    # The rollback triggers for AWS CloudFormation to monitor during stack
+    # The rollback triggers for CloudFormation to monitor during stack
     # creation and updating operations, and for the specified monitoring
     # period afterwards.
     # @return [Types::RollbackConfiguration]
@@ -100,15 +100,16 @@ module Aws::CloudFormation
 
     # Boolean to enable or disable rollback on stack creation failures:
     #
-    # * `true`\: disable rollback
+    # * `true`: disable rollback.
     #
-    # * `false`\: enable rollback
+    # * `false`: enable rollback.
     # @return [Boolean]
     def disable_rollback
       data[:disable_rollback]
     end
 
-    # SNS topic ARNs to which stack related events are published.
+    # Amazon SNS topic Amazon Resource Names (ARNs) to which stack related
+    # events are published.
     # @return [Array<String>]
     def notification_arns
       data[:notification_arns]
@@ -132,10 +133,10 @@ module Aws::CloudFormation
       data[:outputs]
     end
 
-    # The Amazon Resource Name (ARN) of an AWS Identity and Access
-    # Management (IAM) role that is associated with the stack. During a
-    # stack operation, AWS CloudFormation uses this role's credentials to
-    # make calls on your behalf.
+    # The Amazon Resource Name (ARN) of an Identity and Access Management
+    # (IAM) role that's associated with the stack. During a stack
+    # operation, CloudFormation uses this role's credentials to make calls
+    # on your behalf.
     # @return [String]
     def role_arn
       data[:role_arn]
@@ -150,9 +151,9 @@ module Aws::CloudFormation
     # Whether termination protection is enabled for the stack.
     #
     # For [nested stacks][1], termination protection is set on the root
-    # stack and cannot be changed directly on the nested stack. For more
+    # stack and can't be changed directly on the nested stack. For more
     # information, see [Protecting a Stack From Being Deleted][2] in the
-    # *AWS CloudFormation User Guide*.
+    # *CloudFormation User Guide*.
     #
     #
     #
@@ -167,8 +168,8 @@ module Aws::CloudFormation
     # stack ID of the direct parent of this stack. For the first level of
     # nested stacks, the root stack is also the parent stack.
     #
-    # For more information, see [Working with Nested Stacks][1] in the *AWS
-    # CloudFormation User Guide*.
+    # For more information, see [Working with Nested Stacks][1] in the
+    # *CloudFormation User Guide*.
     #
     #
     #
@@ -182,8 +183,8 @@ module Aws::CloudFormation
     # stack ID of the top-level stack to which the nested stack ultimately
     # belongs.
     #
-    # For more information, see [Working with Nested Stacks][1] in the *AWS
-    # CloudFormation User Guide*.
+    # For more information, see [Working with Nested Stacks][1] in the
+    # *CloudFormation User Guide*.
     #
     #
     #
@@ -193,10 +194,10 @@ module Aws::CloudFormation
       data[:root_id]
     end
 
-    # Information on whether a stack's actual configuration differs, or has
-    # *drifted*, from it's expected configuration, as defined in the stack
-    # template and any values specified as template parameters. For more
-    # information, see [Detecting Unregulated Configuration Changes to
+    # Information about whether a stack's actual configuration differs, or
+    # has *drifted*, from its expected configuration, as defined in the
+    # stack template and any values specified as template parameters. For
+    # more information, see [Detecting Unregulated Configuration Changes to
     # Stacks and Resources][1].
     #
     #
@@ -221,7 +222,9 @@ module Aws::CloudFormation
     #
     # @return [self]
     def load
-      resp = @client.describe_stacks(stack_name: @name)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_stacks(stack_name: @name)
+      end
       @data = resp.stacks[0]
       self
     end
@@ -266,7 +269,9 @@ module Aws::CloudFormation
       options, params = separate_params_and_options(options)
       waiter = Waiters::StackExists.new(options)
       yield_waiter_and_warn(waiter, &block) if block_given?
-      waiter.wait(params.merge(stack_name: @name))
+      Aws::Plugins::UserAgent.feature('resource') do
+        waiter.wait(params.merge(stack_name: @name))
+      end
       Stack.new({
         name: @name,
         client: @client
@@ -367,7 +372,9 @@ module Aws::CloudFormation
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -380,14 +387,16 @@ module Aws::CloudFormation
     # @param [Hash] options ({})
     # @option options [String] :client_request_token
     #   A unique identifier for this `CancelUpdateStack` request. Specify this
-    #   token if you plan to retry requests so that AWS CloudFormation knows
-    #   that you're not attempting to cancel an update on a stack with the
-    #   same name. You might retry `CancelUpdateStack` requests to ensure that
-    #   AWS CloudFormation successfully received them.
+    #   token if you plan to retry requests so that CloudFormation knows that
+    #   you're not attempting to cancel an update on a stack with the same
+    #   name. You might retry `CancelUpdateStack` requests to ensure that
+    #   CloudFormation successfully received them.
     # @return [EmptyStructure]
     def cancel_update(options = {})
       options = options.merge(stack_name: @name)
-      resp = @client.cancel_update_stack(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.cancel_update_stack(options)
+      end
       resp.data
     end
 
@@ -435,7 +444,7 @@ module Aws::CloudFormation
     # @option options [String] :template_body
     #   Structure containing the template body with a minimum length of 1 byte
     #   and a maximum length of 51,200 bytes. For more information, go to
-    #   [Template Anatomy][1] in the AWS CloudFormation User Guide.
+    #   [Template anatomy][1] in the CloudFormation User Guide.
     #
     #   Conditional: You must specify either the `TemplateBody` or the
     #   `TemplateURL` parameter, but not both.
@@ -445,9 +454,9 @@ module Aws::CloudFormation
     #   [1]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-anatomy.html
     # @option options [String] :template_url
     #   Location of file containing the template body. The URL must point to a
-    #   template (max size: 460,800 bytes) that is located in an Amazon S3
+    #   template (max size: 460,800 bytes) that's located in an Amazon S3
     #   bucket or a Systems Manager document. For more information, go to the
-    #   [Template Anatomy][1] in the AWS CloudFormation User Guide.
+    #   [Template anatomy][1] in the CloudFormation User Guide.
     #
     #   Conditional: You must specify either the `TemplateBody` or the
     #   `TemplateURL` parameter, but not both.
@@ -469,7 +478,7 @@ module Aws::CloudFormation
     #
     #   Default: `false`
     # @option options [Types::RollbackConfiguration] :rollback_configuration
-    #   The rollback triggers for AWS CloudFormation to monitor during stack
+    #   The rollback triggers for CloudFormation to monitor during stack
     #   creation and updating operations, and for the specified monitoring
     #   period afterwards.
     # @option options [Integer] :timeout_in_minutes
@@ -477,21 +486,21 @@ module Aws::CloudFormation
     #   CREATE\_FAILED; if `DisableRollback` is not set or is set to `false`,
     #   the stack will be rolled back.
     # @option options [Array<String>] :notification_arns
-    #   The Simple Notification Service (SNS) topic ARNs to publish stack
-    #   related events. You can find your SNS topic ARNs using the SNS console
-    #   or your Command Line Interface (CLI).
+    #   The Amazon Simple Notification Service (Amazon SNS) topic ARNs to
+    #   publish stack related events. You can find your Amazon SNS topic ARNs
+    #   using the Amazon SNS console or your Command Line Interface (CLI).
     # @option options [Array<String>] :capabilities
     #   In some cases, you must explicitly acknowledge that your stack
-    #   template contains certain capabilities in order for AWS CloudFormation
-    #   to create the stack.
+    #   template contains certain capabilities in order for CloudFormation to
+    #   create the stack.
     #
     #   * `CAPABILITY_IAM` and `CAPABILITY_NAMED_IAM`
     #
     #     Some stack templates might include resources that can affect
-    #     permissions in your AWS account; for example, by creating new AWS
-    #     Identity and Access Management (IAM) users. For those stacks, you
-    #     must explicitly acknowledge this by specifying one of these
-    #     capabilities.
+    #     permissions in your Amazon Web Services account; for example, by
+    #     creating new Identity and Access Management (IAM) users. For those
+    #     stacks, you must explicitly acknowledge this by specifying one of
+    #     these capabilities.
     #
     #     The following IAM resources require you to specify either the
     #     `CAPABILITY_IAM` or `CAPABILITY_NAMED_IAM` capability.
@@ -501,8 +510,8 @@ module Aws::CloudFormation
     #     * If you have IAM resources with custom names, you *must* specify
     #       `CAPABILITY_NAMED_IAM`.
     #
-    #     * If you don't specify either of these capabilities, AWS
-    #       CloudFormation returns an `InsufficientCapabilities` error.
+    #     * If you don't specify either of these capabilities, CloudFormation
+    #       returns an `InsufficientCapabilities` error.
     #
     #     If your stack template contains these resources, we recommend that
     #     you review all permissions associated with them and edit their
@@ -512,7 +521,7 @@ module Aws::CloudFormation
     #
     #     * [ AWS::IAM::Group][2]
     #
-    #     * [ AWS::IAM::InstanceProfile][3]
+    #     * [AWS::IAM::InstanceProfile][3]
     #
     #     * [ AWS::IAM::Policy][4]
     #
@@ -520,9 +529,9 @@ module Aws::CloudFormation
     #
     #     * [ AWS::IAM::User][6]
     #
-    #     * [ AWS::IAM::UserToGroupAddition][7]
+    #     * [AWS::IAM::UserToGroupAddition][7]
     #
-    #     For more information, see [Acknowledging IAM Resources in AWS
+    #     For more information, see [Acknowledging IAM Resources in
     #     CloudFormation Templates][8].
     #
     #   * `CAPABILITY_AUTO_EXPAND`
@@ -537,7 +546,7 @@ module Aws::CloudFormation
     #     create a stack directly from the processed template, without first
     #     reviewing the resulting changes in a change set, you must
     #     acknowledge this capability. This includes the [AWS::Include][9] and
-    #     [AWS::Serverless][10] transforms, which are macros hosted by AWS
+    #     [AWS::Serverless][10] transforms, which are macros hosted by
     #     CloudFormation.
     #
     #     If you want to create a stack from a stack template that contains
@@ -549,11 +558,11 @@ module Aws::CloudFormation
     #
     #      Each macro relies on an underlying Lambda service function for
     #     processing stack templates. Be aware that the Lambda function owner
-    #     can update the function operation without AWS CloudFormation being
+    #     can update the function operation without CloudFormation being
     #     notified.
     #
-    #     For more information, see [Using AWS CloudFormation Macros to
-    #     Perform Custom Processing on Templates][11].
+    #     For more information, see [Using CloudFormation macros to perform
+    #     custom processing on templates][11].
     #
     #
     #
@@ -572,45 +581,45 @@ module Aws::CloudFormation
     #   The template resource types that you have permissions to work with for
     #   this create stack action, such as `AWS::EC2::Instance`, `AWS::EC2::*`,
     #   or `Custom::MyCustomInstance`. Use the following syntax to describe
-    #   template resource types: `AWS::*` (for all AWS resource), `Custom::*`
-    #   (for all custom resources), `Custom::logical_ID ` (for a specific
-    #   custom resource), `AWS::service_name::*` (for all resources of a
-    #   particular AWS service), and `AWS::service_name::resource_logical_ID `
-    #   (for a specific AWS resource).
+    #   template resource types: `AWS::*` (for all Amazon Web Services
+    #   resources), `Custom::*` (for all custom resources),
+    #   `Custom::logical_ID ` (for a specific custom resource),
+    #   `AWS::service_name::*` (for all resources of a particular Amazon Web
+    #   Services service), and `AWS::service_name::resource_logical_ID ` (for
+    #   a specific Amazon Web Services resource).
     #
     #   If the list of resource types doesn't include a resource that you're
-    #   creating, the stack creation fails. By default, AWS CloudFormation
-    #   grants permissions to all resource types. AWS Identity and Access
-    #   Management (IAM) uses this parameter for AWS CloudFormation-specific
-    #   condition keys in IAM policies. For more information, see [Controlling
-    #   Access with AWS Identity and Access Management][1].
+    #   creating, the stack creation fails. By default, CloudFormation grants
+    #   permissions to all resource types. Identity and Access Management
+    #   (IAM) uses this parameter for CloudFormation-specific condition keys
+    #   in IAM policies. For more information, see [Controlling Access with
+    #   Identity and Access Management][1].
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-template.html
     # @option options [String] :role_arn
-    #   The Amazon Resource Name (ARN) of an AWS Identity and Access
-    #   Management (IAM) role that AWS CloudFormation assumes to create the
-    #   stack. AWS CloudFormation uses the role's credentials to make calls
-    #   on your behalf. AWS CloudFormation always uses this role for all
-    #   future operations on the stack. As long as users have permission to
-    #   operate on the stack, AWS CloudFormation uses this role even if the
-    #   users don't have permission to pass it. Ensure that the role grants
-    #   least privilege.
+    #   The Amazon Resource Name (ARN) of an Identity and Access Management
+    #   (IAM) role that CloudFormation assumes to create the stack.
+    #   CloudFormation uses the role's credentials to make calls on your
+    #   behalf. CloudFormation always uses this role for all future operations
+    #   on the stack. Provided that users have permission to operate on the
+    #   stack, CloudFormation uses this role even if the users don't have
+    #   permission to pass it. Ensure that the role grants least privilege.
     #
-    #   If you don't specify a value, AWS CloudFormation uses the role that
-    #   was previously associated with the stack. If no role is available, AWS
-    #   CloudFormation uses a temporary session that is generated from your
+    #   If you don't specify a value, CloudFormation uses the role that was
+    #   previously associated with the stack. If no role is available,
+    #   CloudFormation uses a temporary session that's generated from your
     #   user credentials.
     # @option options [String] :on_failure
     #   Determines what action will be taken if stack creation fails. This
-    #   must be one of: DO\_NOTHING, ROLLBACK, or DELETE. You can specify
+    #   must be one of: `DO_NOTHING`, `ROLLBACK`, or `DELETE`. You can specify
     #   either `OnFailure` or `DisableRollback`, but not both.
     #
     #   Default: `ROLLBACK`
     # @option options [String] :stack_policy_body
     #   Structure containing the stack policy body. For more information, go
-    #   to [ Prevent Updates to Stack Resources][1] in the *AWS CloudFormation
+    #   to [ Prevent Updates to Stack Resources][1] in the *CloudFormation
     #   User Guide*. You can specify either the `StackPolicyBody` or the
     #   `StackPolicyURL` parameter, but not both.
     #
@@ -623,17 +632,17 @@ module Aws::CloudFormation
     #   Region as the stack. You can specify either the `StackPolicyBody` or
     #   the `StackPolicyURL` parameter, but not both.
     # @option options [Array<Types::Tag>] :tags
-    #   Key-value pairs to associate with this stack. AWS CloudFormation also
+    #   Key-value pairs to associate with this stack. CloudFormation also
     #   propagates these tags to the resources created in the stack. A maximum
     #   number of 50 tags can be specified.
     # @option options [String] :client_request_token
     #   A unique identifier for this `CreateStack` request. Specify this token
-    #   if you plan to retry requests so that AWS CloudFormation knows that
+    #   if you plan to retry requests so that CloudFormation knows that
     #   you're not attempting to create a stack with the same name. You might
-    #   retry `CreateStack` requests to ensure that AWS CloudFormation
+    #   retry `CreateStack` requests to ensure that CloudFormation
     #   successfully received them.
     #
-    #   All events triggered by a given stack operation are assigned the same
+    #   All events initiated by a given stack operation are assigned the same
     #   client request token, which you can use to track operations. For
     #   example, if you execute a `CreateStack` operation with the token
     #   `token1`, then all the `StackEvents` generated by that operation will
@@ -651,11 +660,11 @@ module Aws::CloudFormation
     #   user attempts to delete a stack with termination protection enabled,
     #   the operation fails and the stack remains unchanged. For more
     #   information, see [Protecting a Stack From Being Deleted][1] in the
-    #   *AWS CloudFormation User Guide*. Termination protection is disabled on
+    #   *CloudFormation User Guide*. Termination protection is deactivated on
     #   stacks by default.
     #
     #   For [nested stacks][2], termination protection is set on the root
-    #   stack and cannot be changed directly on the nested stack.
+    #   stack and can't be changed directly on the nested stack.
     #
     #
     #
@@ -664,7 +673,9 @@ module Aws::CloudFormation
     # @return [Types::CreateStackOutput]
     def create(options = {})
       options = options.merge(stack_name: @name)
-      resp = @client.create_stack(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.create_stack(options)
+      end
       resp.data
     end
 
@@ -679,29 +690,29 @@ module Aws::CloudFormation
     # @option options [Array<String>] :retain_resources
     #   For stacks in the `DELETE_FAILED` state, a list of resource logical
     #   IDs that are associated with the resources you want to retain. During
-    #   deletion, AWS CloudFormation deletes the stack but does not delete the
+    #   deletion, CloudFormation deletes the stack but doesn't delete the
     #   retained resources.
     #
-    #   Retaining resources is useful when you cannot delete a resource, such
+    #   Retaining resources is useful when you can't delete a resource, such
     #   as a non-empty S3 bucket, but you want to delete the stack.
     # @option options [String] :role_arn
-    #   The Amazon Resource Name (ARN) of an AWS Identity and Access
-    #   Management (IAM) role that AWS CloudFormation assumes to delete the
-    #   stack. AWS CloudFormation uses the role's credentials to make calls
-    #   on your behalf.
+    #   The Amazon Resource Name (ARN) of an Identity and Access Management
+    #   (IAM) role that CloudFormation assumes to delete the stack.
+    #   CloudFormation uses the role's credentials to make calls on your
+    #   behalf.
     #
-    #   If you don't specify a value, AWS CloudFormation uses the role that
-    #   was previously associated with the stack. If no role is available, AWS
-    #   CloudFormation uses a temporary session that is generated from your
+    #   If you don't specify a value, CloudFormation uses the role that was
+    #   previously associated with the stack. If no role is available,
+    #   CloudFormation uses a temporary session that's generated from your
     #   user credentials.
     # @option options [String] :client_request_token
     #   A unique identifier for this `DeleteStack` request. Specify this token
-    #   if you plan to retry requests so that AWS CloudFormation knows that
+    #   if you plan to retry requests so that CloudFormation knows that
     #   you're not attempting to delete a stack with the same name. You might
-    #   retry `DeleteStack` requests to ensure that AWS CloudFormation
+    #   retry `DeleteStack` requests to ensure that CloudFormation
     #   successfully received them.
     #
-    #   All events triggered by a given stack operation are assigned the same
+    #   All events initiated by a given stack operation are assigned the same
     #   client request token, which you can use to track operations. For
     #   example, if you execute a `CreateStack` operation with the token
     #   `token1`, then all the `StackEvents` generated by that operation will
@@ -717,7 +728,9 @@ module Aws::CloudFormation
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(stack_name: @name)
-      resp = @client.delete_stack(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_stack(options)
+      end
       resp.data
     end
 
@@ -758,13 +771,14 @@ module Aws::CloudFormation
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     disable_rollback: false,
     #     client_request_token: "ClientRequestToken",
     #   })
     # @param [Hash] options ({})
     # @option options [String] :template_body
     #   Structure containing the template body with a minimum length of 1 byte
     #   and a maximum length of 51,200 bytes. (For more information, go to
-    #   [Template Anatomy][1] in the AWS CloudFormation User Guide.)
+    #   [Template Anatomy][1] in the CloudFormation User Guide.)
     #
     #   Conditional: You must specify only one of the following parameters:
     #   `TemplateBody`, `TemplateURL`, or set the `UsePreviousTemplate` to
@@ -775,8 +789,8 @@ module Aws::CloudFormation
     #   [1]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-anatomy.html
     # @option options [String] :template_url
     #   Location of file containing the template body. The URL must point to a
-    #   template that is located in an Amazon S3 bucket or a Systems Manager
-    #   document. For more information, go to [Template Anatomy][1] in the AWS
+    #   template that's located in an Amazon S3 bucket or a Systems Manager
+    #   document. For more information, go to [Template Anatomy][1] in the
     #   CloudFormation User Guide.
     #
     #   Conditional: You must specify only one of the following parameters:
@@ -799,7 +813,7 @@ module Aws::CloudFormation
     #   `StackPolicyDuringUpdateURL` parameter, but not both.
     #
     #   If you want to update protected resources, specify a temporary
-    #   overriding stack policy during this update. If you do not specify a
+    #   overriding stack policy during this update. If you don't specify a
     #   stack policy, the current policy that is associated with the stack
     #   will be used.
     # @option options [String] :stack_policy_during_update_url
@@ -810,7 +824,7 @@ module Aws::CloudFormation
     #   parameter, but not both.
     #
     #   If you want to update protected resources, specify a temporary
-    #   overriding stack policy during this update. If you do not specify a
+    #   overriding stack policy during this update. If you don't specify a
     #   stack policy, the current policy that is associated with the stack
     #   will be used.
     # @option options [Array<Types::Parameter>] :parameters
@@ -822,16 +836,16 @@ module Aws::CloudFormation
     #   [1]: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_Parameter.html
     # @option options [Array<String>] :capabilities
     #   In some cases, you must explicitly acknowledge that your stack
-    #   template contains certain capabilities in order for AWS CloudFormation
-    #   to update the stack.
+    #   template contains certain capabilities in order for CloudFormation to
+    #   update the stack.
     #
     #   * `CAPABILITY_IAM` and `CAPABILITY_NAMED_IAM`
     #
     #     Some stack templates might include resources that can affect
-    #     permissions in your AWS account; for example, by creating new AWS
-    #     Identity and Access Management (IAM) users. For those stacks, you
-    #     must explicitly acknowledge this by specifying one of these
-    #     capabilities.
+    #     permissions in your Amazon Web Services account; for example, by
+    #     creating new Identity and Access Management (IAM) users. For those
+    #     stacks, you must explicitly acknowledge this by specifying one of
+    #     these capabilities.
     #
     #     The following IAM resources require you to specify either the
     #     `CAPABILITY_IAM` or `CAPABILITY_NAMED_IAM` capability.
@@ -841,18 +855,18 @@ module Aws::CloudFormation
     #     * If you have IAM resources with custom names, you *must* specify
     #       `CAPABILITY_NAMED_IAM`.
     #
-    #     * If you don't specify either of these capabilities, AWS
-    #       CloudFormation returns an `InsufficientCapabilities` error.
+    #     * If you don't specify either of these capabilities, CloudFormation
+    #       returns an `InsufficientCapabilities` error.
     #
-    #     If your stack template contains these resources, we recommend that
-    #     you review all permissions associated with them and edit their
+    #     If your stack template contains these resources, we suggest that you
+    #     review all permissions associated with them and edit their
     #     permissions if necessary.
     #
     #     * [ AWS::IAM::AccessKey][1]
     #
     #     * [ AWS::IAM::Group][2]
     #
-    #     * [ AWS::IAM::InstanceProfile][3]
+    #     * [AWS::IAM::InstanceProfile][3]
     #
     #     * [ AWS::IAM::Policy][4]
     #
@@ -860,9 +874,9 @@ module Aws::CloudFormation
     #
     #     * [ AWS::IAM::User][6]
     #
-    #     * [ AWS::IAM::UserToGroupAddition][7]
+    #     * [AWS::IAM::UserToGroupAddition][7]
     #
-    #     For more information, see [Acknowledging IAM Resources in AWS
+    #     For more information, see [Acknowledging IAM Resources in
     #     CloudFormation Templates][8].
     #
     #   * `CAPABILITY_AUTO_EXPAND`
@@ -877,7 +891,7 @@ module Aws::CloudFormation
     #     update a stack directly from the processed template, without first
     #     reviewing the resulting changes in a change set, you must
     #     acknowledge this capability. This includes the [AWS::Include][9] and
-    #     [AWS::Serverless][10] transforms, which are macros hosted by AWS
+    #     [AWS::Serverless][10] transforms, which are macros hosted by
     #     CloudFormation.
     #
     #     If you want to update a stack from a stack template that contains
@@ -889,11 +903,11 @@ module Aws::CloudFormation
     #
     #      Each macro relies on an underlying Lambda service function for
     #     processing stack templates. Be aware that the Lambda function owner
-    #     can update the function operation without AWS CloudFormation being
+    #     can update the function operation without CloudFormation being
     #     notified.
     #
-    #     For more information, see [Using AWS CloudFormation Macros to
-    #     Perform Custom Processing on Templates][11].
+    #     For more information, see [Using CloudFormation Macros to Perform
+    #     Custom Processing on Templates][11].
     #
     #
     #
@@ -914,31 +928,30 @@ module Aws::CloudFormation
     #   or `Custom::MyCustomInstance`.
     #
     #   If the list of resource types doesn't include a resource that you're
-    #   updating, the stack update fails. By default, AWS CloudFormation
-    #   grants permissions to all resource types. AWS Identity and Access
-    #   Management (IAM) uses this parameter for AWS CloudFormation-specific
-    #   condition keys in IAM policies. For more information, see [Controlling
-    #   Access with AWS Identity and Access Management][1].
+    #   updating, the stack update fails. By default, CloudFormation grants
+    #   permissions to all resource types. Identity and Access Management
+    #   (IAM) uses this parameter for CloudFormation-specific condition keys
+    #   in IAM policies. For more information, see [Controlling Access with
+    #   Identity and Access Management][1].
     #
     #
     #
     #   [1]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-template.html
     # @option options [String] :role_arn
-    #   The Amazon Resource Name (ARN) of an AWS Identity and Access
-    #   Management (IAM) role that AWS CloudFormation assumes to update the
-    #   stack. AWS CloudFormation uses the role's credentials to make calls
-    #   on your behalf. AWS CloudFormation always uses this role for all
-    #   future operations on the stack. As long as users have permission to
-    #   operate on the stack, AWS CloudFormation uses this role even if the
-    #   users don't have permission to pass it. Ensure that the role grants
-    #   least privilege.
+    #   The Amazon Resource Name (ARN) of an Identity and Access Management
+    #   (IAM) role that CloudFormation assumes to update the stack.
+    #   CloudFormation uses the role's credentials to make calls on your
+    #   behalf. CloudFormation always uses this role for all future operations
+    #   on the stack. Provided that users have permission to operate on the
+    #   stack, CloudFormation uses this role even if the users don't have
+    #   permission to pass it. Ensure that the role grants least privilege.
     #
-    #   If you don't specify a value, AWS CloudFormation uses the role that
-    #   was previously associated with the stack. If no role is available, AWS
+    #   If you don't specify a value, CloudFormation uses the role that was
+    #   previously associated with the stack. If no role is available,
     #   CloudFormation uses a temporary session that is generated from your
     #   user credentials.
     # @option options [Types::RollbackConfiguration] :rollback_configuration
-    #   The rollback triggers for AWS CloudFormation to monitor during stack
+    #   The rollback triggers for CloudFormation to monitor during stack
     #   creation and updating operations, and for the specified monitoring
     #   period afterwards.
     # @option options [String] :stack_policy_body
@@ -946,7 +959,7 @@ module Aws::CloudFormation
     #   the `StackPolicyBody` or the `StackPolicyURL` parameter, but not both.
     #
     #   You might update the stack policy, for example, in order to protect a
-    #   new resource that you created during a stack update. If you do not
+    #   new resource that you created during a stack update. If you don't
     #   specify a stack policy, the current policy that is associated with the
     #   stack is unchanged.
     # @option options [String] :stack_policy_url
@@ -956,26 +969,31 @@ module Aws::CloudFormation
     #   the `StackPolicyURL` parameter, but not both.
     #
     #   You might update the stack policy, for example, in order to protect a
-    #   new resource that you created during a stack update. If you do not
+    #   new resource that you created during a stack update. If you don't
     #   specify a stack policy, the current policy that is associated with the
     #   stack is unchanged.
     # @option options [Array<String>] :notification_arns
     #   Amazon Simple Notification Service topic Amazon Resource Names (ARNs)
-    #   that AWS CloudFormation associates with the stack. Specify an empty
-    #   list to remove all notification topics.
+    #   that CloudFormation associates with the stack. Specify an empty list
+    #   to remove all notification topics.
     # @option options [Array<Types::Tag>] :tags
-    #   Key-value pairs to associate with this stack. AWS CloudFormation also
+    #   Key-value pairs to associate with this stack. CloudFormation also
     #   propagates these tags to supported resources in the stack. You can
     #   specify a maximum number of 50 tags.
     #
-    #   If you don't specify this parameter, AWS CloudFormation doesn't
-    #   modify the stack's tags. If you specify an empty value, AWS
-    #   CloudFormation removes all associated tags.
+    #   If you don't specify this parameter, CloudFormation doesn't modify
+    #   the stack's tags. If you specify an empty value, CloudFormation
+    #   removes all associated tags.
+    # @option options [Boolean] :disable_rollback
+    #   Preserve the state of previously provisioned resources when an
+    #   operation fails.
+    #
+    #   Default: `False`
     # @option options [String] :client_request_token
     #   A unique identifier for this `UpdateStack` request. Specify this token
-    #   if you plan to retry requests so that AWS CloudFormation knows that
+    #   if you plan to retry requests so that CloudFormation knows that
     #   you're not attempting to update a stack with the same name. You might
-    #   retry `UpdateStack` requests to ensure that AWS CloudFormation
+    #   retry `UpdateStack` requests to ensure that CloudFormation
     #   successfully received them.
     #
     #   All events triggered by a given stack operation are assigned the same
@@ -994,7 +1012,9 @@ module Aws::CloudFormation
     # @return [Types::UpdateStackOutput]
     def update(options = {})
       options = options.merge(stack_name: @name)
-      resp = @client.update_stack(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.update_stack(options)
+      end
       resp.data
     end
 
@@ -1008,7 +1028,9 @@ module Aws::CloudFormation
     def events(options = {})
       batches = Enumerator.new do |y|
         options = options.merge(stack_name: @name)
-        resp = @client.describe_stack_events(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_stack_events(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.stack_events.each do |s|
@@ -1042,7 +1064,9 @@ module Aws::CloudFormation
     def resource_summaries(options = {})
       batches = Enumerator.new do |y|
         options = options.merge(stack_name: @name)
-        resp = @client.list_stack_resources(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.list_stack_resources(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.stack_resource_summaries.each do |s|

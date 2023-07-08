@@ -1,6 +1,148 @@
 Unreleased Changes
 ------------------
 
+1.50.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.49.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.48.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.47.0 (2023-06-13)
+------------------
+
+* Feature - Change the Image Builder ImagePipeline dateNextRun field to more accurately describe the data.
+
+1.46.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.45.0 (2023-03-30)
+------------------
+
+* Feature - Adds support for new image workflow details and image vulnerability detection.
+
+1.44.0 (2023-01-30)
+------------------
+
+* Feature - Enabled FIPS endpoints for GovCloud (US) regions in SDK.
+
+1.43.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.42.0 (2023-01-17)
+------------------
+
+* Feature - Add support for AWS Marketplace product IDs as input during CreateImageRecipe for the parent-image parameter. Add support for listing third-party components.
+
+1.41.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.40.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.39.0 (2022-02-21)
+------------------
+
+* Feature - This release adds support to enable faster launching for Windows AMIs created by EC2 Image Builder.
+
+1.38.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.37.0 (2021-12-21)
+------------------
+
+* Feature - Added a note to infrastructure configuration actions and data types concerning delivery of Image Builder event messages to encrypted SNS topics. The key that's used to encrypt the SNS topic must reside in the account that Image Builder runs under.
+
+1.36.0 (2021-12-20)
+------------------
+
+* Feature - This release adds support for importing and exporting VM Images as part of the Image Creation workflow via EC2 VM Import/Export.
+
+1.35.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.34.0 (2021-11-24)
+------------------
+
+* Feature - This release adds support for sharing AMIs with Organizations within an EC2 Image Builder Distribution Configuration.
+
+1.33.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.32.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.31.0 (2021-09-28)
+------------------
+
+* Feature - Fix description for AmiDistributionConfiguration Name property, which actually refers to the output AMI name. Also updated for consistent terminology to use "base" image, and another update to fix description text.
+
+1.30.0 (2021-09-22)
+------------------
+
+* Feature - This feature adds support for specifying GP3 volume throughput and configuring instance metadata options for instances launched by EC2 Image Builder.
+
+1.29.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.28.0 (2021-08-04)
+------------------
+
+* Feature - Updated list actions to include a list of valid filters that can be used in the request.
+
+1.27.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.26.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.25.0 (2021-07-23)
+------------------
+
+* Feature - Update to documentation to reapply missing change to SSM uninstall switch default value and improve description.
+
+1.24.0 (2021-07-19)
+------------------
+
+* Feature - Documentation updates for reversal of default value for additional instance configuration SSM switch, plus improved descriptions for semantic versioning.
+
+1.23.0 (2021-07-06)
+------------------
+
+* Feature - Adds support for specifying parameters to customize components for recipes. Expands configuration of the Amazon EC2 instances that are used for building and testing images, including the ability to specify commands to run on launch, and more control over installation and removal of the SSM agent.
+
 1.22.0 (2021-05-14)
 ------------------
 

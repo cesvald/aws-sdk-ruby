@@ -13,10 +13,10 @@ module Aws
         }.to raise_error(Aws::Errors::MissingRegionError)
       end
 
-      it 'requires an endpoint' do
+      it 'can be constructed without an endpoint' do
         expect {
           Client.new(region:'us-west-1')
-        }.to raise_error(ArgumentError, "missing required option `:endpoint'")
+        }.not_to raise_error
       end
 
       it 'requires a valid endpoint' do
@@ -28,17 +28,21 @@ module Aws
       it 'correctly extracts the sigv4 signing region' do
         client = Client.new(
           region: "us-east-1",
-          endpoint: "https://FOOBARFOOBAR.iot.us-east-1.amazonaws.com"
+          endpoint: "https://FOOBARFOOBAR.iot.us-east-1.amazonaws.com",
+          stub_responses: true
         )
-        expect(client.config.sigv4_region).to eq("us-east-1")
+        expect_auth({ 'signingRegion' => 'us-east-1' })
+        client.get_thing_shadow(thing_name: 'thing')
       end
 
       it 'correctly extracts the sigv4 signing region outside of us-east-1' do
         client = Client.new(
           region: "eu-west-1",
-          endpoint: "https://FOOBARFOOBAR.iot.eu-west-1.amazonaws.com"
+          endpoint: "https://FOOBARFOOBAR.iot.eu-west-1.amazonaws.com",
+          stub_responses: true
         )
-        expect(client.config.sigv4_region).to eq("eu-west-1")
+        expect_auth({ 'signingRegion' => 'eu-west-1' })
+        client.get_thing_shadow(thing_name: 'thing')
       end
 
       it 'can be constructed with a region and endpoint' do

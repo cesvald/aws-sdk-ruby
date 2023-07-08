@@ -18,7 +18,8 @@ module Aws
           RetryErrorsSvc::Errors::InvalidAccessKeyId,
           RetryErrorsSvc::Errors::AuthFailure,
           RetryErrorsSvc::Errors::InvalidIdentityToken,
-          RetryErrorsSvc::Errors::ExpiredToken
+          RetryErrorsSvc::Errors::ExpiredToken,
+          RetryErrorsSvc::Errors::ExpiredTokenException
         ]
 
         expired_credentials_errors.each do |e|
@@ -102,8 +103,10 @@ module Aws
           ).to be(true)
         end
 
-        it 'returns true if the error extends Errors::ChecksumError' do
-          expect(inspector(Errors::ChecksumError.new).checksum?).to be(true)
+        it 'returns true for BadDigest' do
+          expect(
+            inspector(RetryErrorsSvc::Errors::BadDigest).checksum?
+          ).to be(true)
         end
 
         it 'returns false for other errors' do
@@ -131,6 +134,12 @@ module Aws
         it 'returns true for RequestTimeout' do
           expect(
             inspector(RetryErrorsSvc::Errors::RequestTimeout).networking?
+          ).to be(true)
+        end
+
+        it 'returns true for InternalError' do
+          expect(
+            inspector(RetryErrorsSvc::Errors::InternalError).networking?
           ).to be(true)
         end
 

@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:imagebuilder)
@@ -73,8 +77,13 @@ module Aws::Imagebuilder
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::Imagebuilder::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::Imagebuilder
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::Imagebuilder
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::Imagebuilder
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::Imagebuilder
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::Imagebuilder
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::Imagebuilder::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::Imagebuilder::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::Imagebuilder
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::Imagebuilder
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -331,14 +388,20 @@ module Aws::Imagebuilder
     # only be used on images in a non-terminal state.
     #
     # @option params [required, String] :image_build_version_arn
-    #   The Amazon Resource Name (ARN) of the image whose creation you want to
-    #   cancel.
+    #   The Amazon Resource Name (ARN) of the image that you want to cancel
+    #   creation for.
     #
     # @option params [required, String] :client_token
-    #   The idempotency token used to make this request idempotent.
+    #   Unique, case-sensitive identifier you provide to ensure idempotency of
+    #   the request. For more information, see [Ensuring idempotency][1] in
+    #   the *Amazon EC2 API Reference*.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html
     #
     # @return [Types::CancelImageCreationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -369,19 +432,39 @@ module Aws::Imagebuilder
     end
 
     # Creates a new component that can be used to build, validate, test, and
-    # assess your image.
+    # assess your image. The component is based on a YAML document that you
+    # specify using exactly one of the following methods:
+    #
+    # * Inline, using the `data` property in the request body.
+    #
+    # * A URL that points to a YAML document file stored in Amazon S3, using
+    #   the `uri` property in the request body.
     #
     # @option params [required, String] :name
     #   The name of the component.
     #
     # @option params [required, String] :semantic_version
     #   The semantic version of the component. This version follows the
-    #   semantic version syntax. For example, major.minor.patch. This could be
-    #   versioned like software (2.0.1) or like a date (2019.12.01).
+    #   semantic version syntax.
+    #
+    #   <note markdown="1"> The semantic version has four nodes:
+    #   &lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;/&lt;build&gt;. You can
+    #   assign values for the first three, and can filter on all of them.
+    #
+    #    **Assignment:** For the first three nodes you can assign any positive
+    #   integer value, including zero, with an upper limit of 2^30-1, or
+    #   1073741823 for each node. Image Builder automatically assigns the
+    #   build number to the fourth node.
+    #
+    #    **Patterns:** You can use any numeric pattern that adheres to the
+    #   assignment requirements for the nodes that you can assign. For
+    #   example, you might choose a software version pattern, such as 1.0.0,
+    #   or a date, such as 2021.01.01.
+    #
+    #    </note>
     #
     # @option params [String] :description
-    #   The description of the component. Describes the contents of the
-    #   component.
+    #   Describes the contents of the component.
     #
     # @option params [String] :change_description
     #   The change description of the component. Describes what change has
@@ -389,28 +472,32 @@ module Aws::Imagebuilder
     #   other versions of this component.
     #
     # @option params [required, String] :platform
-    #   The platform of the component.
+    #   The operating system platform of the component.
     #
     # @option params [Array<String>] :supported_os_versions
     #   The operating system (OS) version supported by the component. If the
     #   OS information is available, a prefix match is performed against the
-    #   parent image OS version during image recipe creation.
+    #   base image OS version during image recipe creation.
     #
     # @option params [String] :data
-    #   The data of the component. Used to specify the data inline. Either
-    #   `data` or `uri` can be used to specify the data within the component.
+    #   Component `data` contains inline YAML document content for the
+    #   component. Alternatively, you can specify the `uri` of a YAML document
+    #   file stored in Amazon S3. However, you cannot specify both properties.
     #
     # @option params [String] :uri
-    #   The uri of the component. Must be an S3 URL and the requester must
-    #   have permission to access the S3 bucket. If you use S3, you can
-    #   specify component content up to your service quota. Either `data` or
-    #   `uri` can be used to specify the data within the component.
+    #   The `uri` of a YAML component document file. This must be an S3 URL
+    #   (`s3://bucket/key`), and the requester must have permission to access
+    #   the S3 bucket it points to. If you use Amazon S3, you can specify
+    #   component content up to your service quota.
+    #
+    #   Alternatively, you can specify the YAML document inline, using the
+    #   component `data` property. You cannot specify both properties.
     #
     # @option params [String] :kms_key_id
-    #   The ID of the KMS key that should be used to encrypt this component.
+    #   The ID of the KMS key that is used to encrypt this component.
     #
     # @option params [Hash<String,String>] :tags
-    #   The tags of the component.
+    #   The tags that apply to the component.
     #
     # @option params [required, String] :client_token
     #   The idempotency token of the component.
@@ -470,12 +557,29 @@ module Aws::Imagebuilder
     #   The description of the container recipe.
     #
     # @option params [required, String] :semantic_version
-    #   The semantic version of the container recipe
-    #   (&lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;).
+    #   The semantic version of the container recipe. This version follows the
+    #   semantic version syntax.
+    #
+    #   <note markdown="1"> The semantic version has four nodes:
+    #   &lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;/&lt;build&gt;. You can
+    #   assign values for the first three, and can filter on all of them.
+    #
+    #    **Assignment:** For the first three nodes you can assign any positive
+    #   integer value, including zero, with an upper limit of 2^30-1, or
+    #   1073741823 for each node. Image Builder automatically assigns the
+    #   build number to the fourth node.
+    #
+    #    **Patterns:** You can use any numeric pattern that adheres to the
+    #   assignment requirements for the nodes that you can assign. For
+    #   example, you might choose a software version pattern, such as 1.0.0,
+    #   or a date, such as 2021.01.01.
+    #
+    #    </note>
     #
     # @option params [required, Array<Types::ComponentConfiguration>] :components
     #   Components for build and test that are included in the container
-    #   recipe.
+    #   recipe. Recipes require a minimum of one build component, and can have
+    #   a maximum of 20 build and test components in any combination.
     #
     # @option params [Types::InstanceConfiguration] :instance_configuration
     #   A group of options that can be used to configure an instance for
@@ -486,18 +590,18 @@ module Aws::Imagebuilder
     #   blob.
     #
     # @option params [String] :dockerfile_template_uri
-    #   The S3 URI for the Dockerfile that will be used to build your
+    #   The Amazon S3 URI for the Dockerfile that will be used to build your
     #   container image.
     #
     # @option params [String] :platform_override
-    #   Specifies the operating system platform when you use a custom source
+    #   Specifies the operating system platform when you use a custom base
     #   image.
     #
     # @option params [String] :image_os_version_override
-    #   Specifies the operating system version for the source image.
+    #   Specifies the operating system version for the base image.
     #
     # @option params [required, String] :parent_image
-    #   The source image for the container recipe.
+    #   The base image for the container recipe.
     #
     # @option params [Hash<String,String>] :tags
     #   Tags that are attached to the container recipe.
@@ -533,6 +637,12 @@ module Aws::Imagebuilder
     #     components: [ # required
     #       {
     #         component_arn: "ComponentVersionArnOrBuildVersionArn", # required
+    #         parameters: [
+    #           {
+    #             name: "ComponentParameterName", # required
+    #             value: ["ComponentParameterValue"], # required
+    #           },
+    #         ],
     #       },
     #     ],
     #     instance_configuration: {
@@ -548,6 +658,7 @@ module Aws::Imagebuilder
     #             snapshot_id: "NonEmptyString",
     #             volume_size: 1,
     #             volume_type: "standard", # accepts standard, io1, io2, gp2, gp3, sc1, st1
+    #             throughput: 1,
     #           },
     #           virtual_name: "NonEmptyString",
     #           no_device: "EmptyString",
@@ -632,6 +743,8 @@ module Aws::Imagebuilder
     #           launch_permission: {
     #             user_ids: ["AccountId"],
     #             user_groups: ["NonEmptyString"],
+    #             organization_arns: ["OrganizationArn"],
+    #             organizational_unit_arns: ["OrganizationalUnitArn"],
     #           },
     #         },
     #         container_distribution_configuration: {
@@ -648,6 +761,27 @@ module Aws::Imagebuilder
     #             launch_template_id: "LaunchTemplateId", # required
     #             account_id: "AccountId",
     #             set_default_version: false,
+    #           },
+    #         ],
+    #         s3_export_configuration: {
+    #           role_name: "NonEmptyString", # required
+    #           disk_image_format: "VMDK", # required, accepts VMDK, RAW, VHD
+    #           s3_bucket: "NonEmptyString", # required
+    #           s3_prefix: "NonEmptyString",
+    #         },
+    #         fast_launch_configurations: [
+    #           {
+    #             enabled: false, # required
+    #             snapshot_configuration: {
+    #               target_resource_count: 1,
+    #             },
+    #             max_parallel_launches: 1,
+    #             launch_template: {
+    #               launch_template_id: "LaunchTemplateId",
+    #               launch_template_name: "NonEmptyString",
+    #               launch_template_version: "NonEmptyString",
+    #             },
+    #             account_id: "AccountId",
     #           },
     #         ],
     #       },
@@ -713,6 +847,9 @@ module Aws::Imagebuilder
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
     #
+    # @option params [Types::ImageScanningConfiguration] :image_scanning_configuration
+    #   Contains settings for vulnerability scans.
+    #
     # @return [Types::CreateImageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateImageResponse#request_id #request_id} => String
@@ -735,6 +872,13 @@ module Aws::Imagebuilder
     #       "TagKey" => "TagValue",
     #     },
     #     client_token: "ClientToken", # required
+    #     image_scanning_configuration: {
+    #       image_scanning_enabled: false,
+    #       ecr_configuration: {
+    #         repository_name: "NonEmptyString",
+    #         container_tags: ["NonEmptyString"],
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -802,6 +946,9 @@ module Aws::Imagebuilder
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
     #
+    # @option params [Types::ImageScanningConfiguration] :image_scanning_configuration
+    #   Contains settings for vulnerability scans.
+    #
     # @return [Types::CreateImagePipelineResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateImagePipelineResponse#request_id #request_id} => String
@@ -832,6 +979,13 @@ module Aws::Imagebuilder
     #       "TagKey" => "TagValue",
     #     },
     #     client_token: "ClientToken", # required
+    #     image_scanning_configuration: {
+    #       image_scanning_enabled: false,
+    #       ecr_configuration: {
+    #         repository_name: "NonEmptyString",
+    #         container_tags: ["NonEmptyString"],
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -859,15 +1013,32 @@ module Aws::Imagebuilder
     #   The description of the image recipe.
     #
     # @option params [required, String] :semantic_version
-    #   The semantic version of the image recipe.
+    #   The semantic version of the image recipe. This version follows the
+    #   semantic version syntax.
+    #
+    #   <note markdown="1"> The semantic version has four nodes:
+    #   &lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;/&lt;build&gt;. You can
+    #   assign values for the first three, and can filter on all of them.
+    #
+    #    **Assignment:** For the first three nodes you can assign any positive
+    #   integer value, including zero, with an upper limit of 2^30-1, or
+    #   1073741823 for each node. Image Builder automatically assigns the
+    #   build number to the fourth node.
+    #
+    #    **Patterns:** You can use any numeric pattern that adheres to the
+    #   assignment requirements for the nodes that you can assign. For
+    #   example, you might choose a software version pattern, such as 1.0.0,
+    #   or a date, such as 2021.01.01.
+    #
+    #    </note>
     #
     # @option params [required, Array<Types::ComponentConfiguration>] :components
-    #   The components of the image recipe.
+    #   The components included in the image recipe.
     #
     # @option params [required, String] :parent_image
-    #   The parent image of the image recipe. The value of the string can be
-    #   the ARN of the parent image or an AMI ID. The format for the ARN
-    #   follows this example:
+    #   The base image of the image recipe. The value of the string can be the
+    #   ARN of the base image or an AMI ID. The format for the ARN follows
+    #   this example:
     #   `arn:aws:imagebuilder:us-west-2:aws:image/windows-server-2016-english-full-base-x86/x.x.x`.
     #   You can provide the specific version that you want to use, or you can
     #   use a wildcard in all of the fields. If you enter an AMI ID for the
@@ -881,7 +1052,11 @@ module Aws::Imagebuilder
     #   The tags of the image recipe.
     #
     # @option params [String] :working_directory
-    #   The working directory to be used during build and test workflows.
+    #   The working directory used during build and test workflows.
+    #
+    # @option params [Types::AdditionalInstanceConfiguration] :additional_instance_configuration
+    #   Specify additional settings and launch scripts for your build
+    #   instances.
     #
     # @option params [required, String] :client_token
     #   The idempotency token used to make this request idempotent.
@@ -904,6 +1079,12 @@ module Aws::Imagebuilder
     #     components: [ # required
     #       {
     #         component_arn: "ComponentVersionArnOrBuildVersionArn", # required
+    #         parameters: [
+    #           {
+    #             name: "ComponentParameterName", # required
+    #             value: ["ComponentParameterValue"], # required
+    #           },
+    #         ],
     #       },
     #     ],
     #     parent_image: "NonEmptyString", # required
@@ -918,6 +1099,7 @@ module Aws::Imagebuilder
     #           snapshot_id: "NonEmptyString",
     #           volume_size: 1,
     #           volume_type: "standard", # accepts standard, io1, io2, gp2, gp3, sc1, st1
+    #           throughput: 1,
     #         },
     #         virtual_name: "NonEmptyString",
     #         no_device: "EmptyString",
@@ -927,6 +1109,12 @@ module Aws::Imagebuilder
     #       "TagKey" => "TagValue",
     #     },
     #     working_directory: "NonEmptyString",
+    #     additional_instance_configuration: {
+    #       systems_manager_agent: {
+    #         uninstall_after_build: false,
+    #       },
+    #       user_data_override: "UserDataOverride",
+    #     },
     #     client_token: "ClientToken", # required
     #   })
     #
@@ -962,21 +1150,21 @@ module Aws::Imagebuilder
     #
     # @option params [required, String] :instance_profile_name
     #   The instance profile to associate with the instance used to customize
-    #   your EC2 AMI.
+    #   your Amazon EC2 AMI.
     #
     # @option params [Array<String>] :security_group_ids
     #   The security group IDs to associate with the instance used to
-    #   customize your EC2 AMI.
+    #   customize your Amazon EC2 AMI.
     #
     # @option params [String] :subnet_id
     #   The subnet ID in which to place the instance used to customize your
-    #   EC2 AMI.
+    #   Amazon EC2 AMI.
     #
     # @option params [Types::Logging] :logging
     #   The logging configuration of the infrastructure configuration.
     #
     # @option params [String] :key_pair
-    #   The key pair of the infrastructure configuration. This can be used to
+    #   The key pair of the infrastructure configuration. You can use this to
     #   log on to and debug the instance used to create your image.
     #
     # @option params [Boolean] :terminate_instance_on_failure
@@ -986,10 +1174,22 @@ module Aws::Imagebuilder
     #   workflow fails.
     #
     # @option params [String] :sns_topic_arn
-    #   The SNS topic on which to send image build events.
+    #   The Amazon Resource Name (ARN) for the SNS topic to which we send
+    #   image build event notifications.
+    #
+    #   <note markdown="1"> EC2 Image Builder is unable to send notifications to SNS topics that
+    #   are encrypted using keys from other accounts. The key that is used to
+    #   encrypt the SNS topic must reside in the account that the Image
+    #   Builder service runs under.
+    #
+    #    </note>
     #
     # @option params [Hash<String,String>] :resource_tags
     #   The tags attached to the resource created by Image Builder.
+    #
+    # @option params [Types::InstanceMetadataOptions] :instance_metadata_options
+    #   The instance metadata options that you can set for the HTTP requests
+    #   that pipeline builds use to launch EC2 build and test instances.
     #
     # @option params [Hash<String,String>] :tags
     #   The tags of the infrastructure configuration.
@@ -1026,6 +1226,10 @@ module Aws::Imagebuilder
     #     sns_topic_arn: "SnsTopicArn",
     #     resource_tags: {
     #       "TagKey" => "TagValue",
+    #     },
+    #     instance_metadata_options: {
+    #       http_tokens: "HttpTokens",
+    #       http_put_response_hop_limit: 1,
     #     },
     #     tags: {
     #       "TagKey" => "TagValue",
@@ -1140,10 +1344,29 @@ module Aws::Imagebuilder
       req.send_request(options)
     end
 
-    # Deletes an image.
+    # Deletes an Image Builder image resource. This does not delete any EC2
+    # AMIs or ECR container images that are created during the image build
+    # process. You must clean those up separately, using the appropriate
+    # Amazon EC2 or Amazon ECR console actions, or API or CLI commands.
+    #
+    # * To deregister an EC2 Linux AMI, see [Deregister your Linux AMI][1]
+    #   in the <i> <i>Amazon EC2 User Guide</i> </i>.
+    #
+    # * To deregister an EC2 Windows AMI, see [Deregister your Windows
+    #   AMI][2] in the <i> <i>Amazon EC2 Windows Guide</i> </i>.
+    #
+    # * To delete a container image from Amazon ECR, see [Deleting an
+    #   image][3] in the *Amazon ECR User Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/deregister-ami.html
+    # [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/deregister-ami.html
+    # [3]: https://docs.aws.amazon.com/AmazonECR/latest/userguide/delete_image.html
     #
     # @option params [required, String] :image_build_version_arn
-    #   The Amazon Resource Name (ARN) of the image to delete.
+    #   The Amazon Resource Name (ARN) of the Image Builder image resource to
+    #   delete.
     #
     # @return [Types::DeleteImageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1264,8 +1487,8 @@ module Aws::Imagebuilder
     # Gets a component object.
     #
     # @option params [required, String] :component_build_version_arn
-    #   The Amazon Resource Name (ARN) of the component that you want to
-    #   retrieve. Regex requires "/\\d+$" suffix.
+    #   The Amazon Resource Name (ARN) of the component that you want to get.
+    #   Regex requires the suffix `/\d+$`.
     #
     # @return [Types::GetComponentResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1290,6 +1513,14 @@ module Aws::Imagebuilder
     #   resp.component.platform #=> String, one of "Windows", "Linux"
     #   resp.component.supported_os_versions #=> Array
     #   resp.component.supported_os_versions[0] #=> String
+    #   resp.component.state.status #=> String, one of "DEPRECATED"
+    #   resp.component.state.reason #=> String
+    #   resp.component.parameters #=> Array
+    #   resp.component.parameters[0].name #=> String
+    #   resp.component.parameters[0].type #=> String
+    #   resp.component.parameters[0].default_value #=> Array
+    #   resp.component.parameters[0].default_value[0] #=> String
+    #   resp.component.parameters[0].description #=> String
     #   resp.component.owner #=> String
     #   resp.component.data #=> String
     #   resp.component.kms_key_id #=> String
@@ -1297,6 +1528,8 @@ module Aws::Imagebuilder
     #   resp.component.date_created #=> String
     #   resp.component.tags #=> Hash
     #   resp.component.tags["TagKey"] #=> String
+    #   resp.component.publisher #=> String
+    #   resp.component.obfuscate #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetComponent AWS API Documentation
     #
@@ -1366,6 +1599,10 @@ module Aws::Imagebuilder
     #   resp.container_recipe.version #=> String
     #   resp.container_recipe.components #=> Array
     #   resp.container_recipe.components[0].component_arn #=> String
+    #   resp.container_recipe.components[0].parameters #=> Array
+    #   resp.container_recipe.components[0].parameters[0].name #=> String
+    #   resp.container_recipe.components[0].parameters[0].value #=> Array
+    #   resp.container_recipe.components[0].parameters[0].value[0] #=> String
     #   resp.container_recipe.instance_configuration.image #=> String
     #   resp.container_recipe.instance_configuration.block_device_mappings #=> Array
     #   resp.container_recipe.instance_configuration.block_device_mappings[0].device_name #=> String
@@ -1376,6 +1613,7 @@ module Aws::Imagebuilder
     #   resp.container_recipe.instance_configuration.block_device_mappings[0].ebs.snapshot_id #=> String
     #   resp.container_recipe.instance_configuration.block_device_mappings[0].ebs.volume_size #=> Integer
     #   resp.container_recipe.instance_configuration.block_device_mappings[0].ebs.volume_type #=> String, one of "standard", "io1", "io2", "gp2", "gp3", "sc1", "st1"
+    #   resp.container_recipe.instance_configuration.block_device_mappings[0].ebs.throughput #=> Integer
     #   resp.container_recipe.instance_configuration.block_device_mappings[0].virtual_name #=> String
     #   resp.container_recipe.instance_configuration.block_device_mappings[0].no_device #=> String
     #   resp.container_recipe.dockerfile_template_data #=> String
@@ -1465,6 +1703,10 @@ module Aws::Imagebuilder
     #   resp.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.user_ids[0] #=> String
     #   resp.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.user_groups #=> Array
     #   resp.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.user_groups[0] #=> String
+    #   resp.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.organization_arns #=> Array
+    #   resp.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.organization_arns[0] #=> String
+    #   resp.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.organizational_unit_arns #=> Array
+    #   resp.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.organizational_unit_arns[0] #=> String
     #   resp.distribution_configuration.distributions[0].container_distribution_configuration.description #=> String
     #   resp.distribution_configuration.distributions[0].container_distribution_configuration.container_tags #=> Array
     #   resp.distribution_configuration.distributions[0].container_distribution_configuration.container_tags[0] #=> String
@@ -1476,6 +1718,18 @@ module Aws::Imagebuilder
     #   resp.distribution_configuration.distributions[0].launch_template_configurations[0].launch_template_id #=> String
     #   resp.distribution_configuration.distributions[0].launch_template_configurations[0].account_id #=> String
     #   resp.distribution_configuration.distributions[0].launch_template_configurations[0].set_default_version #=> Boolean
+    #   resp.distribution_configuration.distributions[0].s3_export_configuration.role_name #=> String
+    #   resp.distribution_configuration.distributions[0].s3_export_configuration.disk_image_format #=> String, one of "VMDK", "RAW", "VHD"
+    #   resp.distribution_configuration.distributions[0].s3_export_configuration.s3_bucket #=> String
+    #   resp.distribution_configuration.distributions[0].s3_export_configuration.s3_prefix #=> String
+    #   resp.distribution_configuration.distributions[0].fast_launch_configurations #=> Array
+    #   resp.distribution_configuration.distributions[0].fast_launch_configurations[0].enabled #=> Boolean
+    #   resp.distribution_configuration.distributions[0].fast_launch_configurations[0].snapshot_configuration.target_resource_count #=> Integer
+    #   resp.distribution_configuration.distributions[0].fast_launch_configurations[0].max_parallel_launches #=> Integer
+    #   resp.distribution_configuration.distributions[0].fast_launch_configurations[0].launch_template.launch_template_id #=> String
+    #   resp.distribution_configuration.distributions[0].fast_launch_configurations[0].launch_template.launch_template_name #=> String
+    #   resp.distribution_configuration.distributions[0].fast_launch_configurations[0].launch_template.launch_template_version #=> String
+    #   resp.distribution_configuration.distributions[0].fast_launch_configurations[0].account_id #=> String
     #   resp.distribution_configuration.timeout_minutes #=> Integer
     #   resp.distribution_configuration.date_created #=> String
     #   resp.distribution_configuration.date_updated #=> String
@@ -1494,7 +1748,7 @@ module Aws::Imagebuilder
     # Gets an image.
     #
     # @option params [required, String] :image_build_version_arn
-    #   The Amazon Resource Name (ARN) of the image that you want to retrieve.
+    #   The Amazon Resource Name (ARN) of the image that you want to get.
     #
     # @return [Types::GetImageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1528,6 +1782,10 @@ module Aws::Imagebuilder
     #   resp.image.image_recipe.version #=> String
     #   resp.image.image_recipe.components #=> Array
     #   resp.image.image_recipe.components[0].component_arn #=> String
+    #   resp.image.image_recipe.components[0].parameters #=> Array
+    #   resp.image.image_recipe.components[0].parameters[0].name #=> String
+    #   resp.image.image_recipe.components[0].parameters[0].value #=> Array
+    #   resp.image.image_recipe.components[0].parameters[0].value[0] #=> String
     #   resp.image.image_recipe.parent_image #=> String
     #   resp.image.image_recipe.block_device_mappings #=> Array
     #   resp.image.image_recipe.block_device_mappings[0].device_name #=> String
@@ -1538,12 +1796,15 @@ module Aws::Imagebuilder
     #   resp.image.image_recipe.block_device_mappings[0].ebs.snapshot_id #=> String
     #   resp.image.image_recipe.block_device_mappings[0].ebs.volume_size #=> Integer
     #   resp.image.image_recipe.block_device_mappings[0].ebs.volume_type #=> String, one of "standard", "io1", "io2", "gp2", "gp3", "sc1", "st1"
+    #   resp.image.image_recipe.block_device_mappings[0].ebs.throughput #=> Integer
     #   resp.image.image_recipe.block_device_mappings[0].virtual_name #=> String
     #   resp.image.image_recipe.block_device_mappings[0].no_device #=> String
     #   resp.image.image_recipe.date_created #=> String
     #   resp.image.image_recipe.tags #=> Hash
     #   resp.image.image_recipe.tags["TagKey"] #=> String
     #   resp.image.image_recipe.working_directory #=> String
+    #   resp.image.image_recipe.additional_instance_configuration.systems_manager_agent.uninstall_after_build #=> Boolean
+    #   resp.image.image_recipe.additional_instance_configuration.user_data_override #=> String
     #   resp.image.container_recipe.arn #=> String
     #   resp.image.container_recipe.container_type #=> String, one of "DOCKER"
     #   resp.image.container_recipe.name #=> String
@@ -1553,6 +1814,10 @@ module Aws::Imagebuilder
     #   resp.image.container_recipe.version #=> String
     #   resp.image.container_recipe.components #=> Array
     #   resp.image.container_recipe.components[0].component_arn #=> String
+    #   resp.image.container_recipe.components[0].parameters #=> Array
+    #   resp.image.container_recipe.components[0].parameters[0].name #=> String
+    #   resp.image.container_recipe.components[0].parameters[0].value #=> Array
+    #   resp.image.container_recipe.components[0].parameters[0].value[0] #=> String
     #   resp.image.container_recipe.instance_configuration.image #=> String
     #   resp.image.container_recipe.instance_configuration.block_device_mappings #=> Array
     #   resp.image.container_recipe.instance_configuration.block_device_mappings[0].device_name #=> String
@@ -1563,6 +1828,7 @@ module Aws::Imagebuilder
     #   resp.image.container_recipe.instance_configuration.block_device_mappings[0].ebs.snapshot_id #=> String
     #   resp.image.container_recipe.instance_configuration.block_device_mappings[0].ebs.volume_size #=> Integer
     #   resp.image.container_recipe.instance_configuration.block_device_mappings[0].ebs.volume_type #=> String, one of "standard", "io1", "io2", "gp2", "gp3", "sc1", "st1"
+    #   resp.image.container_recipe.instance_configuration.block_device_mappings[0].ebs.throughput #=> Integer
     #   resp.image.container_recipe.instance_configuration.block_device_mappings[0].virtual_name #=> String
     #   resp.image.container_recipe.instance_configuration.block_device_mappings[0].no_device #=> String
     #   resp.image.container_recipe.dockerfile_template_data #=> String
@@ -1595,6 +1861,8 @@ module Aws::Imagebuilder
     #   resp.image.infrastructure_configuration.date_updated #=> String
     #   resp.image.infrastructure_configuration.resource_tags #=> Hash
     #   resp.image.infrastructure_configuration.resource_tags["TagKey"] #=> String
+    #   resp.image.infrastructure_configuration.instance_metadata_options.http_tokens #=> String
+    #   resp.image.infrastructure_configuration.instance_metadata_options.http_put_response_hop_limit #=> Integer
     #   resp.image.infrastructure_configuration.tags #=> Hash
     #   resp.image.infrastructure_configuration.tags["TagKey"] #=> String
     #   resp.image.distribution_configuration.arn #=> String
@@ -1613,6 +1881,10 @@ module Aws::Imagebuilder
     #   resp.image.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.user_ids[0] #=> String
     #   resp.image.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.user_groups #=> Array
     #   resp.image.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.user_groups[0] #=> String
+    #   resp.image.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.organization_arns #=> Array
+    #   resp.image.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.organization_arns[0] #=> String
+    #   resp.image.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.organizational_unit_arns #=> Array
+    #   resp.image.distribution_configuration.distributions[0].ami_distribution_configuration.launch_permission.organizational_unit_arns[0] #=> String
     #   resp.image.distribution_configuration.distributions[0].container_distribution_configuration.description #=> String
     #   resp.image.distribution_configuration.distributions[0].container_distribution_configuration.container_tags #=> Array
     #   resp.image.distribution_configuration.distributions[0].container_distribution_configuration.container_tags[0] #=> String
@@ -1624,6 +1896,18 @@ module Aws::Imagebuilder
     #   resp.image.distribution_configuration.distributions[0].launch_template_configurations[0].launch_template_id #=> String
     #   resp.image.distribution_configuration.distributions[0].launch_template_configurations[0].account_id #=> String
     #   resp.image.distribution_configuration.distributions[0].launch_template_configurations[0].set_default_version #=> Boolean
+    #   resp.image.distribution_configuration.distributions[0].s3_export_configuration.role_name #=> String
+    #   resp.image.distribution_configuration.distributions[0].s3_export_configuration.disk_image_format #=> String, one of "VMDK", "RAW", "VHD"
+    #   resp.image.distribution_configuration.distributions[0].s3_export_configuration.s3_bucket #=> String
+    #   resp.image.distribution_configuration.distributions[0].s3_export_configuration.s3_prefix #=> String
+    #   resp.image.distribution_configuration.distributions[0].fast_launch_configurations #=> Array
+    #   resp.image.distribution_configuration.distributions[0].fast_launch_configurations[0].enabled #=> Boolean
+    #   resp.image.distribution_configuration.distributions[0].fast_launch_configurations[0].snapshot_configuration.target_resource_count #=> Integer
+    #   resp.image.distribution_configuration.distributions[0].fast_launch_configurations[0].max_parallel_launches #=> Integer
+    #   resp.image.distribution_configuration.distributions[0].fast_launch_configurations[0].launch_template.launch_template_id #=> String
+    #   resp.image.distribution_configuration.distributions[0].fast_launch_configurations[0].launch_template.launch_template_name #=> String
+    #   resp.image.distribution_configuration.distributions[0].fast_launch_configurations[0].launch_template.launch_template_version #=> String
+    #   resp.image.distribution_configuration.distributions[0].fast_launch_configurations[0].account_id #=> String
     #   resp.image.distribution_configuration.timeout_minutes #=> Integer
     #   resp.image.distribution_configuration.date_created #=> String
     #   resp.image.distribution_configuration.date_updated #=> String
@@ -1646,6 +1930,14 @@ module Aws::Imagebuilder
     #   resp.image.output_resources.containers[0].image_uris[0] #=> String
     #   resp.image.tags #=> Hash
     #   resp.image.tags["TagKey"] #=> String
+    #   resp.image.build_type #=> String, one of "USER_INITIATED", "SCHEDULED", "IMPORT"
+    #   resp.image.image_source #=> String, one of "AMAZON_MANAGED", "AWS_MARKETPLACE", "IMPORTED", "CUSTOM"
+    #   resp.image.scan_state.status #=> String, one of "PENDING", "SCANNING", "COLLECTING", "COMPLETED", "ABANDONED", "FAILED", "TIMED_OUT"
+    #   resp.image.scan_state.reason #=> String
+    #   resp.image.image_scanning_configuration.image_scanning_enabled #=> Boolean
+    #   resp.image.image_scanning_configuration.ecr_configuration.repository_name #=> String
+    #   resp.image.image_scanning_configuration.ecr_configuration.container_tags #=> Array
+    #   resp.image.image_scanning_configuration.ecr_configuration.container_tags[0] #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetImage AWS API Documentation
     #
@@ -1697,6 +1989,10 @@ module Aws::Imagebuilder
     #   resp.image_pipeline.date_next_run #=> String
     #   resp.image_pipeline.tags #=> Hash
     #   resp.image_pipeline.tags["TagKey"] #=> String
+    #   resp.image_pipeline.image_scanning_configuration.image_scanning_enabled #=> Boolean
+    #   resp.image_pipeline.image_scanning_configuration.ecr_configuration.repository_name #=> String
+    #   resp.image_pipeline.image_scanning_configuration.ecr_configuration.container_tags #=> Array
+    #   resp.image_pipeline.image_scanning_configuration.ecr_configuration.container_tags[0] #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetImagePipeline AWS API Documentation
     #
@@ -1767,6 +2063,10 @@ module Aws::Imagebuilder
     #   resp.image_recipe.version #=> String
     #   resp.image_recipe.components #=> Array
     #   resp.image_recipe.components[0].component_arn #=> String
+    #   resp.image_recipe.components[0].parameters #=> Array
+    #   resp.image_recipe.components[0].parameters[0].name #=> String
+    #   resp.image_recipe.components[0].parameters[0].value #=> Array
+    #   resp.image_recipe.components[0].parameters[0].value[0] #=> String
     #   resp.image_recipe.parent_image #=> String
     #   resp.image_recipe.block_device_mappings #=> Array
     #   resp.image_recipe.block_device_mappings[0].device_name #=> String
@@ -1777,12 +2077,15 @@ module Aws::Imagebuilder
     #   resp.image_recipe.block_device_mappings[0].ebs.snapshot_id #=> String
     #   resp.image_recipe.block_device_mappings[0].ebs.volume_size #=> Integer
     #   resp.image_recipe.block_device_mappings[0].ebs.volume_type #=> String, one of "standard", "io1", "io2", "gp2", "gp3", "sc1", "st1"
+    #   resp.image_recipe.block_device_mappings[0].ebs.throughput #=> Integer
     #   resp.image_recipe.block_device_mappings[0].virtual_name #=> String
     #   resp.image_recipe.block_device_mappings[0].no_device #=> String
     #   resp.image_recipe.date_created #=> String
     #   resp.image_recipe.tags #=> Hash
     #   resp.image_recipe.tags["TagKey"] #=> String
     #   resp.image_recipe.working_directory #=> String
+    #   resp.image_recipe.additional_instance_configuration.systems_manager_agent.uninstall_after_build #=> Boolean
+    #   resp.image_recipe.additional_instance_configuration.user_data_override #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetImageRecipe AWS API Documentation
     #
@@ -1862,6 +2165,8 @@ module Aws::Imagebuilder
     #   resp.infrastructure_configuration.date_updated #=> String
     #   resp.infrastructure_configuration.resource_tags #=> Hash
     #   resp.infrastructure_configuration.resource_tags["TagKey"] #=> String
+    #   resp.infrastructure_configuration.instance_metadata_options.http_tokens #=> String
+    #   resp.infrastructure_configuration.instance_metadata_options.http_put_response_hop_limit #=> Integer
     #   resp.infrastructure_configuration.tags #=> Hash
     #   resp.infrastructure_configuration.tags["TagKey"] #=> String
     #
@@ -1874,6 +2179,122 @@ module Aws::Imagebuilder
       req.send_request(options)
     end
 
+    # Get the runtime information that was logged for a specific runtime
+    # instance of the workflow.
+    #
+    # @option params [required, String] :workflow_execution_id
+    #   Use the unique identifier for a runtime instance of the workflow to
+    #   get runtime details.
+    #
+    # @return [Types::GetWorkflowExecutionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetWorkflowExecutionResponse#request_id #request_id} => String
+    #   * {Types::GetWorkflowExecutionResponse#workflow_build_version_arn #workflow_build_version_arn} => String
+    #   * {Types::GetWorkflowExecutionResponse#workflow_execution_id #workflow_execution_id} => String
+    #   * {Types::GetWorkflowExecutionResponse#image_build_version_arn #image_build_version_arn} => String
+    #   * {Types::GetWorkflowExecutionResponse#type #type} => String
+    #   * {Types::GetWorkflowExecutionResponse#status #status} => String
+    #   * {Types::GetWorkflowExecutionResponse#message #message} => String
+    #   * {Types::GetWorkflowExecutionResponse#total_step_count #total_step_count} => Integer
+    #   * {Types::GetWorkflowExecutionResponse#total_steps_succeeded #total_steps_succeeded} => Integer
+    #   * {Types::GetWorkflowExecutionResponse#total_steps_failed #total_steps_failed} => Integer
+    #   * {Types::GetWorkflowExecutionResponse#total_steps_skipped #total_steps_skipped} => Integer
+    #   * {Types::GetWorkflowExecutionResponse#start_time #start_time} => String
+    #   * {Types::GetWorkflowExecutionResponse#end_time #end_time} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_workflow_execution({
+    #     workflow_execution_id: "WorkflowExecutionId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.request_id #=> String
+    #   resp.workflow_build_version_arn #=> String
+    #   resp.workflow_execution_id #=> String
+    #   resp.image_build_version_arn #=> String
+    #   resp.type #=> String, one of "BUILD", "TEST", "DISTRIBUTION"
+    #   resp.status #=> String, one of "PENDING", "SKIPPED", "RUNNING", "COMPLETED", "FAILED", "ROLLBACK_IN_PROGRESS", "ROLLBACK_COMPLETED"
+    #   resp.message #=> String
+    #   resp.total_step_count #=> Integer
+    #   resp.total_steps_succeeded #=> Integer
+    #   resp.total_steps_failed #=> Integer
+    #   resp.total_steps_skipped #=> Integer
+    #   resp.start_time #=> String
+    #   resp.end_time #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetWorkflowExecution AWS API Documentation
+    #
+    # @overload get_workflow_execution(params = {})
+    # @param [Hash] params ({})
+    def get_workflow_execution(params = {}, options = {})
+      req = build_request(:get_workflow_execution, params)
+      req.send_request(options)
+    end
+
+    # Get the runtime information that was logged for a specific runtime
+    # instance of the workflow step.
+    #
+    # @option params [required, String] :step_execution_id
+    #   Use the unique identifier for a specific runtime instance of the
+    #   workflow step to get runtime details for that step.
+    #
+    # @return [Types::GetWorkflowStepExecutionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetWorkflowStepExecutionResponse#request_id #request_id} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#step_execution_id #step_execution_id} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#workflow_build_version_arn #workflow_build_version_arn} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#workflow_execution_id #workflow_execution_id} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#image_build_version_arn #image_build_version_arn} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#name #name} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#description #description} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#action #action} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#status #status} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#rollback_status #rollback_status} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#message #message} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#inputs #inputs} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#outputs #outputs} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#start_time #start_time} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#end_time #end_time} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#on_failure #on_failure} => String
+    #   * {Types::GetWorkflowStepExecutionResponse#timeout_seconds #timeout_seconds} => Integer
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_workflow_step_execution({
+    #     step_execution_id: "WorkflowStepExecutionId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.request_id #=> String
+    #   resp.step_execution_id #=> String
+    #   resp.workflow_build_version_arn #=> String
+    #   resp.workflow_execution_id #=> String
+    #   resp.image_build_version_arn #=> String
+    #   resp.name #=> String
+    #   resp.description #=> String
+    #   resp.action #=> String
+    #   resp.status #=> String, one of "PENDING", "SKIPPED", "RUNNING", "COMPLETED", "FAILED"
+    #   resp.rollback_status #=> String, one of "RUNNING", "COMPLETED", "SKIPPED", "FAILED"
+    #   resp.message #=> String
+    #   resp.inputs #=> String
+    #   resp.outputs #=> String
+    #   resp.start_time #=> String
+    #   resp.end_time #=> String
+    #   resp.on_failure #=> String
+    #   resp.timeout_seconds #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/GetWorkflowStepExecution AWS API Documentation
+    #
+    # @overload get_workflow_step_execution(params = {})
+    # @param [Hash] params ({})
+    def get_workflow_step_execution(params = {}, options = {})
+      req = build_request(:get_workflow_step_execution, params)
+      req.send_request(options)
+    end
+
     # Imports a component and transforms its data into a component document.
     #
     # @option params [required, String] :name
@@ -1881,21 +2302,32 @@ module Aws::Imagebuilder
     #
     # @option params [required, String] :semantic_version
     #   The semantic version of the component. This version follows the
-    #   semantic version syntax. For example, major.minor.patch. This could be
-    #   versioned like software (2.0.1) or like a date (2019.12.01).
+    #   semantic version syntax.
+    #
+    #   <note markdown="1"> The semantic version has four nodes:
+    #   &lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;/&lt;build&gt;. You can
+    #   assign values for the first three, and can filter on all of them.
+    #
+    #    **Filtering:** With semantic versioning, you have the flexibility to
+    #   use wildcards (x) to specify the most recent versions or nodes when
+    #   selecting the base image or components for your recipe. When you use a
+    #   wildcard in any node, all nodes to the right of the first wildcard
+    #   must also be wildcards.
+    #
+    #    </note>
     #
     # @option params [String] :description
     #   The description of the component. Describes the contents of the
     #   component.
     #
     # @option params [String] :change_description
-    #   The change description of the component. Describes what change has
-    #   been made in this version, or what makes this version different from
-    #   other versions of this component.
+    #   The change description of the component. This description indicates
+    #   the change that has been made in this version, or what makes this
+    #   version different from other versions of this component.
     #
     # @option params [required, String] :type
     #   The type of the component denotes whether the component is used to
-    #   build the image or only to test it.
+    #   build the image, or only to test it.
     #
     # @option params [required, String] :format
     #   The format of the resource that you want to import as a component.
@@ -1908,10 +2340,10 @@ module Aws::Imagebuilder
     #   `data` or `uri` can be used to specify the data within the component.
     #
     # @option params [String] :uri
-    #   The uri of the component. Must be an S3 URL and the requester must
-    #   have permission to access the S3 bucket. If you use S3, you can
-    #   specify component content up to your service quota. Either `data` or
-    #   `uri` can be used to specify the data within the component.
+    #   The uri of the component. Must be an Amazon S3 URL and the requester
+    #   must have permission to access the Amazon S3 bucket. If you use Amazon
+    #   S3, you can specify component content up to your service quota. Either
+    #   `data` or `uri` can be used to specify the data within the component.
     #
     # @option params [String] :kms_key_id
     #   The ID of the KMS key that should be used to encrypt this component.
@@ -1965,8 +2397,127 @@ module Aws::Imagebuilder
       req.send_request(options)
     end
 
+    # When you export your virtual machine (VM) from its virtualization
+    # environment, that process creates a set of one or more disk container
+    # files that act as snapshots of your VM’s environment, settings, and
+    # data. The Amazon EC2 API [ImportImage][1] action uses those files to
+    # import your VM and create an AMI. To import using the CLI command, see
+    # [import-image][2]
+    #
+    # You can reference the task ID from the VM import to pull in the AMI
+    # that the import created as the base image for your Image Builder
+    # recipe.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ImportImage.html
+    # [2]: https://docs.aws.amazon.com/cli/latest/reference/ec2/import-image.html
+    #
+    # @option params [required, String] :name
+    #   The name of the base image that is created by the import process.
+    #
+    # @option params [required, String] :semantic_version
+    #   The semantic version to attach to the base image that was created
+    #   during the import process. This version follows the semantic version
+    #   syntax.
+    #
+    #   <note markdown="1"> The semantic version has four nodes:
+    #   &lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;/&lt;build&gt;. You can
+    #   assign values for the first three, and can filter on all of them.
+    #
+    #    **Assignment:** For the first three nodes you can assign any positive
+    #   integer value, including zero, with an upper limit of 2^30-1, or
+    #   1073741823 for each node. Image Builder automatically assigns the
+    #   build number to the fourth node.
+    #
+    #    **Patterns:** You can use any numeric pattern that adheres to the
+    #   assignment requirements for the nodes that you can assign. For
+    #   example, you might choose a software version pattern, such as 1.0.0,
+    #   or a date, such as 2021.01.01.
+    #
+    #    </note>
+    #
+    # @option params [String] :description
+    #   The description for the base image that is created by the import
+    #   process.
+    #
+    # @option params [required, String] :platform
+    #   The operating system platform for the imported VM.
+    #
+    # @option params [String] :os_version
+    #   The operating system version for the imported VM.
+    #
+    # @option params [required, String] :vm_import_task_id
+    #   The `importTaskId` (API) or `ImportTaskId` (CLI) from the Amazon EC2
+    #   VM import process. Image Builder retrieves information from the import
+    #   process to pull in the AMI that is created from the VM source as the
+    #   base image for your recipe.
+    #
+    # @option params [Hash<String,String>] :tags
+    #   Tags that are attached to the import resources.
+    #
+    # @option params [required, String] :client_token
+    #   Unique, case-sensitive identifier you provide to ensure idempotency of
+    #   the request. For more information, see [Ensuring idempotency][1] in
+    #   the *Amazon EC2 API Reference*.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html
+    #
+    # @return [Types::ImportVmImageResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ImportVmImageResponse#request_id #request_id} => String
+    #   * {Types::ImportVmImageResponse#image_arn #image_arn} => String
+    #   * {Types::ImportVmImageResponse#client_token #client_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.import_vm_image({
+    #     name: "NonEmptyString", # required
+    #     semantic_version: "VersionNumber", # required
+    #     description: "NonEmptyString",
+    #     platform: "Windows", # required, accepts Windows, Linux
+    #     os_version: "OsVersion",
+    #     vm_import_task_id: "NonEmptyString", # required
+    #     tags: {
+    #       "TagKey" => "TagValue",
+    #     },
+    #     client_token: "ClientToken", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.request_id #=> String
+    #   resp.image_arn #=> String
+    #   resp.client_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ImportVmImage AWS API Documentation
+    #
+    # @overload import_vm_image(params = {})
+    # @param [Hash] params ({})
+    def import_vm_image(params = {}, options = {})
+      req = build_request(:import_vm_image, params)
+      req.send_request(options)
+    end
+
     # Returns the list of component build versions for the specified
     # semantic version.
+    #
+    # <note markdown="1"> The semantic version has four nodes:
+    # &lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;/&lt;build&gt;. You can
+    # assign values for the first three, and can filter on all of them.
+    #
+    #  **Filtering:** With semantic versioning, you have the flexibility to
+    # use wildcards (x) to specify the most recent versions or nodes when
+    # selecting the base image or components for your recipe. When you use a
+    # wildcard in any node, all nodes to the right of the first wildcard
+    # must also be wildcards.
+    #
+    #  </note>
     #
     # @option params [required, String] :component_version_arn
     #   The component version Amazon Resource Name (ARN) whose versions you
@@ -2005,6 +2556,8 @@ module Aws::Imagebuilder
     #   resp.component_summary_list[0].platform #=> String, one of "Windows", "Linux"
     #   resp.component_summary_list[0].supported_os_versions #=> Array
     #   resp.component_summary_list[0].supported_os_versions[0] #=> String
+    #   resp.component_summary_list[0].state.status #=> String, one of "DEPRECATED"
+    #   resp.component_summary_list[0].state.reason #=> String
     #   resp.component_summary_list[0].type #=> String, one of "BUILD", "TEST"
     #   resp.component_summary_list[0].owner #=> String
     #   resp.component_summary_list[0].description #=> String
@@ -2012,6 +2565,8 @@ module Aws::Imagebuilder
     #   resp.component_summary_list[0].date_created #=> String
     #   resp.component_summary_list[0].tags #=> Hash
     #   resp.component_summary_list[0].tags["TagKey"] #=> String
+    #   resp.component_summary_list[0].publisher #=> String
+    #   resp.component_summary_list[0].obfuscate #=> Boolean
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListComponentBuildVersions AWS API Documentation
@@ -2023,22 +2578,47 @@ module Aws::Imagebuilder
       req.send_request(options)
     end
 
-    # Returns the list of component build versions for the specified
-    # semantic version.
+    # Returns the list of components that can be filtered by name, or by
+    # using the listed `filters` to streamline results. Newly created
+    # components can take up to two minutes to appear in the ListComponents
+    # API Results.
+    #
+    # <note markdown="1"> The semantic version has four nodes:
+    # &lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;/&lt;build&gt;. You can
+    # assign values for the first three, and can filter on all of them.
+    #
+    #  **Filtering:** With semantic versioning, you have the flexibility to
+    # use wildcards (x) to specify the most recent versions or nodes when
+    # selecting the base image or components for your recipe. When you use a
+    # wildcard in any node, all nodes to the right of the first wildcard
+    # must also be wildcards.
+    #
+    #  </note>
     #
     # @option params [String] :owner
-    #   The owner defines which components you want to list. By default, this
-    #   request will only show components owned by your account. You can use
-    #   this field to specify if you want to view components owned by
-    #   yourself, by Amazon, or those components that have been shared with
-    #   you by other customers.
+    #   Filters results based on the type of owner for the component. By
+    #   default, this request returns a list of components that your account
+    #   owns. To see results for other types of owners, you can specify
+    #   components that Amazon manages, third party components, or components
+    #   that other accounts have shared with you.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   The filters.
+    #   Use the following filters to streamline results:
+    #
+    #   * `description`
+    #
+    #   * `name`
+    #
+    #   * `platform`
+    #
+    #   * `supportedOsVersion`
+    #
+    #   * `type`
+    #
+    #   * `version`
     #
     # @option params [Boolean] :by_name
-    #   Returns the list of component build versions for the specified
-    #   semantic version.
+    #   Returns the list of components for the specified name.
     #
     # @option params [Integer] :max_results
     #   The maximum items to return in a request.
@@ -2058,7 +2638,7 @@ module Aws::Imagebuilder
     # @example Request syntax with placeholder values
     #
     #   resp = client.list_components({
-    #     owner: "Self", # accepts Self, Shared, Amazon
+    #     owner: "Self", # accepts Self, Shared, Amazon, ThirdParty
     #     filters: [
     #       {
     #         name: "FilterName",
@@ -2103,16 +2683,22 @@ module Aws::Imagebuilder
     #   recipes belonging to your account.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   Request filters that are used to narrow the list of container images
-    #   that are returned.
+    #   Use the following filters to streamline results:
+    #
+    #   * `containerType`
+    #
+    #   * `name`
+    #
+    #   * `parentImage`
+    #
+    #   * `platform`
     #
     # @option params [Integer] :max_results
-    #   The maximum number of results to return in the list.
+    #   The maximum items to return in a request.
     #
     # @option params [String] :next_token
-    #   Provides a token for pagination, which determines where to begin the
-    #   next set of results when the current set reaches the maximum for one
-    #   request.
+    #   A token to specify where to start paginating. This is the NextToken
+    #   from a previously truncated response.
     #
     # @return [Types::ListContainerRecipesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2125,7 +2711,7 @@ module Aws::Imagebuilder
     # @example Request syntax with placeholder values
     #
     #   resp = client.list_container_recipes({
-    #     owner: "Self", # accepts Self, Shared, Amazon
+    #     owner: "Self", # accepts Self, Shared, Amazon, ThirdParty
     #     filters: [
     #       {
     #         name: "FilterName",
@@ -2163,11 +2749,7 @@ module Aws::Imagebuilder
     # Returns a list of distribution configurations.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   The filters.
-    #
-    #   * `name` - The name of this distribution configuration.
-    #
-    #   ^
+    #   You can filter on `name` to streamline results.
     #
     # @option params [Integer] :max_results
     #   The maximum items to return in a request.
@@ -2228,7 +2810,17 @@ module Aws::Imagebuilder
     #   want to retrieve.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   The filters.
+    #   Use the following filters to streamline results:
+    #
+    #   * `name`
+    #
+    #   * `osVersion`
+    #
+    #   * `platform`
+    #
+    #   * `type`
+    #
+    #   * `version`
     #
     # @option params [Integer] :max_results
     #   The maximum items to return in a request.
@@ -2287,6 +2879,8 @@ module Aws::Imagebuilder
     #   resp.image_summary_list[0].output_resources.containers[0].image_uris[0] #=> String
     #   resp.image_summary_list[0].tags #=> Hash
     #   resp.image_summary_list[0].tags["TagKey"] #=> String
+    #   resp.image_summary_list[0].build_type #=> String, one of "USER_INITIATED", "SCHEDULED", "IMPORT"
+    #   resp.image_summary_list[0].image_source #=> String, one of "AMAZON_MANAGED", "AWS_MARKETPLACE", "IMPORTED", "CUSTOM"
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImageBuildVersions AWS API Documentation
@@ -2299,15 +2893,15 @@ module Aws::Imagebuilder
     end
 
     # List the Packages that are associated with an Image Build Version, as
-    # determined by AWS Systems Manager Inventory at build time.
+    # determined by Amazon Web Services Systems Manager Inventory at build
+    # time.
     #
     # @option params [required, String] :image_build_version_arn
     #   Filter results for the ListImagePackages request by the Image Build
     #   Version ARN
     #
     # @option params [Integer] :max_results
-    #   The maxiumum number of results to return from the ListImagePackages
-    #   request.
+    #   The maximum items to return in a request.
     #
     # @option params [String] :next_token
     #   A token to specify where to start paginating. This is the NextToken
@@ -2353,7 +2947,11 @@ module Aws::Imagebuilder
     #   want to view.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   The filters.
+    #   Use the following filters to streamline results:
+    #
+    #   * `name`
+    #
+    #   * `version`
     #
     # @option params [Integer] :max_results
     #   The maximum items to return in a request.
@@ -2412,6 +3010,8 @@ module Aws::Imagebuilder
     #   resp.image_summary_list[0].output_resources.containers[0].image_uris[0] #=> String
     #   resp.image_summary_list[0].tags #=> Hash
     #   resp.image_summary_list[0].tags["TagKey"] #=> String
+    #   resp.image_summary_list[0].build_type #=> String, one of "USER_INITIATED", "SCHEDULED", "IMPORT"
+    #   resp.image_summary_list[0].image_source #=> String, one of "AMAZON_MANAGED", "AWS_MARKETPLACE", "IMPORTED", "CUSTOM"
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImagePipelineImages AWS API Documentation
@@ -2426,7 +3026,19 @@ module Aws::Imagebuilder
     # Returns a list of image pipelines.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   The filters.
+    #   Use the following filters to streamline results:
+    #
+    #   * `description`
+    #
+    #   * `distributionConfigurationArn`
+    #
+    #   * `imageRecipeArn`
+    #
+    #   * `infrastructureConfigurationArn`
+    #
+    #   * `name`
+    #
+    #   * `status`
     #
     # @option params [Integer] :max_results
     #   The maximum items to return in a request.
@@ -2481,6 +3093,10 @@ module Aws::Imagebuilder
     #   resp.image_pipeline_list[0].date_next_run #=> String
     #   resp.image_pipeline_list[0].tags #=> Hash
     #   resp.image_pipeline_list[0].tags["TagKey"] #=> String
+    #   resp.image_pipeline_list[0].image_scanning_configuration.image_scanning_enabled #=> Boolean
+    #   resp.image_pipeline_list[0].image_scanning_configuration.ecr_configuration.repository_name #=> String
+    #   resp.image_pipeline_list[0].image_scanning_configuration.ecr_configuration.container_tags #=> Array
+    #   resp.image_pipeline_list[0].image_scanning_configuration.ecr_configuration.container_tags[0] #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImagePipelines AWS API Documentation
@@ -2502,7 +3118,13 @@ module Aws::Imagebuilder
     #   with you by other customers.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   The filters.
+    #   Use the following filters to streamline results:
+    #
+    #   * `name`
+    #
+    #   * `parentImage`
+    #
+    #   * `platform`
     #
     # @option params [Integer] :max_results
     #   The maximum items to return in a request.
@@ -2522,7 +3144,7 @@ module Aws::Imagebuilder
     # @example Request syntax with placeholder values
     #
     #   resp = client.list_image_recipes({
-    #     owner: "Self", # accepts Self, Shared, Amazon
+    #     owner: "Self", # accepts Self, Shared, Amazon, ThirdParty
     #     filters: [
     #       {
     #         name: "FilterName",
@@ -2556,7 +3178,199 @@ module Aws::Imagebuilder
       req.send_request(options)
     end
 
-    # Returns the list of images that you have access to.
+    # Returns a list of image scan aggregations for your account. You can
+    # filter by the type of key that Image Builder uses to group results.
+    # For example, if you want to get a list of findings by severity level
+    # for one of your pipelines, you might specify your pipeline with the
+    # `imagePipelineArn` filter. If you don't specify a filter, Image
+    # Builder returns an aggregation for your account.
+    #
+    # To streamline results, you can use the following filters in your
+    # request:
+    #
+    # * `accountId`
+    #
+    # * `imageBuildVersionArn`
+    #
+    # * `imagePipelineArn`
+    #
+    # * `vulnerabilityId`
+    #
+    # @option params [Types::Filter] :filter
+    #   A filter name and value pair that is used to return a more specific
+    #   list of results from a list operation. Filters can be used to match a
+    #   set of resources by specific criteria, such as tags, attributes, or
+    #   IDs.
+    #
+    # @option params [String] :next_token
+    #   A token to specify where to start paginating. This is the NextToken
+    #   from a previously truncated response.
+    #
+    # @return [Types::ListImageScanFindingAggregationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListImageScanFindingAggregationsResponse#request_id #request_id} => String
+    #   * {Types::ListImageScanFindingAggregationsResponse#aggregation_type #aggregation_type} => String
+    #   * {Types::ListImageScanFindingAggregationsResponse#responses #responses} => Array&lt;Types::ImageScanFindingAggregation&gt;
+    #   * {Types::ListImageScanFindingAggregationsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_image_scan_finding_aggregations({
+    #     filter: {
+    #       name: "FilterName",
+    #       values: ["FilterValue"],
+    #     },
+    #     next_token: "PaginationToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.request_id #=> String
+    #   resp.aggregation_type #=> String
+    #   resp.responses #=> Array
+    #   resp.responses[0].account_aggregation.account_id #=> String
+    #   resp.responses[0].account_aggregation.severity_counts.all #=> Integer
+    #   resp.responses[0].account_aggregation.severity_counts.critical #=> Integer
+    #   resp.responses[0].account_aggregation.severity_counts.high #=> Integer
+    #   resp.responses[0].account_aggregation.severity_counts.medium #=> Integer
+    #   resp.responses[0].image_aggregation.image_build_version_arn #=> String
+    #   resp.responses[0].image_aggregation.severity_counts.all #=> Integer
+    #   resp.responses[0].image_aggregation.severity_counts.critical #=> Integer
+    #   resp.responses[0].image_aggregation.severity_counts.high #=> Integer
+    #   resp.responses[0].image_aggregation.severity_counts.medium #=> Integer
+    #   resp.responses[0].image_pipeline_aggregation.image_pipeline_arn #=> String
+    #   resp.responses[0].image_pipeline_aggregation.severity_counts.all #=> Integer
+    #   resp.responses[0].image_pipeline_aggregation.severity_counts.critical #=> Integer
+    #   resp.responses[0].image_pipeline_aggregation.severity_counts.high #=> Integer
+    #   resp.responses[0].image_pipeline_aggregation.severity_counts.medium #=> Integer
+    #   resp.responses[0].vulnerability_id_aggregation.vulnerability_id #=> String
+    #   resp.responses[0].vulnerability_id_aggregation.severity_counts.all #=> Integer
+    #   resp.responses[0].vulnerability_id_aggregation.severity_counts.critical #=> Integer
+    #   resp.responses[0].vulnerability_id_aggregation.severity_counts.high #=> Integer
+    #   resp.responses[0].vulnerability_id_aggregation.severity_counts.medium #=> Integer
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImageScanFindingAggregations AWS API Documentation
+    #
+    # @overload list_image_scan_finding_aggregations(params = {})
+    # @param [Hash] params ({})
+    def list_image_scan_finding_aggregations(params = {}, options = {})
+      req = build_request(:list_image_scan_finding_aggregations, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of image scan findings for your account.
+    #
+    # @option params [Array<Types::ImageScanFindingsFilter>] :filters
+    #   An array of name value pairs that you can use to filter your results.
+    #   You can use the following filters to streamline results:
+    #
+    #   * `imageBuildVersionArn`
+    #
+    #   * `imagePipelineArn`
+    #
+    #   * `vulnerabilityId`
+    #
+    #   * `severity`
+    #
+    #   If you don't request a filter, then all findings in your account are
+    #   listed.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum items to return in a request.
+    #
+    # @option params [String] :next_token
+    #   A token to specify where to start paginating. This is the NextToken
+    #   from a previously truncated response.
+    #
+    # @return [Types::ListImageScanFindingsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListImageScanFindingsResponse#request_id #request_id} => String
+    #   * {Types::ListImageScanFindingsResponse#findings #findings} => Array&lt;Types::ImageScanFinding&gt;
+    #   * {Types::ListImageScanFindingsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_image_scan_findings({
+    #     filters: [
+    #       {
+    #         name: "FilterName",
+    #         values: ["FilterValue"],
+    #       },
+    #     ],
+    #     max_results: 1,
+    #     next_token: "PaginationToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.request_id #=> String
+    #   resp.findings #=> Array
+    #   resp.findings[0].aws_account_id #=> String
+    #   resp.findings[0].image_build_version_arn #=> String
+    #   resp.findings[0].image_pipeline_arn #=> String
+    #   resp.findings[0].type #=> String
+    #   resp.findings[0].description #=> String
+    #   resp.findings[0].title #=> String
+    #   resp.findings[0].remediation.recommendation.text #=> String
+    #   resp.findings[0].remediation.recommendation.url #=> String
+    #   resp.findings[0].severity #=> String
+    #   resp.findings[0].first_observed_at #=> Time
+    #   resp.findings[0].updated_at #=> Time
+    #   resp.findings[0].inspector_score #=> Float
+    #   resp.findings[0].inspector_score_details.adjusted_cvss.score_source #=> String
+    #   resp.findings[0].inspector_score_details.adjusted_cvss.cvss_source #=> String
+    #   resp.findings[0].inspector_score_details.adjusted_cvss.version #=> String
+    #   resp.findings[0].inspector_score_details.adjusted_cvss.score #=> Float
+    #   resp.findings[0].inspector_score_details.adjusted_cvss.scoring_vector #=> String
+    #   resp.findings[0].inspector_score_details.adjusted_cvss.adjustments #=> Array
+    #   resp.findings[0].inspector_score_details.adjusted_cvss.adjustments[0].metric #=> String
+    #   resp.findings[0].inspector_score_details.adjusted_cvss.adjustments[0].reason #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerability_id #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages #=> Array
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].name #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].version #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].source_layer_hash #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].epoch #=> Integer
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].release #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].arch #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].package_manager #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].file_path #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].fixed_in_version #=> String
+    #   resp.findings[0].package_vulnerability_details.vulnerable_packages[0].remediation #=> String
+    #   resp.findings[0].package_vulnerability_details.source #=> String
+    #   resp.findings[0].package_vulnerability_details.cvss #=> Array
+    #   resp.findings[0].package_vulnerability_details.cvss[0].base_score #=> Float
+    #   resp.findings[0].package_vulnerability_details.cvss[0].scoring_vector #=> String
+    #   resp.findings[0].package_vulnerability_details.cvss[0].version #=> String
+    #   resp.findings[0].package_vulnerability_details.cvss[0].source #=> String
+    #   resp.findings[0].package_vulnerability_details.related_vulnerabilities #=> Array
+    #   resp.findings[0].package_vulnerability_details.related_vulnerabilities[0] #=> String
+    #   resp.findings[0].package_vulnerability_details.source_url #=> String
+    #   resp.findings[0].package_vulnerability_details.vendor_severity #=> String
+    #   resp.findings[0].package_vulnerability_details.vendor_created_at #=> Time
+    #   resp.findings[0].package_vulnerability_details.vendor_updated_at #=> Time
+    #   resp.findings[0].package_vulnerability_details.reference_urls #=> Array
+    #   resp.findings[0].package_vulnerability_details.reference_urls[0] #=> String
+    #   resp.findings[0].fix_available #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImageScanFindings AWS API Documentation
+    #
+    # @overload list_image_scan_findings(params = {})
+    # @param [Hash] params ({})
+    def list_image_scan_findings(params = {}, options = {})
+      req = build_request(:list_image_scan_findings, params)
+      req.send_request(options)
+    end
+
+    # Returns the list of images that you have access to. Newly created
+    # images can take up to two minutes to appear in the ListImages API
+    # Results.
     #
     # @option params [String] :owner
     #   The owner defines which images you want to list. By default, this
@@ -2566,7 +3380,17 @@ module Aws::Imagebuilder
     #   customers.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   The filters.
+    #   Use the following filters to streamline results:
+    #
+    #   * `name`
+    #
+    #   * `osVersion`
+    #
+    #   * `platform`
+    #
+    #   * `type`
+    #
+    #   * `version`
     #
     # @option params [Boolean] :by_name
     #   Requests a list of images with a specific recipe name.
@@ -2592,7 +3416,7 @@ module Aws::Imagebuilder
     # @example Request syntax with placeholder values
     #
     #   resp = client.list_images({
-    #     owner: "Self", # accepts Self, Shared, Amazon
+    #     owner: "Self", # accepts Self, Shared, Amazon, ThirdParty
     #     filters: [
     #       {
     #         name: "FilterName",
@@ -2617,6 +3441,8 @@ module Aws::Imagebuilder
     #   resp.image_version_list[0].os_version #=> String
     #   resp.image_version_list[0].owner #=> String
     #   resp.image_version_list[0].date_created #=> String
+    #   resp.image_version_list[0].build_type #=> String, one of "USER_INITIATED", "SCHEDULED", "IMPORT"
+    #   resp.image_version_list[0].image_source #=> String, one of "AMAZON_MANAGED", "AWS_MARKETPLACE", "IMPORTED", "CUSTOM"
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListImages AWS API Documentation
@@ -2631,7 +3457,7 @@ module Aws::Imagebuilder
     # Returns a list of infrastructure configurations.
     #
     # @option params [Array<Types::Filter>] :filters
-    #   The filters.
+    #   You can filter on `name` to streamline results.
     #
     # @option params [Integer] :max_results
     #   The maximum items to return in a request.
@@ -2718,6 +3544,130 @@ module Aws::Imagebuilder
       req.send_request(options)
     end
 
+    # Returns a list of workflow runtime instance metadata objects for a
+    # specific image build version.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum items to return in a request.
+    #
+    # @option params [String] :next_token
+    #   A token to specify where to start paginating. This is the NextToken
+    #   from a previously truncated response.
+    #
+    # @option params [required, String] :image_build_version_arn
+    #   List all workflow runtime instances for the specified image build
+    #   version resource ARN.
+    #
+    # @return [Types::ListWorkflowExecutionsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListWorkflowExecutionsResponse#request_id #request_id} => String
+    #   * {Types::ListWorkflowExecutionsResponse#workflow_executions #workflow_executions} => Array&lt;Types::WorkflowExecutionMetadata&gt;
+    #   * {Types::ListWorkflowExecutionsResponse#image_build_version_arn #image_build_version_arn} => String
+    #   * {Types::ListWorkflowExecutionsResponse#message #message} => String
+    #   * {Types::ListWorkflowExecutionsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_workflow_executions({
+    #     max_results: 1,
+    #     next_token: "PaginationToken",
+    #     image_build_version_arn: "ImageBuildVersionArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.request_id #=> String
+    #   resp.workflow_executions #=> Array
+    #   resp.workflow_executions[0].workflow_build_version_arn #=> String
+    #   resp.workflow_executions[0].workflow_execution_id #=> String
+    #   resp.workflow_executions[0].type #=> String, one of "BUILD", "TEST", "DISTRIBUTION"
+    #   resp.workflow_executions[0].status #=> String, one of "PENDING", "SKIPPED", "RUNNING", "COMPLETED", "FAILED", "ROLLBACK_IN_PROGRESS", "ROLLBACK_COMPLETED"
+    #   resp.workflow_executions[0].message #=> String
+    #   resp.workflow_executions[0].total_step_count #=> Integer
+    #   resp.workflow_executions[0].total_steps_succeeded #=> Integer
+    #   resp.workflow_executions[0].total_steps_failed #=> Integer
+    #   resp.workflow_executions[0].total_steps_skipped #=> Integer
+    #   resp.workflow_executions[0].start_time #=> String
+    #   resp.workflow_executions[0].end_time #=> String
+    #   resp.image_build_version_arn #=> String
+    #   resp.message #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListWorkflowExecutions AWS API Documentation
+    #
+    # @overload list_workflow_executions(params = {})
+    # @param [Hash] params ({})
+    def list_workflow_executions(params = {}, options = {})
+      req = build_request(:list_workflow_executions, params)
+      req.send_request(options)
+    end
+
+    # Shows runtime data for each step in a runtime instance of the workflow
+    # that you specify in the request.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum items to return in a request.
+    #
+    # @option params [String] :next_token
+    #   A token to specify where to start paginating. This is the NextToken
+    #   from a previously truncated response.
+    #
+    # @option params [required, String] :workflow_execution_id
+    #   The unique identifier that Image Builder assigned to keep track of
+    #   runtime details when it ran the workflow.
+    #
+    # @return [Types::ListWorkflowStepExecutionsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListWorkflowStepExecutionsResponse#request_id #request_id} => String
+    #   * {Types::ListWorkflowStepExecutionsResponse#steps #steps} => Array&lt;Types::WorkflowStepMetadata&gt;
+    #   * {Types::ListWorkflowStepExecutionsResponse#workflow_build_version_arn #workflow_build_version_arn} => String
+    #   * {Types::ListWorkflowStepExecutionsResponse#workflow_execution_id #workflow_execution_id} => String
+    #   * {Types::ListWorkflowStepExecutionsResponse#image_build_version_arn #image_build_version_arn} => String
+    #   * {Types::ListWorkflowStepExecutionsResponse#message #message} => String
+    #   * {Types::ListWorkflowStepExecutionsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_workflow_step_executions({
+    #     max_results: 1,
+    #     next_token: "PaginationToken",
+    #     workflow_execution_id: "WorkflowExecutionId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.request_id #=> String
+    #   resp.steps #=> Array
+    #   resp.steps[0].step_execution_id #=> String
+    #   resp.steps[0].name #=> String
+    #   resp.steps[0].description #=> String
+    #   resp.steps[0].action #=> String
+    #   resp.steps[0].status #=> String, one of "PENDING", "SKIPPED", "RUNNING", "COMPLETED", "FAILED"
+    #   resp.steps[0].rollback_status #=> String, one of "RUNNING", "COMPLETED", "SKIPPED", "FAILED"
+    #   resp.steps[0].message #=> String
+    #   resp.steps[0].inputs #=> String
+    #   resp.steps[0].outputs #=> String
+    #   resp.steps[0].start_time #=> String
+    #   resp.steps[0].end_time #=> String
+    #   resp.workflow_build_version_arn #=> String
+    #   resp.workflow_execution_id #=> String
+    #   resp.image_build_version_arn #=> String
+    #   resp.message #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/imagebuilder-2019-12-02/ListWorkflowStepExecutions AWS API Documentation
+    #
+    # @overload list_workflow_step_executions(params = {})
+    # @param [Hash] params ({})
+    def list_workflow_step_executions(params = {}, options = {})
+      req = build_request(:list_workflow_step_executions, params)
+      req.send_request(options)
+    end
+
     # Applies a policy to a component. We recommend that you call the RAM
     # API [CreateResourceShare][1] to share resources. If you call the Image
     # Builder API `PutComponentPolicy`, you must also call the RAM API
@@ -2764,11 +3714,11 @@ module Aws::Imagebuilder
 
     # Applies a policy to a container image. We recommend that you call the
     # RAM API CreateResourceShare
-    # (https://docs.aws.amazon.com/ram/latest/APIReference/API\_CreateResourceShare.html)
+    # (https://docs.aws.amazon.com//ram/latest/APIReference/API\_CreateResourceShare.html)
     # to share resources. If you call the Image Builder API
     # `PutContainerImagePolicy`, you must also call the RAM API
     # PromoteResourceShareCreatedFromPolicy
-    # (https://docs.aws.amazon.com/ram/latest/APIReference/API\_PromoteResourceShareCreatedFromPolicy.html)
+    # (https://docs.aws.amazon.com//ram/latest/APIReference/API\_PromoteResourceShareCreatedFromPolicy.html)
     # in order for the resource to be visible to all principals with whom
     # the resource is shared.
     #
@@ -3032,6 +3982,8 @@ module Aws::Imagebuilder
     #           launch_permission: {
     #             user_ids: ["AccountId"],
     #             user_groups: ["NonEmptyString"],
+    #             organization_arns: ["OrganizationArn"],
+    #             organizational_unit_arns: ["OrganizationalUnitArn"],
     #           },
     #         },
     #         container_distribution_configuration: {
@@ -3048,6 +4000,27 @@ module Aws::Imagebuilder
     #             launch_template_id: "LaunchTemplateId", # required
     #             account_id: "AccountId",
     #             set_default_version: false,
+    #           },
+    #         ],
+    #         s3_export_configuration: {
+    #           role_name: "NonEmptyString", # required
+    #           disk_image_format: "VMDK", # required, accepts VMDK, RAW, VHD
+    #           s3_bucket: "NonEmptyString", # required
+    #           s3_prefix: "NonEmptyString",
+    #         },
+    #         fast_launch_configurations: [
+    #           {
+    #             enabled: false, # required
+    #             snapshot_configuration: {
+    #               target_resource_count: 1,
+    #             },
+    #             max_parallel_launches: 1,
+    #             launch_template: {
+    #               launch_template_id: "LaunchTemplateId",
+    #               launch_template_name: "NonEmptyString",
+    #               launch_template_version: "NonEmptyString",
+    #             },
+    #             account_id: "AccountId",
     #           },
     #         ],
     #       },
@@ -3095,12 +4068,13 @@ module Aws::Imagebuilder
     #
     # @option params [required, String] :infrastructure_configuration_arn
     #   The Amazon Resource Name (ARN) of the infrastructure configuration
-    #   that will be used to build images updated by this image pipeline.
+    #   that Image Builder uses to build images that this image pipeline has
+    #   updated.
     #
     # @option params [String] :distribution_configuration_arn
     #   The Amazon Resource Name (ARN) of the distribution configuration that
-    #   will be used to configure and distribute images updated by this image
-    #   pipeline.
+    #   Image Builder uses to configure and distribute images that this image
+    #   pipeline has updated.
     #
     # @option params [Types::ImageTestsConfiguration] :image_tests_configuration
     #   The image test configuration of the image pipeline.
@@ -3122,6 +4096,9 @@ module Aws::Imagebuilder
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
+    #
+    # @option params [Types::ImageScanningConfiguration] :image_scanning_configuration
+    #   Contains settings for vulnerability scans.
     #
     # @return [Types::UpdateImagePipelineResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3150,6 +4127,13 @@ module Aws::Imagebuilder
     #     },
     #     status: "DISABLED", # accepts DISABLED, ENABLED
     #     client_token: "ClientToken", # required
+    #     image_scanning_configuration: {
+    #       image_scanning_enabled: false,
+    #       ecr_configuration: {
+    #         repository_name: "NonEmptyString",
+    #         container_tags: ["NonEmptyString"],
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -3185,20 +4169,21 @@ module Aws::Imagebuilder
     #
     # @option params [required, String] :instance_profile_name
     #   The instance profile to associate with the instance used to customize
-    #   your EC2 AMI.
+    #   your Amazon EC2 AMI.
     #
     # @option params [Array<String>] :security_group_ids
     #   The security group IDs to associate with the instance used to
-    #   customize your EC2 AMI.
+    #   customize your Amazon EC2 AMI.
     #
     # @option params [String] :subnet_id
-    #   The subnet ID to place the instance used to customize your EC2 AMI in.
+    #   The subnet ID to place the instance used to customize your Amazon EC2
+    #   AMI in.
     #
     # @option params [Types::Logging] :logging
     #   The logging configuration of the infrastructure configuration.
     #
     # @option params [String] :key_pair
-    #   The key pair of the infrastructure configuration. This can be used to
+    #   The key pair of the infrastructure configuration. You can use this to
     #   log on to and debug the instance used to create your image.
     #
     # @option params [Boolean] :terminate_instance_on_failure
@@ -3208,7 +4193,15 @@ module Aws::Imagebuilder
     #   workflow fails.
     #
     # @option params [String] :sns_topic_arn
-    #   The SNS topic on which to send image build events.
+    #   The Amazon Resource Name (ARN) for the SNS topic to which we send
+    #   image build event notifications.
+    #
+    #   <note markdown="1"> EC2 Image Builder is unable to send notifications to SNS topics that
+    #   are encrypted using keys from other accounts. The key that is used to
+    #   encrypt the SNS topic must reside in the account that the Image
+    #   Builder service runs under.
+    #
+    #    </note>
     #
     # @option params [required, String] :client_token
     #   The idempotency token used to make this request idempotent.
@@ -3218,6 +4211,23 @@ module Aws::Imagebuilder
     #
     # @option params [Hash<String,String>] :resource_tags
     #   The tags attached to the resource created by Image Builder.
+    #
+    # @option params [Types::InstanceMetadataOptions] :instance_metadata_options
+    #   The instance metadata options that you can set for the HTTP requests
+    #   that pipeline builds use to launch EC2 build and test instances. For
+    #   more information about instance metadata options, see one of the
+    #   following links:
+    #
+    #   * [Configure the instance metadata options][1] in the <i> <i>Amazon
+    #     EC2 User Guide</i> </i> for Linux instances.
+    #
+    #   * [Configure the instance metadata options][2] in the <i> <i>Amazon
+    #     EC2 Windows Guide</i> </i> for Windows instances.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-options.html
+    #   [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/configuring-instance-metadata-options.html
     #
     # @return [Types::UpdateInfrastructureConfigurationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -3246,6 +4256,10 @@ module Aws::Imagebuilder
     #     client_token: "ClientToken", # required
     #     resource_tags: {
     #       "TagKey" => "TagValue",
+    #     },
+    #     instance_metadata_options: {
+    #       http_tokens: "HttpTokens",
+    #       http_put_response_hop_limit: 1,
     #     },
     #   })
     #
@@ -3277,7 +4291,7 @@ module Aws::Imagebuilder
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-imagebuilder'
-      context[:gem_version] = '1.22.0'
+      context[:gem_version] = '1.50.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

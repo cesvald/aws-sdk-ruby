@@ -25,13 +25,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AcceptHandshakeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         handshake_id: "HandshakeId", # required
-    #       }
-    #
     # @!attribute [rw] handshake_id
     #   The unique identifier (ID) of the handshake that you want to accept.
     #
@@ -85,7 +78,7 @@ module Aws::Organizations
 
     # The operation that you attempted requires you to have the
     # `iam:CreateServiceLinkedRole` for `organizations.amazonaws.com`
-    # permission so that AWS Organizations can create the required
+    # permission so that Organizations can create the required
     # service-linked role. You don't have that permission.
     #
     # @!attribute [rw] message
@@ -103,8 +96,8 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # Contains information about an AWS account that is a member of an
-    # organization.
+    # Contains information about an Amazon Web Services account that is a
+    # member of an organization.
     #
     # @!attribute [rw] id
     #   The unique identifier (ID) of the account.
@@ -121,8 +114,8 @@ module Aws::Organizations
     #   The Amazon Resource Name (ARN) of the account.
     #
     #   For more information about ARNs in Organizations, see [ARN Formats
-    #   Supported by Organizations][1] in the *AWS Service Authorization
-    #   Reference*.
+    #   Supported by Organizations][1] in the *Amazon Web Services Service
+    #   Authorization Reference*.
     #
     #
     #
@@ -130,7 +123,7 @@ module Aws::Organizations
     #   @return [String]
     #
     # @!attribute [rw] email
-    #   The email address associated with the AWS account.
+    #   The email address associated with the Amazon Web Services account.
     #
     #   The [regex pattern][1] for this parameter is a string of characters
     #   that represents a standard internet email address.
@@ -177,8 +170,21 @@ module Aws::Organizations
       include Aws::Structure
     end
 
+    # You attempted to close an account that is already closed.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/AccountAlreadyClosedException AWS API Documentation
+    #
+    class AccountAlreadyClosedException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The specified account is already a delegated administrator for this
-    # AWS service.
+    # Amazon Web Services service.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -191,9 +197,9 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # We can't find an AWS account with the `AccountId` that you specified,
-    # or the account whose credentials you used to make this request isn't
-    # a member of an organization.
+    # We can't find an Amazon Web Services account with the `AccountId`
+    # that you specified, or the account whose credentials you used to make
+    # this request isn't a member of an organization.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -206,8 +212,8 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # The specified account is not a delegated administrator for this AWS
-    # service.
+    # The specified account is not a delegated administrator for this Amazon
+    # Web Services service.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -223,11 +229,11 @@ module Aws::Organizations
     # You can't invite an existing account to your organization until you
     # verify that you own the email address associated with the management
     # account. For more information, see [Email Address Verification][1] in
-    # the *AWS Organizations User Guide.*
+    # the *Organizations User Guide.*
     #
     #
     #
-    # [1]: http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_create.html#about-email-verification
+    # [1]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_create.html#about-email-verification
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -254,14 +260,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AttachPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         policy_id: "PolicyId", # required
-    #         target_id: "PolicyTargetId", # required
-    #       }
-    #
     # @!attribute [rw] policy_id
     #   The unique identifier (ID) of the policy that you want to attach to
     #   the target. You can get the ID for the policy by calling the
@@ -310,13 +308,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CancelHandshakeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         handshake_id: "HandshakeId", # required
-    #       }
-    #
     # @!attribute [rw] handshake_id
     #   The unique identifier (ID) of the handshake that you want to cancel.
     #   You can get the ID from the ListHandshakesForOrganization operation.
@@ -384,8 +375,8 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # We can't find an organizational unit (OU) or AWS account with the
-    # `ChildId` that you specified.
+    # We can't find an organizational unit (OU) or Amazon Web Services
+    # account with the `ChildId` that you specified.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -394,6 +385,19 @@ module Aws::Organizations
     #
     class ChildNotFoundException < Struct.new(
       :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] account_id
+    #   Retrieves the Amazon Web Services account Id for the current
+    #   `CloseAccount` API request.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CloseAccountRequest AWS API Documentation
+    #
+    class CloseAccountRequest < Struct.new(
+      :account_id)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -407,6 +411,20 @@ module Aws::Organizations
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ConcurrentModificationException AWS API Documentation
     #
     class ConcurrentModificationException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The request failed because it conflicts with the current state of the
+    # specified resource.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ConflictException AWS API Documentation
+    #
+    class ConflictException < Struct.new(
       :message)
       SENSITIVE = []
       include Aws::Structure
@@ -429,32 +447,29 @@ module Aws::Organizations
     #   management account. Instead, after you remove all member accounts,
     #   delete the organization itself.
     #
-    # * ACCOUNT\_CANNOT\_LEAVE\_WITHOUT\_EULA: You attempted to remove an
-    #   account from the organization that doesn't yet have enough
-    #   information to exist as a standalone account. This account requires
-    #   you to first agree to the AWS Customer Agreement. Follow the steps
-    #   at [Removing a member account from your organization][1]in the *AWS
-    #   Organizations User Guide.*
-    #
     # * ACCOUNT\_CANNOT\_LEAVE\_WITHOUT\_PHONE\_VERIFICATION: You attempted
     #   to remove an account from the organization that doesn't yet have
     #   enough information to exist as a standalone account. This account
     #   requires you to first complete phone verification. Follow the steps
-    #   at [Removing a member account from your organization][1] in the *AWS
-    #   Organizations User Guide.*
+    #   at [Removing a member account from your organization][1] in the
+    #   *Organizations User Guide.*
     #
     # * ACCOUNT\_CREATION\_RATE\_LIMIT\_EXCEEDED: You attempted to exceed
     #   the number of accounts that you can create in one day.
     #
+    # * ACCOUNT\_CREATION\_NOT\_COMPLETE: Your account setup isn't complete
+    #   or your account isn't fully active. You must complete the account
+    #   setup before you create an organization.
+    #
     # * ACCOUNT\_NUMBER\_LIMIT\_EXCEEDED: You attempted to exceed the limit
     #   on the number of accounts in an organization. If you need more
-    #   accounts, contact [AWS Support][2] to request an increase in your
-    #   limit.
+    #   accounts, contact [Amazon Web Services Support][2] to request an
+    #   increase in your limit.
     #
     #   Or the number of invitations that you tried to send would cause you
     #   to exceed the limit of accounts in your organization. Send fewer
-    #   invitations or contact AWS Support to request an increase in the
-    #   number of accounts.
+    #   invitations or contact Amazon Web Services Support to request an
+    #   increase in the number of accounts.
     #
     #   <note markdown="1"> Deleted and closed accounts still count toward your limit.
     #
@@ -462,14 +477,20 @@ module Aws::Organizations
     #
     #   If you get this exception when running a command immediately after
     #   creating the organization, wait one hour and try again. After an
-    #   hour, if the command continues to fail with this error, contact [AWS
-    #   Support][2].
+    #   hour, if the command continues to fail with this error, contact
+    #   [Amazon Web Services Support][2].
     #
     # * CANNOT\_REGISTER\_MASTER\_AS\_DELEGATED\_ADMINISTRATOR: You
     #   attempted to register the management account of the organization as
-    #   a delegated administrator for an AWS service integrated with
-    #   Organizations. You can designate only a member account as a
-    #   delegated administrator.
+    #   a delegated administrator for an Amazon Web Services service
+    #   integrated with Organizations. You can designate only a member
+    #   account as a delegated administrator.
+    #
+    # * CANNOT\_CLOSE\_MANAGEMENT\_ACCOUNT: You attempted to close the
+    #   management account. To close the management account for the
+    #   organization, you must first either remove or close all member
+    #   accounts in the organization. Follow standard account closure
+    #   process using root credentials.​
     #
     # * CANNOT\_REMOVE\_DELEGATED\_ADMINISTRATOR\_FROM\_ORG: You attempted
     #   to remove an account that is registered as a delegated administrator
@@ -477,15 +498,21 @@ module Aws::Organizations
     #   operation, you must first deregister this account as a delegated
     #   administrator.
     #
+    # * CLOSE\_ACCOUNT\_QUOTA\_EXCEEDED: You have exceeded close account
+    #   quota for the past 30 days.
+    #
+    # * CLOSE\_ACCOUNT\_REQUESTS\_LIMIT\_EXCEEDED: You attempted to exceed
+    #   the number of accounts that you can close at a time. ​
+    #
     # * CREATE\_ORGANIZATION\_IN\_BILLING\_MODE\_UNSUPPORTED\_REGION: To
     #   create an organization in the specified region, you must enable all
     #   features mode.
     #
     # * DELEGATED\_ADMINISTRATOR\_EXISTS\_FOR\_THIS\_SERVICE: You attempted
-    #   to register an AWS account as a delegated administrator for an AWS
-    #   service that already has a delegated administrator. To complete this
-    #   operation, you must first deregister any existing delegated
-    #   administrators for this service.
+    #   to register an Amazon Web Services account as a delegated
+    #   administrator for an Amazon Web Services service that already has a
+    #   delegated administrator. To complete this operation, you must first
+    #   deregister any existing delegated administrators for this service.
     #
     # * EMAIL\_VERIFICATION\_CODE\_EXPIRED: The email verification code is
     #   only valid for a limited period of time. You must resubmit the
@@ -493,6 +520,12 @@ module Aws::Organizations
     #
     # * HANDSHAKE\_RATE\_LIMIT\_EXCEEDED: You attempted to exceed the number
     #   of handshakes that you can send in one day.
+    #
+    # * INVALID\_PAYMENT\_INSTRUMENT: You cannot remove an account because
+    #   no supported payment method is associated with the account. Amazon
+    #   Web Services does not support cards issued by financial institutions
+    #   in Russia or Belarus. For more information, see [Managing your
+    #   Amazon Web Services payments][3].
     #
     # * MASTER\_ACCOUNT\_ADDRESS\_DOES\_NOT\_MATCH\_MARKETPLACE: To create
     #   an account in this organization, you first must migrate the
@@ -502,26 +535,26 @@ module Aws::Organizations
     #   marketplace. All accounts in an organization must be associated with
     #   the same marketplace.
     #
-    # * MASTER\_ACCOUNT\_MISSING\_BUSINESS\_LICENSE: Applies only to the AWS
-    #   Regions in China. To create an organization, the master must have a
-    #   valid business license. For more information, contact customer
-    #   support.
+    # * MASTER\_ACCOUNT\_MISSING\_BUSINESS\_LICENSE: Applies only to the
+    #   Amazon Web Services /&gt; Regions in China. To create an
+    #   organization, the master must have a valid business license. For
+    #   more information, contact customer support.
     #
     # * MASTER\_ACCOUNT\_MISSING\_CONTACT\_INFO: To complete this operation,
     #   you must first provide a valid contact address and phone number for
     #   the management account. Then try the operation again.
     #
     # * MASTER\_ACCOUNT\_NOT\_GOVCLOUD\_ENABLED: To complete this operation,
-    #   the management account must have an associated account in the AWS
-    #   GovCloud (US-West) Region. For more information, see [AWS
-    #   Organizations][3] in the *AWS GovCloud User Guide.*
+    #   the management account must have an associated account in the Amazon
+    #   Web Services GovCloud (US-West) Region. For more information, see
+    #   [Organizations][4] in the *Amazon Web Services GovCloud User Guide.*
     #
     # * MASTER\_ACCOUNT\_PAYMENT\_INSTRUMENT\_REQUIRED: To create an
     #   organization with this management account, you first must associate
     #   a valid payment instrument, such as a credit card, with the account.
     #   Follow the steps at [To leave an organization when all required
-    #   account information has not yet been provided][4] in the *AWS
-    #   Organizations User Guide.*
+    #   account information has not yet been provided][5] in the
+    #   *Organizations User Guide.*
     #
     # * MAX\_DELEGATED\_ADMINISTRATORS\_FOR\_SERVICE\_LIMIT\_EXCEEDED: You
     #   attempted to register more delegated administrators than allowed for
@@ -538,8 +571,8 @@ module Aws::Organizations
     #   operation with this member account, you first must associate a valid
     #   payment instrument, such as a credit card, with the account. Follow
     #   the steps at [To leave an organization when all required account
-    #   information has not yet been provided][4] in the *AWS Organizations
-    #   User Guide.*
+    #   information has not yet been provided][5] in the *Organizations User
+    #   Guide.*
     #
     # * MIN\_POLICY\_TYPE\_ATTACHMENT\_LIMIT\_EXCEEDED: You attempted to
     #   detach a policy from an entity that would cause the entity to have
@@ -563,16 +596,26 @@ module Aws::Organizations
     # * POLICY\_NUMBER\_LIMIT\_EXCEEDED: You attempted to exceed the number
     #   of policies that you can have in an organization.
     #
+    # * SERVICE\_ACCESS\_NOT\_ENABLED: You attempted to register a delegated
+    #   administrator before you enabled service access. Call the
+    #   `EnableAWSServiceAccess` API first.
+    #
     # * TAG\_POLICY\_VIOLATION: You attempted to create or update a resource
     #   with tags that are not compliant with the tag policy requirements
     #   for this account.
     #
+    # * WAIT\_PERIOD\_ACTIVE: After you create an Amazon Web Services
+    #   account, there is a waiting period before you can remove it from the
+    #   organization. If you get an error that indicates that a wait period
+    #   is required, try again in a few days.
     #
     #
-    # [1]: http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#orgs_manage_accounts_remove-from-master
-    # [2]: https://console.aws.amazon.com/support/home#/
-    # [3]: http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html
-    # [4]: http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info
+    #
+    # [1]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#orgs_manage_accounts_remove-from-master
+    # [2]: https://docs.aws.amazon.com/support/home#/
+    # [3]: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/manage-general.html
+    # [4]: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html
+    # [5]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -589,28 +632,37 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         email: "Email", # required
-    #         account_name: "AccountName", # required
-    #         role_name: "RoleName",
-    #         iam_user_access_to_billing: "ALLOW", # accepts ALLOW, DENY
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] email
     #   The email address of the owner to assign to the new member account.
-    #   This email address must not already be associated with another AWS
-    #   account. You must use a valid email address to complete account
-    #   creation. You can't access the root user of the account or remove
-    #   an account that was created with an invalid email address.
+    #   This email address must not already be associated with another
+    #   Amazon Web Services account. You must use a valid email address to
+    #   complete account creation.
+    #
+    #   The rules for a valid email address:
+    #
+    #   * The address must be a minimum of 6 and a maximum of 64 characters
+    #     long.
+    #
+    #   * All characters must be 7-bit ASCII characters.
+    #
+    #   * There must be one and only one @ symbol, which separates the local
+    #     name from the domain name.
+    #
+    #   * The local name can't contain any of the following characters:
+    #
+    #     whitespace, " ' ( ) &lt; &gt; \[ \] : ; , \\ \| % &amp;
+    #
+    #   * The local name can't begin with a dot (.)
+    #
+    #   * The domain name can consist of only the characters
+    #     \[a-z\],\[A-Z\],\[0-9\], hyphen (-), or dot (.)
+    #
+    #   * The domain name can't begin or end with a hyphen (-) or dot (.)
+    #
+    #   * The domain name must contain at least one dot
+    #
+    #   You can't access the root user of the account or remove an account
+    #   that was created with an invalid email address.
     #   @return [String]
     #
     # @!attribute [rw] account_name
@@ -618,9 +670,7 @@ module Aws::Organizations
     #   @return [String]
     #
     # @!attribute [rw] role_name
-    #   (Optional)
-    #
-    #   The name of an IAM role that AWS Organizations automatically
+    #   The name of an IAM role that Organizations automatically
     #   preconfigures in the new member account. This role trusts the
     #   management account, allowing users in the management account to
     #   assume the role, as permitted by the management account
@@ -634,10 +684,10 @@ module Aws::Organizations
     #   account, see the following links:
     #
     #   * [Accessing and Administering the Member Accounts in Your
-    #     Organization][1] in the *AWS Organizations User Guide*
+    #     Organization][1] in the *Organizations User Guide*
     #
-    #   * Steps 2 and 3 in [Tutorial: Delegate Access Across AWS Accounts
-    #     Using IAM Roles][2] in the *IAM User Guide*
+    #   * Steps 2 and 3 in [Tutorial: Delegate Access Across Amazon Web
+    #     Services accounts Using IAM Roles][2] in the *IAM User Guide*
     #
     #   The [regex pattern][3] that is used to validate this parameter. The
     #   pattern can include uppercase letters, lowercase letters, digits
@@ -655,8 +705,8 @@ module Aws::Organizations
     #   account billing information *if* they have the required permissions.
     #   If set to `DENY`, only the root user of the new account can access
     #   account billing information. For more information, see [Activating
-    #   Access to the Billing and Cost Management Console][1] in the *AWS
-    #   Billing and Cost Management User Guide*.
+    #   Access to the Billing and Cost Management Console][1] in the *Amazon
+    #   Web Services Billing and Cost Management User Guide*.
     #
     #   If you don't specify this parameter, the value defaults to `ALLOW`,
     #   and IAM users and roles with the required permissions can access
@@ -671,12 +721,12 @@ module Aws::Organizations
     #   A list of tags that you want to attach to the newly created account.
     #   For each tag in the list, you must specify both a tag key and a
     #   value. You can set the value to an empty string, but you can't set
-    #   it to `null`. For more information about tagging, see [Tagging AWS
-    #   Organizations resources][1] in the AWS Organizations User Guide.
+    #   it to `null`. For more information about tagging, see [Tagging
+    #   Organizations resources][1] in the Organizations User Guide.
     #
-    #   <note markdown="1"> If any one of the tags is invalid or if you exceed the allowed
-    #   number of tags for an account, then the entire request fails and the
-    #   account is not created.
+    #   <note markdown="1"> If any one of the tags is not valid or if you exceed the maximum
+    #   allowed number of tags for an account, then the entire request fails
+    #   and the account is not created.
     #
     #    </note>
     #
@@ -703,14 +753,14 @@ module Aws::Organizations
     #   you first receive it because account creation is an asynchronous
     #   process. You can pass the returned `CreateAccountStatus` ID as a
     #   parameter to DescribeCreateAccountStatus to get status about the
-    #   progress of the request at later times. You can also check the AWS
+    #   progress of the request at later times. You can also check the
     #   CloudTrail log for the `CreateAccountResult` event. For more
     #   information, see [Monitoring the Activity in Your Organization][1]
-    #   in the *AWS Organizations User Guide*.
+    #   in the *Organizations User Guide*.
     #
     #
     #
-    #   [1]: http://docs.aws.amazon.com/organizations/latest/userguide/orgs_monitoring.html
+    #   [1]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_monitoring.html
     #   @return [Types::CreateAccountStatus]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateAccountResponse AWS API Documentation
@@ -722,8 +772,8 @@ module Aws::Organizations
     end
 
     # Contains the status about a CreateAccount or CreateGovCloudAccount
-    # request to create an AWS account or an AWS GovCloud (US) account in an
-    # organization.
+    # request to create an Amazon Web Services account or an Amazon Web
+    # Services GovCloud (US) account in an organization.
     #
     # @!attribute [rw] id
     #   The unique identifier (ID) that references this request. You get
@@ -744,7 +794,8 @@ module Aws::Organizations
     #   @return [String]
     #
     # @!attribute [rw] state
-    #   The status of the asynchronous request to create an AWS account.
+    #   The status of the asynchronous request to create an Amazon Web
+    #   Services account.
     #   @return [String]
     #
     # @!attribute [rw] requested_timestamp
@@ -771,7 +822,7 @@ module Aws::Organizations
     #
     # @!attribute [rw] gov_cloud_account_id
     #   If the account was created successfully, the unique identifier (ID)
-    #   of the new account in the AWS GovCloud (US) Region.
+    #   of the new account in the Amazon Web Services GovCloud (US) Region.
     #   @return [String]
     #
     # @!attribute [rw] failure_reason
@@ -785,18 +836,20 @@ module Aws::Organizations
     #     with the same information.
     #
     #   * EMAIL\_ALREADY\_EXISTS: The account could not be created because
-    #     another AWS account with that email address already exists.
+    #     another Amazon Web Services account with that email address
+    #     already exists.
     #
-    #   * FAILED\_BUSINESS\_VALIDATION: The AWS account that owns your
-    #     organization failed to receive business license validation.
+    #   * FAILED\_BUSINESS\_VALIDATION: The Amazon Web Services account that
+    #     owns your organization failed to receive business license
+    #     validation.
     #
-    #   * GOVCLOUD\_ACCOUNT\_ALREADY\_EXISTS: The account in the AWS
-    #     GovCloud (US) Region could not be created because this Region
-    #     already includes an account with that email address.
+    #   * GOVCLOUD\_ACCOUNT\_ALREADY\_EXISTS: The account in the Amazon Web
+    #     Services GovCloud (US) Region could not be created because this
+    #     Region already includes an account with that email address.
     #
-    #   * IDENTITY\_INVALID\_BUSINESS\_VALIDATION: The AWS account that owns
-    #     your organization can't complete business license validation
-    #     because it doesn't have valid identity data.
+    #   * IDENTITY\_INVALID\_BUSINESS\_VALIDATION: The Amazon Web Services
+    #     account that owns your organization can't complete business
+    #     license validation because it doesn't have valid identity data.
     #
     #   * INVALID\_ADDRESS: The account could not be created because the
     #     address you provided is not valid.
@@ -804,23 +857,34 @@ module Aws::Organizations
     #   * INVALID\_EMAIL: The account could not be created because the email
     #     address you provided is not valid.
     #
+    #   * INVALID\_PAYMENT\_INSTRUMENT: The Amazon Web Services account that
+    #     owns your organization does not have a supported payment method
+    #     associated with the account. Amazon Web Services does not support
+    #     cards issued by financial institutions in Russia or Belarus. For
+    #     more information, see [Managing your Amazon Web Services
+    #     payments][1].
+    #
     #   * INTERNAL\_FAILURE: The account could not be created because of an
     #     internal failure. Try again later. If the problem persists,
-    #     contact AWS Customer Support.
+    #     contact Amazon Web Services Customer Support.
     #
-    #   * MISSING\_BUSINESS\_VALIDATION: The AWS account that owns your
-    #     organization has not received Business Validation.
+    #   * MISSING\_BUSINESS\_VALIDATION: The Amazon Web Services account
+    #     that owns your organization has not received Business Validation.
     #
     #   * MISSING\_PAYMENT\_INSTRUMENT: You must configure the management
     #     account with a valid payment method, such as a credit card.
     #
-    #   * PENDING\_BUSINESS\_VALIDATION: The AWS account that owns your
-    #     organization is still in the process of completing business
+    #   * PENDING\_BUSINESS\_VALIDATION: The Amazon Web Services account
+    #     that owns your organization is still in the process of completing
+    #     business license validation.
+    #
+    #   * UNKNOWN\_BUSINESS\_VALIDATION: The Amazon Web Services account
+    #     that owns your organization has an unknown issue with business
     #     license validation.
     #
-    #   * UNKNOWN\_BUSINESS\_VALIDATION: The AWS account that owns your
-    #     organization has an unknown issue with business license
-    #     validation.
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/manage-general.html
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateAccountStatus AWS API Documentation
@@ -852,46 +916,59 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateGovCloudAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         email: "Email", # required
-    #         account_name: "AccountName", # required
-    #         role_name: "RoleName",
-    #         iam_user_access_to_billing: "ALLOW", # accepts ALLOW, DENY
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] email
-    #   The email address of the owner to assign to the new member account
-    #   in the commercial Region. This email address must not already be
-    #   associated with another AWS account. You must use a valid email
-    #   address to complete account creation. You can't access the root
-    #   user of the account or remove an account that was created with an
-    #   invalid email address. Like all request parameters for
-    #   `CreateGovCloudAccount`, the request for the email address for the
-    #   AWS GovCloud (US) account originates from the commercial Region, not
-    #   from the AWS GovCloud (US) Region.
+    #   Specifies the email address of the owner to assign to the new member
+    #   account in the commercial Region. This email address must not
+    #   already be associated with another Amazon Web Services account. You
+    #   must use a valid email address to complete account creation.
+    #
+    #   The rules for a valid email address:
+    #
+    #   * The address must be a minimum of 6 and a maximum of 64 characters
+    #     long.
+    #
+    #   * All characters must be 7-bit ASCII characters.
+    #
+    #   * There must be one and only one @ symbol, which separates the local
+    #     name from the domain name.
+    #
+    #   * The local name can't contain any of the following characters:
+    #
+    #     whitespace, " ' ( ) &lt; &gt; \[ \] : ; , \\ \| % &amp;
+    #
+    #   * The local name can't begin with a dot (.)
+    #
+    #   * The domain name can consist of only the characters
+    #     \[a-z\],\[A-Z\],\[0-9\], hyphen (-), or dot (.)
+    #
+    #   * The domain name can't begin or end with a hyphen (-) or dot (.)
+    #
+    #   * The domain name must contain at least one dot
+    #
+    #   You can't access the root user of the account or remove an account
+    #   that was created with an invalid email address. Like all request
+    #   parameters for `CreateGovCloudAccount`, the request for the email
+    #   address for the Amazon Web Services GovCloud (US) account originates
+    #   from the commercial Region, not from the Amazon Web Services
+    #   GovCloud (US) Region.
     #   @return [String]
     #
     # @!attribute [rw] account_name
     #   The friendly name of the member account.
+    #
+    #   The account name can consist of only the characters
+    #   \[a-z\],\[A-Z\],\[0-9\], hyphen (-), or dot (.) You can't separate
+    #   characters with a dash (–).
     #   @return [String]
     #
     # @!attribute [rw] role_name
     #   (Optional)
     #
-    #   The name of an IAM role that AWS Organizations automatically
-    #   preconfigures in the new member accounts in both the AWS GovCloud
-    #   (US) Region and in the commercial Region. This role trusts the
-    #   management account, allowing users in the management account to
-    #   assume the role, as permitted by the management account
+    #   The name of an IAM role that Organizations automatically
+    #   preconfigures in the new member accounts in both the Amazon Web
+    #   Services GovCloud (US) Region and in the commercial Region. This
+    #   role trusts the management account, allowing users in the management
+    #   account to assume the role, as permitted by the management account
     #   administrator. The role has administrator permissions in the new
     #   member account.
     #
@@ -900,9 +977,9 @@ module Aws::Organizations
     #
     #   For more information about how to use this role to access the member
     #   account, see [Accessing and Administering the Member Accounts in
-    #   Your Organization][1] in the *AWS Organizations User Guide* and
-    #   steps 2 and 3 in [Tutorial: Delegate Access Across AWS Accounts
-    #   Using IAM Roles][2] in the *IAM User Guide.*
+    #   Your Organization][1] in the *Organizations User Guide* and steps 2
+    #   and 3 in [Tutorial: Delegate Access Across Amazon Web Services
+    #   accounts Using IAM Roles][2] in the *IAM User Guide.*
     #
     #   The [regex pattern][3] that is used to validate this parameter. The
     #   pattern can include uppercase letters, lowercase letters, digits
@@ -921,8 +998,8 @@ module Aws::Organizations
     #   have the required permissions. If set to `DENY`, only the root user
     #   of the new account can access account billing information. For more
     #   information, see [Activating Access to the Billing and Cost
-    #   Management Console][1] in the *AWS Billing and Cost Management User
-    #   Guide.*
+    #   Management Console][1] in the *Amazon Web Services Billing and Cost
+    #   Management User Guide.*
     #
     #   If you don't specify this parameter, the value defaults to `ALLOW`,
     #   and IAM users and roles with the required permissions can access
@@ -942,12 +1019,12 @@ module Aws::Organizations
     #
     #   For each tag in the list, you must specify both a tag key and a
     #   value. You can set the value to an empty string, but you can't set
-    #   it to `null`. For more information about tagging, see [Tagging AWS
-    #   Organizations resources][1] in the AWS Organizations User Guide.
+    #   it to `null`. For more information about tagging, see [Tagging
+    #   Organizations resources][1] in the Organizations User Guide.
     #
-    #   <note markdown="1"> If any one of the tags is invalid or if you exceed the allowed
-    #   number of tags for an account, then the entire request fails and the
-    #   account is not created.
+    #   <note markdown="1"> If any one of the tags is not valid or if you exceed the maximum
+    #   allowed number of tags for an account, then the entire request fails
+    #   and the account is not created.
     #
     #    </note>
     #
@@ -970,8 +1047,8 @@ module Aws::Organizations
 
     # @!attribute [rw] create_account_status
     #   Contains the status about a CreateAccount or CreateGovCloudAccount
-    #   request to create an AWS account or an AWS GovCloud (US) account in
-    #   an organization.
+    #   request to create an Amazon Web Services account or an Amazon Web
+    #   Services GovCloud (US) account in an organization.
     #   @return [Types::CreateAccountStatus]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateGovCloudAccountResponse AWS API Documentation
@@ -982,30 +1059,23 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         feature_set: "ALL", # accepts ALL, CONSOLIDATED_BILLING
-    #       }
-    #
     # @!attribute [rw] feature_set
     #   Specifies the feature set supported by the new organization. Each
     #   feature set supports different levels of functionality.
     #
-    #   * `CONSOLIDATED_BILLING`\: All member accounts have their bills
+    #   * `CONSOLIDATED_BILLING`: All member accounts have their bills
     #     consolidated to and paid by the management account. For more
-    #     information, see [Consolidated billing][1] in the *AWS
-    #     Organizations User Guide.*
+    #     information, see [Consolidated billing][1] in the *Organizations
+    #     User Guide.*
     #
     #     The consolidated billing feature subset isn't available for
-    #     organizations in the AWS GovCloud (US) Region.
+    #     organizations in the Amazon Web Services GovCloud (US) Region.
     #
-    #   * `ALL`\: In addition to all the features supported by the
+    #   * `ALL`: In addition to all the features supported by the
     #     consolidated billing feature set, the management account can also
     #     apply any policy type to any member account in the organization.
-    #     For more information, see [All features][2] in the *AWS
-    #     Organizations User Guide.*
+    #     For more information, see [All features][2] in the *Organizations
+    #     User Guide.*
     #
     #
     #
@@ -1034,20 +1104,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateOrganizationalUnitRequest
-    #   data as a hash:
-    #
-    #       {
-    #         parent_id: "ParentId", # required
-    #         name: "OrganizationalUnitName", # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] parent_id
     #   The unique identifier (ID) of the parent root or OU that you want to
     #   create the new OU in.
@@ -1077,10 +1133,10 @@ module Aws::Organizations
     #   A list of tags that you want to attach to the newly created OU. For
     #   each tag in the list, you must specify both a tag key and a value.
     #   You can set the value to an empty string, but you can't set it to
-    #   `null`. For more information about tagging, see [Tagging AWS
-    #   Organizations resources][1] in the AWS Organizations User Guide.
+    #   `null`. For more information about tagging, see [Tagging
+    #   Organizations resources][1] in the Organizations User Guide.
     #
-    #   <note markdown="1"> If any one of the tags is invalid or if you exceed the allowed
+    #   <note markdown="1"> If any one of the tags is not valid or if you exceed the allowed
     #   number of tags for an OU, then the entire request fails and the OU
     #   is not created.
     #
@@ -1113,22 +1169,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreatePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         content: "PolicyContent", # required
-    #         description: "PolicyDescription", # required
-    #         name: "PolicyName", # required
-    #         type: "SERVICE_CONTROL_POLICY", # required, accepts SERVICE_CONTROL_POLICY, TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] content
     #   The policy text content to add to the new policy. The text that you
     #   supply must adhere to the rules of the policy type you specify in
@@ -1174,10 +1214,10 @@ module Aws::Organizations
     #   A list of tags that you want to attach to the newly created policy.
     #   For each tag in the list, you must specify both a tag key and a
     #   value. You can set the value to an empty string, but you can't set
-    #   it to `null`. For more information about tagging, see [Tagging AWS
-    #   Organizations resources][1] in the AWS Organizations User Guide.
+    #   it to `null`. For more information about tagging, see [Tagging
+    #   Organizations resources][1] in the Organizations User Guide.
     #
-    #   <note markdown="1"> If any one of the tags is invalid or if you exceed the allowed
+    #   <note markdown="1"> If any one of the tags is not valid or if you exceed the allowed
     #   number of tags for a policy, then the entire request fails and the
     #   policy is not created.
     #
@@ -1212,13 +1252,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeclineHandshakeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         handshake_id: "HandshakeId", # required
-    #       }
-    #
     # @!attribute [rw] handshake_id
     #   The unique identifier (ID) of the handshake that you want to
     #   decline. You can get the ID from the ListHandshakesForAccount
@@ -1267,7 +1300,7 @@ module Aws::Organizations
     #
     # @!attribute [rw] email
     #   The email address that is associated with the delegated
-    #   administrator's AWS account.
+    #   administrator's Amazon Web Services account.
     #   @return [String]
     #
     # @!attribute [rw] name
@@ -1308,13 +1341,13 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # Contains information about the AWS service for which the account is a
-    # delegated administrator.
+    # Contains information about the Amazon Web Services service for which
+    # the account is a delegated administrator.
     #
     # @!attribute [rw] service_principal
-    #   The name of an AWS service that can request an operation for the
-    #   specified service. This is typically in the form of a URL, such as:
-    #   ` servicename.amazonaws.com`.
+    #   The name of an Amazon Web Services service that can request an
+    #   operation for the specified service. This is typically in the form
+    #   of a URL, such as: ` servicename.amazonaws.com`.
     #   @return [String]
     #
     # @!attribute [rw] delegation_enabled_date
@@ -1331,13 +1364,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteOrganizationalUnitRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organizational_unit_id: "OrganizationalUnitId", # required
-    #       }
-    #
     # @!attribute [rw] organizational_unit_id
     #   The unique identifier (ID) of the organizational unit that you want
     #   to delete. You can get the ID from the
@@ -1362,13 +1388,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeletePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         policy_id: "PolicyId", # required
-    #       }
-    #
     # @!attribute [rw] policy_id
     #   The unique identifier (ID) of the policy that you want to delete.
     #   You can get the ID from the ListPolicies or ListPoliciesForTarget
@@ -1391,28 +1410,20 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeregisterDelegatedAdministratorRequest
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId", # required
-    #         service_principal: "ServicePrincipal", # required
-    #       }
-    #
     # @!attribute [rw] account_id
     #   The account ID number of the member account in the organization that
     #   you want to deregister as a delegated administrator.
     #   @return [String]
     #
     # @!attribute [rw] service_principal
-    #   The service principal name of an AWS service for which the account
-    #   is a delegated administrator.
+    #   The service principal name of an Amazon Web Services service for
+    #   which the account is a delegated administrator.
     #
     #   Delegated administrator privileges are revoked for only the
-    #   specified AWS service from the member account. If the specified
-    #   service is the only service for which the member account is a
-    #   delegated administrator, the operation also revokes Organizations
-    #   read action permissions.
+    #   specified Amazon Web Services service from the member account. If
+    #   the specified service is the only service for which the member
+    #   account is a delegated administrator, the operation also revokes
+    #   Organizations read action permissions.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DeregisterDelegatedAdministratorRequest AWS API Documentation
@@ -1424,17 +1435,10 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId", # required
-    #       }
-    #
     # @!attribute [rw] account_id
-    #   The unique identifier (ID) of the AWS account that you want
-    #   information about. You can get the ID from the ListAccounts or
-    #   ListAccountsForParent operations.
+    #   The unique identifier (ID) of the Amazon Web Services account that
+    #   you want information about. You can get the ID from the ListAccounts
+    #   or ListAccountsForParent operations.
     #
     #   The [regex pattern][1] for an account ID string requires exactly 12
     #   digits.
@@ -1464,13 +1468,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeCreateAccountStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         create_account_request_id: "CreateAccountRequestId", # required
-    #       }
-    #
     # @!attribute [rw] create_account_request_id
     #   Specifies the `Id` value that uniquely identifies the
     #   `CreateAccount` request. You can get the value from the
@@ -1507,14 +1504,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEffectivePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         policy_type: "TAG_POLICY", # required, accepts TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY
-    #         target_id: "PolicyTargetId",
-    #       }
-    #
     # @!attribute [rw] policy_type
     #   The type of policy that you want information about. You can specify
     #   one of the following values:
@@ -1559,13 +1548,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeHandshakeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         handshake_id: "HandshakeId", # required
-    #       }
-    #
     # @!attribute [rw] handshake_id
     #   The unique identifier (ID) of the handshake that you want
     #   information about. You can get the ID from the original call to
@@ -1618,13 +1600,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeOrganizationalUnitRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organizational_unit_id: "OrganizationalUnitId", # required
-    #       }
-    #
     # @!attribute [rw] organizational_unit_id
     #   The unique identifier (ID) of the organizational unit that you want
     #   details about. You can get the ID from the
@@ -1661,13 +1636,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         policy_id: "PolicyId", # required
-    #       }
-    #
     # @!attribute [rw] policy_id
     #   The unique identifier (ID) of the policy that you want details
     #   about. You can get the ID from the ListPolicies or
@@ -1702,6 +1670,18 @@ module Aws::Organizations
       include Aws::Structure
     end
 
+    # @!attribute [rw] resource_policy
+    #   A structure that contains details about the resource policy.
+    #   @return [Types::ResourcePolicy]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeResourcePolicyResponse AWS API Documentation
+    #
+    class DescribeResourcePolicyResponse < Struct.new(
+      :resource_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # We can't find the destination container (a root or OU) with the
     # `ParentId` that you specified.
     #
@@ -1716,14 +1696,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DetachPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         policy_id: "PolicyId", # required
-    #         target_id: "PolicyTargetId", # required
-    #       }
-    #
     # @!attribute [rw] policy_id
     #   The unique identifier (ID) of the policy you want to detach. You can
     #   get the ID from the ListPolicies or ListPoliciesForTarget
@@ -1771,17 +1743,11 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisableAWSServiceAccessRequest
-    #   data as a hash:
-    #
-    #       {
-    #         service_principal: "ServicePrincipal", # required
-    #       }
-    #
     # @!attribute [rw] service_principal
-    #   The service principal name of the AWS service for which you want to
-    #   disable integration with your organization. This is typically in the
-    #   form of a URL, such as ` service-abbreviation.amazonaws.com`.
+    #   The service principal name of the Amazon Web Services service for
+    #   which you want to disable integration with your organization. This
+    #   is typically in the form of a URL, such as `
+    #   service-abbreviation.amazonaws.com`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DisableAWSServiceAccessRequest AWS API Documentation
@@ -1792,14 +1758,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisablePolicyTypeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         root_id: "RootId", # required
-    #         policy_type: "SERVICE_CONTROL_POLICY", # required, accepts SERVICE_CONTROL_POLICY, TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY
-    #       }
-    #
     # @!attribute [rw] root_id
     #   The unique identifier (ID) of the root in which you want to disable
     #   a policy type. You can get the ID from the ListRoots operation.
@@ -1972,17 +1930,11 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass EnableAWSServiceAccessRequest
-    #   data as a hash:
-    #
-    #       {
-    #         service_principal: "ServicePrincipal", # required
-    #       }
-    #
     # @!attribute [rw] service_principal
-    #   The service principal name of the AWS service for which you want to
-    #   enable integration with your organization. This is typically in the
-    #   form of a URL, such as ` service-abbreviation.amazonaws.com`.
+    #   The service principal name of the Amazon Web Services service for
+    #   which you want to enable integration with your organization. This is
+    #   typically in the form of a URL, such as `
+    #   service-abbreviation.amazonaws.com`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/EnableAWSServiceAccessRequest AWS API Documentation
@@ -2012,14 +1964,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass EnablePolicyTypeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         root_id: "RootId", # required
-    #         policy_type: "SERVICE_CONTROL_POLICY", # required, accepts SERVICE_CONTROL_POLICY, TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY
-    #       }
-    #
     # @!attribute [rw] root_id
     #   The unique identifier (ID) of the root in which you want to enable a
     #   policy type. You can get the ID from the ListRoots operation.
@@ -2075,8 +2019,8 @@ module Aws::Organizations
     end
 
     # A structure that contains details of a service principal that
-    # represents an AWS service that is enabled to integrate with AWS
-    # Organizations.
+    # represents an Amazon Web Services service that is enabled to integrate
+    # with Organizations.
     #
     # @!attribute [rw] service_principal
     #   The name of the service principal. This is typically in the form of
@@ -2085,7 +2029,7 @@ module Aws::Organizations
     #
     # @!attribute [rw] date_enabled
     #   The date that the service principal was enabled for integration with
-    #   AWS Organizations.
+    #   Organizations.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/EnabledServicePrincipal AWS API Documentation
@@ -2097,10 +2041,10 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # AWS Organizations couldn't perform the operation because your
+    # Organizations couldn't perform the operation because your
     # organization hasn't finished initializing. This can take up to an
     # hour. Try again later. If after one hour you continue to receive this
-    # error, contact [AWS Support][1].
+    # error, contact [Amazon Web Services Support][1].
     #
     #
     #
@@ -2124,9 +2068,9 @@ module Aws::Organizations
     # accounts exchange information as a series of handshake requests and
     # responses.
     #
-    # **Note:** Handshakes that are `CANCELED`, `ACCEPTED`, or `DECLINED`
-    # show up in lists for only 30 days after entering that state After that
-    # they are deleted.
+    # **Note:** Handshakes that are `CANCELED`, `ACCEPTED`, `DECLINED`, or
+    # `EXPIRED` show up in lists for only 30 days after entering that state
+    # After that they are deleted.
     #
     # @!attribute [rw] id
     #   The unique identifier (ID) of a handshake. The originating account
@@ -2144,8 +2088,8 @@ module Aws::Organizations
     #   The Amazon Resource Name (ARN) of a handshake.
     #
     #   For more information about ARNs in Organizations, see [ARN Formats
-    #   Supported by Organizations][1] in the *AWS Service Authorization
-    #   Reference*.
+    #   Supported by Organizations][1] in the *Amazon Web Services Service
+    #   Authorization Reference*.
     #
     #
     #
@@ -2162,26 +2106,26 @@ module Aws::Organizations
     #   of the handshake through the process from its creation to its
     #   acceptance. The meaning of each of the valid values is as follows:
     #
-    #   * **REQUESTED**\: This handshake was sent to multiple recipients
+    #   * **REQUESTED**: This handshake was sent to multiple recipients
     #     (applicable to only some handshake types) and not all recipients
     #     have responded yet. The request stays in this state until all
     #     recipients respond.
     #
-    #   * **OPEN**\: This handshake was sent to multiple recipients
+    #   * **OPEN**: This handshake was sent to multiple recipients
     #     (applicable to only some policy types) and all recipients have
     #     responded, allowing the originator to complete the handshake
     #     action.
     #
-    #   * **CANCELED**\: This handshake is no longer active because it was
+    #   * **CANCELED**: This handshake is no longer active because it was
     #     canceled by the originating account.
     #
-    #   * **ACCEPTED**\: This handshake is complete because it has been
+    #   * **ACCEPTED**: This handshake is complete because it has been
     #     accepted by the recipient.
     #
-    #   * **DECLINED**\: This handshake is no longer active because it was
+    #   * **DECLINED**: This handshake is no longer active because it was
     #     declined by the recipient account.
     #
-    #   * **EXPIRED**\: This handshake is no longer active because the
+    #   * **EXPIRED**: This handshake is no longer active because the
     #     originator did not receive a response of any kind from the
     #     recipient before the expiration time (15 days).
     #   @return [String]
@@ -2201,18 +2145,18 @@ module Aws::Organizations
     #   recipient accepts the handshake. The following handshake types are
     #   supported:
     #
-    #   * **INVITE**\: This type of handshake represents a request to join
-    #     an organization. It is always sent from the management account to
+    #   * **INVITE**: This type of handshake represents a request to join an
+    #     organization. It is always sent from the management account to
     #     only non-member accounts.
     #
-    #   * **ENABLE\_ALL\_FEATURES**\: This type of handshake represents a
+    #   * **ENABLE\_ALL\_FEATURES**: This type of handshake represents a
     #     request to enable all features in an organization. It is always
     #     sent from the management account to only *invited* member
     #     accounts. Created accounts do not receive this because those
     #     accounts were created by the organization's management account
     #     and approval is inferred.
     #
-    #   * **APPROVE\_ALL\_FEATURES**\: This type of handshake is sent from
+    #   * **APPROVE\_ALL\_FEATURES**: This type of handshake is sent from
     #     the Organizations service when all member accounts have approved
     #     the `ENABLE_ALL_FEATURES` invitation. It is sent only to the
     #     management account and signals the master that it can finalize the
@@ -2266,7 +2210,8 @@ module Aws::Organizations
     #
     #   If you get this exception immediately after creating the
     #   organization, wait one hour and try again. If after an hour it
-    #   continues to fail with this error, contact [AWS Support][1].
+    #   continues to fail with this error, contact [Amazon Web Services
+    #   Support][1].
     #
     # * ALREADY\_IN\_AN\_ORGANIZATION: The handshake request is invalid
     #   because the invited account is already a member of an organization.
@@ -2302,7 +2247,7 @@ module Aws::Organizations
     #
     #
     #
-    # [1]: https://console.aws.amazon.com/support/home#/
+    # [1]: https://docs.aws.amazon.com/support/home#/
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -2321,14 +2266,6 @@ module Aws::Organizations
 
     # Specifies the criteria that are used to select the handshakes for the
     # operation.
-    #
-    # @note When making an API call, you may pass HandshakeFilter
-    #   data as a hash:
-    #
-    #       {
-    #         action_type: "INVITE", # accepts INVITE, ENABLE_ALL_FEATURES, APPROVE_ALL_FEATURES, ADD_ORGANIZATIONS_SERVICE_LINKED_ROLE
-    #         parent_handshake_id: "HandshakeId",
-    #       }
     #
     # @!attribute [rw] action_type
     #   Specifies the type of handshake action.
@@ -2376,14 +2313,6 @@ module Aws::Organizations
 
     # Identifies a participant in a handshake.
     #
-    # @note When making an API call, you may pass HandshakeParty
-    #   data as a hash:
-    #
-    #       {
-    #         id: "HandshakePartyId", # required
-    #         type: "ACCOUNT", # required, accepts ACCOUNT, ORGANIZATION, EMAIL
-    #       }
-    #
     # @!attribute [rw] id
     #   The unique identifier (ID) for the party.
     #
@@ -2420,7 +2349,7 @@ module Aws::Organizations
     #   The type of information being passed, specifying how the value is to
     #   be interpreted by the other party:
     #
-    #   * `ACCOUNT` - Specifies an AWS account ID number.
+    #   * `ACCOUNT` - Specifies an Amazon Web Services account ID number.
     #
     #   * `ORGANIZATION` - Specifies an organization ID number.
     #
@@ -2479,8 +2408,8 @@ module Aws::Organizations
     # * DUPLICATE\_TAG\_KEY: Tag keys must be unique among the tags attached
     #   to the same entity.
     #
-    # * IMMUTABLE\_POLICY: You specified a policy that is managed by AWS and
-    #   can't be modified.
+    # * IMMUTABLE\_POLICY: You specified a policy that is managed by Amazon
+    #   Web Services and can't be modified.
     #
     # * INPUT\_REQUIRED: You must include a value for all required
     #   parameters.
@@ -2521,8 +2450,8 @@ module Aws::Organizations
     #
     # * INVALID\_SYSTEM\_TAGS\_PARAMETER: You specified a tag key that is a
     #   system tag. You can’t add, edit, or delete system tag keys because
-    #   they're reserved for AWS use. System tags don’t count against your
-    #   tags per resource limit.
+    #   they're reserved for Amazon Web Services use. System tags don’t
+    #   count against your tags per resource limit.
     #
     # * MAX\_FILTER\_LIMIT\_EXCEEDED: You can specify only one filter
     #   parameter for the operation.
@@ -2563,38 +2492,22 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass InviteAccountToOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         target: { # required
-    #           id: "HandshakePartyId", # required
-    #           type: "ACCOUNT", # required, accepts ACCOUNT, ORGANIZATION, EMAIL
-    #         },
-    #         notes: "HandshakeNotes",
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] target
-    #   The identifier (ID) of the AWS account that you want to invite to
-    #   join your organization. This is a JSON object that contains the
-    #   following elements:
+    #   The identifier (ID) of the Amazon Web Services account that you want
+    #   to invite to join your organization. This is a JSON object that
+    #   contains the following elements:
     #
     #   `\{ "Type": "ACCOUNT", "Id": "< account id number >" \}`
     #
-    #   If you use the AWS CLI, you can submit this as a single string,
-    #   similar to the following example:
+    #   If you use the CLI, you can submit this as a single string, similar
+    #   to the following example:
     #
     #   `--target Id=123456789012,Type=ACCOUNT`
     #
-    #   If you specify `"Type": "ACCOUNT"`, you must provide the AWS account
-    #   ID number as the `Id`. If you specify `"Type": "EMAIL"`, you must
-    #   specify the email address that is associated with the account.
+    #   If you specify `"Type": "ACCOUNT"`, you must provide the Amazon Web
+    #   Services account ID number as the `Id`. If you specify `"Type":
+    #   "EMAIL"`, you must specify the email address that is associated with
+    #   the account.
     #
     #   `--target Id=diego@example.com,Type=EMAIL`
     #   @return [Types::HandshakeParty]
@@ -2609,8 +2522,8 @@ module Aws::Organizations
     #   becomes a member of the organization. For each tag in the list, you
     #   must specify both a tag key and a value. You can set the value to an
     #   empty string, but you can't set it to `null`. For more information
-    #   about tagging, see [Tagging AWS Organizations resources][1] in the
-    #   AWS Organizations User Guide.
+    #   about tagging, see [Tagging Organizations resources][1] in the
+    #   Organizations User Guide.
     #
     #   Any tags in the request are checked for compliance with any
     #   applicable tag policies when the request is made. The request is
@@ -2621,7 +2534,7 @@ module Aws::Organizations
     #   changes between the invitation and the acceptance, then that tags
     #   could potentially be non-compliant.
     #
-    #   <note markdown="1"> If any one of the tags is invalid or if you exceed the allowed
+    #   <note markdown="1"> If any one of the tags is not valid or if you exceed the allowed
     #   number of tags for an account, then the entire request fails and
     #   invitations are not sent.
     #
@@ -2655,14 +2568,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAWSServiceAccessForOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The parameter for receiving additional results if you receive a
     #   `NextToken` response in a previous request. A `NextToken` response
@@ -2697,7 +2602,7 @@ module Aws::Organizations
     #   A list of the service principals for the services that are enabled
     #   to integrate with your organization. Each principal is a structure
     #   that includes the name and the date that it was enabled for
-    #   integration with AWS Organizations.
+    #   integration with Organizations.
     #   @return [Array<Types::EnabledServicePrincipal>]
     #
     # @!attribute [rw] next_token
@@ -2717,15 +2622,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAccountsForParentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         parent_id: "ParentId", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] parent_id
     #   The unique identifier (ID) for the parent root or organization unit
     #   (OU) whose accounts you want to list.
@@ -2783,14 +2679,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAccountsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The parameter for receiving additional results if you receive a
     #   `NextToken` response in a previous request. A `NextToken` response
@@ -2842,16 +2730,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListChildrenRequest
-    #   data as a hash:
-    #
-    #       {
-    #         parent_id: "ParentId", # required
-    #         child_type: "ACCOUNT", # required, accepts ACCOUNT, ORGANIZATIONAL_UNIT
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] parent_id
     #   The unique identifier (ID) for the parent root or OU whose children
     #   you want to list.
@@ -2930,15 +2808,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListCreateAccountStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         states: ["IN_PROGRESS"], # accepts IN_PROGRESS, SUCCEEDED, FAILED
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] states
     #   A list of one or more states that you want included in the response.
     #   If this parameter isn't present, all requests are included in the
@@ -2999,15 +2868,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDelegatedAdministratorsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         service_principal: "ServicePrincipal",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] service_principal
     #   Specifies a service principal name. If specified, then the operation
     #   lists the delegated administrators only for the specified service.
@@ -3068,15 +2928,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDelegatedServicesForAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] account_id
     #   The account ID number of a delegated administrator account in the
     #   organization.
@@ -3134,18 +2985,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListHandshakesForAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filter: {
-    #           action_type: "INVITE", # accepts INVITE, ENABLE_ALL_FEATURES, APPROVE_ALL_FEATURES, ADD_ORGANIZATIONS_SERVICE_LINKED_ROLE
-    #           parent_handshake_id: "HandshakeId",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] filter
     #   Filters the handshakes that you want included in the response. The
     #   default is all types. Use the `ActionType` element to limit the
@@ -3210,18 +3049,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListHandshakesForOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filter: {
-    #           action_type: "INVITE", # accepts INVITE, ENABLE_ALL_FEATURES, APPROVE_ALL_FEATURES, ADD_ORGANIZATIONS_SERVICE_LINKED_ROLE
-    #           parent_handshake_id: "HandshakeId",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] filter
     #   A filter of the handshakes that you want included in the response.
     #   The default is all types. Use the `ActionType` element to limit the
@@ -3286,15 +3113,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListOrganizationalUnitsForParentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         parent_id: "ParentId", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] parent_id
     #   The unique identifier (ID) of the root or OU whose child OUs you
     #   want to list.
@@ -3368,15 +3186,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListParentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         child_id: "ChildId", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] child_id
     #   The unique identifier (ID) of the OU or account whose parent
     #   containers you want to list. Don't specify a root.
@@ -3449,16 +3258,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPoliciesForTargetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         target_id: "PolicyTargetId", # required
-    #         filter: "SERVICE_CONTROL_POLICY", # required, accepts SERVICE_CONTROL_POLICY, TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] target_id
     #   The unique identifier (ID) of the root, organizational unit, or
     #   account whose policies you want to list.
@@ -3555,15 +3354,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPoliciesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filter: "SERVICE_CONTROL_POLICY", # required, accepts SERVICE_CONTROL_POLICY, TAG_POLICY, BACKUP_POLICY, AISERVICES_OPT_OUT_POLICY
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] filter
     #   Specifies the type of policy that you want to include in the
     #   response. You must specify one of the following values:
@@ -3638,14 +3428,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRootsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The parameter for receiving additional results if you receive a
     #   `NextToken` response in a previous request. A `NextToken` response
@@ -3697,20 +3479,12 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_id: "TaggableResourceId", # required
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] resource_id
     #   The ID of the resource with the tags to list.
     #
     #   You can specify any of the following taggable resources.
     #
-    #   * AWS account – specify the account ID number.
+    #   * Amazon Web Services account – specify the account ID number.
     #
     #   * Organizational unit – specify the OU ID that begins with `ou-` and
     #     looks similar to: `ou-1a2b-34uvwxyz `
@@ -3760,15 +3534,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTargetsForPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         policy_id: "PolicyId", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] policy_id
     #   The unique identifier (ID) of the policy whose attachments you want
     #   to know.
@@ -3838,7 +3603,7 @@ module Aws::Organizations
     # The provided policy document doesn't meet the requirements of the
     # specified policy type. For example, the syntax might be incorrect. For
     # details about service control policy syntax, see [Service Control
-    # Policy Syntax][1] in the *AWS Organizations User Guide.*
+    # Policy Syntax][1] in the *Organizations User Guide.*
     #
     #
     #
@@ -3871,15 +3636,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass MoveAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId", # required
-    #         source_parent_id: "ParentId", # required
-    #         destination_parent_id: "ParentId", # required
-    #       }
-    #
     # @!attribute [rw] account_id
     #   The unique identifier (ID) of the account that you want to move.
     #
@@ -3963,8 +3719,8 @@ module Aws::Organizations
     #   The Amazon Resource Name (ARN) of an organization.
     #
     #   For more information about ARNs in Organizations, see [ARN Formats
-    #   Supported by Organizations][1] in the *AWS Service Authorization
-    #   Reference*.
+    #   Supported by Organizations][1] in the *Amazon Web Services Service
+    #   Authorization Reference*.
     #
     #
     #
@@ -3977,8 +3733,7 @@ module Aws::Organizations
     #   policies can be applied to accounts in the organization. If set to
     #   "CONSOLIDATED\_BILLING", then only consolidated billing
     #   functionality is available. For more information, see [Enabling All
-    #   Features in Your Organization][1] in the *AWS Organizations User
-    #   Guide*.
+    #   Features in Your Organization][1] in the *Organizations User Guide*.
     #
     #
     #
@@ -3990,8 +3745,8 @@ module Aws::Organizations
     #   the management account for the organization.
     #
     #   For more information about ARNs in Organizations, see [ARN Formats
-    #   Supported by Organizations][1] in the *AWS Service Authorization
-    #   Reference*.
+    #   Supported by Organizations][1] in the *Amazon Web Services Service
+    #   Authorization Reference*.
     #
     #
     #
@@ -4011,8 +3766,9 @@ module Aws::Organizations
     #   @return [String]
     #
     # @!attribute [rw] master_account_email
-    #   The email address that is associated with the AWS account that is
-    #   designated as the management account for the organization.
+    #   The email address that is associated with the Amazon Web Services
+    #   account that is designated as the management account for the
+    #   organization.
     #   @return [String]
     #
     # @!attribute [rw] available_policy_types
@@ -4053,9 +3809,9 @@ module Aws::Organizations
     end
 
     # Contains details about an organizational unit (OU). An OU is a
-    # container of AWS accounts within a root of an organization. Policies
-    # that are attached to an OU apply to all accounts contained in that OU
-    # and in any child OUs.
+    # container of Amazon Web Services accounts within a root of an
+    # organization. Policies that are attached to an OU apply to all
+    # accounts contained in that OU and in any child OUs.
     #
     # @!attribute [rw] id
     #   The unique identifier (ID) associated with this OU.
@@ -4075,8 +3831,8 @@ module Aws::Organizations
     #   The Amazon Resource Name (ARN) of this OU.
     #
     #   For more information about ARNs in Organizations, see [ARN Formats
-    #   Supported by Organizations][1] in the *AWS Service Authorization
-    #   Reference*.
+    #   Supported by Organizations][1] in the *Amazon Web Services Service
+    #   Authorization Reference*.
     #
     #
     #
@@ -4276,8 +4032,8 @@ module Aws::Organizations
     #   The Amazon Resource Name (ARN) of the policy.
     #
     #   For more information about ARNs in Organizations, see [ARN Formats
-    #   Supported by Organizations][1] in the *AWS Service Authorization
-    #   Reference*.
+    #   Supported by Organizations][1] in the *Amazon Web Services Service
+    #   Authorization Reference*.
     #
     #
     #
@@ -4305,8 +4061,8 @@ module Aws::Organizations
     #
     # @!attribute [rw] aws_managed
     #   A boolean value that indicates whether the specified policy is an
-    #   AWS managed policy. If true, then you can attach the policy to
-    #   roots, OUs, or accounts, but you cannot edit it.
+    #   Amazon Web Services managed policy. If true, then you can attach the
+    #   policy to roots, OUs, or accounts, but you cannot edit it.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/PolicySummary AWS API Documentation
@@ -4351,8 +4107,8 @@ module Aws::Organizations
     #   The Amazon Resource Name (ARN) of the policy target.
     #
     #   For more information about ARNs in Organizations, see [ARN Formats
-    #   Supported by Organizations][1] in the *AWS Service Authorization
-    #   Reference*.
+    #   Supported by Organizations][1] in the *Amazon Web Services Service
+    #   Authorization Reference*.
     #
     #
     #
@@ -4401,8 +4157,8 @@ module Aws::Organizations
     # You can't use the specified policy type with the feature set
     # currently enabled for this organization. For example, you can enable
     # SCPs only after you enable all features in the organization. For more
-    # information, see [Managing AWS Organizations Policies][1]in the *AWS
-    # Organizations User Guide.*
+    # information, see [Managing Organizations Policies][1]in the
+    # *Organizations User Guide.*
     #
     #
     #
@@ -4422,8 +4178,8 @@ module Aws::Organizations
     # The specified policy type isn't currently enabled in this root. You
     # can't attach policies of the specified type to entities in a root
     # until you enable that type in the root. For more information, see
-    # [Enabling All Features in Your Organization][1] in the *AWS
-    # Organizations User Guide.*
+    # [Enabling All Features in Your Organization][1] in the *Organizations
+    # User Guide.*
     #
     #
     #
@@ -4463,22 +4219,67 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RegisterDelegatedAdministratorRequest
-    #   data as a hash:
+    # @!attribute [rw] content
+    #   If provided, the new content for the resource policy. The text must
+    #   be correctly formatted JSON that complies with the syntax for the
+    #   resource policy's type. For more information, see [Service Control
+    #   Policy Syntax][1] in the *Organizations User Guide.*
     #
-    #       {
-    #         account_id: "AccountId", # required
-    #         service_principal: "ServicePrincipal", # required
-    #       }
     #
+    #
+    #   [1]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_scp-syntax.html
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   A list of tags that you want to attach to the newly created resource
+    #   policy. For each tag in the list, you must specify both a tag key
+    #   and a value. You can set the value to an empty string, but you
+    #   can't set it to `null`. For more information about tagging, see
+    #   [Tagging Organizations resources][1] in the Organizations User
+    #   Guide.
+    #
+    #   <note markdown="1"> Calls with tags apply to the initial creation of the resource
+    #   policy, otherwise an exception is thrown. If any one of the tags is
+    #   not valid or if you exceed the allowed number of tags for the
+    #   resource policy, then the entire request fails and the resource
+    #   policy is not created.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tagging.html
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/PutResourcePolicyRequest AWS API Documentation
+    #
+    class PutResourcePolicyRequest < Struct.new(
+      :content,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_policy
+    #   A structure that contains details about the resource policy.
+    #   @return [Types::ResourcePolicy]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/PutResourcePolicyResponse AWS API Documentation
+    #
+    class PutResourcePolicyResponse < Struct.new(
+      :resource_policy)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] account_id
     #   The account ID number of the member account in the organization to
     #   register as a delegated administrator.
     #   @return [String]
     #
     # @!attribute [rw] service_principal
-    #   The service principal of the AWS service for which you want to make
-    #   the member account a delegated administrator.
+    #   The service principal of the Amazon Web Services service for which
+    #   you want to make the member account a delegated administrator.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/RegisterDelegatedAdministratorRequest AWS API Documentation
@@ -4490,13 +4291,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RemoveAccountFromOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         account_id: "AccountId", # required
-    #       }
-    #
     # @!attribute [rw] account_id
     #   The unique identifier (ID) of the member account that you want to
     #   remove from the organization.
@@ -4517,10 +4311,64 @@ module Aws::Organizations
       include Aws::Structure
     end
 
+    # A structure that contains details about a resource policy.
+    #
+    # @!attribute [rw] resource_policy_summary
+    #   A structure that contains resource policy ID and Amazon Resource
+    #   Name (ARN).
+    #   @return [Types::ResourcePolicySummary]
+    #
+    # @!attribute [rw] content
+    #   The policy text of the resource policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ResourcePolicy AWS API Documentation
+    #
+    class ResourcePolicy < Struct.new(
+      :resource_policy_summary,
+      :content)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # We can't find a resource policy request with the parameter that you
+    # specified.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ResourcePolicyNotFoundException AWS API Documentation
+    #
+    class ResourcePolicyNotFoundException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # A structure that contains resource policy ID and Amazon Resource Name
+    # (ARN).
+    #
+    # @!attribute [rw] id
+    #   The unique identifier (ID) of the resource policy.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   The Amazon Resource Name (ARN) of the resource policy.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ResourcePolicySummary AWS API Documentation
+    #
+    class ResourcePolicySummary < Struct.new(
+      :id,
+      :arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # Contains details about a root. A root is a top-level parent node in
     # the hierarchy of an organization that can contain organizational units
-    # (OUs) and accounts. The root contains every AWS account in the
-    # organization.
+    # (OUs) and accounts. The root contains every Amazon Web Services
+    # account in the organization.
     #
     # @!attribute [rw] id
     #   The unique identifier (ID) for the root.
@@ -4537,8 +4385,8 @@ module Aws::Organizations
     #   The Amazon Resource Name (ARN) of the root.
     #
     #   For more information about ARNs in Organizations, see [ARN Formats
-    #   Supported by Organizations][1] in the *AWS Service Authorization
-    #   Reference*.
+    #   Supported by Organizations][1] in the *Amazon Web Services Service
+    #   Authorization Reference*.
     #
     #
     #
@@ -4592,7 +4440,7 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # AWS Organizations can't complete your request because of an internal
+    # Organizations can't complete your request because of an internal
     # service error. Try again later.
     #
     # @!attribute [rw] message
@@ -4625,21 +4473,13 @@ module Aws::Organizations
     #
     # You can attach tags to any of the following organization resources.
     #
-    # * AWS account
+    # * Amazon Web Services account
     #
     # * Organizational unit (OU)
     #
     # * Organization root
     #
     # * Policy
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
     #
     # @!attribute [rw] key
     #   The key identifier, or name, of the tag.
@@ -4660,29 +4500,12 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_id: "TaggableResourceId", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_id
     #   The ID of the resource to add a tag to.
-    #   @return [String]
-    #
-    # @!attribute [rw] tags
-    #   A list of tags to add to the specified resource.
     #
     #   You can specify any of the following taggable resources.
     #
-    #   * AWS account – specify the account ID number.
+    #   * Amazon Web Services account – specify the account ID number.
     #
     #   * Organizational unit – specify the OU ID that begins with `ou-` and
     #     looks similar to: `ou-1a2b-34uvwxyz `
@@ -4692,14 +4515,18 @@ module Aws::Organizations
     #
     #   * Policy – specify the policy ID that begins with `p-` andlooks
     #     similar to: `p-12abcdefg3 `
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   A list of tags to add to the specified resource.
     #
     #   For each tag in the list, you must specify both a tag key and a
-    #   value. You can set the value to an empty string, but you can't set
-    #   it to `null`.
+    #   value. The value can be an empty string, but you can't set it to
+    #   `null`.
     #
-    #   <note markdown="1"> If any one of the tags is invalid or if you exceed the allowed
-    #   number of tags for an account user, then the entire request fails
-    #   and the account is not created.
+    #   <note markdown="1"> If any one of the tags is not valid or if you exceed the maximum
+    #   allowed number of tags for a resource, then the entire request
+    #   fails.
     #
     #    </note>
     #   @return [Array<Types::Tag>]
@@ -4731,9 +4558,8 @@ module Aws::Organizations
     # quota helps protect against denial-of-service attacks. Try again
     # later.
     #
-    # For information about quotas that affect AWS Organizations, see
-    # [Quotas for AWS Organizations][1]in the *AWS Organizations User
-    # Guide.*
+    # For information about quotas that affect Organizations, see [Quotas
+    # for Organizations][1]in the *Organizations User Guide.*
     #
     #
     #
@@ -4754,7 +4580,8 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # This action isn't available in the current AWS Region.
+    # This action isn't available in the current Amazon Web Services
+    # Region.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -4767,20 +4594,12 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_id: "TaggableResourceId", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_id
     #   The ID of the resource to remove a tag from.
     #
     #   You can specify any of the following taggable resources.
     #
-    #   * AWS account – specify the account ID number.
+    #   * Amazon Web Services account – specify the account ID number.
     #
     #   * Organizational unit – specify the OU ID that begins with `ou-` and
     #     looks similar to: `ou-1a2b-34uvwxyz `
@@ -4805,14 +4624,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateOrganizationalUnitRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organizational_unit_id: "OrganizationalUnitId", # required
-    #         name: "OrganizationalUnitName",
-    #       }
-    #
     # @!attribute [rw] organizational_unit_id
     #   The unique identifier (ID) of the OU that you want to rename. You
     #   can get the ID from the ListOrganizationalUnitsForParent operation.
@@ -4861,16 +4672,6 @@ module Aws::Organizations
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdatePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         policy_id: "PolicyId", # required
-    #         name: "PolicyName",
-    #         description: "PolicyDescription",
-    #         content: "PolicyContent",
-    #       }
-    #
     # @!attribute [rw] policy_id
     #   The unique identifier (ID) of the policy that you want to update.
     #
@@ -4902,7 +4703,7 @@ module Aws::Organizations
     #   If provided, the new content for the policy. The text must be
     #   correctly formatted JSON that complies with the syntax for the
     #   policy's type. For more information, see [Service Control Policy
-    #   Syntax][1] in the *AWS Organizations User Guide.*
+    #   Syntax][1] in the *Organizations User Guide.*
     #
     #
     #

@@ -1,6 +1,73 @@
 Unreleased Changes
 ------------------
 
+1.23.0 (2022-09-30)
+------------------
+
+* Feature - Documentation updates for the IAM Identity Center OIDC CLI Reference.
+
+1.22.0 (2022-08-25)
+------------------
+
+* Issue - This release was an accident as this gem has been moved into core.
+
+* Feature - Updated required request parameters on IAM Identity Center's OIDC CreateToken action.
+
+1.21.0 (2022-08-22)
+------------------
+
+* Feature - Move the `aws-sdk-ssooidc` gem into `aws-sdk-core`.
+
+1.20.0 (2022-08-08)
+------------------
+
+* Feature - Documentation updates to reflect service rename - AWS IAM Identity Center (successor to AWS Single Sign-On)
+
+1.19.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.18.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.17.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.16.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.15.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.14.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.13.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.12.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.11.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
 1.10.0 (2021-03-10)
 ------------------
 

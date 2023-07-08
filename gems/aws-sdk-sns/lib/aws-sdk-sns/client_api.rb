@@ -17,6 +17,10 @@ module Aws::SNS
     AddPermissionInput = Shapes::StructureShape.new(name: 'AddPermissionInput')
     AmazonResourceName = Shapes::StringShape.new(name: 'AmazonResourceName')
     AuthorizationErrorException = Shapes::StructureShape.new(name: 'AuthorizationErrorException')
+    BatchEntryIdsNotDistinctException = Shapes::StructureShape.new(name: 'BatchEntryIdsNotDistinctException')
+    BatchRequestTooLongException = Shapes::StructureShape.new(name: 'BatchRequestTooLongException')
+    BatchResultErrorEntry = Shapes::StructureShape.new(name: 'BatchResultErrorEntry')
+    BatchResultErrorEntryList = Shapes::ListShape.new(name: 'BatchResultErrorEntryList')
     Binary = Shapes::BlobShape.new(name: 'Binary')
     CheckIfPhoneNumberIsOptedOutInput = Shapes::StructureShape.new(name: 'CheckIfPhoneNumberIsOptedOutInput')
     CheckIfPhoneNumberIsOptedOutResponse = Shapes::StructureShape.new(name: 'CheckIfPhoneNumberIsOptedOutResponse')
@@ -27,43 +31,59 @@ module Aws::SNS
     CreatePlatformApplicationInput = Shapes::StructureShape.new(name: 'CreatePlatformApplicationInput')
     CreatePlatformApplicationResponse = Shapes::StructureShape.new(name: 'CreatePlatformApplicationResponse')
     CreatePlatformEndpointInput = Shapes::StructureShape.new(name: 'CreatePlatformEndpointInput')
+    CreateSMSSandboxPhoneNumberInput = Shapes::StructureShape.new(name: 'CreateSMSSandboxPhoneNumberInput')
+    CreateSMSSandboxPhoneNumberResult = Shapes::StructureShape.new(name: 'CreateSMSSandboxPhoneNumberResult')
     CreateTopicInput = Shapes::StructureShape.new(name: 'CreateTopicInput')
     CreateTopicResponse = Shapes::StructureShape.new(name: 'CreateTopicResponse')
     DelegatesList = Shapes::ListShape.new(name: 'DelegatesList')
     DeleteEndpointInput = Shapes::StructureShape.new(name: 'DeleteEndpointInput')
     DeletePlatformApplicationInput = Shapes::StructureShape.new(name: 'DeletePlatformApplicationInput')
+    DeleteSMSSandboxPhoneNumberInput = Shapes::StructureShape.new(name: 'DeleteSMSSandboxPhoneNumberInput')
+    DeleteSMSSandboxPhoneNumberResult = Shapes::StructureShape.new(name: 'DeleteSMSSandboxPhoneNumberResult')
     DeleteTopicInput = Shapes::StructureShape.new(name: 'DeleteTopicInput')
+    EmptyBatchRequestException = Shapes::StructureShape.new(name: 'EmptyBatchRequestException')
     Endpoint = Shapes::StructureShape.new(name: 'Endpoint')
     EndpointDisabledException = Shapes::StructureShape.new(name: 'EndpointDisabledException')
     FilterPolicyLimitExceededException = Shapes::StructureShape.new(name: 'FilterPolicyLimitExceededException')
+    GetDataProtectionPolicyInput = Shapes::StructureShape.new(name: 'GetDataProtectionPolicyInput')
+    GetDataProtectionPolicyResponse = Shapes::StructureShape.new(name: 'GetDataProtectionPolicyResponse')
     GetEndpointAttributesInput = Shapes::StructureShape.new(name: 'GetEndpointAttributesInput')
     GetEndpointAttributesResponse = Shapes::StructureShape.new(name: 'GetEndpointAttributesResponse')
     GetPlatformApplicationAttributesInput = Shapes::StructureShape.new(name: 'GetPlatformApplicationAttributesInput')
     GetPlatformApplicationAttributesResponse = Shapes::StructureShape.new(name: 'GetPlatformApplicationAttributesResponse')
     GetSMSAttributesInput = Shapes::StructureShape.new(name: 'GetSMSAttributesInput')
     GetSMSAttributesResponse = Shapes::StructureShape.new(name: 'GetSMSAttributesResponse')
+    GetSMSSandboxAccountStatusInput = Shapes::StructureShape.new(name: 'GetSMSSandboxAccountStatusInput')
+    GetSMSSandboxAccountStatusResult = Shapes::StructureShape.new(name: 'GetSMSSandboxAccountStatusResult')
     GetSubscriptionAttributesInput = Shapes::StructureShape.new(name: 'GetSubscriptionAttributesInput')
     GetSubscriptionAttributesResponse = Shapes::StructureShape.new(name: 'GetSubscriptionAttributesResponse')
     GetTopicAttributesInput = Shapes::StructureShape.new(name: 'GetTopicAttributesInput')
     GetTopicAttributesResponse = Shapes::StructureShape.new(name: 'GetTopicAttributesResponse')
     InternalErrorException = Shapes::StructureShape.new(name: 'InternalErrorException')
+    InvalidBatchEntryIdException = Shapes::StructureShape.new(name: 'InvalidBatchEntryIdException')
     InvalidParameterException = Shapes::StructureShape.new(name: 'InvalidParameterException')
     InvalidParameterValueException = Shapes::StructureShape.new(name: 'InvalidParameterValueException')
     InvalidSecurityException = Shapes::StructureShape.new(name: 'InvalidSecurityException')
+    Iso2CountryCode = Shapes::StringShape.new(name: 'Iso2CountryCode')
     KMSAccessDeniedException = Shapes::StructureShape.new(name: 'KMSAccessDeniedException')
     KMSDisabledException = Shapes::StructureShape.new(name: 'KMSDisabledException')
     KMSInvalidStateException = Shapes::StructureShape.new(name: 'KMSInvalidStateException')
     KMSNotFoundException = Shapes::StructureShape.new(name: 'KMSNotFoundException')
     KMSOptInRequired = Shapes::StructureShape.new(name: 'KMSOptInRequired')
     KMSThrottlingException = Shapes::StructureShape.new(name: 'KMSThrottlingException')
+    LanguageCodeString = Shapes::StringShape.new(name: 'LanguageCodeString')
     ListEndpointsByPlatformApplicationInput = Shapes::StructureShape.new(name: 'ListEndpointsByPlatformApplicationInput')
     ListEndpointsByPlatformApplicationResponse = Shapes::StructureShape.new(name: 'ListEndpointsByPlatformApplicationResponse')
     ListOfEndpoints = Shapes::ListShape.new(name: 'ListOfEndpoints')
     ListOfPlatformApplications = Shapes::ListShape.new(name: 'ListOfPlatformApplications')
+    ListOriginationNumbersRequest = Shapes::StructureShape.new(name: 'ListOriginationNumbersRequest')
+    ListOriginationNumbersResult = Shapes::StructureShape.new(name: 'ListOriginationNumbersResult')
     ListPhoneNumbersOptedOutInput = Shapes::StructureShape.new(name: 'ListPhoneNumbersOptedOutInput')
     ListPhoneNumbersOptedOutResponse = Shapes::StructureShape.new(name: 'ListPhoneNumbersOptedOutResponse')
     ListPlatformApplicationsInput = Shapes::StructureShape.new(name: 'ListPlatformApplicationsInput')
     ListPlatformApplicationsResponse = Shapes::StructureShape.new(name: 'ListPlatformApplicationsResponse')
+    ListSMSSandboxPhoneNumbersInput = Shapes::StructureShape.new(name: 'ListSMSSandboxPhoneNumbersInput')
+    ListSMSSandboxPhoneNumbersResult = Shapes::StructureShape.new(name: 'ListSMSSandboxPhoneNumbersResult')
     ListString = Shapes::ListShape.new(name: 'ListString')
     ListSubscriptionsByTopicInput = Shapes::StructureShape.new(name: 'ListSubscriptionsByTopicInput')
     ListSubscriptionsByTopicResponse = Shapes::StructureShape.new(name: 'ListSubscriptionsByTopicResponse')
@@ -74,19 +94,39 @@ module Aws::SNS
     ListTopicsInput = Shapes::StructureShape.new(name: 'ListTopicsInput')
     ListTopicsResponse = Shapes::StructureShape.new(name: 'ListTopicsResponse')
     MapStringToString = Shapes::MapShape.new(name: 'MapStringToString')
+    MaxItems = Shapes::IntegerShape.new(name: 'MaxItems')
+    MaxItemsListOriginationNumbers = Shapes::IntegerShape.new(name: 'MaxItemsListOriginationNumbers')
     MessageAttributeMap = Shapes::MapShape.new(name: 'MessageAttributeMap')
     MessageAttributeValue = Shapes::StructureShape.new(name: 'MessageAttributeValue')
     NotFoundException = Shapes::StructureShape.new(name: 'NotFoundException')
+    NumberCapability = Shapes::StringShape.new(name: 'NumberCapability')
+    NumberCapabilityList = Shapes::ListShape.new(name: 'NumberCapabilityList')
+    OTPCode = Shapes::StringShape.new(name: 'OTPCode')
     OptInPhoneNumberInput = Shapes::StructureShape.new(name: 'OptInPhoneNumberInput')
     OptInPhoneNumberResponse = Shapes::StructureShape.new(name: 'OptInPhoneNumberResponse')
+    OptedOutException = Shapes::StructureShape.new(name: 'OptedOutException')
     PhoneNumber = Shapes::StringShape.new(name: 'PhoneNumber')
+    PhoneNumberInformation = Shapes::StructureShape.new(name: 'PhoneNumberInformation')
+    PhoneNumberInformationList = Shapes::ListShape.new(name: 'PhoneNumberInformationList')
     PhoneNumberList = Shapes::ListShape.new(name: 'PhoneNumberList')
+    PhoneNumberString = Shapes::StringShape.new(name: 'PhoneNumberString')
     PlatformApplication = Shapes::StructureShape.new(name: 'PlatformApplication')
     PlatformApplicationDisabledException = Shapes::StructureShape.new(name: 'PlatformApplicationDisabledException')
+    PublishBatchInput = Shapes::StructureShape.new(name: 'PublishBatchInput')
+    PublishBatchRequestEntry = Shapes::StructureShape.new(name: 'PublishBatchRequestEntry')
+    PublishBatchRequestEntryList = Shapes::ListShape.new(name: 'PublishBatchRequestEntryList')
+    PublishBatchResponse = Shapes::StructureShape.new(name: 'PublishBatchResponse')
+    PublishBatchResultEntry = Shapes::StructureShape.new(name: 'PublishBatchResultEntry')
+    PublishBatchResultEntryList = Shapes::ListShape.new(name: 'PublishBatchResultEntryList')
     PublishInput = Shapes::StructureShape.new(name: 'PublishInput')
     PublishResponse = Shapes::StructureShape.new(name: 'PublishResponse')
+    PutDataProtectionPolicyInput = Shapes::StructureShape.new(name: 'PutDataProtectionPolicyInput')
     RemovePermissionInput = Shapes::StructureShape.new(name: 'RemovePermissionInput')
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
+    RouteType = Shapes::StringShape.new(name: 'RouteType')
+    SMSSandboxPhoneNumber = Shapes::StructureShape.new(name: 'SMSSandboxPhoneNumber')
+    SMSSandboxPhoneNumberList = Shapes::ListShape.new(name: 'SMSSandboxPhoneNumberList')
+    SMSSandboxPhoneNumberVerificationStatus = Shapes::StringShape.new(name: 'SMSSandboxPhoneNumberVerificationStatus')
     SetEndpointAttributesInput = Shapes::StructureShape.new(name: 'SetEndpointAttributesInput')
     SetPlatformApplicationAttributesInput = Shapes::StructureShape.new(name: 'SetPlatformApplicationAttributesInput')
     SetSMSAttributesInput = Shapes::StructureShape.new(name: 'SetSMSAttributesInput')
@@ -111,6 +151,8 @@ module Aws::SNS
     TagResourceResponse = Shapes::StructureShape.new(name: 'TagResourceResponse')
     TagValue = Shapes::StringShape.new(name: 'TagValue')
     ThrottledException = Shapes::StructureShape.new(name: 'ThrottledException')
+    Timestamp = Shapes::TimestampShape.new(name: 'Timestamp')
+    TooManyEntriesInBatchRequestException = Shapes::StructureShape.new(name: 'TooManyEntriesInBatchRequestException')
     Topic = Shapes::StructureShape.new(name: 'Topic')
     TopicAttributesMap = Shapes::MapShape.new(name: 'TopicAttributesMap')
     TopicLimitExceededException = Shapes::StructureShape.new(name: 'TopicLimitExceededException')
@@ -118,6 +160,11 @@ module Aws::SNS
     UnsubscribeInput = Shapes::StructureShape.new(name: 'UnsubscribeInput')
     UntagResourceRequest = Shapes::StructureShape.new(name: 'UntagResourceRequest')
     UntagResourceResponse = Shapes::StructureShape.new(name: 'UntagResourceResponse')
+    UserErrorException = Shapes::StructureShape.new(name: 'UserErrorException')
+    ValidationException = Shapes::StructureShape.new(name: 'ValidationException')
+    VerificationException = Shapes::StructureShape.new(name: 'VerificationException')
+    VerifySMSSandboxPhoneNumberInput = Shapes::StructureShape.new(name: 'VerifySMSSandboxPhoneNumberInput')
+    VerifySMSSandboxPhoneNumberResult = Shapes::StructureShape.new(name: 'VerifySMSSandboxPhoneNumberResult')
     account = Shapes::StringShape.new(name: 'account')
     action = Shapes::StringShape.new(name: 'action')
     attributeName = Shapes::StringShape.new(name: 'attributeName')
@@ -149,6 +196,20 @@ module Aws::SNS
 
     AuthorizationErrorException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     AuthorizationErrorException.struct_class = Types::AuthorizationErrorException
+
+    BatchEntryIdsNotDistinctException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
+    BatchEntryIdsNotDistinctException.struct_class = Types::BatchEntryIdsNotDistinctException
+
+    BatchRequestTooLongException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
+    BatchRequestTooLongException.struct_class = Types::BatchRequestTooLongException
+
+    BatchResultErrorEntry.add_member(:id, Shapes::ShapeRef.new(shape: String, required: true, location_name: "Id"))
+    BatchResultErrorEntry.add_member(:code, Shapes::ShapeRef.new(shape: String, required: true, location_name: "Code"))
+    BatchResultErrorEntry.add_member(:message, Shapes::ShapeRef.new(shape: String, location_name: "Message"))
+    BatchResultErrorEntry.add_member(:sender_fault, Shapes::ShapeRef.new(shape: boolean, required: true, location_name: "SenderFault"))
+    BatchResultErrorEntry.struct_class = Types::BatchResultErrorEntry
+
+    BatchResultErrorEntryList.member = Shapes::ShapeRef.new(shape: BatchResultErrorEntry)
 
     CheckIfPhoneNumberIsOptedOutInput.add_member(:phone_number, Shapes::ShapeRef.new(shape: PhoneNumber, required: true, location_name: "phoneNumber"))
     CheckIfPhoneNumberIsOptedOutInput.struct_class = Types::CheckIfPhoneNumberIsOptedOutInput
@@ -184,9 +245,16 @@ module Aws::SNS
     CreatePlatformEndpointInput.add_member(:attributes, Shapes::ShapeRef.new(shape: MapStringToString, location_name: "Attributes"))
     CreatePlatformEndpointInput.struct_class = Types::CreatePlatformEndpointInput
 
+    CreateSMSSandboxPhoneNumberInput.add_member(:phone_number, Shapes::ShapeRef.new(shape: PhoneNumberString, required: true, location_name: "PhoneNumber"))
+    CreateSMSSandboxPhoneNumberInput.add_member(:language_code, Shapes::ShapeRef.new(shape: LanguageCodeString, location_name: "LanguageCode"))
+    CreateSMSSandboxPhoneNumberInput.struct_class = Types::CreateSMSSandboxPhoneNumberInput
+
+    CreateSMSSandboxPhoneNumberResult.struct_class = Types::CreateSMSSandboxPhoneNumberResult
+
     CreateTopicInput.add_member(:name, Shapes::ShapeRef.new(shape: topicName, required: true, location_name: "Name"))
     CreateTopicInput.add_member(:attributes, Shapes::ShapeRef.new(shape: TopicAttributesMap, location_name: "Attributes"))
     CreateTopicInput.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, location_name: "Tags"))
+    CreateTopicInput.add_member(:data_protection_policy, Shapes::ShapeRef.new(shape: attributeValue, location_name: "DataProtectionPolicy"))
     CreateTopicInput.struct_class = Types::CreateTopicInput
 
     CreateTopicResponse.add_member(:topic_arn, Shapes::ShapeRef.new(shape: topicARN, location_name: "TopicArn"))
@@ -200,8 +268,16 @@ module Aws::SNS
     DeletePlatformApplicationInput.add_member(:platform_application_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "PlatformApplicationArn"))
     DeletePlatformApplicationInput.struct_class = Types::DeletePlatformApplicationInput
 
+    DeleteSMSSandboxPhoneNumberInput.add_member(:phone_number, Shapes::ShapeRef.new(shape: PhoneNumberString, required: true, location_name: "PhoneNumber"))
+    DeleteSMSSandboxPhoneNumberInput.struct_class = Types::DeleteSMSSandboxPhoneNumberInput
+
+    DeleteSMSSandboxPhoneNumberResult.struct_class = Types::DeleteSMSSandboxPhoneNumberResult
+
     DeleteTopicInput.add_member(:topic_arn, Shapes::ShapeRef.new(shape: topicARN, required: true, location_name: "TopicArn"))
     DeleteTopicInput.struct_class = Types::DeleteTopicInput
+
+    EmptyBatchRequestException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
+    EmptyBatchRequestException.struct_class = Types::EmptyBatchRequestException
 
     Endpoint.add_member(:endpoint_arn, Shapes::ShapeRef.new(shape: String, location_name: "EndpointArn"))
     Endpoint.add_member(:attributes, Shapes::ShapeRef.new(shape: MapStringToString, location_name: "Attributes"))
@@ -212,6 +288,12 @@ module Aws::SNS
 
     FilterPolicyLimitExceededException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     FilterPolicyLimitExceededException.struct_class = Types::FilterPolicyLimitExceededException
+
+    GetDataProtectionPolicyInput.add_member(:resource_arn, Shapes::ShapeRef.new(shape: topicARN, required: true, location_name: "ResourceArn"))
+    GetDataProtectionPolicyInput.struct_class = Types::GetDataProtectionPolicyInput
+
+    GetDataProtectionPolicyResponse.add_member(:data_protection_policy, Shapes::ShapeRef.new(shape: attributeValue, location_name: "DataProtectionPolicy"))
+    GetDataProtectionPolicyResponse.struct_class = Types::GetDataProtectionPolicyResponse
 
     GetEndpointAttributesInput.add_member(:endpoint_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "EndpointArn"))
     GetEndpointAttributesInput.struct_class = Types::GetEndpointAttributesInput
@@ -231,6 +313,11 @@ module Aws::SNS
     GetSMSAttributesResponse.add_member(:attributes, Shapes::ShapeRef.new(shape: MapStringToString, location_name: "attributes"))
     GetSMSAttributesResponse.struct_class = Types::GetSMSAttributesResponse
 
+    GetSMSSandboxAccountStatusInput.struct_class = Types::GetSMSSandboxAccountStatusInput
+
+    GetSMSSandboxAccountStatusResult.add_member(:is_in_sandbox, Shapes::ShapeRef.new(shape: boolean, required: true, location_name: "IsInSandbox"))
+    GetSMSSandboxAccountStatusResult.struct_class = Types::GetSMSSandboxAccountStatusResult
+
     GetSubscriptionAttributesInput.add_member(:subscription_arn, Shapes::ShapeRef.new(shape: subscriptionARN, required: true, location_name: "SubscriptionArn"))
     GetSubscriptionAttributesInput.struct_class = Types::GetSubscriptionAttributesInput
 
@@ -245,6 +332,9 @@ module Aws::SNS
 
     InternalErrorException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     InternalErrorException.struct_class = Types::InternalErrorException
+
+    InvalidBatchEntryIdException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
+    InvalidBatchEntryIdException.struct_class = Types::InvalidBatchEntryIdException
 
     InvalidParameterException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     InvalidParameterException.struct_class = Types::InvalidParameterException
@@ -285,6 +375,14 @@ module Aws::SNS
 
     ListOfPlatformApplications.member = Shapes::ShapeRef.new(shape: PlatformApplication)
 
+    ListOriginationNumbersRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: nextToken, location_name: "NextToken"))
+    ListOriginationNumbersRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxItemsListOriginationNumbers, location_name: "MaxResults"))
+    ListOriginationNumbersRequest.struct_class = Types::ListOriginationNumbersRequest
+
+    ListOriginationNumbersResult.add_member(:next_token, Shapes::ShapeRef.new(shape: nextToken, location_name: "NextToken"))
+    ListOriginationNumbersResult.add_member(:phone_numbers, Shapes::ShapeRef.new(shape: PhoneNumberInformationList, location_name: "PhoneNumbers"))
+    ListOriginationNumbersResult.struct_class = Types::ListOriginationNumbersResult
+
     ListPhoneNumbersOptedOutInput.add_member(:next_token, Shapes::ShapeRef.new(shape: string, location_name: "nextToken"))
     ListPhoneNumbersOptedOutInput.struct_class = Types::ListPhoneNumbersOptedOutInput
 
@@ -298,6 +396,14 @@ module Aws::SNS
     ListPlatformApplicationsResponse.add_member(:platform_applications, Shapes::ShapeRef.new(shape: ListOfPlatformApplications, location_name: "PlatformApplications"))
     ListPlatformApplicationsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: String, location_name: "NextToken"))
     ListPlatformApplicationsResponse.struct_class = Types::ListPlatformApplicationsResponse
+
+    ListSMSSandboxPhoneNumbersInput.add_member(:next_token, Shapes::ShapeRef.new(shape: nextToken, location_name: "NextToken"))
+    ListSMSSandboxPhoneNumbersInput.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxItems, location_name: "MaxResults"))
+    ListSMSSandboxPhoneNumbersInput.struct_class = Types::ListSMSSandboxPhoneNumbersInput
+
+    ListSMSSandboxPhoneNumbersResult.add_member(:phone_numbers, Shapes::ShapeRef.new(shape: SMSSandboxPhoneNumberList, required: true, location_name: "PhoneNumbers"))
+    ListSMSSandboxPhoneNumbersResult.add_member(:next_token, Shapes::ShapeRef.new(shape: string, location_name: "NextToken"))
+    ListSMSSandboxPhoneNumbersResult.struct_class = Types::ListSMSSandboxPhoneNumbersResult
 
     ListString.member = Shapes::ShapeRef.new(shape: String)
 
@@ -343,10 +449,25 @@ module Aws::SNS
     NotFoundException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     NotFoundException.struct_class = Types::NotFoundException
 
+    NumberCapabilityList.member = Shapes::ShapeRef.new(shape: NumberCapability)
+
     OptInPhoneNumberInput.add_member(:phone_number, Shapes::ShapeRef.new(shape: PhoneNumber, required: true, location_name: "phoneNumber"))
     OptInPhoneNumberInput.struct_class = Types::OptInPhoneNumberInput
 
     OptInPhoneNumberResponse.struct_class = Types::OptInPhoneNumberResponse
+
+    OptedOutException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
+    OptedOutException.struct_class = Types::OptedOutException
+
+    PhoneNumberInformation.add_member(:created_at, Shapes::ShapeRef.new(shape: Timestamp, location_name: "CreatedAt"))
+    PhoneNumberInformation.add_member(:phone_number, Shapes::ShapeRef.new(shape: String, location_name: "PhoneNumber"))
+    PhoneNumberInformation.add_member(:status, Shapes::ShapeRef.new(shape: String, location_name: "Status"))
+    PhoneNumberInformation.add_member(:iso_2_country_code, Shapes::ShapeRef.new(shape: Iso2CountryCode, location_name: "Iso2CountryCode"))
+    PhoneNumberInformation.add_member(:route_type, Shapes::ShapeRef.new(shape: RouteType, location_name: "RouteType"))
+    PhoneNumberInformation.add_member(:number_capabilities, Shapes::ShapeRef.new(shape: NumberCapabilityList, location_name: "NumberCapabilities"))
+    PhoneNumberInformation.struct_class = Types::PhoneNumberInformation
+
+    PhoneNumberInformationList.member = Shapes::ShapeRef.new(shape: PhoneNumberInformation)
 
     PhoneNumberList.member = Shapes::ShapeRef.new(shape: PhoneNumber)
 
@@ -356,6 +477,32 @@ module Aws::SNS
 
     PlatformApplicationDisabledException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     PlatformApplicationDisabledException.struct_class = Types::PlatformApplicationDisabledException
+
+    PublishBatchInput.add_member(:topic_arn, Shapes::ShapeRef.new(shape: topicARN, required: true, location_name: "TopicArn"))
+    PublishBatchInput.add_member(:publish_batch_request_entries, Shapes::ShapeRef.new(shape: PublishBatchRequestEntryList, required: true, location_name: "PublishBatchRequestEntries"))
+    PublishBatchInput.struct_class = Types::PublishBatchInput
+
+    PublishBatchRequestEntry.add_member(:id, Shapes::ShapeRef.new(shape: String, required: true, location_name: "Id"))
+    PublishBatchRequestEntry.add_member(:message, Shapes::ShapeRef.new(shape: message, required: true, location_name: "Message"))
+    PublishBatchRequestEntry.add_member(:subject, Shapes::ShapeRef.new(shape: subject, location_name: "Subject"))
+    PublishBatchRequestEntry.add_member(:message_structure, Shapes::ShapeRef.new(shape: messageStructure, location_name: "MessageStructure"))
+    PublishBatchRequestEntry.add_member(:message_attributes, Shapes::ShapeRef.new(shape: MessageAttributeMap, location_name: "MessageAttributes"))
+    PublishBatchRequestEntry.add_member(:message_deduplication_id, Shapes::ShapeRef.new(shape: String, location_name: "MessageDeduplicationId"))
+    PublishBatchRequestEntry.add_member(:message_group_id, Shapes::ShapeRef.new(shape: String, location_name: "MessageGroupId"))
+    PublishBatchRequestEntry.struct_class = Types::PublishBatchRequestEntry
+
+    PublishBatchRequestEntryList.member = Shapes::ShapeRef.new(shape: PublishBatchRequestEntry)
+
+    PublishBatchResponse.add_member(:successful, Shapes::ShapeRef.new(shape: PublishBatchResultEntryList, location_name: "Successful"))
+    PublishBatchResponse.add_member(:failed, Shapes::ShapeRef.new(shape: BatchResultErrorEntryList, location_name: "Failed"))
+    PublishBatchResponse.struct_class = Types::PublishBatchResponse
+
+    PublishBatchResultEntry.add_member(:id, Shapes::ShapeRef.new(shape: String, location_name: "Id"))
+    PublishBatchResultEntry.add_member(:message_id, Shapes::ShapeRef.new(shape: messageId, location_name: "MessageId"))
+    PublishBatchResultEntry.add_member(:sequence_number, Shapes::ShapeRef.new(shape: String, location_name: "SequenceNumber"))
+    PublishBatchResultEntry.struct_class = Types::PublishBatchResultEntry
+
+    PublishBatchResultEntryList.member = Shapes::ShapeRef.new(shape: PublishBatchResultEntry)
 
     PublishInput.add_member(:topic_arn, Shapes::ShapeRef.new(shape: topicARN, location_name: "TopicArn"))
     PublishInput.add_member(:target_arn, Shapes::ShapeRef.new(shape: String, location_name: "TargetArn"))
@@ -372,12 +519,22 @@ module Aws::SNS
     PublishResponse.add_member(:sequence_number, Shapes::ShapeRef.new(shape: String, location_name: "SequenceNumber"))
     PublishResponse.struct_class = Types::PublishResponse
 
+    PutDataProtectionPolicyInput.add_member(:resource_arn, Shapes::ShapeRef.new(shape: topicARN, required: true, location_name: "ResourceArn"))
+    PutDataProtectionPolicyInput.add_member(:data_protection_policy, Shapes::ShapeRef.new(shape: attributeValue, required: true, location_name: "DataProtectionPolicy"))
+    PutDataProtectionPolicyInput.struct_class = Types::PutDataProtectionPolicyInput
+
     RemovePermissionInput.add_member(:topic_arn, Shapes::ShapeRef.new(shape: topicARN, required: true, location_name: "TopicArn"))
     RemovePermissionInput.add_member(:label, Shapes::ShapeRef.new(shape: label, required: true, location_name: "Label"))
     RemovePermissionInput.struct_class = Types::RemovePermissionInput
 
     ResourceNotFoundException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     ResourceNotFoundException.struct_class = Types::ResourceNotFoundException
+
+    SMSSandboxPhoneNumber.add_member(:phone_number, Shapes::ShapeRef.new(shape: PhoneNumberString, location_name: "PhoneNumber"))
+    SMSSandboxPhoneNumber.add_member(:status, Shapes::ShapeRef.new(shape: SMSSandboxPhoneNumberVerificationStatus, location_name: "Status"))
+    SMSSandboxPhoneNumber.struct_class = Types::SMSSandboxPhoneNumber
+
+    SMSSandboxPhoneNumberList.member = Shapes::ShapeRef.new(shape: SMSSandboxPhoneNumber)
 
     SetEndpointAttributesInput.add_member(:endpoint_arn, Shapes::ShapeRef.new(shape: String, required: true, location_name: "EndpointArn"))
     SetEndpointAttributesInput.add_member(:attributes, Shapes::ShapeRef.new(shape: MapStringToString, required: true, location_name: "Attributes"))
@@ -453,6 +610,9 @@ module Aws::SNS
     ThrottledException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
     ThrottledException.struct_class = Types::ThrottledException
 
+    TooManyEntriesInBatchRequestException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
+    TooManyEntriesInBatchRequestException.struct_class = Types::TooManyEntriesInBatchRequestException
+
     Topic.add_member(:topic_arn, Shapes::ShapeRef.new(shape: topicARN, location_name: "TopicArn"))
     Topic.struct_class = Types::Topic
 
@@ -472,6 +632,22 @@ module Aws::SNS
     UntagResourceRequest.struct_class = Types::UntagResourceRequest
 
     UntagResourceResponse.struct_class = Types::UntagResourceResponse
+
+    UserErrorException.add_member(:message, Shapes::ShapeRef.new(shape: string, location_name: "message"))
+    UserErrorException.struct_class = Types::UserErrorException
+
+    ValidationException.add_member(:message, Shapes::ShapeRef.new(shape: string, required: true, location_name: "Message"))
+    ValidationException.struct_class = Types::ValidationException
+
+    VerificationException.add_member(:message, Shapes::ShapeRef.new(shape: string, required: true, location_name: "Message"))
+    VerificationException.add_member(:status, Shapes::ShapeRef.new(shape: string, required: true, location_name: "Status"))
+    VerificationException.struct_class = Types::VerificationException
+
+    VerifySMSSandboxPhoneNumberInput.add_member(:phone_number, Shapes::ShapeRef.new(shape: PhoneNumberString, required: true, location_name: "PhoneNumber"))
+    VerifySMSSandboxPhoneNumberInput.add_member(:one_time_password, Shapes::ShapeRef.new(shape: OTPCode, required: true, location_name: "OneTimePassword"))
+    VerifySMSSandboxPhoneNumberInput.struct_class = Types::VerifySMSSandboxPhoneNumberInput
+
+    VerifySMSSandboxPhoneNumberResult.struct_class = Types::VerifySMSSandboxPhoneNumberResult
 
 
     # @api private
@@ -552,6 +728,20 @@ module Aws::SNS
         o.errors << Shapes::ShapeRef.new(shape: NotFoundException)
       end)
 
+      api.add_operation(:create_sms_sandbox_phone_number, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "CreateSMSSandboxPhoneNumber"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: CreateSMSSandboxPhoneNumberInput)
+        o.output = Shapes::ShapeRef.new(shape: CreateSMSSandboxPhoneNumberResult)
+        o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: OptedOutException)
+        o.errors << Shapes::ShapeRef.new(shape: UserErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottledException)
+      end)
+
       api.add_operation(:create_topic, Seahorse::Model::Operation.new.tap do |o|
         o.name = "CreateTopic"
         o.http_method = "POST"
@@ -591,6 +781,20 @@ module Aws::SNS
         o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
       end)
 
+      api.add_operation(:delete_sms_sandbox_phone_number, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "DeleteSMSSandboxPhoneNumber"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: DeleteSMSSandboxPhoneNumberInput)
+        o.output = Shapes::ShapeRef.new(shape: DeleteSMSSandboxPhoneNumberResult)
+        o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: UserErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottledException)
+      end)
+
       api.add_operation(:delete_topic, Seahorse::Model::Operation.new.tap do |o|
         o.name = "DeleteTopic"
         o.http_method = "POST"
@@ -604,6 +808,19 @@ module Aws::SNS
         o.errors << Shapes::ShapeRef.new(shape: StaleTagException)
         o.errors << Shapes::ShapeRef.new(shape: TagPolicyException)
         o.errors << Shapes::ShapeRef.new(shape: ConcurrentAccessException)
+      end)
+
+      api.add_operation(:get_data_protection_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetDataProtectionPolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: GetDataProtectionPolicyInput)
+        o.output = Shapes::ShapeRef.new(shape: GetDataProtectionPolicyResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: NotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidSecurityException)
       end)
 
       api.add_operation(:get_endpoint_attributes, Seahorse::Model::Operation.new.tap do |o|
@@ -640,6 +857,17 @@ module Aws::SNS
         o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
         o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+      end)
+
+      api.add_operation(:get_sms_sandbox_account_status, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetSMSSandboxAccountStatus"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: GetSMSSandboxAccountStatusInput)
+        o.output = Shapes::ShapeRef.new(shape: GetSMSSandboxAccountStatusResult)
+        o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottledException)
       end)
 
       api.add_operation(:get_subscription_attributes, Seahorse::Model::Operation.new.tap do |o|
@@ -684,6 +912,25 @@ module Aws::SNS
         )
       end)
 
+      api.add_operation(:list_origination_numbers, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListOriginationNumbers"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListOriginationNumbersRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListOriginationNumbersResult)
+        o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottledException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
       api.add_operation(:list_phone_numbers_opted_out, Seahorse::Model::Operation.new.tap do |o|
         o.name = "ListPhoneNumbersOptedOut"
         o.http_method = "POST"
@@ -694,6 +941,11 @@ module Aws::SNS
         o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
         o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o[:pager] = Aws::Pager.new(
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
       end)
 
       api.add_operation(:list_platform_applications, Seahorse::Model::Operation.new.tap do |o|
@@ -706,6 +958,25 @@ module Aws::SNS
         o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
         o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
         o[:pager] = Aws::Pager.new(
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_sms_sandbox_phone_numbers, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListSMSSandboxPhoneNumbers"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListSMSSandboxPhoneNumbersInput)
+        o.output = Shapes::ShapeRef.new(shape: ListSMSSandboxPhoneNumbersResult)
+        o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottledException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
           tokens: {
             "next_token" => "next_token"
           }
@@ -805,6 +1076,48 @@ module Aws::SNS
         o.errors << Shapes::ShapeRef.new(shape: KMSOptInRequired)
         o.errors << Shapes::ShapeRef.new(shape: KMSThrottlingException)
         o.errors << Shapes::ShapeRef.new(shape: KMSAccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidSecurityException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+      end)
+
+      api.add_operation(:publish_batch, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "PublishBatch"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: PublishBatchInput)
+        o.output = Shapes::ShapeRef.new(shape: PublishBatchResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterValueException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: NotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: EndpointDisabledException)
+        o.errors << Shapes::ShapeRef.new(shape: PlatformApplicationDisabledException)
+        o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: BatchEntryIdsNotDistinctException)
+        o.errors << Shapes::ShapeRef.new(shape: BatchRequestTooLongException)
+        o.errors << Shapes::ShapeRef.new(shape: EmptyBatchRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidBatchEntryIdException)
+        o.errors << Shapes::ShapeRef.new(shape: TooManyEntriesInBatchRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: KMSDisabledException)
+        o.errors << Shapes::ShapeRef.new(shape: KMSInvalidStateException)
+        o.errors << Shapes::ShapeRef.new(shape: KMSNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: KMSOptInRequired)
+        o.errors << Shapes::ShapeRef.new(shape: KMSThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: KMSAccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidSecurityException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+      end)
+
+      api.add_operation(:put_data_protection_policy, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "PutDataProtectionPolicy"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: PutDataProtectionPolicyInput)
+        o.output = Shapes::ShapeRef.new(shape: Shapes::StructureShape.new(struct_class: Aws::EmptyStructure))
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: NotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
         o.errors << Shapes::ShapeRef.new(shape: InvalidSecurityException)
       end)
 
@@ -938,6 +1251,20 @@ module Aws::SNS
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
         o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
         o.errors << Shapes::ShapeRef.new(shape: ConcurrentAccessException)
+      end)
+
+      api.add_operation(:verify_sms_sandbox_phone_number, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "VerifySMSSandboxPhoneNumber"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: VerifySMSSandboxPhoneNumberInput)
+        o.output = Shapes::ShapeRef.new(shape: VerifySMSSandboxPhoneNumberResult)
+        o.errors << Shapes::ShapeRef.new(shape: AuthorizationErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: VerificationException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottledException)
       end)
     end
 

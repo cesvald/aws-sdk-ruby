@@ -50,14 +50,14 @@ module Aws::CloudFormation
     end
 
     # The name or unique identifier that corresponds to a physical instance
-    # ID of a resource supported by AWS CloudFormation.
+    # ID of a resource supported by CloudFormation.
     # @return [String]
     def physical_resource_id
       data[:physical_resource_id]
     end
 
-    # Type of resource. ((For more information, go to [ AWS Resource Types
-    # Reference][1] in the AWS CloudFormation User Guide.)
+    # Type of resource. For more information, go to [Amazon Web Services
+    # Resource Types Reference][1] in the CloudFormation User Guide.
     #
     #
     #
@@ -92,8 +92,8 @@ module Aws::CloudFormation
     end
 
     # The content of the `Metadata` attribute declared for the resource. For
-    # more information, see [Metadata Attribute][1] in the AWS
-    # CloudFormation User Guide.
+    # more information, see [Metadata Attribute][1] in the CloudFormation
+    # User Guide.
     #
     #
     #
@@ -139,10 +139,12 @@ module Aws::CloudFormation
     #
     # @return [self]
     def load
-      resp = @client.describe_stack_resource(
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_stack_resource(
         logical_resource_id: @logical_id,
         stack_name: @stack_name
       )
+      end
       @data = resp.stack_resource_detail
       self
     end
@@ -257,7 +259,9 @@ module Aws::CloudFormation
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Associations

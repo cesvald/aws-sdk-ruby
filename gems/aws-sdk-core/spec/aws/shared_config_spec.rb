@@ -34,14 +34,14 @@ module Aws
 
       it 'defaults credentials_path to Dir.home/.aws/credentials' do
         config = SharedConfig.new
-        expect(config.credentials_path).to eq(
+        expect(config.credentials_path).to include(
           File.join('HOME', '.aws', 'credentials')
         )
       end
 
       it 'defaults config_path to Dir.home/.aws/config' do
         config = SharedConfig.new(config_enabled: true)
-        expect(config.config_path).to eq(
+        expect(config.config_path).to include(
           File.join('HOME', '.aws', 'config')
         )
       end
@@ -121,6 +121,28 @@ module Aws
           profile_name: 'credentials_first'
         )
         expect(config.region).to eq('us-west-2')
+      end
+    end
+
+    context 'use fips endpoint selection' do
+      it 'can resolve use_fips_endpoint from config file' do
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 'use_fips_endpoint'
+        )
+        expect(config.use_fips_endpoint).to eq('true')
+      end
+    end
+
+    context 'use dualstack endpoint selection' do
+      it 'can resolve use_dualstack_endpoint from config file' do
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 'use_dualstack_endpoint'
+        )
+        expect(config.use_dualstack_endpoint).to eq('true')
       end
     end
 
@@ -264,5 +286,98 @@ module Aws
         expect(config.correct_clock_skew).to eq('false')
       end
     end
+
+    context 's3_disable_multiregion_access_points' do
+      it 'can resolve s3_disable_multiregion_access_points from config file' do
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 's3_disable_multiregion_access_points'
+        )
+        expect(config.s3_disable_multiregion_access_points).to eq('true')
+
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 's3_do_not_disable_multiregion_access_points'
+        )
+        expect(config.s3_disable_multiregion_access_points).to eq('false')
+      end
+    end
+
+    context 'ec2_metadata_service_endpoint selection' do
+      it 'can resolve ec2_metadata_service_endpoint from config file' do
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 'ec2_metadata_service_endpoint'
+        )
+        expect(config.ec2_metadata_service_endpoint)
+          .to eq('http://123.123.123.123')
+      end
+    end
+
+    context 'ec2_metadata_service_endpoint_mode selection' do
+      it 'can resolve ec2_metadata_service_endpoint_mode from config file' do
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 'ec2_metadata_service_endpoint_mode'
+        )
+        expect(config.ec2_metadata_service_endpoint_mode).to eq('IPv6')
+      end
+    end
+
+    context 'defaults_mode' do
+      it 'can resolve defaults_mode from config file' do
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 'defaults_mode_standard'
+        )
+        expect(config.defaults_mode).to eq('standard')
+      end
+    end
+
+    context 'sdk_ua_app_id' do
+      it 'can resolve sdk_ua_app_id from config file' do
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 'sdk_ua_app_id'
+        )
+        expect(config.sdk_ua_app_id).to eq('peccy-service')
+      end
+    end
+
+    context 'disable_request_compression' do
+      it 'can resolve disable_request_compression from the config file' do
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 'disable_request_compression'
+        )
+        expect(config.disable_request_compression). to eq('true')
+
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 'do_not_disable_request_compression'
+        )
+        expect(config.disable_request_compression). to eq('false')
+      end
+    end
+
+    context 'request_min_compression_size_bytes' do
+      it 'can resolve request_min_compression_size_bytes from the config file' do
+        config = SharedConfig.new(
+          config_path: mock_config_file,
+          config_enabled: true,
+          profile_name: 'request_min_compression_size_bytes'
+        )
+        expect(config.request_min_compression_size_bytes). to eq('100')
+      end
+    end
+
   end
 end

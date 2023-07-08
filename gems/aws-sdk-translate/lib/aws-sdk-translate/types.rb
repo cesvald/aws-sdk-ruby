@@ -64,23 +64,6 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateParallelDataRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ResourceName", # required
-    #         description: "Description",
-    #         parallel_data_config: { # required
-    #           s3_uri: "S3Uri", # required
-    #           format: "TSV", # required, accepts TSV, CSV, TMX
-    #         },
-    #         encryption_key: {
-    #           type: "KMS", # required, accepts KMS
-    #           id: "EncryptionKeyID", # required
-    #         },
-    #         client_token: "ClientTokenString", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   A custom name for the parallel data resource in Amazon Translate.
     #   You must assign a name that is unique in the account and region.
@@ -108,6 +91,16 @@ module Aws::Translate
     #   not need to pass this option.
     #   @return [String]
     #
+    # @!attribute [rw] tags
+    #   Tags to be associated with this resource. A tag is a key-value pair
+    #   that adds metadata to a resource. Each tag key for the resource must
+    #   be unique. For more information, see [ Tagging your resources][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/tagging.html
+    #   @return [Array<Types::Tag>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/CreateParallelDataRequest AWS API Documentation
     #
     class CreateParallelDataRequest < Struct.new(
@@ -115,7 +108,8 @@ module Aws::Translate
       :description,
       :parallel_data_config,
       :encryption_key,
-      :client_token)
+      :client_token,
+      :tags)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -138,13 +132,6 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteParallelDataRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the parallel data resource that is being deleted.
     #   @return [String]
@@ -174,13 +161,6 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteTerminologyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the custom terminology being deleted.
     #   @return [String]
@@ -193,13 +173,6 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeTextTranslationJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         job_id: "JobId", # required
-    #       }
-    #
     # @!attribute [rw] job_id
     #   The identifier that Amazon Translate generated for the job. The
     #   StartTextTranslationJob operation returns this identifier in its
@@ -255,24 +228,45 @@ module Aws::Translate
       include Aws::Structure
     end
 
+    # The content and content type of a document.
+    #
+    # @!attribute [rw] content
+    #   The `Content`field type is Binary large object (blob). This object
+    #   contains the document content converted into base64-encoded binary
+    #   data. If you use one of the AWS SDKs, the SDK performs the
+    #   Base64-encoding on this field before sending the request.
+    #   @return [String]
+    #
+    # @!attribute [rw] content_type
+    #   Describes the format of the document. You can specify one of the
+    #   following:
+    #
+    #   * text/html - The input data consists of HTML content. Amazon
+    #     Translate translates only the text in the HTML element.
+    #
+    #   * text/plain - The input data consists of unformatted text. Amazon
+    #     Translate translates every character in the content.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/Document AWS API Documentation
+    #
+    class Document < Struct.new(
+      :content,
+      :content_type)
+      SENSITIVE = [:content]
+      include Aws::Structure
+    end
+
     # The encryption key used to encrypt this object.
     #
-    # @note When making an API call, you may pass EncryptionKey
-    #   data as a hash:
-    #
-    #       {
-    #         type: "KMS", # required, accepts KMS
-    #         id: "EncryptionKeyID", # required
-    #       }
-    #
     # @!attribute [rw] type
-    #   The type of encryption key used by Amazon Translate to encrypt
-    #   custom terminologies.
+    #   The type of encryption key used by Amazon Translate to encrypt this
+    #   object.
     #   @return [String]
     #
     # @!attribute [rw] id
     #   The Amazon Resource Name (ARN) of the encryption key being used to
-    #   encrypt the custom terminology.
+    #   encrypt this object.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/EncryptionKey AWS API Documentation
@@ -284,13 +278,6 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetParallelDataRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ResourceName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the parallel data resource that is being retrieved.
     #   @return [String]
@@ -309,9 +296,21 @@ module Aws::Translate
     #   @return [Types::ParallelDataProperties]
     #
     # @!attribute [rw] data_location
-    #   The location of the most recent parallel data input file that was
-    #   successfully imported into Amazon Translate. The location is
-    #   returned as a presigned URL that has a 30 minute expiration.
+    #   The Amazon S3 location of the most recent parallel data input file
+    #   that was successfully imported into Amazon Translate. The location
+    #   is returned as a presigned URL that has a 30-minute expiration.
+    #
+    #   Amazon Translate doesn't scan all input files for the risk of CSV
+    #   injection attacks.
+    #
+    #    CSV injection occurs when a .csv or .tsv file is altered so that a
+    #   record contains malicious code. The record begins with a special
+    #   character, such as =, +, -, or @. When the file is opened in a
+    #   spreadsheet program, the program might interpret the record as a
+    #   formula and run the code within it.
+    #
+    #    Before you download an input file from Amazon S3, ensure that you
+    #   recognize the file and trust its creator.
     #   @return [Types::ParallelDataDataLocation]
     #
     # @!attribute [rw] auxiliary_data_location
@@ -319,7 +318,7 @@ module Aws::Translate
     #   warnings that were produced by your input file. This file was
     #   created when Amazon Translate attempted to create a parallel data
     #   resource. The location is returned as a presigned URL to that has a
-    #   30 minute expiration.
+    #   30-minute expiration.
     #   @return [Types::ParallelDataDataLocation]
     #
     # @!attribute [rw] latest_update_attempt_auxiliary_data_location
@@ -327,7 +326,7 @@ module Aws::Translate
     #   warnings that were produced by your input file. This file was
     #   created when Amazon Translate attempted to update a parallel data
     #   resource. The location is returned as a presigned URL to that has a
-    #   30 minute expiration.
+    #   30-minute expiration.
     #   @return [Types::ParallelDataDataLocation]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/GetParallelDataResponse AWS API Documentation
@@ -341,21 +340,21 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTerminologyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ResourceName", # required
-    #         terminology_data_format: "CSV", # required, accepts CSV, TMX
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the custom terminology being retrieved.
     #   @return [String]
     #
     # @!attribute [rw] terminology_data_format
-    #   The data format of the custom terminology being retrieved, either
-    #   CSV or TMX.
+    #   The data format of the custom terminology being retrieved.
+    #
+    #   If you don't specify this parameter, Amazon Translate returns a
+    #   file with the same format as the file that was imported to create
+    #   the terminology.
+    #
+    #   If you specify this parameter when you retrieve a multi-directional
+    #   terminology resource, you must specify the same format as the input
+    #   file that was imported to create it. Otherwise, Amazon Translate
+    #   throws an error.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/GetTerminologyRequest AWS API Documentation
@@ -372,37 +371,42 @@ module Aws::Translate
     #   @return [Types::TerminologyProperties]
     #
     # @!attribute [rw] terminology_data_location
-    #   The data location of the custom terminology being retrieved. The
-    #   custom terminology file is returned in a presigned url that has a 30
-    #   minute expiration.
+    #   The Amazon S3 location of the most recent custom terminology input
+    #   file that was successfully imported into Amazon Translate. The
+    #   location is returned as a presigned URL that has a 30-minute
+    #   expiration.
+    #
+    #   Amazon Translate doesn't scan all input files for the risk of CSV
+    #   injection attacks.
+    #
+    #    CSV injection occurs when a .csv or .tsv file is altered so that a
+    #   record contains malicious code. The record begins with a special
+    #   character, such as =, +, -, or @. When the file is opened in a
+    #   spreadsheet program, the program might interpret the record as a
+    #   formula and run the code within it.
+    #
+    #    Before you download an input file from Amazon S3, ensure that you
+    #   recognize the file and trust its creator.
+    #   @return [Types::TerminologyDataLocation]
+    #
+    # @!attribute [rw] auxiliary_data_location
+    #   The Amazon S3 location of a file that provides any errors or
+    #   warnings that were produced by your input file. This file was
+    #   created when Amazon Translate attempted to create a terminology
+    #   resource. The location is returned as a presigned URL to that has a
+    #   30-minute expiration.
     #   @return [Types::TerminologyDataLocation]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/GetTerminologyResponse AWS API Documentation
     #
     class GetTerminologyResponse < Struct.new(
       :terminology_properties,
-      :terminology_data_location)
+      :terminology_data_location,
+      :auxiliary_data_location)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ImportTerminologyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "ResourceName", # required
-    #         merge_strategy: "OVERWRITE", # required, accepts OVERWRITE
-    #         description: "Description",
-    #         terminology_data: { # required
-    #           file: "data", # required
-    #           format: "CSV", # required, accepts CSV, TMX
-    #         },
-    #         encryption_key: {
-    #           type: "KMS", # required, accepts KMS
-    #           id: "EncryptionKeyID", # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the custom terminology being imported.
     #   @return [String]
@@ -426,6 +430,16 @@ module Aws::Translate
     #   The encryption key for the custom terminology being imported.
     #   @return [Types::EncryptionKey]
     #
+    # @!attribute [rw] tags
+    #   Tags to be associated with this resource. A tag is a key-value pair
+    #   that adds metadata to a resource. Each tag key for the resource must
+    #   be unique. For more information, see [ Tagging your resources][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/tagging.html
+    #   @return [Array<Types::Tag>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/ImportTerminologyRequest AWS API Documentation
     #
     class ImportTerminologyRequest < Struct.new(
@@ -433,7 +447,8 @@ module Aws::Translate
       :merge_strategy,
       :description,
       :terminology_data,
-      :encryption_key)
+      :encryption_key,
+      :tags)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -442,10 +457,19 @@ module Aws::Translate
     #   The properties of the custom terminology being imported.
     #   @return [Types::TerminologyProperties]
     #
+    # @!attribute [rw] auxiliary_data_location
+    #   The Amazon S3 location of a file that provides any errors or
+    #   warnings that were produced by your input file. This file was
+    #   created when Amazon Translate attempted to create a terminology
+    #   resource. The location is returned as a presigned URL to that has a
+    #   30 minute expiration.
+    #   @return [Types::TerminologyDataLocation]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/ImportTerminologyResponse AWS API Documentation
     #
     class ImportTerminologyResponse < Struct.new(
-      :terminology_properties)
+      :terminology_properties,
+      :auxiliary_data_location)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -453,18 +477,11 @@ module Aws::Translate
     # The input configuration properties for requesting a batch translation
     # job.
     #
-    # @note When making an API call, you may pass InputDataConfig
-    #   data as a hash:
-    #
-    #       {
-    #         s3_uri: "S3Uri", # required
-    #         content_type: "ContentType", # required
-    #       }
-    #
     # @!attribute [rw] s3_uri
-    #   The URI of the AWS S3 folder that contains the input file. The
-    #   folder must be in the same Region as the API endpoint you are
-    #   calling.
+    #   The URI of the AWS S3 folder that contains the input files. Amazon
+    #   Translate translates all the files in the folder and all its
+    #   sub-folders. The folder must be in the same Region as the API
+    #   endpoint you are calling.
     #   @return [String]
     #
     # @!attribute [rw] content_type
@@ -472,24 +489,28 @@ module Aws::Translate
     #   as input. You can specify one of the following multipurpose internet
     #   mail extension (MIME) types:
     #
-    #   * `text/html`\: The input data consists of one or more HTML files.
+    #   * `text/html`: The input data consists of one or more HTML files.
     #     Amazon Translate translates only the text that resides in the
     #     `html` element in each file.
     #
-    #   * `text/plain`\: The input data consists of one or more unformatted
+    #   * `text/plain`: The input data consists of one or more unformatted
     #     text files. Amazon Translate translates every character in this
     #     type of input.
     #
-    #   * `application/vnd.openxmlformats-officedocument.wordprocessingml.document`\:
+    #   * `application/vnd.openxmlformats-officedocument.wordprocessingml.document`:
     #     The input data consists of one or more Word documents (.docx).
     #
-    #   * `application/vnd.openxmlformats-officedocument.presentationml.presentation`\:
+    #   * `application/vnd.openxmlformats-officedocument.presentationml.presentation`:
     #     The input data consists of one or more PowerPoint Presentation
     #     files (.pptx).
     #
-    #   * `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`\:
+    #   * `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`:
     #     The input data consists of one or more Excel Workbook files
     #     (.xlsx).
+    #
+    #   * `application/x-xliff+xml`: The input data consists of one or more
+    #     XML Localization Interchange File Format (XLIFF) files (.xlf).
+    #     Amazon Translate supports only XLIFF version 1.2.
     #
     #   If you structure your input data as HTML, ensure that you set this
     #   parameter to `text/html`. By doing so, you cut costs by limiting the
@@ -520,8 +541,8 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # The filter specified for the operation is invalid. Specify a different
-    # filter.
+    # The filter specified for the operation is not valid. Specify a
+    # different filter.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -534,7 +555,7 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # The value of the parameter is invalid. Review the value of the
+    # The value of the parameter is not valid. Review the value of the
     # parameter you are using to correct it, and then retry your operation.
     #
     # @!attribute [rw] message
@@ -548,8 +569,8 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # The request that you made is invalid. Check your request to determine
-    # why it's invalid and then retry the request.
+    # The request that you made is not valid. Check your request to
+    # determine why it's not valid and then retry the request.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -589,6 +610,25 @@ module Aws::Translate
       include Aws::Structure
     end
 
+    # A supported language.
+    #
+    # @!attribute [rw] language_name
+    #   Language name of the supported language.
+    #   @return [String]
+    #
+    # @!attribute [rw] language_code
+    #   Language code for the supported language.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/Language AWS API Documentation
+    #
+    class Language < Struct.new(
+      :language_name,
+      :language_code)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The specified limit has been exceeded. Review your request and retry
     # it with a quantity below the stated limit.
     #
@@ -603,14 +643,54 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListParallelDataRequest
-    #   data as a hash:
+    # @!attribute [rw] display_language_code
+    #   The language code for the language to use to display the language
+    #   names in the response. The language code is `en` by default.
+    #   @return [String]
     #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] next_token
+    #   Include the NextToken value to fetch the next group of supported
+    #   languages.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   The maximum number of results to return in each response.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/ListLanguagesRequest AWS API Documentation
+    #
+    class ListLanguagesRequest < Struct.new(
+      :display_language_code,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] languages
+    #   The list of supported languages.
+    #   @return [Array<Types::Language>]
+    #
+    # @!attribute [rw] display_language_code
+    #   The language code passed in with the request.
+    #   @return [String]
+    #
+    # @!attribute [rw] next_token
+    #   If the response does not include all remaining results, use the
+    #   NextToken in the next request to fetch the next group of supported
+    #   languages.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/ListLanguagesResponse AWS API Documentation
+    #
+    class ListLanguagesResponse < Struct.new(
+      :languages,
+      :display_language_code,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   A string that specifies the next page of results to return in a
     #   paginated response.
@@ -650,14 +730,35 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTerminologiesRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_arn
+    #   The Amazon Resource Name (ARN) of the given Amazon Translate
+    #   resource you are querying.
+    #   @return [String]
     #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/ListTagsForResourceRequest AWS API Documentation
     #
+    class ListTagsForResourceRequest < Struct.new(
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] tags
+    #   Tags associated with the Amazon Translate resource being queried. A
+    #   tag is a key-value pair that adds as a metadata to a resource used
+    #   by Amazon Translate. For example, a tag with "Sales" as the key
+    #   might be added to a resource to indicate its use by the sales
+    #   department.
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/ListTagsForResourceResponse AWS API Documentation
+    #
+    class ListTagsForResourceResponse < Struct.new(
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   If the result of the request to ListTerminologies was truncated,
     #   include the NextToken to fetch the next group of custom
@@ -697,20 +798,6 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTextTranslationJobsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filter: {
-    #           job_name: "JobName",
-    #           job_status: "SUBMITTED", # accepts SUBMITTED, IN_PROGRESS, COMPLETED, COMPLETED_WITH_ERROR, FAILED, STOP_REQUESTED, STOPPED
-    #           submitted_before_time: Time.now,
-    #           submitted_after_time: Time.now,
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] filter
     #   The parameters that specify which batch translation jobs to
     #   retrieve. Filters include job name, job status, and submission time.
@@ -741,7 +828,7 @@ module Aws::Translate
     #   @return [Array<Types::TextTranslationJobProperties>]
     #
     # @!attribute [rw] next_token
-    #   The token to use to retreive the next page of results. This value is
+    #   The token to use to retrieve the next page of results. This value is
     #   `null` when there are no more results to return.
     #   @return [String]
     #
@@ -756,36 +843,26 @@ module Aws::Translate
 
     # The output configuration properties for a batch translation job.
     #
-    # @note When making an API call, you may pass OutputDataConfig
-    #   data as a hash:
-    #
-    #       {
-    #         s3_uri: "S3Uri", # required
-    #       }
-    #
     # @!attribute [rw] s3_uri
     #   The URI of the S3 folder that contains a translation job's output
     #   file. The folder must be in the same Region as the API endpoint that
     #   you are calling.
     #   @return [String]
     #
+    # @!attribute [rw] encryption_key
+    #   The encryption key used to encrypt this object.
+    #   @return [Types::EncryptionKey]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/OutputDataConfig AWS API Documentation
     #
     class OutputDataConfig < Struct.new(
-      :s3_uri)
+      :s3_uri,
+      :encryption_key)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Specifies the format and S3 location of the parallel data input file.
-    #
-    # @note When making an API call, you may pass ParallelDataConfig
-    #   data as a hash:
-    #
-    #       {
-    #         s3_uri: "S3Uri", # required
-    #         format: "TSV", # required, accepts TSV, CSV, TMX
-    #       }
     #
     # @!attribute [rw] s3_uri
     #   The URI of the Amazon S3 folder that contains the parallel data
@@ -815,7 +892,19 @@ module Aws::Translate
     #
     # @!attribute [rw] location
     #   The Amazon S3 location of the parallel data input file. The location
-    #   is returned as a presigned URL to that has a 30 minute expiration.
+    #   is returned as a presigned URL to that has a 30-minute expiration.
+    #
+    #   Amazon Translate doesn't scan all input files for the risk of CSV
+    #   injection attacks.
+    #
+    #    CSV injection occurs when a .csv or .tsv file is altered so that a
+    #   record contains malicious code. The record begins with a special
+    #   character, such as =, +, -, or @. When the file is opened in a
+    #   spreadsheet program, the program might interpret the record as a
+    #   formula and run the code within it.
+    #
+    #    Before you download an input file from Amazon S3, ensure that you
+    #   recognize the file and trust its creator.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/ParallelDataDataLocation AWS API Documentation
@@ -952,8 +1041,8 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # The Amazon Translate service is temporarily unavailable. Please wait a
-    # bit and then retry your request.
+    # The Amazon Translate service is temporarily unavailable. Wait a bit
+    # and then retry your request.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -966,32 +1055,12 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartTextTranslationJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         job_name: "JobName",
-    #         input_data_config: { # required
-    #           s3_uri: "S3Uri", # required
-    #           content_type: "ContentType", # required
-    #         },
-    #         output_data_config: { # required
-    #           s3_uri: "S3Uri", # required
-    #         },
-    #         data_access_role_arn: "IamRoleArn", # required
-    #         source_language_code: "LanguageCodeString", # required
-    #         target_language_codes: ["LanguageCodeString"], # required
-    #         terminology_names: ["ResourceName"],
-    #         parallel_data_names: ["ResourceName"],
-    #         client_token: "ClientTokenString", # required
-    #       }
-    #
     # @!attribute [rw] job_name
     #   The name of the batch translation job to be performed.
     #   @return [String]
     #
     # @!attribute [rw] input_data_config
-    #   Specifies the format and S3 location of the input documents for the
+    #   Specifies the format and location of the input documents for the
     #   translation job.
     #   @return [Types::InputDataConfig]
     #
@@ -1002,41 +1071,103 @@ module Aws::Translate
     # @!attribute [rw] data_access_role_arn
     #   The Amazon Resource Name (ARN) of an AWS Identity Access and
     #   Management (IAM) role that grants Amazon Translate read access to
-    #   your input data. For more nformation, see
-    #   identity-and-access-management.
+    #   your input data. For more information, see [Identity and access
+    #   management ][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/identity-and-access-management.html
     #   @return [String]
     #
     # @!attribute [rw] source_language_code
-    #   The language code of the input language. For a list of language
-    #   codes, see what-is-languages.
+    #   The language code of the input language. Specify the language if all
+    #   input documents share the same language. If you don't know the
+    #   language of the source files, or your input documents contains
+    #   different source languages, select `auto`. Amazon Translate auto
+    #   detects the source language for each input document. For a list of
+    #   supported language codes, see [Supported languages][1].
     #
-    #   Amazon Translate does not automatically detect a source language
-    #   during batch translation jobs.
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/what-is-languages.html
     #   @return [String]
     #
     # @!attribute [rw] target_language_codes
-    #   The language code of the output language.
+    #   The target languages of the translation job. Enter up to 10 language
+    #   codes. Each input file is translated into each target language.
+    #
+    #   Each language code is 2 or 5 characters long. For a list of language
+    #   codes, see [Supported languages][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/what-is-languages.html
     #   @return [Array<String>]
     #
     # @!attribute [rw] terminology_names
-    #   The name of the terminology to use in the batch translation job. For
-    #   a list of available terminologies, use the ListTerminologies
-    #   operation.
+    #   The name of a custom terminology resource to add to the translation
+    #   job. This resource lists examples source terms and the desired
+    #   translation for each term.
+    #
+    #   This parameter accepts only one custom terminology resource.
+    #
+    #   If you specify multiple target languages for the job, translate uses
+    #   the designated terminology for each requested target language that
+    #   has an entry for the source term in the terminology file.
+    #
+    #   For a list of available custom terminology resources, use the
+    #   ListTerminologies operation.
+    #
+    #   For more information, see [Custom terminology][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/how-custom-terminology.html
     #   @return [Array<String>]
     #
     # @!attribute [rw] parallel_data_names
-    #   The names of the parallel data resources to use in the batch
-    #   translation job. For a list of available parallel data resources,
-    #   use the ListParallelData operation.
+    #   The name of a parallel data resource to add to the translation job.
+    #   This resource consists of examples that show how you want segments
+    #   of text to be translated. If you specify multiple target languages
+    #   for the job, the parallel data file must include translations for
+    #   all the target languages.
+    #
+    #   When you add parallel data to a translation job, you create an
+    #   *Active Custom Translation* job.
+    #
+    #   This parameter accepts only one parallel data resource.
+    #
+    #   <note markdown="1"> Active Custom Translation jobs are priced at a higher rate than
+    #   other jobs that don't use parallel data. For more information, see
+    #   [Amazon Translate pricing][1].
+    #
+    #    </note>
+    #
+    #   For a list of available parallel data resources, use the
+    #   ListParallelData operation.
+    #
+    #   For more information, see [ Customizing your translations with
+    #   parallel data][2].
+    #
+    #
+    #
+    #   [1]: http://aws.amazon.com/translate/pricing/
+    #   [2]: https://docs.aws.amazon.com/translate/latest/dg/customizing-translations-parallel-data.html
     #   @return [Array<String>]
     #
     # @!attribute [rw] client_token
-    #   A unique identifier for the request. This token is auto-generated
+    #   A unique identifier for the request. This token is generated for you
     #   when using the Amazon Translate SDK.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
     #   @return [String]
+    #
+    # @!attribute [rw] settings
+    #   Settings to configure your translation output, including the option
+    #   to set the formality level of the output text and the option to mask
+    #   profane words and phrases.
+    #   @return [Types::TranslationSettings]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/StartTextTranslationJobRequest AWS API Documentation
     #
@@ -1049,7 +1180,8 @@ module Aws::Translate
       :target_language_codes,
       :terminology_names,
       :parallel_data_names,
-      :client_token)
+      :client_token,
+      :settings)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1091,13 +1223,6 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopTextTranslationJobRequest
-    #   data as a hash:
-    #
-    #       {
-    #         job_id: "JobId", # required
-    #       }
-    #
     # @!attribute [rw] job_id
     #   The job ID of the job to be stopped.
     #   @return [String]
@@ -1128,6 +1253,52 @@ module Aws::Translate
       include Aws::Structure
     end
 
+    # A key-value pair that adds as a metadata to a resource used by Amazon
+    # Translate.
+    #
+    # @!attribute [rw] key
+    #   The initial part of a key-value pair that forms a tag associated
+    #   with a given resource.
+    #   @return [String]
+    #
+    # @!attribute [rw] value
+    #   The second part of a key-value pair that forms a tag associated with
+    #   a given resource.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/Tag AWS API Documentation
+    #
+    class Tag < Struct.new(
+      :key,
+      :value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource_arn
+    #   The Amazon Resource Name (ARN) of the given Amazon Translate
+    #   resource to which you want to associate the tags.
+    #   @return [String]
+    #
+    # @!attribute [rw] tags
+    #   Tags being associated with a specific Amazon Translate resource.
+    #   There can be a maximum of 50 tags (both existing and pending)
+    #   associated with a specific resource.
+    #   @return [Array<Types::Tag>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TagResourceRequest AWS API Documentation
+    #
+    class TagResourceRequest < Struct.new(
+      :resource_arn,
+      :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TagResourceResponse AWS API Documentation
+    #
+    class TagResourceResponse < Aws::EmptyStructure; end
+
     # The term being translated by the custom terminology.
     #
     # @!attribute [rw] source_text
@@ -1149,15 +1320,12 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # The data associated with the custom terminology.
+    # The data associated with the custom terminology. For information about
+    # the custom terminology file, see [ Creating a Custom Terminology][1].
     #
-    # @note When making an API call, you may pass TerminologyData
-    #   data as a hash:
     #
-    #       {
-    #         file: "data", # required
-    #         format: "CSV", # required, accepts CSV, TMX
-    #       }
+    #
+    # [1]: https://docs.aws.amazon.com/translate/latest/dg/creating-custom-terminology.html
     #
     # @!attribute [rw] file
     #   The file containing the custom terminology data. Your version of the
@@ -1167,14 +1335,40 @@ module Aws::Translate
     #   @return [String]
     #
     # @!attribute [rw] format
-    #   The data format of the custom terminology. Either CSV or TMX.
+    #   The data format of the custom terminology.
+    #   @return [String]
+    #
+    # @!attribute [rw] directionality
+    #   The directionality of your terminology resource indicates whether it
+    #   has one source language (uni-directional) or multiple
+    #   (multi-directional).
+    #
+    #   UNI
+    #
+    #   : The terminology resource has one source language (for example, the
+    #     first column in a CSV file), and all of its other languages are
+    #     target languages.
+    #
+    #   MULTI
+    #
+    #   : Any language in the terminology resource can be the source
+    #     language or a target language. A single multi-directional
+    #     terminology resource can be used for jobs that translate different
+    #     language pairs. For example, if the terminology contains English
+    #     and Spanish terms, it can be used for jobs that translate English
+    #     to Spanish and Spanish to English.
+    #
+    #   When you create a custom terminology resource without specifying the
+    #   directionality, it behaves as uni-directional terminology, although
+    #   this parameter will have a null value.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TerminologyData AWS API Documentation
     #
     class TerminologyData < Struct.new(
       :file,
-      :format)
+      :format,
+      :directionality)
       SENSITIVE = [:file]
       include Aws::Structure
     end
@@ -1186,7 +1380,22 @@ module Aws::Translate
     #   @return [String]
     #
     # @!attribute [rw] location
-    #   The location of the custom terminology data.
+    #   The Amazon S3 location of the most recent custom terminology input
+    #   file that was successfully imported into Amazon Translate. The
+    #   location is returned as a presigned URL that has a 30-minute
+    #   expiration .
+    #
+    #   Amazon Translate doesn't scan all input files for the risk of CSV
+    #   injection attacks.
+    #
+    #    CSV injection occurs when a .csv or .tsv file is altered so that a
+    #   record contains malicious code. The record begins with a special
+    #   character, such as =, +, -, or @. When the file is opened in a
+    #   spreadsheet program, the program might interpret the record as a
+    #   formula and run the code within it.
+    #
+    #    Before you download an input file from Amazon S3, ensure that you
+    #   recognize the file and trust its creator.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TerminologyDataLocation AWS API Documentation
@@ -1219,8 +1428,8 @@ module Aws::Translate
     #
     # @!attribute [rw] target_language_codes
     #   The language codes for the target languages available with the
-    #   custom terminology file. All possible target languages are returned
-    #   in array.
+    #   custom terminology resource. All possible target languages are
+    #   returned in array.
     #   @return [Array<String>]
     #
     # @!attribute [rw] encryption_key
@@ -1245,6 +1454,37 @@ module Aws::Translate
     #   the timestamp.
     #   @return [Time]
     #
+    # @!attribute [rw] directionality
+    #   The directionality of your terminology resource indicates whether it
+    #   has one source language (uni-directional) or multiple
+    #   (multi-directional).
+    #
+    #   UNI
+    #
+    #   : The terminology resource has one source language (the first column
+    #     in a CSV file), and all of its other languages are target
+    #     languages.
+    #
+    #   MULTI
+    #
+    #   : Any language in the terminology resource can be the source
+    #     language.
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   Additional information from Amazon Translate about the terminology
+    #   resource.
+    #   @return [String]
+    #
+    # @!attribute [rw] skipped_term_count
+    #   The number of terms in the input file that Amazon Translate skipped
+    #   when you created or updated the terminology resource.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] format
+    #   The format of the custom terminology input file.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TerminologyProperties AWS API Documentation
     #
     class TerminologyProperties < Struct.new(
@@ -1257,7 +1497,11 @@ module Aws::Translate
       :size_bytes,
       :term_count,
       :created_at,
-      :last_updated_at)
+      :last_updated_at,
+      :directionality,
+      :message,
+      :skipped_term_count,
+      :format)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1279,16 +1523,6 @@ module Aws::Translate
 
     # Provides information for filtering a list of translation jobs. For
     # more information, see ListTextTranslationJobs.
-    #
-    # @note When making an API call, you may pass TextTranslationJobFilter
-    #   data as a hash:
-    #
-    #       {
-    #         job_name: "JobName",
-    #         job_status: "SUBMITTED", # accepts SUBMITTED, IN_PROGRESS, COMPLETED, COMPLETED_WITH_ERROR, FAILED, STOP_REQUESTED, STOPPED
-    #         submitted_before_time: Time.now,
-    #         submitted_after_time: Time.now,
-    #       }
     #
     # @!attribute [rw] job_name
     #   Filters the list of jobs by name.
@@ -1364,7 +1598,7 @@ module Aws::Translate
     #   @return [Array<String>]
     #
     # @!attribute [rw] message
-    #   An explanation of any errors that may have occured during the
+    #   An explanation of any errors that may have occurred during the
     #   translation job.
     #   @return [String]
     #
@@ -1392,6 +1626,10 @@ module Aws::Translate
     #   the job's input data.
     #   @return [String]
     #
+    # @!attribute [rw] settings
+    #   Settings that modify the translation output.
+    #   @return [Types::TranslationSettings]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TextTranslationJobProperties AWS API Documentation
     #
     class TextTranslationJobProperties < Struct.new(
@@ -1408,7 +1646,8 @@ module Aws::Translate
       :end_time,
       :input_data_config,
       :output_data_config,
-      :data_access_role_arn)
+      :data_access_role_arn,
+      :settings)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1427,48 +1666,177 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TranslateTextRequest
-    #   data as a hash:
+    # You have added too many tags to this resource. The maximum is 50 tags.
     #
-    #       {
-    #         text: "BoundedLengthString", # required
-    #         terminology_names: ["ResourceName"],
-    #         source_language_code: "LanguageCodeString", # required
-    #         target_language_code: "LanguageCodeString", # required
-    #       }
-    #
-    # @!attribute [rw] text
-    #   The text to translate. The text string can be a maximum of 5,000
-    #   bytes long. Depending on your character set, this may be fewer than
-    #   5,000 characters.
+    # @!attribute [rw] message
     #   @return [String]
     #
+    # @!attribute [rw] resource_arn
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TooManyTagsException AWS API Documentation
+    #
+    class TooManyTagsException < Struct.new(
+      :message,
+      :resource_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] document
+    #   The content and content type for the document to be translated. The
+    #   document size must not exceed 100 KB.
+    #   @return [Types::Document]
+    #
     # @!attribute [rw] terminology_names
-    #   The name of the terminology list file to be used in the
-    #   TranslateText request. You can use 1 terminology list at most in a
-    #   `TranslateText` request. Terminology lists can contain a maximum of
-    #   256 terms.
+    #   The name of a terminology list file to add to the translation job.
+    #   This file provides source terms and the desired translation for each
+    #   term. A terminology list can contain a maximum of 256 terms. You can
+    #   use one custom terminology resource in your translation request.
+    #
+    #   Use the ListTerminologies operation to get the available terminology
+    #   lists.
+    #
+    #   For more information about custom terminology lists, see [Custom
+    #   terminology][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/how-custom-terminology.html
     #   @return [Array<String>]
     #
     # @!attribute [rw] source_language_code
-    #   The language code for the language of the source text. The language
-    #   must be a language supported by Amazon Translate. For a list of
-    #   language codes, see what-is-languages.
-    #
-    #   To have Amazon Translate determine the source language of your text,
-    #   you can specify `auto` in the `SourceLanguageCode` field. If you
-    #   specify `auto`, Amazon Translate will call [Amazon Comprehend][1] to
-    #   determine the source language.
+    #   The language code for the language of the source text. Do not use
+    #   `auto`, because `TranslateDocument` does not support language
+    #   auto-detection. For a list of supported language codes, see
+    #   [Supported languages][1].
     #
     #
     #
-    #   [1]: https://docs.aws.amazon.com/comprehend/latest/dg/comprehend-general.html
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/what-is-languages.html
     #   @return [String]
     #
     # @!attribute [rw] target_language_code
-    #   The language code requested for the language of the target text. The
-    #   language must be a language supported by Amazon Translate.
+    #   The language code requested for the translated document. For a list
+    #   of supported language codes, see [Supported languages][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/what-is-languages.html
     #   @return [String]
+    #
+    # @!attribute [rw] settings
+    #   Settings to configure your translation output, including the option
+    #   to set the formality level of the output text and the option to mask
+    #   profane words and phrases.
+    #   @return [Types::TranslationSettings]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TranslateDocumentRequest AWS API Documentation
+    #
+    class TranslateDocumentRequest < Struct.new(
+      :document,
+      :terminology_names,
+      :source_language_code,
+      :target_language_code,
+      :settings)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] translated_document
+    #   The document containing the translated content. The document format
+    #   matches the source document format.
+    #   @return [Types::TranslatedDocument]
+    #
+    # @!attribute [rw] source_language_code
+    #   The language code of the source document.
+    #   @return [String]
+    #
+    # @!attribute [rw] target_language_code
+    #   The language code of the translated document.
+    #   @return [String]
+    #
+    # @!attribute [rw] applied_terminologies
+    #   The names of the custom terminologies applied to the input text by
+    #   Amazon Translate to produce the translated text document.
+    #   @return [Array<Types::AppliedTerminology>]
+    #
+    # @!attribute [rw] applied_settings
+    #   Settings to configure your translation output, including the option
+    #   to set the formality level of the output text and the option to mask
+    #   profane words and phrases.
+    #   @return [Types::TranslationSettings]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TranslateDocumentResponse AWS API Documentation
+    #
+    class TranslateDocumentResponse < Struct.new(
+      :translated_document,
+      :source_language_code,
+      :target_language_code,
+      :applied_terminologies,
+      :applied_settings)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] text
+    #   The text to translate. The text string can be a maximum of 10,000
+    #   bytes long. Depending on your character set, this may be fewer than
+    #   10,000 characters.
+    #   @return [String]
+    #
+    # @!attribute [rw] terminology_names
+    #   The name of a terminology list file to add to the translation job.
+    #   This file provides source terms and the desired translation for each
+    #   term. A terminology list can contain a maximum of 256 terms. You can
+    #   use one custom terminology resource in your translation request.
+    #
+    #   Use the ListTerminologies operation to get the available terminology
+    #   lists.
+    #
+    #   For more information about custom terminology lists, see [Custom
+    #   terminology][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/how-custom-terminology.html
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] source_language_code
+    #   The language code for the language of the source text. For a list of
+    #   language codes, see [Supported languages][1].
+    #
+    #   To have Amazon Translate determine the source language of your text,
+    #   you can specify `auto` in the `SourceLanguageCode` field. If you
+    #   specify `auto`, Amazon Translate will call [Amazon Comprehend][2] to
+    #   determine the source language.
+    #
+    #   <note markdown="1"> If you specify `auto`, you must send the `TranslateText` request in
+    #   a region that supports Amazon Comprehend. Otherwise, the request
+    #   returns an error indicating that autodetect is not supported.
+    #
+    #    </note>
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/what-is-languages.html
+    #   [2]: https://docs.aws.amazon.com/comprehend/latest/dg/comprehend-general.html
+    #   @return [String]
+    #
+    # @!attribute [rw] target_language_code
+    #   The language code requested for the language of the target text. For
+    #   a list of language codes, see [Supported languages][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/what-is-languages.html
+    #   @return [String]
+    #
+    # @!attribute [rw] settings
+    #   Settings to configure your translation output, including the option
+    #   to set the formality level of the output text and the option to mask
+    #   profane words and phrases.
+    #   @return [Types::TranslationSettings]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TranslateTextRequest AWS API Documentation
     #
@@ -1476,7 +1844,8 @@ module Aws::Translate
       :text,
       :terminology_names,
       :source_language_code,
-      :target_language_code)
+      :target_language_code,
+      :settings)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1498,20 +1867,119 @@ module Aws::Translate
     #   Amazon Translate for the translated text response.
     #   @return [Array<Types::AppliedTerminology>]
     #
+    # @!attribute [rw] applied_settings
+    #   Optional settings that modify the translation output.
+    #   @return [Types::TranslationSettings]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TranslateTextResponse AWS API Documentation
     #
     class TranslateTextResponse < Struct.new(
       :translated_text,
       :source_language_code,
       :target_language_code,
-      :applied_terminologies)
+      :applied_terminologies,
+      :applied_settings)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The translated content.
+    #
+    # @!attribute [rw] content
+    #   The document containing the translated content.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TranslatedDocument AWS API Documentation
+    #
+    class TranslatedDocument < Struct.new(
+      :content)
+      SENSITIVE = [:content]
+      include Aws::Structure
+    end
+
+    # Settings to configure your translation output, including the option to
+    # set the formality level of the output text and the option to mask
+    # profane words and phrases.
+    #
+    # @!attribute [rw] formality
+    #   You can optionally specify the desired level of formality for
+    #   translations to supported target languages. The formality setting
+    #   controls the level of formal language usage (also known as
+    #   [register][1]) in the translation output. You can set the value to
+    #   informal or formal. If you don't specify a value for formality, or
+    #   if the target language doesn't support formality, the translation
+    #   will ignore the formality setting.
+    #
+    #   If you specify multiple target languages for the job, translate
+    #   ignores the formality setting for any unsupported target language.
+    #
+    #   For a list of target languages that support formality, see
+    #   [Supported languages][2] in the Amazon Translate Developer Guide.
+    #
+    #
+    #
+    #   [1]: https://en.wikipedia.org/wiki/Register_(sociolinguistics)
+    #   [2]: https://docs.aws.amazon.com/translate/latest/dg/customizing-translations-formality.html#customizing-translations-formality-languages
+    #   @return [String]
+    #
+    # @!attribute [rw] profanity
+    #   Enable the profanity setting if you want Amazon Translate to mask
+    #   profane words and phrases in your translation output.
+    #
+    #   To mask profane words and phrases, Amazon Translate replaces them
+    #   with the grawlix string “?$#@$“. This 5-character sequence is used
+    #   for each profane word or phrase, regardless of the length or number
+    #   of words.
+    #
+    #   Amazon Translate doesn't detect profanity in all of its supported
+    #   languages. For languages that don't support profanity detection,
+    #   see [Unsupported languages][1] in the Amazon Translate Developer
+    #   Guide.
+    #
+    #   If you specify multiple target languages for the job, all the target
+    #   languages must support profanity masking. If any of the target
+    #   languages don't support profanity masking, the translation job
+    #   won't mask profanity for any target language.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/translate/latest/dg/customizing-translations-profanity.html#customizing-translations-profanity-languages
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/TranslationSettings AWS API Documentation
+    #
+    class TranslationSettings < Struct.new(
+      :formality,
+      :profanity)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Requested display language code is not supported.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @!attribute [rw] display_language_code
+    #   Language code passed in with the request.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/UnsupportedDisplayLanguageCodeException AWS API Documentation
+    #
+    class UnsupportedDisplayLanguageCodeException < Struct.new(
+      :message,
+      :display_language_code)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # Amazon Translate does not support translation from the language of the
     # source text into the requested target language. For more information,
-    # see how-to-error-msg.
+    # see [Supported languages][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/translate/latest/dg/what-is-languages.html
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1534,19 +2002,30 @@ module Aws::Translate
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateParallelDataRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_arn
+    #   The Amazon Resource Name (ARN) of the given Amazon Translate
+    #   resource from which you want to remove the tags.
+    #   @return [String]
     #
-    #       {
-    #         name: "ResourceName", # required
-    #         description: "Description",
-    #         parallel_data_config: { # required
-    #           s3_uri: "S3Uri", # required
-    #           format: "TSV", # required, accepts TSV, CSV, TMX
-    #         },
-    #         client_token: "ClientTokenString", # required
-    #       }
+    # @!attribute [rw] tag_keys
+    #   The initial part of a key-value pair that forms a tag being removed
+    #   from a given resource. Keys must be unique and cannot be duplicated
+    #   for a particular resource.
+    #   @return [Array<String>]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/UntagResourceRequest AWS API Documentation
+    #
+    class UntagResourceRequest < Struct.new(
+      :resource_arn,
+      :tag_keys)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @see http://docs.aws.amazon.com/goto/WebAPI/translate-2017-07-01/UntagResourceResponse AWS API Documentation
+    #
+    class UntagResourceResponse < Aws::EmptyStructure; end
+
     # @!attribute [rw] name
     #   The name of the parallel data resource being updated.
     #   @return [String]

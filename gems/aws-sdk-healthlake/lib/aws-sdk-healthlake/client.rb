@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:healthlake)
@@ -73,8 +77,13 @@ module Aws::HealthLake
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::HealthLake::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::HealthLake
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::HealthLake
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::HealthLake
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::HealthLake
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::HealthLake
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::HealthLake::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::HealthLake::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::HealthLake
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::HealthLake
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -345,6 +402,10 @@ module Aws::HealthLake
     # @option params [required, String] :datastore_type_version
     #   The FHIR version of the Data Store. The only supported version is R4.
     #
+    # @option params [Types::SseConfiguration] :sse_configuration
+    #   The server-side encryption key configuration for a customer provided
+    #   encryption key specified for creating a Data Store.
+    #
     # @option params [Types::PreloadDataConfig] :preload_data_config
     #   Optional parameter to preload data upon creation of the Data Store.
     #   Currently, the only supported preloaded data is synthetic data
@@ -355,6 +416,13 @@ module Aws::HealthLake
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.**
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   Resource tags that are applied to a Data Store when it is created.
+    #
+    # @option params [Types::IdentityProviderConfiguration] :identity_provider_configuration
+    #   The configuration of the identity provider that you want to use for
+    #   your Data Store.
     #
     # @return [Types::CreateFHIRDatastoreResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -368,10 +436,28 @@ module Aws::HealthLake
     #   resp = client.create_fhir_datastore({
     #     datastore_name: "DatastoreName",
     #     datastore_type_version: "R4", # required, accepts R4
+    #     sse_configuration: {
+    #       kms_encryption_config: { # required
+    #         cmk_type: "CUSTOMER_MANAGED_KMS_KEY", # required, accepts CUSTOMER_MANAGED_KMS_KEY, AWS_OWNED_KMS_KEY
+    #         kms_key_id: "EncryptionKeyID",
+    #       },
+    #     },
     #     preload_data_config: {
     #       preload_data_type: "SYNTHEA", # required, accepts SYNTHEA
     #     },
     #     client_token: "ClientTokenString",
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #     identity_provider_configuration: {
+    #       authorization_strategy: "SMART_ON_FHIR_V1", # required, accepts SMART_ON_FHIR_V1, AWS_AUTH
+    #       fine_grained_authorization_enabled: false,
+    #       metadata: "ConfigurationMetadata",
+    #       idp_lambda_arn: "LambdaArn",
+    #     },
     #   })
     #
     # @example Response structure
@@ -392,7 +478,7 @@ module Aws::HealthLake
 
     # Deletes a Data Store.
     #
-    # @option params [String] :datastore_id
+    # @option params [required, String] :datastore_id
     #   The AWS-generated ID for the Data Store to be deleted.
     #
     # @return [Types::DeleteFHIRDatastoreResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -405,7 +491,7 @@ module Aws::HealthLake
     # @example Request syntax with placeholder values
     #
     #   resp = client.delete_fhir_datastore({
-    #     datastore_id: "DatastoreId",
+    #     datastore_id: "DatastoreId", # required
     #   })
     #
     # @example Response structure
@@ -428,9 +514,8 @@ module Aws::HealthLake
     # Data Store ID, Data Store ARN, Data Store name, Data Store status,
     # created at, Data Store type version, and Data Store endpoint.
     #
-    # @option params [String] :datastore_id
-    #   The AWS-generated Data Store id. This is part of the
-    #   ‘CreateFHIRDatastore’ output.
+    # @option params [required, String] :datastore_id
+    #   The AWS-generated Data Store ID.
     #
     # @return [Types::DescribeFHIRDatastoreResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -439,7 +524,7 @@ module Aws::HealthLake
     # @example Request syntax with placeholder values
     #
     #   resp = client.describe_fhir_datastore({
-    #     datastore_id: "DatastoreId",
+    #     datastore_id: "DatastoreId", # required
     #   })
     #
     # @example Response structure
@@ -451,7 +536,13 @@ module Aws::HealthLake
     #   resp.datastore_properties.created_at #=> Time
     #   resp.datastore_properties.datastore_type_version #=> String, one of "R4"
     #   resp.datastore_properties.datastore_endpoint #=> String
+    #   resp.datastore_properties.sse_configuration.kms_encryption_config.cmk_type #=> String, one of "CUSTOMER_MANAGED_KMS_KEY", "AWS_OWNED_KMS_KEY"
+    #   resp.datastore_properties.sse_configuration.kms_encryption_config.kms_key_id #=> String
     #   resp.datastore_properties.preload_data_config.preload_data_type #=> String, one of "SYNTHEA"
+    #   resp.datastore_properties.identity_provider_configuration.authorization_strategy #=> String, one of "SMART_ON_FHIR_V1", "AWS_AUTH"
+    #   resp.datastore_properties.identity_provider_configuration.fine_grained_authorization_enabled #=> Boolean
+    #   resp.datastore_properties.identity_provider_configuration.metadata #=> String
+    #   resp.datastore_properties.identity_provider_configuration.idp_lambda_arn #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/DescribeFHIRDatastore AWS API Documentation
     #
@@ -487,11 +578,12 @@ module Aws::HealthLake
     #
     #   resp.export_job_properties.job_id #=> String
     #   resp.export_job_properties.job_name #=> String
-    #   resp.export_job_properties.job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED", "FAILED"
+    #   resp.export_job_properties.job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED_WITH_ERRORS", "COMPLETED", "FAILED", "CANCEL_SUBMITTED", "CANCEL_IN_PROGRESS", "CANCEL_COMPLETED", "CANCEL_FAILED"
     #   resp.export_job_properties.submit_time #=> Time
     #   resp.export_job_properties.end_time #=> Time
     #   resp.export_job_properties.datastore_id #=> String
-    #   resp.export_job_properties.output_data_config.s3_uri #=> String
+    #   resp.export_job_properties.output_data_config.s3_configuration.s3_uri #=> String
+    #   resp.export_job_properties.output_data_config.s3_configuration.kms_key_id #=> String
     #   resp.export_job_properties.data_access_role_arn #=> String
     #   resp.export_job_properties.message #=> String
     #
@@ -528,11 +620,13 @@ module Aws::HealthLake
     #
     #   resp.import_job_properties.job_id #=> String
     #   resp.import_job_properties.job_name #=> String
-    #   resp.import_job_properties.job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED", "FAILED"
+    #   resp.import_job_properties.job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED_WITH_ERRORS", "COMPLETED", "FAILED", "CANCEL_SUBMITTED", "CANCEL_IN_PROGRESS", "CANCEL_COMPLETED", "CANCEL_FAILED"
     #   resp.import_job_properties.submit_time #=> Time
     #   resp.import_job_properties.end_time #=> Time
     #   resp.import_job_properties.datastore_id #=> String
     #   resp.import_job_properties.input_data_config.s3_uri #=> String
+    #   resp.import_job_properties.job_output_data_config.s3_configuration.s3_uri #=> String
+    #   resp.import_job_properties.job_output_data_config.s3_configuration.kms_key_id #=> String
     #   resp.import_job_properties.data_access_role_arn #=> String
     #   resp.import_job_properties.message #=> String
     #
@@ -588,7 +682,13 @@ module Aws::HealthLake
     #   resp.datastore_properties_list[0].created_at #=> Time
     #   resp.datastore_properties_list[0].datastore_type_version #=> String, one of "R4"
     #   resp.datastore_properties_list[0].datastore_endpoint #=> String
+    #   resp.datastore_properties_list[0].sse_configuration.kms_encryption_config.cmk_type #=> String, one of "CUSTOMER_MANAGED_KMS_KEY", "AWS_OWNED_KMS_KEY"
+    #   resp.datastore_properties_list[0].sse_configuration.kms_encryption_config.kms_key_id #=> String
     #   resp.datastore_properties_list[0].preload_data_config.preload_data_type #=> String, one of "SYNTHEA"
+    #   resp.datastore_properties_list[0].identity_provider_configuration.authorization_strategy #=> String, one of "SMART_ON_FHIR_V1", "AWS_AUTH"
+    #   resp.datastore_properties_list[0].identity_provider_configuration.fine_grained_authorization_enabled #=> Boolean
+    #   resp.datastore_properties_list[0].identity_provider_configuration.metadata #=> String
+    #   resp.datastore_properties_list[0].identity_provider_configuration.idp_lambda_arn #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListFHIRDatastores AWS API Documentation
@@ -597,6 +697,186 @@ module Aws::HealthLake
     # @param [Hash] params ({})
     def list_fhir_datastores(params = {}, options = {})
       req = build_request(:list_fhir_datastores, params)
+      req.send_request(options)
+    end
+
+    # Lists all FHIR export jobs associated with an account and their
+    # statuses.
+    #
+    # @option params [required, String] :datastore_id
+    #   This parameter limits the response to the export job with the
+    #   specified Data Store ID.
+    #
+    # @option params [String] :next_token
+    #   A pagination token used to identify the next page of results to return
+    #   for a ListFHIRExportJobs query.
+    #
+    # @option params [Integer] :max_results
+    #   This parameter limits the number of results returned for a
+    #   ListFHIRExportJobs to a maximum quantity specified by the user.
+    #
+    # @option params [String] :job_name
+    #   This parameter limits the response to the export job with the
+    #   specified job name.
+    #
+    # @option params [String] :job_status
+    #   This parameter limits the response to the export jobs with the
+    #   specified job status.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :submitted_before
+    #   This parameter limits the response to FHIR export jobs submitted
+    #   before a user specified date.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :submitted_after
+    #   This parameter limits the response to FHIR export jobs submitted after
+    #   a user specified date.
+    #
+    # @return [Types::ListFHIRExportJobsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListFHIRExportJobsResponse#export_job_properties_list #export_job_properties_list} => Array&lt;Types::ExportJobProperties&gt;
+    #   * {Types::ListFHIRExportJobsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_fhir_export_jobs({
+    #     datastore_id: "DatastoreId", # required
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     job_name: "JobName",
+    #     job_status: "SUBMITTED", # accepts SUBMITTED, IN_PROGRESS, COMPLETED_WITH_ERRORS, COMPLETED, FAILED, CANCEL_SUBMITTED, CANCEL_IN_PROGRESS, CANCEL_COMPLETED, CANCEL_FAILED
+    #     submitted_before: Time.now,
+    #     submitted_after: Time.now,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.export_job_properties_list #=> Array
+    #   resp.export_job_properties_list[0].job_id #=> String
+    #   resp.export_job_properties_list[0].job_name #=> String
+    #   resp.export_job_properties_list[0].job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED_WITH_ERRORS", "COMPLETED", "FAILED", "CANCEL_SUBMITTED", "CANCEL_IN_PROGRESS", "CANCEL_COMPLETED", "CANCEL_FAILED"
+    #   resp.export_job_properties_list[0].submit_time #=> Time
+    #   resp.export_job_properties_list[0].end_time #=> Time
+    #   resp.export_job_properties_list[0].datastore_id #=> String
+    #   resp.export_job_properties_list[0].output_data_config.s3_configuration.s3_uri #=> String
+    #   resp.export_job_properties_list[0].output_data_config.s3_configuration.kms_key_id #=> String
+    #   resp.export_job_properties_list[0].data_access_role_arn #=> String
+    #   resp.export_job_properties_list[0].message #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListFHIRExportJobs AWS API Documentation
+    #
+    # @overload list_fhir_export_jobs(params = {})
+    # @param [Hash] params ({})
+    def list_fhir_export_jobs(params = {}, options = {})
+      req = build_request(:list_fhir_export_jobs, params)
+      req.send_request(options)
+    end
+
+    # Lists all FHIR import jobs associated with an account and their
+    # statuses.
+    #
+    # @option params [required, String] :datastore_id
+    #   This parameter limits the response to the import job with the
+    #   specified Data Store ID.
+    #
+    # @option params [String] :next_token
+    #   A pagination token used to identify the next page of results to return
+    #   for a ListFHIRImportJobs query.
+    #
+    # @option params [Integer] :max_results
+    #   This parameter limits the number of results returned for a
+    #   ListFHIRImportJobs to a maximum quantity specified by the user.
+    #
+    # @option params [String] :job_name
+    #   This parameter limits the response to the import job with the
+    #   specified job name.
+    #
+    # @option params [String] :job_status
+    #   This parameter limits the response to the import job with the
+    #   specified job status.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :submitted_before
+    #   This parameter limits the response to FHIR import jobs submitted
+    #   before a user specified date.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :submitted_after
+    #   This parameter limits the response to FHIR import jobs submitted after
+    #   a user specified date.
+    #
+    # @return [Types::ListFHIRImportJobsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListFHIRImportJobsResponse#import_job_properties_list #import_job_properties_list} => Array&lt;Types::ImportJobProperties&gt;
+    #   * {Types::ListFHIRImportJobsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_fhir_import_jobs({
+    #     datastore_id: "DatastoreId", # required
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     job_name: "JobName",
+    #     job_status: "SUBMITTED", # accepts SUBMITTED, IN_PROGRESS, COMPLETED_WITH_ERRORS, COMPLETED, FAILED, CANCEL_SUBMITTED, CANCEL_IN_PROGRESS, CANCEL_COMPLETED, CANCEL_FAILED
+    #     submitted_before: Time.now,
+    #     submitted_after: Time.now,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.import_job_properties_list #=> Array
+    #   resp.import_job_properties_list[0].job_id #=> String
+    #   resp.import_job_properties_list[0].job_name #=> String
+    #   resp.import_job_properties_list[0].job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED_WITH_ERRORS", "COMPLETED", "FAILED", "CANCEL_SUBMITTED", "CANCEL_IN_PROGRESS", "CANCEL_COMPLETED", "CANCEL_FAILED"
+    #   resp.import_job_properties_list[0].submit_time #=> Time
+    #   resp.import_job_properties_list[0].end_time #=> Time
+    #   resp.import_job_properties_list[0].datastore_id #=> String
+    #   resp.import_job_properties_list[0].input_data_config.s3_uri #=> String
+    #   resp.import_job_properties_list[0].job_output_data_config.s3_configuration.s3_uri #=> String
+    #   resp.import_job_properties_list[0].job_output_data_config.s3_configuration.kms_key_id #=> String
+    #   resp.import_job_properties_list[0].data_access_role_arn #=> String
+    #   resp.import_job_properties_list[0].message #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListFHIRImportJobs AWS API Documentation
+    #
+    # @overload list_fhir_import_jobs(params = {})
+    # @param [Hash] params ({})
+    def list_fhir_import_jobs(params = {}, options = {})
+      req = build_request(:list_fhir_import_jobs, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of all existing tags associated with a Data Store.
+    #
+    # @option params [required, String] :resource_arn
+    #   The Amazon Resource Name(ARN) of the Data Store for which tags are
+    #   being added.
+    #
+    # @return [Types::ListTagsForResourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListTagsForResourceResponse#tags #tags} => Array&lt;Types::Tag&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_tags_for_resource({
+    #     resource_arn: "AmazonResourceName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.tags #=> Array
+    #   resp.tags[0].key #=> String
+    #   resp.tags[0].value #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/ListTagsForResource AWS API Documentation
+    #
+    # @overload list_tags_for_resource(params = {})
+    # @param [Hash] params ({})
+    def list_tags_for_resource(params = {}, options = {})
+      req = build_request(:list_tags_for_resource, params)
       req.send_request(options)
     end
 
@@ -633,7 +913,10 @@ module Aws::HealthLake
     #   resp = client.start_fhir_export_job({
     #     job_name: "JobName",
     #     output_data_config: { # required
-    #       s3_uri: "S3Uri",
+    #       s3_configuration: {
+    #         s3_uri: "S3Uri", # required
+    #         kms_key_id: "EncryptionKeyID", # required
+    #       },
     #     },
     #     datastore_id: "DatastoreId", # required
     #     data_access_role_arn: "IamRoleArn", # required
@@ -643,7 +926,7 @@ module Aws::HealthLake
     # @example Response structure
     #
     #   resp.job_id #=> String
-    #   resp.job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED", "FAILED"
+    #   resp.job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED_WITH_ERRORS", "COMPLETED", "FAILED", "CANCEL_SUBMITTED", "CANCEL_IN_PROGRESS", "CANCEL_COMPLETED", "CANCEL_FAILED"
     #   resp.datastore_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/StartFHIRExportJob AWS API Documentation
@@ -663,6 +946,10 @@ module Aws::HealthLake
     # @option params [required, Types::InputDataConfig] :input_data_config
     #   The input properties of the FHIR Import job in the StartFHIRImport job
     #   request.
+    #
+    # @option params [required, Types::OutputDataConfig] :job_output_data_config
+    #   The output data configuration that was supplied when the export job
+    #   was created.
     #
     # @option params [required, String] :datastore_id
     #   The AWS-generated Data Store ID.
@@ -690,6 +977,12 @@ module Aws::HealthLake
     #     input_data_config: { # required
     #       s3_uri: "S3Uri",
     #     },
+    #     job_output_data_config: { # required
+    #       s3_configuration: {
+    #         s3_uri: "S3Uri", # required
+    #         kms_key_id: "EncryptionKeyID", # required
+    #       },
+    #     },
     #     datastore_id: "DatastoreId", # required
     #     data_access_role_arn: "IamRoleArn", # required
     #     client_token: "ClientTokenString", # required
@@ -698,7 +991,7 @@ module Aws::HealthLake
     # @example Response structure
     #
     #   resp.job_id #=> String
-    #   resp.job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED", "FAILED"
+    #   resp.job_status #=> String, one of "SUBMITTED", "IN_PROGRESS", "COMPLETED_WITH_ERRORS", "COMPLETED", "FAILED", "CANCEL_SUBMITTED", "CANCEL_IN_PROGRESS", "CANCEL_COMPLETED", "CANCEL_FAILED"
     #   resp.datastore_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/StartFHIRImportJob AWS API Documentation
@@ -707,6 +1000,66 @@ module Aws::HealthLake
     # @param [Hash] params ({})
     def start_fhir_import_job(params = {}, options = {})
       req = build_request(:start_fhir_import_job, params)
+      req.send_request(options)
+    end
+
+    # Adds a user specified key and value tag to a Data Store.
+    #
+    # @option params [required, String] :resource_arn
+    #   The Amazon Resource Name(ARN)that gives Amazon HealthLake access to
+    #   the Data Store which tags are being added to.
+    #
+    # @option params [required, Array<Types::Tag>] :tags
+    #   The user specified key and value pair tags being added to a Data
+    #   Store.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.tag_resource({
+    #     resource_arn: "AmazonResourceName", # required
+    #     tags: [ # required
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/TagResource AWS API Documentation
+    #
+    # @overload tag_resource(params = {})
+    # @param [Hash] params ({})
+    def tag_resource(params = {}, options = {})
+      req = build_request(:tag_resource, params)
+      req.send_request(options)
+    end
+
+    # Removes tags from a Data Store.
+    #
+    # @option params [required, String] :resource_arn
+    #   "The Amazon Resource Name(ARN) of the Data Store for which tags are
+    #   being removed
+    #
+    # @option params [required, Array<String>] :tag_keys
+    #   The keys for the tags to be removed from the Healthlake Data Store.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.untag_resource({
+    #     resource_arn: "AmazonResourceName", # required
+    #     tag_keys: ["TagKey"], # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/healthlake-2017-07-01/UntagResource AWS API Documentation
+    #
+    # @overload untag_resource(params = {})
+    # @param [Hash] params ({})
+    def untag_resource(params = {}, options = {})
+      req = build_request(:untag_resource, params)
       req.send_request(options)
     end
 
@@ -723,7 +1076,7 @@ module Aws::HealthLake
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-healthlake'
-      context[:gem_version] = '1.3.0'
+      context[:gem_version] = '1.19.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

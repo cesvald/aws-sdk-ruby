@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-connect/types'
 require_relative 'aws-sdk-connect/client_api'
+require_relative 'aws-sdk-connect/plugins/endpoints.rb'
 require_relative 'aws-sdk-connect/client'
 require_relative 'aws-sdk-connect/errors'
 require_relative 'aws-sdk-connect/resource'
+require_relative 'aws-sdk-connect/endpoint_parameters'
+require_relative 'aws-sdk-connect/endpoint_provider'
+require_relative 'aws-sdk-connect/endpoints'
 require_relative 'aws-sdk-connect/customizations'
 
 # This module provides support for Amazon Connect Service. This module is available in the
@@ -28,7 +32,7 @@ require_relative 'aws-sdk-connect/customizations'
 # structure.
 #
 #     connect = Aws::Connect::Client.new
-#     resp = connect.associate_approved_origin(params)
+#     resp = connect.activate_evaluation_form(params)
 #
 # See {Client} for more information.
 #
@@ -48,6 +52,6 @@ require_relative 'aws-sdk-connect/customizations'
 # @!group service
 module Aws::Connect
 
-  GEM_VERSION = '1.44.0'
+  GEM_VERSION = '1.118.0'
 
 end

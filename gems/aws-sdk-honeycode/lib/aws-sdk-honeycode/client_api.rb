@@ -43,13 +43,16 @@ module Aws::Honeycode
     DescribeTableDataImportJobResult = Shapes::StructureShape.new(name: 'DescribeTableDataImportJobResult')
     DestinationOptions = Shapes::StructureShape.new(name: 'DestinationOptions')
     Email = Shapes::StringShape.new(name: 'Email')
+    ErrorCode = Shapes::StringShape.new(name: 'ErrorCode')
     ErrorMessage = Shapes::StringShape.new(name: 'ErrorMessage')
     Fact = Shapes::StringShape.new(name: 'Fact')
+    FactList = Shapes::ListShape.new(name: 'FactList')
     FailedBatchItem = Shapes::StructureShape.new(name: 'FailedBatchItem')
     FailedBatchItems = Shapes::ListShape.new(name: 'FailedBatchItems')
     Filter = Shapes::StructureShape.new(name: 'Filter')
     Format = Shapes::StringShape.new(name: 'Format')
     FormattedValue = Shapes::StringShape.new(name: 'FormattedValue')
+    FormattedValuesList = Shapes::ListShape.new(name: 'FormattedValuesList')
     Formula = Shapes::StringShape.new(name: 'Formula')
     GetScreenDataRequest = Shapes::StructureShape.new(name: 'GetScreenDataRequest')
     GetScreenDataResult = Shapes::StructureShape.new(name: 'GetScreenDataResult')
@@ -72,6 +75,8 @@ module Aws::Honeycode
     ListTableRowsResult = Shapes::StructureShape.new(name: 'ListTableRowsResult')
     ListTablesRequest = Shapes::StructureShape.new(name: 'ListTablesRequest')
     ListTablesResult = Shapes::StructureShape.new(name: 'ListTablesResult')
+    ListTagsForResourceRequest = Shapes::StructureShape.new(name: 'ListTagsForResourceRequest')
+    ListTagsForResourceResult = Shapes::StructureShape.new(name: 'ListTagsForResourceResult')
     MaxResults = Shapes::IntegerShape.new(name: 'MaxResults')
     Name = Shapes::StringShape.new(name: 'Name')
     PaginationToken = Shapes::StringShape.new(name: 'PaginationToken')
@@ -79,6 +84,7 @@ module Aws::Honeycode
     QueryTableRowsResult = Shapes::StructureShape.new(name: 'QueryTableRowsResult')
     RawValue = Shapes::StringShape.new(name: 'RawValue')
     RequestTimeoutException = Shapes::StructureShape.new(name: 'RequestTimeoutException')
+    ResourceArn = Shapes::StringShape.new(name: 'ResourceArn')
     ResourceId = Shapes::StringShape.new(name: 'ResourceId')
     ResourceIds = Shapes::ListShape.new(name: 'ResourceIds')
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
@@ -108,8 +114,16 @@ module Aws::Honeycode
     TableRow = Shapes::StructureShape.new(name: 'TableRow')
     TableRows = Shapes::ListShape.new(name: 'TableRows')
     Tables = Shapes::ListShape.new(name: 'Tables')
+    TagKey = Shapes::StringShape.new(name: 'TagKey')
+    TagKeysList = Shapes::ListShape.new(name: 'TagKeysList')
+    TagResourceRequest = Shapes::StructureShape.new(name: 'TagResourceRequest')
+    TagResourceResult = Shapes::StructureShape.new(name: 'TagResourceResult')
+    TagValue = Shapes::StringShape.new(name: 'TagValue')
+    TagsMap = Shapes::MapShape.new(name: 'TagsMap')
     ThrottlingException = Shapes::StructureShape.new(name: 'ThrottlingException')
     TimestampInMillis = Shapes::TimestampShape.new(name: 'TimestampInMillis')
+    UntagResourceRequest = Shapes::StructureShape.new(name: 'UntagResourceRequest')
+    UntagResourceResult = Shapes::StructureShape.new(name: 'UntagResourceResult')
     UpdateRowData = Shapes::StructureShape.new(name: 'UpdateRowData')
     UpdateRowDataList = Shapes::ListShape.new(name: 'UpdateRowDataList')
     UpsertAction = Shapes::StringShape.new(name: 'UpsertAction')
@@ -178,9 +192,11 @@ module Aws::Honeycode
     Cell.add_member(:format, Shapes::ShapeRef.new(shape: Format, location_name: "format"))
     Cell.add_member(:raw_value, Shapes::ShapeRef.new(shape: RawValue, location_name: "rawValue"))
     Cell.add_member(:formatted_value, Shapes::ShapeRef.new(shape: FormattedValue, location_name: "formattedValue"))
+    Cell.add_member(:formatted_values, Shapes::ShapeRef.new(shape: FormattedValuesList, location_name: "formattedValues"))
     Cell.struct_class = Types::Cell
 
     CellInput.add_member(:fact, Shapes::ShapeRef.new(shape: Fact, location_name: "fact"))
+    CellInput.add_member(:facts, Shapes::ShapeRef.new(shape: FactList, location_name: "facts"))
     CellInput.struct_class = Types::CellInput
 
     Cells.member = Shapes::ShapeRef.new(shape: Cell)
@@ -219,10 +235,13 @@ module Aws::Honeycode
     DescribeTableDataImportJobResult.add_member(:job_status, Shapes::ShapeRef.new(shape: TableDataImportJobStatus, required: true, location_name: "jobStatus"))
     DescribeTableDataImportJobResult.add_member(:message, Shapes::ShapeRef.new(shape: TableDataImportJobMessage, required: true, location_name: "message"))
     DescribeTableDataImportJobResult.add_member(:job_metadata, Shapes::ShapeRef.new(shape: TableDataImportJobMetadata, required: true, location_name: "jobMetadata"))
+    DescribeTableDataImportJobResult.add_member(:error_code, Shapes::ShapeRef.new(shape: ErrorCode, location_name: "errorCode"))
     DescribeTableDataImportJobResult.struct_class = Types::DescribeTableDataImportJobResult
 
     DestinationOptions.add_member(:column_map, Shapes::ShapeRef.new(shape: ImportColumnMap, location_name: "columnMap"))
     DestinationOptions.struct_class = Types::DestinationOptions
+
+    FactList.member = Shapes::ShapeRef.new(shape: Fact)
 
     FailedBatchItem.add_member(:id, Shapes::ShapeRef.new(shape: BatchItemId, required: true, location_name: "id"))
     FailedBatchItem.add_member(:error_message, Shapes::ShapeRef.new(shape: BatchErrorMessage, required: true, location_name: "errorMessage"))
@@ -233,6 +252,8 @@ module Aws::Honeycode
     Filter.add_member(:formula, Shapes::ShapeRef.new(shape: Formula, required: true, location_name: "formula"))
     Filter.add_member(:context_row_id, Shapes::ShapeRef.new(shape: RowId, location_name: "contextRowId"))
     Filter.struct_class = Types::Filter
+
+    FormattedValuesList.member = Shapes::ShapeRef.new(shape: FormattedValue)
 
     GetScreenDataRequest.add_member(:workbook_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location_name: "workbookId"))
     GetScreenDataRequest.add_member(:app_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location_name: "appId"))
@@ -312,6 +333,12 @@ module Aws::Honeycode
     ListTablesResult.add_member(:next_token, Shapes::ShapeRef.new(shape: PaginationToken, location_name: "nextToken"))
     ListTablesResult.add_member(:workbook_cursor, Shapes::ShapeRef.new(shape: WorkbookCursor, location_name: "workbookCursor"))
     ListTablesResult.struct_class = Types::ListTablesResult
+
+    ListTagsForResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceArn, required: true, location: "uri", location_name: "resourceArn"))
+    ListTagsForResourceRequest.struct_class = Types::ListTagsForResourceRequest
+
+    ListTagsForResourceResult.add_member(:tags, Shapes::ShapeRef.new(shape: TagsMap, location_name: "tags"))
+    ListTagsForResourceResult.struct_class = Types::ListTagsForResourceResult
 
     QueryTableRowsRequest.add_member(:workbook_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location: "uri", location_name: "workbookId"))
     QueryTableRowsRequest.add_member(:table_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location: "uri", location_name: "tableId"))
@@ -400,8 +427,25 @@ module Aws::Honeycode
 
     Tables.member = Shapes::ShapeRef.new(shape: Table)
 
+    TagKeysList.member = Shapes::ShapeRef.new(shape: TagKey)
+
+    TagResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceArn, required: true, location: "uri", location_name: "resourceArn"))
+    TagResourceRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagsMap, required: true, location_name: "tags"))
+    TagResourceRequest.struct_class = Types::TagResourceRequest
+
+    TagResourceResult.struct_class = Types::TagResourceResult
+
+    TagsMap.key = Shapes::ShapeRef.new(shape: TagKey)
+    TagsMap.value = Shapes::ShapeRef.new(shape: TagValue)
+
     ThrottlingException.add_member(:message, Shapes::ShapeRef.new(shape: ErrorMessage, location_name: "message"))
     ThrottlingException.struct_class = Types::ThrottlingException
+
+    UntagResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: ResourceArn, required: true, location: "uri", location_name: "resourceArn"))
+    UntagResourceRequest.add_member(:tag_keys, Shapes::ShapeRef.new(shape: TagKeysList, required: true, location: "querystring", location_name: "tagKeys"))
+    UntagResourceRequest.struct_class = Types::UntagResourceRequest
+
+    UntagResourceResult.struct_class = Types::UntagResourceResult
 
     UpdateRowData.add_member(:row_id, Shapes::ShapeRef.new(shape: RowId, required: true, location_name: "rowId"))
     UpdateRowData.add_member(:cells_to_update, Shapes::ShapeRef.new(shape: RowDataInput, required: true, location_name: "cellsToUpdate"))
@@ -525,6 +569,7 @@ module Aws::Honeycode
         o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
         o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: RequestTimeoutException)
       end)
 
       api.add_operation(:get_screen_data, Seahorse::Model::Operation.new.tap do |o|
@@ -557,6 +602,7 @@ module Aws::Honeycode
         o.errors << Shapes::ShapeRef.new(shape: AutomationExecutionException)
         o.errors << Shapes::ShapeRef.new(shape: AutomationExecutionTimeoutException)
         o.errors << Shapes::ShapeRef.new(shape: RequestTimeoutException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceQuotaExceededException)
       end)
 
       api.add_operation(:list_table_columns, Seahorse::Model::Operation.new.tap do |o|
@@ -621,6 +667,21 @@ module Aws::Honeycode
         )
       end)
 
+      api.add_operation(:list_tags_for_resource, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListTagsForResource"
+        o.http_method = "GET"
+        o.http_request_uri = "/tags/{resourceArn}"
+        o.input = Shapes::ShapeRef.new(shape: ListTagsForResourceRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListTagsForResourceResult)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: RequestTimeoutException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+      end)
+
       api.add_operation(:query_table_rows, Seahorse::Model::Operation.new.tap do |o|
         o.name = "QueryTableRows"
         o.http_method = "POST"
@@ -650,6 +711,38 @@ module Aws::Honeycode
         o.output = Shapes::ShapeRef.new(shape: StartTableDataImportJobResult)
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+        o.errors << Shapes::ShapeRef.new(shape: RequestTimeoutException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceQuotaExceededException)
+      end)
+
+      api.add_operation(:tag_resource, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "TagResource"
+        o.http_method = "POST"
+        o.http_request_uri = "/tags/{resourceArn}"
+        o.input = Shapes::ShapeRef.new(shape: TagResourceRequest)
+        o.output = Shapes::ShapeRef.new(shape: TagResourceResult)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: RequestTimeoutException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+      end)
+
+      api.add_operation(:untag_resource, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UntagResource"
+        o.http_method = "DELETE"
+        o.http_request_uri = "/tags/{resourceArn}"
+        o.input = Shapes::ShapeRef.new(shape: UntagResourceRequest)
+        o.output = Shapes::ShapeRef.new(shape: UntagResourceResult)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServerException)
+        o.errors << Shapes::ShapeRef.new(shape: RequestTimeoutException)
         o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
         o.errors << Shapes::ShapeRef.new(shape: ServiceUnavailableException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)

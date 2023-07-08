@@ -1,6 +1,173 @@
 Unreleased Changes
 ------------------
 
+1.103.0 (2023-07-07)
+------------------
+
+* Feature - This release enables the use of Thumbnails in AWS Elemental MediaLive.
+
+1.102.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.101.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.100.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.99.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.98.0 (2023-03-27)
+------------------
+
+* Feature - AWS Elemental MediaLive now supports ID3 tag insertion for audio only HLS output groups. AWS Elemental Link devices now support tagging.
+
+1.97.0 (2023-03-03)
+------------------
+
+* Feature - AWS Elemental MediaLive adds support for Nielsen watermark timezones.
+
+1.96.0 (2023-01-19)
+------------------
+
+* Feature - AWS Elemental MediaLive adds support for SCTE 35 preRollMilliSeconds.
+
+1.95.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.94.0 (2022-12-20)
+------------------
+
+* Feature - This release adds support for two new features to AWS Elemental MediaLive. First, you can now burn-in timecodes to your MediaLive outputs. Second, we now now support the ability to decode Dolby E audio when it comes in on an input.
+
+1.93.0 (2022-12-09)
+------------------
+
+* Feature - Link devices now support buffer size (latency) configuration. A higher latency value means a longer delay in transmitting from the device to MediaLive, but improved resiliency. A lower latency value means a shorter delay, but less resiliency.
+
+1.92.0 (2022-12-02)
+------------------
+
+* Feature - Updates to Event Signaling and Management (ESAM) API and documentation.
+
+1.91.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.90.0 (2022-10-13)
+------------------
+
+* Feature - AWS Elemental MediaLive now supports forwarding SCTE-35 messages through the Event Signaling and Management (ESAM) API, and can read those SCTE-35 messages from an inactive source.
+
+1.89.0 (2022-09-08)
+------------------
+
+* Feature - This change exposes API settings which allow Dolby Atmos and Dolby Vision to be used when running a channel using Elemental Media Live
+
+1.88.0 (2022-07-22)
+------------------
+
+* Feature - Link devices now support remote rebooting. Link devices now support maintenance windows. Maintenance windows allow a Link device to install software updates without stopping the MediaLive channel. The channel will experience a brief loss of input from the device while updates are installed.
+
+1.87.0 (2022-06-29)
+------------------
+
+* Feature - This release adds support for automatic renewal of MediaLive reservations at the end of each reservation term. Automatic renewal is optional. This release also adds support for labelling accessibility-focused audio and caption tracks in HLS outputs.
+
+1.86.0 (2022-03-28)
+------------------
+
+* Feature - This release adds support for selecting a maintenance window.
+
+1.85.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.84.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.83.0 (2022-01-07)
+------------------
+
+* Feature - This release adds support for selecting the Program Date Time (PDT) Clock source algorithm for HLS outputs.
+
+1.82.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.81.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.80.0 (2021-11-19)
+------------------
+
+* Feature - This release adds support for specifying a SCTE-35 PID on input. MediaLive now supports SCTE-35 PID selection on inputs containing one or more active SCTE-35 PIDs.
+
+1.79.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.78.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.77.0 (2021-10-11)
+------------------
+
+* Feature - This release adds support for Transport Stream files as an input type to MediaLive encoders.
+
+1.76.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.75.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.74.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.73.0 (2021-07-22)
+------------------
+
+* Feature - MediaLive now supports passing through style data on WebVTT caption outputs.
+
+1.72.0 (2021-06-11)
+------------------
+
+* Feature - AWS MediaLive now supports OCR-based conversion of DVB-Sub and SCTE-27 image-based source captions to WebVTT, and supports ingest of ad avail decorations in HLS input manifests.
+
+1.71.0 (2021-06-04)
+------------------
+
+* Feature - Add support for automatically setting the H.264 adaptive quantization and GOP B-frame fields.
+
 1.70.0 (2021-04-06)
 ------------------
 

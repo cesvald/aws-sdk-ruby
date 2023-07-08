@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:lookoutequipment)
@@ -73,8 +77,13 @@ module Aws::LookoutEquipment
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::LookoutEquipment::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::LookoutEquipment
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::LookoutEquipment
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::LookoutEquipment
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::LookoutEquipment
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::LookoutEquipment
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::LookoutEquipment::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::LookoutEquipment::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::LookoutEquipment
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::LookoutEquipment
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -347,13 +404,13 @@ module Aws::LookoutEquipment
     # @option params [required, String] :dataset_name
     #   The name of the dataset being created.
     #
-    # @option params [required, Types::DatasetSchema] :dataset_schema
+    # @option params [Types::DatasetSchema] :dataset_schema
     #   A JSON description of the data that is in each time series dataset,
     #   including names, column names, and data types.
     #
     # @option params [String] :server_side_kms_key_id
-    #   Provides the identifier of the AWS KMS customer master key (CMK) used
-    #   to encrypt dataset data by Amazon Lookout for Equipment.
+    #   Provides the identifier of the KMS key used to encrypt dataset data by
+    #   Amazon Lookout for Equipment.
     #
     # @option params [required, String] :client_token
     #   A unique identifier for the request. If you do not set the client
@@ -375,7 +432,7 @@ module Aws::LookoutEquipment
     #
     #   resp = client.create_dataset({
     #     dataset_name: "DatasetName", # required
-    #     dataset_schema: { # required
+    #     dataset_schema: {
     #       inline_data_schema: "InlineDataSchema",
     #     },
     #     server_side_kms_key_id: "NameOrArn",
@@ -419,24 +476,35 @@ module Aws::LookoutEquipment
     #   The name of the inference scheduler being created.
     #
     # @option params [Integer] :data_delay_offset_in_minutes
-    #   A period of time (in minutes) by which inference on the data is
-    #   delayed after the data starts. For instance, if you select an offset
-    #   delay time of five minutes, inference will not begin on the data until
-    #   the first data measurement after the five minute mark. For example, if
-    #   five minutes is selected, the inference scheduler will wake up at the
-    #   configured frequency with the additional five minute delay time to
-    #   check the customer S3 bucket. The customer can upload data at the same
-    #   frequency and they don't need to stop and restart the scheduler when
-    #   uploading new data.
+    #   The interval (in minutes) of planned delay at the start of each
+    #   inference segment. For example, if inference is set to run every ten
+    #   minutes, the delay is set to five minutes and the time is 09:08. The
+    #   inference scheduler will wake up at the configured interval (which,
+    #   without a delay configured, would be 09:10) plus the additional five
+    #   minute delay time (so 09:15) to check your Amazon S3 bucket. The delay
+    #   provides a buffer for you to upload data at the same frequency, so
+    #   that you don't have to stop and restart the scheduler when uploading
+    #   new data.
+    #
+    #   For more information, see [Understanding the inference process][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lookout-for-equipment/latest/ug/understanding-inference-process.html
     #
     # @option params [required, String] :data_upload_frequency
-    #   How often data is uploaded to the source S3 bucket for the input data.
-    #   The value chosen is the length of time between data uploads. For
-    #   instance, if you select 5 minutes, Amazon Lookout for Equipment will
-    #   upload the real-time data to the source bucket once every 5 minutes.
-    #   This frequency also determines how often Amazon Lookout for Equipment
-    #   starts a scheduled inference on your data. In this example, it starts
-    #   once every 5 minutes.
+    #   How often data is uploaded to the source Amazon S3 bucket for the
+    #   input data. The value chosen is the length of time between data
+    #   uploads. For instance, if you select 5 minutes, Amazon Lookout for
+    #   Equipment will upload the real-time data to the source bucket once
+    #   every 5 minutes. This frequency also determines how often Amazon
+    #   Lookout for Equipment runs inference on your data.
+    #
+    #   For more information, see [Understanding the inference process][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/lookout-for-equipment/latest/ug/understanding-inference-process.html
     #
     # @option params [required, Types::InferenceInputConfiguration] :data_input_configuration
     #   Specifies configuration information for the input data for the
@@ -452,8 +520,8 @@ module Aws::LookoutEquipment
     #   data source being used for the inference.
     #
     # @option params [String] :server_side_kms_key_id
-    #   Provides the identifier of the AWS KMS customer master key (CMK) used
-    #   to encrypt inference scheduler data by Amazon Lookout for Equipment.
+    #   Provides the identifier of the KMS key used to encrypt inference
+    #   scheduler data by Amazon Lookout for Equipment.
     #
     # @option params [required, String] :client_token
     #   A unique identifier for the request. If you do not set the client
@@ -519,6 +587,140 @@ module Aws::LookoutEquipment
     # @param [Hash] params ({})
     def create_inference_scheduler(params = {}, options = {})
       req = build_request(:create_inference_scheduler, params)
+      req.send_request(options)
+    end
+
+    # Creates a label for an event.
+    #
+    # @option params [required, String] :label_group_name
+    #   The name of a group of labels.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :start_time
+    #   The start time of the labeled event.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :end_time
+    #   The end time of the labeled event.
+    #
+    # @option params [required, String] :rating
+    #   Indicates whether a labeled event represents an anomaly.
+    #
+    # @option params [String] :fault_code
+    #   Provides additional information about the label. The fault code must
+    #   be defined in the FaultCodes attribute of the label group.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #
+    # @option params [String] :notes
+    #   Metadata providing additional information about the label.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #
+    # @option params [String] :equipment
+    #   Indicates that a label pertains to a particular piece of equipment.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #
+    # @option params [required, String] :client_token
+    #   A unique identifier for the request to create a label. If you do not
+    #   set the client request token, Lookout for Equipment generates one.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @return [Types::CreateLabelResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateLabelResponse#label_id #label_id} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_label({
+    #     label_group_name: "LabelGroupName", # required
+    #     start_time: Time.now, # required
+    #     end_time: Time.now, # required
+    #     rating: "ANOMALY", # required, accepts ANOMALY, NO_ANOMALY, NEUTRAL
+    #     fault_code: "FaultCode",
+    #     notes: "Comments",
+    #     equipment: "Equipment",
+    #     client_token: "IdempotenceToken", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.label_id #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/CreateLabel AWS API Documentation
+    #
+    # @overload create_label(params = {})
+    # @param [Hash] params ({})
+    def create_label(params = {}, options = {})
+      req = build_request(:create_label, params)
+      req.send_request(options)
+    end
+
+    # Creates a group of labels.
+    #
+    # @option params [required, String] :label_group_name
+    #   Names a group of labels.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #
+    # @option params [Array<String>] :fault_codes
+    #   The acceptable fault codes (indicating the type of anomaly associated
+    #   with the label) that can be used with this label group.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #
+    # @option params [required, String] :client_token
+    #   A unique identifier for the request to create a label group. If you do
+    #   not set the client request token, Lookout for Equipment generates one.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @option params [Array<Types::Tag>] :tags
+    #   Tags that provide metadata about the label group you are creating.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #
+    # @return [Types::CreateLabelGroupResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateLabelGroupResponse#label_group_name #label_group_name} => String
+    #   * {Types::CreateLabelGroupResponse#label_group_arn #label_group_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_label_group({
+    #     label_group_name: "LabelGroupName", # required
+    #     fault_codes: ["FaultCode"],
+    #     client_token: "IdempotenceToken", # required
+    #     tags: [
+    #       {
+    #         key: "TagKey", # required
+    #         value: "TagValue", # required
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.label_group_name #=> String
+    #   resp.label_group_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/CreateLabelGroup AWS API Documentation
+    #
+    # @overload create_label_group(params = {})
+    # @param [Hash] params ({})
+    def create_label_group(params = {}, options = {})
+      req = build_request(:create_label_group, params)
       req.send_request(options)
     end
 
@@ -589,11 +791,16 @@ module Aws::LookoutEquipment
     #   the value for a 1 hour rate is *PT1H*
     #
     # @option params [String] :server_side_kms_key_id
-    #   Provides the identifier of the AWS KMS customer master key (CMK) used
-    #   to encrypt model data by Amazon Lookout for Equipment.
+    #   Provides the identifier of the KMS key used to encrypt model data by
+    #   Amazon Lookout for Equipment.
     #
     # @option params [Array<Types::Tag>] :tags
     #   Any tags associated with the ML model being created.
+    #
+    # @option params [String] :off_condition
+    #   Indicates that the asset associated with this sensor has been shut
+    #   off. As long as this condition is met, Lookout for Equipment will not
+    #   use data from this asset for training, evaluation, or inference.
     #
     # @return [Types::CreateModelResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -609,10 +816,11 @@ module Aws::LookoutEquipment
     #       inline_data_schema: "InlineDataSchema",
     #     },
     #     labels_input_configuration: {
-    #       s3_input_configuration: { # required
+    #       s3_input_configuration: {
     #         bucket: "S3Bucket", # required
     #         prefix: "S3Prefix",
     #       },
+    #       label_group_name: "LabelGroupName",
     #     },
     #     client_token: "IdempotenceToken", # required
     #     training_data_start_time: Time.now,
@@ -630,6 +838,7 @@ module Aws::LookoutEquipment
     #         value: "TagValue", # required
     #       },
     #     ],
+    #     off_condition: "OffCondition",
     #   })
     #
     # @example Response structure
@@ -696,6 +905,58 @@ module Aws::LookoutEquipment
       req.send_request(options)
     end
 
+    # Deletes a label.
+    #
+    # @option params [required, String] :label_group_name
+    #   The name of the label group that contains the label that you want to
+    #   delete. Data in this field will be retained for service usage. Follow
+    #   best practices for the security of your data.
+    #
+    # @option params [required, String] :label_id
+    #   The ID of the label that you want to delete.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_label({
+    #     label_group_name: "LabelGroupName", # required
+    #     label_id: "LabelId", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DeleteLabel AWS API Documentation
+    #
+    # @overload delete_label(params = {})
+    # @param [Hash] params ({})
+    def delete_label(params = {}, options = {})
+      req = build_request(:delete_label, params)
+      req.send_request(options)
+    end
+
+    # Deletes a group of labels.
+    #
+    # @option params [required, String] :label_group_name
+    #   The name of the label group that you want to delete. Data in this
+    #   field will be retained for service usage. Follow best practices for
+    #   the security of your data.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_label_group({
+    #     label_group_name: "LabelGroupName", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DeleteLabelGroup AWS API Documentation
+    #
+    # @overload delete_label_group(params = {})
+    # @param [Hash] params ({})
+    def delete_label_group(params = {}, options = {})
+      req = build_request(:delete_label_group, params)
+      req.send_request(options)
+    end
+
     # Deletes an ML model currently available for Amazon Lookout for
     # Equipment. This will prevent it from being used with an inference
     # scheduler, even one that is already set up.
@@ -721,7 +982,7 @@ module Aws::LookoutEquipment
     end
 
     # Provides information on a specific data ingestion job such as creation
-    # time, dataset ARN, status, and so on.
+    # time, dataset ARN, and status.
     #
     # @option params [required, String] :job_id
     #   The job ID of the data ingestion job.
@@ -735,6 +996,12 @@ module Aws::LookoutEquipment
     #   * {Types::DescribeDataIngestionJobResponse#created_at #created_at} => Time
     #   * {Types::DescribeDataIngestionJobResponse#status #status} => String
     #   * {Types::DescribeDataIngestionJobResponse#failed_reason #failed_reason} => String
+    #   * {Types::DescribeDataIngestionJobResponse#data_quality_summary #data_quality_summary} => Types::DataQualitySummary
+    #   * {Types::DescribeDataIngestionJobResponse#ingested_files_summary #ingested_files_summary} => Types::IngestedFilesSummary
+    #   * {Types::DescribeDataIngestionJobResponse#status_detail #status_detail} => String
+    #   * {Types::DescribeDataIngestionJobResponse#ingested_data_size #ingested_data_size} => Integer
+    #   * {Types::DescribeDataIngestionJobResponse#data_start_time #data_start_time} => Time
+    #   * {Types::DescribeDataIngestionJobResponse#data_end_time #data_end_time} => Time
     #
     # @example Request syntax with placeholder values
     #
@@ -748,10 +1015,28 @@ module Aws::LookoutEquipment
     #   resp.dataset_arn #=> String
     #   resp.ingestion_input_configuration.s3_input_configuration.bucket #=> String
     #   resp.ingestion_input_configuration.s3_input_configuration.prefix #=> String
+    #   resp.ingestion_input_configuration.s3_input_configuration.key_pattern #=> String
     #   resp.role_arn #=> String
     #   resp.created_at #=> Time
     #   resp.status #=> String, one of "IN_PROGRESS", "SUCCESS", "FAILED"
     #   resp.failed_reason #=> String
+    #   resp.data_quality_summary.insufficient_sensor_data.missing_complete_sensor_data.affected_sensor_count #=> Integer
+    #   resp.data_quality_summary.insufficient_sensor_data.sensors_with_short_date_range.affected_sensor_count #=> Integer
+    #   resp.data_quality_summary.missing_sensor_data.affected_sensor_count #=> Integer
+    #   resp.data_quality_summary.missing_sensor_data.total_number_of_missing_values #=> Integer
+    #   resp.data_quality_summary.invalid_sensor_data.affected_sensor_count #=> Integer
+    #   resp.data_quality_summary.invalid_sensor_data.total_number_of_invalid_values #=> Integer
+    #   resp.data_quality_summary.unsupported_timestamps.total_number_of_unsupported_timestamps #=> Integer
+    #   resp.data_quality_summary.duplicate_timestamps.total_number_of_duplicate_timestamps #=> Integer
+    #   resp.ingested_files_summary.total_number_of_files #=> Integer
+    #   resp.ingested_files_summary.ingested_number_of_files #=> Integer
+    #   resp.ingested_files_summary.discarded_files #=> Array
+    #   resp.ingested_files_summary.discarded_files[0].bucket #=> String
+    #   resp.ingested_files_summary.discarded_files[0].key #=> String
+    #   resp.status_detail #=> String
+    #   resp.ingested_data_size #=> Integer
+    #   resp.data_start_time #=> Time
+    #   resp.data_end_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeDataIngestionJob AWS API Documentation
     #
@@ -762,8 +1047,8 @@ module Aws::LookoutEquipment
       req.send_request(options)
     end
 
-    # Provides information on a specified dataset such as the schema
-    # location, status, and so on.
+    # Provides a JSON description of the data in each time series dataset,
+    # including names, column names, and data types.
     #
     # @option params [required, String] :dataset_name
     #   The name of the dataset to be described.
@@ -778,6 +1063,11 @@ module Aws::LookoutEquipment
     #   * {Types::DescribeDatasetResponse#schema #schema} => String
     #   * {Types::DescribeDatasetResponse#server_side_kms_key_id #server_side_kms_key_id} => String
     #   * {Types::DescribeDatasetResponse#ingestion_input_configuration #ingestion_input_configuration} => Types::IngestionInputConfiguration
+    #   * {Types::DescribeDatasetResponse#data_quality_summary #data_quality_summary} => Types::DataQualitySummary
+    #   * {Types::DescribeDatasetResponse#ingested_files_summary #ingested_files_summary} => Types::IngestedFilesSummary
+    #   * {Types::DescribeDatasetResponse#role_arn #role_arn} => String
+    #   * {Types::DescribeDatasetResponse#data_start_time #data_start_time} => Time
+    #   * {Types::DescribeDatasetResponse#data_end_time #data_end_time} => Time
     #
     # @example Request syntax with placeholder values
     #
@@ -796,6 +1086,23 @@ module Aws::LookoutEquipment
     #   resp.server_side_kms_key_id #=> String
     #   resp.ingestion_input_configuration.s3_input_configuration.bucket #=> String
     #   resp.ingestion_input_configuration.s3_input_configuration.prefix #=> String
+    #   resp.ingestion_input_configuration.s3_input_configuration.key_pattern #=> String
+    #   resp.data_quality_summary.insufficient_sensor_data.missing_complete_sensor_data.affected_sensor_count #=> Integer
+    #   resp.data_quality_summary.insufficient_sensor_data.sensors_with_short_date_range.affected_sensor_count #=> Integer
+    #   resp.data_quality_summary.missing_sensor_data.affected_sensor_count #=> Integer
+    #   resp.data_quality_summary.missing_sensor_data.total_number_of_missing_values #=> Integer
+    #   resp.data_quality_summary.invalid_sensor_data.affected_sensor_count #=> Integer
+    #   resp.data_quality_summary.invalid_sensor_data.total_number_of_invalid_values #=> Integer
+    #   resp.data_quality_summary.unsupported_timestamps.total_number_of_unsupported_timestamps #=> Integer
+    #   resp.data_quality_summary.duplicate_timestamps.total_number_of_duplicate_timestamps #=> Integer
+    #   resp.ingested_files_summary.total_number_of_files #=> Integer
+    #   resp.ingested_files_summary.ingested_number_of_files #=> Integer
+    #   resp.ingested_files_summary.discarded_files #=> Array
+    #   resp.ingested_files_summary.discarded_files[0].bucket #=> String
+    #   resp.ingested_files_summary.discarded_files[0].key #=> String
+    #   resp.role_arn #=> String
+    #   resp.data_start_time #=> Time
+    #   resp.data_end_time #=> Time
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeDataset AWS API Documentation
     #
@@ -827,6 +1134,7 @@ module Aws::LookoutEquipment
     #   * {Types::DescribeInferenceSchedulerResponse#data_output_configuration #data_output_configuration} => Types::InferenceOutputConfiguration
     #   * {Types::DescribeInferenceSchedulerResponse#role_arn #role_arn} => String
     #   * {Types::DescribeInferenceSchedulerResponse#server_side_kms_key_id #server_side_kms_key_id} => String
+    #   * {Types::DescribeInferenceSchedulerResponse#latest_inference_result #latest_inference_result} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -855,6 +1163,7 @@ module Aws::LookoutEquipment
     #   resp.data_output_configuration.kms_key_id #=> String
     #   resp.role_arn #=> String
     #   resp.server_side_kms_key_id #=> String
+    #   resp.latest_inference_result #=> String, one of "ANOMALOUS", "NORMAL"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeInferenceScheduler AWS API Documentation
     #
@@ -865,9 +1174,96 @@ module Aws::LookoutEquipment
       req.send_request(options)
     end
 
-    # Provides overall information about a specific ML model, including
-    # model name and ARN, dataset, training and evaluation information,
-    # status, and so on.
+    # Returns the name of the label.
+    #
+    # @option params [required, String] :label_group_name
+    #   Returns the name of the group containing the label.
+    #
+    # @option params [required, String] :label_id
+    #   Returns the ID of the label.
+    #
+    # @return [Types::DescribeLabelResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeLabelResponse#label_group_name #label_group_name} => String
+    #   * {Types::DescribeLabelResponse#label_group_arn #label_group_arn} => String
+    #   * {Types::DescribeLabelResponse#label_id #label_id} => String
+    #   * {Types::DescribeLabelResponse#start_time #start_time} => Time
+    #   * {Types::DescribeLabelResponse#end_time #end_time} => Time
+    #   * {Types::DescribeLabelResponse#rating #rating} => String
+    #   * {Types::DescribeLabelResponse#fault_code #fault_code} => String
+    #   * {Types::DescribeLabelResponse#notes #notes} => String
+    #   * {Types::DescribeLabelResponse#equipment #equipment} => String
+    #   * {Types::DescribeLabelResponse#created_at #created_at} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_label({
+    #     label_group_name: "LabelGroupName", # required
+    #     label_id: "LabelId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.label_group_name #=> String
+    #   resp.label_group_arn #=> String
+    #   resp.label_id #=> String
+    #   resp.start_time #=> Time
+    #   resp.end_time #=> Time
+    #   resp.rating #=> String, one of "ANOMALY", "NO_ANOMALY", "NEUTRAL"
+    #   resp.fault_code #=> String
+    #   resp.notes #=> String
+    #   resp.equipment #=> String
+    #   resp.created_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeLabel AWS API Documentation
+    #
+    # @overload describe_label(params = {})
+    # @param [Hash] params ({})
+    def describe_label(params = {}, options = {})
+      req = build_request(:describe_label, params)
+      req.send_request(options)
+    end
+
+    # Returns information about the label group.
+    #
+    # @option params [required, String] :label_group_name
+    #   Returns the name of the label group.
+    #
+    # @return [Types::DescribeLabelGroupResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeLabelGroupResponse#label_group_name #label_group_name} => String
+    #   * {Types::DescribeLabelGroupResponse#label_group_arn #label_group_arn} => String
+    #   * {Types::DescribeLabelGroupResponse#fault_codes #fault_codes} => Array&lt;String&gt;
+    #   * {Types::DescribeLabelGroupResponse#created_at #created_at} => Time
+    #   * {Types::DescribeLabelGroupResponse#updated_at #updated_at} => Time
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_label_group({
+    #     label_group_name: "LabelGroupName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.label_group_name #=> String
+    #   resp.label_group_arn #=> String
+    #   resp.fault_codes #=> Array
+    #   resp.fault_codes[0] #=> String
+    #   resp.created_at #=> Time
+    #   resp.updated_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeLabelGroup AWS API Documentation
+    #
+    # @overload describe_label_group(params = {})
+    # @param [Hash] params ({})
+    def describe_label_group(params = {}, options = {})
+      req = build_request(:describe_label_group, params)
+      req.send_request(options)
+    end
+
+    # Provides a JSON containing the overall information about a specific ML
+    # model, including model name and ARN, dataset, training and evaluation
+    # information, status, and so on.
     #
     # @option params [required, String] :model_name
     #   The name of the ML model to be described.
@@ -894,6 +1290,7 @@ module Aws::LookoutEquipment
     #   * {Types::DescribeModelResponse#last_updated_time #last_updated_time} => Time
     #   * {Types::DescribeModelResponse#created_at #created_at} => Time
     #   * {Types::DescribeModelResponse#server_side_kms_key_id #server_side_kms_key_id} => String
+    #   * {Types::DescribeModelResponse#off_condition #off_condition} => String
     #
     # @example Request syntax with placeholder values
     #
@@ -910,6 +1307,7 @@ module Aws::LookoutEquipment
     #   resp.schema #=> String
     #   resp.labels_input_configuration.s3_input_configuration.bucket #=> String
     #   resp.labels_input_configuration.s3_input_configuration.prefix #=> String
+    #   resp.labels_input_configuration.label_group_name #=> String
     #   resp.training_data_start_time #=> Time
     #   resp.training_data_end_time #=> Time
     #   resp.evaluation_data_start_time #=> Time
@@ -924,6 +1322,7 @@ module Aws::LookoutEquipment
     #   resp.last_updated_time #=> Time
     #   resp.created_at #=> Time
     #   resp.server_side_kms_key_id #=> String
+    #   resp.off_condition #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/DescribeModel AWS API Documentation
     #
@@ -975,6 +1374,7 @@ module Aws::LookoutEquipment
     #   resp.data_ingestion_job_summaries[0].dataset_arn #=> String
     #   resp.data_ingestion_job_summaries[0].ingestion_input_configuration.s3_input_configuration.bucket #=> String
     #   resp.data_ingestion_job_summaries[0].ingestion_input_configuration.s3_input_configuration.prefix #=> String
+    #   resp.data_ingestion_job_summaries[0].ingestion_input_configuration.s3_input_configuration.key_pattern #=> String
     #   resp.data_ingestion_job_summaries[0].status #=> String, one of "IN_PROGRESS", "SUCCESS", "FAILED"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListDataIngestionJobs AWS API Documentation
@@ -1029,6 +1429,64 @@ module Aws::LookoutEquipment
     # @param [Hash] params ({})
     def list_datasets(params = {}, options = {})
       req = build_request(:list_datasets, params)
+      req.send_request(options)
+    end
+
+    # Lists all inference events that have been found for the specified
+    # inference scheduler.
+    #
+    # @option params [String] :next_token
+    #   An opaque pagination token indicating where to continue the listing of
+    #   inference events.
+    #
+    # @option params [Integer] :max_results
+    #   Specifies the maximum number of inference events to list.
+    #
+    # @option params [required, String] :inference_scheduler_name
+    #   The name of the inference scheduler for the inference events listed.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :interval_start_time
+    #   Lookout for Equipment will return all the inference events with an end
+    #   time equal to or greater than the start time given.
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :interval_end_time
+    #   Returns all the inference events with an end start time equal to or
+    #   greater than less than the end time given
+    #
+    # @return [Types::ListInferenceEventsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListInferenceEventsResponse#next_token #next_token} => String
+    #   * {Types::ListInferenceEventsResponse#inference_event_summaries #inference_event_summaries} => Array&lt;Types::InferenceEventSummary&gt;
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_inference_events({
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #     inference_scheduler_name: "InferenceSchedulerIdentifier", # required
+    #     interval_start_time: Time.now, # required
+    #     interval_end_time: Time.now, # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.next_token #=> String
+    #   resp.inference_event_summaries #=> Array
+    #   resp.inference_event_summaries[0].inference_scheduler_arn #=> String
+    #   resp.inference_event_summaries[0].inference_scheduler_name #=> String
+    #   resp.inference_event_summaries[0].event_start_time #=> Time
+    #   resp.inference_event_summaries[0].event_end_time #=> Time
+    #   resp.inference_event_summaries[0].diagnostics #=> String
+    #   resp.inference_event_summaries[0].event_duration_in_seconds #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListInferenceEvents AWS API Documentation
+    #
+    # @overload list_inference_events(params = {})
+    # @param [Hash] params ({})
+    def list_inference_events(params = {}, options = {})
+      req = build_request(:list_inference_events, params)
       req.send_request(options)
     end
 
@@ -1124,6 +1582,9 @@ module Aws::LookoutEquipment
     # @option params [String] :model_name
     #   The name of the ML model used by the inference scheduler to be listed.
     #
+    # @option params [String] :status
+    #   Specifies the current status of the inference schedulers to list.
+    #
     # @return [Types::ListInferenceSchedulersResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::ListInferenceSchedulersResponse#next_token #next_token} => String
@@ -1138,6 +1599,7 @@ module Aws::LookoutEquipment
     #     max_results: 1,
     #     inference_scheduler_name_begins_with: "InferenceSchedulerIdentifier",
     #     model_name: "ModelName",
+    #     status: "PENDING", # accepts PENDING, RUNNING, STOPPING, STOPPED
     #   })
     #
     # @example Response structure
@@ -1151,6 +1613,7 @@ module Aws::LookoutEquipment
     #   resp.inference_scheduler_summaries[0].status #=> String, one of "PENDING", "RUNNING", "STOPPING", "STOPPED"
     #   resp.inference_scheduler_summaries[0].data_delay_offset_in_minutes #=> Integer
     #   resp.inference_scheduler_summaries[0].data_upload_frequency #=> String, one of "PT5M", "PT10M", "PT15M", "PT30M", "PT1H"
+    #   resp.inference_scheduler_summaries[0].latest_inference_result #=> String, one of "ANOMALOUS", "NORMAL"
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListInferenceSchedulers AWS API Documentation
     #
@@ -1158,6 +1621,118 @@ module Aws::LookoutEquipment
     # @param [Hash] params ({})
     def list_inference_schedulers(params = {}, options = {})
       req = build_request(:list_inference_schedulers, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of the label groups.
+    #
+    # @option params [String] :label_group_name_begins_with
+    #   The beginning of the name of the label groups to be listed.
+    #
+    # @option params [String] :next_token
+    #   An opaque pagination token indicating where to continue the listing of
+    #   label groups.
+    #
+    # @option params [Integer] :max_results
+    #   Specifies the maximum number of label groups to list.
+    #
+    # @return [Types::ListLabelGroupsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListLabelGroupsResponse#next_token #next_token} => String
+    #   * {Types::ListLabelGroupsResponse#label_group_summaries #label_group_summaries} => Array&lt;Types::LabelGroupSummary&gt;
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_label_groups({
+    #     label_group_name_begins_with: "LabelGroupName",
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.next_token #=> String
+    #   resp.label_group_summaries #=> Array
+    #   resp.label_group_summaries[0].label_group_name #=> String
+    #   resp.label_group_summaries[0].label_group_arn #=> String
+    #   resp.label_group_summaries[0].created_at #=> Time
+    #   resp.label_group_summaries[0].updated_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListLabelGroups AWS API Documentation
+    #
+    # @overload list_label_groups(params = {})
+    # @param [Hash] params ({})
+    def list_label_groups(params = {}, options = {})
+      req = build_request(:list_label_groups, params)
+      req.send_request(options)
+    end
+
+    # Provides a list of labels.
+    #
+    # @option params [required, String] :label_group_name
+    #   Retruns the name of the label group.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :interval_start_time
+    #   Returns all the labels with a end time equal to or later than the
+    #   start time given.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :interval_end_time
+    #   Returns all labels with a start time earlier than the end time given.
+    #
+    # @option params [String] :fault_code
+    #   Returns labels with a particular fault code.
+    #
+    # @option params [String] :equipment
+    #   Lists the labels that pertain to a particular piece of equipment.
+    #
+    # @option params [String] :next_token
+    #   An opaque pagination token indicating where to continue the listing of
+    #   label groups.
+    #
+    # @option params [Integer] :max_results
+    #   Specifies the maximum number of labels to list.
+    #
+    # @return [Types::ListLabelsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListLabelsResponse#next_token #next_token} => String
+    #   * {Types::ListLabelsResponse#label_summaries #label_summaries} => Array&lt;Types::LabelSummary&gt;
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_labels({
+    #     label_group_name: "LabelGroupName", # required
+    #     interval_start_time: Time.now,
+    #     interval_end_time: Time.now,
+    #     fault_code: "FaultCode",
+    #     equipment: "Equipment",
+    #     next_token: "NextToken",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.next_token #=> String
+    #   resp.label_summaries #=> Array
+    #   resp.label_summaries[0].label_group_name #=> String
+    #   resp.label_summaries[0].label_id #=> String
+    #   resp.label_summaries[0].label_group_arn #=> String
+    #   resp.label_summaries[0].start_time #=> Time
+    #   resp.label_summaries[0].end_time #=> Time
+    #   resp.label_summaries[0].rating #=> String, one of "ANOMALY", "NO_ANOMALY", "NEUTRAL"
+    #   resp.label_summaries[0].fault_code #=> String
+    #   resp.label_summaries[0].equipment #=> String
+    #   resp.label_summaries[0].created_at #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListLabels AWS API Documentation
+    #
+    # @overload list_labels(params = {})
+    # @param [Hash] params ({})
+    def list_labels(params = {}, options = {})
+      req = build_request(:list_labels, params)
       req.send_request(options)
     end
 
@@ -1215,6 +1790,77 @@ module Aws::LookoutEquipment
     # @param [Hash] params ({})
     def list_models(params = {}, options = {})
       req = build_request(:list_models, params)
+      req.send_request(options)
+    end
+
+    # Lists statistics about the data collected for each of the sensors that
+    # have been successfully ingested in the particular dataset. Can also be
+    # used to retreive Sensor Statistics for a previous ingestion job.
+    #
+    # @option params [required, String] :dataset_name
+    #   The name of the dataset associated with the list of Sensor Statistics.
+    #
+    # @option params [String] :ingestion_job_id
+    #   The ingestion job id associated with the list of Sensor Statistics. To
+    #   get sensor statistics for a particular ingestion job id, both dataset
+    #   name and ingestion job id must be submitted as inputs.
+    #
+    # @option params [Integer] :max_results
+    #   Specifies the maximum number of sensors for which to retrieve
+    #   statistics.
+    #
+    # @option params [String] :next_token
+    #   An opaque pagination token indicating where to continue the listing of
+    #   sensor statistics.
+    #
+    # @return [Types::ListSensorStatisticsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListSensorStatisticsResponse#sensor_statistics_summaries #sensor_statistics_summaries} => Array&lt;Types::SensorStatisticsSummary&gt;
+    #   * {Types::ListSensorStatisticsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_sensor_statistics({
+    #     dataset_name: "DatasetName", # required
+    #     ingestion_job_id: "IngestionJobId",
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.sensor_statistics_summaries #=> Array
+    #   resp.sensor_statistics_summaries[0].component_name #=> String
+    #   resp.sensor_statistics_summaries[0].sensor_name #=> String
+    #   resp.sensor_statistics_summaries[0].data_exists #=> Boolean
+    #   resp.sensor_statistics_summaries[0].missing_values.count #=> Integer
+    #   resp.sensor_statistics_summaries[0].missing_values.percentage #=> Float
+    #   resp.sensor_statistics_summaries[0].invalid_values.count #=> Integer
+    #   resp.sensor_statistics_summaries[0].invalid_values.percentage #=> Float
+    #   resp.sensor_statistics_summaries[0].invalid_date_entries.count #=> Integer
+    #   resp.sensor_statistics_summaries[0].invalid_date_entries.percentage #=> Float
+    #   resp.sensor_statistics_summaries[0].duplicate_timestamps.count #=> Integer
+    #   resp.sensor_statistics_summaries[0].duplicate_timestamps.percentage #=> Float
+    #   resp.sensor_statistics_summaries[0].categorical_values.status #=> String, one of "POTENTIAL_ISSUE_DETECTED", "NO_ISSUE_DETECTED"
+    #   resp.sensor_statistics_summaries[0].categorical_values.number_of_category #=> Integer
+    #   resp.sensor_statistics_summaries[0].multiple_operating_modes.status #=> String, one of "POTENTIAL_ISSUE_DETECTED", "NO_ISSUE_DETECTED"
+    #   resp.sensor_statistics_summaries[0].large_timestamp_gaps.status #=> String, one of "POTENTIAL_ISSUE_DETECTED", "NO_ISSUE_DETECTED"
+    #   resp.sensor_statistics_summaries[0].large_timestamp_gaps.number_of_large_timestamp_gaps #=> Integer
+    #   resp.sensor_statistics_summaries[0].large_timestamp_gaps.max_timestamp_gap_in_days #=> Integer
+    #   resp.sensor_statistics_summaries[0].monotonic_values.status #=> String, one of "POTENTIAL_ISSUE_DETECTED", "NO_ISSUE_DETECTED"
+    #   resp.sensor_statistics_summaries[0].monotonic_values.monotonicity #=> String, one of "DECREASING", "INCREASING", "STATIC"
+    #   resp.sensor_statistics_summaries[0].data_start_time #=> Time
+    #   resp.sensor_statistics_summaries[0].data_end_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/ListSensorStatistics AWS API Documentation
+    #
+    # @overload list_sensor_statistics(params = {})
+    # @param [Hash] params ({})
+    def list_sensor_statistics(params = {}, options = {})
+      req = build_request(:list_sensor_statistics, params)
       req.send_request(options)
     end
 
@@ -1283,6 +1929,7 @@ module Aws::LookoutEquipment
     #       s3_input_configuration: { # required
     #         bucket: "S3Bucket", # required
     #         prefix: "S3Prefix",
+    #         key_pattern: "KeyPattern",
     #       },
     #     },
     #     role_arn: "IamRoleArn", # required
@@ -1447,7 +2094,7 @@ module Aws::LookoutEquipment
     #   The name of the inference scheduler to be updated.
     #
     # @option params [Integer] :data_delay_offset_in_minutes
-    #   &gt; A period of time (in minutes) by which inference on the data is
+    #   A period of time (in minutes) by which inference on the data is
     #   delayed after the data starts. For instance, if you select an offset
     #   delay time of five minutes, inference will not begin on the data until
     #   the first data measurement after the five minute mark. For example, if
@@ -1516,6 +2163,36 @@ module Aws::LookoutEquipment
       req.send_request(options)
     end
 
+    # Updates the label group.
+    #
+    # @option params [required, String] :label_group_name
+    #   The name of the label group to be updated.
+    #
+    # @option params [Array<String>] :fault_codes
+    #   Updates the code indicating the type of anomaly associated with the
+    #   label.
+    #
+    #   Data in this field will be retained for service usage. Follow best
+    #   practices for the security of your data.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_label_group({
+    #     label_group_name: "LabelGroupName", # required
+    #     fault_codes: ["FaultCode"],
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/lookoutequipment-2020-12-15/UpdateLabelGroup AWS API Documentation
+    #
+    # @overload update_label_group(params = {})
+    # @param [Hash] params ({})
+    def update_label_group(params = {}, options = {})
+      req = build_request(:update_label_group, params)
+      req.send_request(options)
+    end
+
     # @!endgroup
 
     # @param params ({})
@@ -1529,7 +2206,7 @@ module Aws::LookoutEquipment
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-lookoutequipment'
-      context[:gem_version] = '1.0.0'
+      context[:gem_version] = '1.20.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

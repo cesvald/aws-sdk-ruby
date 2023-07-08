@@ -10,8 +10,8 @@
 module Aws::FIS
   module Types
 
-    # Describes an action. For more information, see [AWS FIS actions][1] in
-    # the *AWS Fault Injection Simulator User Guide*.
+    # Describes an action. For more information, see [FIS actions][1] in the
+    # *Fault Injection Simulator User Guide*.
     #
     #
     #
@@ -126,23 +126,16 @@ module Aws::FIS
 
     # Specifies an action for an experiment template.
     #
-    # @note When making an API call, you may pass CreateExperimentTemplateActionInput
-    #   data as a hash:
+    # For more information, see [Actions][1] in the *Fault Injection
+    # Simulator User Guide*.
     #
-    #       {
-    #         action_id: "ActionId", # required
-    #         description: "ExperimentTemplateActionDescription",
-    #         parameters: {
-    #           "ExperimentTemplateActionParameterName" => "ExperimentTemplateActionParameter",
-    #         },
-    #         targets: {
-    #           "ExperimentTemplateActionTargetName" => "ExperimentTemplateTargetName",
-    #         },
-    #         start_after: ["ExperimentTemplateActionStartAfter"],
-    #       }
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/fis/latest/userguide/actions.html
     #
     # @!attribute [rw] action_id
-    #   The ID of the action.
+    #   The ID of the action. The format of the action ID is:
+    #   aws:*service-name*:*action-type*.
     #   @return [String]
     #
     # @!attribute [rw] description
@@ -175,53 +168,30 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateExperimentTemplateRequest
-    #   data as a hash:
+    # Specifies the configuration for experiment logging.
     #
-    #       {
-    #         client_token: "ClientToken", # required
-    #         description: "ExperimentTemplateDescription", # required
-    #         stop_conditions: [ # required
-    #           {
-    #             source: "StopConditionSource", # required
-    #             value: "StopConditionValue",
-    #           },
-    #         ],
-    #         targets: {
-    #           "ExperimentTemplateTargetName" => {
-    #             resource_type: "ResourceType", # required
-    #             resource_arns: ["ResourceArn"],
-    #             resource_tags: {
-    #               "TagKey" => "TagValue",
-    #             },
-    #             filters: [
-    #               {
-    #                 path: "ExperimentTemplateTargetFilterPath", # required
-    #                 values: ["ExperimentTemplateTargetFilterValue"], # required
-    #               },
-    #             ],
-    #             selection_mode: "ExperimentTemplateTargetSelectionMode", # required
-    #           },
-    #         },
-    #         actions: { # required
-    #           "ExperimentTemplateActionName" => {
-    #             action_id: "ActionId", # required
-    #             description: "ExperimentTemplateActionDescription",
-    #             parameters: {
-    #               "ExperimentTemplateActionParameterName" => "ExperimentTemplateActionParameter",
-    #             },
-    #             targets: {
-    #               "ExperimentTemplateActionTargetName" => "ExperimentTemplateTargetName",
-    #             },
-    #             start_after: ["ExperimentTemplateActionStartAfter"],
-    #           },
-    #         },
-    #         role_arn: "RoleArn", # required
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
+    # @!attribute [rw] cloud_watch_logs_configuration
+    #   The configuration for experiment logging to Amazon CloudWatch Logs.
+    #   @return [Types::ExperimentTemplateCloudWatchLogsLogConfigurationInput]
     #
+    # @!attribute [rw] s3_configuration
+    #   The configuration for experiment logging to Amazon S3.
+    #   @return [Types::ExperimentTemplateS3LogConfigurationInput]
+    #
+    # @!attribute [rw] log_schema_version
+    #   The schema version.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/CreateExperimentTemplateLogConfigurationInput AWS API Documentation
+    #
+    class CreateExperimentTemplateLogConfigurationInput < Struct.new(
+      :cloud_watch_logs_configuration,
+      :s3_configuration,
+      :log_schema_version)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request.
@@ -231,8 +201,7 @@ module Aws::FIS
     #   @return [String]
     #
     # @!attribute [rw] description
-    #   A description for the experiment template. Can contain up to 64
-    #   letters (A-Z and a-z).
+    #   A description for the experiment template.
     #   @return [String]
     #
     # @!attribute [rw] stop_conditions
@@ -248,13 +217,17 @@ module Aws::FIS
     #   @return [Hash<String,Types::CreateExperimentTemplateActionInput>]
     #
     # @!attribute [rw] role_arn
-    #   The Amazon Resource Name (ARN) of an IAM role that grants the AWS
-    #   FIS service permission to perform service actions on your behalf.
+    #   The Amazon Resource Name (ARN) of an IAM role that grants the FIS
+    #   service permission to perform service actions on your behalf.
     #   @return [String]
     #
     # @!attribute [rw] tags
     #   The tags to apply to the experiment template.
     #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] log_configuration
+    #   The configuration for experiment logging.
+    #   @return [Types::CreateExperimentTemplateLogConfigurationInput]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/CreateExperimentTemplateRequest AWS API Documentation
     #
@@ -265,7 +238,8 @@ module Aws::FIS
       :targets,
       :actions,
       :role_arn,
-      :tags)
+      :tags,
+      :log_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -283,14 +257,6 @@ module Aws::FIS
     end
 
     # Specifies a stop condition for an experiment template.
-    #
-    # @note When making an API call, you may pass CreateExperimentTemplateStopConditionInput
-    #   data as a hash:
-    #
-    #       {
-    #         source: "StopConditionSource", # required
-    #         value: "StopConditionValue",
-    #       }
     #
     # @!attribute [rw] source
     #   The source for the stop condition. Specify `aws:cloudwatch:alarm` if
@@ -316,26 +282,15 @@ module Aws::FIS
     # Amazon Resource Name (ARN) or at least one resource tag. You cannot
     # specify both ARNs and tags.
     #
-    # @note When making an API call, you may pass CreateExperimentTemplateTargetInput
-    #   data as a hash:
+    # For more information, see [Targets][1] in the *Fault Injection
+    # Simulator User Guide*.
     #
-    #       {
-    #         resource_type: "ResourceType", # required
-    #         resource_arns: ["ResourceArn"],
-    #         resource_tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         filters: [
-    #           {
-    #             path: "ExperimentTemplateTargetFilterPath", # required
-    #             values: ["ExperimentTemplateTargetFilterValue"], # required
-    #           },
-    #         ],
-    #         selection_mode: "ExperimentTemplateTargetSelectionMode", # required
-    #       }
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/fis/latest/userguide/targets.html
     #
     # @!attribute [rw] resource_type
-    #   The AWS resource type. The resource type must be supported for the
+    #   The resource type. The resource type must be supported for the
     #   specified action.
     #   @return [String]
     #
@@ -369,6 +324,10 @@ module Aws::FIS
     #     example, PERCENT(25) selects 25% of the targets.
     #   @return [String]
     #
+    # @!attribute [rw] parameters
+    #   The resource type parameters.
+    #   @return [Hash<String,String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/CreateExperimentTemplateTargetInput AWS API Documentation
     #
     class CreateExperimentTemplateTargetInput < Struct.new(
@@ -376,18 +335,12 @@ module Aws::FIS
       :resource_arns,
       :resource_tags,
       :filters,
-      :selection_mode)
+      :selection_mode,
+      :parameters)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteExperimentTemplateRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ExperimentTemplateId", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the experiment template.
     #   @return [String]
@@ -423,8 +376,8 @@ module Aws::FIS
     #   @return [String]
     #
     # @!attribute [rw] role_arn
-    #   The Amazon Resource Name (ARN) of an IAM role that grants the AWS
-    #   FIS service permission to perform service actions on your behalf.
+    #   The Amazon Resource Name (ARN) of an IAM role that grants the FIS
+    #   service permission to perform service actions on your behalf.
     #   @return [String]
     #
     # @!attribute [rw] state
@@ -444,11 +397,11 @@ module Aws::FIS
     #   @return [Array<Types::ExperimentStopCondition>]
     #
     # @!attribute [rw] creation_time
-    #   The time the experiment was created.
+    #   The time that the experiment was created.
     #   @return [Time]
     #
     # @!attribute [rw] start_time
-    #   The time that the experiment was started.
+    #   The time that the experiment started.
     #   @return [Time]
     #
     # @!attribute [rw] end_time
@@ -458,6 +411,10 @@ module Aws::FIS
     # @!attribute [rw] tags
     #   The tags for the experiment.
     #   @return [Hash<String,String>]
+    #
+    # @!attribute [rw] log_configuration
+    #   The configuration for experiment logging.
+    #   @return [Types::ExperimentLogConfiguration]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/Experiment AWS API Documentation
     #
@@ -472,7 +429,8 @@ module Aws::FIS
       :creation_time,
       :start_time,
       :end_time,
-      :tags)
+      :tags,
+      :log_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -504,6 +462,14 @@ module Aws::FIS
     #   The state of the action.
     #   @return [Types::ExperimentActionState]
     #
+    # @!attribute [rw] start_time
+    #   The time that the action started.
+    #   @return [Time]
+    #
+    # @!attribute [rw] end_time
+    #   The time that the action ended.
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentAction AWS API Documentation
     #
     class ExperimentAction < Struct.new(
@@ -512,7 +478,9 @@ module Aws::FIS
       :parameters,
       :targets,
       :start_after,
-      :state)
+      :state,
+      :start_time,
+      :end_time)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -532,6 +500,65 @@ module Aws::FIS
     class ExperimentActionState < Struct.new(
       :status,
       :reason)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the configuration for experiment logging to Amazon
+    # CloudWatch Logs.
+    #
+    # @!attribute [rw] log_group_arn
+    #   The Amazon Resource Name (ARN) of the destination Amazon CloudWatch
+    #   Logs log group.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentCloudWatchLogsLogConfiguration AWS API Documentation
+    #
+    class ExperimentCloudWatchLogsLogConfiguration < Struct.new(
+      :log_group_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the configuration for experiment logging.
+    #
+    # @!attribute [rw] cloud_watch_logs_configuration
+    #   The configuration for experiment logging to Amazon CloudWatch Logs.
+    #   @return [Types::ExperimentCloudWatchLogsLogConfiguration]
+    #
+    # @!attribute [rw] s3_configuration
+    #   The configuration for experiment logging to Amazon S3.
+    #   @return [Types::ExperimentS3LogConfiguration]
+    #
+    # @!attribute [rw] log_schema_version
+    #   The schema version.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentLogConfiguration AWS API Documentation
+    #
+    class ExperimentLogConfiguration < Struct.new(
+      :cloud_watch_logs_configuration,
+      :s3_configuration,
+      :log_schema_version)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the configuration for experiment logging to Amazon S3.
+    #
+    # @!attribute [rw] bucket_name
+    #   The name of the destination bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] prefix
+    #   The bucket prefix.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentS3LogConfiguration AWS API Documentation
+    #
+    class ExperimentS3LogConfiguration < Struct.new(
+      :bucket_name,
+      :prefix)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -632,6 +659,10 @@ module Aws::FIS
     #   Scopes the identified resources to a specific count or percentage.
     #   @return [String]
     #
+    # @!attribute [rw] parameters
+    #   The resource type parameters.
+    #   @return [Hash<String,String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentTarget AWS API Documentation
     #
     class ExperimentTarget < Struct.new(
@@ -639,7 +670,8 @@ module Aws::FIS
       :resource_arns,
       :resource_tags,
       :filters,
-      :selection_mode)
+      :selection_mode,
+      :parameters)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -701,6 +733,10 @@ module Aws::FIS
     #   The tags for the experiment template.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] log_configuration
+    #   The configuration for experiment logging.
+    #   @return [Types::ExperimentTemplateLogConfiguration]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentTemplate AWS API Documentation
     #
     class ExperimentTemplate < Struct.new(
@@ -712,7 +748,8 @@ module Aws::FIS
       :creation_time,
       :last_update_time,
       :role_arn,
-      :tags)
+      :tags,
+      :log_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -748,6 +785,100 @@ module Aws::FIS
       :parameters,
       :targets,
       :start_after)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the configuration for experiment logging to Amazon
+    # CloudWatch Logs.
+    #
+    # @!attribute [rw] log_group_arn
+    #   The Amazon Resource Name (ARN) of the destination Amazon CloudWatch
+    #   Logs log group.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentTemplateCloudWatchLogsLogConfiguration AWS API Documentation
+    #
+    class ExperimentTemplateCloudWatchLogsLogConfiguration < Struct.new(
+      :log_group_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Specifies the configuration for experiment logging to Amazon
+    # CloudWatch Logs.
+    #
+    # @!attribute [rw] log_group_arn
+    #   The Amazon Resource Name (ARN) of the destination Amazon CloudWatch
+    #   Logs log group.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentTemplateCloudWatchLogsLogConfigurationInput AWS API Documentation
+    #
+    class ExperimentTemplateCloudWatchLogsLogConfigurationInput < Struct.new(
+      :log_group_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the configuration for experiment logging.
+    #
+    # @!attribute [rw] cloud_watch_logs_configuration
+    #   The configuration for experiment logging to Amazon CloudWatch Logs.
+    #   @return [Types::ExperimentTemplateCloudWatchLogsLogConfiguration]
+    #
+    # @!attribute [rw] s3_configuration
+    #   The configuration for experiment logging to Amazon S3.
+    #   @return [Types::ExperimentTemplateS3LogConfiguration]
+    #
+    # @!attribute [rw] log_schema_version
+    #   The schema version.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentTemplateLogConfiguration AWS API Documentation
+    #
+    class ExperimentTemplateLogConfiguration < Struct.new(
+      :cloud_watch_logs_configuration,
+      :s3_configuration,
+      :log_schema_version)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the configuration for experiment logging to Amazon S3.
+    #
+    # @!attribute [rw] bucket_name
+    #   The name of the destination bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] prefix
+    #   The bucket prefix.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentTemplateS3LogConfiguration AWS API Documentation
+    #
+    class ExperimentTemplateS3LogConfiguration < Struct.new(
+      :bucket_name,
+      :prefix)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Specifies the configuration for experiment logging to Amazon S3.
+    #
+    # @!attribute [rw] bucket_name
+    #   The name of the destination bucket.
+    #   @return [String]
+    #
+    # @!attribute [rw] prefix
+    #   The bucket prefix.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentTemplateS3LogConfigurationInput AWS API Documentation
+    #
+    class ExperimentTemplateS3LogConfigurationInput < Struct.new(
+      :bucket_name,
+      :prefix)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -829,6 +960,10 @@ module Aws::FIS
     #   Scopes the identified resources to a specific count or percentage.
     #   @return [String]
     #
+    # @!attribute [rw] parameters
+    #   The resource type parameters.
+    #   @return [Hash<String,String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ExperimentTemplateTarget AWS API Documentation
     #
     class ExperimentTemplateTarget < Struct.new(
@@ -836,7 +971,8 @@ module Aws::FIS
       :resource_arns,
       :resource_tags,
       :filters,
-      :selection_mode)
+      :selection_mode,
+      :parameters)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -861,16 +997,15 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # Describes a filter used for the target resource input in an experiment
+    # Specifies a filter used for the target resource input in an experiment
     # template.
     #
-    # @note When making an API call, you may pass ExperimentTemplateTargetInputFilter
-    #   data as a hash:
+    # For more information, see [Resource filters][1] in the *Fault
+    # Injection Simulator User Guide*.
     #
-    #       {
-    #         path: "ExperimentTemplateTargetFilterPath", # required
-    #         values: ["ExperimentTemplateTargetFilterValue"], # required
-    #       }
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/fis/latest/userguide/targets.html#target-filters
     #
     # @!attribute [rw] path
     #   The attribute path for the filter.
@@ -889,13 +1024,6 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetActionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ActionId", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the action.
     #   @return [String]
@@ -920,13 +1048,6 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetExperimentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ExperimentId", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the experiment.
     #   @return [String]
@@ -951,13 +1072,6 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetExperimentTemplateRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ExperimentTemplateId", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the experiment template.
     #   @return [String]
@@ -982,14 +1096,30 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListActionsRequest
-    #   data as a hash:
+    # @!attribute [rw] resource_type
+    #   The resource type.
+    #   @return [String]
     #
-    #       {
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/GetTargetResourceTypeRequest AWS API Documentation
     #
+    class GetTargetResourceTypeRequest < Struct.new(
+      :resource_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] target_resource_type
+    #   Information about the resource type.
+    #   @return [Types::TargetResourceType]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/GetTargetResourceTypeResponse AWS API Documentation
+    #
+    class GetTargetResourceTypeResponse < Struct.new(
+      :target_resource_type)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] max_results
     #   The maximum number of results to return with a single call. To
     #   retrieve the remaining results, make another call with the returned
@@ -1027,14 +1157,6 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListExperimentTemplatesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   The maximum number of results to return with a single call. To
     #   retrieve the remaining results, make another call with the returned
@@ -1072,14 +1194,6 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListExperimentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   The maximum number of results to return with a single call. To
     #   retrieve the remaining results, make another call with the returned
@@ -1117,13 +1231,6 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -1144,6 +1251,43 @@ module Aws::FIS
     #
     class ListTagsForResourceResponse < Struct.new(
       :tags)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] max_results
+    #   The maximum number of results to return with a single call. To
+    #   retrieve the remaining results, make another call with the returned
+    #   `nextToken` value.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] next_token
+    #   The token for the next page of results.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ListTargetResourceTypesRequest AWS API Documentation
+    #
+    class ListTargetResourceTypesRequest < Struct.new(
+      :max_results,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] target_resource_types
+    #   The target resource types.
+    #   @return [Array<Types::TargetResourceTypeSummary>]
+    #
+    # @!attribute [rw] next_token
+    #   The token to use to retrieve the next page of results. This value is
+    #   `null` when there are no more results to return.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ListTargetResourceTypesResponse AWS API Documentation
+    #
+    class ListTargetResourceTypesResponse < Struct.new(
+      :target_resource_types,
+      :next_token)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1174,17 +1318,6 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartExperimentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "ClientToken", # required
-    #         experiment_template_id: "ExperimentTemplateId", # required
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
     #   idempotency of the request.
@@ -1223,13 +1356,6 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopExperimentRequest
-    #   data as a hash:
-    #
-    #       {
-    #         id: "ExperimentId", # required
-    #       }
-    #
     # @!attribute [rw] id
     #   The ID of the experiment.
     #   @return [String]
@@ -1254,16 +1380,6 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -1285,14 +1401,69 @@ module Aws::FIS
     #
     class TagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
+    # Describes a resource type.
     #
-    #       {
-    #         resource_arn: "ResourceArn", # required
-    #         tag_keys: ["TagKey"],
-    #       }
+    # @!attribute [rw] resource_type
+    #   The resource type.
+    #   @return [String]
     #
+    # @!attribute [rw] description
+    #   A description of the resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] parameters
+    #   The parameters for the resource type.
+    #   @return [Hash<String,Types::TargetResourceTypeParameter>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/TargetResourceType AWS API Documentation
+    #
+    class TargetResourceType < Struct.new(
+      :resource_type,
+      :description,
+      :parameters)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes the parameters for a resource type. Use parameters to
+    # determine which tasks are identified during target resolution.
+    #
+    # @!attribute [rw] description
+    #   A description of the parameter.
+    #   @return [String]
+    #
+    # @!attribute [rw] required
+    #   Indicates whether the parameter is required.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/TargetResourceTypeParameter AWS API Documentation
+    #
+    class TargetResourceTypeParameter < Struct.new(
+      :description,
+      :required)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Describes a resource type.
+    #
+    # @!attribute [rw] resource_type
+    #   The resource type.
+    #   @return [String]
+    #
+    # @!attribute [rw] description
+    #   A description of the resource type.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/TargetResourceTypeSummary AWS API Documentation
+    #
+    class TargetResourceTypeSummary < Struct.new(
+      :resource_type,
+      :description)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource.
     #   @return [String]
@@ -1315,21 +1486,6 @@ module Aws::FIS
     class UntagResourceResponse < Aws::EmptyStructure; end
 
     # Specifies an action for an experiment template.
-    #
-    # @note When making an API call, you may pass UpdateExperimentTemplateActionInputItem
-    #   data as a hash:
-    #
-    #       {
-    #         action_id: "ActionId",
-    #         description: "ExperimentTemplateActionDescription",
-    #         parameters: {
-    #           "ExperimentTemplateActionParameterName" => "ExperimentTemplateActionParameter",
-    #         },
-    #         targets: {
-    #           "ExperimentTemplateActionTargetName" => "ExperimentTemplateTargetName",
-    #         },
-    #         start_after: ["ExperimentTemplateActionStartAfter"],
-    #       }
     #
     # @!attribute [rw] action_id
     #   The ID of the action.
@@ -1365,50 +1521,30 @@ module Aws::FIS
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateExperimentTemplateRequest
-    #   data as a hash:
+    # Specifies the configuration for experiment logging.
     #
-    #       {
-    #         id: "ExperimentTemplateId", # required
-    #         description: "ExperimentTemplateDescription",
-    #         stop_conditions: [
-    #           {
-    #             source: "StopConditionSource", # required
-    #             value: "StopConditionValue",
-    #           },
-    #         ],
-    #         targets: {
-    #           "ExperimentTemplateTargetName" => {
-    #             resource_type: "ResourceType", # required
-    #             resource_arns: ["ResourceArn"],
-    #             resource_tags: {
-    #               "TagKey" => "TagValue",
-    #             },
-    #             filters: [
-    #               {
-    #                 path: "ExperimentTemplateTargetFilterPath", # required
-    #                 values: ["ExperimentTemplateTargetFilterValue"], # required
-    #               },
-    #             ],
-    #             selection_mode: "ExperimentTemplateTargetSelectionMode", # required
-    #           },
-    #         },
-    #         actions: {
-    #           "ExperimentTemplateActionName" => {
-    #             action_id: "ActionId",
-    #             description: "ExperimentTemplateActionDescription",
-    #             parameters: {
-    #               "ExperimentTemplateActionParameterName" => "ExperimentTemplateActionParameter",
-    #             },
-    #             targets: {
-    #               "ExperimentTemplateActionTargetName" => "ExperimentTemplateTargetName",
-    #             },
-    #             start_after: ["ExperimentTemplateActionStartAfter"],
-    #           },
-    #         },
-    #         role_arn: "RoleArn",
-    #       }
+    # @!attribute [rw] cloud_watch_logs_configuration
+    #   The configuration for experiment logging to Amazon CloudWatch Logs.
+    #   @return [Types::ExperimentTemplateCloudWatchLogsLogConfigurationInput]
     #
+    # @!attribute [rw] s3_configuration
+    #   The configuration for experiment logging to Amazon S3.
+    #   @return [Types::ExperimentTemplateS3LogConfigurationInput]
+    #
+    # @!attribute [rw] log_schema_version
+    #   The schema version.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/UpdateExperimentTemplateLogConfigurationInput AWS API Documentation
+    #
+    class UpdateExperimentTemplateLogConfigurationInput < Struct.new(
+      :cloud_watch_logs_configuration,
+      :s3_configuration,
+      :log_schema_version)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] id
     #   The ID of the experiment template.
     #   @return [String]
@@ -1430,9 +1566,13 @@ module Aws::FIS
     #   @return [Hash<String,Types::UpdateExperimentTemplateActionInputItem>]
     #
     # @!attribute [rw] role_arn
-    #   The Amazon Resource Name (ARN) of an IAM role that grants the AWS
-    #   FIS service permission to perform service actions on your behalf.
+    #   The Amazon Resource Name (ARN) of an IAM role that grants the FIS
+    #   service permission to perform service actions on your behalf.
     #   @return [String]
+    #
+    # @!attribute [rw] log_configuration
+    #   The configuration for experiment logging.
+    #   @return [Types::UpdateExperimentTemplateLogConfigurationInput]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/UpdateExperimentTemplateRequest AWS API Documentation
     #
@@ -1442,7 +1582,8 @@ module Aws::FIS
       :stop_conditions,
       :targets,
       :actions,
-      :role_arn)
+      :role_arn,
+      :log_configuration)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1461,14 +1602,6 @@ module Aws::FIS
 
     # Specifies a stop condition for an experiment. You can define a stop
     # condition as a CloudWatch alarm.
-    #
-    # @note When making an API call, you may pass UpdateExperimentTemplateStopConditionInput
-    #   data as a hash:
-    #
-    #       {
-    #         source: "StopConditionSource", # required
-    #         value: "StopConditionValue",
-    #       }
     #
     # @!attribute [rw] source
     #   The source for the stop condition. Specify `aws:cloudwatch:alarm` if
@@ -1493,26 +1626,8 @@ module Aws::FIS
     # Amazon Resource Name (ARN) or at least one resource tag. You cannot
     # specify both.
     #
-    # @note When making an API call, you may pass UpdateExperimentTemplateTargetInput
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "ResourceType", # required
-    #         resource_arns: ["ResourceArn"],
-    #         resource_tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         filters: [
-    #           {
-    #             path: "ExperimentTemplateTargetFilterPath", # required
-    #             values: ["ExperimentTemplateTargetFilterValue"], # required
-    #           },
-    #         ],
-    #         selection_mode: "ExperimentTemplateTargetSelectionMode", # required
-    #       }
-    #
     # @!attribute [rw] resource_type
-    #   The AWS resource type. The resource type must be supported for the
+    #   The resource type. The resource type must be supported for the
     #   specified action.
     #   @return [String]
     #
@@ -1533,6 +1648,10 @@ module Aws::FIS
     #   Scopes the identified resources to a specific count or percentage.
     #   @return [String]
     #
+    # @!attribute [rw] parameters
+    #   The resource type parameters.
+    #   @return [Hash<String,String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/UpdateExperimentTemplateTargetInput AWS API Documentation
     #
     class UpdateExperimentTemplateTargetInput < Struct.new(
@@ -1540,7 +1659,8 @@ module Aws::FIS
       :resource_arns,
       :resource_tags,
       :filters,
-      :selection_mode)
+      :selection_mode,
+      :parameters)
       SENSITIVE = []
       include Aws::Structure
     end

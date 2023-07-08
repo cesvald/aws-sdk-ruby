@@ -35,13 +35,18 @@ module Aws::EC2
     end
     alias :key_name :name
 
-    # The SHA-1 digest of the DER encoded private key.
+    # * For RSA key pairs, the key fingerprint is the SHA-1 digest of the
+    #   DER encoded private key.
+    #
+    # * For ED25519 key pairs, the key fingerprint is the base64-encoded
+    #   SHA-256 digest, which is the default for OpenSSH, starting with
+    #   OpenSSH 6.8.
     # @return [String]
     def key_fingerprint
       data[:key_fingerprint]
     end
 
-    # An unencrypted PEM encoded RSA private key.
+    # An unencrypted PEM encoded RSA or ED25519 private key.
     # @return [String]
     def key_material
       data[:key_material]
@@ -183,7 +188,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -205,7 +212,9 @@ module Aws::EC2
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(key_name: @name)
-      resp = @client.delete_key_pair(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_key_pair(options)
+      end
       resp.data
     end
 

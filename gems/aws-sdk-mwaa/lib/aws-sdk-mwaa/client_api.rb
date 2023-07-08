@@ -70,16 +70,13 @@ module Aws::MWAA
     ResourceNotFoundException = Shapes::StructureShape.new(name: 'ResourceNotFoundException')
     S3BucketArn = Shapes::StringShape.new(name: 'S3BucketArn')
     S3ObjectVersion = Shapes::StringShape.new(name: 'S3ObjectVersion')
+    Schedulers = Shapes::IntegerShape.new(name: 'Schedulers')
     SecurityGroupId = Shapes::StringShape.new(name: 'SecurityGroupId')
     SecurityGroupList = Shapes::ListShape.new(name: 'SecurityGroupList')
     StatisticSet = Shapes::StructureShape.new(name: 'StatisticSet')
     String = Shapes::StringShape.new(name: 'String')
     SubnetId = Shapes::StringShape.new(name: 'SubnetId')
     SubnetList = Shapes::ListShape.new(name: 'SubnetList')
-    SyntheticCreateCliTokenResponseToken = Shapes::StringShape.new(name: 'SyntheticCreateCliTokenResponseToken')
-    SyntheticCreateEnvironmentInputAirflowConfigurationOptions = Shapes::MapShape.new(name: 'SyntheticCreateEnvironmentInputAirflowConfigurationOptions')
-    SyntheticCreateWebLoginTokenResponseToken = Shapes::StringShape.new(name: 'SyntheticCreateWebLoginTokenResponseToken')
-    SyntheticUpdateEnvironmentInputAirflowConfigurationOptions = Shapes::MapShape.new(name: 'SyntheticUpdateEnvironmentInputAirflowConfigurationOptions')
     TagKey = Shapes::StringShape.new(name: 'TagKey')
     TagKeyList = Shapes::ListShape.new(name: 'TagKeyList')
     TagMap = Shapes::MapShape.new(name: 'TagMap')
@@ -87,6 +84,7 @@ module Aws::MWAA
     TagResourceOutput = Shapes::StructureShape.new(name: 'TagResourceOutput')
     TagValue = Shapes::StringShape.new(name: 'TagValue')
     Timestamp = Shapes::TimestampShape.new(name: 'Timestamp')
+    Token = Shapes::StringShape.new(name: 'Token')
     Unit = Shapes::StringShape.new(name: 'Unit')
     UntagResourceInput = Shapes::StructureShape.new(name: 'UntagResourceInput')
     UntagResourceOutput = Shapes::StructureShape.new(name: 'UntagResourceOutput')
@@ -95,6 +93,7 @@ module Aws::MWAA
     UpdateEnvironmentOutput = Shapes::StructureShape.new(name: 'UpdateEnvironmentOutput')
     UpdateError = Shapes::StructureShape.new(name: 'UpdateError')
     UpdateNetworkConfigurationInput = Shapes::StructureShape.new(name: 'UpdateNetworkConfigurationInput')
+    UpdateSource = Shapes::StringShape.new(name: 'UpdateSource')
     UpdateStatus = Shapes::StringShape.new(name: 'UpdateStatus')
     ValidationException = Shapes::StructureShape.new(name: 'ValidationException')
     WebserverAccessMode = Shapes::StringShape.new(name: 'WebserverAccessMode')
@@ -110,11 +109,11 @@ module Aws::MWAA
     CreateCliTokenRequest.add_member(:name, Shapes::ShapeRef.new(shape: EnvironmentName, required: true, location: "uri", location_name: "Name"))
     CreateCliTokenRequest.struct_class = Types::CreateCliTokenRequest
 
-    CreateCliTokenResponse.add_member(:cli_token, Shapes::ShapeRef.new(shape: SyntheticCreateCliTokenResponseToken, location_name: "CliToken"))
+    CreateCliTokenResponse.add_member(:cli_token, Shapes::ShapeRef.new(shape: Token, location_name: "CliToken"))
     CreateCliTokenResponse.add_member(:web_server_hostname, Shapes::ShapeRef.new(shape: Hostname, location_name: "WebServerHostname"))
     CreateCliTokenResponse.struct_class = Types::CreateCliTokenResponse
 
-    CreateEnvironmentInput.add_member(:airflow_configuration_options, Shapes::ShapeRef.new(shape: SyntheticCreateEnvironmentInputAirflowConfigurationOptions, location_name: "AirflowConfigurationOptions"))
+    CreateEnvironmentInput.add_member(:airflow_configuration_options, Shapes::ShapeRef.new(shape: AirflowConfigurationOptions, location_name: "AirflowConfigurationOptions"))
     CreateEnvironmentInput.add_member(:airflow_version, Shapes::ShapeRef.new(shape: AirflowVersion, location_name: "AirflowVersion"))
     CreateEnvironmentInput.add_member(:dag_s3_path, Shapes::ShapeRef.new(shape: RelativePath, required: true, location_name: "DagS3Path"))
     CreateEnvironmentInput.add_member(:environment_class, Shapes::ShapeRef.new(shape: EnvironmentClass, location_name: "EnvironmentClass"))
@@ -129,7 +128,10 @@ module Aws::MWAA
     CreateEnvironmentInput.add_member(:plugins_s3_path, Shapes::ShapeRef.new(shape: RelativePath, location_name: "PluginsS3Path"))
     CreateEnvironmentInput.add_member(:requirements_s3_object_version, Shapes::ShapeRef.new(shape: S3ObjectVersion, location_name: "RequirementsS3ObjectVersion"))
     CreateEnvironmentInput.add_member(:requirements_s3_path, Shapes::ShapeRef.new(shape: RelativePath, location_name: "RequirementsS3Path"))
+    CreateEnvironmentInput.add_member(:schedulers, Shapes::ShapeRef.new(shape: Schedulers, location_name: "Schedulers"))
     CreateEnvironmentInput.add_member(:source_bucket_arn, Shapes::ShapeRef.new(shape: S3BucketArn, required: true, location_name: "SourceBucketArn"))
+    CreateEnvironmentInput.add_member(:startup_script_s3_object_version, Shapes::ShapeRef.new(shape: S3ObjectVersion, location_name: "StartupScriptS3ObjectVersion"))
+    CreateEnvironmentInput.add_member(:startup_script_s3_path, Shapes::ShapeRef.new(shape: RelativePath, location_name: "StartupScriptS3Path"))
     CreateEnvironmentInput.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "Tags"))
     CreateEnvironmentInput.add_member(:webserver_access_mode, Shapes::ShapeRef.new(shape: WebserverAccessMode, location_name: "WebserverAccessMode"))
     CreateEnvironmentInput.add_member(:weekly_maintenance_window_start, Shapes::ShapeRef.new(shape: WeeklyMaintenanceWindowStart, location_name: "WeeklyMaintenanceWindowStart"))
@@ -142,7 +144,7 @@ module Aws::MWAA
     CreateWebLoginTokenRequest.struct_class = Types::CreateWebLoginTokenRequest
 
     CreateWebLoginTokenResponse.add_member(:web_server_hostname, Shapes::ShapeRef.new(shape: Hostname, location_name: "WebServerHostname"))
-    CreateWebLoginTokenResponse.add_member(:web_token, Shapes::ShapeRef.new(shape: SyntheticCreateWebLoginTokenResponseToken, location_name: "WebToken"))
+    CreateWebLoginTokenResponse.add_member(:web_token, Shapes::ShapeRef.new(shape: Token, location_name: "WebToken"))
     CreateWebLoginTokenResponse.struct_class = Types::CreateWebLoginTokenResponse
 
     DeleteEnvironmentInput.add_member(:name, Shapes::ShapeRef.new(shape: EnvironmentName, required: true, location: "uri", location_name: "Name"))
@@ -174,8 +176,11 @@ module Aws::MWAA
     Environment.add_member(:plugins_s3_path, Shapes::ShapeRef.new(shape: RelativePath, location_name: "PluginsS3Path"))
     Environment.add_member(:requirements_s3_object_version, Shapes::ShapeRef.new(shape: S3ObjectVersion, location_name: "RequirementsS3ObjectVersion"))
     Environment.add_member(:requirements_s3_path, Shapes::ShapeRef.new(shape: RelativePath, location_name: "RequirementsS3Path"))
+    Environment.add_member(:schedulers, Shapes::ShapeRef.new(shape: Schedulers, location_name: "Schedulers"))
     Environment.add_member(:service_role_arn, Shapes::ShapeRef.new(shape: IamRoleArn, location_name: "ServiceRoleArn"))
     Environment.add_member(:source_bucket_arn, Shapes::ShapeRef.new(shape: S3BucketArn, location_name: "SourceBucketArn"))
+    Environment.add_member(:startup_script_s3_object_version, Shapes::ShapeRef.new(shape: String, location_name: "StartupScriptS3ObjectVersion"))
+    Environment.add_member(:startup_script_s3_path, Shapes::ShapeRef.new(shape: String, location_name: "StartupScriptS3Path"))
     Environment.add_member(:status, Shapes::ShapeRef.new(shape: EnvironmentStatus, location_name: "Status"))
     Environment.add_member(:tags, Shapes::ShapeRef.new(shape: TagMap, location_name: "Tags"))
     Environment.add_member(:webserver_access_mode, Shapes::ShapeRef.new(shape: WebserverAccessMode, location_name: "WebserverAccessMode"))
@@ -196,6 +201,7 @@ module Aws::MWAA
 
     LastUpdate.add_member(:created_at, Shapes::ShapeRef.new(shape: UpdateCreatedAt, location_name: "CreatedAt"))
     LastUpdate.add_member(:error, Shapes::ShapeRef.new(shape: UpdateError, location_name: "Error"))
+    LastUpdate.add_member(:source, Shapes::ShapeRef.new(shape: UpdateSource, location_name: "Source"))
     LastUpdate.add_member(:status, Shapes::ShapeRef.new(shape: UpdateStatus, location_name: "Status"))
     LastUpdate.struct_class = Types::LastUpdate
 
@@ -269,12 +275,6 @@ module Aws::MWAA
 
     SubnetList.member = Shapes::ShapeRef.new(shape: SubnetId)
 
-    SyntheticCreateEnvironmentInputAirflowConfigurationOptions.key = Shapes::ShapeRef.new(shape: ConfigKey)
-    SyntheticCreateEnvironmentInputAirflowConfigurationOptions.value = Shapes::ShapeRef.new(shape: ConfigValue)
-
-    SyntheticUpdateEnvironmentInputAirflowConfigurationOptions.key = Shapes::ShapeRef.new(shape: ConfigKey)
-    SyntheticUpdateEnvironmentInputAirflowConfigurationOptions.value = Shapes::ShapeRef.new(shape: ConfigValue)
-
     TagKeyList.member = Shapes::ShapeRef.new(shape: TagKey)
 
     TagMap.key = Shapes::ShapeRef.new(shape: TagKey)
@@ -292,7 +292,7 @@ module Aws::MWAA
 
     UntagResourceOutput.struct_class = Types::UntagResourceOutput
 
-    UpdateEnvironmentInput.add_member(:airflow_configuration_options, Shapes::ShapeRef.new(shape: SyntheticUpdateEnvironmentInputAirflowConfigurationOptions, location_name: "AirflowConfigurationOptions"))
+    UpdateEnvironmentInput.add_member(:airflow_configuration_options, Shapes::ShapeRef.new(shape: AirflowConfigurationOptions, location_name: "AirflowConfigurationOptions"))
     UpdateEnvironmentInput.add_member(:airflow_version, Shapes::ShapeRef.new(shape: AirflowVersion, location_name: "AirflowVersion"))
     UpdateEnvironmentInput.add_member(:dag_s3_path, Shapes::ShapeRef.new(shape: RelativePath, location_name: "DagS3Path"))
     UpdateEnvironmentInput.add_member(:environment_class, Shapes::ShapeRef.new(shape: EnvironmentClass, location_name: "EnvironmentClass"))
@@ -306,7 +306,10 @@ module Aws::MWAA
     UpdateEnvironmentInput.add_member(:plugins_s3_path, Shapes::ShapeRef.new(shape: RelativePath, location_name: "PluginsS3Path"))
     UpdateEnvironmentInput.add_member(:requirements_s3_object_version, Shapes::ShapeRef.new(shape: S3ObjectVersion, location_name: "RequirementsS3ObjectVersion"))
     UpdateEnvironmentInput.add_member(:requirements_s3_path, Shapes::ShapeRef.new(shape: RelativePath, location_name: "RequirementsS3Path"))
+    UpdateEnvironmentInput.add_member(:schedulers, Shapes::ShapeRef.new(shape: Schedulers, location_name: "Schedulers"))
     UpdateEnvironmentInput.add_member(:source_bucket_arn, Shapes::ShapeRef.new(shape: S3BucketArn, location_name: "SourceBucketArn"))
+    UpdateEnvironmentInput.add_member(:startup_script_s3_object_version, Shapes::ShapeRef.new(shape: S3ObjectVersion, location_name: "StartupScriptS3ObjectVersion"))
+    UpdateEnvironmentInput.add_member(:startup_script_s3_path, Shapes::ShapeRef.new(shape: RelativePath, location_name: "StartupScriptS3Path"))
     UpdateEnvironmentInput.add_member(:webserver_access_mode, Shapes::ShapeRef.new(shape: WebserverAccessMode, location_name: "WebserverAccessMode"))
     UpdateEnvironmentInput.add_member(:weekly_maintenance_window_start, Shapes::ShapeRef.new(shape: WeeklyMaintenanceWindowStart, location_name: "WeeklyMaintenanceWindowStart"))
     UpdateEnvironmentInput.struct_class = Types::UpdateEnvironmentInput

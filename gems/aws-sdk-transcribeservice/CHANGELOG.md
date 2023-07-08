@@ -1,6 +1,163 @@
 Unreleased Changes
 ------------------
 
+1.86.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.85.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.84.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.83.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.82.0 (2023-03-03)
+------------------
+
+* Feature - Amazon Transcribe now supports role access for these API operations: CreateVocabulary, UpdateVocabulary, CreateVocabularyFilter, and UpdateVocabularyFilter.
+
+1.81.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.80.0 (2022-12-20)
+------------------
+
+* Feature - Enable our batch transcription jobs for Swedish and Vietnamese.
+
+1.79.0 (2022-12-05)
+------------------
+
+* Feature - Amazon Transcribe now supports creating custom language models in the following languages: Japanese (ja-JP) and German (de-DE).
+
+1.78.0 (2022-11-28)
+------------------
+
+* Feature - This release adds support for 'inputType' for post-call and real-time (streaming) Call Analytics within Amazon Transcribe.
+
+1.77.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.76.0 (2022-07-22)
+------------------
+
+* Feature - Remove unsupported language codes for StartTranscriptionJob and update VocabularyFileUri for UpdateMedicalVocabulary
+
+1.75.0 (2022-05-31)
+------------------
+
+* Feature - Amazon Transcribe now supports automatic language identification for multi-lingual audio in batch mode.
+
+1.74.0 (2022-03-24)
+------------------
+
+* Feature - This release adds an additional parameter for subtitling with Amazon Transcribe batch jobs: outputStartIndex.
+
+1.73.0 (2022-03-10)
+------------------
+
+* Feature - Documentation fix for API `StartMedicalTranscriptionJobRequest`, now showing min sample rate as 16khz
+
+1.72.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.71.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.70.0 (2022-01-21)
+------------------
+
+* Feature - Add support for granular PIIEntityTypes when using Batch ContentRedaction.
+
+1.69.0 (2022-01-10)
+------------------
+
+* Feature - Documentation updates for Amazon Transcribe.
+
+1.68.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.67.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.66.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.65.0 (2021-10-29)
+------------------
+
+* Feature - Transcribe and Transcribe Call Analytics now support automatic language identification along with custom vocabulary, vocabulary filter, custom language model and PII redaction.
+
+1.64.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.63.0 (2021-09-16)
+------------------
+
+* Feature - This release adds support for subtitling with Amazon Transcribe batch jobs.
+
+1.62.0 (2021-09-10)
+------------------
+
+* Feature - This release adds an API option for startTranscriptionJob and startMedicalTranscriptionJob that allows the user to specify encryption context key value pairs for batch jobs.
+
+1.61.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.60.0 (2021-08-26)
+------------------
+
+* Feature - This release adds support for batch transcription in six new languages - Afrikaans, Danish, Mandarin Chinese (Taiwan), New Zealand English, South African English, and Thai.
+
+1.59.0 (2021-08-24)
+------------------
+
+* Feature - This release adds support for feature tagging with Amazon Transcribe batch jobs.
+
+1.58.0 (2021-08-04)
+------------------
+
+* Feature - This release adds support for call analytics (batch) within Amazon Transcribe.
+
+1.57.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.56.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
 1.55.0 (2021-05-14)
 ------------------
 

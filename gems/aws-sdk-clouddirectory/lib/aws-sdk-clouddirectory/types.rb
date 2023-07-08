@@ -10,7 +10,9 @@
 module Aws::CloudDirectory
   module Types
 
-    # Access denied. Check your permissions.
+    # Access denied or directory not found. Either you don't have
+    # permissions for this directory or the directory does not exist. Try
+    # calling ListDirectories and check your permissions.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -23,36 +25,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AddFacetToObjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         schema_facet: { # required
-    #           schema_arn: "Arn",
-    #           facet_name: "FacetName",
-    #         },
-    #         object_attribute_list: [
-    #           {
-    #             key: { # required
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             value: { # required
-    #               string_value: "StringAttributeValue",
-    #               binary_value: "data",
-    #               boolean_value: false,
-    #               number_value: "NumberAttributeValue",
-    #               datetime_value: Time.now,
-    #             },
-    #           },
-    #         ],
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where the object resides. For more information, see arns.
@@ -86,14 +58,6 @@ module Aws::CloudDirectory
     #
     class AddFacetToObjectResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass ApplySchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         published_schema_arn: "Arn", # required
-    #         directory_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] published_schema_arn
     #   Published schema Amazon Resource Name (ARN) that needs to be copied.
     #   For more information, see arns.
@@ -134,20 +98,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AttachObjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         parent_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         child_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         link_name: "LinkName", # required
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   Amazon Resource Name (ARN) that is associated with the Directory
     #   where both objects reside. For more information, see arns.
@@ -189,19 +139,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AttachPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         policy_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where both objects reside. For more information, see arns.
@@ -230,19 +167,6 @@ module Aws::CloudDirectory
     #
     class AttachPolicyResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass AttachToIndexRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         index_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         target_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) of the directory where the object and
     #   index exist.
@@ -278,35 +202,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AttachTypedLinkRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         source_object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         target_object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         typed_link_facet: { # required
-    #           schema_arn: "Arn", # required
-    #           typed_link_name: "TypedLinkName", # required
-    #         },
-    #         attributes: [ # required
-    #           {
-    #             attribute_name: "AttributeName", # required
-    #             value: { # required
-    #               string_value: "StringAttributeValue",
-    #               binary_value: "data",
-    #               boolean_value: false,
-    #               number_value: "NumberAttributeValue",
-    #               datetime_value: Time.now,
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) of the directory where you want to
     #   attach the typed link.
@@ -355,15 +250,6 @@ module Aws::CloudDirectory
 
     # A unique identifier for an attribute.
     #
-    # @note When making an API call, you may pass AttributeKey
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         facet_name: "FacetName", # required
-    #         name: "AttributeName", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) of the schema that contains the facet
     #   and attribute.
@@ -389,24 +275,6 @@ module Aws::CloudDirectory
 
     # The combination of an attribute key and an attribute value.
     #
-    # @note When making an API call, you may pass AttributeKeyAndValue
-    #   data as a hash:
-    #
-    #       {
-    #         key: { # required
-    #           schema_arn: "Arn", # required
-    #           facet_name: "FacetName", # required
-    #           name: "AttributeName", # required
-    #         },
-    #         value: { # required
-    #           string_value: "StringAttributeValue",
-    #           binary_value: "data",
-    #           boolean_value: false,
-    #           number_value: "NumberAttributeValue",
-    #           datetime_value: Time.now,
-    #         },
-    #       }
-    #
     # @!attribute [rw] key
     #   The key of the attribute.
     #   @return [Types::AttributeKey]
@@ -426,20 +294,6 @@ module Aws::CloudDirectory
 
     # Identifies the attribute name and value for a typed link.
     #
-    # @note When making an API call, you may pass AttributeNameAndValue
-    #   data as a hash:
-    #
-    #       {
-    #         attribute_name: "AttributeName", # required
-    #         value: { # required
-    #           string_value: "StringAttributeValue",
-    #           binary_value: "data",
-    #           boolean_value: false,
-    #           number_value: "NumberAttributeValue",
-    #           datetime_value: Time.now,
-    #         },
-    #       }
-    #
     # @!attribute [rw] attribute_name
     #   The attribute name of the typed link.
     #   @return [String]
@@ -458,35 +312,6 @@ module Aws::CloudDirectory
     end
 
     # Represents the output of a batch add facet to object operation.
-    #
-    # @note When making an API call, you may pass BatchAddFacetToObject
-    #   data as a hash:
-    #
-    #       {
-    #         schema_facet: { # required
-    #           schema_arn: "Arn",
-    #           facet_name: "FacetName",
-    #         },
-    #         object_attribute_list: [ # required
-    #           {
-    #             key: { # required
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             value: { # required
-    #               string_value: "StringAttributeValue",
-    #               binary_value: "data",
-    #               boolean_value: false,
-    #               number_value: "NumberAttributeValue",
-    #               datetime_value: Time.now,
-    #             },
-    #           },
-    #         ],
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
     #
     # @!attribute [rw] schema_facet
     #   Represents the facet being added to the object.
@@ -517,19 +342,6 @@ module Aws::CloudDirectory
     class BatchAddFacetToObjectResponse < Aws::EmptyStructure; end
 
     # Represents the output of an AttachObject operation.
-    #
-    # @note When making an API call, you may pass BatchAttachObject
-    #   data as a hash:
-    #
-    #       {
-    #         parent_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         child_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         link_name: "LinkName", # required
-    #       }
     #
     # @!attribute [rw] parent_reference
     #   The parent object reference.
@@ -571,18 +383,6 @@ module Aws::CloudDirectory
     # operation. For more information, see AttachPolicy and
     # BatchReadRequest$Operations.
     #
-    # @note When making an API call, you may pass BatchAttachPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         policy_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] policy_reference
     #   The reference that is associated with the policy object.
     #   @return [Types::ObjectReference]
@@ -610,18 +410,6 @@ module Aws::CloudDirectory
     # Attaches the specified object to the specified index inside a
     # BatchRead operation. For more information, see AttachToIndex and
     # BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchAttachToIndex
-    #   data as a hash:
-    #
-    #       {
-    #         index_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         target_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
     #
     # @!attribute [rw] index_reference
     #   A reference to the index that you are attaching the object to.
@@ -657,34 +445,6 @@ module Aws::CloudDirectory
     # Attaches a typed link to a specified source and target object inside a
     # BatchRead operation. For more information, see AttachTypedLink and
     # BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchAttachTypedLink
-    #   data as a hash:
-    #
-    #       {
-    #         source_object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         target_object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         typed_link_facet: { # required
-    #           schema_arn: "Arn", # required
-    #           typed_link_name: "TypedLinkName", # required
-    #         },
-    #         attributes: [ # required
-    #           {
-    #             attribute_name: "AttributeName", # required
-    #             value: { # required
-    #               string_value: "StringAttributeValue",
-    #               binary_value: "data",
-    #               boolean_value: false,
-    #               number_value: "NumberAttributeValue",
-    #               datetime_value: Time.now,
-    #             },
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] source_object_reference
     #   Identifies the source object that the typed link will attach to.
@@ -730,25 +490,6 @@ module Aws::CloudDirectory
 
     # Creates an index object inside of a BatchRead operation. For more
     # information, see CreateIndex and BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchCreateIndex
-    #   data as a hash:
-    #
-    #       {
-    #         ordered_indexed_attribute_list: [ # required
-    #           {
-    #             schema_arn: "Arn", # required
-    #             facet_name: "FacetName", # required
-    #             name: "AttributeName", # required
-    #           },
-    #         ],
-    #         is_unique: false, # required
-    #         parent_reference: {
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         link_name: "LinkName",
-    #         batch_reference_name: "BatchReferenceName",
-    #       }
     #
     # @!attribute [rw] ordered_indexed_attribute_list
     #   Specifies the attributes that should be indexed on. Currently only a
@@ -804,39 +545,6 @@ module Aws::CloudDirectory
     end
 
     # Represents the output of a CreateObject operation.
-    #
-    # @note When making an API call, you may pass BatchCreateObject
-    #   data as a hash:
-    #
-    #       {
-    #         schema_facet: [ # required
-    #           {
-    #             schema_arn: "Arn",
-    #             facet_name: "FacetName",
-    #           },
-    #         ],
-    #         object_attribute_list: [ # required
-    #           {
-    #             key: { # required
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             value: { # required
-    #               string_value: "StringAttributeValue",
-    #               binary_value: "data",
-    #               boolean_value: false,
-    #               number_value: "NumberAttributeValue",
-    #               datetime_value: Time.now,
-    #             },
-    #           },
-    #         ],
-    #         parent_reference: {
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         link_name: "LinkName",
-    #         batch_reference_name: "BatchReferenceName",
-    #       }
     #
     # @!attribute [rw] schema_facet
     #   A list of `FacetArns` that will be associated with the object. For
@@ -894,15 +602,6 @@ module Aws::CloudDirectory
 
     # Represents the output of a DeleteObject operation.
     #
-    # @note When making an API call, you may pass BatchDeleteObject
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] object_reference
     #   The reference that identifies the object.
     #   @return [Types::ObjectReference]
@@ -924,18 +623,6 @@ module Aws::CloudDirectory
     # Detaches the specified object from the specified index inside a
     # BatchRead operation. For more information, see DetachFromIndex and
     # BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchDetachFromIndex
-    #   data as a hash:
-    #
-    #       {
-    #         index_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         target_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
     #
     # @!attribute [rw] index_reference
     #   A reference to the index object.
@@ -970,17 +657,6 @@ module Aws::CloudDirectory
     end
 
     # Represents the output of a DetachObject operation.
-    #
-    # @note When making an API call, you may pass BatchDetachObject
-    #   data as a hash:
-    #
-    #       {
-    #         parent_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         link_name: "LinkName", # required
-    #         batch_reference_name: "BatchReferenceName",
-    #       }
     #
     # @!attribute [rw] parent_reference
     #   Parent reference from which the object with the specified link name
@@ -1028,18 +704,6 @@ module Aws::CloudDirectory
     # BatchWrite operation. For more information, see DetachPolicy and
     # BatchWriteRequest$Operations.
     #
-    # @note When making an API call, you may pass BatchDetachPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         policy_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] policy_reference
     #   Reference that identifies the policy object.
     #   @return [Types::ObjectReference]
@@ -1068,36 +732,6 @@ module Aws::CloudDirectory
     # a BatchRead operation. For more information, see DetachTypedLink and
     # BatchReadRequest$Operations.
     #
-    # @note When making an API call, you may pass BatchDetachTypedLink
-    #   data as a hash:
-    #
-    #       {
-    #         typed_link_specifier: { # required
-    #           typed_link_facet: { # required
-    #             schema_arn: "Arn", # required
-    #             typed_link_name: "TypedLinkName", # required
-    #           },
-    #           source_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           target_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           identity_attribute_values: [ # required
-    #             {
-    #               attribute_name: "AttributeName", # required
-    #               value: { # required
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] typed_link_specifier
     #   Used to accept a typed link specifier as input.
     #   @return [Types::TypedLinkSpecifier]
@@ -1119,37 +753,6 @@ module Aws::CloudDirectory
     # Retrieves attributes that are associated with a typed link inside a
     # BatchRead operation. For more information, see GetLinkAttributes and
     # BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchGetLinkAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         typed_link_specifier: { # required
-    #           typed_link_facet: { # required
-    #             schema_arn: "Arn", # required
-    #             typed_link_name: "TypedLinkName", # required
-    #           },
-    #           source_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           target_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           identity_attribute_values: [ # required
-    #             {
-    #               attribute_name: "AttributeName", # required
-    #               value: { # required
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         attribute_names: ["AttributeName"], # required
-    #       }
     #
     # @!attribute [rw] typed_link_specifier
     #   Allows a typed link specifier to be accepted as input.
@@ -1185,20 +788,6 @@ module Aws::CloudDirectory
     # Retrieves attributes within a facet that are associated with an object
     # inside an BatchRead operation. For more information, see
     # GetObjectAttributes and BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchGetObjectAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         schema_facet: { # required
-    #           schema_arn: "Arn",
-    #           facet_name: "FacetName",
-    #         },
-    #         attribute_names: ["AttributeName"], # required
-    #       }
     #
     # @!attribute [rw] object_reference
     #   Reference that identifies the object whose attributes will be
@@ -1242,15 +831,6 @@ module Aws::CloudDirectory
     # more information, see GetObjectInformation and
     # BatchReadRequest$Operations.
     #
-    # @note When making an API call, you may pass BatchGetObjectInformation
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] object_reference
     #   A reference to the object.
     #   @return [Types::ObjectReference]
@@ -1285,17 +865,6 @@ module Aws::CloudDirectory
     # Lists indices attached to an object inside a BatchRead operation. For
     # more information, see ListAttachedIndices and
     # BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchListAttachedIndices
-    #   data as a hash:
-    #
-    #       {
-    #         target_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
     #
     # @!attribute [rw] target_reference
     #   A reference to the object that has indices attached.
@@ -1342,44 +911,6 @@ module Aws::CloudDirectory
     # information for an object inside a BatchRead operation. For more
     # information, see ListIncomingTypedLinks and
     # BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchListIncomingTypedLinks
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         filter_attribute_ranges: [
-    #           {
-    #             attribute_name: "AttributeName",
-    #             range: { # required
-    #               start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               start_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #               end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               end_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         filter_typed_link: {
-    #           schema_arn: "Arn", # required
-    #           typed_link_name: "TypedLinkName", # required
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
     #
     # @!attribute [rw] object_reference
     #   The reference that identifies the object whose attributes will be
@@ -1442,44 +973,6 @@ module Aws::CloudDirectory
     # operation. For more information, see ListIndex and
     # BatchReadRequest$Operations.
     #
-    # @note When making an API call, you may pass BatchListIndex
-    #   data as a hash:
-    #
-    #       {
-    #         ranges_on_indexed_values: [
-    #           {
-    #             attribute_key: {
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             range: {
-    #               start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               start_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #               end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               end_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         index_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] ranges_on_indexed_values
     #   Specifies the ranges of indexed values that you want to query.
     #   @return [Array<Types::ObjectAttributeRange>]
@@ -1527,21 +1020,6 @@ module Aws::CloudDirectory
     end
 
     # Represents the output of a ListObjectAttributes operation.
-    #
-    # @note When making an API call, you may pass BatchListObjectAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         facet_filter: {
-    #           schema_arn: "Arn",
-    #           facet_name: "FacetName",
-    #         },
-    #       }
     #
     # @!attribute [rw] object_reference
     #   Reference of the object whose attributes need to be listed.
@@ -1594,17 +1072,6 @@ module Aws::CloudDirectory
 
     # Represents the output of a ListObjectChildren operation.
     #
-    # @note When making an API call, you may pass BatchListObjectChildren
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] object_reference
     #   Reference of the object for which child objects are being listed.
     #   @return [Types::ObjectReference]
@@ -1653,17 +1120,6 @@ module Aws::CloudDirectory
     # operation. For more information, see ListObjectParentPaths and
     # BatchReadRequest$Operations.
     #
-    # @note When making an API call, you may pass BatchListObjectParentPaths
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] object_reference
     #   The reference that identifies the object whose attributes will be
     #   listed.
@@ -1707,25 +1163,20 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchListObjectParents
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
+    # Lists parent objects that are associated with a given object in
+    # pagination fashion.
     #
     # @!attribute [rw] object_reference
     #   The reference that identifies an object.
     #   @return [Types::ObjectReference]
     #
     # @!attribute [rw] next_token
+    #   The pagination token.
     #   @return [String]
     #
     # @!attribute [rw] max_results
+    #   The maximum number of items to be retrieved in a single call. This
+    #   is an approximate number.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/clouddirectory-2017-01-11/BatchListObjectParents AWS API Documentation
@@ -1738,10 +1189,14 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
+    # Represents the output of a ListObjectParents response operation.
+    #
     # @!attribute [rw] parent_links
+    #   Returns a list of parent reference and LinkName Tuples.
     #   @return [Array<Types::ObjectIdentifierAndLinkNameTuple>]
     #
     # @!attribute [rw] next_token
+    #   The pagination token.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/clouddirectory-2017-01-11/BatchListObjectParentsResponse AWS API Documentation
@@ -1756,17 +1211,6 @@ module Aws::CloudDirectory
     # Returns policies attached to an object in pagination fashion inside a
     # BatchRead operation. For more information, see ListObjectPolicies and
     # BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchListObjectPolicies
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
     #
     # @!attribute [rw] object_reference
     #   The reference that identifies the object whose attributes will be
@@ -1815,44 +1259,6 @@ module Aws::CloudDirectory
     # information for an object inside a BatchRead operation. For more
     # information, see ListOutgoingTypedLinks and
     # BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchListOutgoingTypedLinks
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         filter_attribute_ranges: [
-    #           {
-    #             attribute_name: "AttributeName",
-    #             range: { # required
-    #               start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               start_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #               end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               end_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         filter_typed_link: {
-    #           schema_arn: "Arn", # required
-    #           typed_link_name: "TypedLinkName", # required
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
     #
     # @!attribute [rw] object_reference
     #   The reference that identifies the object whose attributes will be
@@ -1915,17 +1321,6 @@ module Aws::CloudDirectory
     # attached inside a BatchRead operation. For more information, see
     # ListPolicyAttachments and BatchReadRequest$Operations.
     #
-    # @note When making an API call, you may pass BatchListPolicyAttachments
-    #   data as a hash:
-    #
-    #       {
-    #         policy_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] policy_reference
     #   The reference that identifies the policy object.
     #   @return [Types::ObjectReference]
@@ -1970,17 +1365,6 @@ module Aws::CloudDirectory
     # Lists all policies from the root of the Directory to the object
     # specified inside a BatchRead operation. For more information, see
     # LookupPolicy and BatchReadRequest$Operations.
-    #
-    # @note When making an API call, you may pass BatchLookupPolicy
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
     #
     # @!attribute [rw] object_reference
     #   Reference that identifies the object whose policies will be looked
@@ -2052,216 +1436,6 @@ module Aws::CloudDirectory
 
     # Represents the output of a `BatchRead` operation.
     #
-    # @note When making an API call, you may pass BatchReadOperation
-    #   data as a hash:
-    #
-    #       {
-    #         list_object_attributes: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #           facet_filter: {
-    #             schema_arn: "Arn",
-    #             facet_name: "FacetName",
-    #           },
-    #         },
-    #         list_object_children: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #         },
-    #         list_attached_indices: {
-    #           target_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #         },
-    #         list_object_parent_paths: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #         },
-    #         get_object_information: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #         },
-    #         get_object_attributes: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           schema_facet: { # required
-    #             schema_arn: "Arn",
-    #             facet_name: "FacetName",
-    #           },
-    #           attribute_names: ["AttributeName"], # required
-    #         },
-    #         list_object_parents: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #         },
-    #         list_object_policies: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #         },
-    #         list_policy_attachments: {
-    #           policy_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #         },
-    #         lookup_policy: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #         },
-    #         list_index: {
-    #           ranges_on_indexed_values: [
-    #             {
-    #               attribute_key: {
-    #                 schema_arn: "Arn", # required
-    #                 facet_name: "FacetName", # required
-    #                 name: "AttributeName", # required
-    #               },
-    #               range: {
-    #                 start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                 start_value: {
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #                 end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                 end_value: {
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #           index_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           max_results: 1,
-    #           next_token: "NextToken",
-    #         },
-    #         list_outgoing_typed_links: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           filter_attribute_ranges: [
-    #             {
-    #               attribute_name: "AttributeName",
-    #               range: { # required
-    #                 start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                 start_value: {
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #                 end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                 end_value: {
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #           filter_typed_link: {
-    #             schema_arn: "Arn", # required
-    #             typed_link_name: "TypedLinkName", # required
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #         },
-    #         list_incoming_typed_links: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           filter_attribute_ranges: [
-    #             {
-    #               attribute_name: "AttributeName",
-    #               range: { # required
-    #                 start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                 start_value: {
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #                 end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                 end_value: {
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #           filter_typed_link: {
-    #             schema_arn: "Arn", # required
-    #             typed_link_name: "TypedLinkName", # required
-    #           },
-    #           next_token: "NextToken",
-    #           max_results: 1,
-    #         },
-    #         get_link_attributes: {
-    #           typed_link_specifier: { # required
-    #             typed_link_facet: { # required
-    #               schema_arn: "Arn", # required
-    #               typed_link_name: "TypedLinkName", # required
-    #             },
-    #             source_object_reference: { # required
-    #               selector: "SelectorObjectReference",
-    #             },
-    #             target_object_reference: { # required
-    #               selector: "SelectorObjectReference",
-    #             },
-    #             identity_attribute_values: [ # required
-    #               {
-    #                 attribute_name: "AttributeName", # required
-    #                 value: { # required
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           attribute_names: ["AttributeName"], # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] list_object_attributes
     #   Lists all attributes that are associated with an object.
     #   @return [Types::BatchListObjectAttributes]
@@ -2295,6 +1469,8 @@ module Aws::CloudDirectory
     #   @return [Types::BatchGetObjectAttributes]
     #
     # @!attribute [rw] list_object_parents
+    #   Lists parent objects that are associated with a given object in
+    #   pagination fashion.
     #   @return [Types::BatchListObjectParents]
     #
     # @!attribute [rw] list_object_policies
@@ -2391,222 +1567,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchReadRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         operations: [ # required
-    #           {
-    #             list_object_attributes: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #               facet_filter: {
-    #                 schema_arn: "Arn",
-    #                 facet_name: "FacetName",
-    #               },
-    #             },
-    #             list_object_children: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #             },
-    #             list_attached_indices: {
-    #               target_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #             },
-    #             list_object_parent_paths: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #             },
-    #             get_object_information: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #             },
-    #             get_object_attributes: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               schema_facet: { # required
-    #                 schema_arn: "Arn",
-    #                 facet_name: "FacetName",
-    #               },
-    #               attribute_names: ["AttributeName"], # required
-    #             },
-    #             list_object_parents: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #             },
-    #             list_object_policies: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #             },
-    #             list_policy_attachments: {
-    #               policy_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #             },
-    #             lookup_policy: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #             },
-    #             list_index: {
-    #               ranges_on_indexed_values: [
-    #                 {
-    #                   attribute_key: {
-    #                     schema_arn: "Arn", # required
-    #                     facet_name: "FacetName", # required
-    #                     name: "AttributeName", # required
-    #                   },
-    #                   range: {
-    #                     start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                     start_value: {
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                     end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                     end_value: {
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                   },
-    #                 },
-    #               ],
-    #               index_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               max_results: 1,
-    #               next_token: "NextToken",
-    #             },
-    #             list_outgoing_typed_links: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               filter_attribute_ranges: [
-    #                 {
-    #                   attribute_name: "AttributeName",
-    #                   range: { # required
-    #                     start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                     start_value: {
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                     end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                     end_value: {
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                   },
-    #                 },
-    #               ],
-    #               filter_typed_link: {
-    #                 schema_arn: "Arn", # required
-    #                 typed_link_name: "TypedLinkName", # required
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #             },
-    #             list_incoming_typed_links: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               filter_attribute_ranges: [
-    #                 {
-    #                   attribute_name: "AttributeName",
-    #                   range: { # required
-    #                     start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                     start_value: {
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                     end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #                     end_value: {
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                   },
-    #                 },
-    #               ],
-    #               filter_typed_link: {
-    #                 schema_arn: "Arn", # required
-    #                 typed_link_name: "TypedLinkName", # required
-    #               },
-    #               next_token: "NextToken",
-    #               max_results: 1,
-    #             },
-    #             get_link_attributes: {
-    #               typed_link_specifier: { # required
-    #                 typed_link_facet: { # required
-    #                   schema_arn: "Arn", # required
-    #                   typed_link_name: "TypedLinkName", # required
-    #                 },
-    #                 source_object_reference: { # required
-    #                   selector: "SelectorObjectReference",
-    #                 },
-    #                 target_object_reference: { # required
-    #                   selector: "SelectorObjectReference",
-    #                 },
-    #                 identity_attribute_values: [ # required
-    #                   {
-    #                     attribute_name: "AttributeName", # required
-    #                     value: { # required
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                   },
-    #                 ],
-    #               },
-    #               attribute_names: ["AttributeName"], # required
-    #             },
-    #           },
-    #         ],
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the
     #   Directory. For more information, see arns.
@@ -2733,6 +1693,7 @@ module Aws::CloudDirectory
     #   @return [Types::BatchGetLinkAttributesResponse]
     #
     # @!attribute [rw] list_object_parents
+    #   The list of parent objects to retrieve.
     #   @return [Types::BatchListObjectParentsResponse]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/clouddirectory-2017-01-11/BatchReadSuccessfulResponse AWS API Documentation
@@ -2757,19 +1718,6 @@ module Aws::CloudDirectory
     end
 
     # A batch operation to remove a facet from an object.
-    #
-    # @note When making an API call, you may pass BatchRemoveFacetFromObject
-    #   data as a hash:
-    #
-    #       {
-    #         schema_facet: { # required
-    #           schema_arn: "Arn",
-    #           facet_name: "FacetName",
-    #         },
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
     #
     # @!attribute [rw] schema_facet
     #   The facet to remove from the object.
@@ -2799,55 +1747,6 @@ module Aws::CloudDirectory
     # identity, as defined by its `IdentityAttributeOrder`. For more
     # information, see UpdateLinkAttributes and BatchReadRequest$Operations.
     #
-    # @note When making an API call, you may pass BatchUpdateLinkAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         typed_link_specifier: { # required
-    #           typed_link_facet: { # required
-    #             schema_arn: "Arn", # required
-    #             typed_link_name: "TypedLinkName", # required
-    #           },
-    #           source_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           target_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           identity_attribute_values: [ # required
-    #             {
-    #               attribute_name: "AttributeName", # required
-    #               value: { # required
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         attribute_updates: [ # required
-    #           {
-    #             attribute_key: {
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             attribute_action: {
-    #               attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #               attribute_update_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] typed_link_specifier
     #   Allows a typed link specifier to be accepted as input.
     #   @return [Types::TypedLinkSpecifier]
@@ -2872,34 +1771,6 @@ module Aws::CloudDirectory
     class BatchUpdateLinkAttributesResponse < Aws::EmptyStructure; end
 
     # Represents the output of a `BatchUpdate` operation.
-    #
-    # @note When making an API call, you may pass BatchUpdateObjectAttributes
-    #   data as a hash:
-    #
-    #       {
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         attribute_updates: [ # required
-    #           {
-    #             object_attribute_key: {
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             object_attribute_action: {
-    #               object_attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #               object_attribute_update_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] object_reference
     #   Reference that identifies the object.
@@ -2954,262 +1825,6 @@ module Aws::CloudDirectory
     end
 
     # Represents the output of a `BatchWrite` operation.
-    #
-    # @note When making an API call, you may pass BatchWriteOperation
-    #   data as a hash:
-    #
-    #       {
-    #         create_object: {
-    #           schema_facet: [ # required
-    #             {
-    #               schema_arn: "Arn",
-    #               facet_name: "FacetName",
-    #             },
-    #           ],
-    #           object_attribute_list: [ # required
-    #             {
-    #               key: { # required
-    #                 schema_arn: "Arn", # required
-    #                 facet_name: "FacetName", # required
-    #                 name: "AttributeName", # required
-    #               },
-    #               value: { # required
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           ],
-    #           parent_reference: {
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           link_name: "LinkName",
-    #           batch_reference_name: "BatchReferenceName",
-    #         },
-    #         attach_object: {
-    #           parent_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           child_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           link_name: "LinkName", # required
-    #         },
-    #         detach_object: {
-    #           parent_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           link_name: "LinkName", # required
-    #           batch_reference_name: "BatchReferenceName",
-    #         },
-    #         update_object_attributes: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           attribute_updates: [ # required
-    #             {
-    #               object_attribute_key: {
-    #                 schema_arn: "Arn", # required
-    #                 facet_name: "FacetName", # required
-    #                 name: "AttributeName", # required
-    #               },
-    #               object_attribute_action: {
-    #                 object_attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #                 object_attribute_update_value: {
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         delete_object: {
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #         },
-    #         add_facet_to_object: {
-    #           schema_facet: { # required
-    #             schema_arn: "Arn",
-    #             facet_name: "FacetName",
-    #           },
-    #           object_attribute_list: [ # required
-    #             {
-    #               key: { # required
-    #                 schema_arn: "Arn", # required
-    #                 facet_name: "FacetName", # required
-    #                 name: "AttributeName", # required
-    #               },
-    #               value: { # required
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           ],
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #         },
-    #         remove_facet_from_object: {
-    #           schema_facet: { # required
-    #             schema_arn: "Arn",
-    #             facet_name: "FacetName",
-    #           },
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #         },
-    #         attach_policy: {
-    #           policy_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #         },
-    #         detach_policy: {
-    #           policy_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #         },
-    #         create_index: {
-    #           ordered_indexed_attribute_list: [ # required
-    #             {
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #           ],
-    #           is_unique: false, # required
-    #           parent_reference: {
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           link_name: "LinkName",
-    #           batch_reference_name: "BatchReferenceName",
-    #         },
-    #         attach_to_index: {
-    #           index_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           target_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #         },
-    #         detach_from_index: {
-    #           index_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           target_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #         },
-    #         attach_typed_link: {
-    #           source_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           target_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           typed_link_facet: { # required
-    #             schema_arn: "Arn", # required
-    #             typed_link_name: "TypedLinkName", # required
-    #           },
-    #           attributes: [ # required
-    #             {
-    #               attribute_name: "AttributeName", # required
-    #               value: { # required
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         detach_typed_link: {
-    #           typed_link_specifier: { # required
-    #             typed_link_facet: { # required
-    #               schema_arn: "Arn", # required
-    #               typed_link_name: "TypedLinkName", # required
-    #             },
-    #             source_object_reference: { # required
-    #               selector: "SelectorObjectReference",
-    #             },
-    #             target_object_reference: { # required
-    #               selector: "SelectorObjectReference",
-    #             },
-    #             identity_attribute_values: [ # required
-    #               {
-    #                 attribute_name: "AttributeName", # required
-    #                 value: { # required
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #         },
-    #         update_link_attributes: {
-    #           typed_link_specifier: { # required
-    #             typed_link_facet: { # required
-    #               schema_arn: "Arn", # required
-    #               typed_link_name: "TypedLinkName", # required
-    #             },
-    #             source_object_reference: { # required
-    #               selector: "SelectorObjectReference",
-    #             },
-    #             target_object_reference: { # required
-    #               selector: "SelectorObjectReference",
-    #             },
-    #             identity_attribute_values: [ # required
-    #               {
-    #                 attribute_name: "AttributeName", # required
-    #                 value: { # required
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #               },
-    #             ],
-    #           },
-    #           attribute_updates: [ # required
-    #             {
-    #               attribute_key: {
-    #                 schema_arn: "Arn", # required
-    #                 facet_name: "FacetName", # required
-    #                 name: "AttributeName", # required
-    #               },
-    #               attribute_action: {
-    #                 attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #                 attribute_update_value: {
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #               },
-    #             },
-    #           ],
-    #         },
-    #       }
     #
     # @!attribute [rw] create_object
     #   Creates an object.
@@ -3409,267 +2024,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchWriteRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         operations: [ # required
-    #           {
-    #             create_object: {
-    #               schema_facet: [ # required
-    #                 {
-    #                   schema_arn: "Arn",
-    #                   facet_name: "FacetName",
-    #                 },
-    #               ],
-    #               object_attribute_list: [ # required
-    #                 {
-    #                   key: { # required
-    #                     schema_arn: "Arn", # required
-    #                     facet_name: "FacetName", # required
-    #                     name: "AttributeName", # required
-    #                   },
-    #                   value: { # required
-    #                     string_value: "StringAttributeValue",
-    #                     binary_value: "data",
-    #                     boolean_value: false,
-    #                     number_value: "NumberAttributeValue",
-    #                     datetime_value: Time.now,
-    #                   },
-    #                 },
-    #               ],
-    #               parent_reference: {
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               link_name: "LinkName",
-    #               batch_reference_name: "BatchReferenceName",
-    #             },
-    #             attach_object: {
-    #               parent_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               child_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               link_name: "LinkName", # required
-    #             },
-    #             detach_object: {
-    #               parent_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               link_name: "LinkName", # required
-    #               batch_reference_name: "BatchReferenceName",
-    #             },
-    #             update_object_attributes: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               attribute_updates: [ # required
-    #                 {
-    #                   object_attribute_key: {
-    #                     schema_arn: "Arn", # required
-    #                     facet_name: "FacetName", # required
-    #                     name: "AttributeName", # required
-    #                   },
-    #                   object_attribute_action: {
-    #                     object_attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #                     object_attribute_update_value: {
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #             delete_object: {
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #             },
-    #             add_facet_to_object: {
-    #               schema_facet: { # required
-    #                 schema_arn: "Arn",
-    #                 facet_name: "FacetName",
-    #               },
-    #               object_attribute_list: [ # required
-    #                 {
-    #                   key: { # required
-    #                     schema_arn: "Arn", # required
-    #                     facet_name: "FacetName", # required
-    #                     name: "AttributeName", # required
-    #                   },
-    #                   value: { # required
-    #                     string_value: "StringAttributeValue",
-    #                     binary_value: "data",
-    #                     boolean_value: false,
-    #                     number_value: "NumberAttributeValue",
-    #                     datetime_value: Time.now,
-    #                   },
-    #                 },
-    #               ],
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #             },
-    #             remove_facet_from_object: {
-    #               schema_facet: { # required
-    #                 schema_arn: "Arn",
-    #                 facet_name: "FacetName",
-    #               },
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #             },
-    #             attach_policy: {
-    #               policy_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #             },
-    #             detach_policy: {
-    #               policy_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #             },
-    #             create_index: {
-    #               ordered_indexed_attribute_list: [ # required
-    #                 {
-    #                   schema_arn: "Arn", # required
-    #                   facet_name: "FacetName", # required
-    #                   name: "AttributeName", # required
-    #                 },
-    #               ],
-    #               is_unique: false, # required
-    #               parent_reference: {
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               link_name: "LinkName",
-    #               batch_reference_name: "BatchReferenceName",
-    #             },
-    #             attach_to_index: {
-    #               index_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               target_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #             },
-    #             detach_from_index: {
-    #               index_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               target_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #             },
-    #             attach_typed_link: {
-    #               source_object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               target_object_reference: { # required
-    #                 selector: "SelectorObjectReference",
-    #               },
-    #               typed_link_facet: { # required
-    #                 schema_arn: "Arn", # required
-    #                 typed_link_name: "TypedLinkName", # required
-    #               },
-    #               attributes: [ # required
-    #                 {
-    #                   attribute_name: "AttributeName", # required
-    #                   value: { # required
-    #                     string_value: "StringAttributeValue",
-    #                     binary_value: "data",
-    #                     boolean_value: false,
-    #                     number_value: "NumberAttributeValue",
-    #                     datetime_value: Time.now,
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #             detach_typed_link: {
-    #               typed_link_specifier: { # required
-    #                 typed_link_facet: { # required
-    #                   schema_arn: "Arn", # required
-    #                   typed_link_name: "TypedLinkName", # required
-    #                 },
-    #                 source_object_reference: { # required
-    #                   selector: "SelectorObjectReference",
-    #                 },
-    #                 target_object_reference: { # required
-    #                   selector: "SelectorObjectReference",
-    #                 },
-    #                 identity_attribute_values: [ # required
-    #                   {
-    #                     attribute_name: "AttributeName", # required
-    #                     value: { # required
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                   },
-    #                 ],
-    #               },
-    #             },
-    #             update_link_attributes: {
-    #               typed_link_specifier: { # required
-    #                 typed_link_facet: { # required
-    #                   schema_arn: "Arn", # required
-    #                   typed_link_name: "TypedLinkName", # required
-    #                 },
-    #                 source_object_reference: { # required
-    #                   selector: "SelectorObjectReference",
-    #                 },
-    #                 target_object_reference: { # required
-    #                   selector: "SelectorObjectReference",
-    #                 },
-    #                 identity_attribute_values: [ # required
-    #                   {
-    #                     attribute_name: "AttributeName", # required
-    #                     value: { # required
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                   },
-    #                 ],
-    #               },
-    #               attribute_updates: [ # required
-    #                 {
-    #                   attribute_key: {
-    #                     schema_arn: "Arn", # required
-    #                     facet_name: "FacetName", # required
-    #                     name: "AttributeName", # required
-    #                   },
-    #                   attribute_action: {
-    #                     attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #                     attribute_update_value: {
-    #                       string_value: "StringAttributeValue",
-    #                       binary_value: "data",
-    #                       boolean_value: false,
-    #                       number_value: "NumberAttributeValue",
-    #                       datetime_value: Time.now,
-    #                     },
-    #                   },
-    #                 },
-    #               ],
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the
     #   Directory. For more information, see arns.
@@ -3713,14 +2067,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDirectoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "DirectoryName", # required
-    #         schema_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the Directory. Should be unique per account, per region.
     #   @return [String]
@@ -3769,45 +2115,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateFacetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "FacetName", # required
-    #         attributes: [
-    #           {
-    #             name: "AttributeName", # required
-    #             attribute_definition: {
-    #               type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #               default_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #               is_immutable: false,
-    #               rules: {
-    #                 "RuleKey" => {
-    #                   type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #                   parameters: {
-    #                     "RuleParameterKey" => "RuleParameterValue",
-    #                   },
-    #                 },
-    #               },
-    #             },
-    #             attribute_reference: {
-    #               target_facet_name: "FacetName", # required
-    #               target_attribute_name: "AttributeName", # required
-    #             },
-    #             required_behavior: "REQUIRED_ALWAYS", # accepts REQUIRED_ALWAYS, NOT_REQUIRED
-    #           },
-    #         ],
-    #         object_type: "NODE", # accepts NODE, LEAF_NODE, POLICY, INDEX
-    #         facet_style: "STATIC", # accepts STATIC, DYNAMIC
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The schema ARN in which the new Facet will be created. For more
     #   information, see arns.
@@ -3873,25 +2180,6 @@ module Aws::CloudDirectory
     #
     class CreateFacetResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass CreateIndexRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         ordered_indexed_attribute_list: [ # required
-    #           {
-    #             schema_arn: "Arn", # required
-    #             facet_name: "FacetName", # required
-    #             name: "AttributeName", # required
-    #           },
-    #         ],
-    #         is_unique: false, # required
-    #         parent_reference: {
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         link_name: "LinkName",
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory where the index should be created.
     #   @return [String]
@@ -3938,39 +2226,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateObjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         schema_facets: [ # required
-    #           {
-    #             schema_arn: "Arn",
-    #             facet_name: "FacetName",
-    #           },
-    #         ],
-    #         object_attribute_list: [
-    #           {
-    #             key: { # required
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             value: { # required
-    #               string_value: "StringAttributeValue",
-    #               binary_value: "data",
-    #               boolean_value: false,
-    #               number_value: "NumberAttributeValue",
-    #               datetime_value: Time.now,
-    #             },
-    #           },
-    #         ],
-    #         parent_reference: {
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         link_name: "LinkName",
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   in which the object will be created. For more information, see arns.
@@ -4019,13 +2274,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "SchemaName", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name that is associated with the schema. This is unique to each
     #   account and in each region.
@@ -4052,40 +2300,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateTypedLinkFacetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         facet: { # required
-    #           name: "TypedLinkName", # required
-    #           attributes: [ # required
-    #             {
-    #               name: "AttributeName", # required
-    #               type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #               default_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #               is_immutable: false,
-    #               rules: {
-    #                 "RuleKey" => {
-    #                   type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #                   parameters: {
-    #                     "RuleParameterKey" => "RuleParameterValue",
-    #                   },
-    #                 },
-    #               },
-    #               required_behavior: "REQUIRED_ALWAYS", # required, accepts REQUIRED_ALWAYS, NOT_REQUIRED
-    #             },
-    #           ],
-    #           identity_attribute_order: ["AttributeName"], # required
-    #         },
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the schema.
     #   For more information, see arns.
@@ -4108,13 +2322,6 @@ module Aws::CloudDirectory
     #
     class CreateTypedLinkFacetResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteDirectoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory to delete.
     #   @return [String]
@@ -4139,14 +2346,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteFacetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "FacetName", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the Facet.
     #   For more information, see arns.
@@ -4169,16 +2368,6 @@ module Aws::CloudDirectory
     #
     class DeleteFacetResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteObjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where the object resides. For more information, see arns.
@@ -4201,13 +2390,6 @@ module Aws::CloudDirectory
     #
     class DeleteObjectResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) of the development schema. For more
     #   information, see arns.
@@ -4234,14 +2416,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteTypedLinkFacetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "TypedLinkName", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the schema.
     #   For more information, see arns.
@@ -4264,19 +2438,6 @@ module Aws::CloudDirectory
     #
     class DeleteTypedLinkFacetResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DetachFromIndexRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         index_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         target_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) of the directory the index and object
     #   exist in.
@@ -4313,17 +2474,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DetachObjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         parent_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         link_name: "LinkName", # required
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where objects reside. For more information, see arns.
@@ -4360,19 +2510,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DetachPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         policy_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where both objects reside. For more information, see arns.
@@ -4401,37 +2538,6 @@ module Aws::CloudDirectory
     #
     class DetachPolicyResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DetachTypedLinkRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         typed_link_specifier: { # required
-    #           typed_link_facet: { # required
-    #             schema_arn: "Arn", # required
-    #             typed_link_name: "TypedLinkName", # required
-    #           },
-    #           source_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           target_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           identity_attribute_values: [ # required
-    #             {
-    #               attribute_name: "AttributeName", # required
-    #               value: { # required
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) of the directory where you want to
     #   detach the typed link.
@@ -4537,13 +2643,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisableDirectoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory to disable.
     #   @return [String]
@@ -4568,13 +2667,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass EnableDirectoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory to enable.
     #   @return [String]
@@ -4647,37 +2739,6 @@ module Aws::CloudDirectory
 
     # An attribute that is associated with the Facet.
     #
-    # @note When making an API call, you may pass FacetAttribute
-    #   data as a hash:
-    #
-    #       {
-    #         name: "AttributeName", # required
-    #         attribute_definition: {
-    #           type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #           default_value: {
-    #             string_value: "StringAttributeValue",
-    #             binary_value: "data",
-    #             boolean_value: false,
-    #             number_value: "NumberAttributeValue",
-    #             datetime_value: Time.now,
-    #           },
-    #           is_immutable: false,
-    #           rules: {
-    #             "RuleKey" => {
-    #               type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #               parameters: {
-    #                 "RuleParameterKey" => "RuleParameterValue",
-    #               },
-    #             },
-    #           },
-    #         },
-    #         attribute_reference: {
-    #           target_facet_name: "FacetName", # required
-    #           target_attribute_name: "AttributeName", # required
-    #         },
-    #         required_behavior: "REQUIRED_ALWAYS", # accepts REQUIRED_ALWAYS, NOT_REQUIRED
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the facet attribute.
     #   @return [String]
@@ -4723,29 +2784,6 @@ module Aws::CloudDirectory
     #
     # [1]: https://docs.aws.amazon.com/clouddirectory/latest/developerguide/schemas_attributereferences.html
     #
-    # @note When making an API call, you may pass FacetAttributeDefinition
-    #   data as a hash:
-    #
-    #       {
-    #         type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #         default_value: {
-    #           string_value: "StringAttributeValue",
-    #           binary_value: "data",
-    #           boolean_value: false,
-    #           number_value: "NumberAttributeValue",
-    #           datetime_value: Time.now,
-    #         },
-    #         is_immutable: false,
-    #         rules: {
-    #           "RuleKey" => {
-    #             type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #             parameters: {
-    #               "RuleParameterKey" => "RuleParameterValue",
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] type
     #   The type of the attribute.
     #   @return [String]
@@ -4776,14 +2814,6 @@ module Aws::CloudDirectory
     # The facet attribute reference that specifies the attribute definition
     # that contains the attribute facet name and attribute name.
     #
-    # @note When making an API call, you may pass FacetAttributeReference
-    #   data as a hash:
-    #
-    #       {
-    #         target_facet_name: "FacetName", # required
-    #         target_attribute_name: "AttributeName", # required
-    #       }
-    #
     # @!attribute [rw] target_facet_name
     #   The target facet name that is associated with the facet reference.
     #   See [Attribute References][1] for more information.
@@ -4812,40 +2842,6 @@ module Aws::CloudDirectory
     end
 
     # A structure that contains information used to update an attribute.
-    #
-    # @note When making an API call, you may pass FacetAttributeUpdate
-    #   data as a hash:
-    #
-    #       {
-    #         attribute: {
-    #           name: "AttributeName", # required
-    #           attribute_definition: {
-    #             type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #             default_value: {
-    #               string_value: "StringAttributeValue",
-    #               binary_value: "data",
-    #               boolean_value: false,
-    #               number_value: "NumberAttributeValue",
-    #               datetime_value: Time.now,
-    #             },
-    #             is_immutable: false,
-    #             rules: {
-    #               "RuleKey" => {
-    #                 type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #                 parameters: {
-    #                   "RuleParameterKey" => "RuleParameterValue",
-    #                 },
-    #               },
-    #             },
-    #           },
-    #           attribute_reference: {
-    #             target_facet_name: "FacetName", # required
-    #             target_attribute_name: "AttributeName", # required
-    #           },
-    #           required_behavior: "REQUIRED_ALWAYS", # accepts REQUIRED_ALWAYS, NOT_REQUIRED
-    #         },
-    #         action: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #       }
     #
     # @!attribute [rw] attribute
     #   The attribute to update.
@@ -4905,13 +2901,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAppliedSchemaVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The ARN of the applied schema.
     #   @return [String]
@@ -4937,13 +2926,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDirectoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "DirectoryArn", # required
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory.
     #   @return [String]
@@ -4968,14 +2950,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetFacetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "FacetName", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the Facet.
     #   For more information, see arns.
@@ -5006,39 +2980,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetLinkAttributesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         typed_link_specifier: { # required
-    #           typed_link_facet: { # required
-    #             schema_arn: "Arn", # required
-    #             typed_link_name: "TypedLinkName", # required
-    #           },
-    #           source_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           target_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           identity_attribute_values: [ # required
-    #             {
-    #               attribute_name: "AttributeName", # required
-    #               value: { # required
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         attribute_names: ["AttributeName"], # required
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where the typed link resides. For more information, see arns or
@@ -5085,22 +3026,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetObjectAttributesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #         schema_facet: { # required
-    #           schema_arn: "Arn",
-    #           facet_name: "FacetName",
-    #         },
-    #         attribute_names: ["AttributeName"], # required
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where the object resides.
@@ -5149,17 +3074,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetObjectInformationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory being retrieved.
     #   @return [String]
@@ -5202,13 +3116,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetSchemaAsJsonRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The ARN of the schema to retrieve.
     #   @return [String]
@@ -5238,14 +3145,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTypedLinkFacetInformationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "TypedLinkName", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the schema.
     #   For more information, see arns.
@@ -5479,20 +3378,6 @@ module Aws::CloudDirectory
     # The action to take on a typed link attribute value. Updates are only
     # supported for attributes which don’t contribute to link identity.
     #
-    # @note When making an API call, you may pass LinkAttributeAction
-    #   data as a hash:
-    #
-    #       {
-    #         attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #         attribute_update_value: {
-    #           string_value: "StringAttributeValue",
-    #           binary_value: "data",
-    #           boolean_value: false,
-    #           number_value: "NumberAttributeValue",
-    #           datetime_value: Time.now,
-    #         },
-    #       }
-    #
     # @!attribute [rw] attribute_action_type
     #   A type that can be either `UPDATE_OR_CREATE` or `DELETE`.
     #   @return [String]
@@ -5511,27 +3396,6 @@ module Aws::CloudDirectory
     end
 
     # Structure that contains attribute update information.
-    #
-    # @note When making an API call, you may pass LinkAttributeUpdate
-    #   data as a hash:
-    #
-    #       {
-    #         attribute_key: {
-    #           schema_arn: "Arn", # required
-    #           facet_name: "FacetName", # required
-    #           name: "AttributeName", # required
-    #         },
-    #         attribute_action: {
-    #           attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #           attribute_update_value: {
-    #             string_value: "StringAttributeValue",
-    #             binary_value: "data",
-    #             boolean_value: false,
-    #             number_value: "NumberAttributeValue",
-    #             datetime_value: Time.now,
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] attribute_key
     #   The key of the attribute being updated.
@@ -5564,16 +3428,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAppliedSchemaArnsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         schema_arn: "Arn",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory you are listing.
     #   @return [String]
@@ -5619,19 +3473,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAttachedIndicesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         target_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory.
     #   @return [String]
@@ -5681,14 +3522,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDevelopmentSchemaArnsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The pagination token.
     #   @return [String]
@@ -5723,15 +3556,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDirectoriesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         state: "ENABLED", # accepts ENABLED, DISABLED, DELETED
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The pagination token.
     #   @return [String]
@@ -5773,16 +3597,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFacetAttributesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "FacetName", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The ARN of the schema where the facet resides.
     #   @return [String]
@@ -5827,15 +3641,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListFacetNamesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) to retrieve facet names from.
     #   @return [String]
@@ -5875,46 +3680,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListIncomingTypedLinksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         filter_attribute_ranges: [
-    #           {
-    #             attribute_name: "AttributeName",
-    #             range: { # required
-    #               start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               start_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #               end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               end_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         filter_typed_link: {
-    #           schema_arn: "Arn", # required
-    #           typed_link_name: "TypedLinkName", # required
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) of the directory where you want to
     #   list the typed links.
@@ -5981,46 +3746,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListIndexRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         ranges_on_indexed_values: [
-    #           {
-    #             attribute_key: {
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             range: {
-    #               start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               start_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #               end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               end_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         index_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory that the index exists in.
     #   @return [String]
@@ -6081,15 +3806,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListManagedSchemaArnsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The response for ListManagedSchemaArns. When this parameter is used,
     #   all minor version ARNs for a major version are listed.
@@ -6130,23 +3846,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListObjectAttributesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #         facet_filter: {
-    #           schema_arn: "Arn",
-    #           facet_name: "FacetName",
-    #         },
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where the object resides. For more information, see arns.
@@ -6208,19 +3907,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListObjectChildrenRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where the object resides. For more information, see arns.
@@ -6276,18 +3962,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListObjectParentPathsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory to which the parent path applies.
     #   @return [String]
@@ -6335,20 +4009,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListObjectParentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #         include_all_links_to_each_parent: false,
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where the object resides. For more information, see arns.
@@ -6415,19 +4075,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListObjectPoliciesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where objects reside. For more information, see arns.
@@ -6483,46 +4130,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListOutgoingTypedLinksRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         filter_attribute_ranges: [
-    #           {
-    #             attribute_name: "AttributeName",
-    #             range: { # required
-    #               start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               start_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #               end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #               end_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #         filter_typed_link: {
-    #           schema_arn: "Arn", # required
-    #           typed_link_name: "TypedLinkName", # required
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) of the directory where you want to
     #   list the typed links.
@@ -6589,19 +4196,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPolicyAttachmentsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         policy_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #         consistency_level: "SERIALIZABLE", # accepts SERIALIZABLE, EVENTUAL
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where objects reside. For more information, see arns.
@@ -6655,15 +4249,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListPublishedSchemaArnsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn",
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The response for `ListPublishedSchemaArns` when this parameter is
     #   used will list all minor version ARNs for a major version.
@@ -6704,15 +4289,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource. Tagging is only
     #   supported for directories.
@@ -6757,16 +4333,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTypedLinkFacetAttributesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "TypedLinkName", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the schema.
     #   For more information, see arns.
@@ -6812,15 +4378,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTypedLinkFacetNamesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the schema.
     #   For more information, see arns.
@@ -6861,18 +4418,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass LookupPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the
     #   Directory. For more information, see arns.
@@ -6984,20 +4529,6 @@ module Aws::CloudDirectory
 
     # The action to take on the object attribute.
     #
-    # @note When making an API call, you may pass ObjectAttributeAction
-    #   data as a hash:
-    #
-    #       {
-    #         object_attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #         object_attribute_update_value: {
-    #           string_value: "StringAttributeValue",
-    #           binary_value: "data",
-    #           boolean_value: false,
-    #           number_value: "NumberAttributeValue",
-    #           datetime_value: Time.now,
-    #         },
-    #       }
-    #
     # @!attribute [rw] object_attribute_action_type
     #   A type that can be either `Update` or `Delete`.
     #   @return [String]
@@ -7017,35 +4548,6 @@ module Aws::CloudDirectory
 
     # A range of attributes.
     #
-    # @note When making an API call, you may pass ObjectAttributeRange
-    #   data as a hash:
-    #
-    #       {
-    #         attribute_key: {
-    #           schema_arn: "Arn", # required
-    #           facet_name: "FacetName", # required
-    #           name: "AttributeName", # required
-    #         },
-    #         range: {
-    #           start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #           start_value: {
-    #             string_value: "StringAttributeValue",
-    #             binary_value: "data",
-    #             boolean_value: false,
-    #             number_value: "NumberAttributeValue",
-    #             datetime_value: Time.now,
-    #           },
-    #           end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #           end_value: {
-    #             string_value: "StringAttributeValue",
-    #             binary_value: "data",
-    #             boolean_value: false,
-    #             number_value: "NumberAttributeValue",
-    #             datetime_value: Time.now,
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] attribute_key
     #   The key of the attribute that the attribute range covers.
     #   @return [Types::AttributeKey]
@@ -7064,27 +4566,6 @@ module Aws::CloudDirectory
     end
 
     # Structure that contains attribute update information.
-    #
-    # @note When making an API call, you may pass ObjectAttributeUpdate
-    #   data as a hash:
-    #
-    #       {
-    #         object_attribute_key: {
-    #           schema_arn: "Arn", # required
-    #           facet_name: "FacetName", # required
-    #           name: "AttributeName", # required
-    #         },
-    #         object_attribute_action: {
-    #           object_attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #           object_attribute_update_value: {
-    #             string_value: "StringAttributeValue",
-    #             binary_value: "data",
-    #             boolean_value: false,
-    #             number_value: "NumberAttributeValue",
-    #             datetime_value: Time.now,
-    #           },
-    #         },
-    #       }
     #
     # @!attribute [rw] object_attribute_key
     #   The key of the attribute being updated.
@@ -7138,13 +4619,6 @@ module Aws::CloudDirectory
 
     # The reference that identifies an object.
     #
-    # @note When making an API call, you may pass ObjectReference
-    #   data as a hash:
-    #
-    #       {
-    #         selector: "SelectorObjectReference",
-    #       }
-    #
     # @!attribute [rw] selector
     #   A path selector supports easy selection of an object by the
     #   parent/child links leading to it from the directory root. Use the
@@ -7157,7 +4631,9 @@ module Aws::CloudDirectory
     #     provided by Amazon Cloud Directory. When creating objects, the
     #     system will provide you with the identifier of the created object.
     #     An object’s identifier is immutable and no two objects will ever
-    #     share the same object identifier
+    #     share the same object identifier. To identify an object with
+    #     ObjectIdentifier, the ObjectIdentifier must be wrapped in double
+    #     quotes.
     #
     #   * */some/path* - Identifies the object based on path
     #
@@ -7248,16 +4724,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PublishSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         development_schema_arn: "Arn", # required
-    #         version: "Version", # required
-    #         minor_version: "Version",
-    #         name: "SchemaName",
-    #       }
-    #
     # @!attribute [rw] development_schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the
     #   development schema. For more information, see arns.
@@ -7303,14 +4769,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutSchemaFromJsonRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         document: "SchemaJsonDocument", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The ARN of the schema to update.
     #   @return [String]
@@ -7340,20 +4798,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RemoveFacetFromObjectRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         schema_facet: { # required
-    #           schema_arn: "Arn",
-    #           facet_name: "FacetName",
-    #         },
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The ARN of the directory in which the object resides.
     #   @return [String]
@@ -7415,16 +4859,6 @@ module Aws::CloudDirectory
     # Contains an Amazon Resource Name (ARN) and parameters that are
     # associated with the rule.
     #
-    # @note When making an API call, you may pass Rule
-    #   data as a hash:
-    #
-    #       {
-    #         type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #         parameters: {
-    #           "RuleParameterKey" => "RuleParameterValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] type
     #   The type of attribute validation rule.
     #   @return [String]
@@ -7472,18 +4906,11 @@ module Aws::CloudDirectory
 
     # A facet.
     #
-    # @note When making an API call, you may pass SchemaFacet
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn",
-    #         facet_name: "FacetName",
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The ARN of the schema that contains the facet with no minor
     #   component. See arns and [In-Place Schema Upgrade][1] for a
-    #   description of when to provide minor versions.
+    #   description of when to provide minor versions. If this value is set,
+    #   FacetName must also be set.
     #
     #
     #
@@ -7491,7 +4918,8 @@ module Aws::CloudDirectory
     #   @return [String]
     #
     # @!attribute [rw] facet_name
-    #   The name of the facet.
+    #   The name of the facet. If this value is set, SchemaArn must also be
+    #   set.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/clouddirectory-2017-01-11/SchemaFacet AWS API Documentation
@@ -7519,14 +4947,6 @@ module Aws::CloudDirectory
 
     # The tag structure that contains a tag key and value.
     #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey",
-    #         value: "TagValue",
-    #       }
-    #
     # @!attribute [rw] key
     #   The key that is associated with the tag.
     #   @return [String]
@@ -7544,19 +4964,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource. Tagging is only
     #   supported for directories.
@@ -7582,17 +4989,6 @@ module Aws::CloudDirectory
     # Represents the data for a typed attribute. You can set one, and only
     # one, of the elements. Each attribute in an item is a name-value pair.
     # Attributes have a single value.
-    #
-    # @note When making an API call, you may pass TypedAttributeValue
-    #   data as a hash:
-    #
-    #       {
-    #         string_value: "StringAttributeValue",
-    #         binary_value: "data",
-    #         boolean_value: false,
-    #         number_value: "NumberAttributeValue",
-    #         datetime_value: Time.now,
-    #       }
     #
     # @!attribute [rw] string_value
     #   A string data value.
@@ -7633,28 +5029,6 @@ module Aws::CloudDirectory
     #
     # [1]: https://docs.aws.amazon.com/clouddirectory/latest/developerguide/directory_objects_range_filters.html
     #
-    # @note When making an API call, you may pass TypedAttributeValueRange
-    #   data as a hash:
-    #
-    #       {
-    #         start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #         start_value: {
-    #           string_value: "StringAttributeValue",
-    #           binary_value: "data",
-    #           boolean_value: false,
-    #           number_value: "NumberAttributeValue",
-    #           datetime_value: Time.now,
-    #         },
-    #         end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #         end_value: {
-    #           string_value: "StringAttributeValue",
-    #           binary_value: "data",
-    #           boolean_value: false,
-    #           number_value: "NumberAttributeValue",
-    #           datetime_value: Time.now,
-    #         },
-    #       }
-    #
     # @!attribute [rw] start_mode
     #   The inclusive or exclusive range start.
     #   @return [String]
@@ -7683,31 +5057,6 @@ module Aws::CloudDirectory
     end
 
     # A typed link attribute definition.
-    #
-    # @note When making an API call, you may pass TypedLinkAttributeDefinition
-    #   data as a hash:
-    #
-    #       {
-    #         name: "AttributeName", # required
-    #         type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #         default_value: {
-    #           string_value: "StringAttributeValue",
-    #           binary_value: "data",
-    #           boolean_value: false,
-    #           number_value: "NumberAttributeValue",
-    #           datetime_value: Time.now,
-    #         },
-    #         is_immutable: false,
-    #         rules: {
-    #           "RuleKey" => {
-    #             type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #             parameters: {
-    #               "RuleParameterKey" => "RuleParameterValue",
-    #             },
-    #           },
-    #         },
-    #         required_behavior: "REQUIRED_ALWAYS", # required, accepts REQUIRED_ALWAYS, NOT_REQUIRED
-    #       }
     #
     # @!attribute [rw] name
     #   The unique name of the typed link attribute.
@@ -7749,31 +5098,6 @@ module Aws::CloudDirectory
     # Identifies the range of attributes that are used by a specified
     # filter.
     #
-    # @note When making an API call, you may pass TypedLinkAttributeRange
-    #   data as a hash:
-    #
-    #       {
-    #         attribute_name: "AttributeName",
-    #         range: { # required
-    #           start_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #           start_value: {
-    #             string_value: "StringAttributeValue",
-    #             binary_value: "data",
-    #             boolean_value: false,
-    #             number_value: "NumberAttributeValue",
-    #             datetime_value: Time.now,
-    #           },
-    #           end_mode: "FIRST", # required, accepts FIRST, LAST, LAST_BEFORE_MISSING_VALUES, INCLUSIVE, EXCLUSIVE
-    #           end_value: {
-    #             string_value: "StringAttributeValue",
-    #             binary_value: "data",
-    #             boolean_value: false,
-    #             number_value: "NumberAttributeValue",
-    #             datetime_value: Time.now,
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] attribute_name
     #   The unique name of the typed link attribute.
     #   @return [String]
@@ -7793,37 +5117,6 @@ module Aws::CloudDirectory
 
     # Defines the typed links structure and its attributes. To create a
     # typed link facet, use the CreateTypedLinkFacet API.
-    #
-    # @note When making an API call, you may pass TypedLinkFacet
-    #   data as a hash:
-    #
-    #       {
-    #         name: "TypedLinkName", # required
-    #         attributes: [ # required
-    #           {
-    #             name: "AttributeName", # required
-    #             type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #             default_value: {
-    #               string_value: "StringAttributeValue",
-    #               binary_value: "data",
-    #               boolean_value: false,
-    #               number_value: "NumberAttributeValue",
-    #               datetime_value: Time.now,
-    #             },
-    #             is_immutable: false,
-    #             rules: {
-    #               "RuleKey" => {
-    #                 type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #                 parameters: {
-    #                   "RuleParameterKey" => "RuleParameterValue",
-    #                 },
-    #               },
-    #             },
-    #             required_behavior: "REQUIRED_ALWAYS", # required, accepts REQUIRED_ALWAYS, NOT_REQUIRED
-    #           },
-    #         ],
-    #         identity_attribute_order: ["AttributeName"], # required
-    #       }
     #
     # @!attribute [rw] name
     #   The unique name of the typed link facet.
@@ -7856,34 +5149,6 @@ module Aws::CloudDirectory
 
     # A typed link facet attribute update.
     #
-    # @note When making an API call, you may pass TypedLinkFacetAttributeUpdate
-    #   data as a hash:
-    #
-    #       {
-    #         attribute: { # required
-    #           name: "AttributeName", # required
-    #           type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #           default_value: {
-    #             string_value: "StringAttributeValue",
-    #             binary_value: "data",
-    #             boolean_value: false,
-    #             number_value: "NumberAttributeValue",
-    #             datetime_value: Time.now,
-    #           },
-    #           is_immutable: false,
-    #           rules: {
-    #             "RuleKey" => {
-    #               type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #               parameters: {
-    #                 "RuleParameterKey" => "RuleParameterValue",
-    #               },
-    #             },
-    #           },
-    #           required_behavior: "REQUIRED_ALWAYS", # required, accepts REQUIRED_ALWAYS, NOT_REQUIRED
-    #         },
-    #         action: "CREATE_OR_UPDATE", # required, accepts CREATE_OR_UPDATE, DELETE
-    #       }
-    #
     # @!attribute [rw] attribute
     #   The attribute to update.
     #   @return [Types::TypedLinkAttributeDefinition]
@@ -7903,14 +5168,6 @@ module Aws::CloudDirectory
 
     # Identifies the schema Amazon Resource Name (ARN) and facet name for
     # the typed link.
-    #
-    # @note When making an API call, you may pass TypedLinkSchemaAndFacetName
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         typed_link_name: "TypedLinkName", # required
-    #       }
     #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the schema.
@@ -7937,34 +5194,6 @@ module Aws::CloudDirectory
     # one as input. Similarly, the ListIncomingTypedLinks and
     # ListOutgoingTypedLinks API operations provide typed link specifiers as
     # output. You can also construct a typed link specifier from scratch.
-    #
-    # @note When making an API call, you may pass TypedLinkSpecifier
-    #   data as a hash:
-    #
-    #       {
-    #         typed_link_facet: { # required
-    #           schema_arn: "Arn", # required
-    #           typed_link_name: "TypedLinkName", # required
-    #         },
-    #         source_object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         target_object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         identity_attribute_values: [ # required
-    #           {
-    #             attribute_name: "AttributeName", # required
-    #             value: { # required
-    #               string_value: "StringAttributeValue",
-    #               binary_value: "data",
-    #               boolean_value: false,
-    #               number_value: "NumberAttributeValue",
-    #               datetime_value: Time.now,
-    #             },
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] typed_link_facet
     #   Identifies the typed link facet that is associated with the typed
@@ -8007,14 +5236,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the resource. Tagging is only
     #   supported for directories.
@@ -8037,47 +5258,6 @@ module Aws::CloudDirectory
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateFacetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "FacetName", # required
-    #         attribute_updates: [
-    #           {
-    #             attribute: {
-    #               name: "AttributeName", # required
-    #               attribute_definition: {
-    #                 type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #                 default_value: {
-    #                   string_value: "StringAttributeValue",
-    #                   binary_value: "data",
-    #                   boolean_value: false,
-    #                   number_value: "NumberAttributeValue",
-    #                   datetime_value: Time.now,
-    #                 },
-    #                 is_immutable: false,
-    #                 rules: {
-    #                   "RuleKey" => {
-    #                     type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #                     parameters: {
-    #                       "RuleParameterKey" => "RuleParameterValue",
-    #                     },
-    #                   },
-    #                 },
-    #               },
-    #               attribute_reference: {
-    #                 target_facet_name: "FacetName", # required
-    #                 target_attribute_name: "AttributeName", # required
-    #               },
-    #               required_behavior: "REQUIRED_ALWAYS", # accepts REQUIRED_ALWAYS, NOT_REQUIRED
-    #             },
-    #             action: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #           },
-    #         ],
-    #         object_type: "NODE", # accepts NODE, LEAF_NODE, POLICY, INDEX
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the Facet.
     #   For more information, see arns.
@@ -8113,56 +5293,6 @@ module Aws::CloudDirectory
     #
     class UpdateFacetResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateLinkAttributesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         typed_link_specifier: { # required
-    #           typed_link_facet: { # required
-    #             schema_arn: "Arn", # required
-    #             typed_link_name: "TypedLinkName", # required
-    #           },
-    #           source_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           target_object_reference: { # required
-    #             selector: "SelectorObjectReference",
-    #           },
-    #           identity_attribute_values: [ # required
-    #             {
-    #               attribute_name: "AttributeName", # required
-    #               value: { # required
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           ],
-    #         },
-    #         attribute_updates: [ # required
-    #           {
-    #             attribute_key: {
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             attribute_action: {
-    #               attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #               attribute_update_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where the updated typed link resides. For more information, see arns
@@ -8195,35 +5325,6 @@ module Aws::CloudDirectory
     #
     class UpdateLinkAttributesResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateObjectAttributesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         directory_arn: "Arn", # required
-    #         object_reference: { # required
-    #           selector: "SelectorObjectReference",
-    #         },
-    #         attribute_updates: [ # required
-    #           {
-    #             object_attribute_key: {
-    #               schema_arn: "Arn", # required
-    #               facet_name: "FacetName", # required
-    #               name: "AttributeName", # required
-    #             },
-    #             object_attribute_action: {
-    #               object_attribute_action_type: "CREATE_OR_UPDATE", # accepts CREATE_OR_UPDATE, DELETE
-    #               object_attribute_update_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #             },
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] directory_arn
     #   The Amazon Resource Name (ARN) that is associated with the Directory
     #   where the object resides. For more information, see arns.
@@ -8259,14 +5360,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "SchemaName", # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) of the development schema. For more
     #   information, see arns.
@@ -8298,41 +5391,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateTypedLinkFacetRequest
-    #   data as a hash:
-    #
-    #       {
-    #         schema_arn: "Arn", # required
-    #         name: "TypedLinkName", # required
-    #         attribute_updates: [ # required
-    #           {
-    #             attribute: { # required
-    #               name: "AttributeName", # required
-    #               type: "STRING", # required, accepts STRING, BINARY, BOOLEAN, NUMBER, DATETIME, VARIANT
-    #               default_value: {
-    #                 string_value: "StringAttributeValue",
-    #                 binary_value: "data",
-    #                 boolean_value: false,
-    #                 number_value: "NumberAttributeValue",
-    #                 datetime_value: Time.now,
-    #               },
-    #               is_immutable: false,
-    #               rules: {
-    #                 "RuleKey" => {
-    #                   type: "BINARY_LENGTH", # accepts BINARY_LENGTH, NUMBER_COMPARISON, STRING_FROM_SET, STRING_LENGTH
-    #                   parameters: {
-    #                     "RuleParameterKey" => "RuleParameterValue",
-    #                   },
-    #                 },
-    #               },
-    #               required_behavior: "REQUIRED_ALWAYS", # required, accepts REQUIRED_ALWAYS, NOT_REQUIRED
-    #             },
-    #             action: "CREATE_OR_UPDATE", # required, accepts CREATE_OR_UPDATE, DELETE
-    #           },
-    #         ],
-    #         identity_attribute_order: ["AttributeName"], # required
-    #       }
-    #
     # @!attribute [rw] schema_arn
     #   The Amazon Resource Name (ARN) that is associated with the schema.
     #   For more information, see arns.
@@ -8378,15 +5436,6 @@ module Aws::CloudDirectory
     #
     class UpdateTypedLinkFacetResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpgradeAppliedSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         published_schema_arn: "Arn", # required
-    #         directory_arn: "Arn", # required
-    #         dry_run: false,
-    #       }
-    #
     # @!attribute [rw] published_schema_arn
     #   The revision of the published schema to upgrade the directory to.
     #   @return [String]
@@ -8431,16 +5480,6 @@ module Aws::CloudDirectory
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpgradePublishedSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         development_schema_arn: "Arn", # required
-    #         published_schema_arn: "Arn", # required
-    #         minor_version: "Version", # required
-    #         dry_run: false,
-    #       }
-    #
     # @!attribute [rw] development_schema_arn
     #   The ARN of the development schema with the changes used for the
     #   upgrade.

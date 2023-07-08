@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:xray)
@@ -73,8 +77,13 @@ module Aws::XRay
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::XRay::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::XRay
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::XRay
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::XRay
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::XRay
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::XRay
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::XRay::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::XRay::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::XRay
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::XRay
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -389,14 +446,15 @@ module Aws::XRay
     #   * The InsightsEnabled boolean can be set to true to enable insights
     #     for the new group or false to disable insights for the new group.
     #
-    #   * The NotifcationsEnabled boolean can be set to true to enable
+    #   * The NotificationsEnabled boolean can be set to true to enable
     #     insights notifications for the new group. Notifications may only be
     #     enabled on a group with InsightsEnabled set to true.
     #
     # @option params [Array<Types::Tag>] :tags
     #   A map that contains one or more tag keys and tag values to attach to
     #   an X-Ray group. For more information about ways to use tags, see
-    #   [Tagging AWS resources][1] in the *AWS General Reference*.
+    #   [Tagging Amazon Web Services resources][1] in the *Amazon Web Services
+    #   General Reference*.
     #
     #   The following restrictions apply to tags:
     #
@@ -411,7 +469,8 @@ module Aws::XRay
     #
     #   * Tag keys and values are case sensitive.
     #
-    #   * Don't use `aws:` as a prefix for keys; it's reserved for AWS use.
+    #   * Don't use `aws:` as a prefix for keys; it's reserved for Amazon
+    #     Web Services use.
     #
     #
     #
@@ -456,13 +515,18 @@ module Aws::XRay
     end
 
     # Creates a rule to control sampling behavior for instrumented
-    # applications. Services retrieve rules with GetSamplingRules, and
+    # applications. Services retrieve rules with [GetSamplingRules][1], and
     # evaluate each rule in ascending order of *priority* for each request.
     # If a rule matches, the service records a trace, borrowing it from the
     # reservoir size. After 10 seconds, the service reports back to X-Ray
-    # with GetSamplingTargets to get updated versions of each in-use rule.
-    # The updated rule contains a trace quota that the service can use
+    # with [GetSamplingTargets][2] to get updated versions of each in-use
+    # rule. The updated rule contains a trace quota that the service can use
     # instead of borrowing from the reservoir.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingRules.html
+    # [2]: https://docs.aws.amazon.com/xray/latest/api/API_GetSamplingTargets.html
     #
     # @option params [required, Types::SamplingRule] :sampling_rule
     #   The rule definition.
@@ -470,7 +534,8 @@ module Aws::XRay
     # @option params [Array<Types::Tag>] :tags
     #   A map that contains one or more tag keys and tag values to attach to
     #   an X-Ray sampling rule. For more information about ways to use tags,
-    #   see [Tagging AWS resources][1] in the *AWS General Reference*.
+    #   see [Tagging Amazon Web Services resources][1] in the *Amazon Web
+    #   Services General Reference*.
     #
     #   The following restrictions apply to tags:
     #
@@ -485,7 +550,8 @@ module Aws::XRay
     #
     #   * Tag keys and values are case sensitive.
     #
-    #   * Don't use `aws:` as a prefix for keys; it's reserved for AWS use.
+    #   * Don't use `aws:` as a prefix for keys; it's reserved for Amazon
+    #     Web Services use.
     #
     #
     #
@@ -574,6 +640,35 @@ module Aws::XRay
     # @param [Hash] params ({})
     def delete_group(params = {}, options = {})
       req = build_request(:delete_group, params)
+      req.send_request(options)
+    end
+
+    # Deletes a resource policy from the target Amazon Web Services account.
+    #
+    # @option params [required, String] :policy_name
+    #   The name of the resource policy to delete.
+    #
+    # @option params [String] :policy_revision_id
+    #   Specifies a specific policy revision to delete. Provide a
+    #   `PolicyRevisionId` to ensure an atomic delete operation. If the
+    #   provided revision id does not match the latest policy revision id, an
+    #   `InvalidPolicyRevisionIdException` exception is returned.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_resource_policy({
+    #     policy_name: "PolicyName", # required
+    #     policy_revision_id: "PolicyRevisionId",
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/DeleteResourcePolicy AWS API Documentation
+    #
+    # @overload delete_resource_policy(params = {})
+    # @param [Hash] params ({})
+    def delete_resource_policy(params = {}, options = {})
+      req = build_request(:delete_resource_policy, params)
       req.send_request(options)
     end
 
@@ -1130,9 +1225,9 @@ module Aws::XRay
     # Retrieves a document that describes services that process incoming
     # requests, and downstream services that they call as a result. Root
     # services process incoming requests and make calls to downstream
-    # services. Root services are applications that use the [AWS X-Ray
-    # SDK][1]. Downstream services can be other applications, AWS resources,
-    # HTTP web APIs, or SQL databases.
+    # services. Root services are applications that use the [Amazon Web
+    # Services X-Ray SDK][1]. Downstream services can be other applications,
+    # Amazon Web Services resources, HTTP web APIs, or SQL databases.
     #
     #
     #
@@ -1209,6 +1304,10 @@ module Aws::XRay
     #   resp.services[0].edges[0].aliases[0].names #=> Array
     #   resp.services[0].edges[0].aliases[0].names[0] #=> String
     #   resp.services[0].edges[0].aliases[0].type #=> String
+    #   resp.services[0].edges[0].edge_type #=> String
+    #   resp.services[0].edges[0].received_event_age_histogram #=> Array
+    #   resp.services[0].edges[0].received_event_age_histogram[0].value #=> Float
+    #   resp.services[0].edges[0].received_event_age_histogram[0].count #=> Integer
     #   resp.services[0].summary_statistics.ok_count #=> Integer
     #   resp.services[0].summary_statistics.error_statistics.throttle_count #=> Integer
     #   resp.services[0].summary_statistics.error_statistics.other_count #=> Integer
@@ -1380,6 +1479,10 @@ module Aws::XRay
     #   resp.services[0].edges[0].aliases[0].names #=> Array
     #   resp.services[0].edges[0].aliases[0].names[0] #=> String
     #   resp.services[0].edges[0].aliases[0].type #=> String
+    #   resp.services[0].edges[0].edge_type #=> String
+    #   resp.services[0].edges[0].received_event_age_histogram #=> Array
+    #   resp.services[0].edges[0].received_event_age_histogram[0].value #=> Float
+    #   resp.services[0].edges[0].received_event_age_histogram[0].count #=> Integer
     #   resp.services[0].summary_statistics.ok_count #=> Integer
     #   resp.services[0].summary_statistics.error_statistics.throttle_count #=> Integer
     #   resp.services[0].summary_statistics.error_statistics.other_count #=> Integer
@@ -1412,18 +1515,18 @@ module Aws::XRay
     # A filter expression can target traced requests that hit specific
     # service nodes or edges, have errors, or come from a known user. For
     # example, the following filter expression targets traces that pass
-    # through `api.example.com`\:
+    # through `api.example.com`:
     #
     # `service("api.example.com")`
     #
     # This filter expression finds traces that have an annotation named
-    # `account` with the value `12345`\:
+    # `account` with the value `12345`:
     #
     # `annotation.account = "12345"`
     #
     # For a full list of indexed fields and keywords that you can use in
-    # filter expressions, see [Using Filter Expressions][1] in the *AWS
-    # X-Ray Developer Guide*.
+    # filter expressions, see [Using Filter Expressions][1] in the *Amazon
+    # Web Services X-Ray Developer Guide*.
     #
     #
     #
@@ -1587,8 +1690,45 @@ module Aws::XRay
       req.send_request(options)
     end
 
-    # Returns a list of tags that are applied to the specified AWS X-Ray
-    # group or sampling rule.
+    # Returns the list of resource policies in the target Amazon Web
+    # Services account.
+    #
+    # @option params [String] :next_token
+    #   Not currently supported.
+    #
+    # @return [Types::ListResourcePoliciesResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListResourcePoliciesResult#resource_policies #resource_policies} => Array&lt;Types::ResourcePolicy&gt;
+    #   * {Types::ListResourcePoliciesResult#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_resource_policies({
+    #     next_token: "ResourcePolicyNextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.resource_policies #=> Array
+    #   resp.resource_policies[0].policy_name #=> String
+    #   resp.resource_policies[0].policy_document #=> String
+    #   resp.resource_policies[0].policy_revision_id #=> String
+    #   resp.resource_policies[0].last_updated_time #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/ListResourcePolicies AWS API Documentation
+    #
+    # @overload list_resource_policies(params = {})
+    # @param [Hash] params ({})
+    def list_resource_policies(params = {}, options = {})
+      req = build_request(:list_resource_policies, params)
+      req.send_request(options)
+    end
+
+    # Returns a list of tags that are applied to the specified Amazon Web
+    # Services X-Ray group or sampling rule.
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Number (ARN) of an X-Ray group or sampling rule.
@@ -1602,6 +1742,8 @@ module Aws::XRay
     #
     #   * {Types::ListTagsForResourceResponse#tags #tags} => Array&lt;Types::Tag&gt;
     #   * {Types::ListTagsForResourceResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
     #
     # @example Request syntax with placeholder values
     #
@@ -1629,13 +1771,13 @@ module Aws::XRay
     # Updates the encryption configuration for X-Ray data.
     #
     # @option params [String] :key_id
-    #   An AWS KMS customer master key (CMK) in one of the following formats:
+    #   An Amazon Web Services KMS key in one of the following formats:
     #
     #   * **Alias** - The name of the key. For example, `alias/MyKey`.
     #
     #   * **Key ID** - The KMS key ID of the key. For example,
-    #     `ae4aa6d49-a4d8-9df9-a475-4ff6d7898456`. AWS X-Ray does not support
-    #     asymmetric CMKs.
+    #     `ae4aa6d49-a4d8-9df9-a475-4ff6d7898456`. Amazon Web Services X-Ray
+    #     does not support asymmetric KMS keys.
     #
     #   * **ARN** - The full Amazon Resource Name of the key ID or alias. For
     #     example,
@@ -1674,7 +1816,76 @@ module Aws::XRay
       req.send_request(options)
     end
 
-    # Used by the AWS X-Ray daemon to upload telemetry.
+    # Sets the resource policy to grant one or more Amazon Web Services
+    # services and accounts permissions to access X-Ray. Each resource
+    # policy will be associated with a specific Amazon Web Services account.
+    # Each Amazon Web Services account can have a maximum of 5 resource
+    # policies, and each policy name must be unique within that account. The
+    # maximum size of each resource policy is 5KB.
+    #
+    # @option params [required, String] :policy_name
+    #   The name of the resource policy. Must be unique within a specific
+    #   Amazon Web Services account.
+    #
+    # @option params [required, String] :policy_document
+    #   The resource policy document, which can be up to 5kb in size.
+    #
+    # @option params [String] :policy_revision_id
+    #   Specifies a specific policy revision, to ensure an atomic create
+    #   operation. By default the resource policy is created if it does not
+    #   exist, or updated with an incremented revision id. The revision id is
+    #   unique to each policy in the account.
+    #
+    #   If the policy revision id does not match the latest revision id, the
+    #   operation will fail with an `InvalidPolicyRevisionIdException`
+    #   exception. You can also provide a `PolicyRevisionId` of 0. In this
+    #   case, the operation will fail with an
+    #   `InvalidPolicyRevisionIdException` exception if a resource policy with
+    #   the same name already exists.
+    #
+    # @option params [Boolean] :bypass_policy_lockout_check
+    #   A flag to indicate whether to bypass the resource policy lockout
+    #   safety check.
+    #
+    #   Setting this value to true increases the risk that the policy becomes
+    #   unmanageable. Do not set this value to true indiscriminately.
+    #
+    #   Use this parameter only when you include a policy in the request and
+    #   you intend to prevent the principal that is making the request from
+    #   making a subsequent `PutResourcePolicy` request.
+    #
+    #   The default value is false.
+    #
+    # @return [Types::PutResourcePolicyResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::PutResourcePolicyResult#resource_policy #resource_policy} => Types::ResourcePolicy
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.put_resource_policy({
+    #     policy_name: "PolicyName", # required
+    #     policy_document: "PolicyDocument", # required
+    #     policy_revision_id: "PolicyRevisionId",
+    #     bypass_policy_lockout_check: false,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.resource_policy.policy_name #=> String
+    #   resp.resource_policy.policy_document #=> String
+    #   resp.resource_policy.policy_revision_id #=> String
+    #   resp.resource_policy.last_updated_time #=> Time
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/PutResourcePolicy AWS API Documentation
+    #
+    # @overload put_resource_policy(params = {})
+    # @param [Hash] params ({})
+    def put_resource_policy(params = {}, options = {})
+      req = build_request(:put_resource_policy, params)
+      req.send_request(options)
+    end
+
+    # Used by the Amazon Web Services X-Ray daemon to upload telemetry.
     #
     # @option params [required, Array<Types::TelemetryRecord>] :telemetry_records
     #
@@ -1720,14 +1931,14 @@ module Aws::XRay
       req.send_request(options)
     end
 
-    # Uploads segment documents to AWS X-Ray. The [X-Ray SDK][1] generates
-    # segment documents and sends them to the X-Ray daemon, which uploads
-    # them in batches. A segment document can be a completed segment, an
-    # in-progress segment, or an array of subsegments.
+    # Uploads segment documents to Amazon Web Services X-Ray. The [X-Ray
+    # SDK][1] generates segment documents and sends them to the X-Ray
+    # daemon, which uploads them in batches. A segment document can be a
+    # completed segment, an in-progress segment, or an array of subsegments.
     #
     # Segments must include the following fields. For the full segment
-    # document schema, see [AWS X-Ray Segment Documents][2] in the *AWS
-    # X-Ray Developer Guide*.
+    # document schema, see [Amazon Web Services X-Ray Segment Documents][2]
+    # in the *Amazon Web Services X-Ray Developer Guide*.
     #
     # **Required segment document fields**
     #
@@ -1803,7 +2014,8 @@ module Aws::XRay
       req.send_request(options)
     end
 
-    # Applies tags to an existing AWS X-Ray group or sampling rule.
+    # Applies tags to an existing Amazon Web Services X-Ray group or
+    # sampling rule.
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Number (ARN) of an X-Ray group or sampling rule.
@@ -1811,8 +2023,8 @@ module Aws::XRay
     # @option params [required, Array<Types::Tag>] :tags
     #   A map that contains one or more tag keys and tag values to attach to
     #   an X-Ray group or sampling rule. For more information about ways to
-    #   use tags, see [Tagging AWS resources][1] in the *AWS General
-    #   Reference*.
+    #   use tags, see [Tagging Amazon Web Services resources][1] in the
+    #   *Amazon Web Services General Reference*.
     #
     #   The following restrictions apply to tags:
     #
@@ -1827,8 +2039,8 @@ module Aws::XRay
     #
     #   * Tag keys and values are case sensitive.
     #
-    #   * Don't use `aws:` as a prefix for keys; it's reserved for AWS use.
-    #     You cannot edit or delete system tags.
+    #   * Don't use `aws:` as a prefix for keys; it's reserved for Amazon
+    #     Web Services use. You cannot edit or delete system tags.
     #
     #
     #
@@ -1857,8 +2069,8 @@ module Aws::XRay
       req.send_request(options)
     end
 
-    # Removes tags from an AWS X-Ray group or sampling rule. You cannot edit
-    # or delete system tags (those with an `aws:` prefix).
+    # Removes tags from an Amazon Web Services X-Ray group or sampling rule.
+    # You cannot edit or delete system tags (those with an `aws:` prefix).
     #
     # @option params [required, String] :resource_arn
     #   The Amazon Resource Number (ARN) of an X-Ray group or sampling rule.
@@ -1903,7 +2115,7 @@ module Aws::XRay
     #   * The InsightsEnabled boolean can be set to true to enable insights
     #     for the group or false to disable insights for the group.
     #
-    #   * The NotifcationsEnabled boolean can be set to true to enable
+    #   * The NotificationsEnabled boolean can be set to true to enable
     #     insights notifications for the group. Notifications can only be
     #     enabled on a group with InsightsEnabled set to true.
     #
@@ -2011,7 +2223,7 @@ module Aws::XRay
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-xray'
-      context[:gem_version] = '1.37.0'
+      context[:gem_version] = '1.56.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

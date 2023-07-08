@@ -10,13 +10,6 @@
 module Aws::Detective
   module Types
 
-    # @note When making an API call, you may pass AcceptInvitationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         graph_arn: "GraphArn", # required
-    #       }
-    #
     # @!attribute [rw] graph_arn
     #   The ARN of the behavior graph that the member account is accepting
     #   the invitation for.
@@ -32,23 +25,51 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # An AWS account that is the administrator account of or a member of a
-    # behavior graph.
+    # The request issuer does not have permission to access this resource or
+    # perform this operation.
     #
-    # @note When making an API call, you may pass Account
-    #   data as a hash:
+    # @!attribute [rw] message
+    #   @return [String]
     #
-    #       {
-    #         account_id: "AccountId", # required
-    #         email_address: "EmailAddress", # required
-    #       }
+    # @!attribute [rw] error_code
+    #   The SDK default error code associated with the access denied
+    #   exception.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_code_reason
+    #   The SDK default explanation of why access was denied.
+    #   @return [String]
+    #
+    # @!attribute [rw] sub_error_code
+    #   The error code associated with the access denied exception.
+    #   @return [String]
+    #
+    # @!attribute [rw] sub_error_code_reason
+    #   An explanation of why access was denied.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/AccessDeniedException AWS API Documentation
+    #
+    class AccessDeniedException < Struct.new(
+      :message,
+      :error_code,
+      :error_code_reason,
+      :sub_error_code,
+      :sub_error_code_reason)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # An Amazon Web Services account that is the administrator account of or
+    # a member of a behavior graph.
     #
     # @!attribute [rw] account_id
-    #   The account identifier of the AWS account.
+    #   The account identifier of the Amazon Web Services account.
     #   @return [String]
     #
     # @!attribute [rw] email_address
-    #   The AWS account root user email address for the AWS account.
+    #   The Amazon Web Services account root user email address for the
+    #   Amazon Web Services account.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/Account AWS API Documentation
@@ -56,6 +77,102 @@ module Aws::Detective
     class Account < Struct.new(
       :account_id,
       :email_address)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about the Detective administrator account for an
+    # organization.
+    #
+    # @!attribute [rw] account_id
+    #   The Amazon Web Services account identifier of the Detective
+    #   administrator account for the organization.
+    #   @return [String]
+    #
+    # @!attribute [rw] graph_arn
+    #   The ARN of the organization behavior graph.
+    #   @return [String]
+    #
+    # @!attribute [rw] delegation_time
+    #   The date and time when the Detective administrator account was
+    #   enabled. The value is an ISO8601 formatted string. For example,
+    #   `2021-08-18T16:35:56.284Z`.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/Administrator AWS API Documentation
+    #
+    class Administrator < Struct.new(
+      :account_id,
+      :graph_arn,
+      :delegation_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] graph_arn
+    #   The ARN of the behavior graph.
+    #   @return [String]
+    #
+    # @!attribute [rw] account_ids
+    #   The list of Amazon Web Services accounts to get data source package
+    #   information on.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/BatchGetGraphMemberDatasourcesRequest AWS API Documentation
+    #
+    class BatchGetGraphMemberDatasourcesRequest < Struct.new(
+      :graph_arn,
+      :account_ids)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] member_datasources
+    #   Details on the status of data source packages for members of the
+    #   behavior graph.
+    #   @return [Array<Types::MembershipDatasources>]
+    #
+    # @!attribute [rw] unprocessed_accounts
+    #   Accounts that data source package information could not be retrieved
+    #   for.
+    #   @return [Array<Types::UnprocessedAccount>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/BatchGetGraphMemberDatasourcesResponse AWS API Documentation
+    #
+    class BatchGetGraphMemberDatasourcesResponse < Struct.new(
+      :member_datasources,
+      :unprocessed_accounts)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] graph_arns
+    #   The ARN of the behavior graph.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/BatchGetMembershipDatasourcesRequest AWS API Documentation
+    #
+    class BatchGetMembershipDatasourcesRequest < Struct.new(
+      :graph_arns)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] membership_datasources
+    #   Details on the data source package history for an member of the
+    #   behavior graph.
+    #   @return [Array<Types::MembershipDatasources>]
+    #
+    # @!attribute [rw] unprocessed_graphs
+    #   Graphs that data source package information could not be retrieved
+    #   for.
+    #   @return [Array<Types::UnprocessedGraph>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/BatchGetMembershipDatasourcesResponse AWS API Documentation
+    #
+    class BatchGetMembershipDatasourcesResponse < Struct.new(
+      :membership_datasources,
+      :unprocessed_graphs)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -73,15 +190,6 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateGraphRequest
-    #   data as a hash:
-    #
-    #       {
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] tags
     #   The tags to assign to the new behavior graph. You can add up to 50
     #   tags. For each tag, you provide the tag key and the tag value. Each
@@ -109,24 +217,8 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateMembersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         graph_arn: "GraphArn", # required
-    #         message: "EmailMessage",
-    #         disable_email_notification: false,
-    #         accounts: [ # required
-    #           {
-    #             account_id: "AccountId", # required
-    #             email_address: "EmailAddress", # required
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] graph_arn
-    #   The ARN of the behavior graph to invite the member accounts to
-    #   contribute their data to.
+    #   The ARN of the behavior graph.
     #   @return [String]
     #
     # @!attribute [rw] message
@@ -135,16 +227,21 @@ module Aws::Detective
     #   @return [String]
     #
     # @!attribute [rw] disable_email_notification
-    #   if set to `true`, then the member accounts do not receive email
-    #   notifications. By default, this is set to `false`, and the member
+    #   if set to `true`, then the invited accounts do not receive email
+    #   notifications. By default, this is set to `false`, and the invited
     #   accounts receive email notifications.
+    #
+    #   Organization accounts in the organization behavior graph do not
+    #   receive email notifications.
     #   @return [Boolean]
     #
     # @!attribute [rw] accounts
-    #   The list of AWS accounts to invite to become member accounts in the
-    #   behavior graph. You can invite up to 50 accounts at a time. For each
-    #   invited account, the account list contains the account identifier
-    #   and the AWS account root user email address.
+    #   The list of Amazon Web Services accounts to invite or to enable. You
+    #   can invite or enable up to 50 accounts at a time. For each invited
+    #   account, the account list contains the account identifier and the
+    #   Amazon Web Services account root user email address. For
+    #   organization accounts in the organization behavior graph, the email
+    #   address is not required.
     #   @return [Array<Types::Account>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/CreateMembersRequest AWS API Documentation
@@ -159,17 +256,18 @@ module Aws::Detective
     end
 
     # @!attribute [rw] members
-    #   The set of member account invitation requests that Detective was
-    #   able to process. This includes accounts that are being verified,
-    #   that failed verification, and that passed verification and are being
-    #   sent an invitation.
+    #   The set of member account invitation or enablement requests that
+    #   Detective was able to process. This includes accounts that are being
+    #   verified, that failed verification, and that passed verification and
+    #   are being sent an invitation or are being enabled.
     #   @return [Array<Types::MemberDetail>]
     #
     # @!attribute [rw] unprocessed_accounts
     #   The list of accounts for which Detective was unable to process the
-    #   invitation request. For each account, the list provides the reason
-    #   why the request could not be processed. The list includes accounts
-    #   that are already member accounts in the behavior graph.
+    #   invitation or enablement request. For each account, the list
+    #   provides the reason why the request could not be processed. The list
+    #   includes accounts that are already member accounts in the behavior
+    #   graph.
     #   @return [Array<Types::UnprocessedAccount>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/CreateMembersResponse AWS API Documentation
@@ -181,13 +279,50 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteGraphRequest
-    #   data as a hash:
+    # Details about the data source packages ingested by your behavior
+    # graph.
     #
-    #       {
-    #         graph_arn: "GraphArn", # required
-    #       }
+    # @!attribute [rw] datasource_package_ingest_state
+    #   Details on which data source packages are ingested for a member
+    #   account.
+    #   @return [String]
     #
+    # @!attribute [rw] last_ingest_state_change
+    #   The date a data source package was enabled for this account
+    #   @return [Hash<String,Types::TimestampForCollection>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/DatasourcePackageIngestDetail AWS API Documentation
+    #
+    class DatasourcePackageIngestDetail < Struct.new(
+      :datasource_package_ingest_state,
+      :last_ingest_state_change)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information on the usage of a data source package in the behavior
+    # graph.
+    #
+    # @!attribute [rw] volume_usage_in_bytes
+    #   Total volume of data in bytes per day ingested for a given data
+    #   source package.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] volume_usage_update_time
+    #   The data and time when the member account data volume was last
+    #   updated. The value is an ISO8601 formatted string. For example,
+    #   `2021-08-18T16:35:56.284Z`.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/DatasourcePackageUsageInfo AWS API Documentation
+    #
+    class DatasourcePackageUsageInfo < Struct.new(
+      :volume_usage_in_bytes,
+      :volume_usage_update_time)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] graph_arn
     #   The ARN of the behavior graph to disable.
     #   @return [String]
@@ -200,22 +335,14 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteMembersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         graph_arn: "GraphArn", # required
-    #         account_ids: ["AccountId"], # required
-    #       }
-    #
     # @!attribute [rw] graph_arn
-    #   The ARN of the behavior graph to delete members from.
+    #   The ARN of the behavior graph to remove members from.
     #   @return [String]
     #
     # @!attribute [rw] account_ids
-    #   The list of AWS account identifiers for the member accounts to
-    #   delete from the behavior graph. You can delete up to 50 member
-    #   accounts at a time.
+    #   The list of Amazon Web Services account identifiers for the member
+    #   accounts to remove from the behavior graph. You can remove up to 50
+    #   member accounts at a time.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/DeleteMembersRequest AWS API Documentation
@@ -228,12 +355,13 @@ module Aws::Detective
     end
 
     # @!attribute [rw] account_ids
-    #   The list of AWS account identifiers for the member accounts that
-    #   Detective successfully deleted from the behavior graph.
+    #   The list of Amazon Web Services account identifiers for the member
+    #   accounts that Detective successfully removed from the behavior
+    #   graph.
     #   @return [Array<String>]
     #
     # @!attribute [rw] unprocessed_accounts
-    #   The list of member accounts that Detective was not able to delete
+    #   The list of member accounts that Detective was not able to remove
     #   from the behavior graph. For each member account, provides the
     #   reason that the deletion could not be processed.
     #   @return [Array<Types::UnprocessedAccount>]
@@ -247,13 +375,31 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateMembershipRequest
-    #   data as a hash:
+    # @!attribute [rw] graph_arn
+    #   The ARN of the organization behavior graph.
+    #   @return [String]
     #
-    #       {
-    #         graph_arn: "GraphArn", # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/DescribeOrganizationConfigurationRequest AWS API Documentation
     #
+    class DescribeOrganizationConfigurationRequest < Struct.new(
+      :graph_arn)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] auto_enable
+    #   Indicates whether to automatically enable new organization accounts
+    #   as member accounts in the organization behavior graph.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/DescribeOrganizationConfigurationResponse AWS API Documentation
+    #
+    class DescribeOrganizationConfigurationResponse < Struct.new(
+      :auto_enable)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] graph_arn
     #   The ARN of the behavior graph to remove the member account from.
     #
@@ -269,23 +415,29 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetMembersRequest
-    #   data as a hash:
+    # @!attribute [rw] account_id
+    #   The Amazon Web Services account identifier of the account to
+    #   designate as the Detective administrator account for the
+    #   organization.
+    #   @return [String]
     #
-    #       {
-    #         graph_arn: "GraphArn", # required
-    #         account_ids: ["AccountId"], # required
-    #       }
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/EnableOrganizationAdminAccountRequest AWS API Documentation
     #
+    class EnableOrganizationAdminAccountRequest < Struct.new(
+      :account_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] graph_arn
     #   The ARN of the behavior graph for which to request the member
     #   details.
     #   @return [String]
     #
     # @!attribute [rw] account_ids
-    #   The list of AWS account identifiers for the member account for which
-    #   to return member details. You can request details for up to 50
-    #   member accounts at a time.
+    #   The list of Amazon Web Services account identifiers for the member
+    #   account for which to return member details. You can request details
+    #   for up to 50 member accounts at a time.
     #
     #   You cannot use `GetMembers` to retrieve information about member
     #   accounts that were removed from the behavior graph.
@@ -330,7 +482,8 @@ module Aws::Detective
     #
     # @!attribute [rw] created_time
     #   The date and time that the behavior graph was created. The value is
-    #   in milliseconds since the epoch.
+    #   an ISO8601 formatted string. For example,
+    #   `2021-08-18T16:35:56.284Z`.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/Graph AWS API Documentation
@@ -356,14 +509,49 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListGraphsRequest
-    #   data as a hash:
+    # @!attribute [rw] graph_arn
+    #   The ARN of the behavior graph.
+    #   @return [String]
     #
-    #       {
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] next_token
+    #   For requests to get the next page of results, the pagination token
+    #   that was returned with the previous set of results. The initial
+    #   request does not include a pagination token.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   The maximum number of results to return.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/ListDatasourcePackagesRequest AWS API Documentation
+    #
+    class ListDatasourcePackagesRequest < Struct.new(
+      :graph_arn,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] datasource_packages
+    #   Details on the data source packages active in the behavior graph.
+    #   @return [Hash<String,Types::DatasourcePackageIngestDetail>]
+    #
+    # @!attribute [rw] next_token
+    #   For requests to get the next page of results, the pagination token
+    #   that was returned with the previous set of results. The initial
+    #   request does not include a pagination token.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/ListDatasourcePackagesResponse AWS API Documentation
+    #
+    class ListDatasourcePackagesResponse < Struct.new(
+      :datasource_packages,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   For requests to get the next page of results, the pagination token
     #   that was returned with the previous set of results. The initial
@@ -405,14 +593,6 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListInvitationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   For requests to retrieve the next page of results, the pagination
     #   token that was returned with the previous page of results. The
@@ -454,15 +634,6 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListMembersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         graph_arn: "GraphArn", # required
-    #         next_token: "PaginationToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] graph_arn
     #   The ARN of the behavior graph for which to retrieve the list of
     #   member accounts.
@@ -493,16 +664,19 @@ module Aws::Detective
     # @!attribute [rw] member_details
     #   The list of member accounts in the behavior graph.
     #
-    #   The results include member accounts that did not pass verification
-    #   and member accounts that have not yet accepted the invitation to the
-    #   behavior graph. The results do not include member accounts that were
-    #   removed from the behavior graph.
+    #   For invited accounts, the results include member accounts that did
+    #   not pass verification and member accounts that have not yet accepted
+    #   the invitation to the behavior graph. The results do not include
+    #   member accounts that were removed from the behavior graph.
+    #
+    #   For the organization behavior graph, the results do not include
+    #   organization accounts that the Detective administrator account has
+    #   not enabled as member accounts.
     #   @return [Array<Types::MemberDetail>]
     #
     # @!attribute [rw] next_token
-    #   If there are more member accounts remaining in the results, then
-    #   this is the pagination token to use to request the next page of
-    #   member accounts.
+    #   If there are more member accounts remaining in the results, then use
+    #   this pagination token to request the next page of member accounts.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/ListMembersResponse AWS API Documentation
@@ -514,13 +688,43 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
+    # @!attribute [rw] next_token
+    #   For requests to get the next page of results, the pagination token
+    #   that was returned with the previous set of results. The initial
+    #   request does not include a pagination token.
+    #   @return [String]
     #
-    #       {
-    #         resource_arn: "GraphArn", # required
-    #       }
+    # @!attribute [rw] max_results
+    #   The maximum number of results to return.
+    #   @return [Integer]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/ListOrganizationAdminAccountsRequest AWS API Documentation
+    #
+    class ListOrganizationAdminAccountsRequest < Struct.new(
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] administrators
+    #   The list of Detective administrator accounts.
+    #   @return [Array<Types::Administrator>]
+    #
+    # @!attribute [rw] next_token
+    #   If there are more accounts remaining in the results, then this is
+    #   the pagination token to use to request the next page of accounts.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/ListOrganizationAdminAccountsResponse AWS API Documentation
+    #
+    class ListOrganizationAdminAccountsResponse < Struct.new(
+      :administrators,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The ARN of the behavior graph for which to retrieve the tag values.
     #   @return [String]
@@ -546,59 +750,70 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # Details about a member account that was invited to contribute to a
-    # behavior graph.
+    # Details about a member account in a behavior graph.
     #
     # @!attribute [rw] account_id
-    #   The AWS account identifier for the member account.
+    #   The Amazon Web Services account identifier for the member account.
     #   @return [String]
     #
     # @!attribute [rw] email_address
-    #   The AWS account root user email address for the member account.
+    #   The Amazon Web Services account root user email address for the
+    #   member account.
     #   @return [String]
     #
     # @!attribute [rw] graph_arn
-    #   The ARN of the behavior graph that the member account was invited
-    #   to.
+    #   The ARN of the behavior graph.
     #   @return [String]
     #
     # @!attribute [rw] master_id
-    #   The AWS account identifier of the administrator account for the
-    #   behavior graph.
+    #   The Amazon Web Services account identifier of the administrator
+    #   account for the behavior graph.
     #   @return [String]
     #
     # @!attribute [rw] administrator_id
-    #   The AWS account identifier of the administrator account for the
-    #   behavior graph.
+    #   The Amazon Web Services account identifier of the administrator
+    #   account for the behavior graph.
     #   @return [String]
     #
     # @!attribute [rw] status
     #   The current membership status of the member account. The status can
     #   have one of the following values:
     #
-    #   * `INVITED` - Indicates that the member was sent an invitation but
-    #     has not yet responded.
+    #   * `INVITED` - For invited accounts only. Indicates that the member
+    #     was sent an invitation but has not yet responded.
     #
-    #   * `VERIFICATION_IN_PROGRESS` - Indicates that Detective is verifying
-    #     that the account identifier and email address provided for the
-    #     member account match. If they do match, then Detective sends the
-    #     invitation. If the email address and account identifier don't
-    #     match, then the member cannot be added to the behavior graph.
+    #   * `VERIFICATION_IN_PROGRESS` - For invited accounts only, indicates
+    #     that Detective is verifying that the account identifier and email
+    #     address provided for the member account match. If they do match,
+    #     then Detective sends the invitation. If the email address and
+    #     account identifier don't match, then the member cannot be added
+    #     to the behavior graph.
     #
-    #   * `VERIFICATION_FAILED` - Indicates that the account and email
-    #     address provided for the member account do not match, and
-    #     Detective did not send an invitation to the account.
+    #     For organization accounts in the organization behavior graph,
+    #     indicates that Detective is verifying that the account belongs to
+    #     the organization.
     #
-    #   * `ENABLED` - Indicates that the member account accepted the
-    #     invitation to contribute to the behavior graph.
+    #   * `VERIFICATION_FAILED` - For invited accounts only. Indicates that
+    #     the account and email address provided for the member account do
+    #     not match, and Detective did not send an invitation to the
+    #     account.
     #
-    #   * `ACCEPTED_BUT_DISABLED` - Indicates that the member account
-    #     accepted the invitation but is prevented from contributing data to
-    #     the behavior graph. `DisabledReason` provides the reason why the
-    #     member account is not enabled.
+    #   * `ENABLED` - Indicates that the member account currently
+    #     contributes data to the behavior graph. For invited accounts, the
+    #     member account accepted the invitation. For organization accounts
+    #     in the organization behavior graph, the Detective administrator
+    #     account enabled the organization account as a member account.
     #
-    #   Member accounts that declined an invitation or that were removed
-    #   from the behavior graph are not included.
+    #   * `ACCEPTED_BUT_DISABLED` - The account accepted the invitation, or
+    #     was enabled by the Detective administrator account, but is
+    #     prevented from contributing data to the behavior graph.
+    #     `DisabledReason` provides the reason why the member account is not
+    #     enabled.
+    #
+    #   Invited accounts that declined an invitation or that were removed
+    #   from the behavior graph are not included. In the organization
+    #   behavior graph, organization accounts that the Detective
+    #   administrator account did not enable are not included.
     #   @return [String]
     #
     # @!attribute [rw] disabled_reason
@@ -616,13 +831,15 @@ module Aws::Detective
     #   @return [String]
     #
     # @!attribute [rw] invited_time
-    #   The date and time that Detective sent the invitation to the member
-    #   account. The value is in milliseconds since the epoch.
+    #   For invited accounts, the date and time that Detective sent the
+    #   invitation to the account. The value is an ISO8601 formatted string.
+    #   For example, `2021-08-18T16:35:56.284Z`.
     #   @return [Time]
     #
     # @!attribute [rw] updated_time
     #   The date and time that the member account was last updated. The
-    #   value is in milliseconds since the epoch.
+    #   value is an ISO8601 formatted string. For example,
+    #   `2021-08-18T16:35:56.284Z`.
     #   @return [Time]
     #
     # @!attribute [rw] volume_usage_in_bytes
@@ -631,7 +848,8 @@ module Aws::Detective
     #
     # @!attribute [rw] volume_usage_updated_time
     #   The data and time when the member account data volume was last
-    #   updated.
+    #   updated. The value is an ISO8601 formatted string. For example,
+    #   `2021-08-18T16:35:56.284Z`.
     #   @return [Time]
     #
     # @!attribute [rw] percent_of_graph_utilization
@@ -651,8 +869,28 @@ module Aws::Detective
     #
     # @!attribute [rw] percent_of_graph_utilization_updated_time
     #   The date and time when the graph utilization percentage was last
-    #   updated.
+    #   updated. The value is an ISO8601 formatted string. For example,
+    #   `2021-08-18T16:35:56.284Z`.
     #   @return [Time]
+    #
+    # @!attribute [rw] invitation_type
+    #   The type of behavior graph membership.
+    #
+    #   For an organization account in the organization behavior graph, the
+    #   type is `ORGANIZATION`.
+    #
+    #   For an account that was invited to a behavior graph, the type is
+    #   `INVITATION`.
+    #   @return [String]
+    #
+    # @!attribute [rw] volume_usage_by_datasource_package
+    #   Details on the volume of usage for each data source package in a
+    #   behavior graph.
+    #   @return [Hash<String,Types::DatasourcePackageUsageInfo>]
+    #
+    # @!attribute [rw] datasource_package_ingest_states
+    #   The state of a data source package for the behavior graph.
+    #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/MemberDetail AWS API Documentation
     #
@@ -669,18 +907,38 @@ module Aws::Detective
       :volume_usage_in_bytes,
       :volume_usage_updated_time,
       :percent_of_graph_utilization,
-      :percent_of_graph_utilization_updated_time)
+      :percent_of_graph_utilization_updated_time,
+      :invitation_type,
+      :volume_usage_by_datasource_package,
+      :datasource_package_ingest_states)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RejectInvitationRequest
-    #   data as a hash:
+    # Details on data source packages for members of the behavior graph.
     #
-    #       {
-    #         graph_arn: "GraphArn", # required
-    #       }
+    # @!attribute [rw] account_id
+    #   The account identifier of the Amazon Web Services account.
+    #   @return [String]
     #
+    # @!attribute [rw] graph_arn
+    #   The ARN of the organization behavior graph.
+    #   @return [String]
+    #
+    # @!attribute [rw] datasource_package_ingest_history
+    #   Details on when a data source package was added to a behavior graph.
+    #   @return [Hash<String,Hash<String,Types::TimestampForCollection>>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/MembershipDatasources AWS API Documentation
+    #
+    class MembershipDatasources < Struct.new(
+      :account_id,
+      :graph_arn,
+      :datasource_package_ingest_history)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] graph_arn
     #   The ARN of the behavior graph to reject the invitation to.
     #
@@ -713,7 +971,7 @@ module Aws::Detective
     #
     # * The request would cause the number of member accounts in the
     #   behavior graph to exceed the maximum allowed. A behavior graph
-    #   cannot have more than 1000 member accounts.
+    #   cannot have more than 1200 member accounts.
     #
     # * The request would cause the data rate for the behavior graph to
     #   exceed the maximum allowed.
@@ -725,22 +983,19 @@ module Aws::Detective
     # @!attribute [rw] message
     #   @return [String]
     #
+    # @!attribute [rw] resources
+    #   The type of resource that has exceeded the service quota.
+    #   @return [Array<String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/ServiceQuotaExceededException AWS API Documentation
     #
     class ServiceQuotaExceededException < Struct.new(
-      :message)
+      :message,
+      :resources)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartMonitoringMemberRequest
-    #   data as a hash:
-    #
-    #       {
-    #         graph_arn: "GraphArn", # required
-    #         account_id: "AccountId", # required
-    #       }
-    #
     # @!attribute [rw] graph_arn
     #   The ARN of the behavior graph.
     #   @return [String]
@@ -761,16 +1016,6 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "GraphArn", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The ARN of the behavior graph to assign the tags to.
     #   @return [String]
@@ -795,12 +1040,42 @@ module Aws::Detective
     #
     class TagResourceResponse < Aws::EmptyStructure; end
 
+    # Details on when data collection began for a source package.
+    #
+    # @!attribute [rw] timestamp
+    #   The data and time when data collection began for a source package.
+    #   The value is an ISO8601 formatted string. For example,
+    #   `2021-08-18T16:35:56.284Z`.
+    #   @return [Time]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/TimestampForCollection AWS API Documentation
+    #
+    class TimestampForCollection < Struct.new(
+      :timestamp)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The request cannot be completed because too many other requests are
+    # occurring at the same time.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/TooManyRequestsException AWS API Documentation
+    #
+    class TooManyRequestsException < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A member account that was included in a request but for which the
     # request could not be processed.
     #
     # @!attribute [rw] account_id
-    #   The AWS account identifier of the member account that was not
-    #   processed.
+    #   The Amazon Web Services account identifier of the member account
+    #   that was not processed.
     #   @return [String]
     #
     # @!attribute [rw] reason
@@ -816,14 +1091,26 @@ module Aws::Detective
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
+    # Behavior graphs that could not be processed in the request.
     #
-    #       {
-    #         resource_arn: "GraphArn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
+    # @!attribute [rw] graph_arn
+    #   The ARN of the organization behavior graph.
+    #   @return [String]
     #
+    # @!attribute [rw] reason
+    #   The reason data source package information could not be processed
+    #   for a behavior graph.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/UnprocessedGraph AWS API Documentation
+    #
+    class UnprocessedGraph < Struct.new(
+      :graph_arn,
+      :reason)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The ARN of the behavior graph to remove the tags from.
     #   @return [String]
@@ -846,15 +1133,60 @@ module Aws::Detective
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
+    # @!attribute [rw] graph_arn
+    #   The ARN of the behavior graph.
+    #   @return [String]
+    #
+    # @!attribute [rw] datasource_packages
+    #   The data source package start for the behavior graph.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/UpdateDatasourcePackagesRequest AWS API Documentation
+    #
+    class UpdateDatasourcePackagesRequest < Struct.new(
+      :graph_arn,
+      :datasource_packages)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] graph_arn
+    #   The ARN of the organization behavior graph.
+    #   @return [String]
+    #
+    # @!attribute [rw] auto_enable
+    #   Indicates whether to automatically enable new organization accounts
+    #   as member accounts in the organization behavior graph.
+    #   @return [Boolean]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/UpdateOrganizationConfigurationRequest AWS API Documentation
+    #
+    class UpdateOrganizationConfigurationRequest < Struct.new(
+      :graph_arn,
+      :auto_enable)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The request parameters are invalid.
     #
     # @!attribute [rw] message
     #   @return [String]
     #
+    # @!attribute [rw] error_code
+    #   The error code associated with the validation failure.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_code_reason
+    #   An explanation of why validation failed.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/detective-2018-10-26/ValidationException AWS API Documentation
     #
     class ValidationException < Struct.new(
-      :message)
+      :message,
+      :error_code,
+      :error_code_reason)
       SENSITIVE = []
       include Aws::Structure
     end

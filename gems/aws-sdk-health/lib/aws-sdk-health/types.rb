@@ -38,7 +38,8 @@ module Aws::Health
     #   @return [String]
     #
     # @!attribute [rw] aws_account_id
-    #   The 12-digit AWS account number that contains the affected entity.
+    #   The 12-digit Amazon Web Services account number that contains the
+    #   affected entity.
     #   @return [String]
     #
     # @!attribute [rw] last_updated_time
@@ -107,14 +108,6 @@ module Aws::Health
     # [1]: https://docs.aws.amazon.com/health/latest/APIReference/API_EventFilter.html
     # [2]: https://docs.aws.amazon.com/health/latest/APIReference/API_EntityFilter.html
     #
-    # @note When making an API call, you may pass DateTimeRange
-    #   data as a hash:
-    #
-    #       {
-    #         from: Time.now,
-    #         to: Time.now,
-    #       }
-    #
     # @!attribute [rw] from
     #   The starting date and time of a time range.
     #   @return [Time]
@@ -132,15 +125,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeAffectedAccountsForOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         event_arn: "eventArn", # required
-    #         next_token: "nextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] event_arn
     #   The unique identifier for the event. The event ARN has the
     #   `arn:aws:health:event-region::event/SERVICE/EVENT_TYPE_CODE/EVENT_TYPE_PLUS_ID
@@ -179,17 +163,18 @@ module Aws::Health
     #   @return [Array<String>]
     #
     # @!attribute [rw] event_scope_code
-    #   This parameter specifies if the AWS Health event is a public AWS
-    #   service event or an account-specific event.
+    #   This parameter specifies if the Health event is a public Amazon Web
+    #   Service event or an account-specific event.
     #
     #   * If the `eventScopeCode` value is `PUBLIC`, then the
     #     `affectedAccounts` value is always empty.
     #
     #   * If the `eventScopeCode` value is `ACCOUNT_SPECIFIC`, then the
-    #     `affectedAccounts` value lists the affected AWS accounts in your
-    #     organization. For example, if an event affects a service such as
-    #     Amazon Elastic Compute Cloud and you have AWS accounts that use
-    #     that service, those account IDs appear in the response.
+    #     `affectedAccounts` value lists the affected Amazon Web Services
+    #     accounts in your organization. For example, if an event affects a
+    #     service such as Amazon Elastic Compute Cloud and you have Amazon
+    #     Web Services accounts that use that service, those account IDs
+    #     appear in the response.
     #
     #   * If the `eventScopeCode` value is `NONE`, then the `eventArn` that
     #     you specified in the request is invalid or doesn't exist.
@@ -213,21 +198,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeAffectedEntitiesForOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_entity_filters: [ # required
-    #           {
-    #             event_arn: "eventArn", # required
-    #             aws_account_id: "accountId",
-    #           },
-    #         ],
-    #         locale: "locale",
-    #         next_token: "nextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] organization_entity_filters
     #   A JSON set of elements including the `awsAccountId` and the
     #   `eventArn`.
@@ -291,32 +261,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeAffectedEntitiesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filter: { # required
-    #           event_arns: ["eventArn"], # required
-    #           entity_arns: ["entityArn"],
-    #           entity_values: ["entityValue"],
-    #           last_updated_times: [
-    #             {
-    #               from: Time.now,
-    #               to: Time.now,
-    #             },
-    #           ],
-    #           tags: [
-    #             {
-    #               "tagKey" => "tagValue",
-    #             },
-    #           ],
-    #           status_codes: ["IMPAIRED"], # accepts IMPAIRED, UNIMPAIRED, UNKNOWN
-    #         },
-    #         locale: "locale",
-    #         next_token: "nextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] filter
     #   Values to narrow the results returned. At least one event ARN is
     #   required.
@@ -372,13 +316,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEntityAggregatesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         event_arns: ["eventArn"],
-    #       }
-    #
     # @!attribute [rw] event_arns
     #   A list of event ARNs (unique identifiers). For example:
     #   `"arn:aws:health:us-east-1::event/EC2/EC2_INSTANCE_RETIREMENT_SCHEDULED/EC2_INSTANCE_RETIREMENT_SCHEDULED_ABC123-CDE456",
@@ -406,49 +343,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventAggregatesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filter: {
-    #           event_arns: ["eventArn"],
-    #           event_type_codes: ["eventType"],
-    #           services: ["service"],
-    #           regions: ["region"],
-    #           availability_zones: ["availabilityZone"],
-    #           start_times: [
-    #             {
-    #               from: Time.now,
-    #               to: Time.now,
-    #             },
-    #           ],
-    #           end_times: [
-    #             {
-    #               from: Time.now,
-    #               to: Time.now,
-    #             },
-    #           ],
-    #           last_updated_times: [
-    #             {
-    #               from: Time.now,
-    #               to: Time.now,
-    #             },
-    #           ],
-    #           entity_arns: ["entityArn"],
-    #           entity_values: ["entityValue"],
-    #           event_type_categories: ["issue"], # accepts issue, accountNotification, scheduledChange, investigation
-    #           tags: [
-    #             {
-    #               "tagKey" => "tagValue",
-    #             },
-    #           ],
-    #           event_status_codes: ["open"], # accepts open, closed, upcoming
-    #         },
-    #         aggregate_field: "eventTypeCategory", # required, accepts eventTypeCategory
-    #         max_results: 1,
-    #         next_token: "nextToken",
-    #       }
-    #
     # @!attribute [rw] filter
     #   Values to narrow the results returned.
     #   @return [Types::EventFilter]
@@ -503,19 +397,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventDetailsForOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         organization_event_detail_filters: [ # required
-    #           {
-    #             event_arn: "eventArn", # required
-    #             aws_account_id: "accountId",
-    #           },
-    #         ],
-    #         locale: "locale",
-    #       }
-    #
     # @!attribute [rw] organization_event_detail_filters
     #   A set of JSON elements that includes the `awsAccountId` and the
     #   `eventArn`.
@@ -552,14 +433,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventDetailsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         event_arns: ["eventArn"], # required
-    #         locale: "locale",
-    #       }
-    #
     # @!attribute [rw] event_arns
     #   A list of event ARNs (unique identifiers). For example:
     #   `"arn:aws:health:us-east-1::event/EC2/EC2_INSTANCE_RETIREMENT_SCHEDULED/EC2_INSTANCE_RETIREMENT_SCHEDULED_ABC123-CDE456",
@@ -597,20 +470,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventTypesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filter: {
-    #           event_type_codes: ["eventTypeCode"],
-    #           services: ["service"],
-    #           event_type_categories: ["issue"], # accepts issue, accountNotification, scheduledChange, investigation
-    #         },
-    #         locale: "locale",
-    #         next_token: "nextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] filter
     #   Values to narrow the results returned.
     #   @return [Types::EventTypeFilter]
@@ -631,6 +490,11 @@ module Aws::Health
     # @!attribute [rw] max_results
     #   The maximum number of items to return in one batch, between 10 and
     #   100, inclusive.
+    #
+    #   <note markdown="1"> If you don't specify the `maxResults` parameter, this operation
+    #   returns a maximum of 30 items by default.
+    #
+    #    </note>
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/health-2016-08-04/DescribeEventTypesRequest AWS API Documentation
@@ -670,37 +534,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventsForOrganizationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filter: {
-    #           event_type_codes: ["eventType"],
-    #           aws_account_ids: ["accountId"],
-    #           services: ["service"],
-    #           regions: ["region"],
-    #           start_time: {
-    #             from: Time.now,
-    #             to: Time.now,
-    #           },
-    #           end_time: {
-    #             from: Time.now,
-    #             to: Time.now,
-    #           },
-    #           last_updated_time: {
-    #             from: Time.now,
-    #             to: Time.now,
-    #           },
-    #           entity_arns: ["entityArn"],
-    #           entity_values: ["entityValue"],
-    #           event_type_categories: ["issue"], # accepts issue, accountNotification, scheduledChange, investigation
-    #           event_status_codes: ["open"], # accepts open, closed, upcoming
-    #         },
-    #         next_token: "nextToken",
-    #         max_results: 1,
-    #         locale: "locale",
-    #       }
-    #
     # @!attribute [rw] filter
     #   Values to narrow the results returned.
     #   @return [Types::OrganizationEventFilter]
@@ -755,49 +588,6 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeEventsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         filter: {
-    #           event_arns: ["eventArn"],
-    #           event_type_codes: ["eventType"],
-    #           services: ["service"],
-    #           regions: ["region"],
-    #           availability_zones: ["availabilityZone"],
-    #           start_times: [
-    #             {
-    #               from: Time.now,
-    #               to: Time.now,
-    #             },
-    #           ],
-    #           end_times: [
-    #             {
-    #               from: Time.now,
-    #               to: Time.now,
-    #             },
-    #           ],
-    #           last_updated_times: [
-    #             {
-    #               from: Time.now,
-    #               to: Time.now,
-    #             },
-    #           ],
-    #           entity_arns: ["entityArn"],
-    #           entity_values: ["entityValue"],
-    #           event_type_categories: ["issue"], # accepts issue, accountNotification, scheduledChange, investigation
-    #           tags: [
-    #             {
-    #               "tagKey" => "tagValue",
-    #             },
-    #           ],
-    #           event_status_codes: ["open"], # accepts open, closed, upcoming
-    #         },
-    #         next_token: "nextToken",
-    #         max_results: 1,
-    #         locale: "locale",
-    #       }
-    #
     # @!attribute [rw] filter
     #   Values to narrow the results returned.
     #   @return [Types::EventFilter]
@@ -853,8 +643,8 @@ module Aws::Health
     end
 
     # @!attribute [rw] health_service_access_status_for_organization
-    #   Information about the status of enabling or disabling AWS Health
-    #   Organizational View in your organization.
+    #   Information about the status of enabling or disabling the Health
+    #   organizational view feature in your organization.
     #
     #   Valid values are `ENABLED | DISABLED | PENDING`.
     #   @return [String]
@@ -898,33 +688,12 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # The values to use to filter results from the [EntityFilter][1]
-    # operation.
+    # The values to use to filter results from the
+    # [DescribeAffectedEntities][1] operation.
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/health/latest/APIReference/API_EntityFilter.html
-    #
-    # @note When making an API call, you may pass EntityFilter
-    #   data as a hash:
-    #
-    #       {
-    #         event_arns: ["eventArn"], # required
-    #         entity_arns: ["entityArn"],
-    #         entity_values: ["entityValue"],
-    #         last_updated_times: [
-    #           {
-    #             from: Time.now,
-    #             to: Time.now,
-    #           },
-    #         ],
-    #         tags: [
-    #           {
-    #             "tagKey" => "tagValue",
-    #           },
-    #         ],
-    #         status_codes: ["IMPAIRED"], # accepts IMPAIRED, UNIMPAIRED, UNKNOWN
-    #       }
+    # [1]: https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeAffectedEntities.html
     #
     # @!attribute [rw] event_arns
     #   A list of event ARNs (unique identifiers). For example:
@@ -971,20 +740,20 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # Summary information about an AWS Health event.
+    # Summary information about an Health event.
     #
-    # AWS Health events can be public or account-specific:
+    # Health events can be public or account-specific:
     #
     # * *Public events* might be service events that are not specific to an
-    #   AWS account. For example, if there is an issue with an AWS Region,
-    #   AWS Health provides information about the event, even if you don't
-    #   use services or resources in that Region.
+    #   Amazon Web Services account. For example, if there is an issue with
+    #   an Amazon Web Services Region, Health provides information about the
+    #   event, even if you don't use services or resources in that Region.
     #
-    # * *Account-specific* events are specific to either your AWS account or
-    #   an account in your organization. For example, if there's an issue
-    #   with Amazon Elastic Compute Cloud in a Region that you use, AWS
-    #   Health provides information about the event and the affected
-    #   resources in the account.
+    # * *Account-specific* events are specific to either your Amazon Web
+    #   Services account or an account in your organization. For example, if
+    #   there's an issue with Amazon Elastic Compute Cloud in a Region that
+    #   you use, Health provides information about the event and the
+    #   affected resources in the account.
     #
     # You can determine if an event is public or account-specific by using
     # the `eventScopeCode` parameter. For more information, see
@@ -1005,8 +774,8 @@ module Aws::Health
     #   @return [String]
     #
     # @!attribute [rw] service
-    #   The AWS service that is affected by the event. For example, `EC2`,
-    #   `RDS`.
+    #   The Amazon Web Service that is affected by the event. For example,
+    #   `EC2`, `RDS`.
     #   @return [String]
     #
     # @!attribute [rw] event_type_code
@@ -1016,16 +785,18 @@ module Aws::Health
     #   @return [String]
     #
     # @!attribute [rw] event_type_category
-    #   The category of the event. Possible values are `issue`,
-    #   `scheduledChange`, and `accountNotification`.
+    #   A list of event type category codes. Possible values are `issue`,
+    #   `accountNotification`, or `scheduledChange`. Currently, the
+    #   `investigation` value isn't supported at this time.
     #   @return [String]
     #
     # @!attribute [rw] region
-    #   The AWS Region name of the event.
+    #   The Amazon Web Services Region name of the event.
     #   @return [String]
     #
     # @!attribute [rw] availability_zone
-    #   The AWS Availability Zone of the event. For example, us-east-1a.
+    #   The Amazon Web Services Availability Zone of the event. For example,
+    #   us-east-1a.
     #   @return [String]
     #
     # @!attribute [rw] start_time
@@ -1046,17 +817,18 @@ module Aws::Health
     #   @return [String]
     #
     # @!attribute [rw] event_scope_code
-    #   This parameter specifies if the AWS Health event is a public AWS
-    #   service event or an account-specific event.
+    #   This parameter specifies if the Health event is a public Amazon Web
+    #   Service event or an account-specific event.
     #
     #   * If the `eventScopeCode` value is `PUBLIC`, then the
     #     `affectedAccounts` value is always empty.
     #
     #   * If the `eventScopeCode` value is `ACCOUNT_SPECIFIC`, then the
-    #     `affectedAccounts` value lists the affected AWS accounts in your
-    #     organization. For example, if an event affects a service such as
-    #     Amazon Elastic Compute Cloud and you have AWS accounts that use
-    #     that service, those account IDs appear in the response.
+    #     `affectedAccounts` value lists the affected Amazon Web Services
+    #     accounts in your organization. For example, if an event affects a
+    #     service such as Amazon Elastic Compute Cloud and you have Amazon
+    #     Web Services accounts that use that service, those account IDs
+    #     appear in the response.
     #
     #   * If the `eventScopeCode` value is `NONE`, then the `eventArn` that
     #     you specified in the request is invalid or doesn't exist.
@@ -1089,14 +861,6 @@ module Aws::Health
     # [1]: https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventDetailsForOrganization.html
     # [2]: https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeAffectedEntitiesForOrganization.html
     #
-    # @note When making an API call, you may pass EventAccountFilter
-    #   data as a hash:
-    #
-    #       {
-    #         event_arn: "eventArn", # required
-    #         aws_account_id: "accountId",
-    #       }
-    #
     # @!attribute [rw] event_arn
     #   The unique identifier for the event. The event ARN has the
     #   `arn:aws:health:event-region::event/SERVICE/EVENT_TYPE_CODE/EVENT_TYPE_PLUS_ID
@@ -1108,8 +872,8 @@ module Aws::Health
     #   @return [String]
     #
     # @!attribute [rw] aws_account_id
-    #   The 12-digit AWS account numbers that contains the affected
-    #   entities.
+    #   The 12-digit Amazon Web Services account numbers that contains the
+    #   affected entities.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/health-2016-08-04/EventAccountFilter AWS API Documentation
@@ -1239,44 +1003,6 @@ module Aws::Health
     # [1]: https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEvents.html
     # [2]: https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventAggregates.html
     #
-    # @note When making an API call, you may pass EventFilter
-    #   data as a hash:
-    #
-    #       {
-    #         event_arns: ["eventArn"],
-    #         event_type_codes: ["eventType"],
-    #         services: ["service"],
-    #         regions: ["region"],
-    #         availability_zones: ["availabilityZone"],
-    #         start_times: [
-    #           {
-    #             from: Time.now,
-    #             to: Time.now,
-    #           },
-    #         ],
-    #         end_times: [
-    #           {
-    #             from: Time.now,
-    #             to: Time.now,
-    #           },
-    #         ],
-    #         last_updated_times: [
-    #           {
-    #             from: Time.now,
-    #             to: Time.now,
-    #           },
-    #         ],
-    #         entity_arns: ["entityArn"],
-    #         entity_values: ["entityValue"],
-    #         event_type_categories: ["issue"], # accepts issue, accountNotification, scheduledChange, investigation
-    #         tags: [
-    #           {
-    #             "tagKey" => "tagValue",
-    #           },
-    #         ],
-    #         event_status_codes: ["open"], # accepts open, closed, upcoming
-    #       }
-    #
     # @!attribute [rw] event_arns
     #   A list of event ARNs (unique identifiers). For example:
     #   `"arn:aws:health:us-east-1::event/EC2/EC2_INSTANCE_RETIREMENT_SCHEDULED/EC2_INSTANCE_RETIREMENT_SCHEDULED_ABC123-CDE456",
@@ -1289,16 +1015,16 @@ module Aws::Health
     #   @return [Array<String>]
     #
     # @!attribute [rw] services
-    #   The AWS services associated with the event. For example, `EC2`,
-    #   `RDS`.
+    #   The Amazon Web Services associated with the event. For example,
+    #   `EC2`, `RDS`.
     #   @return [Array<String>]
     #
     # @!attribute [rw] regions
-    #   A list of AWS Regions.
+    #   A list of Amazon Web Services Regions.
     #   @return [Array<String>]
     #
     # @!attribute [rw] availability_zones
-    #   A list of AWS Availability Zones.
+    #   A list of Amazon Web Services Availability Zones.
     #   @return [Array<String>]
     #
     # @!attribute [rw] start_times
@@ -1323,8 +1049,9 @@ module Aws::Health
     #   @return [Array<String>]
     #
     # @!attribute [rw] event_type_categories
-    #   A list of event type category codes (`issue`, `scheduledChange`, or
-    #   `accountNotification`).
+    #   A list of event type category codes. Possible values are `issue`,
+    #   `accountNotification`, or `scheduledChange`. Currently, the
+    #   `investigation` value isn't supported at this time.
     #   @return [Array<String>]
     #
     # @!attribute [rw] tags
@@ -1359,7 +1086,7 @@ module Aws::Health
       include Aws::Structure
     end
 
-    # Contains the metadata about a type of event that is reported by AWS
+    # Contains the metadata about a type of event that is reported by
     # Health. The `EventType` shows the category, service, and the event
     # type code of the event. For example, an `issue` might be the category,
     # `EC2` the service, and `AWS_EC2_SYSTEM_MAINTENANCE_EVENT` the event
@@ -1369,10 +1096,10 @@ module Aws::Health
     # information about an event.
     #
     # You can also use the Amazon CloudWatch Events console to create a rule
-    # so that you can get notified or take action when AWS Health delivers a
-    # specific event to your AWS account. For more information, see [Monitor
-    # for AWS Health events with Amazon CloudWatch Events][2] in the *AWS
-    # Health User Guide*.
+    # so that you can get notified or take action when Health delivers a
+    # specific event to your Amazon Web Services account. For more
+    # information, see [Monitor for Health events with Amazon CloudWatch
+    # Events][2] in the *Health User Guide*.
     #
     #
     #
@@ -1380,8 +1107,8 @@ module Aws::Health
     # [2]: https://docs.aws.amazon.com/health/latest/ug/cloudwatch-events-health.html
     #
     # @!attribute [rw] service
-    #   The AWS service that is affected by the event. For example, `EC2`,
-    #   `RDS`.
+    #   The Amazon Web Service that is affected by the event. For example,
+    #   `EC2`, `RDS`.
     #   @return [String]
     #
     # @!attribute [rw] code
@@ -1391,8 +1118,9 @@ module Aws::Health
     #   @return [String]
     #
     # @!attribute [rw] category
-    #   A list of event type category codes (`issue`, `scheduledChange`, or
-    #   `accountNotification`).
+    #   A list of event type category codes. Possible values are `issue`,
+    #   `accountNotification`, or `scheduledChange`. Currently, the
+    #   `investigation` value isn't supported at this time.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/health-2016-08-04/EventType AWS API Documentation
@@ -1412,27 +1140,19 @@ module Aws::Health
     #
     # [1]: https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventTypes.html
     #
-    # @note When making an API call, you may pass EventTypeFilter
-    #   data as a hash:
-    #
-    #       {
-    #         event_type_codes: ["eventTypeCode"],
-    #         services: ["service"],
-    #         event_type_categories: ["issue"], # accepts issue, accountNotification, scheduledChange, investigation
-    #       }
-    #
     # @!attribute [rw] event_type_codes
     #   A list of event type codes.
     #   @return [Array<String>]
     #
     # @!attribute [rw] services
-    #   The AWS services associated with the event. For example, `EC2`,
-    #   `RDS`.
+    #   The Amazon Web Services associated with the event. For example,
+    #   `EC2`, `RDS`.
     #   @return [Array<String>]
     #
     # @!attribute [rw] event_type_categories
-    #   A list of event type category codes (`issue`, `scheduledChange`, or
-    #   `accountNotification`).
+    #   A list of event type category codes. Possible values are `issue`,
+    #   `accountNotification`, or `scheduledChange`. Currently, the
+    #   `investigation` value isn't supported at this time.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/health-2016-08-04/EventTypeFilter AWS API Documentation
@@ -1467,8 +1187,8 @@ module Aws::Health
     # [1]: https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeAffectedEntitiesForOrganization.html
     #
     # @!attribute [rw] aws_account_id
-    #   The 12-digit AWS account numbers that contains the affected
-    #   entities.
+    #   The 12-digit Amazon Web Services account numbers that contains the
+    #   affected entities.
     #   @return [String]
     #
     # @!attribute [rw] event_arn
@@ -1486,9 +1206,13 @@ module Aws::Health
     #   @return [String]
     #
     # @!attribute [rw] error_message
-    #   The unique identifier for the event type. The format is
-    #   `AWS_SERVICE_DESCRIPTION`. For example,
-    #   `AWS_EC2_SYSTEM_MAINTENANCE_EVENT`.
+    #   A message that describes the error. Follow the error message and
+    #   retry your request.
+    #
+    #   For example, the `InvalidAccountInputError` error message appears if
+    #   you call the `DescribeAffectedEntitiesForOrganization` operation and
+    #   specify the `AccountSpecific` value for the `EventScopeCode`
+    #   parameter, but don't specify an Amazon Web Services account.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/health-2016-08-04/OrganizationAffectedEntitiesErrorItem AWS API Documentation
@@ -1520,7 +1244,8 @@ module Aws::Health
     #   @return [String]
     #
     # @!attribute [rw] service
-    #   The AWS service that is affected by the event, such as EC2 and RDS.
+    #   The Amazon Web Service that is affected by the event, such as EC2
+    #   and RDS.
     #   @return [String]
     #
     # @!attribute [rw] event_type_code
@@ -1530,28 +1255,31 @@ module Aws::Health
     #   @return [String]
     #
     # @!attribute [rw] event_type_category
-    #   The category of the event type.
+    #   A list of event type category codes. Possible values are `issue`,
+    #   `accountNotification`, or `scheduledChange`. Currently, the
+    #   `investigation` value isn't supported at this time.
     #   @return [String]
     #
     # @!attribute [rw] event_scope_code
-    #   This parameter specifies if the AWS Health event is a public AWS
-    #   service event or an account-specific event.
+    #   This parameter specifies if the Health event is a public Amazon Web
+    #   Service event or an account-specific event.
     #
     #   * If the `eventScopeCode` value is `PUBLIC`, then the
     #     `affectedAccounts` value is always empty.
     #
     #   * If the `eventScopeCode` value is `ACCOUNT_SPECIFIC`, then the
-    #     `affectedAccounts` value lists the affected AWS accounts in your
-    #     organization. For example, if an event affects a service such as
-    #     Amazon Elastic Compute Cloud and you have AWS accounts that use
-    #     that service, those account IDs appear in the response.
+    #     `affectedAccounts` value lists the affected Amazon Web Services
+    #     accounts in your organization. For example, if an event affects a
+    #     service such as Amazon Elastic Compute Cloud and you have Amazon
+    #     Web Services accounts that use that service, those account IDs
+    #     appear in the response.
     #
     #   * If the `eventScopeCode` value is `NONE`, then the `eventArn` that
     #     you specified in the request is invalid or doesn't exist.
     #   @return [String]
     #
     # @!attribute [rw] region
-    #   The AWS Region name of the event.
+    #   The Amazon Web Services Region name of the event.
     #   @return [String]
     #
     # @!attribute [rw] start_time
@@ -1600,25 +1328,26 @@ module Aws::Health
     # [3]: https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventDetailsForOrganization.html
     #
     # @!attribute [rw] aws_account_id
-    #   The 12-digit AWS account numbers that contains the affected
-    #   entities.
+    #   The 12-digit Amazon Web Services account numbers that contains the
+    #   affected entities.
     #   @return [String]
     #
     # @!attribute [rw] event
-    #   Summary information about an AWS Health event.
+    #   Summary information about an Health event.
     #
-    #   AWS Health events can be public or account-specific:
+    #   Health events can be public or account-specific:
     #
     #   * *Public events* might be service events that are not specific to
-    #     an AWS account. For example, if there is an issue with an AWS
-    #     Region, AWS Health provides information about the event, even if
-    #     you don't use services or resources in that Region.
+    #     an Amazon Web Services account. For example, if there is an issue
+    #     with an Amazon Web Services Region, Health provides information
+    #     about the event, even if you don't use services or resources in
+    #     that Region.
     #
-    #   * *Account-specific* events are specific to either your AWS account
-    #     or an account in your organization. For example, if there's an
-    #     issue with Amazon Elastic Compute Cloud in a Region that you use,
-    #     AWS Health provides information about the event and the affected
-    #     resources in the account.
+    #   * *Account-specific* events are specific to either your Amazon Web
+    #     Services account or an account in your organization. For example,
+    #     if there's an issue with Amazon Elastic Compute Cloud in a Region
+    #     that you use, Health provides information about the event and the
+    #     affected resources in the account.
     #
     #   You can determine if an event is public or account-specific by using
     #   the `eventScopeCode` parameter. For more information, see
@@ -1693,16 +1422,18 @@ module Aws::Health
     #   the message:
     #
     #   * We couldn't find a public event that matches your request. To
-    #     find an event that is account specific, you must enter an AWS
-    #     account ID in the request.
+    #     find an event that is account specific, you must enter an Amazon
+    #     Web Services account ID in the request.
     #
-    #   * We couldn't find an account specific event for the specified AWS
-    #     account. To find an event that is public, you must enter a null
-    #     value for the AWS account ID in the request.
+    #   * We couldn't find an account specific event for the specified
+    #     Amazon Web Services account. To find an event that is public, you
+    #     must enter a null value for the Amazon Web Services account ID in
+    #     the request.
     #
-    #   * Your AWS account doesn't include the AWS Support plan required to
-    #     use the AWS Health API. You must have either a Business or
-    #     Enterprise Support plan.
+    #   * Your Amazon Web Services account doesn't include the Amazon Web
+    #     Services Support plan required to use the Health API. You must
+    #     have either a Business, Enterprise On-Ramp, or Enterprise Support
+    #     plan.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/health-2016-08-04/OrganizationEventDetailsErrorItem AWS API Documentation
@@ -1723,49 +1454,23 @@ module Aws::Health
     #
     # [1]: https://docs.aws.amazon.com/health/latest/APIReference/API_DescribeEventsForOrganization.html
     #
-    # @note When making an API call, you may pass OrganizationEventFilter
-    #   data as a hash:
-    #
-    #       {
-    #         event_type_codes: ["eventType"],
-    #         aws_account_ids: ["accountId"],
-    #         services: ["service"],
-    #         regions: ["region"],
-    #         start_time: {
-    #           from: Time.now,
-    #           to: Time.now,
-    #         },
-    #         end_time: {
-    #           from: Time.now,
-    #           to: Time.now,
-    #         },
-    #         last_updated_time: {
-    #           from: Time.now,
-    #           to: Time.now,
-    #         },
-    #         entity_arns: ["entityArn"],
-    #         entity_values: ["entityValue"],
-    #         event_type_categories: ["issue"], # accepts issue, accountNotification, scheduledChange, investigation
-    #         event_status_codes: ["open"], # accepts open, closed, upcoming
-    #       }
-    #
     # @!attribute [rw] event_type_codes
     #   A list of unique identifiers for event types. For example,
     #   `"AWS_EC2_SYSTEM_MAINTENANCE_EVENT","AWS_RDS_MAINTENANCE_SCHEDULED".`
     #   @return [Array<String>]
     #
     # @!attribute [rw] aws_account_ids
-    #   A list of 12-digit AWS account numbers that contains the affected
-    #   entities.
+    #   A list of 12-digit Amazon Web Services account numbers that contains
+    #   the affected entities.
     #   @return [Array<String>]
     #
     # @!attribute [rw] services
-    #   The AWS services associated with the event. For example, `EC2`,
-    #   `RDS`.
+    #   The Amazon Web Services associated with the event. For example,
+    #   `EC2`, `RDS`.
     #   @return [Array<String>]
     #
     # @!attribute [rw] regions
-    #   A list of AWS Regions.
+    #   A list of Amazon Web Services Regions.
     #   @return [Array<String>]
     #
     # @!attribute [rw] start_time
@@ -1823,8 +1528,9 @@ module Aws::Health
     #   @return [Array<String>]
     #
     # @!attribute [rw] event_type_categories
-    #   A list of event type category codes (issue, scheduledChange, or
-    #   accountNotification).
+    #   A list of event type category codes. Possible values are `issue`,
+    #   `accountNotification`, or `scheduledChange`. Currently, the
+    #   `investigation` value isn't supported at this time.
     #   @return [Array<String>]
     #
     # @!attribute [rw] event_status_codes

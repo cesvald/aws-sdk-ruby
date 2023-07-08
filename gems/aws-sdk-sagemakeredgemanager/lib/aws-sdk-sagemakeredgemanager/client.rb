@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:sagemakeredgemanager)
@@ -73,8 +77,13 @@ module Aws::SagemakerEdgeManager
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::SagemakerEdgeManager::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::SagemakerEdgeManager
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::SagemakerEdgeManager
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::SagemakerEdgeManager
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::SagemakerEdgeManager
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::SagemakerEdgeManager
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::SagemakerEdgeManager::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::SagemakerEdgeManager::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::SagemakerEdgeManager
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::SagemakerEdgeManager
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -326,6 +383,48 @@ module Aws::SagemakerEdgeManager
     end
 
     # @!group API Operations
+
+    # Use to get the active deployments from a device.
+    #
+    # @option params [required, String] :device_name
+    #   The unique name of the device you want to get the configuration of
+    #   active deployments from.
+    #
+    # @option params [required, String] :device_fleet_name
+    #   The name of the fleet that the device belongs to.
+    #
+    # @return [Types::GetDeploymentsResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetDeploymentsResult#deployments #deployments} => Array&lt;Types::EdgeDeployment&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_deployments({
+    #     device_name: "DeviceName", # required
+    #     device_fleet_name: "DeviceFleetName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.deployments #=> Array
+    #   resp.deployments[0].deployment_name #=> String
+    #   resp.deployments[0].type #=> String, one of "Model"
+    #   resp.deployments[0].failure_handling_policy #=> String, one of "ROLLBACK_ON_FAILURE", "DO_NOTHING"
+    #   resp.deployments[0].definitions #=> Array
+    #   resp.deployments[0].definitions[0].model_handle #=> String
+    #   resp.deployments[0].definitions[0].s3_url #=> String
+    #   resp.deployments[0].definitions[0].checksum.type #=> String, one of "SHA1"
+    #   resp.deployments[0].definitions[0].checksum.sum #=> String
+    #   resp.deployments[0].definitions[0].state #=> String, one of "DEPLOY", "UNDEPLOY"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/sagemaker-edge-2020-09-23/GetDeployments AWS API Documentation
+    #
+    # @overload get_deployments(params = {})
+    # @param [Hash] params ({})
+    def get_deployments(params = {}, options = {})
+      req = build_request(:get_deployments, params)
+      req.send_request(options)
+    end
 
     # Use to check if a device is registered with SageMaker Edge Manager.
     #
@@ -381,6 +480,9 @@ module Aws::SagemakerEdgeManager
     # @option params [required, String] :device_fleet_name
     #   The name of the fleet that the device belongs to.
     #
+    # @option params [Types::DeploymentResult] :deployment_result
+    #   Returns the result of a deployment on the device.
+    #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
     # @example Request syntax with placeholder values
@@ -413,6 +515,25 @@ module Aws::SagemakerEdgeManager
     #     agent_version: "Version", # required
     #     device_name: "DeviceName", # required
     #     device_fleet_name: "DeviceFleetName", # required
+    #     deployment_result: {
+    #       deployment_name: "EntityName",
+    #       deployment_status: "EntityName",
+    #       deployment_status_message: "String",
+    #       deployment_start_time: Time.now,
+    #       deployment_end_time: Time.now,
+    #       deployment_models: [
+    #         {
+    #           model_handle: "EntityName",
+    #           model_name: "ModelName",
+    #           model_version: "Version",
+    #           desired_state: "DEPLOY", # accepts DEPLOY, UNDEPLOY
+    #           state: "DEPLOY", # accepts DEPLOY, UNDEPLOY
+    #           status: "SUCCESS", # accepts SUCCESS, FAIL
+    #           status_reason: "String",
+    #           rollback_failure_reason: "String",
+    #         },
+    #       ],
+    #     },
     #   })
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/sagemaker-edge-2020-09-23/SendHeartbeat AWS API Documentation
@@ -437,7 +558,7 @@ module Aws::SagemakerEdgeManager
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-sagemakeredgemanager'
-      context[:gem_version] = '1.2.0'
+      context[:gem_version] = '1.18.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

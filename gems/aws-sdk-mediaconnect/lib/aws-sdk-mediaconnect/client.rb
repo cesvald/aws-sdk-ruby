@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:mediaconnect)
@@ -73,8 +77,13 @@ module Aws::MediaConnect
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::MediaConnect::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::MediaConnect
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::MediaConnect
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::MediaConnect
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::MediaConnect
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::MediaConnect
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::MediaConnect::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::MediaConnect::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::MediaConnect
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::MediaConnect
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -326,6 +383,118 @@ module Aws::MediaConnect
     end
 
     # @!group API Operations
+
+    # Adds outputs to an existing bridge.
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @option params [required, Array<Types::AddBridgeOutputRequest>] :outputs
+    #   The outputs that you want to add to this bridge.
+    #
+    # @return [Types::AddBridgeOutputsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::AddBridgeOutputsResponse#bridge_arn #bridge_arn} => String
+    #   * {Types::AddBridgeOutputsResponse#outputs #outputs} => Array&lt;Types::BridgeOutput&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.add_bridge_outputs({
+    #     bridge_arn: "__string", # required
+    #     outputs: [ # required
+    #       {
+    #         network_output: {
+    #           ip_address: "__string", # required
+    #           name: "__string", # required
+    #           network_name: "__string", # required
+    #           port: 1, # required
+    #           protocol: "zixi-push", # required, accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #           ttl: 1, # required
+    #         },
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge_arn #=> String
+    #   resp.outputs #=> Array
+    #   resp.outputs[0].flow_output.flow_arn #=> String
+    #   resp.outputs[0].flow_output.flow_source_arn #=> String
+    #   resp.outputs[0].flow_output.name #=> String
+    #   resp.outputs[0].network_output.ip_address #=> String
+    #   resp.outputs[0].network_output.name #=> String
+    #   resp.outputs[0].network_output.network_name #=> String
+    #   resp.outputs[0].network_output.port #=> Integer
+    #   resp.outputs[0].network_output.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #   resp.outputs[0].network_output.ttl #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/AddBridgeOutputs AWS API Documentation
+    #
+    # @overload add_bridge_outputs(params = {})
+    # @param [Hash] params ({})
+    def add_bridge_outputs(params = {}, options = {})
+      req = build_request(:add_bridge_outputs, params)
+      req.send_request(options)
+    end
+
+    # Adds sources to an existing bridge.
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @option params [required, Array<Types::AddBridgeSourceRequest>] :sources
+    #   The sources that you want to add to this bridge.
+    #
+    # @return [Types::AddBridgeSourcesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::AddBridgeSourcesResponse#bridge_arn #bridge_arn} => String
+    #   * {Types::AddBridgeSourcesResponse#sources #sources} => Array&lt;Types::BridgeSource&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.add_bridge_sources({
+    #     bridge_arn: "__string", # required
+    #     sources: [ # required
+    #       {
+    #         flow_source: {
+    #           flow_arn: "__string", # required
+    #           flow_vpc_interface_attachment: {
+    #             vpc_interface_name: "__string",
+    #           },
+    #           name: "__string", # required
+    #         },
+    #         network_source: {
+    #           multicast_ip: "__string", # required
+    #           name: "__string", # required
+    #           network_name: "__string", # required
+    #           port: 1, # required
+    #           protocol: "zixi-push", # required, accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #         },
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge_arn #=> String
+    #   resp.sources #=> Array
+    #   resp.sources[0].flow_source.flow_arn #=> String
+    #   resp.sources[0].flow_source.flow_vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.sources[0].flow_source.name #=> String
+    #   resp.sources[0].flow_source.output_arn #=> String
+    #   resp.sources[0].network_source.multicast_ip #=> String
+    #   resp.sources[0].network_source.name #=> String
+    #   resp.sources[0].network_source.network_name #=> String
+    #   resp.sources[0].network_source.port #=> Integer
+    #   resp.sources[0].network_source.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/AddBridgeSources AWS API Documentation
+    #
+    # @overload add_bridge_sources(params = {})
+    # @param [Hash] params ({})
+    def add_bridge_sources(params = {}, options = {})
+      req = build_request(:add_bridge_sources, params)
+      req.send_request(options)
+    end
 
     # Adds media streams to an existing flow. After you add a media stream
     # to a flow, you can associate it with a source and/or an output that
@@ -454,8 +623,9 @@ module Aws::MediaConnect
     #         min_latency: 1,
     #         name: "__string",
     #         port: 1,
-    #         protocol: "zixi-push", # required, accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener
+    #         protocol: "zixi-push", # required, accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
     #         remote_id: "__string",
+    #         sender_control_port: 1,
     #         smoothing_latency: 1,
     #         stream_id: "__string",
     #         vpc_interface_attachment: {
@@ -503,11 +673,18 @@ module Aws::MediaConnect
     #   resp.outputs[0].transport.max_latency #=> Integer
     #   resp.outputs[0].transport.max_sync_buffer #=> Integer
     #   resp.outputs[0].transport.min_latency #=> Integer
-    #   resp.outputs[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.outputs[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.outputs[0].transport.remote_id #=> String
+    #   resp.outputs[0].transport.sender_control_port #=> Integer
+    #   resp.outputs[0].transport.sender_ip_address #=> String
     #   resp.outputs[0].transport.smoothing_latency #=> Integer
+    #   resp.outputs[0].transport.source_listener_address #=> String
+    #   resp.outputs[0].transport.source_listener_port #=> Integer
     #   resp.outputs[0].transport.stream_id #=> String
     #   resp.outputs[0].vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.outputs[0].bridge_arn #=> String
+    #   resp.outputs[0].bridge_ports #=> Array
+    #   resp.outputs[0].bridge_ports[0] #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/AddFlowOutputs AWS API Documentation
     #
@@ -569,10 +746,20 @@ module Aws::MediaConnect
     #         ],
     #         min_latency: 1,
     #         name: "__string",
-    #         protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener
+    #         protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #         sender_control_port: 1,
+    #         sender_ip_address: "__string",
+    #         source_listener_address: "__string",
+    #         source_listener_port: 1,
     #         stream_id: "__string",
     #         vpc_interface_name: "__string",
     #         whitelist_cidr: "__string",
+    #         gateway_bridge_source: {
+    #           bridge_arn: "__string", # required
+    #           vpc_interface_attachment: {
+    #             vpc_interface_name: "__string",
+    #           },
+    #         },
     #       },
     #     ],
     #   })
@@ -603,6 +790,8 @@ module Aws::MediaConnect
     #   resp.sources[0].media_stream_source_configurations[0].input_configurations[0].interface.name #=> String
     #   resp.sources[0].media_stream_source_configurations[0].media_stream_name #=> String
     #   resp.sources[0].name #=> String
+    #   resp.sources[0].sender_control_port #=> Integer
+    #   resp.sources[0].sender_ip_address #=> String
     #   resp.sources[0].source_arn #=> String
     #   resp.sources[0].transport.cidr_allow_list #=> Array
     #   resp.sources[0].transport.cidr_allow_list[0] #=> String
@@ -610,12 +799,18 @@ module Aws::MediaConnect
     #   resp.sources[0].transport.max_latency #=> Integer
     #   resp.sources[0].transport.max_sync_buffer #=> Integer
     #   resp.sources[0].transport.min_latency #=> Integer
-    #   resp.sources[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.sources[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.sources[0].transport.remote_id #=> String
+    #   resp.sources[0].transport.sender_control_port #=> Integer
+    #   resp.sources[0].transport.sender_ip_address #=> String
     #   resp.sources[0].transport.smoothing_latency #=> Integer
+    #   resp.sources[0].transport.source_listener_address #=> String
+    #   resp.sources[0].transport.source_listener_port #=> Integer
     #   resp.sources[0].transport.stream_id #=> String
     #   resp.sources[0].vpc_interface_name #=> String
     #   resp.sources[0].whitelist_cidr #=> String
+    #   resp.sources[0].gateway_bridge_source.bridge_arn #=> String
+    #   resp.sources[0].gateway_bridge_source.vpc_interface_attachment.vpc_interface_name #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/AddFlowSources AWS API Documentation
     #
@@ -675,6 +870,139 @@ module Aws::MediaConnect
       req.send_request(options)
     end
 
+    # Creates a new bridge. The request must include one source.
+    #
+    # @option params [Types::AddEgressGatewayBridgeRequest] :egress_gateway_bridge
+    #   Create a bridge with the egress bridge type. An egress bridge is a
+    #   cloud-to-ground bridge. The content comes from an existing
+    #   MediaConnect flow and is delivered to your premises.
+    #
+    # @option params [Types::AddIngressGatewayBridgeRequest] :ingress_gateway_bridge
+    #   Create a bridge with the ingress bridge type. An ingress bridge is a
+    #   ground-to-cloud bridge. The content originates at your premises and is
+    #   delivered to the cloud.
+    #
+    # @option params [required, String] :name
+    #   The name of the bridge. This name can not be modified after the bridge
+    #   is created.
+    #
+    # @option params [Array<Types::AddBridgeOutputRequest>] :outputs
+    #   The outputs that you want to add to this bridge.
+    #
+    # @option params [required, String] :placement_arn
+    #   The bridge placement Amazon Resource Number (ARN).
+    #
+    # @option params [Types::FailoverConfig] :source_failover_config
+    #   The settings for source failover.
+    #
+    # @option params [required, Array<Types::AddBridgeSourceRequest>] :sources
+    #   The sources that you want to add to this bridge.
+    #
+    # @return [Types::CreateBridgeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateBridgeResponse#bridge #bridge} => Types::Bridge
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_bridge({
+    #     egress_gateway_bridge: {
+    #       max_bitrate: 1, # required
+    #     },
+    #     ingress_gateway_bridge: {
+    #       max_bitrate: 1, # required
+    #       max_outputs: 1, # required
+    #     },
+    #     name: "__string", # required
+    #     outputs: [
+    #       {
+    #         network_output: {
+    #           ip_address: "__string", # required
+    #           name: "__string", # required
+    #           network_name: "__string", # required
+    #           port: 1, # required
+    #           protocol: "zixi-push", # required, accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #           ttl: 1, # required
+    #         },
+    #       },
+    #     ],
+    #     placement_arn: "__string", # required
+    #     source_failover_config: {
+    #       failover_mode: "MERGE", # accepts MERGE, FAILOVER
+    #       recovery_window: 1,
+    #       source_priority: {
+    #         primary_source: "__string",
+    #       },
+    #       state: "ENABLED", # accepts ENABLED, DISABLED
+    #     },
+    #     sources: [ # required
+    #       {
+    #         flow_source: {
+    #           flow_arn: "__string", # required
+    #           flow_vpc_interface_attachment: {
+    #             vpc_interface_name: "__string",
+    #           },
+    #           name: "__string", # required
+    #         },
+    #         network_source: {
+    #           multicast_ip: "__string", # required
+    #           name: "__string", # required
+    #           network_name: "__string", # required
+    #           port: 1, # required
+    #           protocol: "zixi-push", # required, accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #         },
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge.bridge_arn #=> String
+    #   resp.bridge.bridge_messages #=> Array
+    #   resp.bridge.bridge_messages[0].code #=> String
+    #   resp.bridge.bridge_messages[0].message #=> String
+    #   resp.bridge.bridge_messages[0].resource_name #=> String
+    #   resp.bridge.bridge_state #=> String, one of "CREATING", "STANDBY", "STARTING", "DEPLOYING", "ACTIVE", "STOPPING", "DELETING", "DELETED", "START_FAILED", "START_PENDING", "STOP_FAILED", "UPDATING"
+    #   resp.bridge.egress_gateway_bridge.instance_id #=> String
+    #   resp.bridge.egress_gateway_bridge.max_bitrate #=> Integer
+    #   resp.bridge.ingress_gateway_bridge.instance_id #=> String
+    #   resp.bridge.ingress_gateway_bridge.max_bitrate #=> Integer
+    #   resp.bridge.ingress_gateway_bridge.max_outputs #=> Integer
+    #   resp.bridge.name #=> String
+    #   resp.bridge.outputs #=> Array
+    #   resp.bridge.outputs[0].flow_output.flow_arn #=> String
+    #   resp.bridge.outputs[0].flow_output.flow_source_arn #=> String
+    #   resp.bridge.outputs[0].flow_output.name #=> String
+    #   resp.bridge.outputs[0].network_output.ip_address #=> String
+    #   resp.bridge.outputs[0].network_output.name #=> String
+    #   resp.bridge.outputs[0].network_output.network_name #=> String
+    #   resp.bridge.outputs[0].network_output.port #=> Integer
+    #   resp.bridge.outputs[0].network_output.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #   resp.bridge.outputs[0].network_output.ttl #=> Integer
+    #   resp.bridge.placement_arn #=> String
+    #   resp.bridge.source_failover_config.failover_mode #=> String, one of "MERGE", "FAILOVER"
+    #   resp.bridge.source_failover_config.recovery_window #=> Integer
+    #   resp.bridge.source_failover_config.source_priority.primary_source #=> String
+    #   resp.bridge.source_failover_config.state #=> String, one of "ENABLED", "DISABLED"
+    #   resp.bridge.sources #=> Array
+    #   resp.bridge.sources[0].flow_source.flow_arn #=> String
+    #   resp.bridge.sources[0].flow_source.flow_vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.bridge.sources[0].flow_source.name #=> String
+    #   resp.bridge.sources[0].flow_source.output_arn #=> String
+    #   resp.bridge.sources[0].network_source.multicast_ip #=> String
+    #   resp.bridge.sources[0].network_source.name #=> String
+    #   resp.bridge.sources[0].network_source.network_name #=> String
+    #   resp.bridge.sources[0].network_source.port #=> Integer
+    #   resp.bridge.sources[0].network_source.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/CreateBridge AWS API Documentation
+    #
+    # @overload create_bridge(params = {})
+    # @param [Hash] params ({})
+    def create_bridge(params = {}, options = {})
+      req = build_request(:create_bridge, params)
+      req.send_request(options)
+    end
+
     # Creates a new flow. The request must include one source. The request
     # optionally can include outputs (up to 50) and entitlements (up to 50).
     #
@@ -700,12 +1028,15 @@ module Aws::MediaConnect
     #   The settings for the source of the flow.
     #
     # @option params [Types::FailoverConfig] :source_failover_config
-    #   The settings for source failover
+    #   The settings for source failover.
     #
     # @option params [Array<Types::SetSourceRequest>] :sources
     #
     # @option params [Array<Types::VpcInterfaceRequest>] :vpc_interfaces
     #   The VPC interfaces you want on the flow.
+    #
+    # @option params [Types::AddMaintenance] :maintenance
+    #   Create maintenance setting for a flow
     #
     # @return [Types::CreateFlowResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -797,8 +1128,9 @@ module Aws::MediaConnect
     #         min_latency: 1,
     #         name: "__string",
     #         port: 1,
-    #         protocol: "zixi-push", # required, accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener
+    #         protocol: "zixi-push", # required, accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
     #         remote_id: "__string",
+    #         sender_control_port: 1,
     #         smoothing_latency: 1,
     #         stream_id: "__string",
     #         vpc_interface_attachment: {
@@ -840,13 +1172,27 @@ module Aws::MediaConnect
     #       ],
     #       min_latency: 1,
     #       name: "__string",
-    #       protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener
+    #       protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #       sender_control_port: 1,
+    #       sender_ip_address: "__string",
+    #       source_listener_address: "__string",
+    #       source_listener_port: 1,
     #       stream_id: "__string",
     #       vpc_interface_name: "__string",
     #       whitelist_cidr: "__string",
+    #       gateway_bridge_source: {
+    #         bridge_arn: "__string", # required
+    #         vpc_interface_attachment: {
+    #           vpc_interface_name: "__string",
+    #         },
+    #       },
     #     },
     #     source_failover_config: {
+    #       failover_mode: "MERGE", # accepts MERGE, FAILOVER
     #       recovery_window: 1,
+    #       source_priority: {
+    #         primary_source: "__string",
+    #       },
     #       state: "ENABLED", # accepts ENABLED, DISABLED
     #     },
     #     sources: [
@@ -884,10 +1230,20 @@ module Aws::MediaConnect
     #         ],
     #         min_latency: 1,
     #         name: "__string",
-    #         protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener
+    #         protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #         sender_control_port: 1,
+    #         sender_ip_address: "__string",
+    #         source_listener_address: "__string",
+    #         source_listener_port: 1,
     #         stream_id: "__string",
     #         vpc_interface_name: "__string",
     #         whitelist_cidr: "__string",
+    #         gateway_bridge_source: {
+    #           bridge_arn: "__string", # required
+    #           vpc_interface_attachment: {
+    #             vpc_interface_name: "__string",
+    #           },
+    #         },
     #       },
     #     ],
     #     vpc_interfaces: [
@@ -899,6 +1255,10 @@ module Aws::MediaConnect
     #         subnet_id: "__string", # required
     #       },
     #     ],
+    #     maintenance: {
+    #       maintenance_day: "Monday", # required, accepts Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+    #       maintenance_start_hour: "__string", # required
+    #     },
     #   })
     #
     # @example Response structure
@@ -976,11 +1336,18 @@ module Aws::MediaConnect
     #   resp.flow.outputs[0].transport.max_latency #=> Integer
     #   resp.flow.outputs[0].transport.max_sync_buffer #=> Integer
     #   resp.flow.outputs[0].transport.min_latency #=> Integer
-    #   resp.flow.outputs[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.flow.outputs[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.flow.outputs[0].transport.remote_id #=> String
+    #   resp.flow.outputs[0].transport.sender_control_port #=> Integer
+    #   resp.flow.outputs[0].transport.sender_ip_address #=> String
     #   resp.flow.outputs[0].transport.smoothing_latency #=> Integer
+    #   resp.flow.outputs[0].transport.source_listener_address #=> String
+    #   resp.flow.outputs[0].transport.source_listener_port #=> Integer
     #   resp.flow.outputs[0].transport.stream_id #=> String
     #   resp.flow.outputs[0].vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.flow.outputs[0].bridge_arn #=> String
+    #   resp.flow.outputs[0].bridge_ports #=> Array
+    #   resp.flow.outputs[0].bridge_ports[0] #=> Integer
     #   resp.flow.source.data_transfer_subscriber_fee_percent #=> Integer
     #   resp.flow.source.decryption.algorithm #=> String, one of "aes128", "aes192", "aes256"
     #   resp.flow.source.decryption.constant_initialization_vector #=> String
@@ -1003,6 +1370,8 @@ module Aws::MediaConnect
     #   resp.flow.source.media_stream_source_configurations[0].input_configurations[0].interface.name #=> String
     #   resp.flow.source.media_stream_source_configurations[0].media_stream_name #=> String
     #   resp.flow.source.name #=> String
+    #   resp.flow.source.sender_control_port #=> Integer
+    #   resp.flow.source.sender_ip_address #=> String
     #   resp.flow.source.source_arn #=> String
     #   resp.flow.source.transport.cidr_allow_list #=> Array
     #   resp.flow.source.transport.cidr_allow_list[0] #=> String
@@ -1010,13 +1379,21 @@ module Aws::MediaConnect
     #   resp.flow.source.transport.max_latency #=> Integer
     #   resp.flow.source.transport.max_sync_buffer #=> Integer
     #   resp.flow.source.transport.min_latency #=> Integer
-    #   resp.flow.source.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.flow.source.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.flow.source.transport.remote_id #=> String
+    #   resp.flow.source.transport.sender_control_port #=> Integer
+    #   resp.flow.source.transport.sender_ip_address #=> String
     #   resp.flow.source.transport.smoothing_latency #=> Integer
+    #   resp.flow.source.transport.source_listener_address #=> String
+    #   resp.flow.source.transport.source_listener_port #=> Integer
     #   resp.flow.source.transport.stream_id #=> String
     #   resp.flow.source.vpc_interface_name #=> String
     #   resp.flow.source.whitelist_cidr #=> String
+    #   resp.flow.source.gateway_bridge_source.bridge_arn #=> String
+    #   resp.flow.source.gateway_bridge_source.vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.flow.source_failover_config.failover_mode #=> String, one of "MERGE", "FAILOVER"
     #   resp.flow.source_failover_config.recovery_window #=> Integer
+    #   resp.flow.source_failover_config.source_priority.primary_source #=> String
     #   resp.flow.source_failover_config.state #=> String, one of "ENABLED", "DISABLED"
     #   resp.flow.sources #=> Array
     #   resp.flow.sources[0].data_transfer_subscriber_fee_percent #=> Integer
@@ -1041,6 +1418,8 @@ module Aws::MediaConnect
     #   resp.flow.sources[0].media_stream_source_configurations[0].input_configurations[0].interface.name #=> String
     #   resp.flow.sources[0].media_stream_source_configurations[0].media_stream_name #=> String
     #   resp.flow.sources[0].name #=> String
+    #   resp.flow.sources[0].sender_control_port #=> Integer
+    #   resp.flow.sources[0].sender_ip_address #=> String
     #   resp.flow.sources[0].source_arn #=> String
     #   resp.flow.sources[0].transport.cidr_allow_list #=> Array
     #   resp.flow.sources[0].transport.cidr_allow_list[0] #=> String
@@ -1048,12 +1427,18 @@ module Aws::MediaConnect
     #   resp.flow.sources[0].transport.max_latency #=> Integer
     #   resp.flow.sources[0].transport.max_sync_buffer #=> Integer
     #   resp.flow.sources[0].transport.min_latency #=> Integer
-    #   resp.flow.sources[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.flow.sources[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.flow.sources[0].transport.remote_id #=> String
+    #   resp.flow.sources[0].transport.sender_control_port #=> Integer
+    #   resp.flow.sources[0].transport.sender_ip_address #=> String
     #   resp.flow.sources[0].transport.smoothing_latency #=> Integer
+    #   resp.flow.sources[0].transport.source_listener_address #=> String
+    #   resp.flow.sources[0].transport.source_listener_port #=> Integer
     #   resp.flow.sources[0].transport.stream_id #=> String
     #   resp.flow.sources[0].vpc_interface_name #=> String
     #   resp.flow.sources[0].whitelist_cidr #=> String
+    #   resp.flow.sources[0].gateway_bridge_source.bridge_arn #=> String
+    #   resp.flow.sources[0].gateway_bridge_source.vpc_interface_attachment.vpc_interface_name #=> String
     #   resp.flow.status #=> String, one of "STANDBY", "ACTIVE", "UPDATING", "DELETING", "STARTING", "STOPPING", "ERROR"
     #   resp.flow.vpc_interfaces #=> Array
     #   resp.flow.vpc_interfaces[0].name #=> String
@@ -1064,6 +1449,10 @@ module Aws::MediaConnect
     #   resp.flow.vpc_interfaces[0].security_group_ids #=> Array
     #   resp.flow.vpc_interfaces[0].security_group_ids[0] #=> String
     #   resp.flow.vpc_interfaces[0].subnet_id #=> String
+    #   resp.flow.maintenance.maintenance_day #=> String, one of "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    #   resp.flow.maintenance.maintenance_deadline #=> String
+    #   resp.flow.maintenance.maintenance_scheduled_date #=> String
+    #   resp.flow.maintenance.maintenance_start_hour #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/CreateFlow AWS API Documentation
     #
@@ -1071,6 +1460,91 @@ module Aws::MediaConnect
     # @param [Hash] params ({})
     def create_flow(params = {}, options = {})
       req = build_request(:create_flow, params)
+      req.send_request(options)
+    end
+
+    # Creates a new gateway. The request must include at least one network
+    # (up to 4).
+    #
+    # @option params [required, Array<String>] :egress_cidr_blocks
+    #   The range of IP addresses that are allowed to contribute content or
+    #   initiate output requests for flows communicating with this gateway.
+    #   These IP addresses should be in the form of a Classless Inter-Domain
+    #   Routing (CIDR) block; for example, 10.0.0.0/16.
+    #
+    # @option params [required, String] :name
+    #   The name of the gateway. This name can not be modified after the
+    #   gateway is created.
+    #
+    # @option params [required, Array<Types::GatewayNetwork>] :networks
+    #   The list of networks that you want to add.
+    #
+    # @return [Types::CreateGatewayResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateGatewayResponse#gateway #gateway} => Types::Gateway
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_gateway({
+    #     egress_cidr_blocks: ["__string"], # required
+    #     name: "__string", # required
+    #     networks: [ # required
+    #       {
+    #         cidr_block: "__string", # required
+    #         name: "__string", # required
+    #       },
+    #     ],
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.gateway.egress_cidr_blocks #=> Array
+    #   resp.gateway.egress_cidr_blocks[0] #=> String
+    #   resp.gateway.gateway_arn #=> String
+    #   resp.gateway.gateway_messages #=> Array
+    #   resp.gateway.gateway_messages[0].code #=> String
+    #   resp.gateway.gateway_messages[0].message #=> String
+    #   resp.gateway.gateway_messages[0].resource_name #=> String
+    #   resp.gateway.gateway_state #=> String, one of "CREATING", "ACTIVE", "UPDATING", "ERROR", "DELETING", "DELETED"
+    #   resp.gateway.name #=> String
+    #   resp.gateway.networks #=> Array
+    #   resp.gateway.networks[0].cidr_block #=> String
+    #   resp.gateway.networks[0].name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/CreateGateway AWS API Documentation
+    #
+    # @overload create_gateway(params = {})
+    # @param [Hash] params ({})
+    def create_gateway(params = {}, options = {})
+      req = build_request(:create_gateway, params)
+      req.send_request(options)
+    end
+
+    # Deletes a bridge. Before you can delete a bridge, you must stop the
+    # bridge.
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @return [Types::DeleteBridgeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteBridgeResponse#bridge_arn #bridge_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_bridge({
+    #     bridge_arn: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/DeleteBridge AWS API Documentation
+    #
+    # @overload delete_bridge(params = {})
+    # @param [Hash] params ({})
+    def delete_bridge(params = {}, options = {})
+      req = build_request(:delete_bridge, params)
       req.send_request(options)
     end
 
@@ -1100,6 +1574,132 @@ module Aws::MediaConnect
     # @param [Hash] params ({})
     def delete_flow(params = {}, options = {})
       req = build_request(:delete_flow, params)
+      req.send_request(options)
+    end
+
+    # Deletes a gateway. Before you can delete a gateway, you must
+    # deregister its instances and delete its bridges.
+    #
+    # @option params [required, String] :gateway_arn
+    #
+    # @return [Types::DeleteGatewayResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeleteGatewayResponse#gateway_arn #gateway_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_gateway({
+    #     gateway_arn: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.gateway_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/DeleteGateway AWS API Documentation
+    #
+    # @overload delete_gateway(params = {})
+    # @param [Hash] params ({})
+    def delete_gateway(params = {}, options = {})
+      req = build_request(:delete_gateway, params)
+      req.send_request(options)
+    end
+
+    # Deregisters an instance. Before you deregister an instance, all
+    # bridges running on the instance must be stopped. If you want to
+    # deregister an instance without stopping the bridges, you must use the
+    # --force option.
+    #
+    # @option params [Boolean] :force
+    #
+    # @option params [required, String] :gateway_instance_arn
+    #
+    # @return [Types::DeregisterGatewayInstanceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DeregisterGatewayInstanceResponse#gateway_instance_arn #gateway_instance_arn} => String
+    #   * {Types::DeregisterGatewayInstanceResponse#instance_state #instance_state} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.deregister_gateway_instance({
+    #     force: false,
+    #     gateway_instance_arn: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.gateway_instance_arn #=> String
+    #   resp.instance_state #=> String, one of "REGISTERING", "ACTIVE", "DEREGISTERING", "DEREGISTERED", "REGISTRATION_ERROR", "DEREGISTRATION_ERROR"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/DeregisterGatewayInstance AWS API Documentation
+    #
+    # @overload deregister_gateway_instance(params = {})
+    # @param [Hash] params ({})
+    def deregister_gateway_instance(params = {}, options = {})
+      req = build_request(:deregister_gateway_instance, params)
+      req.send_request(options)
+    end
+
+    # Displays the details of a bridge.
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @return [Types::DescribeBridgeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeBridgeResponse#bridge #bridge} => Types::Bridge
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_bridge({
+    #     bridge_arn: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge.bridge_arn #=> String
+    #   resp.bridge.bridge_messages #=> Array
+    #   resp.bridge.bridge_messages[0].code #=> String
+    #   resp.bridge.bridge_messages[0].message #=> String
+    #   resp.bridge.bridge_messages[0].resource_name #=> String
+    #   resp.bridge.bridge_state #=> String, one of "CREATING", "STANDBY", "STARTING", "DEPLOYING", "ACTIVE", "STOPPING", "DELETING", "DELETED", "START_FAILED", "START_PENDING", "STOP_FAILED", "UPDATING"
+    #   resp.bridge.egress_gateway_bridge.instance_id #=> String
+    #   resp.bridge.egress_gateway_bridge.max_bitrate #=> Integer
+    #   resp.bridge.ingress_gateway_bridge.instance_id #=> String
+    #   resp.bridge.ingress_gateway_bridge.max_bitrate #=> Integer
+    #   resp.bridge.ingress_gateway_bridge.max_outputs #=> Integer
+    #   resp.bridge.name #=> String
+    #   resp.bridge.outputs #=> Array
+    #   resp.bridge.outputs[0].flow_output.flow_arn #=> String
+    #   resp.bridge.outputs[0].flow_output.flow_source_arn #=> String
+    #   resp.bridge.outputs[0].flow_output.name #=> String
+    #   resp.bridge.outputs[0].network_output.ip_address #=> String
+    #   resp.bridge.outputs[0].network_output.name #=> String
+    #   resp.bridge.outputs[0].network_output.network_name #=> String
+    #   resp.bridge.outputs[0].network_output.port #=> Integer
+    #   resp.bridge.outputs[0].network_output.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #   resp.bridge.outputs[0].network_output.ttl #=> Integer
+    #   resp.bridge.placement_arn #=> String
+    #   resp.bridge.source_failover_config.failover_mode #=> String, one of "MERGE", "FAILOVER"
+    #   resp.bridge.source_failover_config.recovery_window #=> Integer
+    #   resp.bridge.source_failover_config.source_priority.primary_source #=> String
+    #   resp.bridge.source_failover_config.state #=> String, one of "ENABLED", "DISABLED"
+    #   resp.bridge.sources #=> Array
+    #   resp.bridge.sources[0].flow_source.flow_arn #=> String
+    #   resp.bridge.sources[0].flow_source.flow_vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.bridge.sources[0].flow_source.name #=> String
+    #   resp.bridge.sources[0].flow_source.output_arn #=> String
+    #   resp.bridge.sources[0].network_source.multicast_ip #=> String
+    #   resp.bridge.sources[0].network_source.name #=> String
+    #   resp.bridge.sources[0].network_source.network_name #=> String
+    #   resp.bridge.sources[0].network_source.port #=> Integer
+    #   resp.bridge.sources[0].network_source.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/DescribeBridge AWS API Documentation
+    #
+    # @overload describe_bridge(params = {})
+    # @param [Hash] params ({})
+    def describe_bridge(params = {}, options = {})
+      req = build_request(:describe_bridge, params)
       req.send_request(options)
     end
 
@@ -1195,11 +1795,18 @@ module Aws::MediaConnect
     #   resp.flow.outputs[0].transport.max_latency #=> Integer
     #   resp.flow.outputs[0].transport.max_sync_buffer #=> Integer
     #   resp.flow.outputs[0].transport.min_latency #=> Integer
-    #   resp.flow.outputs[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.flow.outputs[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.flow.outputs[0].transport.remote_id #=> String
+    #   resp.flow.outputs[0].transport.sender_control_port #=> Integer
+    #   resp.flow.outputs[0].transport.sender_ip_address #=> String
     #   resp.flow.outputs[0].transport.smoothing_latency #=> Integer
+    #   resp.flow.outputs[0].transport.source_listener_address #=> String
+    #   resp.flow.outputs[0].transport.source_listener_port #=> Integer
     #   resp.flow.outputs[0].transport.stream_id #=> String
     #   resp.flow.outputs[0].vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.flow.outputs[0].bridge_arn #=> String
+    #   resp.flow.outputs[0].bridge_ports #=> Array
+    #   resp.flow.outputs[0].bridge_ports[0] #=> Integer
     #   resp.flow.source.data_transfer_subscriber_fee_percent #=> Integer
     #   resp.flow.source.decryption.algorithm #=> String, one of "aes128", "aes192", "aes256"
     #   resp.flow.source.decryption.constant_initialization_vector #=> String
@@ -1222,6 +1829,8 @@ module Aws::MediaConnect
     #   resp.flow.source.media_stream_source_configurations[0].input_configurations[0].interface.name #=> String
     #   resp.flow.source.media_stream_source_configurations[0].media_stream_name #=> String
     #   resp.flow.source.name #=> String
+    #   resp.flow.source.sender_control_port #=> Integer
+    #   resp.flow.source.sender_ip_address #=> String
     #   resp.flow.source.source_arn #=> String
     #   resp.flow.source.transport.cidr_allow_list #=> Array
     #   resp.flow.source.transport.cidr_allow_list[0] #=> String
@@ -1229,13 +1838,21 @@ module Aws::MediaConnect
     #   resp.flow.source.transport.max_latency #=> Integer
     #   resp.flow.source.transport.max_sync_buffer #=> Integer
     #   resp.flow.source.transport.min_latency #=> Integer
-    #   resp.flow.source.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.flow.source.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.flow.source.transport.remote_id #=> String
+    #   resp.flow.source.transport.sender_control_port #=> Integer
+    #   resp.flow.source.transport.sender_ip_address #=> String
     #   resp.flow.source.transport.smoothing_latency #=> Integer
+    #   resp.flow.source.transport.source_listener_address #=> String
+    #   resp.flow.source.transport.source_listener_port #=> Integer
     #   resp.flow.source.transport.stream_id #=> String
     #   resp.flow.source.vpc_interface_name #=> String
     #   resp.flow.source.whitelist_cidr #=> String
+    #   resp.flow.source.gateway_bridge_source.bridge_arn #=> String
+    #   resp.flow.source.gateway_bridge_source.vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.flow.source_failover_config.failover_mode #=> String, one of "MERGE", "FAILOVER"
     #   resp.flow.source_failover_config.recovery_window #=> Integer
+    #   resp.flow.source_failover_config.source_priority.primary_source #=> String
     #   resp.flow.source_failover_config.state #=> String, one of "ENABLED", "DISABLED"
     #   resp.flow.sources #=> Array
     #   resp.flow.sources[0].data_transfer_subscriber_fee_percent #=> Integer
@@ -1260,6 +1877,8 @@ module Aws::MediaConnect
     #   resp.flow.sources[0].media_stream_source_configurations[0].input_configurations[0].interface.name #=> String
     #   resp.flow.sources[0].media_stream_source_configurations[0].media_stream_name #=> String
     #   resp.flow.sources[0].name #=> String
+    #   resp.flow.sources[0].sender_control_port #=> Integer
+    #   resp.flow.sources[0].sender_ip_address #=> String
     #   resp.flow.sources[0].source_arn #=> String
     #   resp.flow.sources[0].transport.cidr_allow_list #=> Array
     #   resp.flow.sources[0].transport.cidr_allow_list[0] #=> String
@@ -1267,12 +1886,18 @@ module Aws::MediaConnect
     #   resp.flow.sources[0].transport.max_latency #=> Integer
     #   resp.flow.sources[0].transport.max_sync_buffer #=> Integer
     #   resp.flow.sources[0].transport.min_latency #=> Integer
-    #   resp.flow.sources[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.flow.sources[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.flow.sources[0].transport.remote_id #=> String
+    #   resp.flow.sources[0].transport.sender_control_port #=> Integer
+    #   resp.flow.sources[0].transport.sender_ip_address #=> String
     #   resp.flow.sources[0].transport.smoothing_latency #=> Integer
+    #   resp.flow.sources[0].transport.source_listener_address #=> String
+    #   resp.flow.sources[0].transport.source_listener_port #=> Integer
     #   resp.flow.sources[0].transport.stream_id #=> String
     #   resp.flow.sources[0].vpc_interface_name #=> String
     #   resp.flow.sources[0].whitelist_cidr #=> String
+    #   resp.flow.sources[0].gateway_bridge_source.bridge_arn #=> String
+    #   resp.flow.sources[0].gateway_bridge_source.vpc_interface_attachment.vpc_interface_name #=> String
     #   resp.flow.status #=> String, one of "STANDBY", "ACTIVE", "UPDATING", "DELETING", "STARTING", "STOPPING", "ERROR"
     #   resp.flow.vpc_interfaces #=> Array
     #   resp.flow.vpc_interfaces[0].name #=> String
@@ -1283,6 +1908,10 @@ module Aws::MediaConnect
     #   resp.flow.vpc_interfaces[0].security_group_ids #=> Array
     #   resp.flow.vpc_interfaces[0].security_group_ids[0] #=> String
     #   resp.flow.vpc_interfaces[0].subnet_id #=> String
+    #   resp.flow.maintenance.maintenance_day #=> String, one of "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    #   resp.flow.maintenance.maintenance_deadline #=> String
+    #   resp.flow.maintenance.maintenance_scheduled_date #=> String
+    #   resp.flow.maintenance.maintenance_start_hour #=> String
     #   resp.messages.errors #=> Array
     #   resp.messages.errors[0] #=> String
     #
@@ -1299,6 +1928,82 @@ module Aws::MediaConnect
     # @param [Hash] params ({})
     def describe_flow(params = {}, options = {})
       req = build_request(:describe_flow, params)
+      req.send_request(options)
+    end
+
+    # Displays the details of a gateway. The response includes the gateway
+    # ARN, name, and CIDR blocks, as well as details about the networks.
+    #
+    # @option params [required, String] :gateway_arn
+    #
+    # @return [Types::DescribeGatewayResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeGatewayResponse#gateway #gateway} => Types::Gateway
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_gateway({
+    #     gateway_arn: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.gateway.egress_cidr_blocks #=> Array
+    #   resp.gateway.egress_cidr_blocks[0] #=> String
+    #   resp.gateway.gateway_arn #=> String
+    #   resp.gateway.gateway_messages #=> Array
+    #   resp.gateway.gateway_messages[0].code #=> String
+    #   resp.gateway.gateway_messages[0].message #=> String
+    #   resp.gateway.gateway_messages[0].resource_name #=> String
+    #   resp.gateway.gateway_state #=> String, one of "CREATING", "ACTIVE", "UPDATING", "ERROR", "DELETING", "DELETED"
+    #   resp.gateway.name #=> String
+    #   resp.gateway.networks #=> Array
+    #   resp.gateway.networks[0].cidr_block #=> String
+    #   resp.gateway.networks[0].name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/DescribeGateway AWS API Documentation
+    #
+    # @overload describe_gateway(params = {})
+    # @param [Hash] params ({})
+    def describe_gateway(params = {}, options = {})
+      req = build_request(:describe_gateway, params)
+      req.send_request(options)
+    end
+
+    # Displays the details of an instance.
+    #
+    # @option params [required, String] :gateway_instance_arn
+    #
+    # @return [Types::DescribeGatewayInstanceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::DescribeGatewayInstanceResponse#gateway_instance #gateway_instance} => Types::GatewayInstance
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.describe_gateway_instance({
+    #     gateway_instance_arn: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.gateway_instance.bridge_placement #=> String, one of "AVAILABLE", "LOCKED"
+    #   resp.gateway_instance.connection_status #=> String, one of "CONNECTED", "DISCONNECTED"
+    #   resp.gateway_instance.gateway_arn #=> String
+    #   resp.gateway_instance.gateway_instance_arn #=> String
+    #   resp.gateway_instance.instance_id #=> String
+    #   resp.gateway_instance.instance_messages #=> Array
+    #   resp.gateway_instance.instance_messages[0].code #=> String
+    #   resp.gateway_instance.instance_messages[0].message #=> String
+    #   resp.gateway_instance.instance_messages[0].resource_name #=> String
+    #   resp.gateway_instance.instance_state #=> String, one of "REGISTERING", "ACTIVE", "DEREGISTERING", "DEREGISTERED", "REGISTRATION_ERROR", "DEREGISTRATION_ERROR"
+    #   resp.gateway_instance.running_bridge_count #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/DescribeGatewayInstance AWS API Documentation
+    #
+    # @overload describe_gateway_instance(params = {})
+    # @param [Hash] params ({})
+    def describe_gateway_instance(params = {}, options = {})
+      req = build_request(:describe_gateway_instance, params)
       req.send_request(options)
     end
 
@@ -1450,6 +2155,49 @@ module Aws::MediaConnect
       req.send_request(options)
     end
 
+    # Displays a list of bridges that are associated with this account and
+    # an optionally specified Arn. This request returns a paginated result.
+    #
+    # @option params [String] :filter_arn
+    #
+    # @option params [Integer] :max_results
+    #
+    # @option params [String] :next_token
+    #
+    # @return [Types::ListBridgesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListBridgesResponse#bridges #bridges} => Array&lt;Types::ListedBridge&gt;
+    #   * {Types::ListBridgesResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_bridges({
+    #     filter_arn: "__string",
+    #     max_results: 1,
+    #     next_token: "__string",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridges #=> Array
+    #   resp.bridges[0].bridge_arn #=> String
+    #   resp.bridges[0].bridge_state #=> String, one of "CREATING", "STANDBY", "STARTING", "DEPLOYING", "ACTIVE", "STOPPING", "DELETING", "DELETED", "START_FAILED", "START_PENDING", "STOP_FAILED", "UPDATING"
+    #   resp.bridges[0].bridge_type #=> String
+    #   resp.bridges[0].name #=> String
+    #   resp.bridges[0].placement_arn #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/ListBridges AWS API Documentation
+    #
+    # @overload list_bridges(params = {})
+    # @param [Hash] params ({})
+    def list_bridges(params = {}, options = {})
+      req = build_request(:list_bridges, params)
+      req.send_request(options)
+    end
+
     # Displays a list of all entitlements that have been granted to this
     # account. This request returns 20 results per page.
     #
@@ -1518,6 +2266,10 @@ module Aws::MediaConnect
     #   resp.flows[0].name #=> String
     #   resp.flows[0].source_type #=> String, one of "OWNED", "ENTITLED"
     #   resp.flows[0].status #=> String, one of "STANDBY", "ACTIVE", "UPDATING", "DELETING", "STARTING", "STOPPING", "ERROR"
+    #   resp.flows[0].maintenance.maintenance_day #=> String, one of "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    #   resp.flows[0].maintenance.maintenance_deadline #=> String
+    #   resp.flows[0].maintenance.maintenance_scheduled_date #=> String
+    #   resp.flows[0].maintenance.maintenance_start_hour #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/ListFlows AWS API Documentation
@@ -1526,6 +2278,88 @@ module Aws::MediaConnect
     # @param [Hash] params ({})
     def list_flows(params = {}, options = {})
       req = build_request(:list_flows, params)
+      req.send_request(options)
+    end
+
+    # Displays a list of instances associated with the AWS account. This
+    # request returns a paginated result. You can use the filterArn property
+    # to display only the instances associated with the selected Gateway
+    # Amazon Resource Name (ARN).
+    #
+    # @option params [String] :filter_arn
+    #
+    # @option params [Integer] :max_results
+    #
+    # @option params [String] :next_token
+    #
+    # @return [Types::ListGatewayInstancesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListGatewayInstancesResponse#instances #instances} => Array&lt;Types::ListedGatewayInstance&gt;
+    #   * {Types::ListGatewayInstancesResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_gateway_instances({
+    #     filter_arn: "__string",
+    #     max_results: 1,
+    #     next_token: "__string",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.instances #=> Array
+    #   resp.instances[0].gateway_arn #=> String
+    #   resp.instances[0].gateway_instance_arn #=> String
+    #   resp.instances[0].instance_id #=> String
+    #   resp.instances[0].instance_state #=> String, one of "REGISTERING", "ACTIVE", "DEREGISTERING", "DEREGISTERED", "REGISTRATION_ERROR", "DEREGISTRATION_ERROR"
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/ListGatewayInstances AWS API Documentation
+    #
+    # @overload list_gateway_instances(params = {})
+    # @param [Hash] params ({})
+    def list_gateway_instances(params = {}, options = {})
+      req = build_request(:list_gateway_instances, params)
+      req.send_request(options)
+    end
+
+    # Displays a list of gateways that are associated with this account.
+    # This request returns a paginated result.
+    #
+    # @option params [Integer] :max_results
+    #
+    # @option params [String] :next_token
+    #
+    # @return [Types::ListGatewaysResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListGatewaysResponse#gateways #gateways} => Array&lt;Types::ListedGateway&gt;
+    #   * {Types::ListGatewaysResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_gateways({
+    #     max_results: 1,
+    #     next_token: "__string",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.gateways #=> Array
+    #   resp.gateways[0].gateway_arn #=> String
+    #   resp.gateways[0].gateway_state #=> String, one of "CREATING", "ACTIVE", "UPDATING", "ERROR", "DELETING", "DELETED"
+    #   resp.gateways[0].name #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/ListGateways AWS API Documentation
+    #
+    # @overload list_gateways(params = {})
+    # @param [Hash] params ({})
+    def list_gateways(params = {}, options = {})
+      req = build_request(:list_gateways, params)
       req.send_request(options)
     end
 
@@ -1705,6 +2539,70 @@ module Aws::MediaConnect
     # @param [Hash] params ({})
     def purchase_offering(params = {}, options = {})
       req = build_request(:purchase_offering, params)
+      req.send_request(options)
+    end
+
+    # Removes an output from a bridge.
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @option params [required, String] :output_name
+    #
+    # @return [Types::RemoveBridgeOutputResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::RemoveBridgeOutputResponse#bridge_arn #bridge_arn} => String
+    #   * {Types::RemoveBridgeOutputResponse#output_name #output_name} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.remove_bridge_output({
+    #     bridge_arn: "__string", # required
+    #     output_name: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge_arn #=> String
+    #   resp.output_name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/RemoveBridgeOutput AWS API Documentation
+    #
+    # @overload remove_bridge_output(params = {})
+    # @param [Hash] params ({})
+    def remove_bridge_output(params = {}, options = {})
+      req = build_request(:remove_bridge_output, params)
+      req.send_request(options)
+    end
+
+    # Removes a source from a bridge.
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @option params [required, String] :source_name
+    #
+    # @return [Types::RemoveBridgeSourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::RemoveBridgeSourceResponse#bridge_arn #bridge_arn} => String
+    #   * {Types::RemoveBridgeSourceResponse#source_name #source_name} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.remove_bridge_source({
+    #     bridge_arn: "__string", # required
+    #     source_name: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge_arn #=> String
+    #   resp.source_name #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/RemoveBridgeSource AWS API Documentation
+    #
+    # @overload remove_bridge_source(params = {})
+    # @param [Hash] params ({})
+    def remove_bridge_source(params = {}, options = {})
+      req = build_request(:remove_bridge_source, params)
       req.send_request(options)
     end
 
@@ -1997,12 +2895,240 @@ module Aws::MediaConnect
       req.send_request(options)
     end
 
+    # Updates the bridge
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @option params [Types::UpdateEgressGatewayBridgeRequest] :egress_gateway_bridge
+    #
+    # @option params [Types::UpdateIngressGatewayBridgeRequest] :ingress_gateway_bridge
+    #
+    # @option params [Types::UpdateFailoverConfig] :source_failover_config
+    #   The settings for source failover.
+    #
+    # @return [Types::UpdateBridgeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateBridgeResponse#bridge #bridge} => Types::Bridge
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_bridge({
+    #     bridge_arn: "__string", # required
+    #     egress_gateway_bridge: {
+    #       max_bitrate: 1,
+    #     },
+    #     ingress_gateway_bridge: {
+    #       max_bitrate: 1,
+    #       max_outputs: 1,
+    #     },
+    #     source_failover_config: {
+    #       failover_mode: "MERGE", # accepts MERGE, FAILOVER
+    #       recovery_window: 1,
+    #       source_priority: {
+    #         primary_source: "__string",
+    #       },
+    #       state: "ENABLED", # accepts ENABLED, DISABLED
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge.bridge_arn #=> String
+    #   resp.bridge.bridge_messages #=> Array
+    #   resp.bridge.bridge_messages[0].code #=> String
+    #   resp.bridge.bridge_messages[0].message #=> String
+    #   resp.bridge.bridge_messages[0].resource_name #=> String
+    #   resp.bridge.bridge_state #=> String, one of "CREATING", "STANDBY", "STARTING", "DEPLOYING", "ACTIVE", "STOPPING", "DELETING", "DELETED", "START_FAILED", "START_PENDING", "STOP_FAILED", "UPDATING"
+    #   resp.bridge.egress_gateway_bridge.instance_id #=> String
+    #   resp.bridge.egress_gateway_bridge.max_bitrate #=> Integer
+    #   resp.bridge.ingress_gateway_bridge.instance_id #=> String
+    #   resp.bridge.ingress_gateway_bridge.max_bitrate #=> Integer
+    #   resp.bridge.ingress_gateway_bridge.max_outputs #=> Integer
+    #   resp.bridge.name #=> String
+    #   resp.bridge.outputs #=> Array
+    #   resp.bridge.outputs[0].flow_output.flow_arn #=> String
+    #   resp.bridge.outputs[0].flow_output.flow_source_arn #=> String
+    #   resp.bridge.outputs[0].flow_output.name #=> String
+    #   resp.bridge.outputs[0].network_output.ip_address #=> String
+    #   resp.bridge.outputs[0].network_output.name #=> String
+    #   resp.bridge.outputs[0].network_output.network_name #=> String
+    #   resp.bridge.outputs[0].network_output.port #=> Integer
+    #   resp.bridge.outputs[0].network_output.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #   resp.bridge.outputs[0].network_output.ttl #=> Integer
+    #   resp.bridge.placement_arn #=> String
+    #   resp.bridge.source_failover_config.failover_mode #=> String, one of "MERGE", "FAILOVER"
+    #   resp.bridge.source_failover_config.recovery_window #=> Integer
+    #   resp.bridge.source_failover_config.source_priority.primary_source #=> String
+    #   resp.bridge.source_failover_config.state #=> String, one of "ENABLED", "DISABLED"
+    #   resp.bridge.sources #=> Array
+    #   resp.bridge.sources[0].flow_source.flow_arn #=> String
+    #   resp.bridge.sources[0].flow_source.flow_vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.bridge.sources[0].flow_source.name #=> String
+    #   resp.bridge.sources[0].flow_source.output_arn #=> String
+    #   resp.bridge.sources[0].network_source.multicast_ip #=> String
+    #   resp.bridge.sources[0].network_source.name #=> String
+    #   resp.bridge.sources[0].network_source.network_name #=> String
+    #   resp.bridge.sources[0].network_source.port #=> Integer
+    #   resp.bridge.sources[0].network_source.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/UpdateBridge AWS API Documentation
+    #
+    # @overload update_bridge(params = {})
+    # @param [Hash] params ({})
+    def update_bridge(params = {}, options = {})
+      req = build_request(:update_bridge, params)
+      req.send_request(options)
+    end
+
+    # Updates an existing bridge output.
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @option params [Types::UpdateBridgeNetworkOutputRequest] :network_output
+    #   Update an existing network output.
+    #
+    # @option params [required, String] :output_name
+    #
+    # @return [Types::UpdateBridgeOutputResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateBridgeOutputResponse#bridge_arn #bridge_arn} => String
+    #   * {Types::UpdateBridgeOutputResponse#output #output} => Types::BridgeOutput
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_bridge_output({
+    #     bridge_arn: "__string", # required
+    #     network_output: {
+    #       ip_address: "__string",
+    #       network_name: "__string",
+    #       port: 1,
+    #       protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #       ttl: 1,
+    #     },
+    #     output_name: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge_arn #=> String
+    #   resp.output.flow_output.flow_arn #=> String
+    #   resp.output.flow_output.flow_source_arn #=> String
+    #   resp.output.flow_output.name #=> String
+    #   resp.output.network_output.ip_address #=> String
+    #   resp.output.network_output.name #=> String
+    #   resp.output.network_output.network_name #=> String
+    #   resp.output.network_output.port #=> Integer
+    #   resp.output.network_output.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #   resp.output.network_output.ttl #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/UpdateBridgeOutput AWS API Documentation
+    #
+    # @overload update_bridge_output(params = {})
+    # @param [Hash] params ({})
+    def update_bridge_output(params = {}, options = {})
+      req = build_request(:update_bridge_output, params)
+      req.send_request(options)
+    end
+
+    # Updates an existing bridge source.
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @option params [Types::UpdateBridgeFlowSourceRequest] :flow_source
+    #   Update the flow source of the bridge.
+    #
+    # @option params [Types::UpdateBridgeNetworkSourceRequest] :network_source
+    #   Update the network source of the bridge.
+    #
+    # @option params [required, String] :source_name
+    #
+    # @return [Types::UpdateBridgeSourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateBridgeSourceResponse#bridge_arn #bridge_arn} => String
+    #   * {Types::UpdateBridgeSourceResponse#source #source} => Types::BridgeSource
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_bridge_source({
+    #     bridge_arn: "__string", # required
+    #     flow_source: {
+    #       flow_arn: "__string",
+    #       flow_vpc_interface_attachment: {
+    #         vpc_interface_name: "__string",
+    #       },
+    #     },
+    #     network_source: {
+    #       multicast_ip: "__string",
+    #       network_name: "__string",
+    #       port: 1,
+    #       protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #     },
+    #     source_name: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge_arn #=> String
+    #   resp.source.flow_source.flow_arn #=> String
+    #   resp.source.flow_source.flow_vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.source.flow_source.name #=> String
+    #   resp.source.flow_source.output_arn #=> String
+    #   resp.source.network_source.multicast_ip #=> String
+    #   resp.source.network_source.name #=> String
+    #   resp.source.network_source.network_name #=> String
+    #   resp.source.network_source.port #=> Integer
+    #   resp.source.network_source.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/UpdateBridgeSource AWS API Documentation
+    #
+    # @overload update_bridge_source(params = {})
+    # @param [Hash] params ({})
+    def update_bridge_source(params = {}, options = {})
+      req = build_request(:update_bridge_source, params)
+      req.send_request(options)
+    end
+
+    # Updates the bridge state
+    #
+    # @option params [required, String] :bridge_arn
+    #
+    # @option params [required, String] :desired_state
+    #
+    # @return [Types::UpdateBridgeStateResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateBridgeStateResponse#bridge_arn #bridge_arn} => String
+    #   * {Types::UpdateBridgeStateResponse#desired_state #desired_state} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_bridge_state({
+    #     bridge_arn: "__string", # required
+    #     desired_state: "ACTIVE", # required, accepts ACTIVE, STANDBY, DELETED
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge_arn #=> String
+    #   resp.desired_state #=> String, one of "ACTIVE", "STANDBY", "DELETED"
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/UpdateBridgeState AWS API Documentation
+    #
+    # @overload update_bridge_state(params = {})
+    # @param [Hash] params ({})
+    def update_bridge_state(params = {}, options = {})
+      req = build_request(:update_bridge_state, params)
+      req.send_request(options)
+    end
+
     # Updates flow
     #
     # @option params [required, String] :flow_arn
     #
     # @option params [Types::UpdateFailoverConfig] :source_failover_config
-    #   The settings for source failover
+    #   The settings for source failover.
+    #
+    # @option params [Types::UpdateMaintenance] :maintenance
+    #   Update maintenance setting for a flow
     #
     # @return [Types::UpdateFlowResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2013,8 +3139,17 @@ module Aws::MediaConnect
     #   resp = client.update_flow({
     #     flow_arn: "__string", # required
     #     source_failover_config: {
+    #       failover_mode: "MERGE", # accepts MERGE, FAILOVER
     #       recovery_window: 1,
+    #       source_priority: {
+    #         primary_source: "__string",
+    #       },
     #       state: "ENABLED", # accepts ENABLED, DISABLED
+    #     },
+    #     maintenance: {
+    #       maintenance_day: "Monday", # accepts Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+    #       maintenance_scheduled_date: "__string",
+    #       maintenance_start_hour: "__string",
     #     },
     #   })
     #
@@ -2093,11 +3228,18 @@ module Aws::MediaConnect
     #   resp.flow.outputs[0].transport.max_latency #=> Integer
     #   resp.flow.outputs[0].transport.max_sync_buffer #=> Integer
     #   resp.flow.outputs[0].transport.min_latency #=> Integer
-    #   resp.flow.outputs[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.flow.outputs[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.flow.outputs[0].transport.remote_id #=> String
+    #   resp.flow.outputs[0].transport.sender_control_port #=> Integer
+    #   resp.flow.outputs[0].transport.sender_ip_address #=> String
     #   resp.flow.outputs[0].transport.smoothing_latency #=> Integer
+    #   resp.flow.outputs[0].transport.source_listener_address #=> String
+    #   resp.flow.outputs[0].transport.source_listener_port #=> Integer
     #   resp.flow.outputs[0].transport.stream_id #=> String
     #   resp.flow.outputs[0].vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.flow.outputs[0].bridge_arn #=> String
+    #   resp.flow.outputs[0].bridge_ports #=> Array
+    #   resp.flow.outputs[0].bridge_ports[0] #=> Integer
     #   resp.flow.source.data_transfer_subscriber_fee_percent #=> Integer
     #   resp.flow.source.decryption.algorithm #=> String, one of "aes128", "aes192", "aes256"
     #   resp.flow.source.decryption.constant_initialization_vector #=> String
@@ -2120,6 +3262,8 @@ module Aws::MediaConnect
     #   resp.flow.source.media_stream_source_configurations[0].input_configurations[0].interface.name #=> String
     #   resp.flow.source.media_stream_source_configurations[0].media_stream_name #=> String
     #   resp.flow.source.name #=> String
+    #   resp.flow.source.sender_control_port #=> Integer
+    #   resp.flow.source.sender_ip_address #=> String
     #   resp.flow.source.source_arn #=> String
     #   resp.flow.source.transport.cidr_allow_list #=> Array
     #   resp.flow.source.transport.cidr_allow_list[0] #=> String
@@ -2127,13 +3271,21 @@ module Aws::MediaConnect
     #   resp.flow.source.transport.max_latency #=> Integer
     #   resp.flow.source.transport.max_sync_buffer #=> Integer
     #   resp.flow.source.transport.min_latency #=> Integer
-    #   resp.flow.source.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.flow.source.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.flow.source.transport.remote_id #=> String
+    #   resp.flow.source.transport.sender_control_port #=> Integer
+    #   resp.flow.source.transport.sender_ip_address #=> String
     #   resp.flow.source.transport.smoothing_latency #=> Integer
+    #   resp.flow.source.transport.source_listener_address #=> String
+    #   resp.flow.source.transport.source_listener_port #=> Integer
     #   resp.flow.source.transport.stream_id #=> String
     #   resp.flow.source.vpc_interface_name #=> String
     #   resp.flow.source.whitelist_cidr #=> String
+    #   resp.flow.source.gateway_bridge_source.bridge_arn #=> String
+    #   resp.flow.source.gateway_bridge_source.vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.flow.source_failover_config.failover_mode #=> String, one of "MERGE", "FAILOVER"
     #   resp.flow.source_failover_config.recovery_window #=> Integer
+    #   resp.flow.source_failover_config.source_priority.primary_source #=> String
     #   resp.flow.source_failover_config.state #=> String, one of "ENABLED", "DISABLED"
     #   resp.flow.sources #=> Array
     #   resp.flow.sources[0].data_transfer_subscriber_fee_percent #=> Integer
@@ -2158,6 +3310,8 @@ module Aws::MediaConnect
     #   resp.flow.sources[0].media_stream_source_configurations[0].input_configurations[0].interface.name #=> String
     #   resp.flow.sources[0].media_stream_source_configurations[0].media_stream_name #=> String
     #   resp.flow.sources[0].name #=> String
+    #   resp.flow.sources[0].sender_control_port #=> Integer
+    #   resp.flow.sources[0].sender_ip_address #=> String
     #   resp.flow.sources[0].source_arn #=> String
     #   resp.flow.sources[0].transport.cidr_allow_list #=> Array
     #   resp.flow.sources[0].transport.cidr_allow_list[0] #=> String
@@ -2165,12 +3319,18 @@ module Aws::MediaConnect
     #   resp.flow.sources[0].transport.max_latency #=> Integer
     #   resp.flow.sources[0].transport.max_sync_buffer #=> Integer
     #   resp.flow.sources[0].transport.min_latency #=> Integer
-    #   resp.flow.sources[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.flow.sources[0].transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.flow.sources[0].transport.remote_id #=> String
+    #   resp.flow.sources[0].transport.sender_control_port #=> Integer
+    #   resp.flow.sources[0].transport.sender_ip_address #=> String
     #   resp.flow.sources[0].transport.smoothing_latency #=> Integer
+    #   resp.flow.sources[0].transport.source_listener_address #=> String
+    #   resp.flow.sources[0].transport.source_listener_port #=> Integer
     #   resp.flow.sources[0].transport.stream_id #=> String
     #   resp.flow.sources[0].vpc_interface_name #=> String
     #   resp.flow.sources[0].whitelist_cidr #=> String
+    #   resp.flow.sources[0].gateway_bridge_source.bridge_arn #=> String
+    #   resp.flow.sources[0].gateway_bridge_source.vpc_interface_attachment.vpc_interface_name #=> String
     #   resp.flow.status #=> String, one of "STANDBY", "ACTIVE", "UPDATING", "DELETING", "STARTING", "STOPPING", "ERROR"
     #   resp.flow.vpc_interfaces #=> Array
     #   resp.flow.vpc_interfaces[0].name #=> String
@@ -2181,6 +3341,10 @@ module Aws::MediaConnect
     #   resp.flow.vpc_interfaces[0].security_group_ids #=> Array
     #   resp.flow.vpc_interfaces[0].security_group_ids[0] #=> String
     #   resp.flow.vpc_interfaces[0].subnet_id #=> String
+    #   resp.flow.maintenance.maintenance_day #=> String, one of "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    #   resp.flow.maintenance.maintenance_deadline #=> String
+    #   resp.flow.maintenance.maintenance_scheduled_date #=> String
+    #   resp.flow.maintenance.maintenance_start_hour #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/UpdateFlow AWS API Documentation
     #
@@ -2202,7 +3366,7 @@ module Aws::MediaConnect
     #
     # @option params [Types::UpdateEncryption] :encryption
     #   The type of encryption that will be used on the output associated with
-    #   this entitlement.
+    #   this entitlement. Allowable encryption types: static-key, speke.
     #
     # @option params [required, String] :entitlement_arn
     #
@@ -2369,12 +3533,14 @@ module Aws::MediaConnect
     #
     # @option params [Types::UpdateEncryption] :encryption
     #   The type of key used for the encryption. If no keyType is provided,
-    #   the service will use the default setting (static-key).
+    #   the service will use the default setting (static-key). Allowable
+    #   encryption types: static-key.
     #
     # @option params [required, String] :flow_arn
     #
     # @option params [Integer] :max_latency
-    #   The maximum latency in milliseconds for Zixi-based streams.
+    #   The maximum latency in milliseconds. This parameter applies only to
+    #   RIST-based, Zixi-based, and Fujitsu-based streams.
     #
     # @option params [Array<Types::MediaStreamOutputConfigurationRequest>] :media_stream_output_configurations
     #   The media streams that are associated with the output, and the
@@ -2399,13 +3565,21 @@ module Aws::MediaConnect
     # @option params [String] :remote_id
     #   The remote ID for the Zixi-pull stream.
     #
+    # @option params [Integer] :sender_control_port
+    #   The port that the flow uses to send outbound requests to initiate
+    #   connection with the sender.
+    #
+    # @option params [String] :sender_ip_address
+    #   The IP address that the flow communicates with to initiate connection
+    #   with the sender.
+    #
     # @option params [Integer] :smoothing_latency
     #   The smoothing latency in milliseconds for RIST, RTP, and RTP-FEC
     #   streams.
     #
     # @option params [String] :stream_id
     #   The stream ID that you want to use for this transport. This parameter
-    #   applies only to Zixi-based streams.
+    #   applies only to Zixi and SRT caller-based streams.
     #
     # @option params [Types::VpcInterfaceAttachment] :vpc_interface_attachment
     #   The name of the VPC interface attachment to use for this output.
@@ -2456,8 +3630,10 @@ module Aws::MediaConnect
     #     min_latency: 1,
     #     output_arn: "__string", # required
     #     port: 1,
-    #     protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener
+    #     protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
     #     remote_id: "__string",
+    #     sender_control_port: 1,
+    #     sender_ip_address: "__string",
     #     smoothing_latency: 1,
     #     stream_id: "__string",
     #     vpc_interface_attachment: {
@@ -2502,11 +3678,18 @@ module Aws::MediaConnect
     #   resp.output.transport.max_latency #=> Integer
     #   resp.output.transport.max_sync_buffer #=> Integer
     #   resp.output.transport.min_latency #=> Integer
-    #   resp.output.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.output.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.output.transport.remote_id #=> String
+    #   resp.output.transport.sender_control_port #=> Integer
+    #   resp.output.transport.sender_ip_address #=> String
     #   resp.output.transport.smoothing_latency #=> Integer
+    #   resp.output.transport.source_listener_address #=> String
+    #   resp.output.transport.source_listener_port #=> Integer
     #   resp.output.transport.stream_id #=> String
     #   resp.output.vpc_interface_attachment.vpc_interface_name #=> String
+    #   resp.output.bridge_arn #=> String
+    #   resp.output.bridge_ports #=> Array
+    #   resp.output.bridge_ports[0] #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/UpdateFlowOutput AWS API Documentation
     #
@@ -2521,6 +3704,7 @@ module Aws::MediaConnect
     #
     # @option params [Types::UpdateEncryption] :decryption
     #   The type of encryption used on the content ingested from this source.
+    #   Allowable encryption types: static-key.
     #
     # @option params [String] :description
     #   A description for the source. This value is not used or seen outside
@@ -2537,11 +3721,11 @@ module Aws::MediaConnect
     #   The port that the flow will be listening on for incoming content.
     #
     # @option params [Integer] :max_bitrate
-    #   The smoothing max bitrate for RIST, RTP, and RTP-FEC streams.
+    #   The smoothing max bitrate (in bps) for RIST, RTP, and RTP-FEC streams.
     #
     # @option params [Integer] :max_latency
     #   The maximum latency in milliseconds. This parameter applies only to
-    #   RIST-based and Zixi-based streams.
+    #   RIST-based, Zixi-based, and Fujitsu-based streams.
     #
     # @option params [Integer] :max_sync_buffer
     #   The size of the buffer (in milliseconds) to use to sync incoming
@@ -2562,11 +3746,25 @@ module Aws::MediaConnect
     # @option params [String] :protocol
     #   The protocol that is used by the source.
     #
+    # @option params [Integer] :sender_control_port
+    #   The port that the flow uses to send outbound requests to initiate
+    #   connection with the sender.
+    #
+    # @option params [String] :sender_ip_address
+    #   The IP address that the flow communicates with to initiate connection
+    #   with the sender.
+    #
     # @option params [required, String] :source_arn
+    #
+    # @option params [String] :source_listener_address
+    #   Source IP or domain name for SRT-caller protocol.
+    #
+    # @option params [Integer] :source_listener_port
+    #   Source port for SRT-caller protocol.
     #
     # @option params [String] :stream_id
     #   The stream ID that you want to use for this transport. This parameter
-    #   applies only to Zixi-based streams.
+    #   applies only to Zixi and SRT caller-based streams.
     #
     # @option params [String] :vpc_interface_name
     #   The name of the VPC interface to use for this source.
@@ -2575,6 +3773,10 @@ module Aws::MediaConnect
     #   The range of IP addresses that should be allowed to contribute content
     #   to your source. These IP addresses should be in the form of a
     #   Classless Inter-Domain Routing (CIDR) block; for example, 10.0.0.0/16.
+    #
+    # @option params [Types::UpdateGatewayBridgeSourceRequest] :gateway_bridge_source
+    #   The source configuration for cloud flows receiving a stream from a
+    #   bridge.
     #
     # @return [Types::UpdateFlowSourceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -2617,11 +3819,21 @@ module Aws::MediaConnect
     #       },
     #     ],
     #     min_latency: 1,
-    #     protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener
+    #     protocol: "zixi-push", # accepts zixi-push, rtp-fec, rtp, zixi-pull, rist, st2110-jpegxs, cdi, srt-listener, srt-caller, fujitsu-qos, udp
+    #     sender_control_port: 1,
+    #     sender_ip_address: "__string",
     #     source_arn: "__string", # required
+    #     source_listener_address: "__string",
+    #     source_listener_port: 1,
     #     stream_id: "__string",
     #     vpc_interface_name: "__string",
     #     whitelist_cidr: "__string",
+    #     gateway_bridge_source: {
+    #       bridge_arn: "__string",
+    #       vpc_interface_attachment: {
+    #         vpc_interface_name: "__string",
+    #       },
+    #     },
     #   })
     #
     # @example Response structure
@@ -2649,6 +3861,8 @@ module Aws::MediaConnect
     #   resp.source.media_stream_source_configurations[0].input_configurations[0].interface.name #=> String
     #   resp.source.media_stream_source_configurations[0].media_stream_name #=> String
     #   resp.source.name #=> String
+    #   resp.source.sender_control_port #=> Integer
+    #   resp.source.sender_ip_address #=> String
     #   resp.source.source_arn #=> String
     #   resp.source.transport.cidr_allow_list #=> Array
     #   resp.source.transport.cidr_allow_list[0] #=> String
@@ -2656,12 +3870,18 @@ module Aws::MediaConnect
     #   resp.source.transport.max_latency #=> Integer
     #   resp.source.transport.max_sync_buffer #=> Integer
     #   resp.source.transport.min_latency #=> Integer
-    #   resp.source.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener"
+    #   resp.source.transport.protocol #=> String, one of "zixi-push", "rtp-fec", "rtp", "zixi-pull", "rist", "st2110-jpegxs", "cdi", "srt-listener", "srt-caller", "fujitsu-qos", "udp"
     #   resp.source.transport.remote_id #=> String
+    #   resp.source.transport.sender_control_port #=> Integer
+    #   resp.source.transport.sender_ip_address #=> String
     #   resp.source.transport.smoothing_latency #=> Integer
+    #   resp.source.transport.source_listener_address #=> String
+    #   resp.source.transport.source_listener_port #=> Integer
     #   resp.source.transport.stream_id #=> String
     #   resp.source.vpc_interface_name #=> String
     #   resp.source.whitelist_cidr #=> String
+    #   resp.source.gateway_bridge_source.bridge_arn #=> String
+    #   resp.source.gateway_bridge_source.vpc_interface_attachment.vpc_interface_name #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/UpdateFlowSource AWS API Documentation
     #
@@ -2669,6 +3889,42 @@ module Aws::MediaConnect
     # @param [Hash] params ({})
     def update_flow_source(params = {}, options = {})
       req = build_request(:update_flow_source, params)
+      req.send_request(options)
+    end
+
+    # Updates the configuration of an existing Gateway Instance.
+    #
+    # @option params [String] :bridge_placement
+    #   The availability of the instance to host new bridges. The
+    #   bridgePlacement property can be LOCKED or AVAILABLE. If it is LOCKED,
+    #   no new bridges can be deployed to this instance. If it is AVAILABLE,
+    #   new bridges can be added to this instance.
+    #
+    # @option params [required, String] :gateway_instance_arn
+    #
+    # @return [Types::UpdateGatewayInstanceResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateGatewayInstanceResponse#bridge_placement #bridge_placement} => String
+    #   * {Types::UpdateGatewayInstanceResponse#gateway_instance_arn #gateway_instance_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_gateway_instance({
+    #     bridge_placement: "AVAILABLE", # accepts AVAILABLE, LOCKED
+    #     gateway_instance_arn: "__string", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.bridge_placement #=> String, one of "AVAILABLE", "LOCKED"
+    #   resp.gateway_instance_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/mediaconnect-2018-11-14/UpdateGatewayInstance AWS API Documentation
+    #
+    # @overload update_gateway_instance(params = {})
+    # @param [Hash] params ({})
+    def update_gateway_instance(params = {}, options = {})
+      req = build_request(:update_gateway_instance, params)
       req.send_request(options)
     end
 
@@ -2685,7 +3941,7 @@ module Aws::MediaConnect
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-mediaconnect'
-      context[:gem_version] = '1.33.0'
+      context[:gem_version] = '1.52.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

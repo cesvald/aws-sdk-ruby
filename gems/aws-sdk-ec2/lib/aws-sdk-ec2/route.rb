@@ -48,7 +48,7 @@ module Aws::EC2
       data[:destination_ipv_6_cidr_block]
     end
 
-    # The prefix of the AWS service.
+    # The prefix of the Amazon Web Service.
     # @return [String]
     def destination_prefix_list_id
       data[:destination_prefix_list_id]
@@ -72,7 +72,7 @@ module Aws::EC2
       data[:instance_id]
     end
 
-    # The AWS account ID of the owner of the instance.
+    # The ID of Amazon Web Services account that owns the instance.
     # @return [String]
     def instance_owner_id
       data[:instance_owner_id]
@@ -135,6 +135,12 @@ module Aws::EC2
     # @return [String]
     def vpc_peering_connection_id
       data[:vpc_peering_connection_id]
+    end
+
+    # The Amazon Resource Name (ARN) of the core network.
+    # @return [String]
+    def core_network_arn
+      data[:core_network_arn]
     end
 
     # @!endgroup
@@ -261,7 +267,9 @@ module Aws::EC2
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -290,7 +298,9 @@ module Aws::EC2
         route_table_id: @route_table_id,
         destination_cidr_block: @destination_cidr_block
       )
-      resp = @client.delete_route(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_route(options)
+      end
       resp.data
     end
 
@@ -311,6 +321,7 @@ module Aws::EC2
     #     carrier_gateway_id: "CarrierGatewayId",
     #     network_interface_id: "NetworkInterfaceId",
     #     vpc_peering_connection_id: "VpcPeeringConnectionId",
+    #     core_network_arn: "CoreNetworkArn",
     #   })
     # @param [Hash] options ({})
     # @option options [String] :destination_ipv_6_cidr_block
@@ -348,13 +359,17 @@ module Aws::EC2
     #   The ID of a network interface.
     # @option options [String] :vpc_peering_connection_id
     #   The ID of a VPC peering connection.
+    # @option options [String] :core_network_arn
+    #   The Amazon Resource Name (ARN) of the core network.
     # @return [EmptyStructure]
     def replace(options = {})
       options = options.merge(
         route_table_id: @route_table_id,
         destination_cidr_block: @destination_cidr_block
       )
-      resp = @client.replace_route(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.replace_route(options)
+      end
       resp.data
     end
 

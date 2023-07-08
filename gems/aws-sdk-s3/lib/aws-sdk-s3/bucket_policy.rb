@@ -54,7 +54,9 @@ module Aws::S3
     #
     # @return [self]
     def load
-      resp = @client.get_bucket_policy(bucket: @bucket_name)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.get_bucket_policy(bucket: @bucket_name)
+      end
       @data = resp.data
       self
     end
@@ -169,7 +171,9 @@ module Aws::S3
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Actions
@@ -182,12 +186,14 @@ module Aws::S3
     # @param [Hash] options ({})
     # @option options [String] :expected_bucket_owner
     #   The account ID of the expected bucket owner. If the bucket is owned by
-    #   a different account, the request will fail with an HTTP `403 (Access
-    #   Denied)` error.
+    #   a different account, the request fails with the HTTP status code `403
+    #   Forbidden` (access denied).
     # @return [EmptyStructure]
     def delete(options = {})
       options = options.merge(bucket: @bucket_name)
-      resp = @client.delete_bucket_policy(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.delete_bucket_policy(options)
+      end
       resp.data
     end
 
@@ -195,6 +201,7 @@ module Aws::S3
     #
     #   bucket_policy.put({
     #     content_md5: "ContentMD5",
+    #     checksum_algorithm: "CRC32", # accepts CRC32, CRC32C, SHA1, SHA256
     #     confirm_remove_self_bucket_access: false,
     #     policy: "Policy", # required
     #     expected_bucket_owner: "AccountId",
@@ -203,8 +210,24 @@ module Aws::S3
     # @option options [String] :content_md5
     #   The MD5 hash of the request body.
     #
-    #   For requests made using the AWS Command Line Interface (CLI) or AWS
-    #   SDKs, this field is calculated automatically.
+    #   For requests made using the Amazon Web Services Command Line Interface
+    #   (CLI) or Amazon Web Services SDKs, this field is calculated
+    #   automatically.
+    # @option options [String] :checksum_algorithm
+    #   Indicates the algorithm used to create the checksum for the object
+    #   when using the SDK. This header will not provide any additional
+    #   functionality if not using the SDK. When sending this header, there
+    #   must be a corresponding `x-amz-checksum` or `x-amz-trailer` header
+    #   sent. Otherwise, Amazon S3 fails the request with the HTTP status code
+    #   `400 Bad Request`. For more information, see [Checking object
+    #   integrity][1] in the *Amazon S3 User Guide*.
+    #
+    #   If you provide an individual checksum, Amazon S3 ignores any provided
+    #   `ChecksumAlgorithm` parameter.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html
     # @option options [Boolean] :confirm_remove_self_bucket_access
     #   Set this parameter to true to confirm that you want to remove your
     #   permissions to change this bucket policy in the future.
@@ -212,12 +235,14 @@ module Aws::S3
     #   The bucket policy as a JSON document.
     # @option options [String] :expected_bucket_owner
     #   The account ID of the expected bucket owner. If the bucket is owned by
-    #   a different account, the request will fail with an HTTP `403 (Access
-    #   Denied)` error.
+    #   a different account, the request fails with the HTTP status code `403
+    #   Forbidden` (access denied).
     # @return [EmptyStructure]
     def put(options = {})
       options = options.merge(bucket: @bucket_name)
-      resp = @client.put_bucket_policy(options)
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.put_bucket_policy(options)
+      end
       resp.data
     end
 

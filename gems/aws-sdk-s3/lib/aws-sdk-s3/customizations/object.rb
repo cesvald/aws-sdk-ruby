@@ -27,10 +27,13 @@ module Aws
       #   necessary for objects larger than 5GB and can provide
       #   performance improvements on large objects. Amazon S3 does
       #   not accept multipart copies for objects smaller than 5MB.
+      #   Object metadata such as Content-Type will be copied, however,
+      #   Checksums are not copied.
       #
       # @option options [Integer] :content_length Only used when
       #   `:multipart_copy` is `true`. Passing this options avoids a HEAD
-      #   request to query the source object size. Raises an `ArgumentError` if
+      #   request to query the source object size but prevents object metadata
+      #   from being copied. Raises an `ArgumentError` if
       #   this option is provided when `:multipart_copy` is `false` or not set.
       #
       # @option options [S3::Client] :copy_source_client Only used when
@@ -65,11 +68,13 @@ module Aws
       # @see #copy_to
       #
       def copy_from(source, options = {})
-        if Hash === source && source[:copy_source]
-          # for backwards compatibility
-          @client.copy_object(source.merge(bucket: bucket_name, key: key))
-        else
-          ObjectCopier.new(self, options).copy_from(source, options)
+        Aws::Plugins::UserAgent.feature('resource') do
+          if Hash === source && source[:copy_source]
+            # for backwards compatibility
+            @client.copy_object(source.merge(bucket: bucket_name, key: key))
+          else
+            ObjectCopier.new(self, options).copy_from(source, options)
+          end
         end
       end
 
@@ -106,7 +111,9 @@ module Aws
       #   object.copy_to('src-bucket/src-key', multipart_copy: true)
       #
       def copy_to(target, options = {})
-        ObjectCopier.new(self, options).copy_to(target, options)
+        Aws::Plugins::UserAgent.feature('resource') do
+          ObjectCopier.new(self, options).copy_to(target, options)
+        end
       end
 
       # Copies and deletes the current object. The object will only be deleted
@@ -161,7 +168,7 @@ module Aws
       #
       # @param [Symbol] method
       #   The S3 operation to generate a presigned URL for. Valid values
-      #   are `:get`, `:put`, `:head`, `:delete`, `:create_multipart_upload`, 
+      #   are `:get`, `:put`, `:head`, `:delete`, `:create_multipart_upload`,
       #   `:list_multipart_uploads`, `:complete_multipart_upload`,
       #   `:abort_multipart_upload`, `:list_parts`, and `:upload_part`.
       #
@@ -210,6 +217,79 @@ module Aws
         end
 
         presigner.presigned_url(
+          method.downcase,
+          params.merge(bucket: bucket_name, key: key)
+        )
+      end
+
+      # Allows you to create presigned URL requests for S3 operations. This
+      # method returns a tuple containing the URL and the signed X-amz-* headers
+      # to be used with the presigned url.
+      #
+      # @example Pre-signed GET URL, valid for one hour
+      #
+      #     obj.presigned_request(:get, expires_in: 3600)
+      #     #=> ["https://bucket-name.s3.amazonaws.com/object-key?...", {}]
+      #
+      # @example Pre-signed PUT with a canned ACL
+      #
+      #     # the object uploaded using this URL will be publicly accessible
+      #     obj.presigned_request(:put, acl: 'public-read')
+      #     #=> ["https://bucket-name.s3.amazonaws.com/object-key?...",
+      #      {"x-amz-acl"=>"public-read"}]
+      #
+      # @param [Symbol] method
+      #   The S3 operation to generate a presigned request for. Valid values
+      #   are `:get`, `:put`, `:head`, `:delete`, `:create_multipart_upload`,
+      #   `:list_multipart_uploads`, `:complete_multipart_upload`,
+      #   `:abort_multipart_upload`, `:list_parts`, and `:upload_part`.
+      #
+      # @param [Hash] params
+      #   Additional request parameters to use when generating the pre-signed
+      #   request. See the related documentation in {Client} for accepted
+      #   params.
+      #
+      #   | Method                       | Client Method                      |
+      #   |------------------------------|------------------------------------|
+      #   | `:get`                       | {Client#get_object}                |
+      #   | `:put`                       | {Client#put_object}                |
+      #   | `:head`                      | {Client#head_object}               |
+      #   | `:delete`                    | {Client#delete_object}             |
+      #   | `:create_multipart_upload`   | {Client#create_multipart_upload}   |
+      #   | `:list_multipart_uploads`    | {Client#list_multipart_uploads}    |
+      #   | `:complete_multipart_upload` | {Client#complete_multipart_upload} |
+      #   | `:abort_multipart_upload`    | {Client#abort_multipart_upload}    |
+      #   | `:list_parts`                | {Client#list_parts}                |
+      #   | `:upload_part`               | {Client#upload_part}               |
+      #
+      # @option params [Boolean] :virtual_host (false) When `true` the
+      #   presigned URL will use the bucket name as a virtual host.
+      #
+      #     bucket = Aws::S3::Bucket.new('my.bucket.com')
+      #     bucket.object('key').presigned_request(virtual_host: true)
+      #     #=> ["http://my.bucket.com/key?...", {}]
+      #
+      # @option params [Integer] :expires_in (900) Number of seconds before
+      #   the pre-signed URL expires. This may not exceed one week (604800
+      #   seconds). Note that the pre-signed URL is also only valid as long as
+      #   credentials used to sign it are. For example, when using IAM roles,
+      #   temporary tokens generated for signing also have a default expiration
+      #   which will affect the effective expiration of the pre-signed URL.
+      #
+      # @raise [ArgumentError] Raised if `:expires_in` exceeds one week
+      #   (604800 seconds).
+      #
+      # @return [String, Hash] A tuple with a presigned URL and headers that
+      #   should be included with the request.
+      #
+      def presigned_request(method, params = {})
+        presigner = Presigner.new(client: client)
+
+        if %w(delete head get put).include?(method.to_s)
+          method = "#{method}_object".to_sym
+        end
+
+        presigner.presigned_request(
           method.downcase,
           params.merge(bucket: bucket_name, key: key)
         )
@@ -295,10 +375,12 @@ module Aws
           tempfile: uploading_options.delete(:tempfile),
           part_size: uploading_options.delete(:part_size)
         )
-        uploader.upload(
-          uploading_options.merge(bucket: bucket_name, key: key),
-          &block
-        )
+        Aws::Plugins::UserAgent.feature('resource') do
+          uploader.upload(
+            uploading_options.merge(bucket: bucket_name, key: key),
+            &block
+          )
+        end
         true
       end
 
@@ -327,7 +409,7 @@ module Aws
       #     progress = Proc.new do |bytes, totals|
       #       puts bytes.map.with_index { |b, i| "Part #{i+1}: #{b} / #{totals[i]}"}.join(' ') + "Total: #{100.0 * bytes.sum / totals.sum }%" }
       #     end
-      #     obj.upload_file('/path/to/file')
+      #     obj.upload_file('/path/to/file', progress_callback: progress)
       #
       # @param [String, Pathname, File, Tempfile] source A file on the local
       #   file system that will be uploaded as this object. This can either be
@@ -337,10 +419,10 @@ module Aws
       #   using an open Tempfile, rewind it before uploading or else the object
       #   will be empty.
       #
-      # @option options [Integer] :multipart_threshold (15728640) Files larger
+      # @option options [Integer] :multipart_threshold (104857600) Files larger
       #   than or equal to `:multipart_threshold` are uploaded using the S3
       #   multipart APIs.
-      #   Default threshold is 15MB.
+      #   Default threshold is 100MB.
       #
       # @option options [Integer] :thread_count (10) The number of parallel
       #   multipart uploads. This option is not used if the file is smaller than
@@ -364,10 +446,12 @@ module Aws
           multipart_threshold: uploading_options.delete(:multipart_threshold),
           client: client
         )
-        response = uploader.upload(
-          source,
-          uploading_options.merge(bucket: bucket_name, key: key)
-        )
+        response = Aws::Plugins::UserAgent.feature('resource') do
+          uploader.upload(
+            source,
+            uploading_options.merge(bucket: bucket_name, key: key)
+          )
+        end
         yield response if block_given?
         true
       end
@@ -391,7 +475,7 @@ module Aws
       #  customizing each range size in multipart_download,
       #  By default, `auto` mode is enabled, which performs multipart_download
       #
-      # @option options [String] chunk_size required in get_range mode.
+      # @option options [Integer] chunk_size required in get_range mode.
       #
       # @option options [Integer] thread_count (10) Customize threads used in
       #   the multipart download.
@@ -404,10 +488,12 @@ module Aws
       #   any errors.
       def download_file(destination, options = {})
         downloader = FileDownloader.new(client: client)
-        downloader.download(
-          destination,
-          options.merge(bucket: bucket_name, key: key)
-        )
+        Aws::Plugins::UserAgent.feature('resource') do
+          downloader.download(
+            destination,
+            options.merge(bucket: bucket_name, key: key)
+          )
+        end
         true
       end
     end

@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:codestarnotifications)
@@ -73,8 +77,13 @@ module Aws::CodeStarNotifications
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::CodeStarNotifications::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::CodeStarNotifications
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::CodeStarNotifications
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::CodeStarNotifications
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::CodeStarNotifications
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::CodeStarNotifications
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::CodeStarNotifications::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::CodeStarNotifications::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::CodeStarNotifications
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::CodeStarNotifications
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -328,12 +385,13 @@ module Aws::CodeStarNotifications
     # @!group API Operations
 
     # Creates a notification rule for a resource. The rule specifies the
-    # events you want notifications about and the targets (such as SNS
-    # topics) where you want to receive them.
+    # events you want notifications about and the targets (such as Chatbot
+    # topics or Chatbot clients configured for Slack) where you want to
+    # receive them.
     #
     # @option params [required, String] :name
-    #   The name for the notification rule. Notifictaion rule names must be
-    #   unique in your AWS account.
+    #   The name for the notification rule. Notification rule names must be
+    #   unique in your Amazon Web Services account.
     #
     # @option params [required, Array<String>] :event_type_ids
     #   A list of event types associated with this notification rule. For a
@@ -341,18 +399,19 @@ module Aws::CodeStarNotifications
     #
     # @option params [required, String] :resource
     #   The Amazon Resource Name (ARN) of the resource to associate with the
-    #   notification rule. Supported resources include pipelines in AWS
-    #   CodePipeline, repositories in AWS CodeCommit, and build projects in
-    #   AWS CodeBuild.
+    #   notification rule. Supported resources include pipelines in
+    #   CodePipeline, repositories in CodeCommit, and build projects in
+    #   CodeBuild.
     #
     # @option params [required, Array<Types::Target>] :targets
-    #   A list of Amazon Resource Names (ARNs) of SNS topics to associate with
-    #   the notification rule.
+    #   A list of Amazon Resource Names (ARNs) of Amazon Simple Notification
+    #   Service topics and Chatbot clients to associate with the notification
+    #   rule.
     #
     # @option params [required, String] :detail_type
     #   The level of detail to include in the notifications for this resource.
-    #   BASIC will include only the contents of the event as it would appear
-    #   in AWS CloudWatch. FULL will include any supplemental information
+    #   `BASIC` will include only the contents of the event as it would appear
+    #   in Amazon CloudWatch. `FULL` will include any supplemental information
     #   provided by AWS CodeStar Notifications and/or the service for the
     #   resource for which the notification is created.
     #
@@ -363,8 +422,9 @@ module Aws::CodeStarNotifications
     #   token is included, the request returns information about the initial
     #   request that used that token.
     #
-    #   <note markdown="1"> The AWS SDKs prepopulate client request tokens. If you are using an
-    #   AWS SDK, an idempotency token is created for you.
+    #   <note markdown="1"> The Amazon Web Services SDKs prepopulate client request tokens. If you
+    #   are using an Amazon Web Services SDK, an idempotency token is created
+    #   for you.
     #
     #    </note>
     #
@@ -373,11 +433,11 @@ module Aws::CodeStarNotifications
     #
     # @option params [Hash<String,String>] :tags
     #   A list of tags to apply to this notification rule. Key names cannot
-    #   start with "aws".
+    #   start with "`aws`".
     #
     # @option params [String] :status
-    #   The status of the notification rule. The default value is ENABLED. If
-    #   the status is set to DISABLED, notifications aren't sent for the
+    #   The status of the notification rule. The default value is `ENABLED`.
+    #   If the status is set to `DISABLED`, notifications aren't sent for the
     #   notification rule.
     #
     # @return [Types::CreateNotificationRuleResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
@@ -449,13 +509,14 @@ module Aws::CodeStarNotifications
     # Deletes a specified target for notifications.
     #
     # @option params [required, String] :target_address
-    #   The Amazon Resource Name (ARN) of the SNS topic to delete.
+    #   The Amazon Resource Name (ARN) of the Chatbot topic or Chatbot client
+    #   to delete.
     #
     # @option params [Boolean] :force_unsubscribe_all
     #   A Boolean value that can be used to delete all associations with this
-    #   SNS topic. The default value is FALSE. If set to TRUE, all
+    #   Chatbot topic. The default value is FALSE. If set to TRUE, all
     #   associations between that target and every notification rule in your
-    #   AWS account are deleted.
+    #   Amazon Web Services account are deleted.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -584,7 +645,8 @@ module Aws::CodeStarNotifications
       req.send_request(options)
     end
 
-    # Returns a list of the notification rules for an AWS account.
+    # Returns a list of the notification rules for an Amazon Web Services
+    # account.
     #
     # @option params [Array<Types::ListNotificationRulesFilter>] :filters
     #   The filters to use to return information by service or resource type.
@@ -669,7 +731,8 @@ module Aws::CodeStarNotifications
       req.send_request(options)
     end
 
-    # Returns a list of the notification rule targets for an AWS account.
+    # Returns a list of the notification rule targets for an Amazon Web
+    # Services account.
     #
     # @option params [Array<Types::ListTargetsFilter>] :filters
     #   The filters to use to return information by service or resource type.
@@ -726,16 +789,17 @@ module Aws::CodeStarNotifications
       req.send_request(options)
     end
 
-    # Creates an association between a notification rule and an SNS topic so
-    # that the associated target can receive notifications when the events
-    # described in the rule are triggered.
+    # Creates an association between a notification rule and an Chatbot
+    # topic or Chatbot client so that the associated target can receive
+    # notifications when the events described in the rule are triggered.
     #
     # @option params [required, String] :arn
     #   The Amazon Resource Name (ARN) of the notification rule for which you
     #   want to create the association.
     #
     # @option params [required, Types::Target] :target
-    #   Information about the SNS topics associated with a notification rule.
+    #   Information about the Chatbot topics or Chatbot clients associated
+    #   with a notification rule.
     #
     # @option params [String] :client_request_token
     #   An enumeration token that, when provided in a request, returns the
@@ -776,7 +840,7 @@ module Aws::CodeStarNotifications
     #
     # @option params [required, Hash<String,String>] :tags
     #   The list of tags to associate with the resource. Tag key names cannot
-    #   start with "aws".
+    #   start with "`aws`".
     #
     # @return [Types::TagResourceResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -805,7 +869,7 @@ module Aws::CodeStarNotifications
       req.send_request(options)
     end
 
-    # Removes an association between a notification rule and an Amazon SNS
+    # Removes an association between a notification rule and an Chatbot
     # topic so that subscribers to that topic stop receiving notifications
     # when the events described in the rule are triggered.
     #
@@ -813,7 +877,8 @@ module Aws::CodeStarNotifications
     #   The Amazon Resource Name (ARN) of the notification rule.
     #
     # @option params [required, String] :target_address
-    #   The ARN of the SNS topic to unsubscribe from the notification rule.
+    #   The ARN of the Chatbot topic to unsubscribe from the notification
+    #   rule.
     #
     # @return [Types::UnsubscribeResult] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -887,7 +952,13 @@ module Aws::CodeStarNotifications
     #   (sending notifications) or disabled (not sending notifications).
     #
     # @option params [Array<String>] :event_type_ids
-    #   A list of event types associated with this notification rule.
+    #   A list of event types associated with this notification rule. For a
+    #   complete list of event types and IDs, see [Notification concepts][1]
+    #   in the *Developer Tools Console User Guide*.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/codestar-notifications/latest/userguide/concepts.html#concepts-api
     #
     # @option params [Array<Types::Target>] :targets
     #   The address and type of the targets to receive notifications from this
@@ -896,7 +967,7 @@ module Aws::CodeStarNotifications
     # @option params [String] :detail_type
     #   The level of detail to include in the notifications for this resource.
     #   BASIC will include only the contents of the event as it would appear
-    #   in AWS CloudWatch. FULL will include any supplemental information
+    #   in Amazon CloudWatch. FULL will include any supplemental information
     #   provided by AWS CodeStar Notifications and/or the service for the
     #   resource for which the notification is created.
     #
@@ -940,7 +1011,7 @@ module Aws::CodeStarNotifications
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-codestarnotifications'
-      context[:gem_version] = '1.10.0'
+      context[:gem_version] = '1.26.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

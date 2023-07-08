@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-mgn/types'
 require_relative 'aws-sdk-mgn/client_api'
+require_relative 'aws-sdk-mgn/plugins/endpoints.rb'
 require_relative 'aws-sdk-mgn/client'
 require_relative 'aws-sdk-mgn/errors'
 require_relative 'aws-sdk-mgn/resource'
+require_relative 'aws-sdk-mgn/endpoint_parameters'
+require_relative 'aws-sdk-mgn/endpoint_provider'
+require_relative 'aws-sdk-mgn/endpoints'
 require_relative 'aws-sdk-mgn/customizations'
 
 # This module provides support for Application Migration Service. This module is available in the
@@ -28,7 +32,7 @@ require_relative 'aws-sdk-mgn/customizations'
 # structure.
 #
 #     mgn = Aws::Mgn::Client.new
-#     resp = mgn.change_server_life_cycle_state(params)
+#     resp = mgn.archive_application(params)
 #
 # See {Client} for more information.
 #
@@ -48,6 +52,6 @@ require_relative 'aws-sdk-mgn/customizations'
 # @!group service
 module Aws::Mgn
 
-  GEM_VERSION = '1.0.0'
+  GEM_VERSION = '1.23.0'
 
 end

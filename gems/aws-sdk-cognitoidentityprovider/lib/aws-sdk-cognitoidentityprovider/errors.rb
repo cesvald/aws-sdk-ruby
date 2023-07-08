@@ -34,6 +34,7 @@ module Aws::CognitoIdentityProvider
   # * {DuplicateProviderException}
   # * {EnableSoftwareTokenMFAException}
   # * {ExpiredCodeException}
+  # * {ForbiddenException}
   # * {GroupExistsException}
   # * {InternalErrorException}
   # * {InvalidEmailRoleAccessPolicyException}
@@ -54,8 +55,11 @@ module Aws::CognitoIdentityProvider
   # * {SoftwareTokenMFANotFoundException}
   # * {TooManyFailedAttemptsException}
   # * {TooManyRequestsException}
+  # * {UnauthorizedException}
   # * {UnexpectedLambdaException}
   # * {UnsupportedIdentityProviderException}
+  # * {UnsupportedOperationException}
+  # * {UnsupportedTokenTypeException}
   # * {UnsupportedUserStateException}
   # * {UserImportInProgressException}
   # * {UserLambdaValidationException}
@@ -166,6 +170,21 @@ module Aws::CognitoIdentityProvider
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::CognitoIdentityProvider::Types::ExpiredCodeException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class ForbiddenException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::CognitoIdentityProvider::Types::ForbiddenException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end
@@ -476,6 +495,21 @@ module Aws::CognitoIdentityProvider
       end
     end
 
+    class UnauthorizedException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::CognitoIdentityProvider::Types::UnauthorizedException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
     class UnexpectedLambdaException < ServiceError
 
       # @param [Seahorse::Client::RequestContext] context
@@ -496,6 +530,36 @@ module Aws::CognitoIdentityProvider
       # @param [Seahorse::Client::RequestContext] context
       # @param [String] message
       # @param [Aws::CognitoIdentityProvider::Types::UnsupportedIdentityProviderException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class UnsupportedOperationException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::CognitoIdentityProvider::Types::UnsupportedOperationException] data
+      def initialize(context, message, data = Aws::EmptyStructure.new)
+        super(context, message, data)
+      end
+
+      # @return [String]
+      def message
+        @message || @data[:message]
+      end
+    end
+
+    class UnsupportedTokenTypeException < ServiceError
+
+      # @param [Seahorse::Client::RequestContext] context
+      # @param [String] message
+      # @param [Aws::CognitoIdentityProvider::Types::UnsupportedTokenTypeException] data
       def initialize(context, message, data = Aws::EmptyStructure.new)
         super(context, message, data)
       end

@@ -15,7 +15,7 @@ module Aws::ECRPublic
     #
     # @!attribute [rw] authorization_token
     #   A base64-encoded string that contains authorization data for a
-    #   public Amazon ECR registry. When the string is decoded, it is
+    #   public Amazon ECR registry. When the string is decoded, it's
     #   presented in the format `user:password` for public registry
     #   authentication using `docker login`.
     #   @return [String]
@@ -34,23 +34,15 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchCheckLayerAvailabilityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryIdOrAlias",
-    #         repository_name: "RepositoryName", # required
-    #         layer_digests: ["BatchedOperationLayerDigest"], # required
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry that contains
-    #   the image layers to check. If you do not specify a registry, the
-    #   default public registry is assumed.
+    #   The Amazon Web Services account ID, or registry alias, associated
+    #   with the public registry that contains the image layers to check. If
+    #   you do not specify a registry, the default public registry is
+    #   assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The name of the repository that is associated with the image layers
+    #   The name of the repository that's associated with the image layers
     #   to check.
     #   @return [String]
     #
@@ -69,7 +61,7 @@ module Aws::ECRPublic
     end
 
     # @!attribute [rw] layers
-    #   A list of image layer objects corresponding to the image layer
+    #   A list of image layer objects that correspond to the image layer
     #   references in the request.
     #   @return [Array<Types::Layer>]
     #
@@ -86,24 +78,11 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass BatchDeleteImageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_name: "RepositoryName", # required
-    #         image_ids: [ # required
-    #           {
-    #             image_digest: "ImageDigest",
-    #             image_tag: "ImageTag",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the registry that contains the
-    #   image to delete. If you do not specify a registry, the default
-    #   public registry is assumed.
+    #   The Amazon Web Services account ID, or registry alias, that's
+    #   associated with the registry that contains the image to delete. If
+    #   you do not specify a registry, the default public registry is
+    #   assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -144,20 +123,10 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CompleteLayerUploadRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryIdOrAlias",
-    #         repository_name: "RepositoryName", # required
-    #         upload_id: "UploadId", # required
-    #         layer_digests: ["LayerDigest"], # required
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the registry to which to upload
-    #   layers. If you do not specify a registry, the default public
-    #   registry is assumed.
+    #   The Amazon Web Services account ID, or registry alias, associated
+    #   with the registry where layers are uploaded. If you do not specify a
+    #   registry, the default public registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -186,15 +155,15 @@ module Aws::ECRPublic
     end
 
     # @!attribute [rw] registry_id
-    #   The public registry ID associated with the request.
+    #   The public registry ID that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The repository name associated with the request.
+    #   The repository name that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] upload_id
-    #   The upload ID associated with the layer.
+    #   The upload ID that's associated with the layer.
     #   @return [String]
     #
     # @!attribute [rw] layer_digest
@@ -212,32 +181,11 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateRepositoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         repository_name: "RepositoryName", # required
-    #         catalog_data: {
-    #           description: "RepositoryDescription",
-    #           architectures: ["Architecture"],
-    #           operating_systems: ["OperatingSystem"],
-    #           logo_image_blob: "data",
-    #           about_text: "AboutText",
-    #           usage_text: "UsageText",
-    #         },
-    #         tags: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] repository_name
     #   The name to use for the repository. This appears publicly in the
-    #   Amazon ECR Public Gallery. The repository name may be specified on
-    #   its own (such as `nginx-web-app`) or it can be prepended with a
-    #   namespace to group the repository into a category (such as
+    #   Amazon ECR Public Gallery. The repository name can be specified on
+    #   its own (for example `nginx-web-app`) or prepended with a namespace
+    #   to group the repository into a category (for example
     #   `project-a/nginx-web-app`).
     #   @return [String]
     #
@@ -247,11 +195,11 @@ module Aws::ECRPublic
     #   @return [Types::RepositoryCatalogDataInput]
     #
     # @!attribute [rw] tags
-    #   The metadata that you apply to the repository to help you categorize
-    #   and organize them. Each tag consists of a key and an optional value,
-    #   both of which you define. Tag keys can have a maximum character
-    #   length of 128 characters, and tag values can have a maximum length
-    #   of 256 characters.
+    #   The metadata that you apply to each repository to help categorize
+    #   and organize your repositories. Each tag consists of a key and an
+    #   optional value. You define both of them. Tag keys can have a maximum
+    #   character length of 128 characters, and tag values can have a
+    #   maximum length of 256 characters.
     #   @return [Array<Types::Tag>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/CreateRepositoryRequest AWS API Documentation
@@ -282,22 +230,15 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRepositoryPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_name: "RepositoryName", # required
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry that contains
-    #   the repository policy to delete. If you do not specify a registry,
-    #   the default public registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   public registry that contains the repository policy to delete. If
+    #   you do not specify a registry, the default public registry is
+    #   assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The name of the repository that is associated with the repository
+    #   The name of the repository that's associated with the repository
     #   policy to delete.
     #   @return [String]
     #
@@ -311,11 +252,11 @@ module Aws::ECRPublic
     end
 
     # @!attribute [rw] registry_id
-    #   The registry ID associated with the request.
+    #   The registry ID that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The repository name associated with the request.
+    #   The repository name that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] policy_text
@@ -332,19 +273,10 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRepositoryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_name: "RepositoryName", # required
-    #         force: false,
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry that contains
-    #   the repository to delete. If you do not specify a registry, the
-    #   default public registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   public registry that contains the repository to delete. If you do
+    #   not specify a registry, the default public registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -352,7 +284,9 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] force
-    #   If a repository contains images, forces the deletion.
+    #   The force option can be used to delete a repository that contains
+    #   images. If the force option is not used, the repository must be
+    #   empty prior to deletion.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/DeleteRepositoryRequest AWS API Documentation
@@ -377,20 +311,11 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeImageTagsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_name: "RepositoryName", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry that contains
-    #   the repository in which to describe images. If you do not specify a
-    #   registry, the default public registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   public registry that contains the repository where images are
+    #   described. If you do not specify a registry, the default public
+    #   registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -399,26 +324,25 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] next_token
-    #   The `nextToken` value returned from a previous paginated
+    #   The `nextToken` value that's returned from a previous paginated
     #   `DescribeImageTags` request where `maxResults` was used and the
     #   results exceeded the value of that parameter. Pagination continues
     #   from the end of the previous results that returned the `nextToken`
-    #   value. This value is `null` when there are no more results to
-    #   return. This option cannot be used when you specify images with
-    #   `imageIds`.
+    #   value. If there are no more results to return, this value is `null`.
+    #   If you specify images with `imageIds`, you can't use this option.
     #   @return [String]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of repository results returned by
+    #   The maximum number of repository results that's returned by
     #   `DescribeImageTags` in paginated output. When this parameter is
     #   used, `DescribeImageTags` only returns `maxResults` results in a
-    #   single page along with a `nextToken` response element. The remaining
-    #   results of the initial request can be seen by sending another
+    #   single page along with a `nextToken` response element. You can see
+    #   the remaining results of the initial request by sending another
     #   `DescribeImageTags` request with the returned `nextToken` value.
-    #   This value can be between 1 and 1000. If this parameter is not used,
+    #   This value can be between 1 and 1000. If this parameter isn't used,
     #   then `DescribeImageTags` returns up to 100 results and a `nextToken`
-    #   value, if applicable. This option cannot be used when you specify
-    #   images with `imageIds`.
+    #   value, if applicable. If you specify images with `imageIds`, you
+    #   can't use this option.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/DescribeImageTagsRequest AWS API Documentation
@@ -439,9 +363,9 @@ module Aws::ECRPublic
     # @!attribute [rw] next_token
     #   The `nextToken` value to include in a future `DescribeImageTags`
     #   request. When the results of a `DescribeImageTags` request exceed
-    #   `maxResults`, this value can be used to retrieve the next page of
-    #   results. This value is `null` when there are no more results to
-    #   return.
+    #   `maxResults`, you can use this value to retrieve the next page of
+    #   results. If there are no more results to return, this value is
+    #   `null`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/DescribeImageTagsResponse AWS API Documentation
@@ -453,26 +377,11 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeImagesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_name: "RepositoryName", # required
-    #         image_ids: [
-    #           {
-    #             image_digest: "ImageDigest",
-    #             image_tag: "ImageTag",
-    #           },
-    #         ],
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry that contains
-    #   the repository in which to describe images. If you do not specify a
-    #   registry, the default public registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   public registry that contains the repository where images are
+    #   described. If you do not specify a registry, the default public
+    #   registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -484,25 +393,25 @@ module Aws::ECRPublic
     #   @return [Array<Types::ImageIdentifier>]
     #
     # @!attribute [rw] next_token
-    #   The `nextToken` value returned from a previous paginated
+    #   The `nextToken` value that's returned from a previous paginated
     #   `DescribeImages` request where `maxResults` was used and the results
     #   exceeded the value of that parameter. Pagination continues from the
-    #   end of the previous results that returned the `nextToken` value.
-    #   This value is `null` when there are no more results to return. This
-    #   option cannot be used when you specify images with `imageIds`.
+    #   end of the previous results that returned the `nextToken` value. If
+    #   there are no more results to return, this value is `null`. If you
+    #   specify images with `imageIds`, you can't use this option.
     #   @return [String]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of repository results returned by
+    #   The maximum number of repository results that's returned by
     #   `DescribeImages` in paginated output. When this parameter is used,
     #   `DescribeImages` only returns `maxResults` results in a single page
-    #   along with a `nextToken` response element. The remaining results of
-    #   the initial request can be seen by sending another `DescribeImages`
+    #   along with a `nextToken` response element. You can see the remaining
+    #   results of the initial request by sending another `DescribeImages`
     #   request with the returned `nextToken` value. This value can be
-    #   between 1 and 1000. If this parameter is not used, then
+    #   between 1 and 1000. If this parameter isn't used, then
     #   `DescribeImages` returns up to 100 results and a `nextToken` value,
-    #   if applicable. This option cannot be used when you specify images
-    #   with `imageIds`.
+    #   if applicable. If you specify images with `imageIds`, you can't use
+    #   this option.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/DescribeImagesRequest AWS API Documentation
@@ -524,9 +433,9 @@ module Aws::ECRPublic
     # @!attribute [rw] next_token
     #   The `nextToken` value to include in a future `DescribeImages`
     #   request. When the results of a `DescribeImages` request exceed
-    #   `maxResults`, this value can be used to retrieve the next page of
-    #   results. This value is `null` when there are no more results to
-    #   return.
+    #   `maxResults`, you can use this value to retrieve the next page of
+    #   results. If there are no more results to return, this value is
+    #   `null`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/DescribeImagesResponse AWS API Documentation
@@ -538,21 +447,12 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRegistriesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
-    #   The `nextToken` value returned from a previous paginated
+    #   The `nextToken` value that's returned from a previous paginated
     #   `DescribeRegistries` request where `maxResults` was used and the
     #   results exceeded the value of that parameter. Pagination continues
     #   from the end of the previous results that returned the `nextToken`
-    #   value. This value is `null` when there are no more results to
-    #   return.
+    #   value. If there are no more results to return, this value is `null`.
     #
     #   <note markdown="1"> This token should be treated as an opaque identifier that is only
     #   used to retrieve the next items in a list and not for other
@@ -562,13 +462,13 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of repository results returned by
+    #   The maximum number of repository results that's returned by
     #   `DescribeRegistries` in paginated output. When this parameter is
     #   used, `DescribeRegistries` only returns `maxResults` results in a
     #   single page along with a `nextToken` response element. The remaining
     #   results of the initial request can be seen by sending another
     #   `DescribeRegistries` request with the returned `nextToken` value.
-    #   This value can be between 1 and 1000. If this parameter is not used,
+    #   This value can be between 1 and 1000. If this parameter isn't used,
     #   then `DescribeRegistries` returns up to 100 results and a
     #   `nextToken` value, if applicable.
     #   @return [Integer]
@@ -583,15 +483,14 @@ module Aws::ECRPublic
     end
 
     # @!attribute [rw] registries
-    #   An object containing the details for a public registry.
+    #   An object that contains the details for a public registry.
     #   @return [Array<Types::Registry>]
     #
     # @!attribute [rw] next_token
     #   The `nextToken` value to include in a future `DescribeRepositories`
-    #   request. When the results of a `DescribeRepositories` request exceed
-    #   `maxResults`, this value can be used to retrieve the next page of
-    #   results. This value is `null` when there are no more results to
-    #   return.
+    #   request. If the results of a `DescribeRepositories` request exceed
+    #   `maxResults`, you can use this value to retrieve the next page of
+    #   results. If there are no more results, this value is `null`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/DescribeRegistriesResponse AWS API Documentation
@@ -603,20 +502,10 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRepositoriesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_names: ["RepositoryName"],
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the registry that contains the
-    #   repositories to be described. If you do not specify a registry, the
-    #   default public registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   registry that contains the repositories to be described. If you do
+    #   not specify a registry, the default public registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_names
@@ -625,13 +514,13 @@ module Aws::ECRPublic
     #   @return [Array<String>]
     #
     # @!attribute [rw] next_token
-    #   The `nextToken` value returned from a previous paginated
+    #   The `nextToken` value that's returned from a previous paginated
     #   `DescribeRepositories` request where `maxResults` was used and the
     #   results exceeded the value of that parameter. Pagination continues
     #   from the end of the previous results that returned the `nextToken`
-    #   value. This value is `null` when there are no more results to
-    #   return. This option cannot be used when you specify repositories
-    #   with `repositoryNames`.
+    #   value. If there are no more results to return, this value is `null`.
+    #   If you specify repositories with `repositoryNames`, you can't use
+    #   this option.
     #
     #   <note markdown="1"> This token should be treated as an opaque identifier that is only
     #   used to retrieve the next items in a list and not for other
@@ -641,16 +530,16 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] max_results
-    #   The maximum number of repository results returned by
+    #   The maximum number of repository results that's returned by
     #   `DescribeRepositories` in paginated output. When this parameter is
     #   used, `DescribeRepositories` only returns `maxResults` results in a
-    #   single page along with a `nextToken` response element. The remaining
-    #   results of the initial request can be seen by sending another
+    #   single page along with a `nextToken` response element. You can see
+    #   the remaining results of the initial request by sending another
     #   `DescribeRepositories` request with the returned `nextToken` value.
-    #   This value can be between 1 and 1000. If this parameter is not used,
+    #   This value can be between 1 and 1000. If this parameter isn't used,
     #   then `DescribeRepositories` returns up to 100 results and a
-    #   `nextToken` value, if applicable. This option cannot be used when
-    #   you specify repositories with `repositoryNames`.
+    #   `nextToken` value, if applicable. If you specify repositories with
+    #   `repositoryNames`, you can't use this option.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/DescribeRepositoriesRequest AWS API Documentation
@@ -672,8 +561,8 @@ module Aws::ECRPublic
     #   The `nextToken` value to include in a future `DescribeRepositories`
     #   request. When the results of a `DescribeRepositories` request exceed
     #   `maxResults`, this value can be used to retrieve the next page of
-    #   results. This value is `null` when there are no more results to
-    #   return.
+    #   results. If there are no more results to return, this value is
+    #   `null`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/DescribeRepositoriesResponse AWS API Documentation
@@ -685,7 +574,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The specified layer upload does not contain any layer parts.
+    # The specified layer upload doesn't contain any layer parts.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -735,18 +624,10 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetRepositoryCatalogDataRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_name: "RepositoryName", # required
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the registry that contains the
-    #   repositories to be described. If you do not specify a registry, the
-    #   default public registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   registry that contains the repositories to be described. If you do
+    #   not specify a registry, the default public registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -774,18 +655,10 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetRepositoryPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_name: "RepositoryName", # required
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry that contains
-    #   the repository. If you do not specify a registry, the default public
-    #   registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   public registry that contains the repository. If you do not specify
+    #   a registry, the default public registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -802,16 +675,16 @@ module Aws::ECRPublic
     end
 
     # @!attribute [rw] registry_id
-    #   The registry ID associated with the request.
+    #   The registry ID that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The repository name associated with the request.
+    #   The repository name that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] policy_text
-    #   The repository policy text associated with the repository. The
-    #   policy text will be in JSON format.
+    #   The repository policy text that's associated with the repository.
+    #   The policy text will be in JSON format.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/GetRepositoryPolicyResponse AWS API Documentation
@@ -824,24 +697,24 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # An object representing an Amazon ECR image.
+    # An object that represents an Amazon ECR image.
     #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the registry containing the
-    #   image.
+    #   The Amazon Web Services account ID that's associated with the
+    #   registry containing the image.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The name of the repository associated with the image.
+    #   The name of the repository that's associated with the image.
     #   @return [String]
     #
     # @!attribute [rw] image_id
-    #   An object containing the image tag and image digest associated with
-    #   an image.
+    #   An object that contains the image tag and image digest associated
+    #   with an image.
     #   @return [Types::ImageIdentifier]
     #
     # @!attribute [rw] image_manifest
-    #   The image manifest associated with the image.
+    #   The image manifest that's associated with the image.
     #   @return [String]
     #
     # @!attribute [rw] image_manifest_media_type
@@ -874,16 +747,16 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # An object that describes an image returned by a DescribeImages
+    # An object that describes an image that's returned by a DescribeImages
     # operation.
     #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry to which this
-    #   image belongs.
+    #   The Amazon Web Services account ID that's associated with the
+    #   public registry where this image belongs.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The name of the repository to which this image belongs.
+    #   The name of the repository where this image belongs.
     #   @return [String]
     #
     # @!attribute [rw] image_digest
@@ -891,27 +764,27 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] image_tags
-    #   The list of tags associated with this image.
+    #   The list of tags that's associated with this image.
     #   @return [Array<String>]
     #
     # @!attribute [rw] image_size_in_bytes
     #   The size, in bytes, of the image in the repository.
     #
-    #   If the image is a manifest list, this will be the max size of all
+    #   If the image is a manifest list, this is the max size of all
     #   manifests in the list.
     #
     #   <note markdown="1"> Beginning with Docker version 1.9, the Docker client compresses
     #   image layers before pushing them to a V2 Docker registry. The output
     #   of the `docker images` command shows the uncompressed image size, so
-    #   it may return a larger image size than the image sizes returned by
-    #   DescribeImages.
+    #   it might return a larger image size than the image sizes that are
+    #   returned by DescribeImages.
     #
     #    </note>
     #   @return [Integer]
     #
     # @!attribute [rw] image_pushed_at
-    #   The date and time, expressed in standard JavaScript date format, at
-    #   which the current image was pushed to the repository.
+    #   The date and time, expressed in standard JavaScript date format,
+    #   that the current image was pushed to the repository at.
     #   @return [Time]
     #
     # @!attribute [rw] image_manifest_media_type
@@ -937,7 +810,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The specified image digest does not match the digest that Amazon ECR
+    # The specified image digest doesn't match the digest that Amazon ECR
     # calculated for the image.
     #
     # @!attribute [rw] message
@@ -951,14 +824,14 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # An object representing an Amazon ECR image failure.
+    # An object that represents an Amazon ECR image failure.
     #
     # @!attribute [rw] image_id
-    #   The image ID associated with the failure.
+    #   The image ID that's associated with the failure.
     #   @return [Types::ImageIdentifier]
     #
     # @!attribute [rw] failure_code
-    #   The code associated with the failure.
+    #   The code that's associated with the failure.
     #   @return [String]
     #
     # @!attribute [rw] failure_reason
@@ -977,20 +850,12 @@ module Aws::ECRPublic
 
     # An object with identifying information for an Amazon ECR image.
     #
-    # @note When making an API call, you may pass ImageIdentifier
-    #   data as a hash:
-    #
-    #       {
-    #         image_digest: "ImageDigest",
-    #         image_tag: "ImageTag",
-    #       }
-    #
     # @!attribute [rw] image_digest
     #   The `sha256` digest of the image manifest.
     #   @return [String]
     #
     # @!attribute [rw] image_tag
-    #   The tag used for the image.
+    #   The tag that's used for the image.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/ImageIdentifier AWS API Documentation
@@ -1002,7 +867,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The image requested does not exist in the specified repository.
+    # The image requested doesn't exist in the specified repository.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1029,14 +894,14 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # An object representing the image tag details for an image.
+    # An object that represents the image tag details for an image.
     #
     # @!attribute [rw] image_tag
-    #   The tag associated with the image.
+    #   The tag that's associated with the image.
     #   @return [String]
     #
     # @!attribute [rw] created_at
-    #   The time stamp indicating when the image tag was created.
+    #   The time stamp that indicates when the image tag was created.
     #   @return [Time]
     #
     # @!attribute [rw] image_detail
@@ -1053,22 +918,15 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass InitiateLayerUploadRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryIdOrAlias",
-    #         repository_name: "RepositoryName", # required
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the registry to which you intend
-    #   to upload layers. If you do not specify a registry, the default
-    #   public registry is assumed.
+    #   The Amazon Web Services account ID, or registry alias, that's
+    #   associated with the registry to which you intend to upload layers.
+    #   If you do not specify a registry, the default public registry is
+    #   assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The name of the repository to which you intend to upload layers.
+    #   The name of the repository that you want to upload layers to.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/InitiateLayerUploadRequest AWS API Documentation
@@ -1099,8 +957,8 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The layer digest calculation performed by Amazon ECR upon receipt of
-    # the image layer does not match the digest specified.
+    # The layer digest calculation performed by Amazon ECR when the image
+    # layer doesn't match the digest specified.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1113,11 +971,12 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The layer part size is not valid, or the first byte specified is not
+    # The layer part size isn't valid, or the first byte specified isn't
     # consecutive to the last byte of a previous layer part upload.
     #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the layer part.
+    #   The Amazon Web Services account ID that's associated with the layer
+    #   part.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -1125,7 +984,7 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] upload_id
-    #   The upload ID associated with the layer part.
+    #   The upload ID that's associated with the layer part.
     #   @return [String]
     #
     # @!attribute [rw] last_valid_byte_received
@@ -1176,7 +1035,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # An object representing an Amazon ECR image layer.
+    # An object that represents an Amazon ECR image layer.
     #
     # @!attribute [rw] layer_digest
     #   The `sha256` digest of the image layer.
@@ -1220,14 +1079,14 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # An object representing an Amazon ECR image layer failure.
+    # An object that represents an Amazon ECR image layer failure.
     #
     # @!attribute [rw] layer_digest
-    #   The layer digest associated with the failure.
+    #   The layer digest that's associated with the failure.
     #   @return [String]
     #
     # @!attribute [rw] failure_code
-    #   The failure code associated with the failure.
+    #   The failure code that's associated with the failure.
     #   @return [String]
     #
     # @!attribute [rw] failure_reason
@@ -1257,7 +1116,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The specified layers could not be found, or the specified layer is not
+    # The specified layers can't be found, or the specified layer isn't
     # valid for this repository.
     #
     # @!attribute [rw] message
@@ -1271,7 +1130,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The operation did not succeed because it would have exceeded a service
+    # The operation didn't succeed because it would have exceeded a service
     # limit for your account. For more information, see [Amazon ECR Service
     # Quotas][1] in the Amazon Elastic Container Registry User Guide.
     #
@@ -1290,17 +1149,10 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
-    #   The Amazon Resource Name (ARN) that identifies the resource for
-    #   which to list the tags. Currently, the supported resource is an
-    #   Amazon ECR Public repository.
+    #   The Amazon Resource Name (ARN) that identifies the resource to list
+    #   the tags for. Currently, the supported resource is an Amazon ECR
+    #   Public repository.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/ListTagsForResourceRequest AWS API Documentation
@@ -1323,35 +1175,24 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutImageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryIdOrAlias",
-    #         repository_name: "RepositoryName", # required
-    #         image_manifest: "ImageManifest", # required
-    #         image_manifest_media_type: "MediaType",
-    #         image_tag: "ImageTag",
-    #         image_digest: "ImageDigest",
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry that contains
-    #   the repository in which to put the image. If you do not specify a
-    #   registry, the default public registry is assumed.
+    #   The Amazon Web Services account ID, or registry alias, that's
+    #   associated with the public registry that contains the repository
+    #   where the image is put. If you do not specify a registry, the
+    #   default public registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The name of the repository in which to put the image.
+    #   The name of the repository where the image is put.
     #   @return [String]
     #
     # @!attribute [rw] image_manifest
-    #   The image manifest corresponding to the image to be uploaded.
+    #   The image manifest that corresponds to the image to be uploaded.
     #   @return [String]
     #
     # @!attribute [rw] image_manifest_media_type
     #   The media type of the image manifest. If you push an image manifest
-    #   that does not contain the `mediaType` field, you must specify the
+    #   that doesn't contain the `mediaType` field, you must specify the
     #   `imageManifestMediaType` in the request.
     #   @return [String]
     #
@@ -1362,7 +1203,8 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] image_digest
-    #   The image digest of the image manifest corresponding to the image.
+    #   The image digest of the image manifest that corresponds to the
+    #   image.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/PutImageRequest AWS API Documentation
@@ -1390,13 +1232,6 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutRegistryCatalogDataRequest
-    #   data as a hash:
-    #
-    #       {
-    #         display_name: "RegistryDisplayName",
-    #       }
-    #
     # @!attribute [rw] display_name
     #   The display name for a public registry. The display name is shown as
     #   the repository author in the Amazon ECR Public Gallery.
@@ -1427,26 +1262,10 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutRepositoryCatalogDataRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_name: "RepositoryName", # required
-    #         catalog_data: { # required
-    #           description: "RepositoryDescription",
-    #           architectures: ["Architecture"],
-    #           operating_systems: ["OperatingSystem"],
-    #           logo_image_blob: "data",
-    #           about_text: "AboutText",
-    #           usage_text: "UsageText",
-    #         },
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry the
-    #   repository is in. If you do not specify a registry, the default
-    #   public registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   public registry the repository is in. If you do not specify a
+    #   registry, the default public registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -1480,7 +1299,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # An object that describes the image tag details returned by a
+    # An object that describes the image tag details that are returned by a
     # DescribeImageTags action.
     #
     # @!attribute [rw] image_digest
@@ -1490,21 +1309,21 @@ module Aws::ECRPublic
     # @!attribute [rw] image_size_in_bytes
     #   The size, in bytes, of the image in the repository.
     #
-    #   If the image is a manifest list, this will be the max size of all
+    #   If the image is a manifest list, this is the max size of all
     #   manifests in the list.
     #
     #   <note markdown="1"> Beginning with Docker version 1.9, the Docker client compresses
     #   image layers before pushing them to a V2 Docker registry. The output
     #   of the `docker images` command shows the uncompressed image size, so
-    #   it may return a larger image size than the image sizes returned by
-    #   DescribeImages.
+    #   it might return a larger image size than the image sizes that are
+    #   returned by DescribeImages.
     #
     #    </note>
     #   @return [Integer]
     #
     # @!attribute [rw] image_pushed_at
-    #   The date and time, expressed in standard JavaScript date format, at
-    #   which the current image tag was pushed to the repository.
+    #   The date and time, expressed in standard JavaScript date format,
+    #   which the current image tag was pushed to the repository at.
     #   @return [Time]
     #
     # @!attribute [rw] image_manifest_media_type
@@ -1527,7 +1346,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The manifest list is referencing an image that does not exist.
+    # The manifest list is referencing an image that doesn't exist.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1543,8 +1362,9 @@ module Aws::ECRPublic
     # The details of a public registry.
     #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the registry. If you do not
-    #   specify a registry, the default public registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   registry. If you do not specify a registry, the default public
+    #   registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] registry_arn
@@ -1557,14 +1377,15 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] verified
-    #   Whether the account is verified. This indicates whether the account
-    #   is an AWS Marketplace vendor. If an account is verified, each public
-    #   repository will received a verified account badge on the Amazon ECR
+    #   Indicates whether the account is a verified Amazon Web Services
+    #   Marketplace vendor. If an account is verified, each public
+    #   repository receives a verified account badge on the Amazon ECR
     #   Public Gallery.
     #   @return [Boolean]
     #
     # @!attribute [rw] aliases
-    #   An array of objects representing the aliases for a public registry.
+    #   An array of objects that represents the aliases for a public
+    #   registry.
     #   @return [Array<Types::RegistryAlias>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/Registry AWS API Documentation
@@ -1580,8 +1401,8 @@ module Aws::ECRPublic
     end
 
     # An object representing the aliases for a public registry. A public
-    # registry is given an alias upon creation but a custom alias can be set
-    # using the Amazon ECR console. For more information, see
+    # registry is given an alias when it's created. However, a custom alias
+    # can be set using the Amazon ECR console. For more information, see
     # [Registries][1] in the *Amazon Elastic Container Registry User Guide*.
     #
     #
@@ -1597,19 +1418,19 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] primary_registry_alias
-    #   Whether or not the registry alias is the primary alias for the
+    #   Indicates whether the registry alias is the primary alias for the
     #   registry. If true, the alias is the primary registry alias and is
     #   displayed in both the repository URL and the image URI used in the
     #   `docker pull` commands on the Amazon ECR Public Gallery.
     #
-    #   <note markdown="1"> A registry alias that is not the primary registry alias can be used
+    #   <note markdown="1"> A registry alias that isn't the primary registry alias can be used
     #   in the repository URI in a `docker pull` command.
     #
     #    </note>
     #   @return [Boolean]
     #
     # @!attribute [rw] default_registry_alias
-    #   Whether or not the registry alias is the default alias for the
+    #   Indicates whether the registry alias is the default alias for the
     #   registry. When the first public repository is created, your public
     #   registry is assigned a default registry alias.
     #   @return [Boolean]
@@ -1643,7 +1464,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The registry does not exist.
+    # The registry doesn't exist.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1661,14 +1482,14 @@ module Aws::ECRPublic
     # @!attribute [rw] repository_arn
     #   The Amazon Resource Name (ARN) that identifies the repository. The
     #   ARN contains the `arn:aws:ecr` namespace, followed by the region of
-    #   the repository, AWS account ID of the repository owner, repository
-    #   namespace, and repository name. For example,
+    #   the repository, Amazon Web Services account ID of the repository
+    #   owner, repository namespace, and repository name. For example,
     #   `arn:aws:ecr:region:012345678910:repository/test`.
     #   @return [String]
     #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the public registry that contains
-    #   the repository.
+    #   The Amazon Web Services account ID that's associated with the
+    #   public registry that contains the repository.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -1738,7 +1559,8 @@ module Aws::ECRPublic
     #   @return [Array<String>]
     #
     # @!attribute [rw] logo_url
-    #   The URL containing the logo associated with the repository.
+    #   The URL that contains the logo that's associated with the
+    #   repository.
     #   @return [String]
     #
     # @!attribute [rw] about_text
@@ -1753,7 +1575,8 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] marketplace_certified
-    #   Whether or not the repository is certified by AWS Marketplace.
+    #   Indicates whether the repository is certified by Amazon Web Services
+    #   Marketplace.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/RepositoryCatalogData AWS API Documentation
@@ -1770,20 +1593,8 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # An object containing the catalog data for a repository. This data is
-    # publicly visible in the Amazon ECR Public Gallery.
-    #
-    # @note When making an API call, you may pass RepositoryCatalogDataInput
-    #   data as a hash:
-    #
-    #       {
-    #         description: "RepositoryDescription",
-    #         architectures: ["Architecture"],
-    #         operating_systems: ["OperatingSystem"],
-    #         logo_image_blob: "data",
-    #         about_text: "AboutText",
-    #         usage_text: "UsageText",
-    #       }
+    # An object that contains the catalog data for a repository. This data
+    # is publicly visible in the Amazon ECR Public Gallery.
     #
     # @!attribute [rw] description
     #   A short description of the contents of the repository. This text
@@ -1794,26 +1605,14 @@ module Aws::ECRPublic
     # @!attribute [rw] architectures
     #   The system architecture that the images in the repository are
     #   compatible with. On the Amazon ECR Public Gallery, the following
-    #   supported architectures will appear as badges on the repository and
-    #   are used as search filters.
+    #   supported architectures appear as badges on the repository and are
+    #   used as search filters.
     #
-    #   * `Linux`
-    #
-    #   * `Windows`
-    #
-    #   <note markdown="1"> If an unsupported tag is added to your repository catalog data, it
-    #   will be associated with the repository and can be retrieved using
-    #   the API but will not be discoverable in the Amazon ECR Public
-    #   Gallery.
+    #   <note markdown="1"> If an unsupported tag is added to your repository catalog data,
+    #   it's associated with the repository and can be retrieved using the
+    #   API but isn't discoverable in the Amazon ECR Public Gallery.
     #
     #    </note>
-    #   @return [Array<String>]
-    #
-    # @!attribute [rw] operating_systems
-    #   The operating systems that the images in the repository are
-    #   compatible with. On the Amazon ECR Public Gallery, the following
-    #   supported operating systems will appear as badges on the repository
-    #   and are used as search filters.
     #
     #   * `ARM`
     #
@@ -1822,13 +1621,23 @@ module Aws::ECRPublic
     #   * `x86`
     #
     #   * `x86-64`
+    #   @return [Array<String>]
     #
-    #   <note markdown="1"> If an unsupported tag is added to your repository catalog data, it
-    #   will be associated with the repository and can be retrieved using
-    #   the API but will not be discoverable in the Amazon ECR Public
-    #   Gallery.
+    # @!attribute [rw] operating_systems
+    #   The operating systems that the images in the repository are
+    #   compatible with. On the Amazon ECR Public Gallery, the following
+    #   supported operating systems appear as badges on the repository and
+    #   are used as search filters.
+    #
+    #   <note markdown="1"> If an unsupported tag is added to your repository catalog data,
+    #   it's associated with the repository and can be retrieved using the
+    #   API but isn't discoverable in the Amazon ECR Public Gallery.
     #
     #    </note>
+    #
+    #   * `Linux`
+    #
+    #   * `Windows`
     #   @return [Array<String>]
     #
     # @!attribute [rw] logo_image_blob
@@ -1841,17 +1650,17 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] about_text
-    #   A detailed description of the contents of the repository. It is
+    #   A detailed description of the contents of the repository. It's
     #   publicly visible in the Amazon ECR Public Gallery. The text must be
     #   in markdown format.
     #   @return [String]
     #
     # @!attribute [rw] usage_text
-    #   Detailed information on how to use the contents of the repository.
-    #   It is publicly visible in the Amazon ECR Public Gallery. The usage
-    #   text provides context, support information, and additional usage
-    #   details for users of the repository. The text must be in markdown
-    #   format.
+    #   Detailed information about how to use the contents of the
+    #   repository. It's publicly visible in the Amazon ECR Public Gallery.
+    #   The usage text provides context, support information, and additional
+    #   usage details for users of the repository. The text must be in
+    #   markdown format.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/RepositoryCatalogDataInput AWS API Documentation
@@ -1863,6 +1672,19 @@ module Aws::ECRPublic
       :logo_image_blob,
       :about_text,
       :usage_text)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The repository catalog data doesn't exist.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/RepositoryCatalogDataNotFoundException AWS API Documentation
+    #
+    class RepositoryCatalogDataNotFoundException < Struct.new(
+      :message)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1882,8 +1704,8 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The specified repository could not be found. Check the spelling of the
-    # specified repository and ensure that you are performing operations on
+    # The specified repository can't be found. Check the spelling of the
+    # specified repository and ensure that you're performing operations on
     # the correct registry.
     #
     # @!attribute [rw] message
@@ -1897,7 +1719,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The specified repository and registry combination does not have an
+    # The specified repository and registry combination doesn't have an
     # associated repository policy.
     #
     # @!attribute [rw] message
@@ -1924,20 +1746,10 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SetRepositoryPolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryId",
-    #         repository_name: "RepositoryName", # required
-    #         policy_text: "RepositoryPolicyText", # required
-    #         force: false,
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the registry that contains the
-    #   repository. If you do not specify a registry, the default public
-    #   registry is assumed.
+    #   The Amazon Web Services account ID that's associated with the
+    #   registry that contains the repository. If you do not specify a
+    #   registry, the default public registry is assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
@@ -1955,10 +1767,10 @@ module Aws::ECRPublic
     #   @return [String]
     #
     # @!attribute [rw] force
-    #   If the policy you are attempting to set on a repository policy would
+    #   If the policy that you want to set on a repository policy would
     #   prevent you from setting another policy in the future, you must
-    #   force the SetRepositoryPolicy operation. This is intended to prevent
-    #   accidental repository lock outs.
+    #   force the SetRepositoryPolicy operation. This prevents accidental
+    #   repository lockouts.
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/SetRepositoryPolicyRequest AWS API Documentation
@@ -1973,15 +1785,15 @@ module Aws::ECRPublic
     end
 
     # @!attribute [rw] registry_id
-    #   The registry ID associated with the request.
+    #   The registry ID that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The repository name associated with the request.
+    #   The repository name that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] policy_text
-    #   The JSON repository policy text applied to the repository.
+    #   The JSON repository policy text that's applied to the repository.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/SetRepositoryPolicyResponse AWS API Documentation
@@ -1995,18 +1807,10 @@ module Aws::ECRPublic
     end
 
     # The metadata that you apply to a resource to help you categorize and
-    # organize them. Each tag consists of a key and an optional value, both
-    # of which you define. Tag keys can have a maximum character length of
-    # 128 characters, and tag values can have a maximum length of 256
+    # organize them. Each tag consists of a key and an optional value. You
+    # define both. Tag keys can have a maximum character length of 128
+    # characters, and tag values can have a maximum length of 256
     # characters.
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey",
-    #         value: "TagValue",
-    #       }
     #
     # @!attribute [rw] key
     #   One part of a key-value pair that make up a tag. A `key` is a
@@ -2028,21 +1832,8 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tags: [ # required
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] resource_arn
-    #   The Amazon Resource Name (ARN) of the resource to which to add tags.
+    #   The Amazon Resource Name (ARN) of the resource to add tags to.
     #   Currently, the supported resource is an Amazon ECR Public
     #   repository.
     #   @return [String]
@@ -2081,7 +1872,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The action is not supported in this Region.
+    # The action isn't supported in this Region.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -2094,17 +1885,9 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
-    #   The Amazon Resource Name (ARN) of the resource from which to delete
-    #   tags. Currently, the supported resource is an Amazon ECR Public
+    #   The Amazon Resource Name (ARN) of the resource to delete tags from.
+    #   Currently, the supported resource is an Amazon ECR Public
     #   repository.
     #   @return [String]
     #
@@ -2125,26 +1908,15 @@ module Aws::ECRPublic
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UploadLayerPartRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_id: "RegistryIdOrAlias",
-    #         repository_name: "RepositoryName", # required
-    #         upload_id: "UploadId", # required
-    #         part_first_byte: 1, # required
-    #         part_last_byte: 1, # required
-    #         layer_part_blob: "data", # required
-    #       }
-    #
     # @!attribute [rw] registry_id
-    #   The AWS account ID associated with the registry to which you are
-    #   uploading layer parts. If you do not specify a registry, the default
-    #   public registry is assumed.
+    #   The Amazon Web Services account ID, or registry alias, that's
+    #   associated with the registry that you're uploading layer parts to.
+    #   If you do not specify a registry, the default public registry is
+    #   assumed.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The name of the repository to which you are uploading layer parts.
+    #   The name of the repository that you're uploading layer parts to.
     #   @return [String]
     #
     # @!attribute [rw] upload_id
@@ -2180,19 +1952,19 @@ module Aws::ECRPublic
     end
 
     # @!attribute [rw] registry_id
-    #   The registry ID associated with the request.
+    #   The registry ID that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] repository_name
-    #   The repository name associated with the request.
+    #   The repository name that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] upload_id
-    #   The upload ID associated with the request.
+    #   The upload ID that's associated with the request.
     #   @return [String]
     #
     # @!attribute [rw] last_byte_received
-    #   The integer value of the last byte received in the request.
+    #   The integer value of the last byte that's received in the request.
     #   @return [Integer]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ecr-public-2020-10-30/UploadLayerPartResponse AWS API Documentation
@@ -2206,7 +1978,7 @@ module Aws::ECRPublic
       include Aws::Structure
     end
 
-    # The upload could not be found, or the specified upload ID is not valid
+    # The upload can't be found, or the specified upload ID isn't valid
     # for this repository.
     #
     # @!attribute [rw] message

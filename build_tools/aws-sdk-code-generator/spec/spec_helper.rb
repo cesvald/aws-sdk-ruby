@@ -89,12 +89,14 @@ module SpecHelper
         resources: model_path(:resources, api_dir),
         waiters: model_path(:waiters, api_dir),
         examples: model_path(:examples, api_dir),
+        endpoint_rules: model_path('endpoint-rule-set'.to_sym, api_dir)
       })
 
       # For APIG service
       apig_opts = shared_opts.merge({
         api: model_path(:service, api_dir),
         default_endpoint: "https://foobar.us-west-2.amazonaws.com/test",
+        remove_plugins: ['Aws::Plugins::UserAgent']
       })
 
       svc_opts = options[:custom] ? apig_opts : service_opts
@@ -119,7 +121,7 @@ module SpecHelper
       else
         code = generator.source
         begin
-          Kernel.module_eval(code)
+          Object.module_eval(code)
         rescue => error
           $stderr.puts("\nCODE:\n#{code}\n")
           raise error

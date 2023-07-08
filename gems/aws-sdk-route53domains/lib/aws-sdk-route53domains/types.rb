@@ -13,17 +13,10 @@ module Aws::Route53Domains
     # The AcceptDomainTransferFromAnotherAwsAccount request includes the
     # following elements.
     #
-    # @note When making an API call, you may pass AcceptDomainTransferFromAnotherAwsAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         password: "String", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
-    #   The name of the domain that was specified when another AWS account
-    #   submitted a [TransferDomainToAnotherAwsAccount][1] request.
+    #   The name of the domain that was specified when another Amazon Web
+    #   Services account submitted a [TransferDomainToAnotherAwsAccount][1]
+    #   request.
     #
     #
     #
@@ -63,6 +56,41 @@ module Aws::Route53Domains
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/AcceptDomainTransferFromAnotherAwsAccountResponse AWS API Documentation
     #
     class AcceptDomainTransferFromAnotherAwsAccountResponse < Struct.new(
+      :operation_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] domain_name
+    #   The name of the domain.
+    #   @return [String]
+    #
+    # @!attribute [rw] signing_attributes
+    #   The information about a key, including the algorithm, public
+    #   key-value, and flags.
+    #   @return [Types::DnssecSigningAttributes]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/AssociateDelegationSignerToDomainRequest AWS API Documentation
+    #
+    class AssociateDelegationSignerToDomainRequest < Struct.new(
+      :domain_name,
+      :signing_attributes)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] operation_id
+    #   The identifier for tracking the progress of the request. To query
+    #   the operation status, use [GetOperationDetail][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_GetOperationDetail.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/AssociateDelegationSignerToDomainResponse AWS API Documentation
+    #
+    class AssociateDelegationSignerToDomainResponse < Struct.new(
       :operation_id)
       SENSITIVE = []
       include Aws::Structure
@@ -115,16 +143,9 @@ module Aws::Route53Domains
     # The CancelDomainTransferToAnotherAwsAccount request includes the
     # following element.
     #
-    # @note When making an API call, you may pass CancelDomainTransferToAnotherAwsAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain for which you want to cancel the transfer to
-    #   another AWS account.
+    #   another Amazon Web Services account.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/CancelDomainTransferToAnotherAwsAccountRequest AWS API Documentation
@@ -154,14 +175,6 @@ module Aws::Route53Domains
     end
 
     # The CheckDomainAvailability request contains the following elements.
-    #
-    # @note When making an API call, you may pass CheckDomainAvailabilityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         idn_lang_code: "LangCode",
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to get availability for. The
@@ -272,14 +285,6 @@ module Aws::Route53Domains
     # The CheckDomainTransferability request contains the following
     # elements.
     #
-    # @note When making an API call, you may pass CheckDomainTransferabilityRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         auth_code: "DomainAuthCode",
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to transfer to Route 53. The
     #   top-level domain (TLD), such as .com, must be a TLD that Route 53
@@ -335,32 +340,26 @@ module Aws::Route53Domains
       include Aws::Structure
     end
 
+    # Customer's consent for the owner change request.
+    #
+    # @!attribute [rw] max_price
+    #   Maximum amount the customer agreed to accept.
+    #   @return [Float]
+    #
+    # @!attribute [rw] currency
+    #   Currency for the `MaxPrice`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/Consent AWS API Documentation
+    #
+    class Consent < Struct.new(
+      :max_price,
+      :currency)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # ContactDetail includes the following elements.
-    #
-    # @note When making an API call, you may pass ContactDetail
-    #   data as a hash:
-    #
-    #       {
-    #         first_name: "ContactName",
-    #         last_name: "ContactName",
-    #         contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #         organization_name: "ContactName",
-    #         address_line_1: "AddressLine",
-    #         address_line_2: "AddressLine",
-    #         city: "City",
-    #         state: "State",
-    #         country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #         zip_code: "ZipCode",
-    #         phone_number: "ContactNumber",
-    #         email: "Email",
-    #         fax: "ContactNumber",
-    #         extra_params: [
-    #           {
-    #             name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #             value: "ExtraParamValue", # required
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] first_name
     #   First name of contact.
@@ -383,8 +382,8 @@ module Aws::Route53Domains
     #     Register with Amazon Route 53][1] in the *Amazon Route 53
     #     Developer Guide*
     #
-    #   * For .es domains, if you specify `PERSON`, you must specify
-    #     `INDIVIDUAL` for the value of `ES_LEGAL_FORM`.
+    #   * For .es domains, the value of `ContactType` must be `PERSON` for
+    #     all three contacts.
     #
     #
     #
@@ -466,15 +465,36 @@ module Aws::Route53Domains
       include Aws::Structure
     end
 
+    # @!attribute [rw] domain_name
+    #   Name of the domain to be deleted.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/DeleteDomainRequest AWS API Documentation
+    #
+    class DeleteDomainRequest < Struct.new(
+      :domain_name)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] operation_id
+    #   Identifier for tracking the progress of the request. To query the
+    #   operation status, use [GetOperationDetail][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_GetOperationDetail.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/DeleteDomainResponse AWS API Documentation
+    #
+    class DeleteDomainResponse < Struct.new(
+      :operation_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The DeleteTagsForDomainRequest includes the following elements.
-    #
-    # @note When making an API call, you may pass DeleteTagsForDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         tags_to_delete: ["TagKey"], # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The domain for which you want to delete one or more tags.
@@ -497,13 +517,6 @@ module Aws::Route53Domains
     #
     class DeleteTagsForDomainResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DisableDomainAutoRenewRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to disable automatic renewal
     #   for.
@@ -522,13 +535,6 @@ module Aws::Route53Domains
     class DisableDomainAutoRenewResponse < Aws::EmptyStructure; end
 
     # The DisableDomainTransferLock request includes the following element.
-    #
-    # @note When making an API call, you may pass DisableDomainTransferLockRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to remove the transfer lock
@@ -562,6 +568,188 @@ module Aws::Route53Domains
       include Aws::Structure
     end
 
+    # @!attribute [rw] domain_name
+    #   Name of the domain.
+    #   @return [String]
+    #
+    # @!attribute [rw] id
+    #   An internal identification number assigned to each DS record after
+    #   it’s created. You can retrieve it as part of DNSSEC information
+    #   returned by [GetDomainDetail][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_GetDomainDetail.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/DisassociateDelegationSignerFromDomainRequest AWS API Documentation
+    #
+    class DisassociateDelegationSignerFromDomainRequest < Struct.new(
+      :domain_name,
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] operation_id
+    #   Identifier for tracking the progress of the request. To query the
+    #   operation status, use [GetOperationDetail][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_GetOperationDetail.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/DisassociateDelegationSignerFromDomainResponse AWS API Documentation
+    #
+    class DisassociateDelegationSignerFromDomainResponse < Struct.new(
+      :operation_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about the DNSSEC key.
+    #
+    # You get this from your DNS provider and then give it to Route 53 (by
+    # using [AssociateDelegationSignerToDomain][1]) to pass it to the
+    # registry to establish the chain of trust.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_AssociateDelegationSignerToDomain.html
+    #
+    # @!attribute [rw] algorithm
+    #   The number of the public key’s cryptographic algorithm according to
+    #   an [IANA][1] assignment.
+    #
+    #   If Route 53 is your DNS service, set this to 13.
+    #
+    #   For more information about enabling DNSSEC signing, see [Enabling
+    #   DNSSEC signing and establishing a chain of trust][2].
+    #
+    #
+    #
+    #   [1]: https://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xml
+    #   [2]: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-enable-signing.html
+    #   @return [Integer]
+    #
+    # @!attribute [rw] flags
+    #   Defines the type of key. It can be either a KSK (key-signing-key,
+    #   value 257) or ZSK (zone-signing-key, value 256). Using KSK is always
+    #   encouraged. Only use ZSK if your DNS provider isn't Route 53 and
+    #   you don’t have KSK available.
+    #
+    #   If you have KSK and ZSK keys, always use KSK to create a delegations
+    #   signer (DS) record. If you have ZSK keys only – use ZSK to create a
+    #   DS record.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] public_key
+    #   The base64-encoded public key part of the key pair that is passed to
+    #   the registry .
+    #   @return [String]
+    #
+    # @!attribute [rw] digest_type
+    #   The number of the DS digest algorithm according to an IANA
+    #   assignment.
+    #
+    #   For more information, see [IANA][1] for DNSSEC Delegation Signer
+    #   (DS) Resource Record (RR) Type Digest Algorithms.
+    #
+    #
+    #
+    #   [1]: https://www.iana.org/assignments/ds-rr-types/ds-rr-types.xhtml
+    #   @return [Integer]
+    #
+    # @!attribute [rw] digest
+    #   The delegation signer digest.
+    #
+    #   Digest is calculated from the public key provided using specified
+    #   digest algorithm and this digest is the actual value returned from
+    #   the registry nameservers as the value of DS records.
+    #   @return [String]
+    #
+    # @!attribute [rw] key_tag
+    #   A numeric identification of the DNSKEY record referred to by this DS
+    #   record.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] id
+    #   An ID assigned to each DS record created by
+    #   [AssociateDelegationSignerToDomain][1].
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_AssociateDelegationSignerToDomain.html
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/DnssecKey AWS API Documentation
+    #
+    class DnssecKey < Struct.new(
+      :algorithm,
+      :flags,
+      :public_key,
+      :digest_type,
+      :digest,
+      :key_tag,
+      :id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # This error is returned if you call `AssociateDelegationSignerToDomain`
+    # when the specified domain has reached the maximum number of DS
+    # records. You can't add any additional DS records unless you delete an
+    # existing one first.
+    #
+    # @!attribute [rw] message
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/DnssecLimitExceeded AWS API Documentation
+    #
+    class DnssecLimitExceeded < Struct.new(
+      :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about a delegation signer (DS) record that was created in
+    # the registry by [AssociateDelegationSignerToDomain][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_AssociateDelegationSignerToDomain.html
+    #
+    # @!attribute [rw] algorithm
+    #   Algorithm which was used to generate the digest from the public key.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] flags
+    #   Defines the type of key. It can be either a KSK (key-signing-key,
+    #   value 257) or ZSK (zone-signing-key, value 256). Using KSK is always
+    #   encouraged. Only use ZSK if your DNS provider isn't Route 53 and
+    #   you don’t have KSK available.
+    #
+    #   If you have KSK and ZSK keys, always use KSK to create a delegations
+    #   signer (DS) record. If you have ZSK keys only – use ZSK to create a
+    #   DS record.
+    #   @return [Integer]
+    #
+    # @!attribute [rw] public_key
+    #   The base64-encoded public key part of the key pair that is passed to
+    #   the registry.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/DnssecSigningAttributes AWS API Documentation
+    #
+    class DnssecSigningAttributes < Struct.new(
+      :algorithm,
+      :flags,
+      :public_key)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The number of domains has exceeded the allowed threshold for the
     # account.
     #
@@ -574,6 +762,45 @@ module Aws::Route53Domains
     #
     class DomainLimitExceeded < Struct.new(
       :message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Information about the domain price associated with a TLD.
+    #
+    # @!attribute [rw] name
+    #   The name of the TLD for which the prices apply.
+    #   @return [String]
+    #
+    # @!attribute [rw] registration_price
+    #   The price for domain registration with Route 53.
+    #   @return [Types::PriceWithCurrency]
+    #
+    # @!attribute [rw] transfer_price
+    #   The price for transferring the domain registration to Route 53.
+    #   @return [Types::PriceWithCurrency]
+    #
+    # @!attribute [rw] renewal_price
+    #   The price for renewing domain registration with Route 53.
+    #   @return [Types::PriceWithCurrency]
+    #
+    # @!attribute [rw] change_ownership_price
+    #   The price for changing domain ownership.
+    #   @return [Types::PriceWithCurrency]
+    #
+    # @!attribute [rw] restoration_price
+    #   The price for restoring the domain with Route 53.
+    #   @return [Types::PriceWithCurrency]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/DomainPrice AWS API Documentation
+    #
+    class DomainPrice < Struct.new(
+      :name,
+      :registration_price,
+      :transfer_price,
+      :renewal_price,
+      :change_ownership_price,
+      :restoration_price)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -684,8 +911,8 @@ module Aws::Route53Domains
     # @!attribute [rw] transferable
     #   Whether the domain name can be transferred to Route 53.
     #
-    #   <note markdown="1"> You can transfer only domains that have a value of `TRANSFERABLE`
-    #   for `Transferable`.
+    #   <note markdown="1"> You can transfer only domains that have a value of `TRANSFERABLE` or
+    #   `Transferable`.
     #
     #    </note>
     #
@@ -702,6 +929,19 @@ module Aws::Route53Domains
     #   DONT\_KNOW
     #
     #   : Reserved for future use.
+    #
+    #   DOMAIN\_IN\_OWN\_ACCOUNT
+    #
+    #   : The domain already exists in the current Amazon Web Services
+    #     account.
+    #
+    #   DOMAIN\_IN\_ANOTHER\_ACCOUNT
+    #
+    #   : the domain exists in another Amazon Web Services account.
+    #
+    #   PREMIUM\_DOMAIN
+    #
+    #   : Premium domain transfer is not supported.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/DomainTransferability AWS API Documentation
@@ -726,13 +966,6 @@ module Aws::Route53Domains
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass EnableDomainAutoRenewRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to enable automatic renewal
     #   for.
@@ -751,13 +984,6 @@ module Aws::Route53Domains
     class EnableDomainAutoRenewResponse < Aws::EmptyStructure; end
 
     # A request to set the transfer lock for the specified domain.
-    #
-    # @note When making an API call, you may pass EnableDomainTransferLockRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to set the transfer lock for.
@@ -787,14 +1013,6 @@ module Aws::Route53Domains
     end
 
     # ExtraParam includes the following elements.
-    #
-    # @note When making an API call, you may pass ExtraParam
-    #   data as a hash:
-    #
-    #       {
-    #         name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #         value: "ExtraParamValue", # required
-    #       }
     #
     # @!attribute [rw] name
     #   The name of an additional parameter that is required by a top-level
@@ -917,16 +1135,47 @@ module Aws::Route53Domains
     #   .es
     #   : * `ES_IDENTIFICATION`
     #
-    #       Specify the applicable value:
+    #       The value of `ES_IDENTIFICATION` depends on the following
+    #       values:
     #
-    #       * **For contacts inside Spain:** Enter your passport ID.
+    #       * The value of `ES_LEGAL_FORM`
     #
-    #       * **For contacts outside of Spain:** Enter the VAT
-    #         identification number for the company.
+    #       * The value of `ES_IDENTIFICATION_TYPE`
     #
-    #         <note markdown="1"> For .es domains, the value of `ContactType` must be `PERSON`.
+    #       **If `ES_LEGAL_FORM` is any value other than `INDIVIDUAL`:**
     #
-    #          </note>
+    #       * Specify 1 letter + 8 numbers (CIF \[Certificado de
+    #         Identificación Fiscal\])
+    #
+    #       * Example: B12345678
+    #
+    #       **If `ES_LEGAL_FORM` is `INDIVIDUAL`, the value that you specify
+    #       for `ES_IDENTIFICATION` depends on the value of
+    #       `ES_IDENTIFICATION_TYPE`:**
+    #
+    #       * If `ES_IDENTIFICATION_TYPE` is `DNI_AND_NIF` (for Spanish
+    #         contacts):
+    #
+    #         * Specify 8 numbers + 1 letter (DNI \[Documento Nacional de
+    #           Identidad\], NIF \[Número de Identificación Fiscal\])
+    #
+    #         * Example: 12345678M
+    #
+    #       * If `ES_IDENTIFICATION_TYPE` is `NIE` (for foreigners with
+    #         legal residence):
+    #
+    #         * Specify 1 letter + 7 numbers + 1 letter ( NIE \[Número de
+    #           Identidad de Extranjero\])
+    #
+    #         * Example: Y1234567X
+    #
+    #       * If `ES_IDENTIFICATION_TYPE` is `OTHER` (for contacts outside
+    #         of Spain):
+    #
+    #         * Specify a passport number, drivers license number, or
+    #           national identity card number
+    #
+    #         ^
     #
     #     * `ES_IDENTIFICATION_TYPE`
     #
@@ -1018,6 +1267,11 @@ module Aws::Route53Domains
     #
     #       * `WORKER_OWNED_LIMITED_COMPANY`
     #
+    #   .eu
+    #   : * ` EU_COUNTRY_OF_CITIZENSHIP`
+    #
+    #     ^
+    #
     #   .fi
     #   : * `BIRTH_DATE_IN_YYYY_MM_DD`
     #
@@ -1050,22 +1304,6 @@ module Aws::Route53Domains
     #       * `PUBLIC_COMMUNITY`
     #
     #       * `TOWNSHIP`
-    #
-    #   .fr
-    #   : * `BIRTH_CITY`
-    #
-    #     * `BIRTH_COUNTRY`
-    #
-    #     * `BIRTH_DATE_IN_YYYY_MM_DD`
-    #
-    #     * `BIRTH_DEPARTMENT`\: Specify the INSEE code that corresponds
-    #       with the department where the contact was born. If the contact
-    #       was born somewhere other than France or its overseas
-    #       departments, specify `99`. For more information, including a
-    #       list of departments and the corresponding INSEE numbers, see the
-    #       Wikipedia entry [Departments of France][1].
-    #
-    #     * `BRAND_NUMBER`
     #
     #   .it
     #   : * `IT_NATIONALITY`
@@ -1104,7 +1342,7 @@ module Aws::Route53Domains
     #
     #     ^
     #
-    #   .co.uk, .me.uk, and .org.uk
+    #   .uk, .co.uk, .me.uk, and .org.uk
     #   : * `UK_CONTACT_TYPE`
     #
     #       Valid values include the following:
@@ -1145,10 +1383,6 @@ module Aws::Route53Domains
     #     * `UK_COMPANY_NUMBER`
     #
     #   In addition, many TLDs require a `VAT_NUMBER`.
-    #
-    #
-    #
-    #   [1]: https://en.wikipedia.org/wiki/Departments_of_France
     #   @return [String]
     #
     # @!attribute [rw] value
@@ -1160,17 +1394,47 @@ module Aws::Route53Domains
     class ExtraParam < Struct.new(
       :name,
       :value)
+      SENSITIVE = [:value]
+      include Aws::Structure
+    end
+
+    # Information for the filtering of a list of domains returned by
+    # [ListDomains][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains__ListDomains.html
+    #
+    # @!attribute [rw] name
+    #   Name of the field which should be used for filtering the list of
+    #   domains.
+    #   @return [String]
+    #
+    # @!attribute [rw] operator
+    #   The operator values for filtering domain names. The values can be:
+    #
+    #   * `LE`: Less than, or equal to
+    #
+    #   * `GE`: Greater than, or equal to
+    #
+    #   * `BEGINS_WITH`: Begins with
+    #   @return [String]
+    #
+    # @!attribute [rw] values
+    #   An array of strings presenting values to compare. Only 1 item in the
+    #   list is currently supported.
+    #   @return [Array<String>]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/FilterCondition AWS API Documentation
+    #
+    class FilterCondition < Struct.new(
+      :name,
+      :operator,
+      :values)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetContactReachabilityStatusRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName",
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain for which you want to know whether the
     #   registrant contact has confirmed that the email address is valid.
@@ -1218,13 +1482,6 @@ module Aws::Route53Domains
 
     # The GetDomainDetail request includes the following element.
     #
-    # @note When making an API call, you may pass GetDomainDetailRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to get detailed information
     #   about.
@@ -1245,7 +1502,7 @@ module Aws::Route53Domains
     #   @return [String]
     #
     # @!attribute [rw] nameservers
-    #   The name of the domain.
+    #   The name servers of the domain.
     #   @return [Array<Types::Nameserver>]
     #
     # @!attribute [rw] auto_renew
@@ -1348,7 +1605,7 @@ module Aws::Route53Domains
     #   @return [String]
     #
     # @!attribute [rw] dns_sec
-    #   Reserved for future use.
+    #   Deprecated.
     #   @return [String]
     #
     # @!attribute [rw] status_list
@@ -1371,6 +1628,11 @@ module Aws::Route53Domains
     #
     #   [1]: https://www.icann.org/
     #   @return [Array<String>]
+    #
+    # @!attribute [rw] dnssec_keys
+    #   A complex type that contains information about the DNSSEC
+    #   configuration.
+    #   @return [Array<Types::DnssecKey>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/GetDomainDetailResponse AWS API Documentation
     #
@@ -1395,20 +1657,12 @@ module Aws::Route53Domains
       :expiration_date,
       :reseller,
       :dns_sec,
-      :status_list)
+      :status_list,
+      :dnssec_keys)
       SENSITIVE = [:admin_contact, :registrant_contact, :tech_contact]
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDomainSuggestionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         suggestion_count: 1, # required
-    #         only_available: false, # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   A domain name that you want to use as the basis for a list of
     #   possible domain names. The top-level domain (TLD), such as .com,
@@ -1481,13 +1735,6 @@ module Aws::Route53Domains
     #
     # [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_GetOperationDetail.html
     #
-    # @note When making an API call, you may pass GetOperationDetailRequest
-    #   data as a hash:
-    #
-    #       {
-    #         operation_id: "OperationId", # required
-    #       }
-    #
     # @!attribute [rw] operation_id
     #   The identifier for the operation for which you want to get the
     #   status. Route 53 returned the identifier in the response to the
@@ -1528,6 +1775,35 @@ module Aws::Route53Domains
     #   The date when the request was submitted.
     #   @return [Time]
     #
+    # @!attribute [rw] last_updated_date
+    #   The date when the operation was last updated.
+    #   @return [Time]
+    #
+    # @!attribute [rw] status_flag
+    #   Lists any outstanding operations that require customer action. Valid
+    #   values are:
+    #
+    #   * `PENDING_ACCEPTANCE`: The operation is waiting for acceptance from
+    #     the account that is receiving the domain.
+    #
+    #   * `PENDING_CUSTOMER_ACTION`: The operation is waiting for customer
+    #     action, for example, returning an email.
+    #
+    #   * `PENDING_AUTHORIZATION`: The operation is waiting for the form of
+    #     authorization. For more information, see
+    #     [ResendOperationAuthorization][1].
+    #
+    #   * `PENDING_PAYMENT_VERIFICATION`: The operation is waiting for the
+    #     payment method to validate.
+    #
+    #   * `PENDING_SUPPORT_CASE`: The operation includes a support case and
+    #     is waiting for its resolution.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_ResendOperationAuthorization.html
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/GetOperationDetailResponse AWS API Documentation
     #
     class GetOperationDetailResponse < Struct.new(
@@ -1536,7 +1812,9 @@ module Aws::Route53Domains
       :message,
       :domain_name,
       :type,
-      :submitted_date)
+      :submitted_date,
+      :last_updated_date,
+      :status_flag)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1564,22 +1842,25 @@ module Aws::Route53Domains
 
     # The ListDomains request includes the following elements.
     #
-    # @note When making an API call, you may pass ListDomainsRequest
-    #   data as a hash:
+    # @!attribute [rw] filter_conditions
+    #   A complex type that contains information about the filters applied
+    #   during the `ListDomains` request. The filter conditions can include
+    #   domain name and domain expiration.
+    #   @return [Array<Types::FilterCondition>]
     #
-    #       {
-    #         marker: "PageMarker",
-    #         max_items: 1,
-    #       }
+    # @!attribute [rw] sort_condition
+    #   A complex type that contains information about the requested
+    #   ordering of domains in the returned list.
+    #   @return [Types::SortCondition]
     #
     # @!attribute [rw] marker
     #   For an initial request for a list of domains, omit this element. If
-    #   the number of domains that are associated with the current AWS
-    #   account is greater than the value that you specified for `MaxItems`,
-    #   you can use `Marker` to return additional domains. Get the value of
-    #   `NextPageMarker` from the previous response, and submit another
-    #   request that includes the value of `NextPageMarker` in the `Marker`
-    #   element.
+    #   the number of domains that are associated with the current Amazon
+    #   Web Services account is greater than the value that you specified
+    #   for `MaxItems`, you can use `Marker` to return additional domains.
+    #   Get the value of `NextPageMarker` from the previous response, and
+    #   submit another request that includes the value of `NextPageMarker`
+    #   in the `Marker` element.
     #
     #   Constraints: The marker must match the value specified in the
     #   previous request.
@@ -1594,6 +1875,8 @@ module Aws::Route53Domains
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/ListDomainsRequest AWS API Documentation
     #
     class ListDomainsRequest < Struct.new(
+      :filter_conditions,
+      :sort_condition,
       :marker,
       :max_items)
       SENSITIVE = []
@@ -1603,7 +1886,7 @@ module Aws::Route53Domains
     # The ListDomains response includes the following elements.
     #
     # @!attribute [rw] domains
-    #   A summary of domains.
+    #   A list of domains.
     #   @return [Array<Types::DomainSummary>]
     #
     # @!attribute [rw] next_page_marker
@@ -1622,15 +1905,6 @@ module Aws::Route53Domains
     end
 
     # The ListOperations request includes the following elements.
-    #
-    # @note When making an API call, you may pass ListOperationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         submitted_since: Time.now,
-    #         marker: "PageMarker",
-    #         max_items: 1,
-    #       }
     #
     # @!attribute [rw] submitted_since
     #   An optional parameter that lets you get information about all the
@@ -1655,12 +1929,32 @@ module Aws::Route53Domains
     #   Default: 20
     #   @return [Integer]
     #
+    # @!attribute [rw] status
+    #   The status of the operations.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] type
+    #   An arrays of the domains operation types.
+    #   @return [Array<String>]
+    #
+    # @!attribute [rw] sort_by
+    #   The sort type for returned values.
+    #   @return [String]
+    #
+    # @!attribute [rw] sort_order
+    #   The sort order ofr returned values, either ascending or descending.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/ListOperationsRequest AWS API Documentation
     #
     class ListOperationsRequest < Struct.new(
       :submitted_since,
       :marker,
-      :max_items)
+      :max_items,
+      :status,
+      :type,
+      :sort_by,
+      :sort_order)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1686,14 +1980,67 @@ module Aws::Route53Domains
       include Aws::Structure
     end
 
+    # @!attribute [rw] tld
+    #   The TLD for which you want to receive the pricing information. For
+    #   example. `.net`.
+    #
+    #   If a `Tld` value is not provided, a list of prices for all TLDs
+    #   supported by Route 53 is returned.
+    #   @return [String]
+    #
+    # @!attribute [rw] marker
+    #   For an initial request for a list of prices, omit this element. If
+    #   the number of prices that are not yet complete is greater than the
+    #   value that you specified for `MaxItems`, you can use `Marker` to
+    #   return additional prices. Get the value of `NextPageMarker` from the
+    #   previous response, and submit another request that includes the
+    #   value of `NextPageMarker` in the `Marker` element.
+    #
+    #   Used only for all TLDs. If you specify a TLD, don't specify a
+    #   `Marker`.
+    #   @return [String]
+    #
+    # @!attribute [rw] max_items
+    #   Number of `Prices` to be returned.
+    #
+    #   Used only for all TLDs. If you specify a TLD, don't specify a
+    #   `MaxItems`.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/ListPricesRequest AWS API Documentation
+    #
+    class ListPricesRequest < Struct.new(
+      :tld,
+      :marker,
+      :max_items)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] prices
+    #   A complex type that includes all the pricing information. If you
+    #   specify a TLD, this array contains only the pricing for that TLD.
+    #   @return [Array<Types::DomainPrice>]
+    #
+    # @!attribute [rw] next_page_marker
+    #   If there are more prices than you specified for `MaxItems` in the
+    #   request, submit another request and include the value of
+    #   `NextPageMarker` in the value of `Marker`.
+    #
+    #   Used only for all TLDs. If you specify a TLD, don't specify a
+    #   `NextPageMarker`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/ListPricesResponse AWS API Documentation
+    #
+    class ListPricesResponse < Struct.new(
+      :prices,
+      :next_page_marker)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The ListTagsForDomainRequest includes the following elements.
-    #
-    # @note When making an API call, you may pass ListTagsForDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The domain for which you want to get a list of tags.
@@ -1721,15 +2068,7 @@ module Aws::Route53Domains
       include Aws::Structure
     end
 
-    # Nameserver includes the following elements.
-    #
-    # @note When making an API call, you may pass Nameserver
-    #   data as a hash:
-    #
-    #       {
-    #         name: "HostName", # required
-    #         glue_ips: ["GlueIp"],
-    #       }
+    # Name server includes the following elements.
     #
     # @!attribute [rw] name
     #   The fully qualified host name of the name server.
@@ -1791,94 +2130,98 @@ module Aws::Route53Domains
     #   The date when the request was submitted.
     #   @return [Time]
     #
+    # @!attribute [rw] domain_name
+    #   Name of the domain.
+    #   @return [String]
+    #
+    # @!attribute [rw] message
+    #   Message about the operation.
+    #   @return [String]
+    #
+    # @!attribute [rw] status_flag
+    #   Automatically checks whether there are no outstanding operations on
+    #   domains that need customer attention.
+    #
+    #   Valid values are:
+    #
+    #   * `PENDING_ACCEPTANCE`: The operation is waiting for acceptance from
+    #     the account that is receiving the domain.
+    #
+    #   * `PENDING_CUSTOMER_ACTION`: The operation is waiting for customer
+    #     action, for example, returning an email.
+    #
+    #   * `PENDING_AUTHORIZATION`: The operation is waiting for the form of
+    #     authorization. For more information, see
+    #     [ResendOperationAuthorization][1].
+    #
+    #   * `PENDING_PAYMENT_VERIFICATION`: The operation is waiting for the
+    #     payment method to validate.
+    #
+    #   * `PENDING_SUPPORT_CASE`: The operation includes a support case and
+    #     is waiting for its resolution.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_ResendOperationAuthorization.html
+    #   @return [String]
+    #
+    # @!attribute [rw] last_updated_date
+    #   The date when the last change was made in Unix time format and
+    #   Coordinated Universal Time (UTC).
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/OperationSummary AWS API Documentation
     #
     class OperationSummary < Struct.new(
       :operation_id,
       :status,
       :type,
-      :submitted_date)
+      :submitted_date,
+      :domain_name,
+      :message,
+      :status_flag,
+      :last_updated_date)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Currency-specific price information.
+    #
+    # @!attribute [rw] price
+    #   The price of a domain, in a specific currency.
+    #   @return [Float]
+    #
+    # @!attribute [rw] currency
+    #   The currency specifier.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/PriceWithCurrency AWS API Documentation
+    #
+    class PriceWithCurrency < Struct.new(
+      :price,
+      :currency)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] domain_name
+    #   Name of the domain.
+    #   @return [String]
+    #
+    # @!attribute [rw] target
+    #   New IPS tag for the domain.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/PushDomainRequest AWS API Documentation
+    #
+    class PushDomainRequest < Struct.new(
+      :domain_name,
+      :target)
       SENSITIVE = []
       include Aws::Structure
     end
 
     # The RegisterDomain request includes the following elements.
-    #
-    # @note When making an API call, you may pass RegisterDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         idn_lang_code: "LangCode",
-    #         duration_in_years: 1, # required
-    #         auto_renew: false,
-    #         admin_contact: { # required
-    #           first_name: "ContactName",
-    #           last_name: "ContactName",
-    #           contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #           organization_name: "ContactName",
-    #           address_line_1: "AddressLine",
-    #           address_line_2: "AddressLine",
-    #           city: "City",
-    #           state: "State",
-    #           country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #           zip_code: "ZipCode",
-    #           phone_number: "ContactNumber",
-    #           email: "Email",
-    #           fax: "ContactNumber",
-    #           extra_params: [
-    #             {
-    #               name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #               value: "ExtraParamValue", # required
-    #             },
-    #           ],
-    #         },
-    #         registrant_contact: { # required
-    #           first_name: "ContactName",
-    #           last_name: "ContactName",
-    #           contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #           organization_name: "ContactName",
-    #           address_line_1: "AddressLine",
-    #           address_line_2: "AddressLine",
-    #           city: "City",
-    #           state: "State",
-    #           country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #           zip_code: "ZipCode",
-    #           phone_number: "ContactNumber",
-    #           email: "Email",
-    #           fax: "ContactNumber",
-    #           extra_params: [
-    #             {
-    #               name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #               value: "ExtraParamValue", # required
-    #             },
-    #           ],
-    #         },
-    #         tech_contact: { # required
-    #           first_name: "ContactName",
-    #           last_name: "ContactName",
-    #           contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #           organization_name: "ContactName",
-    #           address_line_1: "AddressLine",
-    #           address_line_2: "AddressLine",
-    #           city: "City",
-    #           state: "State",
-    #           country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #           zip_code: "ZipCode",
-    #           phone_number: "ContactNumber",
-    #           email: "Email",
-    #           fax: "ContactNumber",
-    #           extra_params: [
-    #             {
-    #               name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #               value: "ExtraParamValue", # required
-    #             },
-    #           ],
-    #         },
-    #         privacy_protect_admin_contact: false,
-    #         privacy_protect_registrant_contact: false,
-    #         privacy_protect_tech_contact: false,
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The domain name that you want to register. The top-level domain
@@ -1930,8 +2273,8 @@ module Aws::Route53Domains
     #
     # @!attribute [rw] auto_renew
     #   Indicates whether the domain will be automatically renewed (`true`)
-    #   or not (`false`). Autorenewal only takes effect after the account is
-    #   charged.
+    #   or not (`false`). Auto renewal only takes effect after the account
+    #   is charged.
     #
     #   Default: `true`
     #   @return [Boolean]
@@ -1971,6 +2314,11 @@ module Aws::Route53Domains
     #   If you specify `false`, WHOIS queries return the information that
     #   you entered for the admin contact.
     #
+    #   <note markdown="1"> You must specify the same privacy setting for the administrative,
+    #   registrant, and technical contacts.
+    #
+    #    </note>
+    #
     #   Default: `true`
     #   @return [Boolean]
     #
@@ -1982,6 +2330,11 @@ module Aws::Route53Domains
     #   If you specify `false`, WHOIS queries return the information that
     #   you entered for the registrant contact (the domain owner).
     #
+    #   <note markdown="1"> You must specify the same privacy setting for the administrative,
+    #   registrant, and technical contacts.
+    #
+    #    </note>
+    #
     #   Default: `true`
     #   @return [Boolean]
     #
@@ -1992,6 +2345,11 @@ module Aws::Route53Domains
     #   domains) or for our registrar associate, Gandi (for all other TLDs).
     #   If you specify `false`, WHOIS queries return the information that
     #   you entered for the technical contact.
+    #
+    #   <note markdown="1"> You must specify the same privacy setting for the administrative,
+    #   registrant, and technical contacts.
+    #
+    #    </note>
     #
     #   Default: `true`
     #   @return [Boolean]
@@ -2035,16 +2393,10 @@ module Aws::Route53Domains
     # The RejectDomainTransferFromAnotherAwsAccount request includes the
     # following element.
     #
-    # @note When making an API call, you may pass RejectDomainTransferFromAnotherAwsAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
-    #   The name of the domain that was specified when another AWS account
-    #   submitted a [TransferDomainToAnotherAwsAccount][1] request.
+    #   The name of the domain that was specified when another Amazon Web
+    #   Services account submitted a [TransferDomainToAnotherAwsAccount][1]
+    #   request.
     #
     #
     #
@@ -2079,15 +2431,6 @@ module Aws::Route53Domains
 
     # A `RenewDomain` request includes the number of years that you want to
     # renew for and the current expiration year.
-    #
-    # @note When making an API call, you may pass RenewDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         duration_in_years: 1,
-    #         current_expiry_year: 1, # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to renew.
@@ -2139,13 +2482,6 @@ module Aws::Route53Domains
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ResendContactReachabilityEmailRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName",
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain for which you want Route 53 to resend a
     #   confirmation email to the registrant contact.
@@ -2184,16 +2520,21 @@ module Aws::Route53Domains
       include Aws::Structure
     end
 
+    # @!attribute [rw] operation_id
+    #   Operation ID.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/ResendOperationAuthorizationRequest AWS API Documentation
+    #
+    class ResendOperationAuthorizationRequest < Struct.new(
+      :operation_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # A request for the authorization code for the specified domain. To
     # transfer a domain to another registrar, you provide this value to the
     # new registrar.
-    #
-    # @note When making an API call, you may pass RetrieveDomainAuthCodeRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to get an authorization code
@@ -2222,6 +2563,34 @@ module Aws::Route53Domains
       include Aws::Structure
     end
 
+    # Information for sorting a list of domains.
+    #
+    # @!attribute [rw] name
+    #   Field to be used for sorting the list of domains. It can be either
+    #   the name or the expiration for a domain. Note that if
+    #   `filterCondition` is used in the same [ListDomains][1] call, the
+    #   field used for sorting has to be the same as the field used for
+    #   filtering.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains__ListDomains.html
+    #   @return [String]
+    #
+    # @!attribute [rw] sort_order
+    #   The sort order for a list of domains. Either ascending (ASC) or
+    #   descending (DES).
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/SortCondition AWS API Documentation
+    #
+    class SortCondition < Struct.new(
+      :name,
+      :sort_order)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # The top-level domain does not support this operation.
     #
     # @!attribute [rw] message
@@ -2237,14 +2606,6 @@ module Aws::Route53Domains
     end
 
     # Each tag includes the following elements.
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey",
-    #         value: "TagValue",
-    #       }
     #
     # @!attribute [rw] key
     #   The key (name) of a tag.
@@ -2272,89 +2633,6 @@ module Aws::Route53Domains
     end
 
     # The TransferDomain request includes the following elements.
-    #
-    # @note When making an API call, you may pass TransferDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         idn_lang_code: "LangCode",
-    #         duration_in_years: 1, # required
-    #         nameservers: [
-    #           {
-    #             name: "HostName", # required
-    #             glue_ips: ["GlueIp"],
-    #           },
-    #         ],
-    #         auth_code: "DomainAuthCode",
-    #         auto_renew: false,
-    #         admin_contact: { # required
-    #           first_name: "ContactName",
-    #           last_name: "ContactName",
-    #           contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #           organization_name: "ContactName",
-    #           address_line_1: "AddressLine",
-    #           address_line_2: "AddressLine",
-    #           city: "City",
-    #           state: "State",
-    #           country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #           zip_code: "ZipCode",
-    #           phone_number: "ContactNumber",
-    #           email: "Email",
-    #           fax: "ContactNumber",
-    #           extra_params: [
-    #             {
-    #               name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #               value: "ExtraParamValue", # required
-    #             },
-    #           ],
-    #         },
-    #         registrant_contact: { # required
-    #           first_name: "ContactName",
-    #           last_name: "ContactName",
-    #           contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #           organization_name: "ContactName",
-    #           address_line_1: "AddressLine",
-    #           address_line_2: "AddressLine",
-    #           city: "City",
-    #           state: "State",
-    #           country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #           zip_code: "ZipCode",
-    #           phone_number: "ContactNumber",
-    #           email: "Email",
-    #           fax: "ContactNumber",
-    #           extra_params: [
-    #             {
-    #               name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #               value: "ExtraParamValue", # required
-    #             },
-    #           ],
-    #         },
-    #         tech_contact: { # required
-    #           first_name: "ContactName",
-    #           last_name: "ContactName",
-    #           contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #           organization_name: "ContactName",
-    #           address_line_1: "AddressLine",
-    #           address_line_2: "AddressLine",
-    #           city: "City",
-    #           state: "State",
-    #           country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #           zip_code: "ZipCode",
-    #           phone_number: "ContactNumber",
-    #           email: "Email",
-    #           fax: "ContactNumber",
-    #           extra_params: [
-    #             {
-    #               name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #               value: "ExtraParamValue", # required
-    #             },
-    #           ],
-    #         },
-    #         privacy_protect_admin_contact: false,
-    #         privacy_protect_registrant_contact: false,
-    #         privacy_protect_tech_contact: false,
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to transfer to Route 53. The
@@ -2403,7 +2681,7 @@ module Aws::Route53Domains
     #
     # @!attribute [rw] auto_renew
     #   Indicates whether the domain will be automatically renewed (true) or
-    #   not (false). Autorenewal only takes effect after the account is
+    #   not (false). Auto renewal only takes effect after the account is
     #   charged.
     #
     #   Default: true
@@ -2424,10 +2702,13 @@ module Aws::Route53Domains
     # @!attribute [rw] privacy_protect_admin_contact
     #   Whether you want to conceal contact information from WHOIS queries.
     #   If you specify `true`, WHOIS ("who is") queries return contact
-    #   information either for Amazon Registrar (for .com, .net, and .org
-    #   domains) or for our registrar associate, Gandi (for all other TLDs).
-    #   If you specify `false`, WHOIS queries return the information that
-    #   you entered for the admin contact.
+    #   information for the registrar, the phrase "REDACTED FOR PRIVACY",
+    #   or "On behalf of &lt;domain name&gt; owner.".
+    #
+    #   <note markdown="1"> While some domains may allow different privacy settings per contact,
+    #   we recommend specifying the same privacy setting for all contacts.
+    #
+    #    </note>
     #
     #   Default: `true`
     #   @return [Boolean]
@@ -2440,6 +2721,11 @@ module Aws::Route53Domains
     #   If you specify `false`, WHOIS queries return the information that
     #   you entered for the registrant contact (domain owner).
     #
+    #   <note markdown="1"> You must specify the same privacy setting for the administrative,
+    #   registrant, and technical contacts.
+    #
+    #    </note>
+    #
     #   Default: `true`
     #   @return [Boolean]
     #
@@ -2450,6 +2736,11 @@ module Aws::Route53Domains
     #   domains) or for our registrar associate, Gandi (for all other TLDs).
     #   If you specify `false`, WHOIS queries return the information that
     #   you entered for the technical contact.
+    #
+    #   <note markdown="1"> You must specify the same privacy setting for the administrative,
+    #   registrant, and technical contacts.
+    #
+    #    </note>
     #
     #   Default: `true`
     #   @return [Boolean]
@@ -2495,22 +2786,14 @@ module Aws::Route53Domains
     # The TransferDomainToAnotherAwsAccount request includes the following
     # elements.
     #
-    # @note When making an API call, you may pass TransferDomainToAnotherAwsAccountRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         account_id: "AccountId", # required
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to transfer from the current
-    #   AWS account to another account.
+    #   Amazon Web Services account to another account.
     #   @return [String]
     #
     # @!attribute [rw] account_id
-    #   The account ID of the AWS account that you want to transfer the
-    #   domain to, for example, `111122223333`.
+    #   The account ID of the Amazon Web Services account that you want to
+    #   transfer the domain to, for example, `111122223333`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/TransferDomainToAnotherAwsAccountRequest AWS API Documentation
@@ -2535,11 +2818,11 @@ module Aws::Route53Domains
     #   @return [String]
     #
     # @!attribute [rw] password
-    #   To finish transferring a domain to another AWS account, the account
-    #   that the domain is being transferred to must submit an
-    #   [AcceptDomainTransferFromAnotherAwsAccount][1] request. The request
-    #   must include the value of the `Password` element that was returned
-    #   in the `TransferDomainToAnotherAwsAccount` response.
+    #   To finish transferring a domain to another Amazon Web Services
+    #   account, the account that the domain is being transferred to must
+    #   submit an [AcceptDomainTransferFromAnotherAwsAccount][1] request.
+    #   The request must include the value of the `Password` element that
+    #   was returned in the `TransferDomainToAnotherAwsAccount` response.
     #
     #
     #
@@ -2572,16 +2855,6 @@ module Aws::Route53Domains
     # The UpdateDomainContactPrivacy request includes the following
     # elements.
     #
-    # @note When making an API call, you may pass UpdateDomainContactPrivacyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         admin_privacy: false,
-    #         registrant_privacy: false,
-    #         tech_privacy: false,
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to update the privacy setting
     #   for.
@@ -2594,6 +2867,11 @@ module Aws::Route53Domains
     #   domains) or for our registrar associate, Gandi (for all other TLDs).
     #   If you specify `false`, WHOIS queries return the information that
     #   you entered for the admin contact.
+    #
+    #   <note markdown="1"> You must specify the same privacy setting for the administrative,
+    #   registrant, and technical contacts.
+    #
+    #    </note>
     #   @return [Boolean]
     #
     # @!attribute [rw] registrant_privacy
@@ -2603,6 +2881,11 @@ module Aws::Route53Domains
     #   domains) or for our registrar associate, Gandi (for all other TLDs).
     #   If you specify `false`, WHOIS queries return the information that
     #   you entered for the registrant contact (domain owner).
+    #
+    #   <note markdown="1"> You must specify the same privacy setting for the administrative,
+    #   registrant, and technical contacts.
+    #
+    #    </note>
     #   @return [Boolean]
     #
     # @!attribute [rw] tech_privacy
@@ -2612,6 +2895,11 @@ module Aws::Route53Domains
     #   domains) or for our registrar associate, Gandi (for all other TLDs).
     #   If you specify `false`, WHOIS queries return the information that
     #   you entered for the technical contact.
+    #
+    #   <note markdown="1"> You must specify the same privacy setting for the administrative,
+    #   registrant, and technical contacts.
+    #
+    #    </note>
     #   @return [Boolean]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/UpdateDomainContactPrivacyRequest AWS API Documentation
@@ -2643,76 +2931,6 @@ module Aws::Route53Domains
 
     # The UpdateDomainContact request includes the following elements.
     #
-    # @note When making an API call, you may pass UpdateDomainContactRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         admin_contact: {
-    #           first_name: "ContactName",
-    #           last_name: "ContactName",
-    #           contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #           organization_name: "ContactName",
-    #           address_line_1: "AddressLine",
-    #           address_line_2: "AddressLine",
-    #           city: "City",
-    #           state: "State",
-    #           country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #           zip_code: "ZipCode",
-    #           phone_number: "ContactNumber",
-    #           email: "Email",
-    #           fax: "ContactNumber",
-    #           extra_params: [
-    #             {
-    #               name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #               value: "ExtraParamValue", # required
-    #             },
-    #           ],
-    #         },
-    #         registrant_contact: {
-    #           first_name: "ContactName",
-    #           last_name: "ContactName",
-    #           contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #           organization_name: "ContactName",
-    #           address_line_1: "AddressLine",
-    #           address_line_2: "AddressLine",
-    #           city: "City",
-    #           state: "State",
-    #           country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #           zip_code: "ZipCode",
-    #           phone_number: "ContactNumber",
-    #           email: "Email",
-    #           fax: "ContactNumber",
-    #           extra_params: [
-    #             {
-    #               name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #               value: "ExtraParamValue", # required
-    #             },
-    #           ],
-    #         },
-    #         tech_contact: {
-    #           first_name: "ContactName",
-    #           last_name: "ContactName",
-    #           contact_type: "PERSON", # accepts PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
-    #           organization_name: "ContactName",
-    #           address_line_1: "AddressLine",
-    #           address_line_2: "AddressLine",
-    #           city: "City",
-    #           state: "State",
-    #           country_code: "AD", # accepts AD, AE, AF, AG, AI, AL, AM, AN, AO, AQ, AR, AS, AT, AU, AW, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GH, GI, GL, GM, GN, GQ, GR, GT, GU, GW, GY, HK, HN, HR, HT, HU, ID, IE, IL, IM, IN, IQ, IR, IS, IT, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PT, PW, PY, QA, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
-    #           zip_code: "ZipCode",
-    #           phone_number: "ContactNumber",
-    #           email: "Email",
-    #           fax: "ContactNumber",
-    #           extra_params: [
-    #             {
-    #               name: "DUNS_NUMBER", # required, accepts DUNS_NUMBER, BRAND_NUMBER, BIRTH_DEPARTMENT, BIRTH_DATE_IN_YYYY_MM_DD, BIRTH_COUNTRY, BIRTH_CITY, DOCUMENT_NUMBER, AU_ID_NUMBER, AU_ID_TYPE, CA_LEGAL_TYPE, CA_BUSINESS_ENTITY_TYPE, CA_LEGAL_REPRESENTATIVE, CA_LEGAL_REPRESENTATIVE_CAPACITY, ES_IDENTIFICATION, ES_IDENTIFICATION_TYPE, ES_LEGAL_FORM, FI_BUSINESS_NUMBER, FI_ID_NUMBER, FI_NATIONALITY, FI_ORGANIZATION_TYPE, IT_NATIONALITY, IT_PIN, IT_REGISTRANT_ENTITY_TYPE, RU_PASSPORT_DATA, SE_ID_NUMBER, SG_ID_NUMBER, VAT_NUMBER, UK_CONTACT_TYPE, UK_COMPANY_NUMBER
-    #               value: "ExtraParamValue", # required
-    #             },
-    #           ],
-    #         },
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to update contact information
     #   for.
@@ -2730,13 +2948,19 @@ module Aws::Route53Domains
     #   Provides detailed contact information.
     #   @return [Types::ContactDetail]
     #
+    # @!attribute [rw] consent
+    #   Customer's consent for the owner change request. Required if the
+    #   domain is not free (consent price is more than $0.00).
+    #   @return [Types::Consent]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/route53domains-2014-05-15/UpdateDomainContactRequest AWS API Documentation
     #
     class UpdateDomainContactRequest < Struct.new(
       :domain_name,
       :admin_contact,
       :registrant_contact,
-      :tech_contact)
+      :tech_contact,
+      :consent)
       SENSITIVE = [:admin_contact, :registrant_contact, :tech_contact]
       include Aws::Structure
     end
@@ -2770,20 +2994,6 @@ module Aws::Route53Domains
     # not completed successfully, the domain registrant will be notified by
     # email.
     #
-    # @note When making an API call, you may pass UpdateDomainNameserversRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         fi_auth_key: "FIAuthKey",
-    #         nameservers: [ # required
-    #           {
-    #             name: "HostName", # required
-    #             glue_ips: ["GlueIp"],
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] domain_name
     #   The name of the domain that you want to change name servers for.
     #   @return [String]
@@ -2802,7 +3012,7 @@ module Aws::Route53Domains
       :domain_name,
       :fi_auth_key,
       :nameservers)
-      SENSITIVE = []
+      SENSITIVE = [:fi_auth_key]
       include Aws::Structure
     end
 
@@ -2826,19 +3036,6 @@ module Aws::Route53Domains
     end
 
     # The UpdateTagsForDomainRequest includes the following elements.
-    #
-    # @note When making an API call, you may pass UpdateTagsForDomainRequest
-    #   data as a hash:
-    #
-    #       {
-    #         domain_name: "DomainName", # required
-    #         tags_to_update: [
-    #           {
-    #             key: "TagKey",
-    #             value: "TagValue",
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] domain_name
     #   The domain for which you want to add or update tags.
@@ -2865,16 +3062,6 @@ module Aws::Route53Domains
 
     # The ViewBilling request includes the following elements.
     #
-    # @note When making an API call, you may pass ViewBillingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         start: Time.now,
-    #         end: Time.now,
-    #         marker: "PageMarker",
-    #         max_items: 1,
-    #       }
-    #
     # @!attribute [rw] start
     #   The beginning date and time for the time period for which you want a
     #   list of billing records. Specify the date and time in Unix time
@@ -2890,11 +3077,12 @@ module Aws::Route53Domains
     # @!attribute [rw] marker
     #   For an initial request for a list of billing records, omit this
     #   element. If the number of billing records that are associated with
-    #   the current AWS account during the specified period is greater than
-    #   the value that you specified for `MaxItems`, you can use `Marker` to
-    #   return additional billing records. Get the value of `NextPageMarker`
-    #   from the previous response, and submit another request that includes
-    #   the value of `NextPageMarker` in the `Marker` element.
+    #   the current Amazon Web Services account during the specified period
+    #   is greater than the value that you specified for `MaxItems`, you can
+    #   use `Marker` to return additional billing records. Get the value of
+    #   `NextPageMarker` from the previous response, and submit another
+    #   request that includes the value of `NextPageMarker` in the `Marker`
+    #   element.
     #
     #   Constraints: The marker must match the value of `NextPageMarker`
     #   that was returned in the previous response.

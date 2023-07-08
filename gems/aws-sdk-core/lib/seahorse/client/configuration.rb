@@ -68,7 +68,7 @@ module Seahorse
           @block = block
         end
 
-        def call(*args) 
+        def call(*args)
           @block.call(*args)
         end
       end
@@ -195,12 +195,16 @@ module Seahorse
           @members.include?(method_name) or super
         end
 
+        def override_config(k, v)
+          @struct[k] = v
+        end
+
         private
 
         def value_at(opt_name)
           value = @struct[opt_name]
           if value.is_a?(Defaults)
-            # this config value is used by endpoint discovery
+            # Legacy endpoints must continue to exist.
             if opt_name == :endpoint && @struct.members.include?(:regional_endpoint)
               @struct[:regional_endpoint] = true
             end

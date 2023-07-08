@@ -70,6 +70,19 @@ module Aws::RDS
       data[:default_character_set]
     end
 
+    # The EC2 image
+    # @return [Types::CustomDBEngineVersionAMI]
+    def image
+      data[:image]
+    end
+
+    # A value that indicates the source media provider of the AMI based on
+    # the usage operation. Applicable for RDS Custom for SQL Server.
+    # @return [String]
+    def db_engine_media_type
+      data[:db_engine_media_type]
+    end
+
     # A list of the character sets supported by this engine for the
     # `CharacterSetName` parameter of the `CreateDBInstance` operation.
     # @return [Array<Types::CharacterSet>]
@@ -124,12 +137,24 @@ module Aws::RDS
       data[:supported_engine_modes]
     end
 
-    # A list of features supported by the DB engine. Supported feature names
-    # include the following.
+    # A list of features supported by the DB engine.
     #
-    # * s3Import
+    # The supported features vary by DB engine and DB engine version.
     #
-    # ^
+    # To determine the supported features for a specific DB engine and DB
+    # engine version using the CLI, use the following command:
+    #
+    # `aws rds describe-db-engine-versions --engine <engine_name>
+    # --engine-version <engine_version>`
+    #
+    # For example, to determine the supported features for RDS for
+    # PostgreSQL version 13.3 using the CLI, use the following command:
+    #
+    # `aws rds describe-db-engine-versions --engine postgres
+    # --engine-version 13.3`
+    #
+    # The supported features are listed under `SupportedFeatureNames` in the
+    # output.
     # @return [Array<String>]
     def supported_feature_names
       data[:supported_feature_names]
@@ -156,6 +181,102 @@ module Aws::RDS
       data[:supports_global_databases]
     end
 
+    # The major engine version of the CEV.
+    # @return [String]
+    def major_engine_version
+      data[:major_engine_version]
+    end
+
+    # The name of the Amazon S3 bucket that contains your database
+    # installation files.
+    # @return [String]
+    def database_installation_files_s3_bucket_name
+      data[:database_installation_files_s3_bucket_name]
+    end
+
+    # The Amazon S3 directory that contains the database installation files.
+    # If not specified, then no prefix is assumed.
+    # @return [String]
+    def database_installation_files_s3_prefix
+      data[:database_installation_files_s3_prefix]
+    end
+
+    # The ARN of the custom engine version.
+    # @return [String]
+    def db_engine_version_arn
+      data[:db_engine_version_arn]
+    end
+
+    # The Amazon Web Services KMS key identifier for an encrypted CEV. This
+    # parameter is required for RDS Custom, but optional for Amazon RDS.
+    # @return [String]
+    def kms_key_id
+      data[:kms_key_id]
+    end
+
+    # The creation time of the DB engine version.
+    # @return [Time]
+    def create_time
+      data[:create_time]
+    end
+
+    # A list of tags. For more information, see [Tagging Amazon RDS
+    # Resources][1] in the *Amazon RDS User Guide.*
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Tagging.html
+    # @return [Array<Types::Tag>]
+    def tag_list
+      data[:tag_list]
+    end
+
+    # A value that indicates whether the engine version supports Babelfish
+    # for Aurora PostgreSQL.
+    # @return [Boolean]
+    def supports_babelfish
+      data[:supports_babelfish]
+    end
+
+    # JSON string that lists the installation files and parameters that RDS
+    # Custom uses to create a custom engine version (CEV). RDS Custom
+    # applies the patches in the order in which they're listed in the
+    # manifest. You can set the Oracle home, Oracle base, and UNIX/Linux
+    # user and group using the installation parameters. For more
+    # information, see [JSON fields in the CEV manifest][1] in the *Amazon
+    # RDS User Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-cev.preparing.html#custom-cev.preparing.manifest.fields
+    # @return [String]
+    def custom_db_engine_version_manifest
+      data[:custom_db_engine_version_manifest]
+    end
+
+    # A value that indicates whether the engine version supports rotating
+    # the server certificate without rebooting the DB instance.
+    # @return [Boolean]
+    def supports_certificate_rotation_without_restart
+      data[:supports_certificate_rotation_without_restart]
+    end
+
+    # A list of the supported CA certificate identifiers.
+    #
+    # For more information, see [Using SSL/TLS to encrypt a connection to a
+    # DB instance][1] in the *Amazon RDS User Guide* and [ Using SSL/TLS to
+    # encrypt a connection to a DB cluster][2] in the *Amazon Aurora User
+    # Guide*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html
+    # [2]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.SSL.html
+    # @return [Array<String>]
+    def supported_ca_certificate_identifiers
+      data[:supported_ca_certificate_identifiers]
+    end
+
     # @!endgroup
 
     # @return [Client]
@@ -170,10 +291,12 @@ module Aws::RDS
     #
     # @return [self]
     def load
-      resp = @client.describe_db_engine_versions(
+      resp = Aws::Plugins::UserAgent.feature('resource') do
+        @client.describe_db_engine_versions(
         engine: @engine_name,
         engine_version: @version
       )
+      end
       @data = resp.db_engine_versions[0]
       self
     end
@@ -288,7 +411,9 @@ module Aws::RDS
           :retry
         end
       end
-      Aws::Waiters::Waiter.new(options).wait({})
+      Aws::Plugins::UserAgent.feature('resource') do
+        Aws::Waiters::Waiter.new(options).wait({})
+      end
     end
 
     # @!group Associations
@@ -321,7 +446,9 @@ module Aws::RDS
           engine_name: @engine,
           major_engine_version: @version
         )
-        resp = @client.describe_option_group_options(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_option_group_options(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.option_group_options.each do |o|
@@ -361,7 +488,9 @@ module Aws::RDS
           engine_name: @engine,
           major_engine_version: @version
         )
-        resp = @client.describe_option_groups(options)
+        resp = Aws::Plugins::UserAgent.feature('resource') do
+          @client.describe_option_groups(options)
+        end
         resp.each_page do |page|
           batch = []
           page.data.option_groups_list.each do |o|

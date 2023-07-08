@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:pricing)
@@ -73,8 +77,13 @@ module Aws::Pricing
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::Pricing::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::Pricing
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::Pricing
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::Pricing
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::Pricing
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::Pricing
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::Pricing::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::Pricing::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::Pricing
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::Pricing
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -371,35 +428,6 @@ module Aws::Pricing
     #
     # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
     #
-    #
-    # @example Example: To retrieve a list of services and service codes
-    #
-    #   # Retrieves the service for the given Service Code.
-    #
-    #   resp = client.describe_services({
-    #     format_version: "aws_v1", 
-    #     max_results: 1, 
-    #     service_code: "AmazonEC2", 
-    #   })
-    #
-    #   resp.to_h outputs the following:
-    #   {
-    #     format_version: "aws_v1", 
-    #     next_token: "abcdefg123", 
-    #     services: [
-    #       {
-    #         attribute_names: [
-    #           "volumeType", 
-    #           "maxIopsvolume", 
-    #           "instanceCapacity10xlarge", 
-    #           "locationType", 
-    #           "operation", 
-    #         ], 
-    #         service_code: "AmazonEC2", 
-    #       }, 
-    #     ], 
-    #   }
-    #
     # @example Request syntax with placeholder values
     #
     #   resp = client.describe_services({
@@ -427,10 +455,10 @@ module Aws::Pricing
       req.send_request(options)
     end
 
-    # Returns a list of attribute values. Attibutes are similar to the
+    # Returns a list of attribute values. Attributes are similar to the
     # details in a Price List API offer file. For a list of available
-    # attributes, see [Offer File Definitions][1] in the [AWS Billing and
-    # Cost Management User Guide][2].
+    # attributes, see [Offer File Definitions][1] in the [Billing and Cost
+    # Management User Guide][2].
     #
     #
     #
@@ -460,30 +488,6 @@ module Aws::Pricing
     #
     # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
     #
-    #
-    # @example Example: To retrieve a list of attribute values
-    #
-    #   # This operation returns a list of values available for the given attribute.
-    #
-    #   resp = client.get_attribute_values({
-    #     attribute_name: "volumeType", 
-    #     max_results: 2, 
-    #     service_code: "AmazonEC2", 
-    #   })
-    #
-    #   resp.to_h outputs the following:
-    #   {
-    #     attribute_values: [
-    #       {
-    #         value: "Throughput Optimized HDD", 
-    #       }, 
-    #       {
-    #         value: "Provisioned IOPS", 
-    #       }, 
-    #     ], 
-    #     next_token: "GpgauEXAMPLEezucl5LV0w==:7GzYJ0nw0DBTJ2J66EoTIIynE6O1uXwQtTRqioJzQadBnDVgHPzI1en4BUQnPCLpzeBk9RQQAWaFieA4+DapFAGLgk+Z/9/cTw9GldnPOHN98+FdmJP7wKU3QQpQ8MQr5KOeBkIsAqvAQYdL0DkL7tHwPtE5iCEByAmg9gcC/yBU1vAOsf7R3VaNN4M5jMDv3woSWqASSIlBVB6tgW78YL22KhssoItM/jWW+aP6Jqtq4mldxp/ct6DWAl+xLFwHU/CbketimPPXyqHF3/UXDw==", 
-    #   }
-    #
     # @example Request syntax with placeholder values
     #
     #   resp = client.get_attribute_values({
@@ -508,9 +512,65 @@ module Aws::Pricing
       req.send_request(options)
     end
 
+    # <i> <b>This feature is in preview release and is subject to change.
+    # Your use of Amazon Web Services Price List API is subject to the Beta
+    # Service Participation terms of the <a
+    # href="https://aws.amazon.com/service-terms/">Amazon Web Services
+    # Service Terms</a> (Section 1.10).</b> </i>
+    #
+    # This returns the URL that you can retrieve your Price List file from.
+    # This URL is based on the `PriceListArn` and `FileFormat` that you
+    # retrieve from the [ `ListPriceLists` ][1] response.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_ListPriceLists.html
+    #
+    # @option params [required, String] :price_list_arn
+    #   The unique identifier that maps to where your Price List files are
+    #   located. `PriceListArn` can be obtained from the [ `ListPriceLists`
+    #   ][1] response.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_ListPriceLists.html
+    #
+    # @option params [required, String] :file_format
+    #   The format that you want to retrieve your Price List files in. The
+    #   `FileFormat` can be obtained from the [ `ListPriceLists` ][1]
+    #   response.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_ListPriceLists.html
+    #
+    # @return [Types::GetPriceListFileUrlResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetPriceListFileUrlResponse#url #url} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_price_list_file_url({
+    #     price_list_arn: "PriceListArn", # required
+    #     file_format: "FileFormat", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.url #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/pricing-2017-10-15/GetPriceListFileUrl AWS API Documentation
+    #
+    # @overload get_price_list_file_url(params = {})
+    # @param [Hash] params ({})
+    def get_price_list_file_url(params = {}, options = {})
+      req = build_request(:get_price_list_file_url, params)
+      req.send_request(options)
+    end
+
     # Returns a list of all products that match the filter criteria.
     #
-    # @option params [String] :service_code
+    # @option params [required, String] :service_code
     #   The code for the service whose products you want to retrieve.
     #
     # @option params [Array<Types::Filter>] :filters
@@ -537,41 +597,10 @@ module Aws::Pricing
     #
     # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
     #
-    #
-    # @example Example: To retrieve a list of products
-    #
-    #   # This operation returns a list of products that match the given criteria.
-    #
-    #   resp = client.get_products({
-    #     filters: [
-    #       {
-    #         field: "ServiceCode", 
-    #         type: "TERM_MATCH", 
-    #         value: "AmazonEC2", 
-    #       }, 
-    #       {
-    #         field: "volumeType", 
-    #         type: "TERM_MATCH", 
-    #         value: "Provisioned IOPS", 
-    #       }, 
-    #     ], 
-    #     format_version: "aws_v1", 
-    #     max_results: 1, 
-    #   })
-    #
-    #   resp.to_h outputs the following:
-    #   {
-    #     format_version: "aws_v1", 
-    #     next_token: "57r3EXAMPLEujbzWfHF7Ciw==:ywSmZsD3mtpQmQLQ5XfOsIMkYybSj+vAT+kGmwMFq+K9DGmIoJkz7lunVeamiOPgthdWSO2a7YKojCO+zY4dJmuNl2QvbNhXs+AJ2Ufn7xGmJncNI2TsEuAsVCUfTAvAQNcwwamtk6XuZ4YdNnooV62FjkV3ZAn40d9+wAxV7+FImvhUHi/+f8afgZdGh2zPUlH8jlV9uUtj0oHp8+DhPUuHXh+WBII1E/aoKpPSm3c=", 
-    #     price_list: [
-    #       "{\"product\":{\"productFamily\":\"Storage\",\"attributes\":{\"storageMedia\":\"SSD-backed\",\"maxThroughputvolume\":\"320 MB/sec\",\"volumeType\":\"Provisioned IOPS\",\"maxIopsvolume\":\"20000\",\"servicecode\":\"AmazonEC2\",\"usagetype\":\"CAN1-EBS:VolumeUsage.piops\",\"locationType\":\"AWS Region\",\"location\":\"Canada (Central)\",\"servicename\":\"Amazon Elastic Compute Cloud\",\"maxVolumeSize\":\"16 TiB\",\"operation\":\"\"},\"sku\":\"WQGC34PB2AWS8R4U\"},\"serviceCode\":\"AmazonEC2\",\"terms\":{\"OnDemand\":{\"WQGC34PB2AWS8R4U.JRTCKXETXF\":{\"priceDimensions\":{\"WQGC34PB2AWS8R4U.JRTCKXETXF.6YS6EN2CT7\":{\"unit\":\"GB-Mo\",\"endRange\":\"Inf\",\"description\":\"$0.138 per GB-month of Provisioned IOPS SSD (io1)  provisioned storage - Canada (Central)\",\"appliesTo\":[],\"rateCode\":\"WQGC34PB2AWS8R4U.JRTCKXETXF.6YS6EN2CT7\",\"beginRange\":\"0\",\"pricePerUnit\":{\"USD\":\"0.1380000000\"}}},\"sku\":\"WQGC34PB2AWS8R4U\",\"effectiveDate\":\"2017-08-01T00:00:00Z\",\"offerTermCode\":\"JRTCKXETXF\",\"termAttributes\":{}}}},\"version\":\"20170901182201\",\"publicationDate\":\"2017-09-01T18:22:01Z\"}", 
-    #     ], 
-    #   }
-    #
     # @example Request syntax with placeholder values
     #
     #   resp = client.get_products({
-    #     service_code: "String",
+    #     service_code: "String", # required
     #     filters: [
     #       {
     #         type: "TERM_MATCH", # required, accepts TERM_MATCH
@@ -600,6 +629,103 @@ module Aws::Pricing
       req.send_request(options)
     end
 
+    # <i> <b>This feature is in preview release and is subject to change.
+    # Your use of Amazon Web Services Price List API is subject to the Beta
+    # Service Participation terms of the <a
+    # href="https://aws.amazon.com/service-terms/">Amazon Web Services
+    # Service Terms</a> (Section 1.10).</b> </i>
+    #
+    # This returns a list of Price List references that the requester if
+    # authorized to view, given a `ServiceCode`, `CurrencyCode`, and an
+    # `EffectiveDate`. Use without a `RegionCode` filter to list Price List
+    # references from all available Amazon Web Services Regions. Use with a
+    # `RegionCode` filter to get the Price List reference that's specific
+    # to a specific Amazon Web Services Region. You can use the
+    # `PriceListArn` from the response to get your preferred Price List
+    # files through the [ `GetPriceListFileUrl` ][1] API.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetPriceListFileUrl.html
+    #
+    # @option params [required, String] :service_code
+    #   The service code or the Savings Plan service code for the attributes
+    #   that you want to retrieve. For example, to get the list of applicable
+    #   Amazon EC2 price lists, use `AmazonEC2`. For a full list of service
+    #   codes containing On-Demand and Reserved Instance (RI) pricing, use the
+    #   [ `DescribeServices` ][1] API.
+    #
+    #   To retrieve the Compute Savings Plan price lists, use
+    #   `ComputeSavingsPlans`. To retrieve Machine Learning Savings Plans
+    #   price lists, use `MachineLearningSavingsPlans`.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_DescribeServices.html#awscostmanagement-pricing_DescribeServices-request-FormatVersion
+    #
+    # @option params [required, Time,DateTime,Date,Integer,String] :effective_date
+    #   The date that the Price List file prices are effective from.
+    #
+    # @option params [String] :region_code
+    #   This is used to filter the Price List by Amazon Web Services Region.
+    #   For example, to get the price list only for the `US East (N.
+    #   Virginia)` Region, use `us-east-1`. If nothing is specified, you
+    #   retrieve price lists for all applicable Regions. The available
+    #   `RegionCode` list can be retrieved from [ `GetAttributeValues` ][1]
+    #   API.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetAttributeValues.html
+    #
+    # @option params [required, String] :currency_code
+    #   The three alphabetical character ISO-4217 currency code that the Price
+    #   List files are denominated in.
+    #
+    # @option params [String] :next_token
+    #   The pagination token that indicates the next set of results that you
+    #   want to retrieve.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return in the response.
+    #
+    # @return [Types::ListPriceListsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListPriceListsResponse#price_lists #price_lists} => Array&lt;Types::PriceList&gt;
+    #   * {Types::ListPriceListsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_price_lists({
+    #     service_code: "ServiceCode", # required
+    #     effective_date: Time.now, # required
+    #     region_code: "RegionCode",
+    #     currency_code: "CurrencyCode", # required
+    #     next_token: "String",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.price_lists #=> Array
+    #   resp.price_lists[0].price_list_arn #=> String
+    #   resp.price_lists[0].region_code #=> String
+    #   resp.price_lists[0].currency_code #=> String
+    #   resp.price_lists[0].file_formats #=> Array
+    #   resp.price_lists[0].file_formats[0] #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/pricing-2017-10-15/ListPriceLists AWS API Documentation
+    #
+    # @overload list_price_lists(params = {})
+    # @param [Hash] params ({})
+    def list_price_lists(params = {}, options = {})
+      req = build_request(:list_price_lists, params)
+      req.send_request(options)
+    end
+
     # @!endgroup
 
     # @param params ({})
@@ -613,7 +739,7 @@ module Aws::Pricing
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-pricing'
-      context[:gem_version] = '1.27.0'
+      context[:gem_version] = '1.48.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

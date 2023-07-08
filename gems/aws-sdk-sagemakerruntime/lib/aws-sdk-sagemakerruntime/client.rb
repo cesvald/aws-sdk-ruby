@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:sagemakerruntime)
@@ -73,8 +77,13 @@ module Aws::SageMakerRuntime
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::SageMakerRuntime::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::SageMakerRuntime
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::SageMakerRuntime
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::SageMakerRuntime
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::SageMakerRuntime
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::SageMakerRuntime
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::SageMakerRuntime::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::SageMakerRuntime::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::SageMakerRuntime
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::SageMakerRuntime
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -338,9 +395,10 @@ module Aws::SageMakerRuntime
     # rely on the behavior of headers outside those enumerated in the
     # request syntax.
     #
-    # Calls to `InvokeEndpoint` are authenticated by using AWS Signature
-    # Version 4. For information, see [Authenticating Requests (AWS
-    # Signature Version 4)][2] in the *Amazon S3 API Reference*.
+    # Calls to `InvokeEndpoint` are authenticated by using Amazon Web
+    # Services Signature Version 4. For information, see [Authenticating
+    # Requests (Amazon Web Services Signature Version 4)][2] in the *Amazon
+    # S3 API Reference*.
     #
     # A customer's model containers must respond to requests within 60
     # seconds. The model itself can have a maximum processing time of 60
@@ -402,8 +460,8 @@ module Aws::SageMakerRuntime
     #   custom attribute represents the trace ID, your model can prepend the
     #   custom attribute with `Trace ID:` in your post-processing function.
     #
-    #   This feature is currently supported in the AWS SDKs but not in the
-    #   Amazon SageMaker Python SDK.
+    #   This feature is currently supported in the Amazon Web Services SDKs
+    #   but not in the Amazon SageMaker Python SDK.
     #
     #
     #
@@ -440,6 +498,16 @@ module Aws::SageMakerRuntime
     #
     #   [1]: https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-data-capture.html
     #
+    # @option params [String] :enable_explanations
+    #   An optional JMESPath expression used to override the
+    #   `EnableExplanations` parameter of the `ClarifyExplainerConfig` API.
+    #   See the [EnableExplanations][1] section in the developer guide for
+    #   more information.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-online-explainability-create-endpoint.html#clarify-online-explainability-create-endpoint-enable
+    #
     # @return [Types::InvokeEndpointOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::InvokeEndpointOutput#body #body} => String
@@ -459,6 +527,7 @@ module Aws::SageMakerRuntime
     #     target_variant: "TargetVariantHeader",
     #     target_container_hostname: "TargetContainerHostnameHeader",
     #     inference_id: "InferenceId",
+    #     enable_explanations: "EnableExplanationsHeader",
     #   })
     #
     # @example Response structure
@@ -477,6 +546,117 @@ module Aws::SageMakerRuntime
       req.send_request(options)
     end
 
+    # After you deploy a model into production using Amazon SageMaker
+    # hosting services, your client applications use this API to get
+    # inferences from the model hosted at the specified endpoint in an
+    # asynchronous manner.
+    #
+    # Inference requests sent to this API are enqueued for asynchronous
+    # processing. The processing of the inference request may or may not
+    # complete before you receive a response from this API. The response
+    # from this API will not contain the result of the inference request but
+    # contain information about where you can locate it.
+    #
+    # Amazon SageMaker strips all `POST` headers except those supported by
+    # the API. Amazon SageMaker might add additional headers. You should not
+    # rely on the behavior of headers outside those enumerated in the
+    # request syntax.
+    #
+    # Calls to `InvokeEndpointAsync` are authenticated by using Amazon Web
+    # Services Signature Version 4. For information, see [Authenticating
+    # Requests (Amazon Web Services Signature Version 4)][1] in the *Amazon
+    # S3 API Reference*.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html
+    #
+    # @option params [required, String] :endpoint_name
+    #   The name of the endpoint that you specified when you created the
+    #   endpoint using the [ `CreateEndpoint` ][1] API.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateEndpoint.html
+    #
+    # @option params [String] :content_type
+    #   The MIME type of the input data in the request body.
+    #
+    # @option params [String] :accept
+    #   The desired MIME type of the inference in the response.
+    #
+    # @option params [String] :custom_attributes
+    #   Provides additional information about a request for an inference
+    #   submitted to a model hosted at an Amazon SageMaker endpoint. The
+    #   information is an opaque value that is forwarded verbatim. You could
+    #   use this value, for example, to provide an ID that you can use to
+    #   track a request or to provide other metadata that a service endpoint
+    #   was programmed to process. The value must consist of no more than 1024
+    #   visible US-ASCII characters as specified in [Section 3.3.6. Field
+    #   Value Components][1] of the Hypertext Transfer Protocol (HTTP/1.1).
+    #
+    #   The code in your model is responsible for setting or updating any
+    #   custom attributes in the response. If your code does not set this
+    #   value in the response, an empty value is returned. For example, if a
+    #   custom attribute represents the trace ID, your model can prepend the
+    #   custom attribute with `Trace ID`: in your post-processing function.
+    #
+    #   This feature is currently supported in the Amazon Web Services SDKs
+    #   but not in the Amazon SageMaker Python SDK.
+    #
+    #
+    #
+    #   [1]: https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.6
+    #
+    # @option params [String] :inference_id
+    #   The identifier for the inference request. Amazon SageMaker will
+    #   generate an identifier for you if none is specified.
+    #
+    # @option params [required, String] :input_location
+    #   The Amazon S3 URI where the inference request payload is stored.
+    #
+    # @option params [Integer] :request_ttl_seconds
+    #   Maximum age in seconds a request can be in the queue before it is
+    #   marked as expired. The default is 6 hours, or 21,600 seconds.
+    #
+    # @option params [Integer] :invocation_timeout_seconds
+    #   Maximum amount of time in seconds a request can be processed before it
+    #   is marked as expired. The default is 15 minutes, or 900 seconds.
+    #
+    # @return [Types::InvokeEndpointAsyncOutput] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::InvokeEndpointAsyncOutput#inference_id #inference_id} => String
+    #   * {Types::InvokeEndpointAsyncOutput#output_location #output_location} => String
+    #   * {Types::InvokeEndpointAsyncOutput#failure_location #failure_location} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.invoke_endpoint_async({
+    #     endpoint_name: "EndpointName", # required
+    #     content_type: "Header",
+    #     accept: "Header",
+    #     custom_attributes: "CustomAttributesHeader",
+    #     inference_id: "InferenceId",
+    #     input_location: "InputLocationHeader", # required
+    #     request_ttl_seconds: 1,
+    #     invocation_timeout_seconds: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.inference_id #=> String
+    #   resp.output_location #=> String
+    #   resp.failure_location #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/runtime.sagemaker-2017-05-13/InvokeEndpointAsync AWS API Documentation
+    #
+    # @overload invoke_endpoint_async(params = {})
+    # @param [Hash] params ({})
+    def invoke_endpoint_async(params = {}, options = {})
+      req = build_request(:invoke_endpoint_async, params)
+      req.send_request(options)
+    end
+
     # @!endgroup
 
     # @param params ({})
@@ -490,7 +670,7 @@ module Aws::SageMakerRuntime
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-sagemakerruntime'
-      context[:gem_version] = '1.31.0'
+      context[:gem_version] = '1.53.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

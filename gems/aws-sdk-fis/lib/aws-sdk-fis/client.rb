@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:fis)
@@ -73,8 +77,13 @@ module Aws::FIS
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::FIS::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::FIS
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::FIS
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::FIS
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::FIS
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::FIS
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::FIS::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::FIS::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::FIS
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::FIS
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -329,26 +386,26 @@ module Aws::FIS
 
     # Creates an experiment template.
     #
-    # To create a template, specify the following information:
+    # An experiment template includes the following components:
     #
-    # * **Targets**\: A target can be a specific resource in your AWS
-    #   environment, or one or more resources that match criteria that you
-    #   specify, for example, resources that have specific tags.
+    # * **Targets**: A target can be a specific resource in your Amazon Web
+    #   Services environment, or one or more resources that match criteria
+    #   that you specify, for example, resources that have specific tags.
     #
-    # * **Actions**\: The actions to carry out on the target. You can
-    #   specify multiple actions, the duration of each action, and when to
-    #   start each action during an experiment.
+    # * **Actions**: The actions to carry out on the target. You can specify
+    #   multiple actions, the duration of each action, and when to start
+    #   each action during an experiment.
     #
-    # * **Stop conditions**\: If a stop condition is triggered while an
+    # * **Stop conditions**: If a stop condition is triggered while an
     #   experiment is running, the experiment is automatically stopped. You
     #   can define a stop condition as a CloudWatch alarm.
     #
-    # For more information, see the [AWS Fault Injection Simulator User
-    # Guide][1].
+    # For more information, see [Experiment templates][1] in the *Fault
+    # Injection Simulator User Guide*.
     #
     #
     #
-    # [1]: https://docs.aws.amazon.com/fis/latest/userguide/
+    # [1]: https://docs.aws.amazon.com/fis/latest/userguide/experiment-templates.html
     #
     # @option params [required, String] :client_token
     #   Unique, case-sensitive identifier that you provide to ensure the
@@ -358,8 +415,7 @@ module Aws::FIS
     #   not need to pass this option.**
     #
     # @option params [required, String] :description
-    #   A description for the experiment template. Can contain up to 64
-    #   letters (A-Z and a-z).
+    #   A description for the experiment template.
     #
     # @option params [required, Array<Types::CreateExperimentTemplateStopConditionInput>] :stop_conditions
     #   The stop conditions.
@@ -371,11 +427,14 @@ module Aws::FIS
     #   The actions for the experiment.
     #
     # @option params [required, String] :role_arn
-    #   The Amazon Resource Name (ARN) of an IAM role that grants the AWS FIS
+    #   The Amazon Resource Name (ARN) of an IAM role that grants the FIS
     #   service permission to perform service actions on your behalf.
     #
     # @option params [Hash<String,String>] :tags
     #   The tags to apply to the experiment template.
+    #
+    # @option params [Types::CreateExperimentTemplateLogConfigurationInput] :log_configuration
+    #   The configuration for experiment logging.
     #
     # @return [Types::CreateExperimentTemplateResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -394,7 +453,7 @@ module Aws::FIS
     #     ],
     #     targets: {
     #       "ExperimentTemplateTargetName" => {
-    #         resource_type: "ResourceType", # required
+    #         resource_type: "TargetResourceTypeId", # required
     #         resource_arns: ["ResourceArn"],
     #         resource_tags: {
     #           "TagKey" => "TagValue",
@@ -406,6 +465,9 @@ module Aws::FIS
     #           },
     #         ],
     #         selection_mode: "ExperimentTemplateTargetSelectionMode", # required
+    #         parameters: {
+    #           "ExperimentTemplateTargetParameterName" => "ExperimentTemplateTargetParameterValue",
+    #         },
     #       },
     #     },
     #     actions: { # required
@@ -425,6 +487,16 @@ module Aws::FIS
     #     tags: {
     #       "TagKey" => "TagValue",
     #     },
+    #     log_configuration: {
+    #       cloud_watch_logs_configuration: {
+    #         log_group_arn: "CloudWatchLogGroupArn", # required
+    #       },
+    #       s3_configuration: {
+    #         bucket_name: "S3BucketName", # required
+    #         prefix: "S3ObjectKey",
+    #       },
+    #       log_schema_version: 1, # required
+    #     },
     #   })
     #
     # @example Response structure
@@ -442,6 +514,8 @@ module Aws::FIS
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].filters[0].values #=> Array
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].filters[0].values[0] #=> String
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].selection_mode #=> String
+    #   resp.experiment_template.targets["ExperimentTemplateTargetName"].parameters #=> Hash
+    #   resp.experiment_template.targets["ExperimentTemplateTargetName"].parameters["ExperimentTemplateTargetParameterName"] #=> String
     #   resp.experiment_template.actions #=> Hash
     #   resp.experiment_template.actions["ExperimentTemplateActionName"].action_id #=> String
     #   resp.experiment_template.actions["ExperimentTemplateActionName"].description #=> String
@@ -459,6 +533,10 @@ module Aws::FIS
     #   resp.experiment_template.role_arn #=> String
     #   resp.experiment_template.tags #=> Hash
     #   resp.experiment_template.tags["TagKey"] #=> String
+    #   resp.experiment_template.log_configuration.cloud_watch_logs_configuration.log_group_arn #=> String
+    #   resp.experiment_template.log_configuration.s3_configuration.bucket_name #=> String
+    #   resp.experiment_template.log_configuration.s3_configuration.prefix #=> String
+    #   resp.experiment_template.log_configuration.log_schema_version #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/CreateExperimentTemplate AWS API Documentation
     #
@@ -499,6 +577,8 @@ module Aws::FIS
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].filters[0].values #=> Array
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].filters[0].values[0] #=> String
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].selection_mode #=> String
+    #   resp.experiment_template.targets["ExperimentTemplateTargetName"].parameters #=> Hash
+    #   resp.experiment_template.targets["ExperimentTemplateTargetName"].parameters["ExperimentTemplateTargetParameterName"] #=> String
     #   resp.experiment_template.actions #=> Hash
     #   resp.experiment_template.actions["ExperimentTemplateActionName"].action_id #=> String
     #   resp.experiment_template.actions["ExperimentTemplateActionName"].description #=> String
@@ -516,6 +596,10 @@ module Aws::FIS
     #   resp.experiment_template.role_arn #=> String
     #   resp.experiment_template.tags #=> Hash
     #   resp.experiment_template.tags["TagKey"] #=> String
+    #   resp.experiment_template.log_configuration.cloud_watch_logs_configuration.log_group_arn #=> String
+    #   resp.experiment_template.log_configuration.s3_configuration.bucket_name #=> String
+    #   resp.experiment_template.log_configuration.s3_configuration.prefix #=> String
+    #   resp.experiment_template.log_configuration.log_schema_version #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/DeleteExperimentTemplate AWS API Documentation
     #
@@ -526,7 +610,7 @@ module Aws::FIS
       req.send_request(options)
     end
 
-    # Gets information about the specified AWS FIS action.
+    # Gets information about the specified FIS action.
     #
     # @option params [required, String] :id
     #   The ID of the action.
@@ -595,6 +679,8 @@ module Aws::FIS
     #   resp.experiment.targets["ExperimentTargetName"].filters[0].values #=> Array
     #   resp.experiment.targets["ExperimentTargetName"].filters[0].values[0] #=> String
     #   resp.experiment.targets["ExperimentTargetName"].selection_mode #=> String
+    #   resp.experiment.targets["ExperimentTargetName"].parameters #=> Hash
+    #   resp.experiment.targets["ExperimentTargetName"].parameters["ExperimentTargetParameterName"] #=> String
     #   resp.experiment.actions #=> Hash
     #   resp.experiment.actions["ExperimentActionName"].action_id #=> String
     #   resp.experiment.actions["ExperimentActionName"].description #=> String
@@ -606,6 +692,8 @@ module Aws::FIS
     #   resp.experiment.actions["ExperimentActionName"].start_after[0] #=> String
     #   resp.experiment.actions["ExperimentActionName"].state.status #=> String, one of "pending", "initiating", "running", "completed", "cancelled", "stopping", "stopped", "failed"
     #   resp.experiment.actions["ExperimentActionName"].state.reason #=> String
+    #   resp.experiment.actions["ExperimentActionName"].start_time #=> Time
+    #   resp.experiment.actions["ExperimentActionName"].end_time #=> Time
     #   resp.experiment.stop_conditions #=> Array
     #   resp.experiment.stop_conditions[0].source #=> String
     #   resp.experiment.stop_conditions[0].value #=> String
@@ -614,6 +702,10 @@ module Aws::FIS
     #   resp.experiment.end_time #=> Time
     #   resp.experiment.tags #=> Hash
     #   resp.experiment.tags["TagKey"] #=> String
+    #   resp.experiment.log_configuration.cloud_watch_logs_configuration.log_group_arn #=> String
+    #   resp.experiment.log_configuration.s3_configuration.bucket_name #=> String
+    #   resp.experiment.log_configuration.s3_configuration.prefix #=> String
+    #   resp.experiment.log_configuration.log_schema_version #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/GetExperiment AWS API Documentation
     #
@@ -654,6 +746,8 @@ module Aws::FIS
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].filters[0].values #=> Array
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].filters[0].values[0] #=> String
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].selection_mode #=> String
+    #   resp.experiment_template.targets["ExperimentTemplateTargetName"].parameters #=> Hash
+    #   resp.experiment_template.targets["ExperimentTemplateTargetName"].parameters["ExperimentTemplateTargetParameterName"] #=> String
     #   resp.experiment_template.actions #=> Hash
     #   resp.experiment_template.actions["ExperimentTemplateActionName"].action_id #=> String
     #   resp.experiment_template.actions["ExperimentTemplateActionName"].description #=> String
@@ -671,6 +765,10 @@ module Aws::FIS
     #   resp.experiment_template.role_arn #=> String
     #   resp.experiment_template.tags #=> Hash
     #   resp.experiment_template.tags["TagKey"] #=> String
+    #   resp.experiment_template.log_configuration.cloud_watch_logs_configuration.log_group_arn #=> String
+    #   resp.experiment_template.log_configuration.s3_configuration.bucket_name #=> String
+    #   resp.experiment_template.log_configuration.s3_configuration.prefix #=> String
+    #   resp.experiment_template.log_configuration.log_schema_version #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/GetExperimentTemplate AWS API Documentation
     #
@@ -681,7 +779,39 @@ module Aws::FIS
       req.send_request(options)
     end
 
-    # Lists the available AWS FIS actions.
+    # Gets information about the specified resource type.
+    #
+    # @option params [required, String] :resource_type
+    #   The resource type.
+    #
+    # @return [Types::GetTargetResourceTypeResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetTargetResourceTypeResponse#target_resource_type #target_resource_type} => Types::TargetResourceType
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_target_resource_type({
+    #     resource_type: "TargetResourceTypeId", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.target_resource_type.resource_type #=> String
+    #   resp.target_resource_type.description #=> String
+    #   resp.target_resource_type.parameters #=> Hash
+    #   resp.target_resource_type.parameters["TargetResourceTypeParameterName"].description #=> String
+    #   resp.target_resource_type.parameters["TargetResourceTypeParameterName"].required #=> Boolean
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/GetTargetResourceType AWS API Documentation
+    #
+    # @overload get_target_resource_type(params = {})
+    # @param [Hash] params ({})
+    def get_target_resource_type(params = {}, options = {})
+      req = build_request(:get_target_resource_type, params)
+      req.send_request(options)
+    end
+
+    # Lists the available FIS actions.
     #
     # @option params [Integer] :max_results
     #   The maximum number of results to return with a single call. To
@@ -843,6 +973,46 @@ module Aws::FIS
       req.send_request(options)
     end
 
+    # Lists the target resource types.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return with a single call. To
+    #   retrieve the remaining results, make another call with the returned
+    #   `nextToken` value.
+    #
+    # @option params [String] :next_token
+    #   The token for the next page of results.
+    #
+    # @return [Types::ListTargetResourceTypesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListTargetResourceTypesResponse#target_resource_types #target_resource_types} => Array&lt;Types::TargetResourceTypeSummary&gt;
+    #   * {Types::ListTargetResourceTypesResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_target_resource_types({
+    #     max_results: 1,
+    #     next_token: "NextToken",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.target_resource_types #=> Array
+    #   resp.target_resource_types[0].resource_type #=> String
+    #   resp.target_resource_types[0].description #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/ListTargetResourceTypes AWS API Documentation
+    #
+    # @overload list_target_resource_types(params = {})
+    # @param [Hash] params ({})
+    def list_target_resource_types(params = {}, options = {})
+      req = build_request(:list_target_resource_types, params)
+      req.send_request(options)
+    end
+
     # Starts running an experiment from the specified experiment template.
     #
     # @option params [required, String] :client_token
@@ -890,6 +1060,8 @@ module Aws::FIS
     #   resp.experiment.targets["ExperimentTargetName"].filters[0].values #=> Array
     #   resp.experiment.targets["ExperimentTargetName"].filters[0].values[0] #=> String
     #   resp.experiment.targets["ExperimentTargetName"].selection_mode #=> String
+    #   resp.experiment.targets["ExperimentTargetName"].parameters #=> Hash
+    #   resp.experiment.targets["ExperimentTargetName"].parameters["ExperimentTargetParameterName"] #=> String
     #   resp.experiment.actions #=> Hash
     #   resp.experiment.actions["ExperimentActionName"].action_id #=> String
     #   resp.experiment.actions["ExperimentActionName"].description #=> String
@@ -901,6 +1073,8 @@ module Aws::FIS
     #   resp.experiment.actions["ExperimentActionName"].start_after[0] #=> String
     #   resp.experiment.actions["ExperimentActionName"].state.status #=> String, one of "pending", "initiating", "running", "completed", "cancelled", "stopping", "stopped", "failed"
     #   resp.experiment.actions["ExperimentActionName"].state.reason #=> String
+    #   resp.experiment.actions["ExperimentActionName"].start_time #=> Time
+    #   resp.experiment.actions["ExperimentActionName"].end_time #=> Time
     #   resp.experiment.stop_conditions #=> Array
     #   resp.experiment.stop_conditions[0].source #=> String
     #   resp.experiment.stop_conditions[0].value #=> String
@@ -909,6 +1083,10 @@ module Aws::FIS
     #   resp.experiment.end_time #=> Time
     #   resp.experiment.tags #=> Hash
     #   resp.experiment.tags["TagKey"] #=> String
+    #   resp.experiment.log_configuration.cloud_watch_logs_configuration.log_group_arn #=> String
+    #   resp.experiment.log_configuration.s3_configuration.bucket_name #=> String
+    #   resp.experiment.log_configuration.s3_configuration.prefix #=> String
+    #   resp.experiment.log_configuration.log_schema_version #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/StartExperiment AWS API Documentation
     #
@@ -952,6 +1130,8 @@ module Aws::FIS
     #   resp.experiment.targets["ExperimentTargetName"].filters[0].values #=> Array
     #   resp.experiment.targets["ExperimentTargetName"].filters[0].values[0] #=> String
     #   resp.experiment.targets["ExperimentTargetName"].selection_mode #=> String
+    #   resp.experiment.targets["ExperimentTargetName"].parameters #=> Hash
+    #   resp.experiment.targets["ExperimentTargetName"].parameters["ExperimentTargetParameterName"] #=> String
     #   resp.experiment.actions #=> Hash
     #   resp.experiment.actions["ExperimentActionName"].action_id #=> String
     #   resp.experiment.actions["ExperimentActionName"].description #=> String
@@ -963,6 +1143,8 @@ module Aws::FIS
     #   resp.experiment.actions["ExperimentActionName"].start_after[0] #=> String
     #   resp.experiment.actions["ExperimentActionName"].state.status #=> String, one of "pending", "initiating", "running", "completed", "cancelled", "stopping", "stopped", "failed"
     #   resp.experiment.actions["ExperimentActionName"].state.reason #=> String
+    #   resp.experiment.actions["ExperimentActionName"].start_time #=> Time
+    #   resp.experiment.actions["ExperimentActionName"].end_time #=> Time
     #   resp.experiment.stop_conditions #=> Array
     #   resp.experiment.stop_conditions[0].source #=> String
     #   resp.experiment.stop_conditions[0].value #=> String
@@ -971,6 +1153,10 @@ module Aws::FIS
     #   resp.experiment.end_time #=> Time
     #   resp.experiment.tags #=> Hash
     #   resp.experiment.tags["TagKey"] #=> String
+    #   resp.experiment.log_configuration.cloud_watch_logs_configuration.log_group_arn #=> String
+    #   resp.experiment.log_configuration.s3_configuration.bucket_name #=> String
+    #   resp.experiment.log_configuration.s3_configuration.prefix #=> String
+    #   resp.experiment.log_configuration.log_schema_version #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/StopExperiment AWS API Documentation
     #
@@ -1053,8 +1239,11 @@ module Aws::FIS
     #   The actions for the experiment.
     #
     # @option params [String] :role_arn
-    #   The Amazon Resource Name (ARN) of an IAM role that grants the AWS FIS
+    #   The Amazon Resource Name (ARN) of an IAM role that grants the FIS
     #   service permission to perform service actions on your behalf.
+    #
+    # @option params [Types::UpdateExperimentTemplateLogConfigurationInput] :log_configuration
+    #   The configuration for experiment logging.
     #
     # @return [Types::UpdateExperimentTemplateResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1073,7 +1262,7 @@ module Aws::FIS
     #     ],
     #     targets: {
     #       "ExperimentTemplateTargetName" => {
-    #         resource_type: "ResourceType", # required
+    #         resource_type: "TargetResourceTypeId", # required
     #         resource_arns: ["ResourceArn"],
     #         resource_tags: {
     #           "TagKey" => "TagValue",
@@ -1085,6 +1274,9 @@ module Aws::FIS
     #           },
     #         ],
     #         selection_mode: "ExperimentTemplateTargetSelectionMode", # required
+    #         parameters: {
+    #           "ExperimentTemplateTargetParameterName" => "ExperimentTemplateTargetParameterValue",
+    #         },
     #       },
     #     },
     #     actions: {
@@ -1101,6 +1293,16 @@ module Aws::FIS
     #       },
     #     },
     #     role_arn: "RoleArn",
+    #     log_configuration: {
+    #       cloud_watch_logs_configuration: {
+    #         log_group_arn: "CloudWatchLogGroupArn", # required
+    #       },
+    #       s3_configuration: {
+    #         bucket_name: "S3BucketName", # required
+    #         prefix: "S3ObjectKey",
+    #       },
+    #       log_schema_version: 1,
+    #     },
     #   })
     #
     # @example Response structure
@@ -1118,6 +1320,8 @@ module Aws::FIS
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].filters[0].values #=> Array
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].filters[0].values[0] #=> String
     #   resp.experiment_template.targets["ExperimentTemplateTargetName"].selection_mode #=> String
+    #   resp.experiment_template.targets["ExperimentTemplateTargetName"].parameters #=> Hash
+    #   resp.experiment_template.targets["ExperimentTemplateTargetName"].parameters["ExperimentTemplateTargetParameterName"] #=> String
     #   resp.experiment_template.actions #=> Hash
     #   resp.experiment_template.actions["ExperimentTemplateActionName"].action_id #=> String
     #   resp.experiment_template.actions["ExperimentTemplateActionName"].description #=> String
@@ -1135,6 +1339,10 @@ module Aws::FIS
     #   resp.experiment_template.role_arn #=> String
     #   resp.experiment_template.tags #=> Hash
     #   resp.experiment_template.tags["TagKey"] #=> String
+    #   resp.experiment_template.log_configuration.cloud_watch_logs_configuration.log_group_arn #=> String
+    #   resp.experiment_template.log_configuration.s3_configuration.bucket_name #=> String
+    #   resp.experiment_template.log_configuration.s3_configuration.prefix #=> String
+    #   resp.experiment_template.log_configuration.log_schema_version #=> Integer
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/fis-2020-12-01/UpdateExperimentTemplate AWS API Documentation
     #
@@ -1158,7 +1366,7 @@ module Aws::FIS
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-fis'
-      context[:gem_version] = '1.1.0'
+      context[:gem_version] = '1.20.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

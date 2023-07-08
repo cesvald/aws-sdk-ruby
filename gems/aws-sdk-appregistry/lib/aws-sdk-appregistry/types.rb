@@ -10,8 +10,23 @@
 module Aws::AppRegistry
   module Types
 
-    # Represents a Service Catalog AppRegistry application that is the
-    # top-level node in a hierarchy of related cloud resource abstractions.
+    # Includes all of the AppRegistry settings.
+    #
+    # @!attribute [rw] tag_query_configuration
+    #   Includes the definition of a `tagQuery`.
+    #   @return [Types::TagQueryConfiguration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/AppRegistryConfiguration AWS API Documentation
+    #
+    class AppRegistryConfiguration < Struct.new(
+      :tag_query_configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Represents a Amazon Web Services Service Catalog AppRegistry
+    # application that is the top-level node in a hierarchy of related cloud
+    # resource abstractions.
     #
     # @!attribute [rw] id
     #   The identifier of the application.
@@ -59,7 +74,8 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # Summary of a Service Catalog AppRegistry application.
+    # Summary of a Amazon Web Services Service Catalog AppRegistry
+    # application.
     #
     # @!attribute [rw] id
     #   The identifier of the application.
@@ -102,21 +118,13 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateAttributeGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "ApplicationSpecifier", # required
-    #         attribute_group: "AttributeGroupSpecifier", # required
-    #       }
-    #
     # @!attribute [rw] application
-    #   The name or ID of the application.
+    #   The name, ID, or ARN of the application.
     #   @return [String]
     #
     # @!attribute [rw] attribute_group
-    #   The name or ID of the attribute group that holds the attributes to
-    #   describe the application.
+    #   The name, ID, or ARN of the attribute group that holds the
+    #   attributes to describe the application.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/AssociateAttributeGroupRequest AWS API Documentation
@@ -147,17 +155,8 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass AssociateResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "ApplicationSpecifier", # required
-    #         resource_type: "CFN_STACK", # required, accepts CFN_STACK
-    #         resource: "ResourceSpecifier", # required
-    #       }
-    #
     # @!attribute [rw] application
-    #   The name or ID of the application.
+    #   The name, ID, or ARN of the application.
     #   @return [String]
     #
     # @!attribute [rw] resource_type
@@ -197,8 +196,9 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # Represents a Service Catalog AppRegistry attribute group that is rich
-    # metadata which describes an application and its components.
+    # Represents a Amazon Web Services Service Catalog AppRegistry attribute
+    # group that is rich metadata which describes an application and its
+    # components.
     #
     # @!attribute [rw] id
     #   The globally unique attribute group identifier of the attribute
@@ -247,7 +247,40 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # Summary of a Service Catalog AppRegistry attribute group.
+    # The details related to a specific AttributeGroup.
+    #
+    # @!attribute [rw] id
+    #   The unique identifier of the attribute group.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   The Amazon resource name (ARN) that specifies the attribute group.
+    #   @return [String]
+    #
+    # @!attribute [rw] name
+    #   This field is no longer supported. We recommend you don't use the
+    #   field when using `ListAttributeGroupsForApplication`.
+    #
+    #   The name of the attribute group.
+    #   @return [String]
+    #
+    # @!attribute [rw] created_by
+    #   The service principal that created the attribute group.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/AttributeGroupDetails AWS API Documentation
+    #
+    class AttributeGroupDetails < Struct.new(
+      :id,
+      :arn,
+      :name,
+      :created_by)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Summary of a Amazon Web Services Service Catalog AppRegistry attribute
+    # group.
     #
     # @!attribute [rw] id
     #   The globally unique attribute group identifier of the attribute
@@ -278,6 +311,10 @@ module Aws::AppRegistry
     #   newly created attribute group.
     #   @return [Time]
     #
+    # @!attribute [rw] created_by
+    #   The service principal that created the attribute group.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/AttributeGroupSummary AWS API Documentation
     #
     class AttributeGroupSummary < Struct.new(
@@ -286,7 +323,8 @@ module Aws::AppRegistry
       :name,
       :description,
       :creation_time,
-      :last_update_time)
+      :last_update_time,
+      :created_by)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -305,18 +343,6 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         description: "Description",
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         client_token: "ClientToken", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the application. The name must be unique in the region
     #   in which you are creating the application.
@@ -365,19 +391,6 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateAttributeGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         name: "Name", # required
-    #         description: "Description",
-    #         attributes: "Attributes", # required
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #         client_token: "ClientToken", # required
-    #       }
-    #
     # @!attribute [rw] name
     #   The name of the attribute group.
     #   @return [String]
@@ -432,15 +445,8 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "ApplicationSpecifier", # required
-    #       }
-    #
     # @!attribute [rw] application
-    #   The name or ID of the application.
+    #   The name, ID, or ARN of the application.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/DeleteApplicationRequest AWS API Documentation
@@ -463,16 +469,9 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteAttributeGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         attribute_group: "AttributeGroupSpecifier", # required
-    #       }
-    #
     # @!attribute [rw] attribute_group
-    #   The name or ID of the attribute group that holds the attributes to
-    #   describe the application.
+    #   The name, ID, or ARN of the attribute group that holds the
+    #   attributes to describe the application.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/DeleteAttributeGroupRequest AWS API Documentation
@@ -495,21 +494,13 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateAttributeGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "ApplicationSpecifier", # required
-    #         attribute_group: "AttributeGroupSpecifier", # required
-    #       }
-    #
     # @!attribute [rw] application
-    #   The name or ID of the application.
+    #   The name, ID, or ARN of the application.
     #   @return [String]
     #
     # @!attribute [rw] attribute_group
-    #   The name or ID of the attribute group that holds the attributes to
-    #   describe the application.
+    #   The name, ID, or ARN of the attribute group that holds the
+    #   attributes to describe the application.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/DisassociateAttributeGroupRequest AWS API Documentation
@@ -538,15 +529,6 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DisassociateResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "ApplicationSpecifier", # required
-    #         resource_type: "CFN_STACK", # required, accepts CFN_STACK
-    #         resource: "ResourceSpecifier", # required
-    #       }
-    #
     # @!attribute [rw] application
     #   The name or ID of the application.
     #   @return [String]
@@ -586,15 +568,8 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "ApplicationSpecifier", # required
-    #       }
-    #
     # @!attribute [rw] application
-    #   The name or ID of the application.
+    #   The name, ID, or ARN of the application.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/GetApplicationRequest AWS API Documentation
@@ -642,6 +617,11 @@ module Aws::AppRegistry
     #   Key-value pairs associated with the application.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] integrations
+    #   The information about the integration of the application with other
+    #   services, such as Resource Groups.
+    #   @return [Types::Integrations]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/GetApplicationResponse AWS API Documentation
     #
     class GetApplicationResponse < Struct.new(
@@ -652,21 +632,49 @@ module Aws::AppRegistry
       :creation_time,
       :last_update_time,
       :associated_resource_count,
-      :tags)
+      :tags,
+      :integrations)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetAttributeGroupRequest
-    #   data as a hash:
+    # @!attribute [rw] application
+    #   The name, ID, or ARN of the application.
+    #   @return [String]
     #
-    #       {
-    #         attribute_group: "AttributeGroupSpecifier", # required
-    #       }
+    # @!attribute [rw] resource_type
+    #   The type of resource associated with the application.
+    #   @return [String]
     #
+    # @!attribute [rw] resource
+    #   The name or ID of the resource associated with the application.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/GetAssociatedResourceRequest AWS API Documentation
+    #
+    class GetAssociatedResourceRequest < Struct.new(
+      :application,
+      :resource_type,
+      :resource)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] resource
+    #   The resource associated with the application.
+    #   @return [Types::Resource]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/GetAssociatedResourceResponse AWS API Documentation
+    #
+    class GetAssociatedResourceResponse < Struct.new(
+      :resource)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] attribute_group
-    #   The name or ID of the attribute group that holds the attributes to
-    #   describe the application.
+    #   The name, ID, or ARN of the attribute group that holds the
+    #   attributes to describe the application.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/GetAttributeGroupRequest AWS API Documentation
@@ -715,6 +723,10 @@ module Aws::AppRegistry
     #   Key-value pairs associated with the attribute group.
     #   @return [Hash<String,String>]
     #
+    # @!attribute [rw] created_by
+    #   The service principal that created the attribute group.
+    #   @return [String]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/GetAttributeGroupResponse AWS API Documentation
     #
     class GetAttributeGroupResponse < Struct.new(
@@ -725,7 +737,34 @@ module Aws::AppRegistry
       :attributes,
       :creation_time,
       :last_update_time,
-      :tags)
+      :tags,
+      :created_by)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] configuration
+    #   Retrieves `TagKey` configuration from an account.
+    #   @return [Types::AppRegistryConfiguration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/GetConfigurationResponse AWS API Documentation
+    #
+    class GetConfigurationResponse < Struct.new(
+      :configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The information about the service integration.
+    #
+    # @!attribute [rw] resource_group
+    #   The information about the resource group integration.
+    #   @return [Types::ResourceGroup]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/Integrations AWS API Documentation
+    #
+    class Integrations < Struct.new(
+      :resource_group)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -743,14 +782,6 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListApplicationsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] next_token
     #   The token to use to get the next page of results after a previous
     #   API call.
@@ -789,15 +820,6 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAssociatedAttributeGroupsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "ApplicationSpecifier", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] application
     #   The name or ID of the application.
     #   @return [String]
@@ -841,17 +863,8 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAssociatedResourcesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "ApplicationSpecifier", # required
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
-    #
     # @!attribute [rw] application
-    #   The name or ID of the application.
+    #   The name, ID, or ARN of the application.
     #   @return [String]
     #
     # @!attribute [rw] next_token
@@ -893,14 +906,49 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListAttributeGroupsRequest
-    #   data as a hash:
+    # @!attribute [rw] application
+    #   The name or ID of the application.
+    #   @return [String]
     #
-    #       {
-    #         next_token: "NextToken",
-    #         max_results: 1,
-    #       }
+    # @!attribute [rw] next_token
+    #   This token retrieves the next page of results after a previous API
+    #   call.
+    #   @return [String]
     #
+    # @!attribute [rw] max_results
+    #   The upper bound of the number of results to return. The value cannot
+    #   exceed 25. If you omit this parameter, it defaults to 25. This value
+    #   is optional.
+    #   @return [Integer]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/ListAttributeGroupsForApplicationRequest AWS API Documentation
+    #
+    class ListAttributeGroupsForApplicationRequest < Struct.new(
+      :application,
+      :next_token,
+      :max_results)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # @!attribute [rw] attribute_groups_details
+    #   The details related to a specific attribute group.
+    #   @return [Array<Types::AttributeGroupDetails>]
+    #
+    # @!attribute [rw] next_token
+    #   The token to use to get the next page of results after a previous
+    #   API call.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/ListAttributeGroupsForApplicationResponse AWS API Documentation
+    #
+    class ListAttributeGroupsForApplicationResponse < Struct.new(
+      :attribute_groups_details,
+      :next_token)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] next_token
     #   The token to use to get the next page of results after a previous
     #   API call.
@@ -939,13 +987,6 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon resource name (ARN) that specifies the resource.
     #   @return [String]
@@ -970,7 +1011,100 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # Information about the resource.
+    # @!attribute [rw] configuration
+    #   Associates a `TagKey` configuration to an account.
+    #   @return [Types::AppRegistryConfiguration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/PutConfigurationRequest AWS API Documentation
+    #
+    class PutConfigurationRequest < Struct.new(
+      :configuration)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The information about the resource.
+    #
+    # @!attribute [rw] name
+    #   The name of the resource.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   The Amazon resource name (ARN) of the resource.
+    #   @return [String]
+    #
+    # @!attribute [rw] association_time
+    #   The time the resource was associated with the application.
+    #   @return [Time]
+    #
+    # @!attribute [rw] integrations
+    #   The service integration information about the resource.
+    #   @return [Types::ResourceIntegrations]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/Resource AWS API Documentation
+    #
+    class Resource < Struct.new(
+      :name,
+      :arn,
+      :association_time,
+      :integrations)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The details related to the resource.
+    #
+    # @!attribute [rw] tag_value
+    #   The value of the tag.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/ResourceDetails AWS API Documentation
+    #
+    class ResourceDetails < Struct.new(
+      :tag_value)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The information about the resource group integration.
+    #
+    # @!attribute [rw] state
+    #   The state of the propagation process for the resource group. The
+    #   states includes:
+    #
+    #   `CREATING `if the resource group is in the process of being created.
+    #
+    #   `CREATE_COMPLETE` if the resource group was created successfully.
+    #
+    #   `CREATE_FAILED` if the resource group failed to be created.
+    #
+    #   `UPDATING` if the resource group is in the process of being updated.
+    #
+    #   `UPDATE_COMPLETE` if the resource group updated successfully.
+    #
+    #   `UPDATE_FAILED` if the resource group could not update successfully.
+    #   @return [String]
+    #
+    # @!attribute [rw] arn
+    #   The Amazon resource name (ARN) of the resource group.
+    #   @return [String]
+    #
+    # @!attribute [rw] error_message
+    #   The error message that generates when the propagation process for
+    #   the resource group fails.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/ResourceGroup AWS API Documentation
+    #
+    class ResourceGroup < Struct.new(
+      :state,
+      :arn,
+      :error_message)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The information about the resource.
     #
     # @!attribute [rw] name
     #   The name of the resource.
@@ -981,11 +1115,36 @@ module Aws::AppRegistry
     #   services.
     #   @return [String]
     #
+    # @!attribute [rw] resource_type
+    #   Provides information about the Service Catalog App Registry resource
+    #   type.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource_details
+    #   The details related to the resource.
+    #   @return [Types::ResourceDetails]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/ResourceInfo AWS API Documentation
     #
     class ResourceInfo < Struct.new(
       :name,
-      :arn)
+      :arn,
+      :resource_type,
+      :resource_details)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # The service integration information about the resource.
+    #
+    # @!attribute [rw] resource_group
+    #   The information about the integration of Resource Groups.
+    #   @return [Types::ResourceGroup]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/ResourceIntegrations AWS API Documentation
+    #
+    class ResourceIntegrations < Struct.new(
+      :resource_group)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1016,22 +1175,14 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SyncResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_type: "CFN_STACK", # required, accepts CFN_STACK
-    #         resource: "ResourceSpecifier", # required
-    #       }
-    #
     # @!attribute [rw] resource_type
     #   The type of resource of which the application will be associated.
     #   @return [String]
     #
     # @!attribute [rw] resource
     #   An entity you can work with and specify with a name or ID. Examples
-    #   include an Amazon EC2 instance, an AWS CloudFormation stack, or an
-    #   Amazon S3 bucket.
+    #   include an Amazon EC2 instance, an Amazon Web Services
+    #   CloudFormation stack, or an Amazon S3 bucket.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/SyncResourceRequest AWS API Documentation
@@ -1066,16 +1217,22 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
+    # The definition of `tagQuery`. Specifies which resources are associated
+    # with an application.
     #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
+    # @!attribute [rw] tag_key
+    #   Condition in the IAM policy that associates resources to an
+    #   application.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/TagQueryConfiguration AWS API Documentation
+    #
+    class TagQueryConfiguration < Struct.new(
+      :tag_key)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon resource name (ARN) that specifies the resource.
     #   @return [String]
@@ -1097,14 +1254,25 @@ module Aws::AppRegistry
     #
     class TagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
+    # The maximum number of API requests has been exceeded.
     #
-    #       {
-    #         resource_arn: "Arn", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
+    # @!attribute [rw] message
+    #   A message associated with the Throttling exception.
+    #   @return [String]
     #
+    # @!attribute [rw] service_code
+    #   The originating service code.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/AWS242AppRegistry-2020-06-24/ThrottlingException AWS API Documentation
+    #
+    class ThrottlingException < Struct.new(
+      :message,
+      :service_code)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] resource_arn
     #   The Amazon resource name (ARN) that specifies the resource.
     #   @return [String]
@@ -1126,22 +1294,14 @@ module Aws::AppRegistry
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateApplicationRequest
-    #   data as a hash:
-    #
-    #       {
-    #         application: "ApplicationSpecifier", # required
-    #         name: "Name",
-    #         description: "Description",
-    #       }
-    #
     # @!attribute [rw] application
-    #   The name or ID of the application that will be updated.
+    #   The name, ID, or ARN of the application that will be updated.
     #   @return [String]
     #
     # @!attribute [rw] name
-    #   The new name of the application. The name must be unique in the
-    #   region in which you are updating the application.
+    #   Deprecated: The new name of the application. The name must be unique
+    #   in the region in which you are updating the application. Please do
+    #   not use this field as we have stopped supporting name updates.
     #   @return [String]
     #
     # @!attribute [rw] description
@@ -1170,24 +1330,16 @@ module Aws::AppRegistry
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateAttributeGroupRequest
-    #   data as a hash:
-    #
-    #       {
-    #         attribute_group: "AttributeGroupSpecifier", # required
-    #         name: "Name",
-    #         description: "Description",
-    #         attributes: "Attributes",
-    #       }
-    #
     # @!attribute [rw] attribute_group
-    #   The name or ID of the attribute group that holds the attributes to
-    #   describe the application.
+    #   The name, ID, or ARN of the attribute group that holds the
+    #   attributes to describe the application.
     #   @return [String]
     #
     # @!attribute [rw] name
-    #   The new name of the attribute group. The name must be unique in the
-    #   region in which you are updating the attribute group.
+    #   Deprecated: The new name of the attribute group. The name must be
+    #   unique in the region in which you are updating the attribute group.
+    #   Please do not use this field as we have stopped supporting name
+    #   updates.
     #   @return [String]
     #
     # @!attribute [rw] description

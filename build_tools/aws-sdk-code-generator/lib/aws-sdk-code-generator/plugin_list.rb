@@ -20,7 +20,7 @@ module AwsSdkCodeGenerator
     def compute_plugins(options)
       plugins = {}
       plugins.update(options[:async_client] ? default_async_plugins : default_plugins)
-      plugins.update(signature_plugins(options.fetch(:signature_version)))
+      plugins.update(signature_plugins(options))
       plugins.update(protocol_plugins(options.fetch(:protocol)))
       plugins.update(options.fetch(:add_plugins))
       options.fetch(:remove_plugins).each do |plugin_name|
@@ -58,12 +58,17 @@ module AwsSdkCodeGenerator
         'Aws::Plugins::ClientMetricsPlugin' => "#{core_plugins}/client_metrics_plugin.rb",
         'Aws::Plugins::ClientMetricsSendPlugin' => "#{core_plugins}/client_metrics_send_plugin.rb",
         'Aws::Plugins::TransferEncoding' => "#{core_plugins}/transfer_encoding.rb",
-        'Aws::Plugins::HttpChecksum' => "#{core_plugins}/http_checksum.rb"
+        'Aws::Plugins::HttpChecksum' => "#{core_plugins}/http_checksum.rb",
+        'Aws::Plugins::ChecksumAlgorithm' => "#{core_plugins}/checksum_algorithm.rb",
+        'Aws::Plugins::RequestCompression' => "#{core_plugins}/request_compression.rb",
+        'Aws::Plugins::DefaultsMode' => "#{core_plugins}/defaults_mode.rb",
+        'Aws::Plugins::RecursionDetection' => "#{core_plugins}/recursion_detection.rb"
       }
     end
 
     def default_async_plugins
       plugins = default_plugins.dup
+      plugins.delete('Seahorse::Client::Plugins::ContentLength')
       plugins.delete('Aws::Plugins::ResponsePaging')
       plugins.delete('Aws::Plugins::EndpointDiscovery')
       plugins.delete('Aws::Plugins::EndpointPattern')
@@ -92,14 +97,31 @@ module AwsSdkCodeGenerator
       }[protocol]
     end
 
-    def signature_plugins(signature_version)
-      case signature_version
-      when 'v4'
-        { 'Aws::Plugins::SignatureV4' => "#{core_plugins}/signature_v4.rb" }
-      when 'v2'
-        { 'Aws::Plugins::SignatureV2' => "#{core_plugins}/signature_v2.rb" }
+    # HACK: Sigv2 is deprecated, Sigv4/Bearer are with core. Always assume
+    # new signer plugin. This logic would be moved to gem dependencies
+    # calculation, but don't worry until new signature type.
+    #
+    # NOTE: If no rules are provided, just use old Signing method
+    def signature_plugins(options)
+      if !options[:legacy_endpoints]
+        {
+          'Aws::Plugins::Sign' => "#{core_plugins}/sign.rb"
+        }
       else
-        {}
+        auth_types  = [options.fetch(:signature_version)]
+        auth_types += options[:api]['operations'].map { |_n, o| o['authtype'] }.compact
+        plugins = {}
+        auth_types.each do |auth_type|
+          case auth_type
+          when 'v4'
+            plugins['Aws::Plugins::SignatureV4'] = "#{core_plugins}/signature_v4.rb"
+          when 'v2'
+            plugins['Aws::Plugins::SignatureV2'] = "#{core_plugins}/signature_v2.rb"
+          when 'bearer'
+            plugins['Aws::Plugins::BearerAuthorization'] = "#{core_plugins}/bearer_authorization.rb"
+          end
+        end
+        plugins
       end
     end
 

@@ -79,10 +79,6 @@ module Aws::Schemas
     ListTagsForResourceOutput = Shapes::StructureShape.new(name: 'ListTagsForResourceOutput')
     ListTagsForResourceRequest = Shapes::StructureShape.new(name: 'ListTagsForResourceRequest')
     ListTagsForResourceResponse = Shapes::StructureShape.new(name: 'ListTagsForResourceResponse')
-    LockServiceLinkedRoleInput = Shapes::StructureShape.new(name: 'LockServiceLinkedRoleInput')
-    LockServiceLinkedRoleOutput = Shapes::StructureShape.new(name: 'LockServiceLinkedRoleOutput')
-    LockServiceLinkedRoleRequest = Shapes::StructureShape.new(name: 'LockServiceLinkedRoleRequest')
-    LockServiceLinkedRoleResponse = Shapes::StructureShape.new(name: 'LockServiceLinkedRoleResponse')
     NotFoundException = Shapes::StructureShape.new(name: 'NotFoundException')
     PreconditionFailedException = Shapes::StructureShape.new(name: 'PreconditionFailedException')
     PutCodeBindingRequest = Shapes::StructureShape.new(name: 'PutCodeBindingRequest')
@@ -112,9 +108,6 @@ module Aws::Schemas
     TooManyRequestsException = Shapes::StructureShape.new(name: 'TooManyRequestsException')
     Type = Shapes::StringShape.new(name: 'Type')
     UnauthorizedException = Shapes::StructureShape.new(name: 'UnauthorizedException')
-    UnlockServiceLinkedRoleInput = Shapes::StructureShape.new(name: 'UnlockServiceLinkedRoleInput')
-    UnlockServiceLinkedRoleRequest = Shapes::StructureShape.new(name: 'UnlockServiceLinkedRoleRequest')
-    UnlockServiceLinkedRoleResponse = Shapes::StructureShape.new(name: 'UnlockServiceLinkedRoleResponse')
     UntagResourceRequest = Shapes::StructureShape.new(name: 'UntagResourceRequest')
     UpdateDiscovererInput = Shapes::StructureShape.new(name: 'UpdateDiscovererInput')
     UpdateDiscovererRequest = Shapes::StructureShape.new(name: 'UpdateDiscovererRequest')
@@ -163,11 +156,13 @@ module Aws::Schemas
 
     CreateDiscovererInput.add_member(:description, Shapes::ShapeRef.new(shape: __stringMin0Max256, location_name: "Description"))
     CreateDiscovererInput.add_member(:source_arn, Shapes::ShapeRef.new(shape: __stringMin20Max1600, required: true, location_name: "SourceArn"))
+    CreateDiscovererInput.add_member(:cross_account, Shapes::ShapeRef.new(shape: __boolean, location_name: "CrossAccount"))
     CreateDiscovererInput.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "tags"))
     CreateDiscovererInput.struct_class = Types::CreateDiscovererInput
 
     CreateDiscovererRequest.add_member(:description, Shapes::ShapeRef.new(shape: __stringMin0Max256, location_name: "Description"))
     CreateDiscovererRequest.add_member(:source_arn, Shapes::ShapeRef.new(shape: __stringMin20Max1600, required: true, location_name: "SourceArn"))
+    CreateDiscovererRequest.add_member(:cross_account, Shapes::ShapeRef.new(shape: __boolean, location_name: "CrossAccount"))
     CreateDiscovererRequest.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "tags"))
     CreateDiscovererRequest.struct_class = Types::CreateDiscovererRequest
 
@@ -176,6 +171,7 @@ module Aws::Schemas
     CreateDiscovererResponse.add_member(:discoverer_id, Shapes::ShapeRef.new(shape: __string, location_name: "DiscovererId"))
     CreateDiscovererResponse.add_member(:source_arn, Shapes::ShapeRef.new(shape: __string, location_name: "SourceArn"))
     CreateDiscovererResponse.add_member(:state, Shapes::ShapeRef.new(shape: DiscovererState, location_name: "State"))
+    CreateDiscovererResponse.add_member(:cross_account, Shapes::ShapeRef.new(shape: __boolean, location_name: "CrossAccount"))
     CreateDiscovererResponse.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "tags"))
     CreateDiscovererResponse.struct_class = Types::CreateDiscovererResponse
 
@@ -256,6 +252,7 @@ module Aws::Schemas
     DescribeDiscovererResponse.add_member(:discoverer_id, Shapes::ShapeRef.new(shape: __string, location_name: "DiscovererId"))
     DescribeDiscovererResponse.add_member(:source_arn, Shapes::ShapeRef.new(shape: __string, location_name: "SourceArn"))
     DescribeDiscovererResponse.add_member(:state, Shapes::ShapeRef.new(shape: DiscovererState, location_name: "State"))
+    DescribeDiscovererResponse.add_member(:cross_account, Shapes::ShapeRef.new(shape: __boolean, location_name: "CrossAccount"))
     DescribeDiscovererResponse.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "tags"))
     DescribeDiscovererResponse.struct_class = Types::DescribeDiscovererResponse
 
@@ -300,6 +297,7 @@ module Aws::Schemas
     DiscovererOutput.add_member(:discoverer_id, Shapes::ShapeRef.new(shape: __string, location_name: "DiscovererId"))
     DiscovererOutput.add_member(:source_arn, Shapes::ShapeRef.new(shape: __string, location_name: "SourceArn"))
     DiscovererOutput.add_member(:state, Shapes::ShapeRef.new(shape: DiscovererState, location_name: "State"))
+    DiscovererOutput.add_member(:cross_account, Shapes::ShapeRef.new(shape: __boolean, location_name: "CrossAccount"))
     DiscovererOutput.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "tags"))
     DiscovererOutput.struct_class = Types::DiscovererOutput
 
@@ -311,6 +309,7 @@ module Aws::Schemas
     DiscovererSummary.add_member(:discoverer_id, Shapes::ShapeRef.new(shape: __string, location_name: "DiscovererId"))
     DiscovererSummary.add_member(:source_arn, Shapes::ShapeRef.new(shape: __string, location_name: "SourceArn"))
     DiscovererSummary.add_member(:state, Shapes::ShapeRef.new(shape: DiscovererState, location_name: "State"))
+    DiscovererSummary.add_member(:cross_account, Shapes::ShapeRef.new(shape: __boolean, location_name: "CrossAccount"))
     DiscovererSummary.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "tags"))
     DiscovererSummary.struct_class = Types::DiscovererSummary
 
@@ -451,24 +450,6 @@ module Aws::Schemas
     ListTagsForResourceResponse.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "tags"))
     ListTagsForResourceResponse.struct_class = Types::ListTagsForResourceResponse
 
-    LockServiceLinkedRoleInput.add_member(:role_arn, Shapes::ShapeRef.new(shape: __stringMin1Max1600, required: true, location_name: "RoleArn"))
-    LockServiceLinkedRoleInput.add_member(:timeout, Shapes::ShapeRef.new(shape: __integerMin1Max29000, required: true, location_name: "Timeout"))
-    LockServiceLinkedRoleInput.struct_class = Types::LockServiceLinkedRoleInput
-
-    LockServiceLinkedRoleOutput.add_member(:can_be_deleted, Shapes::ShapeRef.new(shape: __boolean, location_name: "CanBeDeleted"))
-    LockServiceLinkedRoleOutput.add_member(:reason_of_failure, Shapes::ShapeRef.new(shape: __stringMin1Max1600, location_name: "ReasonOfFailure"))
-    LockServiceLinkedRoleOutput.add_member(:related_resources, Shapes::ShapeRef.new(shape: __listOfDiscovererSummary, location_name: "RelatedResources"))
-    LockServiceLinkedRoleOutput.struct_class = Types::LockServiceLinkedRoleOutput
-
-    LockServiceLinkedRoleRequest.add_member(:role_arn, Shapes::ShapeRef.new(shape: __stringMin1Max1600, required: true, location_name: "RoleArn"))
-    LockServiceLinkedRoleRequest.add_member(:timeout, Shapes::ShapeRef.new(shape: __integerMin1Max29000, required: true, location_name: "Timeout"))
-    LockServiceLinkedRoleRequest.struct_class = Types::LockServiceLinkedRoleRequest
-
-    LockServiceLinkedRoleResponse.add_member(:can_be_deleted, Shapes::ShapeRef.new(shape: __boolean, location_name: "CanBeDeleted"))
-    LockServiceLinkedRoleResponse.add_member(:reason_of_failure, Shapes::ShapeRef.new(shape: __stringMin1Max1600, location_name: "ReasonOfFailure"))
-    LockServiceLinkedRoleResponse.add_member(:related_resources, Shapes::ShapeRef.new(shape: __listOfDiscovererSummary, location_name: "RelatedResources"))
-    LockServiceLinkedRoleResponse.struct_class = Types::LockServiceLinkedRoleResponse
-
     NotFoundException.add_member(:code, Shapes::ShapeRef.new(shape: __string, required: true, location_name: "Code"))
     NotFoundException.add_member(:message, Shapes::ShapeRef.new(shape: __string, required: true, location_name: "Message"))
     NotFoundException.struct_class = Types::NotFoundException
@@ -601,23 +582,17 @@ module Aws::Schemas
     UnauthorizedException.add_member(:message, Shapes::ShapeRef.new(shape: __string, required: true, location_name: "Message"))
     UnauthorizedException.struct_class = Types::UnauthorizedException
 
-    UnlockServiceLinkedRoleInput.add_member(:role_arn, Shapes::ShapeRef.new(shape: __stringMin1Max1600, required: true, location_name: "RoleArn"))
-    UnlockServiceLinkedRoleInput.struct_class = Types::UnlockServiceLinkedRoleInput
-
-    UnlockServiceLinkedRoleRequest.add_member(:role_arn, Shapes::ShapeRef.new(shape: __stringMin1Max1600, required: true, location_name: "RoleArn"))
-    UnlockServiceLinkedRoleRequest.struct_class = Types::UnlockServiceLinkedRoleRequest
-
-    UnlockServiceLinkedRoleResponse.struct_class = Types::UnlockServiceLinkedRoleResponse
-
     UntagResourceRequest.add_member(:resource_arn, Shapes::ShapeRef.new(shape: __string, required: true, location: "uri", location_name: "resource-arn"))
     UntagResourceRequest.add_member(:tag_keys, Shapes::ShapeRef.new(shape: __listOf__string, required: true, location: "querystring", location_name: "tagKeys"))
     UntagResourceRequest.struct_class = Types::UntagResourceRequest
 
     UpdateDiscovererInput.add_member(:description, Shapes::ShapeRef.new(shape: __stringMin0Max256, location_name: "Description"))
+    UpdateDiscovererInput.add_member(:cross_account, Shapes::ShapeRef.new(shape: __boolean, location_name: "CrossAccount"))
     UpdateDiscovererInput.struct_class = Types::UpdateDiscovererInput
 
     UpdateDiscovererRequest.add_member(:description, Shapes::ShapeRef.new(shape: __stringMin0Max256, location_name: "Description"))
     UpdateDiscovererRequest.add_member(:discoverer_id, Shapes::ShapeRef.new(shape: __string, required: true, location: "uri", location_name: "discovererId"))
+    UpdateDiscovererRequest.add_member(:cross_account, Shapes::ShapeRef.new(shape: __boolean, location_name: "CrossAccount"))
     UpdateDiscovererRequest.struct_class = Types::UpdateDiscovererRequest
 
     UpdateDiscovererResponse.add_member(:description, Shapes::ShapeRef.new(shape: __string, location_name: "Description"))
@@ -625,6 +600,7 @@ module Aws::Schemas
     UpdateDiscovererResponse.add_member(:discoverer_id, Shapes::ShapeRef.new(shape: __string, location_name: "DiscovererId"))
     UpdateDiscovererResponse.add_member(:source_arn, Shapes::ShapeRef.new(shape: __string, location_name: "SourceArn"))
     UpdateDiscovererResponse.add_member(:state, Shapes::ShapeRef.new(shape: DiscovererState, location_name: "State"))
+    UpdateDiscovererResponse.add_member(:cross_account, Shapes::ShapeRef.new(shape: __boolean, location_name: "CrossAccount"))
     UpdateDiscovererResponse.add_member(:tags, Shapes::ShapeRef.new(shape: Tags, location_name: "tags"))
     UpdateDiscovererResponse.struct_class = Types::UpdateDiscovererResponse
 

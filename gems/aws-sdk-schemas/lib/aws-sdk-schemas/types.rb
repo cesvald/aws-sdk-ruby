@@ -75,6 +75,11 @@ module Aws::Schemas
     #   The ARN of the event bus.
     #   @return [String]
     #
+    # @!attribute [rw] cross_account
+    #   Support discovery of schemas in events sent to the bus from another
+    #   account. (default: true)
+    #   @return [Boolean]
+    #
     # @!attribute [rw] tags
     #   Tags associated with the resource.
     #   @return [Hash<String,String>]
@@ -84,27 +89,20 @@ module Aws::Schemas
     class CreateDiscovererInput < Struct.new(
       :description,
       :source_arn,
+      :cross_account,
       :tags)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateDiscovererRequest
-    #   data as a hash:
-    #
-    #       {
-    #         description: "__stringMin0Max256",
-    #         source_arn: "__stringMin20Max1600", # required
-    #         tags: {
-    #           "__string" => "__string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] description
     #   @return [String]
     #
     # @!attribute [rw] source_arn
     #   @return [String]
+    #
+    # @!attribute [rw] cross_account
+    #   @return [Boolean]
     #
     # @!attribute [rw] tags
     #   Key-value pairs associated with a resource.
@@ -115,6 +113,7 @@ module Aws::Schemas
     class CreateDiscovererRequest < Struct.new(
       :description,
       :source_arn,
+      :cross_account,
       :tags)
       SENSITIVE = []
       include Aws::Structure
@@ -135,6 +134,9 @@ module Aws::Schemas
     # @!attribute [rw] state
     #   @return [String]
     #
+    # @!attribute [rw] cross_account
+    #   @return [Boolean]
+    #
     # @!attribute [rw] tags
     #   Key-value pairs associated with a resource.
     #   @return [Hash<String,String>]
@@ -147,6 +149,7 @@ module Aws::Schemas
       :discoverer_id,
       :source_arn,
       :state,
+      :cross_account,
       :tags)
       SENSITIVE = []
       include Aws::Structure
@@ -169,17 +172,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateRegistryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         description: "__stringMin0Max256",
-    #         registry_name: "__string", # required
-    #         tags: {
-    #           "__string" => "__string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] description
     #   @return [String]
     #
@@ -251,20 +243,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         content: "__stringMin1Max100000", # required
-    #         description: "__stringMin0Max256",
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #         tags: {
-    #           "__string" => "__string",
-    #         },
-    #         type: "OpenApi3", # required, accepts OpenApi3
-    #       }
-    #
     # @!attribute [rw] content
     #   @return [String]
     #
@@ -337,13 +315,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteDiscovererRequest
-    #   data as a hash:
-    #
-    #       {
-    #         discoverer_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] discoverer_id
     #   @return [String]
     #
@@ -355,13 +326,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteRegistryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] registry_name
     #   @return [String]
     #
@@ -373,13 +337,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteResourcePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_name: "__string",
-    #       }
-    #
     # @!attribute [rw] registry_name
     #   @return [String]
     #
@@ -391,14 +348,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] registry_name
     #   @return [String]
     #
@@ -414,15 +363,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteSchemaVersionRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #         schema_version: "__string", # required
-    #       }
-    #
     # @!attribute [rw] registry_name
     #   @return [String]
     #
@@ -442,16 +382,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeCodeBindingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         language: "__string", # required
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #         schema_version: "__string",
-    #       }
-    #
     # @!attribute [rw] language
     #   @return [String]
     #
@@ -498,13 +428,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeDiscovererRequest
-    #   data as a hash:
-    #
-    #       {
-    #         discoverer_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] discoverer_id
     #   @return [String]
     #
@@ -531,6 +454,9 @@ module Aws::Schemas
     # @!attribute [rw] state
     #   @return [String]
     #
+    # @!attribute [rw] cross_account
+    #   @return [Boolean]
+    #
     # @!attribute [rw] tags
     #   Key-value pairs associated with a resource.
     #   @return [Hash<String,String>]
@@ -543,18 +469,12 @@ module Aws::Schemas
       :discoverer_id,
       :source_arn,
       :state,
+      :cross_account,
       :tags)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeRegistryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] registry_name
     #   @return [String]
     #
@@ -642,15 +562,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DescribeSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #         schema_version: "__string",
-    #       }
-    #
     # @!attribute [rw] registry_name
     #   @return [String]
     #
@@ -734,6 +645,11 @@ module Aws::Schemas
     #   The state of the discoverer.
     #   @return [String]
     #
+    # @!attribute [rw] cross_account
+    #   The Status if the discoverer will discover schemas from events sent
+    #   from another account.
+    #   @return [Boolean]
+    #
     # @!attribute [rw] tags
     #   Tags associated with the resource.
     #   @return [Hash<String,String>]
@@ -746,6 +662,7 @@ module Aws::Schemas
       :discoverer_id,
       :source_arn,
       :state,
+      :cross_account,
       :tags)
       SENSITIVE = []
       include Aws::Structure
@@ -784,6 +701,11 @@ module Aws::Schemas
     #   The state of the discoverer.
     #   @return [String]
     #
+    # @!attribute [rw] cross_account
+    #   The Status if the discoverer will discover schemas from events sent
+    #   from another account.
+    #   @return [Boolean]
+    #
     # @!attribute [rw] tags
     #   Tags associated with the resource.
     #   @return [Hash<String,String>]
@@ -795,6 +717,7 @@ module Aws::Schemas
       :discoverer_id,
       :source_arn,
       :state,
+      :cross_account,
       :tags)
       SENSITIVE = []
       include Aws::Structure
@@ -832,16 +755,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetCodeBindingSourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         language: "__string", # required
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #         schema_version: "__string",
-    #       }
-    #
     # @!attribute [rw] language
     #   @return [String]
     #
@@ -907,14 +820,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetDiscoveredSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         events: ["GetDiscoveredSchemaVersionItemInput"], # required
-    #         type: "OpenApi3", # required, accepts OpenApi3
-    #       }
-    #
     # @!attribute [rw] events
     #   @return [Array<String>]
     #
@@ -960,13 +865,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetResourcePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_name: "__string",
-    #       }
-    #
     # @!attribute [rw] registry_name
     #   @return [String]
     #
@@ -1024,7 +922,6 @@ module Aws::Schemas
     end
 
     # @!attribute [rw] discoverers
-    #   An array of DiscovererSummary information.
     #   @return [Array<Types::DiscovererSummary>]
     #
     # @!attribute [rw] next_token
@@ -1042,16 +939,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListDiscoverersRequest
-    #   data as a hash:
-    #
-    #       {
-    #         discoverer_id_prefix: "__string",
-    #         limit: 1,
-    #         next_token: "__string",
-    #         source_arn_prefix: "__string",
-    #       }
-    #
     # @!attribute [rw] discoverer_id_prefix
     #   @return [String]
     #
@@ -1111,16 +998,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRegistriesRequest
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         next_token: "__string",
-    #         registry_name_prefix: "__string",
-    #         scope: "__string",
-    #       }
-    #
     # @!attribute [rw] limit
     #   @return [Integer]
     #
@@ -1178,16 +1055,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListSchemaVersionsRequest
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         next_token: "__string",
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] limit
     #   @return [Integer]
     #
@@ -1245,16 +1112,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListSchemasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         limit: 1,
-    #         next_token: "__string",
-    #         registry_name: "__string", # required
-    #         schema_name_prefix: "__string",
-    #       }
-    #
     # @!attribute [rw] limit
     #   @return [Integer]
     #
@@ -1305,13 +1162,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "__string", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   @return [String]
     #
@@ -1331,74 +1181,6 @@ module Aws::Schemas
     #
     class ListTagsForResourceResponse < Struct.new(
       :tags)
-      SENSITIVE = []
-      include Aws::Structure
-    end
-
-    # @!attribute [rw] role_arn
-    #   @return [String]
-    #
-    # @!attribute [rw] timeout
-    #   @return [Integer]
-    #
-    # @see http://docs.aws.amazon.com/goto/WebAPI/schemas-2019-12-02/LockServiceLinkedRoleInput AWS API Documentation
-    #
-    class LockServiceLinkedRoleInput < Struct.new(
-      :role_arn,
-      :timeout)
-      SENSITIVE = []
-      include Aws::Structure
-    end
-
-    # @!attribute [rw] can_be_deleted
-    #   @return [Boolean]
-    #
-    # @!attribute [rw] reason_of_failure
-    #   @return [String]
-    #
-    # @!attribute [rw] related_resources
-    #   @return [Array<Types::DiscovererSummary>]
-    #
-    # @see http://docs.aws.amazon.com/goto/WebAPI/schemas-2019-12-02/LockServiceLinkedRoleOutput AWS API Documentation
-    #
-    class LockServiceLinkedRoleOutput < Struct.new(
-      :can_be_deleted,
-      :reason_of_failure,
-      :related_resources)
-      SENSITIVE = []
-      include Aws::Structure
-    end
-
-    # @!attribute [rw] role_arn
-    #   @return [String]
-    #
-    # @!attribute [rw] timeout
-    #   @return [Integer]
-    #
-    # @see http://docs.aws.amazon.com/goto/WebAPI/schemas-2019-12-02/LockServiceLinkedRoleRequest AWS API Documentation
-    #
-    class LockServiceLinkedRoleRequest < Struct.new(
-      :role_arn,
-      :timeout)
-      SENSITIVE = []
-      include Aws::Structure
-    end
-
-    # @!attribute [rw] can_be_deleted
-    #   @return [Boolean]
-    #
-    # @!attribute [rw] reason_of_failure
-    #   @return [String]
-    #
-    # @!attribute [rw] related_resources
-    #   @return [Array<Types::DiscovererSummary>]
-    #
-    # @see http://docs.aws.amazon.com/goto/WebAPI/schemas-2019-12-02/LockServiceLinkedRoleResponse AWS API Documentation
-    #
-    class LockServiceLinkedRoleResponse < Struct.new(
-      :can_be_deleted,
-      :reason_of_failure,
-      :related_resources)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -1433,16 +1215,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutCodeBindingRequest
-    #   data as a hash:
-    #
-    #       {
-    #         language: "__string", # required
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #         schema_version: "__string",
-    #       }
-    #
     # @!attribute [rw] language
     #   @return [String]
     #
@@ -1529,15 +1301,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutResourcePolicyRequest
-    #   data as a hash:
-    #
-    #       {
-    #         policy: "__string", # required
-    #         registry_name: "__string",
-    #         revision_id: "__string",
-    #       }
-    #
     # @!attribute [rw] policy
     #   @return [String]
     #
@@ -1795,16 +1558,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass SearchSchemasRequest
-    #   data as a hash:
-    #
-    #       {
-    #         keywords: "__string", # required
-    #         limit: 1,
-    #         next_token: "__string",
-    #         registry_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] keywords
     #   @return [String]
     #
@@ -1858,13 +1611,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartDiscovererRequest
-    #   data as a hash:
-    #
-    #       {
-    #         discoverer_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] discoverer_id
     #   @return [String]
     #
@@ -1891,13 +1637,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StopDiscovererRequest
-    #   data as a hash:
-    #
-    #       {
-    #         discoverer_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] discoverer_id
     #   @return [String]
     #
@@ -1936,16 +1675,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "__string", # required
-    #         tags: { # required
-    #           "__string" => "__string",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   @return [String]
     #
@@ -1992,40 +1721,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @!attribute [rw] role_arn
-    #   @return [String]
-    #
-    # @see http://docs.aws.amazon.com/goto/WebAPI/schemas-2019-12-02/UnlockServiceLinkedRoleInput AWS API Documentation
-    #
-    class UnlockServiceLinkedRoleInput < Struct.new(
-      :role_arn)
-      SENSITIVE = []
-      include Aws::Structure
-    end
-
-    # @!attribute [rw] role_arn
-    #   @return [String]
-    #
-    # @see http://docs.aws.amazon.com/goto/WebAPI/schemas-2019-12-02/UnlockServiceLinkedRoleRequest AWS API Documentation
-    #
-    class UnlockServiceLinkedRoleRequest < Struct.new(
-      :role_arn)
-      SENSITIVE = []
-      include Aws::Structure
-    end
-
-    # @see http://docs.aws.amazon.com/goto/WebAPI/schemas-2019-12-02/UnlockServiceLinkedRoleResponse AWS API Documentation
-    #
-    class UnlockServiceLinkedRoleResponse < Aws::EmptyStructure; end
-
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "__string", # required
-    #         tag_keys: ["__string"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   @return [String]
     #
@@ -2045,33 +1740,35 @@ module Aws::Schemas
     #   The description of the discoverer to update.
     #   @return [String]
     #
+    # @!attribute [rw] cross_account
+    #   Support discovery of schemas in events sent to the bus from another
+    #   account. (default: true)
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/schemas-2019-12-02/UpdateDiscovererInput AWS API Documentation
     #
     class UpdateDiscovererInput < Struct.new(
-      :description)
+      :description,
+      :cross_account)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateDiscovererRequest
-    #   data as a hash:
-    #
-    #       {
-    #         description: "__stringMin0Max256",
-    #         discoverer_id: "__string", # required
-    #       }
-    #
     # @!attribute [rw] description
     #   @return [String]
     #
     # @!attribute [rw] discoverer_id
     #   @return [String]
     #
+    # @!attribute [rw] cross_account
+    #   @return [Boolean]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/schemas-2019-12-02/UpdateDiscovererRequest AWS API Documentation
     #
     class UpdateDiscovererRequest < Struct.new(
       :description,
-      :discoverer_id)
+      :discoverer_id,
+      :cross_account)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2091,6 +1788,9 @@ module Aws::Schemas
     # @!attribute [rw] state
     #   @return [String]
     #
+    # @!attribute [rw] cross_account
+    #   @return [Boolean]
+    #
     # @!attribute [rw] tags
     #   Key-value pairs associated with a resource.
     #   @return [Hash<String,String>]
@@ -2103,6 +1803,7 @@ module Aws::Schemas
       :discoverer_id,
       :source_arn,
       :state,
+      :cross_account,
       :tags)
       SENSITIVE = []
       include Aws::Structure
@@ -2120,14 +1821,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateRegistryRequest
-    #   data as a hash:
-    #
-    #       {
-    #         description: "__stringMin0Max256",
-    #         registry_name: "__string", # required
-    #       }
-    #
     # @!attribute [rw] description
     #   @return [String]
     #
@@ -2197,18 +1890,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UpdateSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         client_token_id: "__stringMin0Max36",
-    #         content: "__stringMin1Max100000",
-    #         description: "__stringMin0Max256",
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #         type: "OpenApi3", # accepts OpenApi3
-    #       }
-    #
     # @!attribute [rw] client_token_id
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
@@ -2314,16 +1995,6 @@ module Aws::Schemas
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ExportSchemaRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registry_name: "__string", # required
-    #         schema_name: "__string", # required
-    #         schema_version: "__string",
-    #         type: "__string", # required
-    #       }
-    #
     # @!attribute [rw] registry_name
     #   @return [String]
     #

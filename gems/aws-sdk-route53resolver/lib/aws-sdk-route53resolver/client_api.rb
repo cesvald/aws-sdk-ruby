@@ -25,6 +25,7 @@ module Aws::Route53Resolver
     AssociateResolverQueryLogConfigResponse = Shapes::StructureShape.new(name: 'AssociateResolverQueryLogConfigResponse')
     AssociateResolverRuleRequest = Shapes::StructureShape.new(name: 'AssociateResolverRuleRequest')
     AssociateResolverRuleResponse = Shapes::StructureShape.new(name: 'AssociateResolverRuleResponse')
+    AutodefinedReverseFlag = Shapes::StringShape.new(name: 'AutodefinedReverseFlag')
     BlockOverrideDnsType = Shapes::StringShape.new(name: 'BlockOverrideDnsType')
     BlockOverrideDomain = Shapes::StringShape.new(name: 'BlockOverrideDomain')
     BlockOverrideTtl = Shapes::IntegerShape.new(name: 'BlockOverrideTtl')
@@ -105,6 +106,8 @@ module Aws::Route53Resolver
     GetFirewallRuleGroupPolicyResponse = Shapes::StructureShape.new(name: 'GetFirewallRuleGroupPolicyResponse')
     GetFirewallRuleGroupRequest = Shapes::StructureShape.new(name: 'GetFirewallRuleGroupRequest')
     GetFirewallRuleGroupResponse = Shapes::StructureShape.new(name: 'GetFirewallRuleGroupResponse')
+    GetResolverConfigRequest = Shapes::StructureShape.new(name: 'GetResolverConfigRequest')
+    GetResolverConfigResponse = Shapes::StructureShape.new(name: 'GetResolverConfigResponse')
     GetResolverDnssecConfigRequest = Shapes::StructureShape.new(name: 'GetResolverDnssecConfigRequest')
     GetResolverDnssecConfigResponse = Shapes::StructureShape.new(name: 'GetResolverDnssecConfigResponse')
     GetResolverEndpointRequest = Shapes::StructureShape.new(name: 'GetResolverEndpointRequest')
@@ -137,6 +140,7 @@ module Aws::Route53Resolver
     IpAddressUpdate = Shapes::StructureShape.new(name: 'IpAddressUpdate')
     IpAddressesRequest = Shapes::ListShape.new(name: 'IpAddressesRequest')
     IpAddressesResponse = Shapes::ListShape.new(name: 'IpAddressesResponse')
+    Ipv6 = Shapes::StringShape.new(name: 'Ipv6')
     LimitExceededException = Shapes::StructureShape.new(name: 'LimitExceededException')
     ListDomainMaxResults = Shapes::IntegerShape.new(name: 'ListDomainMaxResults')
     ListFirewallConfigsMaxResult = Shapes::IntegerShape.new(name: 'ListFirewallConfigsMaxResult')
@@ -152,6 +156,9 @@ module Aws::Route53Resolver
     ListFirewallRuleGroupsResponse = Shapes::StructureShape.new(name: 'ListFirewallRuleGroupsResponse')
     ListFirewallRulesRequest = Shapes::StructureShape.new(name: 'ListFirewallRulesRequest')
     ListFirewallRulesResponse = Shapes::StructureShape.new(name: 'ListFirewallRulesResponse')
+    ListResolverConfigsMaxResult = Shapes::IntegerShape.new(name: 'ListResolverConfigsMaxResult')
+    ListResolverConfigsRequest = Shapes::StructureShape.new(name: 'ListResolverConfigsRequest')
+    ListResolverConfigsResponse = Shapes::StructureShape.new(name: 'ListResolverConfigsResponse')
     ListResolverDnssecConfigsRequest = Shapes::StructureShape.new(name: 'ListResolverDnssecConfigsRequest')
     ListResolverDnssecConfigsResponse = Shapes::StructureShape.new(name: 'ListResolverDnssecConfigsResponse')
     ListResolverEndpointIpAddressesRequest = Shapes::StructureShape.new(name: 'ListResolverEndpointIpAddressesRequest')
@@ -180,12 +187,16 @@ module Aws::Route53Resolver
     PutResolverQueryLogConfigPolicyResponse = Shapes::StructureShape.new(name: 'PutResolverQueryLogConfigPolicyResponse')
     PutResolverRulePolicyRequest = Shapes::StructureShape.new(name: 'PutResolverRulePolicyRequest')
     PutResolverRulePolicyResponse = Shapes::StructureShape.new(name: 'PutResolverRulePolicyResponse')
+    ResolverAutodefinedReverseStatus = Shapes::StringShape.new(name: 'ResolverAutodefinedReverseStatus')
+    ResolverConfig = Shapes::StructureShape.new(name: 'ResolverConfig')
+    ResolverConfigList = Shapes::ListShape.new(name: 'ResolverConfigList')
     ResolverDNSSECValidationStatus = Shapes::StringShape.new(name: 'ResolverDNSSECValidationStatus')
     ResolverDnssecConfig = Shapes::StructureShape.new(name: 'ResolverDnssecConfig')
     ResolverDnssecConfigList = Shapes::ListShape.new(name: 'ResolverDnssecConfigList')
     ResolverEndpoint = Shapes::StructureShape.new(name: 'ResolverEndpoint')
     ResolverEndpointDirection = Shapes::StringShape.new(name: 'ResolverEndpointDirection')
     ResolverEndpointStatus = Shapes::StringShape.new(name: 'ResolverEndpointStatus')
+    ResolverEndpointType = Shapes::StringShape.new(name: 'ResolverEndpointType')
     ResolverEndpoints = Shapes::ListShape.new(name: 'ResolverEndpoints')
     ResolverQueryLogConfig = Shapes::StructureShape.new(name: 'ResolverQueryLogConfig')
     ResolverQueryLogConfigAssociation = Shapes::StructureShape.new(name: 'ResolverQueryLogConfigAssociation')
@@ -242,6 +253,10 @@ module Aws::Route53Resolver
     UpdateFirewallRuleGroupAssociationResponse = Shapes::StructureShape.new(name: 'UpdateFirewallRuleGroupAssociationResponse')
     UpdateFirewallRuleRequest = Shapes::StructureShape.new(name: 'UpdateFirewallRuleRequest')
     UpdateFirewallRuleResponse = Shapes::StructureShape.new(name: 'UpdateFirewallRuleResponse')
+    UpdateIpAddress = Shapes::StructureShape.new(name: 'UpdateIpAddress')
+    UpdateIpAddresses = Shapes::ListShape.new(name: 'UpdateIpAddresses')
+    UpdateResolverConfigRequest = Shapes::StructureShape.new(name: 'UpdateResolverConfigRequest')
+    UpdateResolverConfigResponse = Shapes::StructureShape.new(name: 'UpdateResolverConfigResponse')
     UpdateResolverDnssecConfigRequest = Shapes::StructureShape.new(name: 'UpdateResolverDnssecConfigRequest')
     UpdateResolverDnssecConfigResponse = Shapes::StructureShape.new(name: 'UpdateResolverDnssecConfigResponse')
     UpdateResolverEndpointRequest = Shapes::StructureShape.new(name: 'UpdateResolverEndpointRequest')
@@ -328,6 +343,7 @@ module Aws::Route53Resolver
     CreateResolverEndpointRequest.add_member(:direction, Shapes::ShapeRef.new(shape: ResolverEndpointDirection, required: true, location_name: "Direction"))
     CreateResolverEndpointRequest.add_member(:ip_addresses, Shapes::ShapeRef.new(shape: IpAddressesRequest, required: true, location_name: "IpAddresses"))
     CreateResolverEndpointRequest.add_member(:tags, Shapes::ShapeRef.new(shape: TagList, location_name: "Tags", metadata: {"box"=>true}))
+    CreateResolverEndpointRequest.add_member(:resolver_endpoint_type, Shapes::ShapeRef.new(shape: ResolverEndpointType, location_name: "ResolverEndpointType", metadata: {"box"=>true}))
     CreateResolverEndpointRequest.struct_class = Types::CreateResolverEndpointRequest
 
     CreateResolverEndpointResponse.add_member(:resolver_endpoint, Shapes::ShapeRef.new(shape: ResolverEndpoint, location_name: "ResolverEndpoint"))
@@ -543,6 +559,12 @@ module Aws::Route53Resolver
     GetFirewallRuleGroupResponse.add_member(:firewall_rule_group, Shapes::ShapeRef.new(shape: FirewallRuleGroup, location_name: "FirewallRuleGroup"))
     GetFirewallRuleGroupResponse.struct_class = Types::GetFirewallRuleGroupResponse
 
+    GetResolverConfigRequest.add_member(:resource_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location_name: "ResourceId"))
+    GetResolverConfigRequest.struct_class = Types::GetResolverConfigRequest
+
+    GetResolverConfigResponse.add_member(:resolver_config, Shapes::ShapeRef.new(shape: ResolverConfig, location_name: "ResolverConfig"))
+    GetResolverConfigResponse.struct_class = Types::GetResolverConfigResponse
+
     GetResolverDnssecConfigRequest.add_member(:resource_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location_name: "ResourceId"))
     GetResolverDnssecConfigRequest.struct_class = Types::GetResolverDnssecConfigRequest
 
@@ -623,11 +645,13 @@ module Aws::Route53Resolver
 
     IpAddressRequest.add_member(:subnet_id, Shapes::ShapeRef.new(shape: SubnetId, required: true, location_name: "SubnetId"))
     IpAddressRequest.add_member(:ip, Shapes::ShapeRef.new(shape: Ip, location_name: "Ip", metadata: {"box"=>true}))
+    IpAddressRequest.add_member(:ipv_6, Shapes::ShapeRef.new(shape: Ipv6, location_name: "Ipv6", metadata: {"box"=>true}))
     IpAddressRequest.struct_class = Types::IpAddressRequest
 
     IpAddressResponse.add_member(:ip_id, Shapes::ShapeRef.new(shape: ResourceId, location_name: "IpId"))
     IpAddressResponse.add_member(:subnet_id, Shapes::ShapeRef.new(shape: SubnetId, location_name: "SubnetId"))
     IpAddressResponse.add_member(:ip, Shapes::ShapeRef.new(shape: Ip, location_name: "Ip"))
+    IpAddressResponse.add_member(:ipv_6, Shapes::ShapeRef.new(shape: Ipv6, location_name: "Ipv6"))
     IpAddressResponse.add_member(:status, Shapes::ShapeRef.new(shape: IpAddressStatus, location_name: "Status"))
     IpAddressResponse.add_member(:status_message, Shapes::ShapeRef.new(shape: StatusMessage, location_name: "StatusMessage"))
     IpAddressResponse.add_member(:creation_time, Shapes::ShapeRef.new(shape: Rfc3339TimeString, location_name: "CreationTime"))
@@ -637,6 +661,7 @@ module Aws::Route53Resolver
     IpAddressUpdate.add_member(:ip_id, Shapes::ShapeRef.new(shape: ResourceId, location_name: "IpId", metadata: {"box"=>true}))
     IpAddressUpdate.add_member(:subnet_id, Shapes::ShapeRef.new(shape: SubnetId, location_name: "SubnetId", metadata: {"box"=>true}))
     IpAddressUpdate.add_member(:ip, Shapes::ShapeRef.new(shape: Ip, location_name: "Ip", metadata: {"box"=>true}))
+    IpAddressUpdate.add_member(:ipv_6, Shapes::ShapeRef.new(shape: Ipv6, location_name: "Ipv6", metadata: {"box"=>true}))
     IpAddressUpdate.struct_class = Types::IpAddressUpdate
 
     IpAddressesRequest.member = Shapes::ShapeRef.new(shape: IpAddressRequest)
@@ -702,6 +727,14 @@ module Aws::Route53Resolver
     ListFirewallRulesResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
     ListFirewallRulesResponse.add_member(:firewall_rules, Shapes::ShapeRef.new(shape: FirewallRules, location_name: "FirewallRules"))
     ListFirewallRulesResponse.struct_class = Types::ListFirewallRulesResponse
+
+    ListResolverConfigsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: ListResolverConfigsMaxResult, location_name: "MaxResults", metadata: {"box"=>true}))
+    ListResolverConfigsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken", metadata: {"box"=>true}))
+    ListResolverConfigsRequest.struct_class = Types::ListResolverConfigsRequest
+
+    ListResolverConfigsResponse.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken"))
+    ListResolverConfigsResponse.add_member(:resolver_configs, Shapes::ShapeRef.new(shape: ResolverConfigList, location_name: "ResolverConfigs"))
+    ListResolverConfigsResponse.struct_class = Types::ListResolverConfigsResponse
 
     ListResolverDnssecConfigsRequest.add_member(:max_results, Shapes::ShapeRef.new(shape: MaxResults, location_name: "MaxResults", metadata: {"box"=>true}))
     ListResolverDnssecConfigsRequest.add_member(:next_token, Shapes::ShapeRef.new(shape: NextToken, location_name: "NextToken", metadata: {"box"=>true}))
@@ -808,6 +841,14 @@ module Aws::Route53Resolver
     PutResolverRulePolicyResponse.add_member(:return_value, Shapes::ShapeRef.new(shape: Boolean, location_name: "ReturnValue"))
     PutResolverRulePolicyResponse.struct_class = Types::PutResolverRulePolicyResponse
 
+    ResolverConfig.add_member(:id, Shapes::ShapeRef.new(shape: ResourceId, location_name: "Id"))
+    ResolverConfig.add_member(:resource_id, Shapes::ShapeRef.new(shape: ResourceId, location_name: "ResourceId"))
+    ResolverConfig.add_member(:owner_id, Shapes::ShapeRef.new(shape: AccountId, location_name: "OwnerId"))
+    ResolverConfig.add_member(:autodefined_reverse, Shapes::ShapeRef.new(shape: ResolverAutodefinedReverseStatus, location_name: "AutodefinedReverse"))
+    ResolverConfig.struct_class = Types::ResolverConfig
+
+    ResolverConfigList.member = Shapes::ShapeRef.new(shape: ResolverConfig)
+
     ResolverDnssecConfig.add_member(:id, Shapes::ShapeRef.new(shape: ResourceId, location_name: "Id"))
     ResolverDnssecConfig.add_member(:owner_id, Shapes::ShapeRef.new(shape: AccountId, location_name: "OwnerId"))
     ResolverDnssecConfig.add_member(:resource_id, Shapes::ShapeRef.new(shape: ResourceId, location_name: "ResourceId"))
@@ -828,6 +869,7 @@ module Aws::Route53Resolver
     ResolverEndpoint.add_member(:status_message, Shapes::ShapeRef.new(shape: StatusMessage, location_name: "StatusMessage"))
     ResolverEndpoint.add_member(:creation_time, Shapes::ShapeRef.new(shape: Rfc3339TimeString, location_name: "CreationTime"))
     ResolverEndpoint.add_member(:modification_time, Shapes::ShapeRef.new(shape: Rfc3339TimeString, location_name: "ModificationTime"))
+    ResolverEndpoint.add_member(:resolver_endpoint_type, Shapes::ShapeRef.new(shape: ResolverEndpointType, location_name: "ResolverEndpointType"))
     ResolverEndpoint.struct_class = Types::ResolverEndpoint
 
     ResolverEndpoints.member = Shapes::ShapeRef.new(shape: ResolverEndpoint)
@@ -922,8 +964,9 @@ module Aws::Route53Resolver
 
     TagResourceResponse.struct_class = Types::TagResourceResponse
 
-    TargetAddress.add_member(:ip, Shapes::ShapeRef.new(shape: Ip, required: true, location_name: "Ip"))
+    TargetAddress.add_member(:ip, Shapes::ShapeRef.new(shape: Ip, location_name: "Ip", metadata: {"box"=>true}))
     TargetAddress.add_member(:port, Shapes::ShapeRef.new(shape: Port, location_name: "Port", metadata: {"box"=>true}))
+    TargetAddress.add_member(:ipv_6, Shapes::ShapeRef.new(shape: Ipv6, location_name: "Ipv6", metadata: {"box"=>true}))
     TargetAddress.struct_class = Types::TargetAddress
 
     TargetList.member = Shapes::ShapeRef.new(shape: TargetAddress)
@@ -981,6 +1024,19 @@ module Aws::Route53Resolver
     UpdateFirewallRuleResponse.add_member(:firewall_rule, Shapes::ShapeRef.new(shape: FirewallRule, location_name: "FirewallRule"))
     UpdateFirewallRuleResponse.struct_class = Types::UpdateFirewallRuleResponse
 
+    UpdateIpAddress.add_member(:ip_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location_name: "IpId"))
+    UpdateIpAddress.add_member(:ipv_6, Shapes::ShapeRef.new(shape: Ipv6, required: true, location_name: "Ipv6"))
+    UpdateIpAddress.struct_class = Types::UpdateIpAddress
+
+    UpdateIpAddresses.member = Shapes::ShapeRef.new(shape: UpdateIpAddress)
+
+    UpdateResolverConfigRequest.add_member(:resource_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location_name: "ResourceId"))
+    UpdateResolverConfigRequest.add_member(:autodefined_reverse_flag, Shapes::ShapeRef.new(shape: AutodefinedReverseFlag, required: true, location_name: "AutodefinedReverseFlag"))
+    UpdateResolverConfigRequest.struct_class = Types::UpdateResolverConfigRequest
+
+    UpdateResolverConfigResponse.add_member(:resolver_config, Shapes::ShapeRef.new(shape: ResolverConfig, location_name: "ResolverConfig"))
+    UpdateResolverConfigResponse.struct_class = Types::UpdateResolverConfigResponse
+
     UpdateResolverDnssecConfigRequest.add_member(:resource_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location_name: "ResourceId"))
     UpdateResolverDnssecConfigRequest.add_member(:validation, Shapes::ShapeRef.new(shape: Validation, required: true, location_name: "Validation"))
     UpdateResolverDnssecConfigRequest.struct_class = Types::UpdateResolverDnssecConfigRequest
@@ -990,6 +1046,8 @@ module Aws::Route53Resolver
 
     UpdateResolverEndpointRequest.add_member(:resolver_endpoint_id, Shapes::ShapeRef.new(shape: ResourceId, required: true, location_name: "ResolverEndpointId"))
     UpdateResolverEndpointRequest.add_member(:name, Shapes::ShapeRef.new(shape: Name, location_name: "Name", metadata: {"box"=>true}))
+    UpdateResolverEndpointRequest.add_member(:resolver_endpoint_type, Shapes::ShapeRef.new(shape: ResolverEndpointType, location_name: "ResolverEndpointType", metadata: {"box"=>true}))
+    UpdateResolverEndpointRequest.add_member(:update_ip_addresses, Shapes::ShapeRef.new(shape: UpdateIpAddresses, location_name: "UpdateIpAddresses", metadata: {"box"=>true}))
     UpdateResolverEndpointRequest.struct_class = Types::UpdateResolverEndpointRequest
 
     UpdateResolverEndpointResponse.add_member(:resolver_endpoint, Shapes::ShapeRef.new(shape: ResolverEndpoint, location_name: "ResolverEndpoint"))
@@ -1368,6 +1426,20 @@ module Aws::Route53Resolver
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
       end)
 
+      api.add_operation(:get_resolver_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "GetResolverConfig"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: GetResolverConfigRequest)
+        o.output = Shapes::ShapeRef.new(shape: GetResolverConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServiceErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
+      end)
+
       api.add_operation(:get_resolver_dnssec_config, Seahorse::Model::Operation.new.tap do |o|
         o.name = "GetResolverDnssecConfig"
         o.http_method = "POST"
@@ -1468,6 +1540,7 @@ module Aws::Route53Resolver
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
         o.errors << Shapes::ShapeRef.new(shape: UnknownResourceException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
       end)
 
       api.add_operation(:import_firewall_domains, Seahorse::Model::Operation.new.tap do |o|
@@ -1587,6 +1660,27 @@ module Aws::Route53Resolver
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceErrorException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o[:pager] = Aws::Pager.new(
+          limit_key: "max_results",
+          tokens: {
+            "next_token" => "next_token"
+          }
+        )
+      end)
+
+      api.add_operation(:list_resolver_configs, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "ListResolverConfigs"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: ListResolverConfigsRequest)
+        o.output = Shapes::ShapeRef.new(shape: ListResolverConfigsResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidNextTokenException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServiceErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
         o[:pager] = Aws::Pager.new(
           limit_key: "max_results",
           tokens: {
@@ -1788,6 +1882,7 @@ module Aws::Route53Resolver
         o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
         o.errors << Shapes::ShapeRef.new(shape: UnknownResourceException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
       end)
 
       api.add_operation(:tag_resource, Seahorse::Model::Operation.new.tap do |o|
@@ -1872,6 +1967,23 @@ module Aws::Route53Resolver
         o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
         o.errors << Shapes::ShapeRef.new(shape: InternalServiceErrorException)
         o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+      end)
+
+      api.add_operation(:update_resolver_config, Seahorse::Model::Operation.new.tap do |o|
+        o.name = "UpdateResolverConfig"
+        o.http_method = "POST"
+        o.http_request_uri = "/"
+        o.input = Shapes::ShapeRef.new(shape: UpdateResolverConfigRequest)
+        o.output = Shapes::ShapeRef.new(shape: UpdateResolverConfigResponse)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidRequestException)
+        o.errors << Shapes::ShapeRef.new(shape: InvalidParameterException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceNotFoundException)
+        o.errors << Shapes::ShapeRef.new(shape: ResourceUnavailableException)
+        o.errors << Shapes::ShapeRef.new(shape: LimitExceededException)
+        o.errors << Shapes::ShapeRef.new(shape: InternalServiceErrorException)
+        o.errors << Shapes::ShapeRef.new(shape: ThrottlingException)
+        o.errors << Shapes::ShapeRef.new(shape: AccessDeniedException)
+        o.errors << Shapes::ShapeRef.new(shape: ValidationException)
       end)
 
       api.add_operation(:update_resolver_dnssec_config, Seahorse::Model::Operation.new.tap do |o|

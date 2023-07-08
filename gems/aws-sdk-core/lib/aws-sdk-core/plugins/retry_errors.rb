@@ -163,9 +163,15 @@ a clock skew correction and retry requests with skewed client clocks.
       option(:clock_skew) { Retries::ClockSkew.new }
 
       def self.resolve_retry_mode(cfg)
-        value = ENV['AWS_RETRY_MODE'] ||
-                Aws.shared_config.retry_mode(profile: cfg.profile) ||
-                'legacy'
+        default_mode_value =
+          if cfg.respond_to?(:defaults_mode_config_resolver)
+            cfg.defaults_mode_config_resolver.resolve(:retry_mode)
+          end
+
+          value = ENV['AWS_RETRY_MODE'] ||
+                  Aws.shared_config.retry_mode(profile: cfg.profile) ||
+                  default_mode_value ||
+                  'legacy'
         # Raise if provided value is not one of the retry modes
         if value != 'legacy' && value != 'standard' && value != 'adaptive'
           raise ArgumentError,
@@ -307,10 +313,15 @@ a clock skew correction and retry requests with skewed client clocks.
 
         def retry_request(context, error)
           context.retries += 1
-          context.config.credentials.refresh! if error.expired_credentials?
+          context.config.credentials.refresh! if refresh_credentials?(context, error)
           context.http_request.body.rewind
           context.http_response.reset
           call(context)
+        end
+
+        def refresh_credentials?(context, error)
+          error.expired_credentials? &&
+            context.config.credentials.respond_to?(:refresh!)
         end
 
         def add_retry_headers(context)
@@ -377,7 +388,7 @@ a clock skew correction and retry requests with skewed client clocks.
         def retry_request(context, error)
           delay_retry(context)
           context.retries += 1
-          context.config.credentials.refresh! if error.expired_credentials?
+          context.config.credentials.refresh! if refresh_credentials?(context, error)
           context.http_request.body.rewind
           context.http_response.reset
           call(context)
@@ -391,6 +402,11 @@ a clock skew correction and retry requests with skewed client clocks.
           error.retryable?(context) &&
             context.retries < retry_limit(context) &&
             response_truncatable?(context)
+        end
+
+        def refresh_credentials?(context, error)
+          error.expired_credentials? &&
+            context.config.credentials.respond_to?(:refresh!)
         end
 
         def retry_limit(context)

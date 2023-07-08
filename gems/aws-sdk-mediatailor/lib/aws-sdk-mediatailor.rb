@@ -13,9 +13,13 @@ require 'aws-sigv4'
 
 require_relative 'aws-sdk-mediatailor/types'
 require_relative 'aws-sdk-mediatailor/client_api'
+require_relative 'aws-sdk-mediatailor/plugins/endpoints.rb'
 require_relative 'aws-sdk-mediatailor/client'
 require_relative 'aws-sdk-mediatailor/errors'
 require_relative 'aws-sdk-mediatailor/resource'
+require_relative 'aws-sdk-mediatailor/endpoint_parameters'
+require_relative 'aws-sdk-mediatailor/endpoint_provider'
+require_relative 'aws-sdk-mediatailor/endpoints'
 require_relative 'aws-sdk-mediatailor/customizations'
 
 # This module provides support for AWS MediaTailor. This module is available in the
@@ -28,7 +32,7 @@ require_relative 'aws-sdk-mediatailor/customizations'
 # structure.
 #
 #     media_tailor = Aws::MediaTailor::Client.new
-#     resp = media_tailor.create_channel(params)
+#     resp = media_tailor.configure_logs_for_channel(params)
 #
 # See {Client} for more information.
 #
@@ -48,6 +52,6 @@ require_relative 'aws-sdk-mediatailor/customizations'
 # @!group service
 module Aws::MediaTailor
 
-  GEM_VERSION = '1.38.0'
+  GEM_VERSION = '1.66.0'
 
 end

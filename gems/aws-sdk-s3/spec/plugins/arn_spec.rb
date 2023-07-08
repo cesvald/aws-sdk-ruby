@@ -3,44 +3,91 @@ require_relative '../spec_helper'
 module Aws
   module S3
     describe Client do
-      it 'is configured to use the arn region by default' do
-        client = Aws::S3::Client.new(
-          stub_responses: true,
-          region: 'us-west-2'
-        )
-        expect(client.config.s3_use_arn_region).to be true
-      end
+      # squash legacy fips shim transform warnings
+      before { allow(Aws::Plugins::RegionalEndpoint).to receive(:warn) }
 
-      it 'can be configured using shared config' do
-        allow_any_instance_of(Aws::SharedConfig)
-          .to receive(:s3_use_arn_region).and_return('false')
-        client = Aws::S3::Client.new(
-          stub_responses: true,
-          region: 'us-west-2'
-        )
-        expect(client.config.s3_use_arn_region).to be false
-      end
-
-      it 'can be configured using ENV with precedence over shared config' do
-        allow_any_instance_of(Aws::SharedConfig)
-          .to receive(:s3_use_arn_region).and_return('true')
-        ENV['AWS_S3_USE_ARN_REGION'] = 'false'
-        client = Aws::S3::Client.new(
-          stub_responses: true,
-          region: 'us-west-2'
-        )
-        expect(client.config.s3_use_arn_region).to be false
-      end
-
-      it 'raises when use arn region is not true or false' do
-        ENV['AWS_S3_USE_ARN_REGION'] = 'peccy'
-
-        expect do
-          Aws::S3::Client.new(
+      describe 's3_use_arn_region' do
+        it 'is configured to use the arn region by default' do
+          client = Aws::S3::Client.new(
             stub_responses: true,
             region: 'us-west-2'
           )
-        end.to raise_error(ArgumentError)
+          expect(client.config.s3_use_arn_region).to be true
+        end
+
+        it 'can be configured using shared config' do
+          allow_any_instance_of(Aws::SharedConfig)
+            .to receive(:s3_use_arn_region).and_return('false')
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2'
+          )
+          expect(client.config.s3_use_arn_region).to be false
+        end
+
+        it 'can be configured using ENV with precedence over shared config' do
+          allow_any_instance_of(Aws::SharedConfig)
+            .to receive(:s3_use_arn_region).and_return('true')
+          ENV['AWS_S3_USE_ARN_REGION'] = 'false'
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2'
+          )
+          expect(client.config.s3_use_arn_region).to be false
+        end
+
+        it 'raises when use arn region is not true or false' do
+          ENV['AWS_S3_USE_ARN_REGION'] = 'peccy'
+
+          expect do
+            Aws::S3::Client.new(
+              stub_responses: true,
+              region: 'us-west-2'
+            )
+          end.to raise_error(ArgumentError)
+        end
+      end
+
+      describe 's3_disable_multiregion_access_points' do
+        it 'is is false by default' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2'
+          )
+          expect(client.config.s3_disable_multiregion_access_points).to be false
+        end
+
+        it 'can be configured using shared config' do
+          allow_any_instance_of(Aws::SharedConfig)
+            .to receive(:s3_disable_multiregion_access_points).and_return('true')
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2'
+          )
+          expect(client.config.s3_disable_multiregion_access_points).to be true
+        end
+
+        it 'can be configured using ENV with precedence over shared config' do
+          allow_any_instance_of(Aws::SharedConfig)
+            .to receive(:s3_disable_multiregion_access_points).and_return('false')
+          ENV['AWS_S3_DISABLE_MULTIREGION_ACCESS_POINTS'] = 'true'
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2'
+          )
+          expect(client.config.s3_disable_multiregion_access_points).to be true
+        end
+
+        it 'raises when use arn region is not true or false' do
+          ENV['AWS_S3_DISABLE_MULTIREGION_ACCESS_POINTS'] = 'peccy'
+
+          expect do
+            Aws::S3::Client.new(
+              stub_responses: true,
+              region: 'us-west-2'
+            )
+          end.to raise_error(ArgumentError)
+        end
       end
 
       it 'sends an arn over the wire for #copy_object' do
@@ -82,7 +129,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws:s3:us-east-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -96,7 +143,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.us-west-2.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -109,7 +156,7 @@ module Aws
             region: 'us-west-2'
           )
           arn = 'arn:aws:s3:us-east-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -122,7 +169,7 @@ module Aws
             region: 's3-external-1'
           )
           arn = 'arn:aws:s3:us-east-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -138,7 +185,7 @@ module Aws
           arn = 'arn:aws:s3:us-east-1:123456789012:accesspoint:myendpoint'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 'accepts an accesspoint arn with an aws-global client' do
@@ -147,7 +194,7 @@ module Aws
             region: 'aws-global'
           )
           arn = 'arn:aws:s3:us-east-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -163,7 +210,7 @@ module Aws
           arn = 'arn:aws:s3:us-east-1:123456789012:accesspoint:myendpoint'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 's3_use_arn_region false; raises if client region and arn region mismatchs' do
@@ -175,7 +222,7 @@ module Aws
           arn = 'arn:aws:s3:us-east-1:123456789012:accesspoint:myendpoint'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 'can use dualstack with the accesspoint arn' do
@@ -185,7 +232,7 @@ module Aws
             use_dualstack_endpoint: true
           )
           arn = 'arn:aws:s3:us-west-2:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.dualstack.us-west-2.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -200,7 +247,7 @@ module Aws
           arn = 'arn:aws-cn:s3:cn-north-1:123456789012:accesspoint:myendpoint'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNPartitionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 'accepts an accesspoint arn in a china region' do
@@ -209,7 +256,7 @@ module Aws
             region: 'cn-north-1'
           )
           arn = 'arn:aws-cn:s3:cn-north-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.cn-north-1.amazonaws.com.cn'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -223,7 +270,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws-cn:s3:cn-north-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.cn-north-1.amazonaws.com.cn'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -236,7 +283,7 @@ module Aws
             region: 'cn-north-1'
           )
           arn = 'arn:aws-cn:s3:cn-northwest-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.cn-northwest-1.amazonaws.com.cn'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -249,7 +296,7 @@ module Aws
             region: 'us-gov-east-1'
           )
           arn = 'arn:aws-us-gov:s3:us-gov-east-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint.us-gov-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -263,7 +310,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws-us-gov:s3:us-gov-east-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint-fips.us-gov-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -276,7 +323,7 @@ module Aws
             region: 'fips-us-gov-east-1'
           )
           arn = 'arn:aws-us-gov:s3:us-gov-east-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint-fips.us-gov-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -292,18 +339,46 @@ module Aws
           arn = 'arn:aws-us-gov:s3:us-gov-west-1:123456789012:accesspoint:myendpoint'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          end.to raise_error(ArgumentError)
         end
 
-        it 'raises when the fips client region does not match the arn region' do
+        it 'uses the arn region with the fips client region' do
           client = Aws::S3::Client.new(
             stub_responses: true,
             region: 'fips-us-gov-east-1'
           )
           arn = 'arn:aws-us-gov:s3:us-gov-west-1:123456789012:accesspoint:myendpoint'
-          expect do
-            client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          resp = client.get_object(bucket: arn, key: 'obj')
+          host = 'myendpoint-123456789012.s3-accesspoint-fips.us-gov-west-1.amazonaws.com'
+          expect(resp.context.http_request.endpoint.host).to eq(host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+
+        it 's3_use_arn_region false; uses the fips configuration flag' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-gov-east-1',
+            use_fips_endpoint: true,
+            s3_use_arn_region: false
+          )
+          arn = 'arn:aws-us-gov:s3:us-gov-east-1:123456789012:accesspoint:myendpoint'
+          resp = client.get_object(bucket: arn, key: 'obj')
+          host = 'myendpoint-123456789012.s3-accesspoint-fips.us-gov-east-1.amazonaws.com'
+          expect(resp.context.http_request.endpoint.host).to eq(host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+
+        it 'uses the fips configuration flag' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-gov-east-1',
+            use_fips_endpoint: true
+          )
+          arn = 'arn:aws-us-gov:s3:us-gov-west-1:123456789012:accesspoint:myendpoint'
+          resp = client.get_object(bucket: arn, key: 'obj')
+          host = 'myendpoint-123456789012.s3-accesspoint-fips.us-gov-west-1.amazonaws.com'
+          expect(resp.context.http_request.endpoint.host).to eq(host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
         end
 
         it 'uses the arn region for a fips client with dualstack' do
@@ -313,7 +388,7 @@ module Aws
             use_dualstack_endpoint: true
           )
           arn = 'arn:aws-us-gov:s3:us-gov-east-1:123456789012:accesspoint:myendpoint'
-          expect_sigv4_service('s3')
+          expect_auth({ 'signingName' => 's3' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myendpoint-123456789012.s3-accesspoint-fips.dualstack.us-gov-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -348,12 +423,23 @@ module Aws
           end.to raise_error(ArgumentError)
         end
 
-        it 'validates missing region' do
+        it 'raises for FIPS region in ARN (prefix)' do
           client = Aws::S3::Client.new(
             stub_responses: true,
-            region: 'us-west-2'
+            region: 'us-gov-west-1'
           )
-          arn = 'arn:aws:s3::123456789012:accesspoint:myendpoint'
+          arn = 'arn:aws-us-gov:s3:fips-us-gov-west-1:123456789012:accesspoint/myendpoint'
+          expect do
+            client.get_object(bucket: arn, key: 'obj')
+          end.to raise_error(ArgumentError)
+        end
+
+        it 'raises for FIPS region in ARN (suffix)' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-gov-west-1'
+          )
+          arn = 'arn:aws-us-gov:s3:us-gov-west-1-fips:123456789012:accesspoint/myendpoint'
           expect do
             client.get_object(bucket: arn, key: 'obj')
           end.to raise_error(ArgumentError)
@@ -416,7 +502,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws:s3-outposts:us-west-2:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint'
-          expect_sigv4_service('s3-outposts')
+          expect_auth({ 'signingName' => 's3-outposts' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myaccesspoint-123456789012.op-01234567890123456.s3-outposts.us-west-2.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -429,7 +515,7 @@ module Aws
             region: 'us-west-2'
           )
           arn = 'arn:aws:s3-outposts:us-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint'
-          expect_sigv4_service('s3-outposts')
+          expect_auth({ 'signingName' => 's3-outposts' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myaccesspoint-123456789012.op-01234567890123456.s3-outposts.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -443,7 +529,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws:s3-outposts:us-west-2:123456789012:outpost/op-01234567890123456/accesspoint/myaccesspoint'
-          expect_sigv4_service('s3-outposts')
+          expect_auth({ 'signingName' => 's3-outposts' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myaccesspoint-123456789012.op-01234567890123456.s3-outposts.us-west-2.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -456,7 +542,7 @@ module Aws
             region: 'us-west-2'
           )
           arn = 'arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-01234567890123456/accesspoint/myaccesspoint'
-          expect_sigv4_service('s3-outposts')
+          expect_auth({ 'signingName' => 's3-outposts' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myaccesspoint-123456789012.op-01234567890123456.s3-outposts.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -472,7 +558,7 @@ module Aws
           arn = 'arn:aws:s3-outposts:us-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 'raises if the client and outposts arn partitions mismatch' do
@@ -483,7 +569,7 @@ module Aws
           arn = 'arn:aws-cn:s3-outposts:cn-north-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNPartitionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 'accepts an outpost arn in a gov region' do
@@ -492,7 +578,7 @@ module Aws
             region: 'us-gov-east-1'
           )
           arn = 'arn:aws-us-gov:s3-outposts:us-gov-east-1:123456789012:outpost:op-01234567890123456:accesspoint:myaccesspoint'
-          expect_sigv4_service('s3-outposts')
+          expect_auth({ 'signingName' => 's3-outposts' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'myaccesspoint-123456789012.op-01234567890123456.s3-outposts.us-gov-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -643,7 +729,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws:s3-object-lambda:us-east-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -657,7 +743,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws:s3-object-lambda:us-west-2:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.us-west-2.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -671,7 +757,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws:s3-object-lambda:us-west-2:123456789012:accesspoint:mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.us-west-2.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -684,7 +770,7 @@ module Aws
             region: 'us-west-2'
           )
           arn = 'arn:aws:s3-object-lambda:us-east-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -697,7 +783,7 @@ module Aws
             region: 's3-external-1'
           )
           arn = 'arn:aws:s3-object-lambda:us-east-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -713,7 +799,7 @@ module Aws
           arn = 'arn:aws:s3-object-lambda:us-east-1:123456789012:accesspoint/mybanner'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 'accepts an object lambda arn with an aws-global client' do
@@ -722,7 +808,7 @@ module Aws
             region: 'aws-global'
           )
           arn = 'arn:aws:s3-object-lambda:us-east-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.us-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -738,7 +824,7 @@ module Aws
           arn = 'arn:aws:s3-object-lambda:us-east-1:123456789012:accesspoint/mybanner'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 's3_use_arn_region false; raises if client region and arn region mismatchs' do
@@ -750,7 +836,7 @@ module Aws
           arn = 'arn:aws:s3-object-lambda:us-east-1:123456789012:accesspoint/mybanner'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 'raises with :use_dualstack_endpoint' do
@@ -773,7 +859,7 @@ module Aws
           arn = 'arn:aws-cn:s3-object-lambda:cn-north-1:123456789012:accesspoint/mybanner'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNPartitionError)
+          end.to raise_error(ArgumentError)
         end
 
         it 'accepts an object lambda arn in a china region' do
@@ -782,7 +868,7 @@ module Aws
             region: 'cn-north-1'
           )
           arn = 'arn:aws-cn:s3-object-lambda:cn-north-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.cn-north-1.amazonaws.com.cn'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -796,7 +882,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws-cn:s3-object-lambda:cn-north-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.cn-north-1.amazonaws.com.cn'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -809,7 +895,7 @@ module Aws
             region: 'cn-north-1'
           )
           arn = 'arn:aws-cn:s3-object-lambda:cn-northwest-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.cn-northwest-1.amazonaws.com.cn'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -822,7 +908,7 @@ module Aws
             region: 'us-gov-east-1'
           )
           arn = 'arn:aws-us-gov:s3-object-lambda:us-gov-east-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda.us-gov-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -836,7 +922,7 @@ module Aws
             s3_use_arn_region: false
           )
           arn = 'arn:aws-us-gov:s3-object-lambda:us-gov-east-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda-fips.us-gov-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -849,7 +935,7 @@ module Aws
             region: 'fips-us-gov-east-1'
           )
           arn = 'arn:aws-us-gov:s3-object-lambda:us-gov-east-1:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.s3-object-lambda-fips.us-gov-east-1.amazonaws.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
@@ -862,21 +948,49 @@ module Aws
             region: 'fips-us-gov-east-1',
             s3_use_arn_region: false
           )
-          arn = 'arn:aws-us-gov:s3:us-gov-west-1:123456789012:accesspoint:myendpoint'
+          arn = 'arn:aws-us-gov:s3-object-lambda:us-gov-west-1:123456789012:accesspoint/mybanner'
           expect do
             client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          end.to raise_error(ArgumentError)
         end
 
-        it 'raises when the fips client region does not match the arn region' do
+        it 'uses the arn region with the fips client region' do
           client = Aws::S3::Client.new(
             stub_responses: true,
             region: 'fips-us-gov-east-1'
           )
-          arn = 'arn:aws-us-gov:s3:us-gov-west-1:123456789012:accesspoint:myendpoint'
-          expect do
-            client.get_object(bucket: arn, key: 'obj')
-          end.to raise_error(Aws::Errors::InvalidARNRegionError)
+          arn = 'arn:aws-us-gov:s3-object-lambda:us-gov-west-1:123456789012:accesspoint/mybanner'
+          resp = client.get_object(bucket: arn, key: 'obj')
+          host = 'mybanner-123456789012.s3-object-lambda-fips.us-gov-west-1.amazonaws.com'
+          expect(resp.context.http_request.endpoint.host).to eq(host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+
+        it 's3_use_arn_region false; uses the fips configuration flag' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-gov-east-1',
+            use_fips_endpoint: true,
+            s3_use_arn_region: false
+          )
+          arn = 'arn:aws-us-gov:s3-object-lambda:us-gov-east-1:123456789012:accesspoint/mybanner'
+          resp = client.get_object(bucket: arn, key: 'obj')
+          host = 'mybanner-123456789012.s3-object-lambda-fips.us-gov-east-1.amazonaws.com'
+          expect(resp.context.http_request.endpoint.host).to eq(host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+
+        it 'uses the fips configuration flag' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-gov-east-1',
+            use_fips_endpoint: true
+          )
+          arn = 'arn:aws-us-gov:s3-object-lambda:us-gov-west-1:123456789012:accesspoint/mybanner'
+          resp = client.get_object(bucket: arn, key: 'obj')
+          host = 'mybanner-123456789012.s3-object-lambda-fips.us-gov-west-1.amazonaws.com'
+          expect(resp.context.http_request.endpoint.host).to eq(host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
         end
 
         it 'raises with :use_accelerate_endpoint' do
@@ -917,6 +1031,29 @@ module Aws
             client.get_object(bucket: arn, key: 'obj')
           end.to raise_error(ArgumentError)
         end
+
+        it 'raises for FIPS region in ARN (prefix)' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-gov-west-1'
+          )
+          arn = 'arn:aws-us-gov:s3-object-lambda:fips-us-gov-west-1:123456789012:accesspoint/myendpoint'
+          expect do
+            client.get_object(bucket: arn, key: 'obj')
+          end.to raise_error(ArgumentError)
+        end
+
+        it 'raises for FIPS region in ARN (suffix)' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-gov-west-1'
+          )
+          arn = 'arn:aws-us-gov:s3-object-lambda:us-gov-west-1-fips:123456789012:accesspoint/myendpoint'
+          expect do
+            client.get_object(bucket: arn, key: 'obj')
+          end.to raise_error(ArgumentError)
+        end
+
 
         it 'validates account id' do
           client = Aws::S3::Client.new(
@@ -973,10 +1110,171 @@ module Aws
             endpoint: 'https://my-endpoint.com'
           )
           arn = 'arn:aws:s3-object-lambda:us-west-2:123456789012:accesspoint/mybanner'
-          expect_sigv4_service('s3-object-lambda')
+          expect_auth({ 'signingName' => 's3-object-lambda' })
           resp = client.get_object(bucket: arn, key: 'obj')
           host = 'mybanner-123456789012.my-endpoint.com'
           expect(resp.context.http_request.endpoint.host).to eq(host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+      end
+
+      context 'Multi-region access point (MRAP) ARN' do
+        it 's3_use_arn_region n/a; accepts MRAP with client us-east-1' do
+          # Tests specify N/A for use_arn_region.  Test that both true and false behave the same way
+          arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+          expected_host = 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com'
+
+          client_true = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-east-1',
+            s3_use_arn_region: true
+          )
+          expect_auth({ 'name' => 'sigv4a', 'signingRegionSet' => ['*'] })
+          resp = client_true.get_object(bucket: arn, key: 'obj')
+          expect(resp.context.http_request.endpoint.host).to eq(expected_host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+
+          client_false = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-east-1',
+            s3_use_arn_region: false
+          )
+          expect_auth({ 'name' => 'sigv4a', 'signingRegionSet' => ['*'] })
+          resp = client_false.get_object(bucket: arn, key: 'obj')
+          expect(resp.context.http_request.endpoint.host).to eq(expected_host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+
+        it 'accepts MRAP with client us-west-2' do
+          arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+          expected_host = 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com'
+
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2'
+          )
+          expect_auth({ 'name' => 'sigv4a', 'signingRegionSet' => ['*'] })
+          resp = client.get_object(bucket: arn, key: 'obj')
+          expect(resp.context.http_request.endpoint.host).to eq(expected_host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+
+        it 'accepts MRAP with client aws-global' do
+          arn = 'arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+          expected_host = 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com'
+
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'aws-global'
+          )
+          expect_auth({ 'name' => 'sigv4a', 'signingRegionSet' => ['*'] })
+          resp = client.get_object(bucket: arn, key: 'obj')
+          expect(resp.context.http_request.endpoint.host).to eq(expected_host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+
+        it 'accepts aws-cn MRAP with client cn-north-1 and uses the cn partition' do
+          arn = 'arn:aws-cn:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+          expected_host = 'mfzwi23gnjvgw.mrap.accesspoint.s3-global.amazonaws.com.cn'
+
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'cn-north-1'
+          )
+          expect_auth({ 'name' => 'sigv4a', 'signingRegionSet' => ['*'] })
+          resp = client.get_object(bucket: arn, key: 'obj')
+          expect(resp.context.http_request.endpoint.host).to eq(expected_host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+
+        it 's3_disable_multiregion_access_points true; raises for MRAP ARN' do
+          arn = 'arn:aws-cn:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2',
+            s3_disable_multiregion_access_points: true
+          )
+          expect do
+            client.get_object(bucket: arn, key: 'obj')
+          end.to raise_error(ArgumentError)
+        end
+
+        it 's3_disable_multiregion_access_points true; raises for MRAP ARN with client region aws-global' do
+          arn = 'arn:aws-cn:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'aws-global',
+            s3_disable_multiregion_access_points: true
+          )
+          expect do
+            client.get_object(bucket: arn, key: 'obj')
+          end.to raise_error(ArgumentError)
+        end
+
+        it 'raises with :use_dualstack_endpoint' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2',
+            use_dualstack_endpoint: true
+          )
+          arn = 'arn:aws-cn:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+          expect do
+            client.get_object(bucket: arn, key: 'obj')
+          end.to raise_error(ArgumentError)
+        end
+
+        it 'raises with :use_accelerate_endpoint' do
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2',
+            use_accelerate_endpoint: true
+          )
+          arn = 'arn:aws-cn:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap'
+          expect do
+            client.get_object(bucket: arn, key: 'obj')
+          end.to raise_error(ArgumentError)
+        end
+
+        it 's3_disable_multiregion_access_points true; raises for MRAP ARN myendpoint' do
+          arn = 'arn:aws:s3::123456789012:accesspoint:myendpoint'
+
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2',
+            s3_disable_multiregion_access_points: true
+          )
+          expect do
+            client.get_object(bucket: arn, key: 'obj')
+          end.to raise_error(ArgumentError)
+        end
+
+        it 'accepts MRAP arn myendpoint' do
+          arn = 'arn:aws:s3::123456789012:accesspoint:myendpoint'
+          expected_host = 'myendpoint.accesspoint.s3-global.amazonaws.com'
+
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2'
+          )
+          expect_auth({ 'name' => 'sigv4a', 'signingRegionSet' => ['*'] })
+          resp = client.get_object(bucket: arn, key: 'obj')
+          expect(resp.context.http_request.endpoint.host).to eq(expected_host)
+          expect(resp.context.http_request.endpoint.path).to eq('/obj')
+        end
+
+        it 'accepts MRAP arn my.bucket' do
+          arn = 'arn:aws:s3::123456789012:accesspoint:my.bucket'
+          expected_host = 'my.bucket.accesspoint.s3-global.amazonaws.com'
+
+          client = Aws::S3::Client.new(
+            stub_responses: true,
+            region: 'us-west-2'
+          )
+          expect_auth({ 'name' => 'sigv4a', 'signingRegionSet' => ['*'] })
+          resp = client.get_object(bucket: arn, key: 'obj')
+          expect(resp.context.http_request.endpoint.host).to eq(expected_host)
           expect(resp.context.http_request.endpoint.path).to eq('/obj')
         end
       end

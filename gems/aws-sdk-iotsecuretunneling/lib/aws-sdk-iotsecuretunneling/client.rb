@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:iotsecuretunneling)
@@ -73,8 +77,13 @@ module Aws::IoTSecureTunneling
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::IoTSecureTunneling::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::IoTSecureTunneling
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::IoTSecureTunneling
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::IoTSecureTunneling
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::IoTSecureTunneling
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::IoTSecureTunneling
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::IoTSecureTunneling::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::IoTSecureTunneling::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::IoTSecureTunneling
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::IoTSecureTunneling
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -341,11 +398,17 @@ module Aws::IoTSecureTunneling
     # `CloseTunnel` request is received, we close the WebSocket connections
     # between the client and proxy server so no data can be transmitted.
     #
+    # Requires permission to access the [CloseTunnel][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
     # @option params [required, String] :tunnel_id
     #   The ID of the tunnel to close.
     #
     # @option params [Boolean] :delete
-    #   When set to true, AWS IoT Secure Tunneling deletes the tunnel data
+    #   When set to true, IoT Secure Tunneling deletes the tunnel data
     #   immediately.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
@@ -365,6 +428,12 @@ module Aws::IoTSecureTunneling
     end
 
     # Gets information about a tunnel identified by the unique tunnel id.
+    #
+    # Requires permission to access the [DescribeTunnel][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
     #
     # @option params [required, String] :tunnel_id
     #   The tunnel to describe.
@@ -434,9 +503,15 @@ module Aws::IoTSecureTunneling
       req.send_request(options)
     end
 
-    # List all tunnels for an AWS account. Tunnels are listed by creation
-    # time in descending order, newer tunnels will be listed before older
-    # tunnels.
+    # List all tunnels for an Amazon Web Services account. Tunnels are
+    # listed by creation time in descending order, newer tunnels will be
+    # listed before older tunnels.
+    #
+    # Requires permission to access the [ListTunnels][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
     #
     # @option params [String] :thing_name
     #   The name of the IoT thing associated with the destination device.
@@ -445,7 +520,8 @@ module Aws::IoTSecureTunneling
     #   The maximum number of results to return at once.
     #
     # @option params [String] :next_token
-    #   A token to retrieve the next set of results.
+    #   To retrieve the next set of results, the nextToken value from a
+    #   previous response; otherwise null to receive the first set of results.
     #
     # @return [Types::ListTunnelsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -481,7 +557,13 @@ module Aws::IoTSecureTunneling
     end
 
     # Creates a new tunnel, and returns two client access tokens for clients
-    # to use to connect to the AWS IoT Secure Tunneling proxy server.
+    # to use to connect to the IoT Secure Tunneling proxy server.
+    #
+    # Requires permission to access the [OpenTunnel][1] action.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
     #
     # @option params [String] :description
     #   A short text description of the tunnel.
@@ -532,6 +614,63 @@ module Aws::IoTSecureTunneling
     # @param [Hash] params ({})
     def open_tunnel(params = {}, options = {})
       req = build_request(:open_tunnel, params)
+      req.send_request(options)
+    end
+
+    # Revokes the current client access token (CAT) and returns new CAT for
+    # clients to use when reconnecting to secure tunneling to access the
+    # same tunnel.
+    #
+    # Requires permission to access the [RotateTunnelAccessToken][1] action.
+    #
+    # <note markdown="1"> Rotating the CAT doesn't extend the tunnel duration. For example, say
+    # the tunnel duration is 12 hours and the tunnel has already been open
+    # for 4 hours. When you rotate the access tokens, the new tokens that
+    # are generated can only be used for the remaining 8 hours.
+    #
+    #  </note>
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsiot.html#awsiot-actions-as-permissions
+    #
+    # @option params [required, String] :tunnel_id
+    #   The tunnel for which you want to rotate the access tokens.
+    #
+    # @option params [required, String] :client_mode
+    #   The mode of the client that will use the client token, which can be
+    #   either the source or destination, or both source and destination.
+    #
+    # @option params [Types::DestinationConfig] :destination_config
+    #   The destination configuration.
+    #
+    # @return [Types::RotateTunnelAccessTokenResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::RotateTunnelAccessTokenResponse#tunnel_arn #tunnel_arn} => String
+    #   * {Types::RotateTunnelAccessTokenResponse#source_access_token #source_access_token} => String
+    #   * {Types::RotateTunnelAccessTokenResponse#destination_access_token #destination_access_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.rotate_tunnel_access_token({
+    #     tunnel_id: "TunnelId", # required
+    #     client_mode: "SOURCE", # required, accepts SOURCE, DESTINATION, ALL
+    #     destination_config: {
+    #       thing_name: "ThingName",
+    #       services: ["Service"], # required
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.tunnel_arn #=> String
+    #   resp.source_access_token #=> String
+    #   resp.destination_access_token #=> String
+    #
+    # @overload rotate_tunnel_access_token(params = {})
+    # @param [Hash] params ({})
+    def rotate_tunnel_access_token(params = {}, options = {})
+      req = build_request(:rotate_tunnel_access_token, params)
       req.send_request(options)
     end
 
@@ -601,7 +740,7 @@ module Aws::IoTSecureTunneling
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-iotsecuretunneling'
-      context[:gem_version] = '1.11.0'
+      context[:gem_version] = '1.27.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

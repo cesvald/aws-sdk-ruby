@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:braket)
@@ -73,8 +77,13 @@ module Aws::Braket
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::Braket::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::Braket
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::Braket
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::Braket
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::Braket
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::Braket
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::Braket::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::Braket::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::Braket
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::Braket
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -326,6 +383,36 @@ module Aws::Braket
     end
 
     # @!group API Operations
+
+    # Cancels an Amazon Braket job.
+    #
+    # @option params [required, String] :job_arn
+    #   The ARN of the Amazon Braket job to cancel.
+    #
+    # @return [Types::CancelJobResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CancelJobResponse#cancellation_status #cancellation_status} => String
+    #   * {Types::CancelJobResponse#job_arn #job_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.cancel_job({
+    #     job_arn: "JobArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.cancellation_status #=> String, one of "CANCELLING", "CANCELLED"
+    #   resp.job_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/braket-2019-09-01/CancelJob AWS API Documentation
+    #
+    # @overload cancel_job(params = {})
+    # @param [Hash] params ({})
+    def cancel_job(params = {}, options = {})
+      req = build_request(:cancel_job, params)
+      req.send_request(options)
+    end
 
     # Cancels the specified task.
     #
@@ -364,6 +451,132 @@ module Aws::Braket
       req.send_request(options)
     end
 
+    # Creates an Amazon Braket job.
+    #
+    # @option params [required, Types::AlgorithmSpecification] :algorithm_specification
+    #   Definition of the Amazon Braket job to be created. Specifies the
+    #   container image the job uses and information about the Python scripts
+    #   used for entry and training.
+    #
+    # @option params [Types::JobCheckpointConfig] :checkpoint_config
+    #   Information about the output locations for job checkpoint data.
+    #
+    # @option params [required, String] :client_token
+    #   A unique token that guarantees that the call to this API is
+    #   idempotent.
+    #
+    #   **A suitable default value is auto-generated.** You should normally
+    #   not need to pass this option.**
+    #
+    # @option params [required, Types::DeviceConfig] :device_config
+    #   The quantum processing unit (QPU) or simulator used to create an
+    #   Amazon Braket job.
+    #
+    # @option params [Hash<String,String>] :hyper_parameters
+    #   Algorithm-specific parameters used by an Amazon Braket job that
+    #   influence the quality of the training job. The values are set with a
+    #   string of JSON key:value pairs, where the key is the name of the
+    #   hyperparameter and the value is the value of th hyperparameter.
+    #
+    # @option params [Array<Types::InputFileConfig>] :input_data_config
+    #   A list of parameters that specify the name and type of input data and
+    #   where it is located.
+    #
+    # @option params [required, Types::InstanceConfig] :instance_config
+    #   Configuration of the resource instances to use while running the
+    #   hybrid job on Amazon Braket.
+    #
+    # @option params [required, String] :job_name
+    #   The name of the Amazon Braket job.
+    #
+    # @option params [required, Types::JobOutputDataConfig] :output_data_config
+    #   The path to the S3 location where you want to store job artifacts and
+    #   the encryption key used to store them.
+    #
+    # @option params [required, String] :role_arn
+    #   The Amazon Resource Name (ARN) of an IAM role that Amazon Braket can
+    #   assume to perform tasks on behalf of a user. It can access user
+    #   resources, run an Amazon Braket job container on behalf of user, and
+    #   output resources to the users' s3 buckets.
+    #
+    # @option params [Types::JobStoppingCondition] :stopping_condition
+    #   The user-defined criteria that specifies when a job stops running.
+    #
+    # @option params [Hash<String,String>] :tags
+    #   A tag object that consists of a key and an optional value, used to
+    #   manage metadata for Amazon Braket resources.
+    #
+    # @return [Types::CreateJobResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateJobResponse#job_arn #job_arn} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_job({
+    #     algorithm_specification: { # required
+    #       container_image: {
+    #         uri: "Uri", # required
+    #       },
+    #       script_mode_config: {
+    #         compression_type: "NONE", # accepts NONE, GZIP
+    #         entry_point: "String", # required
+    #         s3_uri: "S3Path", # required
+    #       },
+    #     },
+    #     checkpoint_config: {
+    #       local_path: "String4096",
+    #       s3_uri: "S3Path", # required
+    #     },
+    #     client_token: "String64", # required
+    #     device_config: { # required
+    #       device: "String256", # required
+    #     },
+    #     hyper_parameters: {
+    #       "String256" => "HyperParametersValueString",
+    #     },
+    #     input_data_config: [
+    #       {
+    #         channel_name: "InputFileConfigChannelNameString", # required
+    #         content_type: "String256",
+    #         data_source: { # required
+    #           s3_data_source: { # required
+    #             s3_uri: "S3Path", # required
+    #           },
+    #         },
+    #       },
+    #     ],
+    #     instance_config: { # required
+    #       instance_count: 1,
+    #       instance_type: "ml.m4.xlarge", # required, accepts ml.m4.xlarge, ml.m4.2xlarge, ml.m4.4xlarge, ml.m4.10xlarge, ml.m4.16xlarge, ml.g4dn.xlarge, ml.g4dn.2xlarge, ml.g4dn.4xlarge, ml.g4dn.8xlarge, ml.g4dn.12xlarge, ml.g4dn.16xlarge, ml.m5.large, ml.m5.xlarge, ml.m5.2xlarge, ml.m5.4xlarge, ml.m5.12xlarge, ml.m5.24xlarge, ml.c4.xlarge, ml.c4.2xlarge, ml.c4.4xlarge, ml.c4.8xlarge, ml.p2.xlarge, ml.p2.8xlarge, ml.p2.16xlarge, ml.p3.2xlarge, ml.p3.8xlarge, ml.p3.16xlarge, ml.p3dn.24xlarge, ml.p4d.24xlarge, ml.c5.xlarge, ml.c5.2xlarge, ml.c5.4xlarge, ml.c5.9xlarge, ml.c5.18xlarge, ml.c5n.xlarge, ml.c5n.2xlarge, ml.c5n.4xlarge, ml.c5n.9xlarge, ml.c5n.18xlarge
+    #       volume_size_in_gb: 1, # required
+    #     },
+    #     job_name: "CreateJobRequestJobNameString", # required
+    #     output_data_config: { # required
+    #       kms_key_id: "String2048",
+    #       s3_path: "S3Path", # required
+    #     },
+    #     role_arn: "RoleArn", # required
+    #     stopping_condition: {
+    #       max_runtime_in_seconds: 1,
+    #     },
+    #     tags: {
+    #       "String" => "String",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.job_arn #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/braket-2019-09-01/CreateJob AWS API Documentation
+    #
+    # @overload create_job(params = {})
+    # @param [Hash] params ({})
+    def create_job(params = {}, options = {})
+      req = build_request(:create_job, params)
+      req.send_request(options)
+    end
+
     # Creates a quantum task.
     #
     # @option params [required, String] :action
@@ -389,6 +602,10 @@ module Aws::Braket
     #   when the required value (Hash, Array, etc.) is provided according to
     #   the description.**
     #
+    # @option params [String] :job_token
+    #   The token for an Amazon Braket job that associates it with the quantum
+    #   task.
+    #
     # @option params [required, String] :output_s3_bucket
     #   The S3 bucket to store task result files in.
     #
@@ -413,6 +630,7 @@ module Aws::Braket
     #     client_token: "String64", # required
     #     device_arn: "DeviceArn", # required
     #     device_parameters: "CreateQuantumTaskRequestDeviceParametersString",
+    #     job_token: "JobToken",
     #     output_s3_bucket: "CreateQuantumTaskRequestOutputS3BucketString", # required
     #     output_s3_key_prefix: "CreateQuantumTaskRequestOutputS3KeyPrefixString", # required
     #     shots: 1, # required
@@ -435,6 +653,18 @@ module Aws::Braket
     end
 
     # Retrieves the devices available in Amazon Braket.
+    #
+    # <note markdown="1"> For backwards compatibility with older versions of BraketSchemas,
+    # OpenQASM information is omitted from GetDevice API calls. To get this
+    # information the user-agent needs to present a recent version of the
+    # BraketSchemas (1.8.0 or later). The Braket SDK automatically reports
+    # this for you. If you do not see OpenQASM results in the GetDevice
+    # response when using a Braket SDK, you may need to set
+    # AWS\_EXECUTION\_ENV environment variable to configure user-agent. See
+    # the code examples provided below for how to do this for the AWS CLI,
+    # Boto3, and the Go, Java, and JavaScript/TypeScript SDKs.
+    #
+    #  </note>
     #
     # @option params [required, String] :device_arn
     #   The ARN of the device to retrieve.
@@ -459,7 +689,7 @@ module Aws::Braket
     #   resp.device_arn #=> String
     #   resp.device_capabilities #=> String
     #   resp.device_name #=> String
-    #   resp.device_status #=> String, one of "ONLINE", "OFFLINE"
+    #   resp.device_status #=> String, one of "ONLINE", "OFFLINE", "RETIRED"
     #   resp.device_type #=> String, one of "QPU", "SIMULATOR"
     #   resp.provider_name #=> String
     #
@@ -469,6 +699,85 @@ module Aws::Braket
     # @param [Hash] params ({})
     def get_device(params = {}, options = {})
       req = build_request(:get_device, params)
+      req.send_request(options)
+    end
+
+    # Retrieves the specified Amazon Braket job.
+    #
+    # @option params [required, String] :job_arn
+    #   The ARN of the job to retrieve.
+    #
+    # @return [Types::GetJobResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetJobResponse#algorithm_specification #algorithm_specification} => Types::AlgorithmSpecification
+    #   * {Types::GetJobResponse#billable_duration #billable_duration} => Integer
+    #   * {Types::GetJobResponse#checkpoint_config #checkpoint_config} => Types::JobCheckpointConfig
+    #   * {Types::GetJobResponse#created_at #created_at} => Time
+    #   * {Types::GetJobResponse#device_config #device_config} => Types::DeviceConfig
+    #   * {Types::GetJobResponse#ended_at #ended_at} => Time
+    #   * {Types::GetJobResponse#events #events} => Array&lt;Types::JobEventDetails&gt;
+    #   * {Types::GetJobResponse#failure_reason #failure_reason} => String
+    #   * {Types::GetJobResponse#hyper_parameters #hyper_parameters} => Hash&lt;String,String&gt;
+    #   * {Types::GetJobResponse#input_data_config #input_data_config} => Array&lt;Types::InputFileConfig&gt;
+    #   * {Types::GetJobResponse#instance_config #instance_config} => Types::InstanceConfig
+    #   * {Types::GetJobResponse#job_arn #job_arn} => String
+    #   * {Types::GetJobResponse#job_name #job_name} => String
+    #   * {Types::GetJobResponse#output_data_config #output_data_config} => Types::JobOutputDataConfig
+    #   * {Types::GetJobResponse#role_arn #role_arn} => String
+    #   * {Types::GetJobResponse#started_at #started_at} => Time
+    #   * {Types::GetJobResponse#status #status} => String
+    #   * {Types::GetJobResponse#stopping_condition #stopping_condition} => Types::JobStoppingCondition
+    #   * {Types::GetJobResponse#tags #tags} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_job({
+    #     job_arn: "JobArn", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.algorithm_specification.container_image.uri #=> String
+    #   resp.algorithm_specification.script_mode_config.compression_type #=> String, one of "NONE", "GZIP"
+    #   resp.algorithm_specification.script_mode_config.entry_point #=> String
+    #   resp.algorithm_specification.script_mode_config.s3_uri #=> String
+    #   resp.billable_duration #=> Integer
+    #   resp.checkpoint_config.local_path #=> String
+    #   resp.checkpoint_config.s3_uri #=> String
+    #   resp.created_at #=> Time
+    #   resp.device_config.device #=> String
+    #   resp.ended_at #=> Time
+    #   resp.events #=> Array
+    #   resp.events[0].event_type #=> String, one of "WAITING_FOR_PRIORITY", "QUEUED_FOR_EXECUTION", "STARTING_INSTANCE", "DOWNLOADING_DATA", "RUNNING", "DEPRIORITIZED_DUE_TO_INACTIVITY", "UPLOADING_RESULTS", "COMPLETED", "FAILED", "MAX_RUNTIME_EXCEEDED", "CANCELLED"
+    #   resp.events[0].message #=> String
+    #   resp.events[0].time_of_event #=> Time
+    #   resp.failure_reason #=> String
+    #   resp.hyper_parameters #=> Hash
+    #   resp.hyper_parameters["String256"] #=> String
+    #   resp.input_data_config #=> Array
+    #   resp.input_data_config[0].channel_name #=> String
+    #   resp.input_data_config[0].content_type #=> String
+    #   resp.input_data_config[0].data_source.s3_data_source.s3_uri #=> String
+    #   resp.instance_config.instance_count #=> Integer
+    #   resp.instance_config.instance_type #=> String, one of "ml.m4.xlarge", "ml.m4.2xlarge", "ml.m4.4xlarge", "ml.m4.10xlarge", "ml.m4.16xlarge", "ml.g4dn.xlarge", "ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g4dn.16xlarge", "ml.m5.large", "ml.m5.xlarge", "ml.m5.2xlarge", "ml.m5.4xlarge", "ml.m5.12xlarge", "ml.m5.24xlarge", "ml.c4.xlarge", "ml.c4.2xlarge", "ml.c4.4xlarge", "ml.c4.8xlarge", "ml.p2.xlarge", "ml.p2.8xlarge", "ml.p2.16xlarge", "ml.p3.2xlarge", "ml.p3.8xlarge", "ml.p3.16xlarge", "ml.p3dn.24xlarge", "ml.p4d.24xlarge", "ml.c5.xlarge", "ml.c5.2xlarge", "ml.c5.4xlarge", "ml.c5.9xlarge", "ml.c5.18xlarge", "ml.c5n.xlarge", "ml.c5n.2xlarge", "ml.c5n.4xlarge", "ml.c5n.9xlarge", "ml.c5n.18xlarge"
+    #   resp.instance_config.volume_size_in_gb #=> Integer
+    #   resp.job_arn #=> String
+    #   resp.job_name #=> String
+    #   resp.output_data_config.kms_key_id #=> String
+    #   resp.output_data_config.s3_path #=> String
+    #   resp.role_arn #=> String
+    #   resp.started_at #=> Time
+    #   resp.status #=> String, one of "QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELLING", "CANCELLED"
+    #   resp.stopping_condition.max_runtime_in_seconds #=> Integer
+    #   resp.tags #=> Hash
+    #   resp.tags["String"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/braket-2019-09-01/GetJob AWS API Documentation
+    #
+    # @overload get_job(params = {})
+    # @param [Hash] params ({})
+    def get_job(params = {}, options = {})
+      req = build_request(:get_job, params)
       req.send_request(options)
     end
 
@@ -484,6 +793,7 @@ module Aws::Braket
     #   * {Types::GetQuantumTaskResponse#device_parameters #device_parameters} => String
     #   * {Types::GetQuantumTaskResponse#ended_at #ended_at} => Time
     #   * {Types::GetQuantumTaskResponse#failure_reason #failure_reason} => String
+    #   * {Types::GetQuantumTaskResponse#job_arn #job_arn} => String
     #   * {Types::GetQuantumTaskResponse#output_s3_bucket #output_s3_bucket} => String
     #   * {Types::GetQuantumTaskResponse#output_s3_directory #output_s3_directory} => String
     #   * {Types::GetQuantumTaskResponse#quantum_task_arn #quantum_task_arn} => String
@@ -504,6 +814,7 @@ module Aws::Braket
     #   resp.device_parameters #=> String
     #   resp.ended_at #=> Time
     #   resp.failure_reason #=> String
+    #   resp.job_arn #=> String
     #   resp.output_s3_bucket #=> String
     #   resp.output_s3_directory #=> String
     #   resp.quantum_task_arn #=> String
@@ -588,7 +899,7 @@ module Aws::Braket
     #   resp.devices #=> Array
     #   resp.devices[0].device_arn #=> String
     #   resp.devices[0].device_name #=> String
-    #   resp.devices[0].device_status #=> String, one of "ONLINE", "OFFLINE"
+    #   resp.devices[0].device_status #=> String, one of "ONLINE", "OFFLINE", "RETIRED"
     #   resp.devices[0].device_type #=> String, one of "QPU", "SIMULATOR"
     #   resp.devices[0].provider_name #=> String
     #   resp.next_token #=> String
@@ -599,6 +910,64 @@ module Aws::Braket
     # @param [Hash] params ({})
     def search_devices(params = {}, options = {})
       req = build_request(:search_devices, params)
+      req.send_request(options)
+    end
+
+    # Searches for Amazon Braket jobs that match the specified filter
+    # values.
+    #
+    # @option params [required, Array<Types::SearchJobsFilter>] :filters
+    #   The filter values to use when searching for a job.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return in the response.
+    #
+    # @option params [String] :next_token
+    #   A token used for pagination of results returned in the response. Use
+    #   the token returned from the previous request to continue results where
+    #   the previous request ended.
+    #
+    # @return [Types::SearchJobsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::SearchJobsResponse#jobs #jobs} => Array&lt;Types::JobSummary&gt;
+    #   * {Types::SearchJobsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.search_jobs({
+    #     filters: [ # required
+    #       {
+    #         name: "String64", # required
+    #         operator: "LT", # required, accepts LT, LTE, EQUAL, GT, GTE, BETWEEN, CONTAINS
+    #         values: ["String256"], # required
+    #       },
+    #     ],
+    #     max_results: 1,
+    #     next_token: "String",
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.jobs #=> Array
+    #   resp.jobs[0].created_at #=> Time
+    #   resp.jobs[0].device #=> String
+    #   resp.jobs[0].ended_at #=> Time
+    #   resp.jobs[0].job_arn #=> String
+    #   resp.jobs[0].job_name #=> String
+    #   resp.jobs[0].started_at #=> Time
+    #   resp.jobs[0].status #=> String, one of "QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELLING", "CANCELLED"
+    #   resp.jobs[0].tags #=> Hash
+    #   resp.jobs[0].tags["String"] #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/braket-2019-09-01/SearchJobs AWS API Documentation
+    #
+    # @overload search_jobs(params = {})
+    # @param [Hash] params ({})
+    def search_jobs(params = {}, options = {})
+      req = build_request(:search_jobs, params)
       req.send_request(options)
     end
 
@@ -696,7 +1065,7 @@ module Aws::Braket
     #   tags.
     #
     # @option params [required, Array<String>] :tag_keys
-    #   pecify the keys for the tags to remove from the resource.
+    #   Specify the keys for the tags to remove from the resource.
     #
     # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
     #
@@ -729,7 +1098,7 @@ module Aws::Braket
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-braket'
-      context[:gem_version] = '1.7.0'
+      context[:gem_version] = '1.25.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

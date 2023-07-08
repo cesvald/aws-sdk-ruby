@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:wafregional)
@@ -73,8 +77,13 @@ module Aws::WAFRegional
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
+    add_plugin(Aws::WAFRegional::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::WAFRegional
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::WAFRegional
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::WAFRegional
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::WAFRegional
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -285,9 +314,34 @@ module Aws::WAFRegional
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::WAFRegional::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::WAFRegional::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -296,7 +350,7 @@ module Aws::WAFRegional
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -311,6 +365,9 @@ module Aws::WAFRegional
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -662,7 +719,7 @@ module Aws::WAFRegional
     # If you add more than one predicate to a `RateBasedRule`, a request not
     # only must exceed the `RateLimit`, but it also must match all the
     # conditions to be counted or blocked. For example, suppose you add the
-    # following to a `RateBasedRule`\:
+    # following to a `RateBasedRule`:
     #
     # * An `IPSet` that matches the IP address `192.0.2.44/32`
     #
@@ -682,7 +739,7 @@ module Aws::WAFRegional
     #
     # As a second example, suppose you want to limit requests to a
     # particular page on your site. To do this, you could add the following
-    # to a `RateBasedRule`\:
+    # to a `RateBasedRule`:
     #
     # * A `ByteMatchSet` with `FieldToMatch` of `URI`
     #
@@ -968,7 +1025,7 @@ module Aws::WAFRegional
     # objects, and other predicates that identify the requests that you want
     # to block. If you add more than one predicate to a `Rule`, a request
     # must match all of the specifications to be allowed or blocked. For
-    # example, suppose that you add the following to a `Rule`\:
+    # example, suppose that you add the following to a `Rule`:
     #
     # * An `IPSet` that matches the IP address `192.0.2.44/32`
     #
@@ -2836,14 +2893,14 @@ module Aws::WAFRegional
     # Returns the status of a `ChangeToken` that you got by calling
     # GetChangeToken. `ChangeTokenStatus` is one of the following values:
     #
-    # * `PROVISIONED`\: You requested the change token by calling
+    # * `PROVISIONED`: You requested the change token by calling
     #   `GetChangeToken`, but you haven't used it yet in a call to create,
     #   update, or delete an AWS WAF object.
     #
-    # * `PENDING`\: AWS WAF is propagating the create, update, or delete
+    # * `PENDING`: AWS WAF is propagating the create, update, or delete
     #   request to all AWS WAF servers.
     #
-    # * `INSYNC`\: Propagation is complete.
+    # * `INSYNC`: Propagation is complete.
     #
     #
     #
@@ -5726,7 +5783,7 @@ module Aws::WAFRegional
     # If you add more than one predicate to a `RateBasedRule`, a request
     # must match all the predicates and exceed the `RateLimit` to be counted
     # or blocked. For example, suppose you add the following to a
-    # `RateBasedRule`\:
+    # `RateBasedRule`:
     #
     # * An `IPSet` that matches the IP address `192.0.2.44/32`
     #
@@ -5744,7 +5801,7 @@ module Aws::WAFRegional
     #
     # As a second example, suppose you want to limit requests to a
     # particular page on your site. To do this, you could add the following
-    # to a `RateBasedRule`\:
+    # to a `RateBasedRule`:
     #
     # * A `ByteMatchSet` with `FieldToMatch` of `URI`
     #
@@ -6027,7 +6084,7 @@ module Aws::WAFRegional
     # that specifies the web requests that you want to allow, block, or
     # count. If you add more than one predicate to a `Rule`, a request must
     # match all of the specifications to be allowed, blocked, or counted.
-    # For example, suppose that you add the following to a `Rule`\:
+    # For example, suppose that you add the following to a `Rule`:
     #
     # * A `ByteMatchSet` that matches the value `BadBot` in the `User-Agent`
     #   header
@@ -6413,15 +6470,15 @@ module Aws::WAFRegional
     # SqlInjectionMatchSet. For each `SqlInjectionMatchTuple` object, you
     # specify the following values:
     #
-    # * `Action`\: Whether to insert the object into or delete the object
+    # * `Action`: Whether to insert the object into or delete the object
     #   from the array. To change a `SqlInjectionMatchTuple`, you delete the
     #   existing object and add a new one.
     #
-    # * `FieldToMatch`\: The part of web requests that you want AWS WAF to
+    # * `FieldToMatch`: The part of web requests that you want AWS WAF to
     #   inspect and, if you want AWS WAF to inspect a header or custom query
     #   parameter, the name of the header or parameter.
     #
-    # * `TextTransformation`\: Which text transformation, if any, to perform
+    # * `TextTransformation`: Which text transformation, if any, to perform
     #   on the web request before inspecting the request for snippets of
     #   malicious SQL code.
     #
@@ -6737,15 +6794,15 @@ module Aws::WAFRegional
     # Inserts or deletes XssMatchTuple objects (filters) in an XssMatchSet.
     # For each `XssMatchTuple` object, you specify the following values:
     #
-    # * `Action`\: Whether to insert the object into or delete the object
+    # * `Action`: Whether to insert the object into or delete the object
     #   from the array. To change an `XssMatchTuple`, you delete the
     #   existing object and add a new one.
     #
-    # * `FieldToMatch`\: The part of web requests that you want AWS WAF to
+    # * `FieldToMatch`: The part of web requests that you want AWS WAF to
     #   inspect and, if you want AWS WAF to inspect a header or custom query
     #   parameter, the name of the header or parameter.
     #
-    # * `TextTransformation`\: Which text transformation, if any, to perform
+    # * `TextTransformation`: Which text transformation, if any, to perform
     #   on the web request before inspecting the request for cross-site
     #   scripting attacks.
     #
@@ -6873,7 +6930,7 @@ module Aws::WAFRegional
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-wafregional'
-      context[:gem_version] = '1.39.0'
+      context[:gem_version] = '1.54.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

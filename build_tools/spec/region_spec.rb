@@ -18,7 +18,7 @@ def whitelist
     's3' => {
       'location_constraint.rb' => 14,
       'bucket.rb' => 155,
-      'presigned_post.rb' => 623,
+      'presigned_post.rb' => 642,
       'iad_regional_endpoint.rb' => 'SKIP_FILE'
     }
   }
@@ -30,6 +30,9 @@ describe 'ensure no hard-coded region' do
 
     Dir.glob("#{dir}**/*").sort.each do |path|
       next if File.directory? path
+
+      # skip EndpointProviders as they have special cased region logic
+      next if File.basename(path) == "endpoint_provider.rb"
 
       file = File.open(path, 'r', encoding: 'UTF-8', &:read)
       lines = file.lines.to_a

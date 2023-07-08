@@ -1,6 +1,163 @@
 Unreleased Changes
 ------------------
 
+1.91.0 (2023-07-06)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.90.0 (2023-06-29)
+------------------
+
+* Feature - This release adds ReturnValuesOnConditionCheckFailure parameter to PutItem, UpdateItem, DeleteItem, ExecuteStatement, BatchExecuteStatement and ExecuteTransaction APIs. When set to ALL_OLD,  API returns a copy of the item as it was when a conditional write failed
+
+1.89.0 (2023-06-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.88.0 (2023-06-21)
+------------------
+
+* Feature - Documentation updates for DynamoDB
+
+1.87.0 (2023-06-15)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.86.0 (2023-06-12)
+------------------
+
+* Feature - Documentation updates for DynamoDB
+
+1.85.0 (2023-05-31)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.84.0 (2023-04-17)
+------------------
+
+* Feature - Documentation updates for DynamoDB API
+
+1.83.0 (2023-03-08)
+------------------
+
+* Feature - Adds deletion protection support to DynamoDB tables. Tables with deletion protection enabled cannot be deleted. Deletion protection is disabled by default, can be enabled via the CreateTable or UpdateTable APIs, and is visible in TableDescription. This setting is not replicated for Global Tables.
+
+1.82.0 (2023-03-03)
+------------------
+
+* Feature - Documentation updates for DynamoDB.
+
+1.81.0 (2023-01-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+* Issue - Replace runtime endpoint resolution approach with generated ruby code.
+
+1.80.0 (2022-12-06)
+------------------
+
+* Feature - Endpoint Ruleset update: Use http instead of https for the "local" region.
+
+1.79.0 (2022-11-18)
+------------------
+
+* Feature - Updated minor fixes for DynamoDB documentation.
+
+1.78.0 (2022-10-25)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.77.0 (2022-09-15)
+------------------
+
+* Feature - Increased DynamoDB transaction limit from 25 to 100.
+
+1.76.0 (2022-08-18)
+------------------
+
+* Feature - This release adds support for importing data from S3 into a new DynamoDB table
+
+1.75.0 (2022-06-17)
+------------------
+
+* Feature - Doc only update for DynamoDB service
+
+1.74.0 (2022-02-24)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.73.0 (2022-02-21)
+------------------
+
+* Feature - DynamoDB ExecuteStatement API now supports Limit as a request parameter to specify the maximum number of items to evaluate. If specified, the service will process up to the Limit and the results will include a LastEvaluatedKey value to continue the read in a subsequent operation.
+
+1.72.0 (2022-02-03)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.71.0 (2022-02-02)
+------------------
+
+* Feature - Documentation update for DynamoDB Java SDK.
+
+1.70.0 (2021-12-21)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.69.0 (2021-12-01)
+------------------
+
+* Feature - Add support for Table Classes and introduce the Standard Infrequent Access table class.
+
+1.68.0 (2021-11-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.67.0 (2021-11-23)
+------------------
+
+* Feature - DynamoDB PartiQL now supports ReturnConsumedCapacity, which returns capacity units consumed by PartiQL APIs if the request specified returnConsumedCapacity parameter. PartiQL APIs include ExecuteStatement, BatchExecuteStatement, and ExecuteTransaction.
+
+1.66.0 (2021-11-11)
+------------------
+
+* Feature - Updated Help section for "dynamodb update-contributor-insights" API
+
+1.65.0 (2021-11-04)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.64.0 (2021-10-18)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.63.0 (2021-09-01)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.62.0 (2021-07-30)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
+1.61.0 (2021-07-28)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
 1.60.0 (2021-03-10)
 ------------------
 

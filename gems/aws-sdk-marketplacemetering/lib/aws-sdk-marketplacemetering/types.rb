@@ -10,38 +10,12 @@
 module Aws::MarketplaceMetering
   module Types
 
-    # A BatchMeterUsageRequest contains UsageRecords, which indicate
+    # A `BatchMeterUsageRequest` contains `UsageRecords`, which indicate
     # quantities of usage within your application.
     #
-    # @note When making an API call, you may pass BatchMeterUsageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         usage_records: [ # required
-    #           {
-    #             timestamp: Time.now, # required
-    #             customer_identifier: "CustomerIdentifier", # required
-    #             dimension: "UsageDimension", # required
-    #             quantity: 1,
-    #             usage_allocations: [
-    #               {
-    #                 allocated_usage_quantity: 1, # required
-    #                 tags: [
-    #                   {
-    #                     key: "TagKey", # required
-    #                     value: "TagValue", # required
-    #                   },
-    #                 ],
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #         product_code: "ProductCode", # required
-    #       }
-    #
     # @!attribute [rw] usage_records
-    #   The set of UsageRecords to submit. BatchMeterUsage accepts up to 25
-    #   UsageRecords at a time.
+    #   The set of `UsageRecords` to submit. `BatchMeterUsage` accepts up to
+    #   25 `UsageRecords` at a time.
     #   @return [Array<Types::UsageRecord>]
     #
     # @!attribute [rw] product_code
@@ -59,20 +33,21 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # Contains the UsageRecords processed by BatchMeterUsage and any records
-    # that have failed due to transient error.
+    # Contains the `UsageRecords` processed by `BatchMeterUsage` and any
+    # records that have failed due to transient error.
     #
     # @!attribute [rw] results
-    #   Contains all UsageRecords processed by BatchMeterUsage. These
+    #   Contains all `UsageRecords` processed by `BatchMeterUsage`. These
     #   records were either honored by AWS Marketplace Metering Service or
-    #   were invalid.
+    #   were invalid. Invalid records should be fixed before being
+    #   resubmitted.
     #   @return [Array<Types::UsageRecordResult>]
     #
     # @!attribute [rw] unprocessed_records
-    #   Contains all UsageRecords that were not processed by
-    #   BatchMeterUsage. This is a list of UsageRecords. You can retry the
-    #   failed request by making another BatchMeterUsage call with this list
-    #   as input in the BatchMeterUsageRequest.
+    #   Contains all `UsageRecords` that were not processed by
+    #   `BatchMeterUsage`. This is a list of `UsageRecords`. You can retry
+    #   the failed request by making another `BatchMeterUsage` call with
+    #   this list as input in the `BatchMeterUsageRequest`.
     #   @return [Array<Types::UsageRecord>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/BatchMeterUsageResult AWS API Documentation
@@ -112,8 +87,8 @@ module Aws::MarketplaceMetering
     end
 
     # A metering record has already been emitted by the same EC2 instance,
-    # ECS task, or EKS pod for the given \\\{usageDimension, timestamp\\}
-    # with a different usageQuantity.
+    # ECS task, or EKS pod for the given \\\{`usageDimension`,
+    # `timestamp`\\} with a different `usageQuantity`.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -158,7 +133,7 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # You have metered usage for a CustomerIdentifier that does not exist.
+    # You have metered usage for a `CustomerIdentifier` that does not exist.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -213,9 +188,9 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # RegisterUsage must be called in the same AWS Region the ECS task was
+    # `RegisterUsage` must be called in the same AWS Region the ECS task was
     # launched in. This prevents a container from hardcoding a Region (e.g.
-    # withRegion(“us-east-1”) when calling RegisterUsage.
+    # withRegion(“us-east-1”) when calling `RegisterUsage`.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -268,7 +243,7 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # The usage dimension does not match one of the UsageDimensions
+    # The usage dimension does not match one of the `UsageDimensions`
     # associated with products.
     #
     # @!attribute [rw] message
@@ -282,28 +257,6 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass MeterUsageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         product_code: "ProductCode", # required
-    #         timestamp: Time.now, # required
-    #         usage_dimension: "UsageDimension", # required
-    #         usage_quantity: 1,
-    #         dry_run: false,
-    #         usage_allocations: [
-    #           {
-    #             allocated_usage_quantity: 1, # required
-    #             tags: [
-    #               {
-    #                 key: "TagKey", # required
-    #                 value: "TagValue", # required
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #       }
-    #
     # @!attribute [rw] product_code
     #   Product code is used to uniquely identify a product in AWS
     #   Marketplace. The product code should be the same as the one used
@@ -313,7 +266,7 @@ module Aws::MarketplaceMetering
     # @!attribute [rw] timestamp
     #   Timestamp, in UTC, for which the usage is being reported. Your
     #   application can meter usage for up to one hour in the past. Make
-    #   sure the timestamp value is not before the start of the software
+    #   sure the `timestamp` value is not before the start of the software
     #   usage.
     #   @return [Time]
     #
@@ -329,16 +282,16 @@ module Aws::MarketplaceMetering
     # @!attribute [rw] dry_run
     #   Checks whether you have the permissions required for the action, but
     #   does not make the request. If you have the permissions, the request
-    #   returns DryRunOperation; otherwise, it returns
-    #   UnauthorizedException. Defaults to `false` if not specified.
+    #   returns `DryRunOperation`; otherwise, it returns
+    #   `UnauthorizedException`. Defaults to `false` if not specified.
     #   @return [Boolean]
     #
     # @!attribute [rw] usage_allocations
-    #   The set of UsageAllocations to submit.
+    #   The set of `UsageAllocations` to submit.
     #
-    #   The sum of all UsageAllocation quantities must equal the
-    #   UsageQuantity of the MeterUsage request, and each UsageAllocation
-    #   must have a unique set of tags (include no tags).
+    #   The sum of all `UsageAllocation` quantities must equal the
+    #   `UsageQuantity` of the `MeterUsage` request, and each
+    #   `UsageAllocation` must have a unique set of tags (include no tags).
     #   @return [Array<Types::UsageAllocation>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/MeterUsageRequest AWS API Documentation
@@ -381,15 +334,6 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass RegisterUsageRequest
-    #   data as a hash:
-    #
-    #       {
-    #         product_code: "ProductCode", # required
-    #         public_key_version: 1, # required
-    #         nonce: "Nonce",
-    #       }
-    #
     # @!attribute [rw] product_code
     #   Product code is used to uniquely identify a product in AWS
     #   Marketplace. The product code should be the same as the one used
@@ -432,20 +376,13 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # Contains input to the ResolveCustomer operation.
-    #
-    # @note When making an API call, you may pass ResolveCustomerRequest
-    #   data as a hash:
-    #
-    #       {
-    #         registration_token: "NonEmptyString", # required
-    #       }
+    # Contains input to the `ResolveCustomer` operation.
     #
     # @!attribute [rw] registration_token
     #   When a buyer visits your website during the registration process,
     #   the buyer submits a registration token through the browser. The
-    #   registration token is resolved to obtain a CustomerIdentifier and
-    #   product code.
+    #   registration token is resolved to obtain a `CustomerIdentifier`
+    #   along with the `CustomerAWSAccountId` and `ProductCode`.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/ResolveCustomerRequest AWS API Documentation
@@ -456,50 +393,49 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # The result of the ResolveCustomer operation. Contains the
-    # CustomerIdentifier and product code.
+    # The result of the `ResolveCustomer` operation. Contains the
+    # `CustomerIdentifier` along with the `CustomerAWSAccountId` and
+    # `ProductCode`.
     #
     # @!attribute [rw] customer_identifier
-    #   The CustomerIdentifier is used to identify an individual customer in
-    #   your application. Calls to BatchMeterUsage require
-    #   CustomerIdentifiers for each UsageRecord.
+    #   The `CustomerIdentifier` is used to identify an individual customer
+    #   in your application. Calls to `BatchMeterUsage` require
+    #   `CustomerIdentifiers` for each `UsageRecord`.
     #   @return [String]
     #
     # @!attribute [rw] product_code
     #   The product code is returned to confirm that the buyer is
-    #   registering for your product. Subsequent BatchMeterUsage calls
+    #   registering for your product. Subsequent `BatchMeterUsage` calls
     #   should be made using this product code.
+    #   @return [String]
+    #
+    # @!attribute [rw] customer_aws_account_id
+    #   The `CustomerAWSAccountId` provides the AWS account ID associated
+    #   with the `CustomerIdentifier` for the individual customer.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/ResolveCustomerResult AWS API Documentation
     #
     class ResolveCustomerResult < Struct.new(
       :customer_identifier,
-      :product_code)
+      :product_code,
+      :customer_aws_account_id)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # Metadata assigned to an allocation. Each tag is made up of a key and a
-    # value.
-    #
-    # @note When making an API call, you may pass Tag
-    #   data as a hash:
-    #
-    #       {
-    #         key: "TagKey", # required
-    #         value: "TagValue", # required
-    #       }
+    # Metadata assigned to an allocation. Each tag is made up of a `key` and
+    # a `value`.
     #
     # @!attribute [rw] key
-    #   One part of a key-value pair that makes up a tag. A key is a label
-    #   that acts like a category for the specific tag values.
+    #   One part of a key-value pair that makes up a `tag`. A `key` is a
+    #   label that acts like a category for the specific tag values.
     #   @return [String]
     #
     # @!attribute [rw] value
-    #   One part of a key-value pair that makes up a tag. A value acts as a
-    #   descriptor within a tag category (key). The value can be empty or
-    #   null.
+    #   One part of a key-value pair that makes up a `tag`. A `value` acts
+    #   as a descriptor within a tag category (key). The value can be empty
+    #   or null.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/Tag AWS API Documentation
@@ -524,8 +460,12 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # The timestamp value passed in the meterUsage() is out of allowed
+    # The `timestamp` value passed in the `UsageRecord` is out of allowed
     # range.
+    #
+    # For `BatchMeterUsage`, if any of the records are outside of the
+    # allowed range, the entire batch is not processed. You must remove
+    # invalid records and try again.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -540,21 +480,8 @@ module Aws::MarketplaceMetering
 
     # Usage allocations allow you to split usage into buckets by tags.
     #
-    # Each UsageAllocation indicates the usage quantity for a specific set
+    # Each `UsageAllocation` indicates the usage quantity for a specific set
     # of tags.
-    #
-    # @note When making an API call, you may pass UsageAllocation
-    #   data as a hash:
-    #
-    #       {
-    #         allocated_usage_quantity: 1, # required
-    #         tags: [
-    #           {
-    #             key: "TagKey", # required
-    #             value: "TagValue", # required
-    #           },
-    #         ],
-    #       }
     #
     # @!attribute [rw] allocated_usage_quantity
     #   The total quantity allocated to this bucket of usage.
@@ -574,50 +501,29 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # A UsageRecord indicates a quantity of usage for a given product,
+    # A `UsageRecord` indicates a quantity of usage for a given product,
     # customer, dimension and time.
     #
-    # Multiple requests with the same UsageRecords as input will be
-    # deduplicated to prevent double charges.
-    #
-    # @note When making an API call, you may pass UsageRecord
-    #   data as a hash:
-    #
-    #       {
-    #         timestamp: Time.now, # required
-    #         customer_identifier: "CustomerIdentifier", # required
-    #         dimension: "UsageDimension", # required
-    #         quantity: 1,
-    #         usage_allocations: [
-    #           {
-    #             allocated_usage_quantity: 1, # required
-    #             tags: [
-    #               {
-    #                 key: "TagKey", # required
-    #                 value: "TagValue", # required
-    #               },
-    #             ],
-    #           },
-    #         ],
-    #       }
+    # Multiple requests with the same `UsageRecords` as input will be
+    # de-duplicated to prevent double charges.
     #
     # @!attribute [rw] timestamp
     #   Timestamp, in UTC, for which the usage is being reported.
     #
     #   Your application can meter usage for up to one hour in the past.
-    #   Make sure the timestamp value is not before the start of the
+    #   Make sure the `timestamp` value is not before the start of the
     #   software usage.
     #   @return [Time]
     #
     # @!attribute [rw] customer_identifier
-    #   The CustomerIdentifier is obtained through the ResolveCustomer
+    #   The `CustomerIdentifier` is obtained through the `ResolveCustomer`
     #   operation and represents an individual buyer in your application.
     #   @return [String]
     #
     # @!attribute [rw] dimension
-    #   During the process of registering a product on AWS Marketplace, up
-    #   to eight dimensions are specified. These represent different units
-    #   of value in your application.
+    #   During the process of registering a product on AWS Marketplace,
+    #   dimensions are specified. These represent different units of value
+    #   in your application.
     #   @return [String]
     #
     # @!attribute [rw] quantity
@@ -626,9 +532,9 @@ module Aws::MarketplaceMetering
     #   @return [Integer]
     #
     # @!attribute [rw] usage_allocations
-    #   The set of UsageAllocations to submit. The sum of all
-    #   UsageAllocation quantities must equal the Quantity of the
-    #   UsageRecord.
+    #   The set of `UsageAllocations` to submit. The sum of all
+    #   `UsageAllocation` quantities must equal the Quantity of the
+    #   `UsageRecord`.
     #   @return [Array<Types::UsageAllocation>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/UsageRecord AWS API Documentation
@@ -643,31 +549,40 @@ module Aws::MarketplaceMetering
       include Aws::Structure
     end
 
-    # A UsageRecordResult indicates the status of a given UsageRecord
-    # processed by BatchMeterUsage.
+    # A `UsageRecordResult` indicates the status of a given `UsageRecord`
+    # processed by `BatchMeterUsage`.
     #
     # @!attribute [rw] usage_record
-    #   The UsageRecord that was part of the BatchMeterUsage request.
+    #   The `UsageRecord` that was part of the `BatchMeterUsage` request.
     #   @return [Types::UsageRecord]
     #
     # @!attribute [rw] metering_record_id
-    #   The MeteringRecordId is a unique identifier for this metering event.
+    #   The `MeteringRecordId` is a unique identifier for this metering
+    #   event.
     #   @return [String]
     #
     # @!attribute [rw] status
-    #   The UsageRecordResult Status indicates the status of an individual
-    #   UsageRecord processed by BatchMeterUsage.
+    #   The `UsageRecordResult` `Status` indicates the status of an
+    #   individual `UsageRecord` processed by `BatchMeterUsage`.
     #
-    #   * *Success*- The UsageRecord was accepted and honored by
-    #     BatchMeterUsage.
+    #   * *Success*- The `UsageRecord` was accepted and honored by
+    #     `BatchMeterUsage`.
     #
-    #   * *CustomerNotSubscribed*- The CustomerIdentifier specified is not
-    #     subscribed to your product. The UsageRecord was not honored.
-    #     Future UsageRecords for this customer will fail until the customer
-    #     subscribes to your product.
+    #   * *CustomerNotSubscribed*- The `CustomerIdentifier` specified is not
+    #     able to use your product. The `UsageRecord` was not honored. There
+    #     are three causes for this result:
     #
-    #   * *DuplicateRecord*- Indicates that the UsageRecord was invalid and
-    #     not honored. A previously metered UsageRecord had the same
+    #     * The customer identifier is invalid.
+    #
+    #     * The customer identifier provided in the metering record does not
+    #       have an active agreement or subscription with this product.
+    #       Future `UsageRecords` for this customer will fail until the
+    #       customer subscribes to your product.
+    #
+    #     * The customer's AWS account was suspended.
+    #
+    #   * *DuplicateRecord*- Indicates that the `UsageRecord` was invalid
+    #     and not honored. A previously metered `UsageRecord` had the same
     #     customer, dimension, and time, but a different quantity.
     #   @return [String]
     #

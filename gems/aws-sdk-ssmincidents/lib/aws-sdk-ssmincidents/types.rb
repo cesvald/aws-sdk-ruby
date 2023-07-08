@@ -10,7 +10,7 @@
 module Aws::SSMIncidents
   module Types
 
-    # You don't have sufficient access to perform this action.
+    # You don't have sufficient access to perform this operation.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -26,20 +26,9 @@ module Aws::SSMIncidents
     # The action that starts at the beginning of an incident. The response
     # plan defines the action.
     #
-    # @note When making an API call, you may pass Action
-    #   data as a hash:
+    # @note Action is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         ssm_automation: {
-    #           document_name: "SsmAutomationDocumentNameString", # required
-    #           document_version: "SsmAutomationDocumentVersionString",
-    #           parameters: {
-    #             "SsmParametersKeyString" => ["SsmParameterValuesMemberString"],
-    #           },
-    #           role_arn: "RoleArn", # required
-    #           target_account: "RESPONSE_PLAN_OWNER_ACCOUNT", # accepts RESPONSE_PLAN_OWNER_ACCOUNT, IMPACTED_ACCOUNT
-    #         },
-    #       }
+    # @note Action is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of Action corresponding to the set member.
     #
     # @!attribute [rw] ssm_automation
     #   The Systems Manager automation document to start as the runbook at
@@ -49,23 +38,21 @@ module Aws::SSMIncidents
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/Action AWS API Documentation
     #
     class Action < Struct.new(
-      :ssm_automation)
+      :ssm_automation,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class SsmAutomation < Action; end
+      class Unknown < Action; end
     end
 
-    # Defines the Region and KMS key to add to the replication set.
-    #
-    # @note When making an API call, you may pass AddRegionAction
-    #   data as a hash:
-    #
-    #       {
-    #         region_name: "RegionName", # required
-    #         sse_kms_key_id: "SseKmsKey",
-    #       }
+    # Defines the Amazon Web Services Region and KMS key to add to the
+    # replication set.
     #
     # @!attribute [rw] region_name
-    #   The Region name to add to the replication set.
+    #   The Amazon Web Services Region name to add to the replication set.
     #   @return [String]
     #
     # @!attribute [rw] sse_kms_key_id
@@ -83,13 +70,7 @@ module Aws::SSMIncidents
 
     # Use the AttributeValueList to filter by string or integer values.
     #
-    # @note When making an API call, you may pass AttributeValueList
-    #   data as a hash:
-    #
-    #       {
-    #         integer_values: [1],
-    #         string_values: ["StringListMemberString"],
-    #       }
+    # @note AttributeValueList is a union - when making an API calls you must set exactly one of the members.
     #
     # @!attribute [rw] integer_values
     #   The list of integer values that the filter matches.
@@ -103,13 +84,21 @@ module Aws::SSMIncidents
     #
     class AttributeValueList < Struct.new(
       :integer_values,
-      :string_values)
+      :string_values,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class IntegerValues < AttributeValueList; end
+      class StringValues < AttributeValueList; end
+      class Unknown < AttributeValueList; end
     end
 
     # The Systems Manager automation document process to start as the
     # runbook at the beginning of the incident.
+    #
+    # @note AutomationExecution is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of AutomationExecution corresponding to the set member.
     #
     # @!attribute [rw] ssm_execution_arn
     #   The Amazon Resource Name (ARN) of the automation process.
@@ -118,27 +107,26 @@ module Aws::SSMIncidents
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/AutomationExecution AWS API Documentation
     #
     class AutomationExecution < Struct.new(
-      :ssm_execution_arn)
+      :ssm_execution_arn,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class SsmExecutionArn < AutomationExecution; end
+      class Unknown < AutomationExecution; end
     end
 
-    # The AWS Chatbot chat channel used for collaboration during an
-    # incident.
+    # The Chatbot chat channel used for collaboration during an incident.
     #
-    # @note When making an API call, you may pass ChatChannel
-    #   data as a hash:
+    # @note ChatChannel is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         chatbot_sns: ["SnsArn"],
-    #         empty: {
-    #         },
-    #       }
+    # @note ChatChannel is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of ChatChannel corresponding to the set member.
     #
     # @!attribute [rw] chatbot_sns
-    #   The SNS targets that AWS Chatbot uses to notify the chat channel of
-    #   updates to an incident. You can also make updates to the incident
-    #   through the chat channel by using the SNS topics.
+    #   The Amazon SNS targets that Chatbot uses to notify the chat channel
+    #   of updates to an incident. You can also make updates to the incident
+    #   through the chat channel by using the Amazon SNS topics.
     #   @return [Array<String>]
     #
     # @!attribute [rw] empty
@@ -150,9 +138,15 @@ module Aws::SSMIncidents
     #
     class ChatChannel < Struct.new(
       :chatbot_sns,
-      :empty)
+      :empty,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class ChatbotSns < ChatChannel; end
+      class Empty < ChatChannel; end
+      class Unknown < ChatChannel; end
     end
 
     # A conditional statement with which to compare a value, after a
@@ -161,17 +155,7 @@ module Aws::SSMIncidents
     # statement. If multiple values are specified for a conditional, the
     # values are `OR`d.
     #
-    # @note When making an API call, you may pass Condition
-    #   data as a hash:
-    #
-    #       {
-    #         after: Time.now,
-    #         before: Time.now,
-    #         equals: {
-    #           integer_values: [1],
-    #           string_values: ["StringListMemberString"],
-    #         },
-    #       }
+    # @note Condition is a union - when making an API calls you must set exactly one of the members.
     #
     # @!attribute [rw] after
     #   After the specified timestamp.
@@ -190,9 +174,16 @@ module Aws::SSMIncidents
     class Condition < Struct.new(
       :after,
       :before,
-      :equals)
+      :equals,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class After < Condition; end
+      class Before < Condition; end
+      class Equals < Condition; end
+      class Unknown < Condition; end
     end
 
     # Updating or deleting a resource causes an inconsistent state.
@@ -208,30 +199,24 @@ module Aws::SSMIncidents
     #   The resource type
     #   @return [String]
     #
+    # @!attribute [rw] retry_after
+    #   If present in the output, the operation can be retried after this
+    #   time
+    #   @return [Time]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/ConflictException AWS API Documentation
     #
     class ConflictException < Struct.new(
       :message,
       :resource_identifier,
-      :resource_type)
+      :resource_type,
+      :retry_after)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateReplicationSetInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "ClientToken",
-    #         regions: { # required
-    #           "RegionName" => {
-    #             sse_kms_key_id: "SseKmsKey",
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token that ensures that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -243,11 +228,16 @@ module Aws::SSMIncidents
     #   have up to three Regions in your replication set.
     #   @return [Hash<String,Types::RegionMapInputValue>]
     #
+    # @!attribute [rw] tags
+    #   A list of tags to add to the replication set.
+    #   @return [Hash<String,String>]
+    #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/CreateReplicationSetInput AWS API Documentation
     #
     class CreateReplicationSetInput < Struct.new(
       :client_token,
-      :regions)
+      :regions,
+      :tags)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -264,60 +254,17 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateResponsePlanInput
-    #   data as a hash:
-    #
-    #       {
-    #         actions: [
-    #           {
-    #             ssm_automation: {
-    #               document_name: "SsmAutomationDocumentNameString", # required
-    #               document_version: "SsmAutomationDocumentVersionString",
-    #               parameters: {
-    #                 "SsmParametersKeyString" => ["SsmParameterValuesMemberString"],
-    #               },
-    #               role_arn: "RoleArn", # required
-    #               target_account: "RESPONSE_PLAN_OWNER_ACCOUNT", # accepts RESPONSE_PLAN_OWNER_ACCOUNT, IMPACTED_ACCOUNT
-    #             },
-    #           },
-    #         ],
-    #         chat_channel: {
-    #           chatbot_sns: ["SnsArn"],
-    #           empty: {
-    #           },
-    #         },
-    #         client_token: "ClientToken",
-    #         display_name: "ResponsePlanDisplayName",
-    #         engagements: ["SsmContactsArn"],
-    #         incident_template: { # required
-    #           dedupe_string: "DedupeString",
-    #           impact: 1, # required
-    #           notification_targets: [
-    #             {
-    #               sns_topic_arn: "Arn",
-    #             },
-    #           ],
-    #           summary: "IncidentSummary",
-    #           title: "IncidentTitle", # required
-    #         },
-    #         name: "ResponsePlanName", # required
-    #         tags: {
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] actions
     #   The actions that the response plan starts at the beginning of an
     #   incident.
     #   @return [Array<Types::Action>]
     #
     # @!attribute [rw] chat_channel
-    #   The AWS Chatbot chat channel used for collaboration during an
-    #   incident.
+    #   The Chatbot chat channel used for collaboration during an incident.
     #   @return [Types::ChatChannel]
     #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -330,13 +277,18 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] engagements
-    #   The contacts and escalation plans that the response plan engages
-    #   during an incident.
+    #   The Amazon Resource Name (ARN) for the contacts and escalation plans
+    #   that the response plan engages during an incident.
     #   @return [Array<String>]
     #
     # @!attribute [rw] incident_template
     #   Details used to create an incident when using this response plan.
     #   @return [Types::IncidentTemplate]
+    #
+    # @!attribute [rw] integrations
+    #   Information about third-party services integrated into the response
+    #   plan.
+    #   @return [Array<Types::Integration>]
     #
     # @!attribute [rw] name
     #   The short format name of the response plan. Can't include spaces.
@@ -355,6 +307,7 @@ module Aws::SSMIncidents
       :display_name,
       :engagements,
       :incident_template,
+      :integrations,
       :name,
       :tags)
       SENSITIVE = []
@@ -373,20 +326,9 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass CreateTimelineEventInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "ClientToken", # required
-    #         event_data: "EventData", # required
-    #         event_time: Time.now, # required
-    #         event_type: "TimelineEventType", # required
-    #         incident_record_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
-    #   specified details.
+    #   A token that ensures that a client calls the action only once with
+    #   the specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
@@ -396,18 +338,29 @@ module Aws::SSMIncidents
     #   A short description of the event.
     #   @return [String]
     #
+    # @!attribute [rw] event_references
+    #   Adds one or more references to the `TimelineEvent`. A reference is
+    #   an Amazon Web Services resource involved or associated with the
+    #   incident. To specify a reference, enter its Amazon Resource Name
+    #   (ARN). You can also specify a related item associated with a
+    #   resource. For example, to specify an Amazon DynamoDB (DynamoDB)
+    #   table as a resource, use the table's ARN. You can also specify an
+    #   Amazon CloudWatch metric associated with the DynamoDB table as a
+    #   related item.
+    #   @return [Array<Types::EventReference>]
+    #
     # @!attribute [rw] event_time
     #   The time that the event occurred.
     #   @return [Time]
     #
     # @!attribute [rw] event_type
-    #   The type of the event. You can create timeline events of type
-    #   `Custom Event`.
+    #   The type of event. You can create timeline events of type `Custom
+    #   Event`.
     #   @return [String]
     #
     # @!attribute [rw] incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident record you are adding
-    #   the event to.
+    #   The Amazon Resource Name (ARN) of the incident record that the
+    #   action adds the incident to.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/CreateTimelineEventInput AWS API Documentation
@@ -415,6 +368,7 @@ module Aws::SSMIncidents
     class CreateTimelineEventInput < Struct.new(
       :client_token,
       :event_data,
+      :event_references,
       :event_time,
       :event_type,
       :incident_record_arn)
@@ -439,13 +393,6 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteIncidentRecordInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the incident record you are
     #   deleting.
@@ -463,18 +410,12 @@ module Aws::SSMIncidents
     #
     class DeleteIncidentRecordOutput < Aws::EmptyStructure; end
 
-    # Defines the information about the Region you're deleting from your
-    # replication set.
-    #
-    # @note When making an API call, you may pass DeleteRegionAction
-    #   data as a hash:
-    #
-    #       {
-    #         region_name: "RegionName", # required
-    #       }
+    # Defines the information about the Amazon Web Services Region you're
+    # deleting from your replication set.
     #
     # @!attribute [rw] region_name
-    #   The name of the Region you're deleting from the replication set.
+    #   The name of the Amazon Web Services Region you're deleting from the
+    #   replication set.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/DeleteRegionAction AWS API Documentation
@@ -485,13 +426,6 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass DeleteReplicationSetInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the replication set you're
     #   deleting.
@@ -509,14 +443,6 @@ module Aws::SSMIncidents
     #
     class DeleteReplicationSetOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteResourcePolicyInput
-    #   data as a hash:
-    #
-    #       {
-    #         policy_id: "PolicyId", # required
-    #         resource_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] policy_id
     #   The ID of the resource policy you're deleting.
     #   @return [String]
@@ -539,13 +465,6 @@ module Aws::SSMIncidents
     #
     class DeleteResourcePolicyOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteResponsePlanInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the response plan.
     #   @return [String]
@@ -562,22 +481,14 @@ module Aws::SSMIncidents
     #
     class DeleteResponsePlanOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass DeleteTimelineEventInput
-    #   data as a hash:
-    #
-    #       {
-    #         event_id: "UUID", # required
-    #         incident_record_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] event_id
-    #   The ID of the event you are updating. You can find this by using
-    #   `ListTimelineEvents`.
+    #   The ID of the event to update. You can use `ListTimelineEvents` to
+    #   find an event's ID.
     #   @return [String]
     #
     # @!attribute [rw] incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident that the event is
-    #   part of.
+    #   The Amazon Resource Name (ARN) of the incident that includes the
+    #   timeline event.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/DeleteTimelineEventInput AWS API Documentation
@@ -593,6 +504,30 @@ module Aws::SSMIncidents
     #
     class DeleteTimelineEventOutput < Aws::EmptyStructure; end
 
+    # The dynamic SSM parameter value.
+    #
+    # @note DynamicSsmParameterValue is a union - when making an API calls you must set exactly one of the members.
+    #
+    # @note DynamicSsmParameterValue is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of DynamicSsmParameterValue corresponding to the set member.
+    #
+    # @!attribute [rw] variable
+    #   Variable dynamic parameters. A parameter value is determined when an
+    #   incident is created.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/DynamicSsmParameterValue AWS API Documentation
+    #
+    class DynamicSsmParameterValue < Struct.new(
+      :variable,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class Variable < DynamicSsmParameterValue; end
+      class Unknown < DynamicSsmParameterValue; end
+    end
+
     # Used to remove the chat channel from an incident record or response
     # plan.
     #
@@ -602,11 +537,47 @@ module Aws::SSMIncidents
     #
     class EmptyChatChannel < Aws::EmptyStructure; end
 
+    # An item referenced in a `TimelineEvent` that is involved in or somehow
+    # associated with an incident. You can specify an Amazon Resource Name
+    # (ARN) for an Amazon Web Services resource or a `RelatedItem` ID.
+    #
+    # @note EventReference is a union - when making an API calls you must set exactly one of the members.
+    #
+    # @note EventReference is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of EventReference corresponding to the set member.
+    #
+    # @!attribute [rw] related_item_id
+    #   The ID of a `RelatedItem` referenced in a `TimelineEvent`.
+    #   @return [String]
+    #
+    # @!attribute [rw] resource
+    #   The Amazon Resource Name (ARN) of an Amazon Web Services resource
+    #   referenced in a `TimelineEvent`.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/EventReference AWS API Documentation
+    #
+    class EventReference < Struct.new(
+      :related_item_id,
+      :resource,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class RelatedItemId < EventReference; end
+      class Resource < EventReference; end
+      class Unknown < EventReference; end
+    end
+
     # Details about a timeline event during an incident.
     #
     # @!attribute [rw] event_id
     #   The timeline event ID.
     #   @return [String]
+    #
+    # @!attribute [rw] event_references
+    #   A list of references in a `TimelineEvent`.
+    #   @return [Array<Types::EventReference>]
     #
     # @!attribute [rw] event_time
     #   The time that the event occurred.
@@ -629,6 +600,7 @@ module Aws::SSMIncidents
     #
     class EventSummary < Struct.new(
       :event_id,
+      :event_references,
       :event_time,
       :event_type,
       :event_updated_time,
@@ -638,21 +610,6 @@ module Aws::SSMIncidents
     end
 
     # Filter the selection by using a condition.
-    #
-    # @note When making an API call, you may pass Filter
-    #   data as a hash:
-    #
-    #       {
-    #         condition: { # required
-    #           after: Time.now,
-    #           before: Time.now,
-    #           equals: {
-    #             integer_values: [1],
-    #             string_values: ["StringListMemberString"],
-    #           },
-    #         },
-    #         key: "FilterKeyString", # required
-    #       }
     #
     # @!attribute [rw] condition
     #   The condition accepts before or after a specified time, equal to a
@@ -672,13 +629,6 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetIncidentRecordInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the incident record.
     #   @return [String]
@@ -692,7 +642,7 @@ module Aws::SSMIncidents
     end
 
     # @!attribute [rw] incident_record
-    #   Details structure of the incident record.
+    #   Details the structure of the incident record.
     #   @return [Types::IncidentRecord]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/GetIncidentRecordOutput AWS API Documentation
@@ -703,13 +653,6 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetReplicationSetInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the replication set you want to
     #   retrieve.
@@ -735,17 +678,8 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetResourcePoliciesInput
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #         resource_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] max_results
-    #   The maximum number of resource policies to display per page of
+    #   The maximum number of resource policies to display for each page of
     #   results.
     #   @return [Integer]
     #
@@ -785,13 +719,6 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetResponsePlanInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the response plan.
     #   @return [String]
@@ -814,8 +741,7 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] chat_channel
-    #   The AWS Chatbot chat channel used for collaboration during an
-    #   incident.
+    #   The Chatbot chat channel used for collaboration during an incident.
     #   @return [Types::ChatChannel]
     #
     # @!attribute [rw] display_name
@@ -823,16 +749,22 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] engagements
-    #   The contacts and escalation plans that the response plan engages
-    #   during an incident.
+    #   The Amazon Resource Name (ARN) for the contacts and escalation plans
+    #   that the response plan engages during an incident.
     #   @return [Array<String>]
     #
     # @!attribute [rw] incident_template
     #   Details used to create the incident when using this response plan.
     #   @return [Types::IncidentTemplate]
     #
+    # @!attribute [rw] integrations
+    #   Information about third-party services integrated into the Incident
+    #   Manager response plan.
+    #   @return [Array<Types::Integration>]
+    #
     # @!attribute [rw] name
-    #   The short format name of the response plan. Can't contain spaces.
+    #   The short format name of the response plan. The name can't contain
+    #   spaces.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/GetResponsePlanOutput AWS API Documentation
@@ -844,27 +776,20 @@ module Aws::SSMIncidents
       :display_name,
       :engagements,
       :incident_template,
+      :integrations,
       :name)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass GetTimelineEventInput
-    #   data as a hash:
-    #
-    #       {
-    #         event_id: "UUID", # required
-    #         incident_record_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] event_id
-    #   The ID of the event. You can get an event's ID when you create it
+    #   The ID of the event. You can get an event's ID when you create it,
     #   or by using `ListTimelineEvents`.
     #   @return [String]
     #
     # @!attribute [rw] incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident that the timeline
-    #   event is part of.
+    #   The Amazon Resource Name (ARN) of the incident that includes the
+    #   timeline event.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/GetTimelineEventInput AWS API Documentation
@@ -909,7 +834,7 @@ module Aws::SSMIncidents
     #
     # @!attribute [rw] dedupe_string
     #   The string Incident Manager uses to prevent duplicate incidents from
-    #   being created by the same incident.
+    #   being created by the same incident in the same account.
     #   @return [String]
     #
     # @!attribute [rw] impact
@@ -929,8 +854,8 @@ module Aws::SSMIncidents
     #   @return [Time]
     #
     # @!attribute [rw] notification_targets
-    #   The SNS targets that AWS Chatbot uses to notify the chat channels
-    #   and perform actions on the incident record.
+    #   The Amazon SNS targets that are notified when updates are made to an
+    #   incident.
     #   @return [Array<Types::NotificationTargetItem>]
     #
     # @!attribute [rw] resolved_time
@@ -944,7 +869,7 @@ module Aws::SSMIncidents
     #
     # @!attribute [rw] summary
     #   The summary of the incident. The summary is a brief synopsis of what
-    #   occurred, what is currently happening, and context.
+    #   occurred, what's currently happening, and context of the incident.
     #   @return [String]
     #
     # @!attribute [rw] title
@@ -972,14 +897,17 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # Details about how the incident record was created and when.
+    # Details about what created the incident record and when it was
+    # created.
     #
     # @!attribute [rw] created_by
     #   The principal that started the incident.
     #   @return [String]
     #
     # @!attribute [rw] invoked_by
-    #   The principal the assumed the role specified of the `createdBy`.
+    #   The service principal that assumed the role specified in
+    #   `createdBy`. If no service principal assumed the role this will be
+    #   left blank.
     #   @return [String]
     #
     # @!attribute [rw] resource_arn
@@ -988,8 +916,8 @@ module Aws::SSMIncidents
     #
     # @!attribute [rw] source
     #   The service that started the incident. This can be manually created
-    #   from Incident Manager, automatically created using an AWS CloudWatch
-    #   alarm, or Amazon EventBridge event.
+    #   from Incident Manager, automatically created using an Amazon
+    #   CloudWatch alarm, or Amazon EventBridge event.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/IncidentRecordSource AWS API Documentation
@@ -1051,21 +979,6 @@ module Aws::SSMIncidents
     # Basic details used in creating a response plan. The response plan is
     # then used to create an incident record.
     #
-    # @note When making an API call, you may pass IncidentTemplate
-    #   data as a hash:
-    #
-    #       {
-    #         dedupe_string: "DedupeString",
-    #         impact: 1, # required
-    #         notification_targets: [
-    #           {
-    #             sns_topic_arn: "Arn",
-    #           },
-    #         ],
-    #         summary: "IncidentSummary",
-    #         title: "IncidentTitle", # required
-    #       }
-    #
     # @!attribute [rw] dedupe_string
     #   Used to stop Incident Manager from creating multiple incident
     #   records for the same incident.
@@ -1075,10 +988,15 @@ module Aws::SSMIncidents
     #   The impact of the incident on your customers and applications.
     #   @return [Integer]
     #
+    # @!attribute [rw] incident_tags
+    #   Tags to assign to the template. When the `StartIncident` API action
+    #   is called, Incident Manager assigns the tags specified in the
+    #   template to the incident.
+    #   @return [Hash<String,String>]
+    #
     # @!attribute [rw] notification_targets
-    #   The SNS targets that AWS Chatbot uses to notify the chat channel of
-    #   updates to an incident. You can also make updates to the incident
-    #   through the chat channel using the SNS topics.
+    #   The Amazon SNS targets that are notified when updates are made to an
+    #   incident.
     #   @return [Array<Types::NotificationTargetItem>]
     #
     # @!attribute [rw] summary
@@ -1095,11 +1013,37 @@ module Aws::SSMIncidents
     class IncidentTemplate < Struct.new(
       :dedupe_string,
       :impact,
+      :incident_tags,
       :notification_targets,
       :summary,
       :title)
       SENSITIVE = []
       include Aws::Structure
+    end
+
+    # Information about third-party services integrated into a response
+    # plan.
+    #
+    # @note Integration is a union - when making an API calls you must set exactly one of the members.
+    #
+    # @note Integration is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of Integration corresponding to the set member.
+    #
+    # @!attribute [rw] pager_duty_configuration
+    #   Information about the PagerDuty service where the response plan
+    #   creates an incident.
+    #   @return [Types::PagerDutyConfiguration]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/Integration AWS API Documentation
+    #
+    class Integration < Struct.new(
+      :pager_duty_configuration,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class PagerDutyConfiguration < Integration; end
+      class Unknown < Integration; end
     end
 
     # The request processing has failed because of an unknown error,
@@ -1118,33 +1062,8 @@ module Aws::SSMIncidents
 
     # Details and type of a related item.
     #
-    # @note When making an API call, you may pass ItemIdentifier
-    #   data as a hash:
-    #
-    #       {
-    #         type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
-    #         value: { # required
-    #           arn: "Arn",
-    #           metric_definition: "MetricDefinition",
-    #           url: "Url",
-    #         },
-    #       }
-    #
     # @!attribute [rw] type
-    #   The type of related item. Incident Manager supports the following
-    #   types:
-    #
-    #   * `ANALYSIS`
-    #
-    #   * `INCIDENT`
-    #
-    #   * `METRIC`
-    #
-    #   * `PARENT`
-    #
-    #   * `ATTACHMENT`
-    #
-    #   * `OTHER`
+    #   The type of related item.
     #   @return [String]
     #
     # @!attribute [rw] value
@@ -1162,14 +1081,9 @@ module Aws::SSMIncidents
 
     # Describes a related item.
     #
-    # @note When making an API call, you may pass ItemValue
-    #   data as a hash:
+    # @note ItemValue is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         arn: "Arn",
-    #         metric_definition: "MetricDefinition",
-    #         url: "Url",
-    #       }
+    # @note ItemValue is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of ItemValue corresponding to the set member.
     #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the related item, if the related
@@ -1177,12 +1091,17 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] metric_definition
-    #   The metric definition, if the related item is a metric in
+    #   The metric definition, if the related item is a metric in Amazon
     #   CloudWatch.
     #   @return [String]
     #
+    # @!attribute [rw] pager_duty_incident_detail
+    #   Details about an incident that is associated with a PagerDuty
+    #   incident.
+    #   @return [Types::PagerDutyIncidentDetail]
+    #
     # @!attribute [rw] url
-    #   The URL, if the related item is a non-AWS resource.
+    #   The URL, if the related item is a non-Amazon Web Services resource.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/ItemValue AWS API Documentation
@@ -1190,34 +1109,22 @@ module Aws::SSMIncidents
     class ItemValue < Struct.new(
       :arn,
       :metric_definition,
-      :url)
+      :pager_duty_incident_detail,
+      :url,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class Arn < ItemValue; end
+      class MetricDefinition < ItemValue; end
+      class PagerDutyIncidentDetail < ItemValue; end
+      class Url < ItemValue; end
+      class Unknown < ItemValue; end
     end
 
-    # @note When making an API call, you may pass ListIncidentRecordsInput
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [
-    #           {
-    #             condition: { # required
-    #               after: Time.now,
-    #               before: Time.now,
-    #               equals: {
-    #                 integer_values: [1],
-    #                 string_values: ["StringListMemberString"],
-    #               },
-    #             },
-    #             key: "FilterKeyString", # required
-    #           },
-    #         ],
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] filters
-    #   Filter the list of incident records you are searching through. You
+    #   Filters the list of incident records you want to search through. You
     #   can filter on the following keys:
     #
     #   * `creationTime`
@@ -1227,6 +1134,17 @@ module Aws::SSMIncidents
     #   * `status`
     #
     #   * `createdBy`
+    #
+    #   Note the following when when you use Filters:
+    #
+    #   * If you don't specify a Filter, the response includes all incident
+    #     records.
+    #
+    #   * If you specify more than one filter in a single request, the
+    #     response returns incident records that match all filters.
+    #
+    #   * If you specify a filter with more than one value, the response
+    #     returns incident records that match any of the values provided.
     #   @return [Array<Types::Filter>]
     #
     # @!attribute [rw] max_results
@@ -1264,18 +1182,9 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListRelatedItemsInput
-    #   data as a hash:
-    #
-    #       {
-    #         incident_record_arn: "Arn", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident record that you are
-    #   listing related items for.
+    #   The Amazon Resource Name (ARN) of the incident record containing the
+    #   listed related items.
     #   @return [String]
     #
     # @!attribute [rw] max_results
@@ -1313,14 +1222,6 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListReplicationSetsInput
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   The maximum number of results per page.
     #   @return [Integer]
@@ -1355,14 +1256,6 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListResponsePlansInput
-    #   data as a hash:
-    #
-    #       {
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #       }
-    #
     # @!attribute [rw] max_results
     #   The maximum number of response plans per page.
     #   @return [Integer]
@@ -1397,13 +1290,6 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTagsForResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "String", # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the response plan.
     #   @return [String]
@@ -1428,42 +1314,29 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass ListTimelineEventsInput
-    #   data as a hash:
-    #
-    #       {
-    #         filters: [
-    #           {
-    #             condition: { # required
-    #               after: Time.now,
-    #               before: Time.now,
-    #               equals: {
-    #                 integer_values: [1],
-    #                 string_values: ["StringListMemberString"],
-    #               },
-    #             },
-    #             key: "FilterKeyString", # required
-    #           },
-    #         ],
-    #         incident_record_arn: "Arn", # required
-    #         max_results: 1,
-    #         next_token: "NextToken",
-    #         sort_by: "EVENT_TIME", # accepts EVENT_TIME
-    #         sort_order: "ASCENDING", # accepts ASCENDING, DESCENDING
-    #       }
-    #
     # @!attribute [rw] filters
     #   Filters the timeline events based on the provided conditional
-    #   values. You can filter timeline events using the following keys:
+    #   values. You can filter timeline events with the following keys:
     #
     #   * `eventTime`
     #
     #   * `eventType`
+    #
+    #   Note the following when deciding how to use Filters:
+    #
+    #   * If you don't specify a Filter, the response includes all timeline
+    #     events.
+    #
+    #   * If you specify more than one filter in a single request, the
+    #     response returns timeline events that match all filters.
+    #
+    #   * If you specify a filter with more than one value, the response
+    #     returns timeline events that match any of the values provided.
     #   @return [Array<Types::Filter>]
     #
     # @!attribute [rw] incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident that the event is
-    #   part of.
+    #   The Amazon Resource Name (ARN) of the incident that includes the
+    #   timeline event.
     #   @return [String]
     #
     # @!attribute [rw] max_results
@@ -1475,7 +1348,7 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] sort_by
-    #   Sort by the specified key value pair.
+    #   Sort timeline events by the specified key value pair.
     #   @return [String]
     #
     # @!attribute [rw] sort_order
@@ -1513,15 +1386,12 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # The SNS topic that's used by AWS Chatbot to notify the incidents chat
-    # channel.
+    # The SNS targets that are notified when updates are made to an
+    # incident.
     #
-    # @note When making an API call, you may pass NotificationTargetItem
-    #   data as a hash:
+    # @note NotificationTargetItem is a union - when making an API calls you must set exactly one of the members.
     #
-    #       {
-    #         sns_topic_arn: "Arn",
-    #       }
+    # @note NotificationTargetItem is a union - when returned from an API call exactly one value will be set and the returned type will be a subclass of NotificationTargetItem corresponding to the set member.
     #
     # @!attribute [rw] sns_topic_arn
     #   The Amazon Resource Name (ARN) of the SNS topic.
@@ -1530,26 +1400,95 @@ module Aws::SSMIncidents
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/NotificationTargetItem AWS API Documentation
     #
     class NotificationTargetItem < Struct.new(
-      :sns_topic_arn)
+      :sns_topic_arn,
+      :unknown)
+      SENSITIVE = []
+      include Aws::Structure
+      include Aws::Structure::Union
+
+      class SnsTopicArn < NotificationTargetItem; end
+      class Unknown < NotificationTargetItem; end
+    end
+
+    # Details about the PagerDuty configuration for a response plan.
+    #
+    # @!attribute [rw] name
+    #   The name of the PagerDuty configuration.
+    #   @return [String]
+    #
+    # @!attribute [rw] pager_duty_incident_configuration
+    #   Details about the PagerDuty service associated with the
+    #   configuration.
+    #   @return [Types::PagerDutyIncidentConfiguration]
+    #
+    # @!attribute [rw] secret_id
+    #   The ID of the Amazon Web Services Secrets Manager secret that stores
+    #   your PagerDuty key, either a General Access REST API Key or User
+    #   Token REST API Key, and other user credentials.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/PagerDutyConfiguration AWS API Documentation
+    #
+    class PagerDutyConfiguration < Struct.new(
+      :name,
+      :pager_duty_incident_configuration,
+      :secret_id)
       SENSITIVE = []
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass PutResourcePolicyInput
-    #   data as a hash:
+    # Details about the PagerDuty service where the response plan creates an
+    # incident.
     #
-    #       {
-    #         policy: "Policy", # required
-    #         resource_arn: "Arn", # required
-    #       }
+    # @!attribute [rw] service_id
+    #   The ID of the PagerDuty service that the response plan associates
+    #   with an incident when it launches.
+    #   @return [String]
     #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/PagerDutyIncidentConfiguration AWS API Documentation
+    #
+    class PagerDutyIncidentConfiguration < Struct.new(
+      :service_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
+    # Details about the PagerDuty incident associated with an incident
+    # created by an Incident Manager response plan.
+    #
+    # @!attribute [rw] auto_resolve
+    #   Indicates whether to resolve the PagerDuty incident when you resolve
+    #   the associated Incident Manager incident.
+    #   @return [Boolean]
+    #
+    # @!attribute [rw] id
+    #   The ID of the incident associated with the PagerDuty service for the
+    #   response plan.
+    #   @return [String]
+    #
+    # @!attribute [rw] secret_id
+    #   The ID of the Amazon Web Services Secrets Manager secret that stores
+    #   your PagerDuty key, either a General Access REST API Key or User
+    #   Token REST API Key, and other user credentials.
+    #   @return [String]
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/PagerDutyIncidentDetail AWS API Documentation
+    #
+    class PagerDutyIncidentDetail < Struct.new(
+      :auto_resolve,
+      :id,
+      :secret_id)
+      SENSITIVE = []
+      include Aws::Structure
+    end
+
     # @!attribute [rw] policy
     #   Details of the resource policy.
     #   @return [String]
     #
     # @!attribute [rw] resource_arn
-    #   The Amazon Resource Name (ARN) of the response plan you're adding
-    #   the resource policy to.
+    #   The Amazon Resource Name (ARN) of the response plan to add the
+    #   resource policy to.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/PutResourcePolicyInput AWS API Documentation
@@ -1573,22 +1512,26 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # Information about a Region in your replication set.
+    # Information about a Amazon Web Services Region in your replication
+    # set.
     #
     # @!attribute [rw] sse_kms_key_id
-    #   The ID of the KMS key used to encrypt the data in this Region.
+    #   The ID of the KMS key used to encrypt the data in this Amazon Web
+    #   Services Region.
     #   @return [String]
     #
     # @!attribute [rw] status
-    #   The status of the Region in the replication set.
+    #   The status of the Amazon Web Services Region in the replication set.
     #   @return [String]
     #
     # @!attribute [rw] status_message
-    #   Information displayed about the status of the Region.
+    #   Information displayed about the status of the Amazon Web Services
+    #   Region.
     #   @return [String]
     #
     # @!attribute [rw] status_update_date_time
-    #   The most recent date and time that the Region's status was updated.
+    #   The most recent date and time that Incident Manager updated the
+    #   Amazon Web Services Region's status.
     #   @return [Time]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/RegionInfo AWS API Documentation
@@ -1602,15 +1545,8 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # The mapping between a Region and the key that's used to encrypt the
-    # data.
-    #
-    # @note When making an API call, you may pass RegionMapInputValue
-    #   data as a hash:
-    #
-    #       {
-    #         sse_kms_key_id: "SseKmsKey",
-    #       }
+    # The mapping between a Amazon Web Services Region and the key that's
+    # used to encrypt the data.
     #
     # @!attribute [rw] sse_kms_key_id
     #   The KMS key used to encrypt the data in your replication set.
@@ -1626,20 +1562,12 @@ module Aws::SSMIncidents
 
     # Resources that responders use to triage and mitigate the incident.
     #
-    # @note When making an API call, you may pass RelatedItem
-    #   data as a hash:
+    # @!attribute [rw] generated_id
+    #   A unique ID for a `RelatedItem`.
     #
-    #       {
-    #         identifier: { # required
-    #           type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
-    #           value: { # required
-    #             arn: "Arn",
-    #             metric_definition: "MetricDefinition",
-    #             url: "Url",
-    #           },
-    #         },
-    #         title: "RelatedItemTitleString",
-    #       }
+    #   Don't specify this parameter when you add a `RelatedItem` by using
+    #   the UpdateRelatedItems API action.
+    #   @return [String]
     #
     # @!attribute [rw] identifier
     #   Details about the related item.
@@ -1652,6 +1580,7 @@ module Aws::SSMIncidents
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/RelatedItem AWS API Documentation
     #
     class RelatedItem < Struct.new(
+      :generated_id,
       :identifier,
       :title)
       SENSITIVE = []
@@ -1660,30 +1589,7 @@ module Aws::SSMIncidents
 
     # Details about the related item you're adding.
     #
-    # @note When making an API call, you may pass RelatedItemsUpdate
-    #   data as a hash:
-    #
-    #       {
-    #         item_to_add: {
-    #           identifier: { # required
-    #             type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
-    #             value: { # required
-    #               arn: "Arn",
-    #               metric_definition: "MetricDefinition",
-    #               url: "Url",
-    #             },
-    #           },
-    #           title: "RelatedItemTitleString",
-    #         },
-    #         item_to_remove: {
-    #           type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
-    #           value: { # required
-    #             arn: "Arn",
-    #             metric_definition: "MetricDefinition",
-    #             url: "Url",
-    #           },
-    #         },
-    #       }
+    # @note RelatedItemsUpdate is a union - when making an API calls you must set exactly one of the members.
     #
     # @!attribute [rw] item_to_add
     #   Details about the related item you're adding.
@@ -1697,13 +1603,23 @@ module Aws::SSMIncidents
     #
     class RelatedItemsUpdate < Struct.new(
       :item_to_add,
-      :item_to_remove)
+      :item_to_remove,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class ItemToAdd < RelatedItemsUpdate; end
+      class ItemToRemove < RelatedItemsUpdate; end
+      class Unknown < RelatedItemsUpdate; end
     end
 
-    # The set of Regions that your Incident Manager data will be replicated
-    # to and the KMS key used to encrypt the data.
+    # The set of Amazon Web Services Region that your Incident Manager data
+    # will be replicated to and the KMS key used to encrypt the data.
+    #
+    # @!attribute [rw] arn
+    #   The Amazon Resource Name (ARN) of the replication set.
+    #   @return [String]
     #
     # @!attribute [rw] created_by
     #   Details about who created the replication set.
@@ -1716,7 +1632,7 @@ module Aws::SSMIncidents
     # @!attribute [rw] deletion_protected
     #   Determines if the replication set deletion protection is enabled or
     #   not. If deletion protection is enabled, you can't delete the last
-    #   Region in the replication set.
+    #   Amazon Web Services Region in the replication set.
     #   @return [Boolean]
     #
     # @!attribute [rw] last_modified_by
@@ -1728,8 +1644,8 @@ module Aws::SSMIncidents
     #   @return [Time]
     #
     # @!attribute [rw] region_map
-    #   The map between each Region in your replication set and the KMS key
-    #   that is used to encrypt the data in that Region.
+    #   The map between each Amazon Web Services Region in your replication
+    #   set and the KMS key that's used to encrypt the data in that Region.
     #   @return [Hash<String,Types::RegionInfo>]
     #
     # @!attribute [rw] status
@@ -1740,6 +1656,7 @@ module Aws::SSMIncidents
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/ReplicationSet AWS API Documentation
     #
     class ReplicationSet < Struct.new(
+      :arn,
       :created_by,
       :created_time,
       :deletion_protected,
@@ -1751,7 +1668,7 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # Request references a resource which does not exist.
+    # Request references a resource which doesn't exist.
     #
     # @!attribute [rw] message
     #   @return [String]
@@ -1786,7 +1703,8 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] ram_resource_share_region
-    #   The Region that policy allows resources to be used in.
+    #   The Amazon Web Services Region that policy allows resources to be
+    #   used in.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/ResourcePolicy AWS API Documentation
@@ -1860,19 +1778,6 @@ module Aws::SSMIncidents
     # Details about the Systems Manager automation document that will be
     # used as a runbook during an incident.
     #
-    # @note When making an API call, you may pass SsmAutomation
-    #   data as a hash:
-    #
-    #       {
-    #         document_name: "SsmAutomationDocumentNameString", # required
-    #         document_version: "SsmAutomationDocumentVersionString",
-    #         parameters: {
-    #           "SsmParametersKeyString" => ["SsmParameterValuesMemberString"],
-    #         },
-    #         role_arn: "RoleArn", # required
-    #         target_account: "RESPONSE_PLAN_OWNER_ACCOUNT", # accepts RESPONSE_PLAN_OWNER_ACCOUNT, IMPACTED_ACCOUNT
-    #       }
-    #
     # @!attribute [rw] document_name
     #   The automation document's name.
     #   @return [String]
@@ -1880,6 +1785,11 @@ module Aws::SSMIncidents
     # @!attribute [rw] document_version
     #   The automation document's version to use when running.
     #   @return [String]
+    #
+    # @!attribute [rw] dynamic_parameters
+    #   The key-value pair to resolve dynamic parameter values when
+    #   processing a Systems Manager Automation runbook.
+    #   @return [Hash<String,Types::DynamicSsmParameterValue>]
     #
     # @!attribute [rw] parameters
     #   The key-value pair parameters to use when running the automation
@@ -1901,6 +1811,7 @@ module Aws::SSMIncidents
     class SsmAutomation < Struct.new(
       :document_name,
       :document_version,
+      :dynamic_parameters,
       :parameters,
       :role_arn,
       :target_account)
@@ -1908,37 +1819,8 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass StartIncidentInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "ClientToken",
-    #         impact: 1,
-    #         related_items: [
-    #           {
-    #             identifier: { # required
-    #               type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
-    #               value: { # required
-    #                 arn: "Arn",
-    #                 metric_definition: "MetricDefinition",
-    #                 url: "Url",
-    #               },
-    #             },
-    #             title: "RelatedItemTitleString",
-    #           },
-    #         ],
-    #         response_plan_arn: "Arn", # required
-    #         title: "IncidentTitle",
-    #         trigger_details: {
-    #           raw_data: "RawData",
-    #           source: "IncidentSource", # required
-    #           timestamp: Time.now, # required
-    #           trigger_arn: "Arn",
-    #         },
-    #       }
-    #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -1969,14 +1851,14 @@ module Aws::SSMIncidents
     #
     # @!attribute [rw] related_items
     #   Add related items to the incident for other responders to use.
-    #   Related items are AWS resources, external links, or files uploaded
-    #   to an S3 bucket.
+    #   Related items are Amazon Web Services resources, external links, or
+    #   files uploaded to an Amazon S3 bucket.
     #   @return [Array<Types::RelatedItem>]
     #
     # @!attribute [rw] response_plan_arn
     #   The Amazon Resource Name (ARN) of the response plan that pre-defines
-    #   summary, chat channels, SNS topics, runbooks, title, and impact of
-    #   the incident.
+    #   summary, chat channels, Amazon SNS topics, runbooks, title, and
+    #   impact of the incident.
     #   @return [String]
     #
     # @!attribute [rw] title
@@ -2013,23 +1895,13 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass TagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "String", # required
-    #         tags: { # required
-    #           "TagKey" => "TagValue",
-    #         },
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the response plan you're adding
     #   the tags to.
     #   @return [String]
     #
     # @!attribute [rw] tags
-    #   A list of tags that you are adding to the response plan.
+    #   A list of tags to add to the response plan.
     #   @return [Hash<String,String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/TagResourceRequest AWS API Documentation
@@ -2078,6 +1950,10 @@ module Aws::SSMIncidents
     #   The ID of the timeline event.
     #   @return [String]
     #
+    # @!attribute [rw] event_references
+    #   A list of references in a `TimelineEvent`.
+    #   @return [Array<Types::EventReference>]
+    #
     # @!attribute [rw] event_time
     #   The time that the event occurred.
     #   @return [Time]
@@ -2101,6 +1977,7 @@ module Aws::SSMIncidents
     class TimelineEvent < Struct.new(
       :event_data,
       :event_id,
+      :event_references,
       :event_time,
       :event_type,
       :event_updated_time,
@@ -2112,27 +1989,17 @@ module Aws::SSMIncidents
     # Details about what caused the incident to be created in Incident
     # Manager.
     #
-    # @note When making an API call, you may pass TriggerDetails
-    #   data as a hash:
-    #
-    #       {
-    #         raw_data: "RawData",
-    #         source: "IncidentSource", # required
-    #         timestamp: Time.now, # required
-    #         trigger_arn: "Arn",
-    #       }
-    #
     # @!attribute [rw] raw_data
-    #   Raw data passed from either EventBridge, CloudWatch, or Incident
-    #   Manager when an incident is created.
+    #   Raw data passed from either Amazon EventBridge, Amazon CloudWatch,
+    #   or Incident Manager when an incident is created.
     #   @return [String]
     #
     # @!attribute [rw] source
     #   Identifies the service that sourced the event. All events sourced
-    #   from within AWS begin with "aws." Customer-generated events can
-    #   have any value here, as long as it doesn't begin with "aws." We
-    #   recommend the use of Java package-name style reverse domain-name
-    #   strings.
+    #   from within Amazon Web Services begin with "`aws.`"
+    #   Customer-generated events can have any value here, as long as it
+    #   doesn't begin with "`aws.`" We recommend the use of Java
+    #   package-name style reverse domain-name strings.
     #   @return [String]
     #
     # @!attribute [rw] timestamp
@@ -2140,7 +2007,8 @@ module Aws::SSMIncidents
     #   @return [Time]
     #
     # @!attribute [rw] trigger_arn
-    #   The ARN of the source that detected the incident.
+    #   The Amazon Resource Name (ARN) of the source that detected the
+    #   incident.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/TriggerDetails AWS API Documentation
@@ -2154,21 +2022,13 @@ module Aws::SSMIncidents
       include Aws::Structure
     end
 
-    # @note When making an API call, you may pass UntagResourceRequest
-    #   data as a hash:
-    #
-    #       {
-    #         resource_arn: "String", # required
-    #         tag_keys: ["TagKey"], # required
-    #       }
-    #
     # @!attribute [rw] resource_arn
     #   The Amazon Resource Name (ARN) of the response plan you're removing
     #   a tag from.
     #   @return [String]
     #
     # @!attribute [rw] tag_keys
-    #   The name of the tag you're removing from the response plan.
+    #   The name of the tag to remove from the response plan.
     #   @return [Array<String>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/UntagResourceRequest AWS API Documentation
@@ -2184,22 +2044,12 @@ module Aws::SSMIncidents
     #
     class UntagResourceResponse < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateDeletionProtectionInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "Arn", # required
-    #         client_token: "ClientToken",
-    #         deletion_protected: false, # required
-    #       }
-    #
     # @!attribute [rw] arn
-    #   The Amazon Resource Name (ARN) of the replication set you're
-    #   updating.
+    #   The Amazon Resource Name (ARN) of the replication set to update.
     #   @return [String]
     #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token that ensures that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -2207,7 +2057,7 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] deletion_protected
-    #   Details if deletion protection is enabled or disabled in your
+    #   Specifies if deletion protection is turned on or off in your
     #   account.
     #   @return [Boolean]
     #
@@ -2225,53 +2075,32 @@ module Aws::SSMIncidents
     #
     class UpdateDeletionProtectionOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateIncidentRecordInput
-    #   data as a hash:
-    #
-    #       {
-    #         arn: "Arn", # required
-    #         chat_channel: {
-    #           chatbot_sns: ["SnsArn"],
-    #           empty: {
-    #           },
-    #         },
-    #         client_token: "ClientToken",
-    #         impact: 1,
-    #         notification_targets: [
-    #           {
-    #             sns_topic_arn: "Arn",
-    #           },
-    #         ],
-    #         status: "OPEN", # accepts OPEN, RESOLVED
-    #         summary: "IncidentSummary",
-    #         title: "IncidentTitle",
-    #       }
-    #
     # @!attribute [rw] arn
     #   The Amazon Resource Name (ARN) of the incident record you are
     #   updating.
     #   @return [String]
     #
     # @!attribute [rw] chat_channel
-    #   The AWS Chatbot chat channel for responders to collaborate in.
+    #   The Chatbot chat channel where responders can collaborate.
     #   @return [Types::ChatChannel]
     #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
-    #   specified details.
+    #   A token that ensures that a client calls the operation only once
+    #   with the specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
     #   @return [String]
     #
     # @!attribute [rw] impact
-    #   Defines the impact to customers and applications. Providing an
-    #   impact overwrites the impact provided by the response plan.
+    #   Defines the impact of the incident to customers and applications. If
+    #   you provide an impact for an incident, it overwrites the impact
+    #   provided by the response plan.
     #
     #   **Possible impacts:**
     #
-    #   * `1` - Critical impact, this typically relates to full application
-    #     failure that impacts many to all customers.
+    #   * `1` - Critical impact, full application failure that impacts many
+    #     to all customers.
     #
     #   * `2` - High impact, partial application failure with impact to many
     #     customers.
@@ -2279,32 +2108,31 @@ module Aws::SSMIncidents
     #   * `3` - Medium impact, the application is providing reduced service
     #     to customers.
     #
-    #   * `4` - Low impact, customer might aren't impacted by the problem
-    #     yet.
+    #   * `4` - Low impact, customer aren't impacted by the problem yet.
     #
     #   * `5` - No impact, customers aren't currently impacted but urgent
     #     action is needed to avoid impact.
     #   @return [Integer]
     #
     # @!attribute [rw] notification_targets
-    #   The SNS targets that AWS Chatbot uses to notify the chat channel of
-    #   updates to an incident. You can also make updates to the incident
-    #   through the chat channel using the SNS topics.
+    #   The Amazon SNS targets that Incident Manager notifies when a client
+    #   updates an incident.
     #
-    #   Using multiple SNS topics creates redundancy in the case that a
+    #   Using multiple SNS topics creates redundancy in the event that a
     #   Region is down during the incident.
     #   @return [Array<Types::NotificationTargetItem>]
     #
     # @!attribute [rw] status
-    #   The status of the incident. An incident can be `Open` or `Resolved`.
+    #   The status of the incident. Possible statuses are `Open` or
+    #   `Resolved`.
     #   @return [String]
     #
     # @!attribute [rw] summary
-    #   The summary describes what has happened during the incident.
+    #   A longer description of what occurred during the incident.
     #   @return [String]
     #
     # @!attribute [rw] title
-    #   The title of the incident is a brief and easily recognizable.
+    #   A brief description of the incident.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/UpdateIncidentRecordInput AWS API Documentation
@@ -2326,50 +2154,22 @@ module Aws::SSMIncidents
     #
     class UpdateIncidentRecordOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateRelatedItemsInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "ClientToken",
-    #         incident_record_arn: "Arn", # required
-    #         related_items_update: { # required
-    #           item_to_add: {
-    #             identifier: { # required
-    #               type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
-    #               value: { # required
-    #                 arn: "Arn",
-    #                 metric_definition: "MetricDefinition",
-    #                 url: "Url",
-    #               },
-    #             },
-    #             title: "RelatedItemTitleString",
-    #           },
-    #           item_to_remove: {
-    #             type: "ANALYSIS", # required, accepts ANALYSIS, INCIDENT, METRIC, PARENT, ATTACHMENT, OTHER
-    #             value: { # required
-    #               arn: "Arn",
-    #               metric_definition: "MetricDefinition",
-    #               url: "Url",
-    #             },
-    #           },
-    #         },
-    #       }
-    #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
-    #   specified details.
+    #   A token that ensures that a client calls the operation only once
+    #   with the specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
     #   @return [String]
     #
     # @!attribute [rw] incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident record you are
-    #   updating related items in.
+    #   The Amazon Resource Name (ARN) of the incident record that contains
+    #   the related items that you update.
     #   @return [String]
     #
     # @!attribute [rw] related_items_update
-    #   Details about the item you are adding or deleting.
+    #   Details about the item that you are add to, or delete from, an
+    #   incident.
     #   @return [Types::RelatedItemsUpdate]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/UpdateRelatedItemsInput AWS API Documentation
@@ -2388,56 +2188,33 @@ module Aws::SSMIncidents
 
     # Details used when updating the replication set.
     #
-    # @note When making an API call, you may pass UpdateReplicationSetAction
-    #   data as a hash:
-    #
-    #       {
-    #         add_region_action: {
-    #           region_name: "RegionName", # required
-    #           sse_kms_key_id: "SseKmsKey",
-    #         },
-    #         delete_region_action: {
-    #           region_name: "RegionName", # required
-    #         },
-    #       }
+    # @note UpdateReplicationSetAction is a union - when making an API calls you must set exactly one of the members.
     #
     # @!attribute [rw] add_region_action
-    #   Details about the Region that you're adding to the replication set.
+    #   Details about the Amazon Web Services Region that you're adding to
+    #   the replication set.
     #   @return [Types::AddRegionAction]
     #
     # @!attribute [rw] delete_region_action
-    #   Details about the Region that you're deleting to the replication
-    #   set.
+    #   Details about the Amazon Web Services Region that you're deleting
+    #   to the replication set.
     #   @return [Types::DeleteRegionAction]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/UpdateReplicationSetAction AWS API Documentation
     #
     class UpdateReplicationSetAction < Struct.new(
       :add_region_action,
-      :delete_region_action)
+      :delete_region_action,
+      :unknown)
       SENSITIVE = []
       include Aws::Structure
+      include Aws::Structure::Union
+
+      class AddRegionAction < UpdateReplicationSetAction; end
+      class DeleteRegionAction < UpdateReplicationSetAction; end
+      class Unknown < UpdateReplicationSetAction; end
     end
 
-    # @note When making an API call, you may pass UpdateReplicationSetInput
-    #   data as a hash:
-    #
-    #       {
-    #         actions: [ # required
-    #           {
-    #             add_region_action: {
-    #               region_name: "RegionName", # required
-    #               sse_kms_key_id: "SseKmsKey",
-    #             },
-    #             delete_region_action: {
-    #               region_name: "RegionName", # required
-    #             },
-    #           },
-    #         ],
-    #         arn: "Arn", # required
-    #         client_token: "ClientToken",
-    #       }
-    #
     # @!attribute [rw] actions
     #   An action to add or delete a Region.
     #   @return [Array<Types::UpdateReplicationSetAction>]
@@ -2448,7 +2225,7 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token that ensures that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -2469,43 +2246,6 @@ module Aws::SSMIncidents
     #
     class UpdateReplicationSetOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateResponsePlanInput
-    #   data as a hash:
-    #
-    #       {
-    #         actions: [
-    #           {
-    #             ssm_automation: {
-    #               document_name: "SsmAutomationDocumentNameString", # required
-    #               document_version: "SsmAutomationDocumentVersionString",
-    #               parameters: {
-    #                 "SsmParametersKeyString" => ["SsmParameterValuesMemberString"],
-    #               },
-    #               role_arn: "RoleArn", # required
-    #               target_account: "RESPONSE_PLAN_OWNER_ACCOUNT", # accepts RESPONSE_PLAN_OWNER_ACCOUNT, IMPACTED_ACCOUNT
-    #             },
-    #           },
-    #         ],
-    #         arn: "Arn", # required
-    #         chat_channel: {
-    #           chatbot_sns: ["SnsArn"],
-    #           empty: {
-    #           },
-    #         },
-    #         client_token: "ClientToken",
-    #         display_name: "ResponsePlanDisplayName",
-    #         engagements: ["SsmContactsArn"],
-    #         incident_template_dedupe_string: "DedupeString",
-    #         incident_template_impact: 1,
-    #         incident_template_notification_targets: [
-    #           {
-    #             sns_topic_arn: "Arn",
-    #           },
-    #         ],
-    #         incident_template_summary: "IncidentSummary",
-    #         incident_template_title: "IncidentTitle",
-    #       }
-    #
     # @!attribute [rw] actions
     #   The actions that this response plan takes at the beginning of an
     #   incident.
@@ -2516,12 +2256,14 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] chat_channel
-    #   The AWS Chatbot chat channel used for collaboration during an
-    #   incident.
+    #   The Chatbot chat channel used for collaboration during an incident.
+    #
+    #   Use the empty structure to remove the chat channel from the response
+    #   plan.
     #   @return [Types::ChatChannel]
     #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
+    #   A token ensuring that the operation is called only once with the
     #   specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
@@ -2529,16 +2271,18 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] display_name
-    #   The long format name of the response plan. Can't contain spaces.
+    #   The long format name of the response plan. The display name can't
+    #   contain spaces.
     #   @return [String]
     #
     # @!attribute [rw] engagements
-    #   The contacts and escalation plans that Incident Manager engages at
-    #   the start of the incident.
+    #   The Amazon Resource Name (ARN) for the contacts and escalation plans
+    #   that the response plan engages during an incident.
     #   @return [Array<String>]
     #
     # @!attribute [rw] incident_template_dedupe_string
-    #   Used to create only one incident record for an incident.
+    #   The string Incident Manager uses to prevent duplicate incidents from
+    #   being created by the same incident in the same account.
     #   @return [String]
     #
     # @!attribute [rw] incident_template_impact
@@ -2559,8 +2303,8 @@ module Aws::SSMIncidents
     #   @return [Integer]
     #
     # @!attribute [rw] incident_template_notification_targets
-    #   The SNS targets that AWS Chatbot uses to notify the chat channels
-    #   and perform actions on the incident record.
+    #   The Amazon SNS targets that are notified when updates are made to an
+    #   incident.
     #   @return [Array<Types::NotificationTargetItem>]
     #
     # @!attribute [rw] incident_template_summary
@@ -2568,9 +2312,23 @@ module Aws::SSMIncidents
     #   happened, what's currently happening, and next steps.
     #   @return [String]
     #
+    # @!attribute [rw] incident_template_tags
+    #   Tags to assign to the template. When the `StartIncident` API action
+    #   is called, Incident Manager assigns the tags specified in the
+    #   template to the incident. To call this action, you must also have
+    #   permission to call the `TagResource` API action for the incident
+    #   record resource.
+    #   @return [Hash<String,String>]
+    #
     # @!attribute [rw] incident_template_title
-    #   The short format name of the incident. Can't contain spaces.
+    #   The short format name of the incident. The title can't contain
+    #   spaces.
     #   @return [String]
+    #
+    # @!attribute [rw] integrations
+    #   Information about third-party services integrated into the response
+    #   plan.
+    #   @return [Array<Types::Integration>]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/UpdateResponsePlanInput AWS API Documentation
     #
@@ -2585,7 +2343,9 @@ module Aws::SSMIncidents
       :incident_template_impact,
       :incident_template_notification_targets,
       :incident_template_summary,
-      :incident_template_title)
+      :incident_template_tags,
+      :incident_template_title,
+      :integrations)
       SENSITIVE = []
       include Aws::Structure
     end
@@ -2594,21 +2354,9 @@ module Aws::SSMIncidents
     #
     class UpdateResponsePlanOutput < Aws::EmptyStructure; end
 
-    # @note When making an API call, you may pass UpdateTimelineEventInput
-    #   data as a hash:
-    #
-    #       {
-    #         client_token: "ClientToken", # required
-    #         event_data: "EventData",
-    #         event_id: "UUID", # required
-    #         event_time: Time.now,
-    #         event_type: "TimelineEventType",
-    #         incident_record_arn: "Arn", # required
-    #       }
-    #
     # @!attribute [rw] client_token
-    #   A token ensuring that the action is called only once with the
-    #   specified details.
+    #   A token that ensures that a client calls the operation only once
+    #   with the specified details.
     #
     #   **A suitable default value is auto-generated.** You should normally
     #   not need to pass this option.
@@ -2619,21 +2367,37 @@ module Aws::SSMIncidents
     #   @return [String]
     #
     # @!attribute [rw] event_id
-    #   The ID of the event you are updating. You can find this by using
-    #   `ListTimelineEvents`.
+    #   The ID of the event to update. You can use `ListTimelineEvents` to
+    #   find an event's ID.
     #   @return [String]
+    #
+    # @!attribute [rw] event_references
+    #   Updates all existing references in a `TimelineEvent`. A reference is
+    #   an Amazon Web Services resource involved or associated with the
+    #   incident. To specify a reference, enter its Amazon Resource Name
+    #   (ARN). You can also specify a related item associated with that
+    #   resource. For example, to specify an Amazon DynamoDB (DynamoDB)
+    #   table as a resource, use its ARN. You can also specify an Amazon
+    #   CloudWatch metric associated with the DynamoDB table as a related
+    #   item.
+    #
+    #   This update action overrides all existing references. If you want to
+    #   keep existing references, you must specify them in the call. If you
+    #   don't, this action removes any existing references and enters only
+    #   new references.
+    #   @return [Array<Types::EventReference>]
     #
     # @!attribute [rw] event_time
     #   The time that the event occurred.
     #   @return [Time]
     #
     # @!attribute [rw] event_type
-    #   The type of the event. You can update events of type `Custom Event`.
+    #   The type of event. You can update events of type `Custom Event`.
     #   @return [String]
     #
     # @!attribute [rw] incident_record_arn
-    #   The Amazon Resource Name (ARN) of the incident that the timeline
-    #   event is part of.
+    #   The Amazon Resource Name (ARN) of the incident that includes the
+    #   timeline event.
     #   @return [String]
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/ssm-incidents-2018-05-10/UpdateTimelineEventInput AWS API Documentation
@@ -2642,6 +2406,7 @@ module Aws::SSMIncidents
       :client_token,
       :event_data,
       :event_id,
+      :event_references,
       :event_time,
       :event_type,
       :incident_record_arn)
@@ -2653,8 +2418,8 @@ module Aws::SSMIncidents
     #
     class UpdateTimelineEventOutput < Aws::EmptyStructure; end
 
-    # The input fails to satisfy the constraints specified by an AWS
-    # service.
+    # The input fails to satisfy the constraints specified by an Amazon Web
+    # Services service.
     #
     # @!attribute [rw] message
     #   @return [String]

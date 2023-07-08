@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/rest_json.rb'
 
 Aws::Plugins::GlobalConfiguration.add_identifier(:customerprofiles)
@@ -73,8 +77,13 @@ module Aws::CustomerProfiles
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::RestJson)
+    add_plugin(Aws::CustomerProfiles::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -119,7 +128,9 @@ module Aws::CustomerProfiles
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -173,9 +184,17 @@ module Aws::CustomerProfiles
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -216,6 +235,11 @@ module Aws::CustomerProfiles
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -262,6 +286,11 @@ module Aws::CustomerProfiles
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -275,9 +304,34 @@ module Aws::CustomerProfiles
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::CustomerProfiles::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::CustomerProfiles::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -286,7 +340,7 @@ module Aws::CustomerProfiles
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -301,6 +355,9 @@ module Aws::CustomerProfiles
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -328,7 +385,7 @@ module Aws::CustomerProfiles
     # @!group API Operations
 
     # Associates a new key value with a specific profile, such as a Contact
-    # Trace Record (CTR) ContactId.
+    # Record ContactId.
     #
     # A profile object can have a single unique key and any number of
     # additional keys that can be used to identify the profile that it
@@ -338,7 +395,13 @@ module Aws::CustomerProfiles
     #   The unique identifier of a customer profile.
     #
     # @option params [required, String] :key_name
-    #   A searchable identifier of a customer profile.
+    #   A searchable identifier of a customer profile. The predefined keys you
+    #   can use include: \_account, \_profileId, \_assetId, \_caseId,
+    #   \_orderId, \_fullName, \_phone, \_email, \_ctrContactId,
+    #   \_marketoLeadId, \_salesforceAccountId, \_salesforceContactId,
+    #   \_salesforceAssetId, \_zendeskUserId, \_zendeskExternalId,
+    #   \_zendeskTicketId, \_serviceNowSystemId, \_serviceNowIncidentId,
+    #   \_segmentUserId, \_shopifyCustomerId, \_shopifyOrderId.
     #
     # @option params [required, Array<String>] :values
     #   A list of key values.
@@ -375,6 +438,116 @@ module Aws::CustomerProfiles
       req.send_request(options)
     end
 
+    # Creates a new calculated attribute definition. After creation, new
+    # object data ingested into Customer Profiles will be included in the
+    # calculated attribute, which can be retrieved for a profile using the
+    # [GetCalculatedAttributeForProfile][1] API. Defining a calculated
+    # attribute makes it available for all profiles within a domain. Each
+    # calculated attribute can only reference one `ObjectType` and at most,
+    # two fields from that `ObjectType`.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_GetCalculatedAttributeForProfile.html
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :calculated_attribute_name
+    #   The unique name of the calculated attribute.
+    #
+    # @option params [String] :display_name
+    #   The display name of the calculated attribute.
+    #
+    # @option params [String] :description
+    #   The description of the calculated attribute.
+    #
+    # @option params [required, Types::AttributeDetails] :attribute_details
+    #   Mathematical expression and a list of attribute items specified in
+    #   that expression.
+    #
+    # @option params [Types::Conditions] :conditions
+    #   The conditions including range, object count, and threshold for the
+    #   calculated attribute.
+    #
+    # @option params [required, String] :statistic
+    #   The aggregation operation to perform for the calculated attribute.
+    #
+    # @option params [Hash<String,String>] :tags
+    #   The tags used to organize, track, or control access for this resource.
+    #
+    # @return [Types::CreateCalculatedAttributeDefinitionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateCalculatedAttributeDefinitionResponse#calculated_attribute_name #calculated_attribute_name} => String
+    #   * {Types::CreateCalculatedAttributeDefinitionResponse#display_name #display_name} => String
+    #   * {Types::CreateCalculatedAttributeDefinitionResponse#description #description} => String
+    #   * {Types::CreateCalculatedAttributeDefinitionResponse#attribute_details #attribute_details} => Types::AttributeDetails
+    #   * {Types::CreateCalculatedAttributeDefinitionResponse#conditions #conditions} => Types::Conditions
+    #   * {Types::CreateCalculatedAttributeDefinitionResponse#statistic #statistic} => String
+    #   * {Types::CreateCalculatedAttributeDefinitionResponse#created_at #created_at} => Time
+    #   * {Types::CreateCalculatedAttributeDefinitionResponse#last_updated_at #last_updated_at} => Time
+    #   * {Types::CreateCalculatedAttributeDefinitionResponse#tags #tags} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_calculated_attribute_definition({
+    #     domain_name: "name", # required
+    #     calculated_attribute_name: "typeName", # required
+    #     display_name: "displayName",
+    #     description: "text",
+    #     attribute_details: { # required
+    #       attributes: [ # required
+    #         {
+    #           name: "attributeName", # required
+    #         },
+    #       ],
+    #       expression: "string1To255", # required
+    #     },
+    #     conditions: {
+    #       range: {
+    #         value: 1, # required
+    #         unit: "DAYS", # required, accepts DAYS
+    #       },
+    #       object_count: 1,
+    #       threshold: {
+    #         value: "string1To255", # required
+    #         operator: "EQUAL_TO", # required, accepts EQUAL_TO, GREATER_THAN, LESS_THAN, NOT_EQUAL_TO
+    #       },
+    #     },
+    #     statistic: "FIRST_OCCURRENCE", # required, accepts FIRST_OCCURRENCE, LAST_OCCURRENCE, COUNT, SUM, MINIMUM, MAXIMUM, AVERAGE, MAX_OCCURRENCE
+    #     tags: {
+    #       "TagKey" => "TagValue",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.calculated_attribute_name #=> String
+    #   resp.display_name #=> String
+    #   resp.description #=> String
+    #   resp.attribute_details.attributes #=> Array
+    #   resp.attribute_details.attributes[0].name #=> String
+    #   resp.attribute_details.expression #=> String
+    #   resp.conditions.range.value #=> Integer
+    #   resp.conditions.range.unit #=> String, one of "DAYS"
+    #   resp.conditions.object_count #=> Integer
+    #   resp.conditions.threshold.value #=> String
+    #   resp.conditions.threshold.operator #=> String, one of "EQUAL_TO", "GREATER_THAN", "LESS_THAN", "NOT_EQUAL_TO"
+    #   resp.statistic #=> String, one of "FIRST_OCCURRENCE", "LAST_OCCURRENCE", "COUNT", "SUM", "MINIMUM", "MAXIMUM", "AVERAGE", "MAX_OCCURRENCE"
+    #   resp.created_at #=> Time
+    #   resp.last_updated_at #=> Time
+    #   resp.tags #=> Hash
+    #   resp.tags["TagKey"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/CreateCalculatedAttributeDefinition AWS API Documentation
+    #
+    # @overload create_calculated_attribute_definition(params = {})
+    # @param [Hash] params ({})
+    def create_calculated_attribute_definition(params = {}, options = {})
+      req = build_request(:create_calculated_attribute_definition, params)
+      req.send_request(options)
+    end
+
     # Creates a domain, which is a container for all customer data, such as
     # customer profile attributes, object types, profile keys, and
     # encryption keys. You can create multiple domains, and each domain can
@@ -382,6 +555,19 @@ module Aws::CustomerProfiles
     #
     # Each Amazon Connect instance can be associated with only one domain.
     # Multiple Amazon Connect instances can be associated with one domain.
+    #
+    # Use this API or [UpdateDomain][1] to enable [identity resolution][2]:
+    # set `Matching` to true.
+    #
+    # To prevent cross-service impersonation when you call this API, see
+    # [Cross-service confused deputy prevention][3] for sample policies that
+    # you should apply.
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_UpdateDomain.html
+    # [2]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_GetMatches.html
+    # [3]: https://docs.aws.amazon.com/connect/latest/adminguide/cross-service-confused-deputy-prevention.html
     #
     # @option params [required, String] :domain_name
     #   The unique name of the domain.
@@ -402,8 +588,20 @@ module Aws::CustomerProfiles
     #   to the DeadLetterQueue.
     #
     # @option params [Types::MatchingRequest] :matching
-    #   The process of matching duplicate profiles. This process runs every
-    #   Saturday at 12AM.
+    #   The process of matching duplicate profiles. If `Matching` = `true`,
+    #   Amazon Connect Customer Profiles starts a weekly batch process called
+    #   Identity Resolution Job. If you do not specify a date and time for
+    #   Identity Resolution Job to run, by default it runs every Saturday at
+    #   12AM UTC to detect duplicate profiles in your domains.
+    #
+    #   After the Identity Resolution Job completes, use the [GetMatches][1]
+    #   API to return and review the results. Or, if you have configured
+    #   `ExportingConfig` in the `MatchingRequest`, you can download the
+    #   results from S3.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_GetMatches.html
     #
     # @option params [Hash<String,String>] :tags
     #   The tags used to organize, track, or control access for this resource.
@@ -428,6 +626,29 @@ module Aws::CustomerProfiles
     #     dead_letter_queue_url: "sqsQueueUrl",
     #     matching: {
     #       enabled: false, # required
+    #       job_schedule: {
+    #         day_of_the_week: "SUNDAY", # required, accepts SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
+    #         time: "JobScheduleTime", # required
+    #       },
+    #       auto_merging: {
+    #         enabled: false, # required
+    #         consolidation: {
+    #           matching_attributes_list: [ # required
+    #             ["string1To255"],
+    #           ],
+    #         },
+    #         conflict_resolution: {
+    #           conflict_resolving_model: "RECENCY", # required, accepts RECENCY, SOURCE
+    #           source_name: "string1To255",
+    #         },
+    #         min_allowed_confidence_score_for_merging: 1.0,
+    #       },
+    #       exporting_config: {
+    #         s3_exporting: {
+    #           s3_bucket_name: "s3BucketName", # required
+    #           s3_key_name: "s3KeyNameCustomerOutputConfig",
+    #         },
+    #       },
     #     },
     #     tags: {
     #       "TagKey" => "TagValue",
@@ -441,6 +662,17 @@ module Aws::CustomerProfiles
     #   resp.default_encryption_key #=> String
     #   resp.dead_letter_queue_url #=> String
     #   resp.matching.enabled #=> Boolean
+    #   resp.matching.job_schedule.day_of_the_week #=> String, one of "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
+    #   resp.matching.job_schedule.time #=> String
+    #   resp.matching.auto_merging.enabled #=> Boolean
+    #   resp.matching.auto_merging.consolidation.matching_attributes_list #=> Array
+    #   resp.matching.auto_merging.consolidation.matching_attributes_list[0] #=> Array
+    #   resp.matching.auto_merging.consolidation.matching_attributes_list[0][0] #=> String
+    #   resp.matching.auto_merging.conflict_resolution.conflict_resolving_model #=> String, one of "RECENCY", "SOURCE"
+    #   resp.matching.auto_merging.conflict_resolution.source_name #=> String
+    #   resp.matching.auto_merging.min_allowed_confidence_score_for_merging #=> Float
+    #   resp.matching.exporting_config.s3_exporting.s3_bucket_name #=> String
+    #   resp.matching.exporting_config.s3_exporting.s3_key_name #=> String
     #   resp.created_at #=> Time
     #   resp.last_updated_at #=> Time
     #   resp.tags #=> Hash
@@ -452,6 +684,188 @@ module Aws::CustomerProfiles
     # @param [Hash] params ({})
     def create_domain(params = {}, options = {})
       req = build_request(:create_domain, params)
+      req.send_request(options)
+    end
+
+    # Creates an event stream, which is a subscription to real-time events,
+    # such as when profiles are created and updated through Amazon Connect
+    # Customer Profiles.
+    #
+    # Each event stream can be associated with only one Kinesis Data Stream
+    # destination in the same region and Amazon Web Services account as the
+    # customer profiles domain
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :uri
+    #   The StreamARN of the destination to deliver profile events to. For
+    #   example, arn:aws:kinesis:region:account-id:stream/stream-name
+    #
+    # @option params [required, String] :event_stream_name
+    #   The name of the event stream.
+    #
+    # @option params [Hash<String,String>] :tags
+    #   The tags used to organize, track, or control access for this resource.
+    #
+    # @return [Types::CreateEventStreamResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateEventStreamResponse#event_stream_arn #event_stream_arn} => String
+    #   * {Types::CreateEventStreamResponse#tags #tags} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_event_stream({
+    #     domain_name: "name", # required
+    #     uri: "string1To255", # required
+    #     event_stream_name: "name", # required
+    #     tags: {
+    #       "TagKey" => "TagValue",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.event_stream_arn #=> String
+    #   resp.tags #=> Hash
+    #   resp.tags["TagKey"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/CreateEventStream AWS API Documentation
+    #
+    # @overload create_event_stream(params = {})
+    # @param [Hash] params ({})
+    def create_event_stream(params = {}, options = {})
+      req = build_request(:create_event_stream, params)
+      req.send_request(options)
+    end
+
+    # Creates an integration workflow. An integration workflow is an async
+    # process which ingests historic data and sets up an integration for
+    # ongoing updates. The supported Amazon AppFlow sources are Salesforce,
+    # ServiceNow, and Marketo.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :workflow_type
+    #   The type of workflow. The only supported value is
+    #   APPFLOW\_INTEGRATION.
+    #
+    # @option params [required, Types::IntegrationConfig] :integration_config
+    #   Configuration data for integration workflow.
+    #
+    # @option params [required, String] :object_type_name
+    #   The name of the profile object type.
+    #
+    # @option params [required, String] :role_arn
+    #   The Amazon Resource Name (ARN) of the IAM role. Customer Profiles
+    #   assumes this role to create resources on your behalf as part of
+    #   workflow execution.
+    #
+    # @option params [Hash<String,String>] :tags
+    #   The tags used to organize, track, or control access for this resource.
+    #
+    # @return [Types::CreateIntegrationWorkflowResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::CreateIntegrationWorkflowResponse#workflow_id #workflow_id} => String
+    #   * {Types::CreateIntegrationWorkflowResponse#message #message} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.create_integration_workflow({
+    #     domain_name: "name", # required
+    #     workflow_type: "APPFLOW_INTEGRATION", # required, accepts APPFLOW_INTEGRATION
+    #     integration_config: { # required
+    #       appflow_integration: {
+    #         flow_definition: { # required
+    #           description: "FlowDescription",
+    #           flow_name: "FlowName", # required
+    #           kms_arn: "KmsArn", # required
+    #           source_flow_config: { # required
+    #             connector_profile_name: "ConnectorProfileName",
+    #             connector_type: "Salesforce", # required, accepts Salesforce, Marketo, Zendesk, Servicenow, S3
+    #             incremental_pull_config: {
+    #               datetime_type_field_name: "DatetimeTypeFieldName",
+    #             },
+    #             source_connector_properties: { # required
+    #               marketo: {
+    #                 object: "Object", # required
+    #               },
+    #               s3: {
+    #                 bucket_name: "BucketName", # required
+    #                 bucket_prefix: "BucketPrefix",
+    #               },
+    #               salesforce: {
+    #                 object: "Object", # required
+    #                 enable_dynamic_field_update: false,
+    #                 include_deleted_records: false,
+    #               },
+    #               service_now: {
+    #                 object: "Object", # required
+    #               },
+    #               zendesk: {
+    #                 object: "Object", # required
+    #               },
+    #             },
+    #           },
+    #           tasks: [ # required
+    #             {
+    #               connector_operator: {
+    #                 marketo: "PROJECTION", # accepts PROJECTION, LESS_THAN, GREATER_THAN, BETWEEN, ADDITION, MULTIPLICATION, DIVISION, SUBTRACTION, MASK_ALL, MASK_FIRST_N, MASK_LAST_N, VALIDATE_NON_NULL, VALIDATE_NON_ZERO, VALIDATE_NON_NEGATIVE, VALIDATE_NUMERIC, NO_OP
+    #                 s3: "PROJECTION", # accepts PROJECTION, LESS_THAN, GREATER_THAN, BETWEEN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN_OR_EQUAL_TO, EQUAL_TO, NOT_EQUAL_TO, ADDITION, MULTIPLICATION, DIVISION, SUBTRACTION, MASK_ALL, MASK_FIRST_N, MASK_LAST_N, VALIDATE_NON_NULL, VALIDATE_NON_ZERO, VALIDATE_NON_NEGATIVE, VALIDATE_NUMERIC, NO_OP
+    #                 salesforce: "PROJECTION", # accepts PROJECTION, LESS_THAN, CONTAINS, GREATER_THAN, BETWEEN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN_OR_EQUAL_TO, EQUAL_TO, NOT_EQUAL_TO, ADDITION, MULTIPLICATION, DIVISION, SUBTRACTION, MASK_ALL, MASK_FIRST_N, MASK_LAST_N, VALIDATE_NON_NULL, VALIDATE_NON_ZERO, VALIDATE_NON_NEGATIVE, VALIDATE_NUMERIC, NO_OP
+    #                 service_now: "PROJECTION", # accepts PROJECTION, CONTAINS, LESS_THAN, GREATER_THAN, BETWEEN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN_OR_EQUAL_TO, EQUAL_TO, NOT_EQUAL_TO, ADDITION, MULTIPLICATION, DIVISION, SUBTRACTION, MASK_ALL, MASK_FIRST_N, MASK_LAST_N, VALIDATE_NON_NULL, VALIDATE_NON_ZERO, VALIDATE_NON_NEGATIVE, VALIDATE_NUMERIC, NO_OP
+    #                 zendesk: "PROJECTION", # accepts PROJECTION, GREATER_THAN, ADDITION, MULTIPLICATION, DIVISION, SUBTRACTION, MASK_ALL, MASK_FIRST_N, MASK_LAST_N, VALIDATE_NON_NULL, VALIDATE_NON_ZERO, VALIDATE_NON_NEGATIVE, VALIDATE_NUMERIC, NO_OP
+    #               },
+    #               destination_field: "DestinationField",
+    #               source_fields: ["stringTo2048"], # required
+    #               task_properties: {
+    #                 "VALUE" => "Property",
+    #               },
+    #               task_type: "Arithmetic", # required, accepts Arithmetic, Filter, Map, Mask, Merge, Truncate, Validate
+    #             },
+    #           ],
+    #           trigger_config: { # required
+    #             trigger_type: "Scheduled", # required, accepts Scheduled, Event, OnDemand
+    #             trigger_properties: {
+    #               scheduled: {
+    #                 schedule_expression: "ScheduleExpression", # required
+    #                 data_pull_mode: "Incremental", # accepts Incremental, Complete
+    #                 schedule_start_time: Time.now,
+    #                 schedule_end_time: Time.now,
+    #                 timezone: "Timezone",
+    #                 schedule_offset: 1,
+    #                 first_execution_from: Time.now,
+    #               },
+    #             },
+    #           },
+    #         },
+    #         batches: [
+    #           {
+    #             start_time: Time.now, # required
+    #             end_time: Time.now, # required
+    #           },
+    #         ],
+    #       },
+    #     },
+    #     object_type_name: "typeName", # required
+    #     role_arn: "RoleArn", # required
+    #     tags: {
+    #       "TagKey" => "TagValue",
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.workflow_id #=> String
+    #   resp.message #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/CreateIntegrationWorkflow AWS API Documentation
+    #
+    # @overload create_integration_workflow(params = {})
+    # @param [Hash] params ({})
+    def create_integration_workflow(params = {}, options = {})
+      req = build_request(:create_integration_workflow, params)
       req.send_request(options)
     end
 
@@ -529,6 +943,12 @@ module Aws::CustomerProfiles
     # @option params [Hash<String,String>] :attributes
     #   A key value pair of attributes of a customer profile.
     #
+    # @option params [String] :party_type_string
+    #   An alternative to `PartyType` which accepts any string as input.
+    #
+    # @option params [String] :gender_string
+    #   An alternative to `Gender` which accepts any string as input.
+    #
     # @return [Types::CreateProfileResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::CreateProfileResponse#profile_id #profile_id} => String
@@ -604,6 +1024,8 @@ module Aws::CustomerProfiles
     #     attributes: {
     #       "string1To255" => "string1To255",
     #     },
+    #     party_type_string: "string1To255",
+    #     gender_string: "string1To255",
     #   })
     #
     # @example Response structure
@@ -616,6 +1038,36 @@ module Aws::CustomerProfiles
     # @param [Hash] params ({})
     def create_profile(params = {}, options = {})
       req = build_request(:create_profile, params)
+      req.send_request(options)
+    end
+
+    # Deletes an existing calculated attribute definition. Note that
+    # deleting a default calculated attribute is possible, however once
+    # deleted, you will be unable to undo that action and will need to
+    # recreate it on your own using the CreateCalculatedAttributeDefinition
+    # API if you want it back.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :calculated_attribute_name
+    #   The unique name of the calculated attribute.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_calculated_attribute_definition({
+    #     domain_name: "name", # required
+    #     calculated_attribute_name: "typeName", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/DeleteCalculatedAttributeDefinition AWS API Documentation
+    #
+    # @overload delete_calculated_attribute_definition(params = {})
+    # @param [Hash] params ({})
+    def delete_calculated_attribute_definition(params = {}, options = {})
+      req = build_request(:delete_calculated_attribute_definition, params)
       req.send_request(options)
     end
 
@@ -645,6 +1097,32 @@ module Aws::CustomerProfiles
     # @param [Hash] params ({})
     def delete_domain(params = {}, options = {})
       req = build_request(:delete_domain, params)
+      req.send_request(options)
+    end
+
+    # Disables and deletes the specified event stream.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :event_stream_name
+    #   The name of the event stream
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_event_stream({
+    #     domain_name: "name", # required
+    #     event_stream_name: "name", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/DeleteEventStream AWS API Documentation
+    #
+    # @overload delete_event_stream(params = {})
+    # @param [Hash] params ({})
+    def delete_event_stream(params = {}, options = {})
+      req = build_request(:delete_event_stream, params)
       req.send_request(options)
     end
 
@@ -830,6 +1308,201 @@ module Aws::CustomerProfiles
       req.send_request(options)
     end
 
+    # Deletes the specified workflow and all its corresponding resources.
+    # This is an async process.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :workflow_id
+    #   Unique identifier for the workflow.
+    #
+    # @return [Struct] Returns an empty {Seahorse::Client::Response response}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.delete_workflow({
+    #     domain_name: "name", # required
+    #     workflow_id: "string1To255", # required
+    #   })
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/DeleteWorkflow AWS API Documentation
+    #
+    # @overload delete_workflow(params = {})
+    # @param [Hash] params ({})
+    def delete_workflow(params = {}, options = {})
+      req = build_request(:delete_workflow, params)
+      req.send_request(options)
+    end
+
+    # Tests the auto-merging settings of your Identity Resolution Job
+    # without merging your data. It randomly selects a sample of matching
+    # groups from the existing matching results, and applies the automerging
+    # settings that you provided. You can then view the number of profiles
+    # in the sample, the number of matches, and the number of profiles
+    # identified to be merged. This enables you to evaluate the accuracy of
+    # the attributes in your matching list.
+    #
+    # You can't view which profiles are matched and would be merged.
+    #
+    # We strongly recommend you use this API to do a dry run of the
+    # automerging process before running the Identity Resolution Job.
+    # Include **at least** two matching attributes. If your matching list
+    # includes too few attributes (such as only `FirstName` or only
+    # `LastName`), there may be a large number of matches. This increases
+    # the chances of erroneous merges.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, Types::Consolidation] :consolidation
+    #   A list of matching attributes that represent matching criteria.
+    #
+    # @option params [required, Types::ConflictResolution] :conflict_resolution
+    #   How the auto-merging process should resolve conflicts between
+    #   different profiles.
+    #
+    # @option params [Float] :min_allowed_confidence_score_for_merging
+    #   Minimum confidence score required for profiles within a matching group
+    #   to be merged during the auto-merge process.
+    #
+    # @return [Types::GetAutoMergingPreviewResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetAutoMergingPreviewResponse#domain_name #domain_name} => String
+    #   * {Types::GetAutoMergingPreviewResponse#number_of_matches_in_sample #number_of_matches_in_sample} => Integer
+    #   * {Types::GetAutoMergingPreviewResponse#number_of_profiles_in_sample #number_of_profiles_in_sample} => Integer
+    #   * {Types::GetAutoMergingPreviewResponse#number_of_profiles_will_be_merged #number_of_profiles_will_be_merged} => Integer
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_auto_merging_preview({
+    #     domain_name: "name", # required
+    #     consolidation: { # required
+    #       matching_attributes_list: [ # required
+    #         ["string1To255"],
+    #       ],
+    #     },
+    #     conflict_resolution: { # required
+    #       conflict_resolving_model: "RECENCY", # required, accepts RECENCY, SOURCE
+    #       source_name: "string1To255",
+    #     },
+    #     min_allowed_confidence_score_for_merging: 1.0,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.domain_name #=> String
+    #   resp.number_of_matches_in_sample #=> Integer
+    #   resp.number_of_profiles_in_sample #=> Integer
+    #   resp.number_of_profiles_will_be_merged #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/GetAutoMergingPreview AWS API Documentation
+    #
+    # @overload get_auto_merging_preview(params = {})
+    # @param [Hash] params ({})
+    def get_auto_merging_preview(params = {}, options = {})
+      req = build_request(:get_auto_merging_preview, params)
+      req.send_request(options)
+    end
+
+    # Provides more information on a calculated attribute definition for
+    # Customer Profiles.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :calculated_attribute_name
+    #   The unique name of the calculated attribute.
+    #
+    # @return [Types::GetCalculatedAttributeDefinitionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetCalculatedAttributeDefinitionResponse#calculated_attribute_name #calculated_attribute_name} => String
+    #   * {Types::GetCalculatedAttributeDefinitionResponse#display_name #display_name} => String
+    #   * {Types::GetCalculatedAttributeDefinitionResponse#description #description} => String
+    #   * {Types::GetCalculatedAttributeDefinitionResponse#created_at #created_at} => Time
+    #   * {Types::GetCalculatedAttributeDefinitionResponse#last_updated_at #last_updated_at} => Time
+    #   * {Types::GetCalculatedAttributeDefinitionResponse#statistic #statistic} => String
+    #   * {Types::GetCalculatedAttributeDefinitionResponse#conditions #conditions} => Types::Conditions
+    #   * {Types::GetCalculatedAttributeDefinitionResponse#attribute_details #attribute_details} => Types::AttributeDetails
+    #   * {Types::GetCalculatedAttributeDefinitionResponse#tags #tags} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_calculated_attribute_definition({
+    #     domain_name: "name", # required
+    #     calculated_attribute_name: "typeName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.calculated_attribute_name #=> String
+    #   resp.display_name #=> String
+    #   resp.description #=> String
+    #   resp.created_at #=> Time
+    #   resp.last_updated_at #=> Time
+    #   resp.statistic #=> String, one of "FIRST_OCCURRENCE", "LAST_OCCURRENCE", "COUNT", "SUM", "MINIMUM", "MAXIMUM", "AVERAGE", "MAX_OCCURRENCE"
+    #   resp.conditions.range.value #=> Integer
+    #   resp.conditions.range.unit #=> String, one of "DAYS"
+    #   resp.conditions.object_count #=> Integer
+    #   resp.conditions.threshold.value #=> String
+    #   resp.conditions.threshold.operator #=> String, one of "EQUAL_TO", "GREATER_THAN", "LESS_THAN", "NOT_EQUAL_TO"
+    #   resp.attribute_details.attributes #=> Array
+    #   resp.attribute_details.attributes[0].name #=> String
+    #   resp.attribute_details.expression #=> String
+    #   resp.tags #=> Hash
+    #   resp.tags["TagKey"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/GetCalculatedAttributeDefinition AWS API Documentation
+    #
+    # @overload get_calculated_attribute_definition(params = {})
+    # @param [Hash] params ({})
+    def get_calculated_attribute_definition(params = {}, options = {})
+      req = build_request(:get_calculated_attribute_definition, params)
+      req.send_request(options)
+    end
+
+    # Retrieve a calculated attribute for a customer profile.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :profile_id
+    #   The unique identifier of a customer profile.
+    #
+    # @option params [required, String] :calculated_attribute_name
+    #   The unique name of the calculated attribute.
+    #
+    # @return [Types::GetCalculatedAttributeForProfileResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetCalculatedAttributeForProfileResponse#calculated_attribute_name #calculated_attribute_name} => String
+    #   * {Types::GetCalculatedAttributeForProfileResponse#display_name #display_name} => String
+    #   * {Types::GetCalculatedAttributeForProfileResponse#is_data_partial #is_data_partial} => String
+    #   * {Types::GetCalculatedAttributeForProfileResponse#value #value} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_calculated_attribute_for_profile({
+    #     domain_name: "name", # required
+    #     profile_id: "uuid", # required
+    #     calculated_attribute_name: "typeName", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.calculated_attribute_name #=> String
+    #   resp.display_name #=> String
+    #   resp.is_data_partial #=> String
+    #   resp.value #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/GetCalculatedAttributeForProfile AWS API Documentation
+    #
+    # @overload get_calculated_attribute_for_profile(params = {})
+    # @param [Hash] params ({})
+    def get_calculated_attribute_for_profile(params = {}, options = {})
+      req = build_request(:get_calculated_attribute_for_profile, params)
+      req.send_request(options)
+    end
+
     # Returns information about a specific domain.
     #
     # @option params [required, String] :domain_name
@@ -864,6 +1537,17 @@ module Aws::CustomerProfiles
     #   resp.stats.object_count #=> Integer
     #   resp.stats.total_size #=> Integer
     #   resp.matching.enabled #=> Boolean
+    #   resp.matching.job_schedule.day_of_the_week #=> String, one of "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
+    #   resp.matching.job_schedule.time #=> String
+    #   resp.matching.auto_merging.enabled #=> Boolean
+    #   resp.matching.auto_merging.consolidation.matching_attributes_list #=> Array
+    #   resp.matching.auto_merging.consolidation.matching_attributes_list[0] #=> Array
+    #   resp.matching.auto_merging.consolidation.matching_attributes_list[0][0] #=> String
+    #   resp.matching.auto_merging.conflict_resolution.conflict_resolving_model #=> String, one of "RECENCY", "SOURCE"
+    #   resp.matching.auto_merging.conflict_resolution.source_name #=> String
+    #   resp.matching.auto_merging.min_allowed_confidence_score_for_merging #=> Float
+    #   resp.matching.exporting_config.s3_exporting.s3_bucket_name #=> String
+    #   resp.matching.exporting_config.s3_exporting.s3_key_name #=> String
     #   resp.created_at #=> Time
     #   resp.last_updated_at #=> Time
     #   resp.tags #=> Hash
@@ -875,6 +1559,125 @@ module Aws::CustomerProfiles
     # @param [Hash] params ({})
     def get_domain(params = {}, options = {})
       req = build_request(:get_domain, params)
+      req.send_request(options)
+    end
+
+    # Returns information about the specified event stream in a specific
+    # domain.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :event_stream_name
+    #   The name of the event stream provided during create operations.
+    #
+    # @return [Types::GetEventStreamResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetEventStreamResponse#domain_name #domain_name} => String
+    #   * {Types::GetEventStreamResponse#event_stream_arn #event_stream_arn} => String
+    #   * {Types::GetEventStreamResponse#created_at #created_at} => Time
+    #   * {Types::GetEventStreamResponse#state #state} => String
+    #   * {Types::GetEventStreamResponse#stopped_since #stopped_since} => Time
+    #   * {Types::GetEventStreamResponse#destination_details #destination_details} => Types::EventStreamDestinationDetails
+    #   * {Types::GetEventStreamResponse#tags #tags} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_event_stream({
+    #     domain_name: "name", # required
+    #     event_stream_name: "name", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.domain_name #=> String
+    #   resp.event_stream_arn #=> String
+    #   resp.created_at #=> Time
+    #   resp.state #=> String, one of "RUNNING", "STOPPED"
+    #   resp.stopped_since #=> Time
+    #   resp.destination_details.uri #=> String
+    #   resp.destination_details.status #=> String, one of "HEALTHY", "UNHEALTHY"
+    #   resp.destination_details.unhealthy_since #=> Time
+    #   resp.destination_details.message #=> String
+    #   resp.tags #=> Hash
+    #   resp.tags["TagKey"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/GetEventStream AWS API Documentation
+    #
+    # @overload get_event_stream(params = {})
+    # @param [Hash] params ({})
+    def get_event_stream(params = {}, options = {})
+      req = build_request(:get_event_stream, params)
+      req.send_request(options)
+    end
+
+    # Returns information about an Identity Resolution Job in a specific
+    # domain.
+    #
+    # Identity Resolution Jobs are set up using the Amazon Connect admin
+    # console. For more information, see [Use Identity Resolution to
+    # consolidate similar profiles][1].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/connect/latest/adminguide/use-identity-resolution.html
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :job_id
+    #   The unique identifier of the Identity Resolution Job.
+    #
+    # @return [Types::GetIdentityResolutionJobResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetIdentityResolutionJobResponse#domain_name #domain_name} => String
+    #   * {Types::GetIdentityResolutionJobResponse#job_id #job_id} => String
+    #   * {Types::GetIdentityResolutionJobResponse#status #status} => String
+    #   * {Types::GetIdentityResolutionJobResponse#message #message} => String
+    #   * {Types::GetIdentityResolutionJobResponse#job_start_time #job_start_time} => Time
+    #   * {Types::GetIdentityResolutionJobResponse#job_end_time #job_end_time} => Time
+    #   * {Types::GetIdentityResolutionJobResponse#last_updated_at #last_updated_at} => Time
+    #   * {Types::GetIdentityResolutionJobResponse#job_expiration_time #job_expiration_time} => Time
+    #   * {Types::GetIdentityResolutionJobResponse#auto_merging #auto_merging} => Types::AutoMerging
+    #   * {Types::GetIdentityResolutionJobResponse#exporting_location #exporting_location} => Types::ExportingLocation
+    #   * {Types::GetIdentityResolutionJobResponse#job_stats #job_stats} => Types::JobStats
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_identity_resolution_job({
+    #     domain_name: "name", # required
+    #     job_id: "uuid", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.domain_name #=> String
+    #   resp.job_id #=> String
+    #   resp.status #=> String, one of "PENDING", "PREPROCESSING", "FIND_MATCHING", "MERGING", "COMPLETED", "PARTIAL_SUCCESS", "FAILED"
+    #   resp.message #=> String
+    #   resp.job_start_time #=> Time
+    #   resp.job_end_time #=> Time
+    #   resp.last_updated_at #=> Time
+    #   resp.job_expiration_time #=> Time
+    #   resp.auto_merging.enabled #=> Boolean
+    #   resp.auto_merging.consolidation.matching_attributes_list #=> Array
+    #   resp.auto_merging.consolidation.matching_attributes_list[0] #=> Array
+    #   resp.auto_merging.consolidation.matching_attributes_list[0][0] #=> String
+    #   resp.auto_merging.conflict_resolution.conflict_resolving_model #=> String, one of "RECENCY", "SOURCE"
+    #   resp.auto_merging.conflict_resolution.source_name #=> String
+    #   resp.auto_merging.min_allowed_confidence_score_for_merging #=> Float
+    #   resp.exporting_location.s3_exporting.s3_bucket_name #=> String
+    #   resp.exporting_location.s3_exporting.s3_key_name #=> String
+    #   resp.job_stats.number_of_profiles_reviewed #=> Integer
+    #   resp.job_stats.number_of_matches_found #=> Integer
+    #   resp.job_stats.number_of_merges_done #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/GetIdentityResolutionJob AWS API Documentation
+    #
+    # @overload get_identity_resolution_job(params = {})
+    # @param [Hash] params ({})
+    def get_identity_resolution_job(params = {}, options = {})
+      req = build_request(:get_identity_resolution_job, params)
       req.send_request(options)
     end
 
@@ -894,6 +1697,9 @@ module Aws::CustomerProfiles
     #   * {Types::GetIntegrationResponse#created_at #created_at} => Time
     #   * {Types::GetIntegrationResponse#last_updated_at #last_updated_at} => Time
     #   * {Types::GetIntegrationResponse#tags #tags} => Hash&lt;String,String&gt;
+    #   * {Types::GetIntegrationResponse#object_type_names #object_type_names} => Hash&lt;String,String&gt;
+    #   * {Types::GetIntegrationResponse#workflow_id #workflow_id} => String
+    #   * {Types::GetIntegrationResponse#is_unstructured #is_unstructured} => Boolean
     #
     # @example Request syntax with placeholder values
     #
@@ -911,6 +1717,10 @@ module Aws::CustomerProfiles
     #   resp.last_updated_at #=> Time
     #   resp.tags #=> Hash
     #   resp.tags["TagKey"] #=> String
+    #   resp.object_type_names #=> Hash
+    #   resp.object_type_names["string1To255"] #=> String
+    #   resp.workflow_id #=> String
+    #   resp.is_unstructured #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/GetIntegration AWS API Documentation
     #
@@ -921,18 +1731,22 @@ module Aws::CustomerProfiles
       req.send_request(options)
     end
 
-    # This API is in preview release for Amazon Connect and subject to
-    # change.
-    #
     # Before calling this API, use [CreateDomain][1] or [UpdateDomain][2] to
     # enable identity resolution: set `Matching` to true.
     #
     # GetMatches returns potentially matching profiles, based on the results
     # of the latest run of a machine learning process.
     #
-    # Amazon Connect runs a batch process every Saturday at 12AM UTC to
-    # identify matching profiles. The results are returned up to seven days
-    # after the Saturday run.
+    # The process of matching duplicate profiles. If `Matching` = `true`,
+    # Amazon Connect Customer Profiles starts a weekly batch process called
+    # Identity Resolution Job. If you do not specify a date and time for
+    # Identity Resolution Job to run, by default it runs every Saturday at
+    # 12AM UTC to detect duplicate profiles in your domains.
+    #
+    #  After the Identity Resolution Job completes, use the [GetMatches][3]
+    # API to return and review the results. Or, if you have configured
+    # `ExportingConfig` in the `MatchingRequest`, you can download the
+    # results from S3.
     #
     # Amazon Connect uses the following profile attributes to identify
     # matches:
@@ -953,12 +1767,18 @@ module Aws::CustomerProfiles
     #
     # * FullName
     #
-    # * BusinessName
+    # For example, two or more profiles—with spelling mistakes such as
+    # **John Doe** and **Jhn Doe**, or different casing email addresses such
+    # as **JOHN\_DOE@ANYCOMPANY.COM** and **johndoe@anycompany.com**, or
+    # different phone number formats such as **555-010-0000** and
+    # **+1-555-010-0000**—can be detected as belonging to the same customer
+    # **John Doe** and merged into a unified profile.
     #
     #
     #
     # [1]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_CreateDomain.html
     # [2]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_UpdateDomain.html
+    # [3]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_GetMatches.html
     #
     # @option params [String] :next_token
     #   The token for the next set of results. Use the value returned in the
@@ -995,6 +1815,7 @@ module Aws::CustomerProfiles
     #   resp.matches[0].match_id #=> String
     #   resp.matches[0].profile_ids #=> Array
     #   resp.matches[0].profile_ids[0] #=> String
+    #   resp.matches[0].confidence_score #=> Float
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/GetMatches AWS API Documentation
     #
@@ -1021,6 +1842,7 @@ module Aws::CustomerProfiles
     #   * {Types::GetProfileObjectTypeResponse#expiration_days #expiration_days} => Integer
     #   * {Types::GetProfileObjectTypeResponse#encryption_key #encryption_key} => String
     #   * {Types::GetProfileObjectTypeResponse#allow_profile_creation #allow_profile_creation} => Boolean
+    #   * {Types::GetProfileObjectTypeResponse#source_last_updated_timestamp_format #source_last_updated_timestamp_format} => String
     #   * {Types::GetProfileObjectTypeResponse#fields #fields} => Hash&lt;String,Types::ObjectTypeField&gt;
     #   * {Types::GetProfileObjectTypeResponse#keys #keys} => Hash&lt;String,Array&lt;Types::ObjectTypeKey&gt;&gt;
     #   * {Types::GetProfileObjectTypeResponse#created_at #created_at} => Time
@@ -1042,6 +1864,7 @@ module Aws::CustomerProfiles
     #   resp.expiration_days #=> Integer
     #   resp.encryption_key #=> String
     #   resp.allow_profile_creation #=> Boolean
+    #   resp.source_last_updated_timestamp_format #=> String
     #   resp.fields #=> Hash
     #   resp.fields["name"].source #=> String
     #   resp.fields["name"].target #=> String
@@ -1049,7 +1872,7 @@ module Aws::CustomerProfiles
     #   resp.keys #=> Hash
     #   resp.keys["name"] #=> Array
     #   resp.keys["name"][0].standard_identifiers #=> Array
-    #   resp.keys["name"][0].standard_identifiers[0] #=> String, one of "PROFILE", "UNIQUE", "SECONDARY", "LOOKUP_ONLY", "NEW_ONLY"
+    #   resp.keys["name"][0].standard_identifiers[0] #=> String, one of "PROFILE", "ASSET", "CASE", "UNIQUE", "SECONDARY", "LOOKUP_ONLY", "NEW_ONLY", "ORDER"
     #   resp.keys["name"][0].field_names #=> Array
     #   resp.keys["name"][0].field_names[0] #=> String
     #   resp.created_at #=> Time
@@ -1083,6 +1906,7 @@ module Aws::CustomerProfiles
     #   * {Types::GetProfileObjectTypeTemplateResponse#source_name #source_name} => String
     #   * {Types::GetProfileObjectTypeTemplateResponse#source_object #source_object} => String
     #   * {Types::GetProfileObjectTypeTemplateResponse#allow_profile_creation #allow_profile_creation} => Boolean
+    #   * {Types::GetProfileObjectTypeTemplateResponse#source_last_updated_timestamp_format #source_last_updated_timestamp_format} => String
     #   * {Types::GetProfileObjectTypeTemplateResponse#fields #fields} => Hash&lt;String,Types::ObjectTypeField&gt;
     #   * {Types::GetProfileObjectTypeTemplateResponse#keys #keys} => Hash&lt;String,Array&lt;Types::ObjectTypeKey&gt;&gt;
     #
@@ -1098,6 +1922,7 @@ module Aws::CustomerProfiles
     #   resp.source_name #=> String
     #   resp.source_object #=> String
     #   resp.allow_profile_creation #=> Boolean
+    #   resp.source_last_updated_timestamp_format #=> String
     #   resp.fields #=> Hash
     #   resp.fields["name"].source #=> String
     #   resp.fields["name"].target #=> String
@@ -1105,7 +1930,7 @@ module Aws::CustomerProfiles
     #   resp.keys #=> Hash
     #   resp.keys["name"] #=> Array
     #   resp.keys["name"][0].standard_identifiers #=> Array
-    #   resp.keys["name"][0].standard_identifiers[0] #=> String, one of "PROFILE", "UNIQUE", "SECONDARY", "LOOKUP_ONLY", "NEW_ONLY"
+    #   resp.keys["name"][0].standard_identifiers[0] #=> String, one of "PROFILE", "ASSET", "CASE", "UNIQUE", "SECONDARY", "LOOKUP_ONLY", "NEW_ONLY", "ORDER"
     #   resp.keys["name"][0].field_names #=> Array
     #   resp.keys["name"][0].field_names[0] #=> String
     #
@@ -1115,6 +1940,112 @@ module Aws::CustomerProfiles
     # @param [Hash] params ({})
     def get_profile_object_type_template(params = {}, options = {})
       req = build_request(:get_profile_object_type_template, params)
+      req.send_request(options)
+    end
+
+    # Get details of specified workflow.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :workflow_id
+    #   Unique identifier for the workflow.
+    #
+    # @return [Types::GetWorkflowResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetWorkflowResponse#workflow_id #workflow_id} => String
+    #   * {Types::GetWorkflowResponse#workflow_type #workflow_type} => String
+    #   * {Types::GetWorkflowResponse#status #status} => String
+    #   * {Types::GetWorkflowResponse#error_description #error_description} => String
+    #   * {Types::GetWorkflowResponse#start_date #start_date} => Time
+    #   * {Types::GetWorkflowResponse#last_updated_at #last_updated_at} => Time
+    #   * {Types::GetWorkflowResponse#attributes #attributes} => Types::WorkflowAttributes
+    #   * {Types::GetWorkflowResponse#metrics #metrics} => Types::WorkflowMetrics
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_workflow({
+    #     domain_name: "name", # required
+    #     workflow_id: "uuid", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.workflow_id #=> String
+    #   resp.workflow_type #=> String, one of "APPFLOW_INTEGRATION"
+    #   resp.status #=> String, one of "NOT_STARTED", "IN_PROGRESS", "COMPLETE", "FAILED", "SPLIT", "RETRY", "CANCELLED"
+    #   resp.error_description #=> String
+    #   resp.start_date #=> Time
+    #   resp.last_updated_at #=> Time
+    #   resp.attributes.appflow_integration.source_connector_type #=> String, one of "Salesforce", "Marketo", "Zendesk", "Servicenow", "S3"
+    #   resp.attributes.appflow_integration.connector_profile_name #=> String
+    #   resp.attributes.appflow_integration.role_arn #=> String
+    #   resp.metrics.appflow_integration.records_processed #=> Integer
+    #   resp.metrics.appflow_integration.steps_completed #=> Integer
+    #   resp.metrics.appflow_integration.total_steps #=> Integer
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/GetWorkflow AWS API Documentation
+    #
+    # @overload get_workflow(params = {})
+    # @param [Hash] params ({})
+    def get_workflow(params = {}, options = {})
+      req = build_request(:get_workflow, params)
+      req.send_request(options)
+    end
+
+    # Get granular list of steps in workflow.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :workflow_id
+    #   Unique identifier for the workflow.
+    #
+    # @option params [String] :next_token
+    #   The token for the next set of results. Use the value returned in the
+    #   previous response in the next request to retrieve the next set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return per page.
+    #
+    # @return [Types::GetWorkflowStepsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::GetWorkflowStepsResponse#workflow_id #workflow_id} => String
+    #   * {Types::GetWorkflowStepsResponse#workflow_type #workflow_type} => String
+    #   * {Types::GetWorkflowStepsResponse#items #items} => Array&lt;Types::WorkflowStepItem&gt;
+    #   * {Types::GetWorkflowStepsResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.get_workflow_steps({
+    #     domain_name: "name", # required
+    #     workflow_id: "uuid", # required
+    #     next_token: "token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.workflow_id #=> String
+    #   resp.workflow_type #=> String, one of "APPFLOW_INTEGRATION"
+    #   resp.items #=> Array
+    #   resp.items[0].appflow_integration.flow_name #=> String
+    #   resp.items[0].appflow_integration.status #=> String, one of "NOT_STARTED", "IN_PROGRESS", "COMPLETE", "FAILED", "SPLIT", "RETRY", "CANCELLED"
+    #   resp.items[0].appflow_integration.execution_message #=> String
+    #   resp.items[0].appflow_integration.records_processed #=> Integer
+    #   resp.items[0].appflow_integration.batch_records_start_time #=> String
+    #   resp.items[0].appflow_integration.batch_records_end_time #=> String
+    #   resp.items[0].appflow_integration.created_at #=> Time
+    #   resp.items[0].appflow_integration.last_updated_at #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/GetWorkflowSteps AWS API Documentation
+    #
+    # @overload get_workflow_steps(params = {})
+    # @param [Hash] params ({})
+    def get_workflow_steps(params = {}, options = {})
+      req = build_request(:get_workflow_steps, params)
       req.send_request(options)
     end
 
@@ -1131,6 +2062,10 @@ module Aws::CustomerProfiles
     # @option params [Integer] :max_results
     #   The maximum number of objects returned per page.
     #
+    # @option params [Boolean] :include_hidden
+    #   Boolean to indicate if hidden integration should be returned. Defaults
+    #   to `False`.
+    #
     # @return [Types::ListAccountIntegrationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::ListAccountIntegrationsResponse#items #items} => Array&lt;Types::ListIntegrationItem&gt;
@@ -1142,6 +2077,7 @@ module Aws::CustomerProfiles
     #     uri: "string1To255", # required
     #     next_token: "token",
     #     max_results: 1,
+    #     include_hidden: false,
     #   })
     #
     # @example Response structure
@@ -1154,6 +2090,10 @@ module Aws::CustomerProfiles
     #   resp.items[0].last_updated_at #=> Time
     #   resp.items[0].tags #=> Hash
     #   resp.items[0].tags["TagKey"] #=> String
+    #   resp.items[0].object_type_names #=> Hash
+    #   resp.items[0].object_type_names["string1To255"] #=> String
+    #   resp.items[0].workflow_id #=> String
+    #   resp.items[0].is_unstructured #=> Boolean
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/ListAccountIntegrations AWS API Documentation
@@ -1162,6 +2102,100 @@ module Aws::CustomerProfiles
     # @param [Hash] params ({})
     def list_account_integrations(params = {}, options = {})
       req = build_request(:list_account_integrations, params)
+      req.send_request(options)
+    end
+
+    # Lists calculated attribute definitions for Customer Profiles
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [String] :next_token
+    #   The pagination token from the previous call to
+    #   ListCalculatedAttributeDefinitions.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of calculated attribute definitions returned per
+    #   page.
+    #
+    # @return [Types::ListCalculatedAttributeDefinitionsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListCalculatedAttributeDefinitionsResponse#items #items} => Array&lt;Types::ListCalculatedAttributeDefinitionItem&gt;
+    #   * {Types::ListCalculatedAttributeDefinitionsResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_calculated_attribute_definitions({
+    #     domain_name: "name", # required
+    #     next_token: "token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.items #=> Array
+    #   resp.items[0].calculated_attribute_name #=> String
+    #   resp.items[0].display_name #=> String
+    #   resp.items[0].description #=> String
+    #   resp.items[0].created_at #=> Time
+    #   resp.items[0].last_updated_at #=> Time
+    #   resp.items[0].tags #=> Hash
+    #   resp.items[0].tags["TagKey"] #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/ListCalculatedAttributeDefinitions AWS API Documentation
+    #
+    # @overload list_calculated_attribute_definitions(params = {})
+    # @param [Hash] params ({})
+    def list_calculated_attribute_definitions(params = {}, options = {})
+      req = build_request(:list_calculated_attribute_definitions, params)
+      req.send_request(options)
+    end
+
+    # Retrieve a list of calculated attributes for a customer profile.
+    #
+    # @option params [String] :next_token
+    #   The pagination token from the previous call to
+    #   ListCalculatedAttributesForProfile.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of calculated attributes returned per page.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :profile_id
+    #   The unique identifier of a customer profile.
+    #
+    # @return [Types::ListCalculatedAttributesForProfileResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListCalculatedAttributesForProfileResponse#items #items} => Array&lt;Types::ListCalculatedAttributeForProfileItem&gt;
+    #   * {Types::ListCalculatedAttributesForProfileResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_calculated_attributes_for_profile({
+    #     next_token: "token",
+    #     max_results: 1,
+    #     domain_name: "name", # required
+    #     profile_id: "uuid", # required
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.items #=> Array
+    #   resp.items[0].calculated_attribute_name #=> String
+    #   resp.items[0].display_name #=> String
+    #   resp.items[0].is_data_partial #=> String
+    #   resp.items[0].value #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/ListCalculatedAttributesForProfile AWS API Documentation
+    #
+    # @overload list_calculated_attributes_for_profile(params = {})
+    # @param [Hash] params ({})
+    def list_calculated_attributes_for_profile(params = {}, options = {})
+      req = build_request(:list_calculated_attributes_for_profile, params)
       req.send_request(options)
     end
 
@@ -1205,6 +2239,108 @@ module Aws::CustomerProfiles
       req.send_request(options)
     end
 
+    # Returns a list of all the event streams in a specific domain.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [String] :next_token
+    #   Identifies the next page of results to return.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of objects returned per page.
+    #
+    # @return [Types::ListEventStreamsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListEventStreamsResponse#items #items} => Array&lt;Types::EventStreamSummary&gt;
+    #   * {Types::ListEventStreamsResponse#next_token #next_token} => String
+    #
+    # The returned {Seahorse::Client::Response response} is a pageable response and is Enumerable. For details on usage see {Aws::PageableResponse PageableResponse}.
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_event_streams({
+    #     domain_name: "name", # required
+    #     next_token: "token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.items #=> Array
+    #   resp.items[0].domain_name #=> String
+    #   resp.items[0].event_stream_name #=> String
+    #   resp.items[0].event_stream_arn #=> String
+    #   resp.items[0].state #=> String, one of "RUNNING", "STOPPED"
+    #   resp.items[0].stopped_since #=> Time
+    #   resp.items[0].destination_summary.uri #=> String
+    #   resp.items[0].destination_summary.status #=> String, one of "HEALTHY", "UNHEALTHY"
+    #   resp.items[0].destination_summary.unhealthy_since #=> Time
+    #   resp.items[0].tags #=> Hash
+    #   resp.items[0].tags["TagKey"] #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/ListEventStreams AWS API Documentation
+    #
+    # @overload list_event_streams(params = {})
+    # @param [Hash] params ({})
+    def list_event_streams(params = {}, options = {})
+      req = build_request(:list_event_streams, params)
+      req.send_request(options)
+    end
+
+    # Lists all of the Identity Resolution Jobs in your domain. The response
+    # sorts the list by `JobStartTime`.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [String] :next_token
+    #   The token for the next set of results. Use the value returned in the
+    #   previous response in the next request to retrieve the next set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return per page.
+    #
+    # @return [Types::ListIdentityResolutionJobsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListIdentityResolutionJobsResponse#identity_resolution_jobs_list #identity_resolution_jobs_list} => Array&lt;Types::IdentityResolutionJob&gt;
+    #   * {Types::ListIdentityResolutionJobsResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_identity_resolution_jobs({
+    #     domain_name: "name", # required
+    #     next_token: "token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.identity_resolution_jobs_list #=> Array
+    #   resp.identity_resolution_jobs_list[0].domain_name #=> String
+    #   resp.identity_resolution_jobs_list[0].job_id #=> String
+    #   resp.identity_resolution_jobs_list[0].status #=> String, one of "PENDING", "PREPROCESSING", "FIND_MATCHING", "MERGING", "COMPLETED", "PARTIAL_SUCCESS", "FAILED"
+    #   resp.identity_resolution_jobs_list[0].job_start_time #=> Time
+    #   resp.identity_resolution_jobs_list[0].job_end_time #=> Time
+    #   resp.identity_resolution_jobs_list[0].job_stats.number_of_profiles_reviewed #=> Integer
+    #   resp.identity_resolution_jobs_list[0].job_stats.number_of_matches_found #=> Integer
+    #   resp.identity_resolution_jobs_list[0].job_stats.number_of_merges_done #=> Integer
+    #   resp.identity_resolution_jobs_list[0].exporting_location.s3_exporting.s3_bucket_name #=> String
+    #   resp.identity_resolution_jobs_list[0].exporting_location.s3_exporting.s3_key_name #=> String
+    #   resp.identity_resolution_jobs_list[0].message #=> String
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/ListIdentityResolutionJobs AWS API Documentation
+    #
+    # @overload list_identity_resolution_jobs(params = {})
+    # @param [Hash] params ({})
+    def list_identity_resolution_jobs(params = {}, options = {})
+      req = build_request(:list_identity_resolution_jobs, params)
+      req.send_request(options)
+    end
+
     # Lists all of the integrations in your domain.
     #
     # @option params [required, String] :domain_name
@@ -1215,6 +2351,10 @@ module Aws::CustomerProfiles
     #
     # @option params [Integer] :max_results
     #   The maximum number of objects returned per page.
+    #
+    # @option params [Boolean] :include_hidden
+    #   Boolean to indicate if hidden integration should be returned. Defaults
+    #   to `False`.
     #
     # @return [Types::ListIntegrationsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1227,6 +2367,7 @@ module Aws::CustomerProfiles
     #     domain_name: "name", # required
     #     next_token: "token",
     #     max_results: 1,
+    #     include_hidden: false,
     #   })
     #
     # @example Response structure
@@ -1239,6 +2380,10 @@ module Aws::CustomerProfiles
     #   resp.items[0].last_updated_at #=> Time
     #   resp.items[0].tags #=> Hash
     #   resp.items[0].tags["TagKey"] #=> String
+    #   resp.items[0].object_type_names #=> Hash
+    #   resp.items[0].object_type_names["string1To255"] #=> String
+    #   resp.items[0].workflow_id #=> String
+    #   resp.items[0].is_unstructured #=> Boolean
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/ListIntegrations AWS API Documentation
@@ -1350,6 +2495,10 @@ module Aws::CustomerProfiles
     # @option params [required, String] :profile_id
     #   The unique identifier of a customer profile.
     #
+    # @option params [Types::ObjectFilter] :object_filter
+    #   Applies a filter to the response to include profile objects with the
+    #   specified index values.
+    #
     # @return [Types::ListProfileObjectsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::ListProfileObjectsResponse#items #items} => Array&lt;Types::ListProfileObjectsItem&gt;
@@ -1363,6 +2512,10 @@ module Aws::CustomerProfiles
     #     domain_name: "name", # required
     #     object_type_name: "typeName", # required
     #     profile_id: "uuid", # required
+    #     object_filter: {
+    #       key_name: "name", # required
+    #       values: ["string1To255"], # required
+    #     },
     #   })
     #
     # @example Response structure
@@ -1413,9 +2566,69 @@ module Aws::CustomerProfiles
       req.send_request(options)
     end
 
-    # This API is in preview release for Amazon Connect and subject to
-    # change.
+    # Query to list all workflows.
     #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [String] :workflow_type
+    #   The type of workflow. The only supported value is
+    #   APPFLOW\_INTEGRATION.
+    #
+    # @option params [String] :status
+    #   Status of workflow execution.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :query_start_date
+    #   Retrieve workflows started after timestamp.
+    #
+    # @option params [Time,DateTime,Date,Integer,String] :query_end_date
+    #   Retrieve workflows ended after timestamp.
+    #
+    # @option params [String] :next_token
+    #   The token for the next set of results. Use the value returned in the
+    #   previous response in the next request to retrieve the next set of
+    #   results.
+    #
+    # @option params [Integer] :max_results
+    #   The maximum number of results to return per page.
+    #
+    # @return [Types::ListWorkflowsResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::ListWorkflowsResponse#items #items} => Array&lt;Types::ListWorkflowsItem&gt;
+    #   * {Types::ListWorkflowsResponse#next_token #next_token} => String
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.list_workflows({
+    #     domain_name: "name", # required
+    #     workflow_type: "APPFLOW_INTEGRATION", # accepts APPFLOW_INTEGRATION
+    #     status: "NOT_STARTED", # accepts NOT_STARTED, IN_PROGRESS, COMPLETE, FAILED, SPLIT, RETRY, CANCELLED
+    #     query_start_date: Time.now,
+    #     query_end_date: Time.now,
+    #     next_token: "token",
+    #     max_results: 1,
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.items #=> Array
+    #   resp.items[0].workflow_type #=> String, one of "APPFLOW_INTEGRATION"
+    #   resp.items[0].workflow_id #=> String
+    #   resp.items[0].status #=> String, one of "NOT_STARTED", "IN_PROGRESS", "COMPLETE", "FAILED", "SPLIT", "RETRY", "CANCELLED"
+    #   resp.items[0].status_description #=> String
+    #   resp.items[0].created_at #=> Time
+    #   resp.items[0].last_updated_at #=> Time
+    #   resp.next_token #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/ListWorkflows AWS API Documentation
+    #
+    # @overload list_workflows(params = {})
+    # @param [Hash] params ({})
+    def list_workflows(params = {}, options = {})
+      req = build_request(:list_workflows, params)
+      req.send_request(options)
+    end
+
     # Runs an AWS Lambda job that does the following:
     #
     # 1.  All the profileKeys in the `ProfileToBeMerged` will be moved to
@@ -1521,13 +2734,21 @@ module Aws::CustomerProfiles
     #
     # An integration can belong to only one domain.
     #
+    # To add or remove tags on an existing Integration, see [ TagResource
+    # ][1]/[ UntagResource][2].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_TagResource.html
+    # [2]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_UntagResource.html
+    #
     # @option params [required, String] :domain_name
     #   The unique name of the domain.
     #
     # @option params [String] :uri
     #   The URI of the S3 bucket or any other type of data source.
     #
-    # @option params [required, String] :object_type_name
+    # @option params [String] :object_type_name
     #   The name of the profile object type.
     #
     # @option params [Hash<String,String>] :tags
@@ -1537,6 +2758,15 @@ module Aws::CustomerProfiles
     #   The configuration that controls how Customer Profiles retrieves data
     #   from the source.
     #
+    # @option params [Hash<String,String>] :object_type_names
+    #   A map in which each key is an event type from an external application
+    #   such as Segment or Shopify, and each value is an `ObjectTypeName`
+    #   (template) used to ingest the event. It supports the following event
+    #   types: `SegmentIdentify`, `ShopifyCreateCustomers`,
+    #   `ShopifyUpdateCustomers`, `ShopifyCreateDraftOrders`,
+    #   `ShopifyUpdateDraftOrders`, `ShopifyCreateOrders`, and
+    #   `ShopifyUpdatedOrders`.
+    #
     # @return [Types::PutIntegrationResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::PutIntegrationResponse#domain_name #domain_name} => String
@@ -1545,13 +2775,16 @@ module Aws::CustomerProfiles
     #   * {Types::PutIntegrationResponse#created_at #created_at} => Time
     #   * {Types::PutIntegrationResponse#last_updated_at #last_updated_at} => Time
     #   * {Types::PutIntegrationResponse#tags #tags} => Hash&lt;String,String&gt;
+    #   * {Types::PutIntegrationResponse#object_type_names #object_type_names} => Hash&lt;String,String&gt;
+    #   * {Types::PutIntegrationResponse#workflow_id #workflow_id} => String
+    #   * {Types::PutIntegrationResponse#is_unstructured #is_unstructured} => Boolean
     #
     # @example Request syntax with placeholder values
     #
     #   resp = client.put_integration({
     #     domain_name: "name", # required
     #     uri: "string1To255",
-    #     object_type_name: "typeName", # required
+    #     object_type_name: "typeName",
     #     tags: {
     #       "TagKey" => "TagValue",
     #     },
@@ -1618,6 +2851,9 @@ module Aws::CustomerProfiles
     #         },
     #       },
     #     },
+    #     object_type_names: {
+    #       "string1To255" => "typeName",
+    #     },
     #   })
     #
     # @example Response structure
@@ -1629,6 +2865,10 @@ module Aws::CustomerProfiles
     #   resp.last_updated_at #=> Time
     #   resp.tags #=> Hash
     #   resp.tags["TagKey"] #=> String
+    #   resp.object_type_names #=> Hash
+    #   resp.object_type_names["string1To255"] #=> String
+    #   resp.workflow_id #=> String
+    #   resp.is_unstructured #=> Boolean
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/PutIntegration AWS API Documentation
     #
@@ -1641,10 +2881,10 @@ module Aws::CustomerProfiles
 
     # Adds additional objects to customer profiles of a given ObjectType.
     #
-    # When adding a specific profile object, like a Contact Trace Record
-    # (CTR), an inferred profile can get created if it is not mapped to an
-    # existing profile. The resulting profile will only have a phone number
-    # populated in the standard ProfileObject. Any additional CTRs with the
+    # When adding a specific profile object, like a Contact Record, an
+    # inferred profile can get created if it is not mapped to an existing
+    # profile. The resulting profile will only have a phone number populated
+    # in the standard ProfileObject. Any additional Contact Records with the
     # same phone number will be mapped to the same inferred profile.
     #
     # When a ProfileObject is created and if a ProfileObjectType already
@@ -1690,6 +2930,14 @@ module Aws::CustomerProfiles
 
     # Defines a ProfileObjectType.
     #
+    # To add or remove tags on an existing ObjectType, see [
+    # TagResource][1]/[UntagResource][2].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_TagResource.html
+    # [2]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_UntagResource.html
+    #
     # @option params [required, String] :domain_name
     #   The unique name of the domain.
     #
@@ -1700,7 +2948,14 @@ module Aws::CustomerProfiles
     #   Description of the profile object type.
     #
     # @option params [String] :template_id
-    #   A unique identifier for the object template.
+    #   A unique identifier for the object template. For some attributes in
+    #   the request, the service will use the default value from the object
+    #   template when TemplateId is present. If these attributes are present
+    #   in the request, the service may return a `BadRequestException`. These
+    #   attributes include: AllowProfileCreation,
+    #   SourceLastUpdatedTimestampFormat, Fields, and Keys. For example, if
+    #   AllowProfileCreation is set to true when TemplateId is set, the
+    #   service may return a `BadRequestException`.
     #
     # @option params [Integer] :expiration_days
     #   The number of days until the data in the object expires.
@@ -1716,6 +2971,10 @@ module Aws::CustomerProfiles
     #   tries to fetch a standard profile and associate this object with the
     #   profile. If it is set to `TRUE`, and if no match is found, then the
     #   service creates a new standard profile.
+    #
+    # @option params [String] :source_last_updated_timestamp_format
+    #   The format of your `sourceLastUpdatedTimestamp` that was previously
+    #   set up.
     #
     # @option params [Hash<String,Types::ObjectTypeField>] :fields
     #   A map of the name and ObjectType field.
@@ -1734,6 +2993,7 @@ module Aws::CustomerProfiles
     #   * {Types::PutProfileObjectTypeResponse#expiration_days #expiration_days} => Integer
     #   * {Types::PutProfileObjectTypeResponse#encryption_key #encryption_key} => String
     #   * {Types::PutProfileObjectTypeResponse#allow_profile_creation #allow_profile_creation} => Boolean
+    #   * {Types::PutProfileObjectTypeResponse#source_last_updated_timestamp_format #source_last_updated_timestamp_format} => String
     #   * {Types::PutProfileObjectTypeResponse#fields #fields} => Hash&lt;String,Types::ObjectTypeField&gt;
     #   * {Types::PutProfileObjectTypeResponse#keys #keys} => Hash&lt;String,Array&lt;Types::ObjectTypeKey&gt;&gt;
     #   * {Types::PutProfileObjectTypeResponse#created_at #created_at} => Time
@@ -1750,6 +3010,7 @@ module Aws::CustomerProfiles
     #     expiration_days: 1,
     #     encryption_key: "encryptionKey",
     #     allow_profile_creation: false,
+    #     source_last_updated_timestamp_format: "string1To255",
     #     fields: {
     #       "name" => {
     #         source: "text",
@@ -1760,7 +3021,7 @@ module Aws::CustomerProfiles
     #     keys: {
     #       "name" => [
     #         {
-    #           standard_identifiers: ["PROFILE"], # accepts PROFILE, UNIQUE, SECONDARY, LOOKUP_ONLY, NEW_ONLY
+    #           standard_identifiers: ["PROFILE"], # accepts PROFILE, ASSET, CASE, UNIQUE, SECONDARY, LOOKUP_ONLY, NEW_ONLY, ORDER
     #           field_names: ["name"],
     #         },
     #       ],
@@ -1778,6 +3039,7 @@ module Aws::CustomerProfiles
     #   resp.expiration_days #=> Integer
     #   resp.encryption_key #=> String
     #   resp.allow_profile_creation #=> Boolean
+    #   resp.source_last_updated_timestamp_format #=> String
     #   resp.fields #=> Hash
     #   resp.fields["name"].source #=> String
     #   resp.fields["name"].target #=> String
@@ -1785,7 +3047,7 @@ module Aws::CustomerProfiles
     #   resp.keys #=> Hash
     #   resp.keys["name"] #=> Array
     #   resp.keys["name"][0].standard_identifiers #=> Array
-    #   resp.keys["name"][0].standard_identifiers[0] #=> String, one of "PROFILE", "UNIQUE", "SECONDARY", "LOOKUP_ONLY", "NEW_ONLY"
+    #   resp.keys["name"][0].standard_identifiers[0] #=> String, one of "PROFILE", "ASSET", "CASE", "UNIQUE", "SECONDARY", "LOOKUP_ONLY", "NEW_ONLY", "ORDER"
     #   resp.keys["name"][0].field_names #=> Array
     #   resp.keys["name"][0].field_names[0] #=> String
     #   resp.created_at #=> Time
@@ -1802,8 +3064,14 @@ module Aws::CustomerProfiles
       req.send_request(options)
     end
 
-    # Searches for profiles within a specific domain name using name, phone
-    # number, email address, account number, or a custom defined index.
+    # Searches for profiles within a specific domain using one or more
+    # predefined search keys (e.g., \_fullName, \_phone, \_email, \_account,
+    # etc.) and/or custom-defined search keys. A search key is a data type
+    # pair that consists of a `KeyName` and `Values` list.
+    #
+    # This operation supports searching for profiles with a minimum of 1
+    # key-value(s) pair and up to 5 key-value(s) pairs using either `AND` or
+    # `OR` logic.
     #
     # @option params [String] :next_token
     #   The pagination token from the previous SearchProfiles API call.
@@ -1811,18 +3079,49 @@ module Aws::CustomerProfiles
     # @option params [Integer] :max_results
     #   The maximum number of objects returned per page.
     #
+    #   The default is 20 if this parameter is not included in the request.
+    #
     # @option params [required, String] :domain_name
     #   The unique name of the domain.
     #
     # @option params [required, String] :key_name
     #   A searchable identifier of a customer profile. The predefined keys you
-    #   can use to search include: \_account, \_profileId, \_fullName,
-    #   \_phone, \_email, \_ctrContactId, \_marketoLeadId,
-    #   \_salesforceAccountId, \_salesforceContactId, \_zendeskUserId,
-    #   \_zendeskExternalId, \_serviceNowSystemId.
+    #   can use to search include: \_account, \_profileId, \_assetId,
+    #   \_caseId, \_orderId, \_fullName, \_phone, \_email, \_ctrContactId,
+    #   \_marketoLeadId, \_salesforceAccountId, \_salesforceContactId,
+    #   \_salesforceAssetId, \_zendeskUserId, \_zendeskExternalId,
+    #   \_zendeskTicketId, \_serviceNowSystemId, \_serviceNowIncidentId,
+    #   \_segmentUserId, \_shopifyCustomerId, \_shopifyOrderId.
     #
     # @option params [required, Array<String>] :values
     #   A list of key values.
+    #
+    # @option params [Array<Types::AdditionalSearchKey>] :additional_search_keys
+    #   A list of `AdditionalSearchKey` objects that are each searchable
+    #   identifiers of a profile. Each `AdditionalSearchKey` object contains a
+    #   `KeyName` and a list of `Values` associated with that specific key
+    #   (i.e., a key-value(s) pair). These additional search keys will be used
+    #   in conjunction with the `LogicalOperator` and the required `KeyName`
+    #   and `Values` parameters to search for profiles that satisfy the search
+    #   criteria.
+    #
+    # @option params [String] :logical_operator
+    #   Relationship between all specified search keys that will be used to
+    #   search for profiles. This includes the required `KeyName` and `Values`
+    #   parameters as well as any key-value(s) pairs specified in the
+    #   `AdditionalSearchKeys` list.
+    #
+    #   This parameter influences which profiles will be returned in the
+    #   response in the following manner:
+    #
+    #   * `AND` - The response only includes profiles that match all of the
+    #     search keys.
+    #
+    #   * `OR` - The response includes profiles that match at least one of the
+    #     search keys.
+    #
+    #   The `OR` relationship is the default behavior if this parameter is not
+    #   included in the request.
     #
     # @return [Types::SearchProfilesResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
@@ -1837,6 +3136,13 @@ module Aws::CustomerProfiles
     #     domain_name: "name", # required
     #     key_name: "name", # required
     #     values: ["string1To255"], # required
+    #     additional_search_keys: [
+    #       {
+    #         key_name: "name", # required
+    #         values: ["string1To255"], # required
+    #       },
+    #     ],
+    #     logical_operator: "AND", # accepts AND, OR
     #   })
     #
     # @example Response structure
@@ -1901,6 +3207,12 @@ module Aws::CustomerProfiles
     #   resp.items[0].billing_address.postal_code #=> String
     #   resp.items[0].attributes #=> Hash
     #   resp.items[0].attributes["string1To255"] #=> String
+    #   resp.items[0].found_by_items #=> Array
+    #   resp.items[0].found_by_items[0].key_name #=> String
+    #   resp.items[0].found_by_items[0].values #=> Array
+    #   resp.items[0].found_by_items[0].values[0] #=> String
+    #   resp.items[0].party_type_string #=> String
+    #   resp.items[0].gender_string #=> String
     #   resp.next_token #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/SearchProfiles AWS API Documentation
@@ -1984,10 +3296,109 @@ module Aws::CustomerProfiles
       req.send_request(options)
     end
 
+    # Updates an existing calculated attribute definition. When updating the
+    # Conditions, note that increasing the date range of a calculated
+    # attribute will not trigger inclusion of historical data greater than
+    # the current date range.
+    #
+    # @option params [required, String] :domain_name
+    #   The unique name of the domain.
+    #
+    # @option params [required, String] :calculated_attribute_name
+    #   The unique name of the calculated attribute.
+    #
+    # @option params [String] :display_name
+    #   The display name of the calculated attribute.
+    #
+    # @option params [String] :description
+    #   The description of the calculated attribute.
+    #
+    # @option params [Types::Conditions] :conditions
+    #   The conditions including range, object count, and threshold for the
+    #   calculated attribute.
+    #
+    # @return [Types::UpdateCalculatedAttributeDefinitionResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
+    #
+    #   * {Types::UpdateCalculatedAttributeDefinitionResponse#calculated_attribute_name #calculated_attribute_name} => String
+    #   * {Types::UpdateCalculatedAttributeDefinitionResponse#display_name #display_name} => String
+    #   * {Types::UpdateCalculatedAttributeDefinitionResponse#description #description} => String
+    #   * {Types::UpdateCalculatedAttributeDefinitionResponse#created_at #created_at} => Time
+    #   * {Types::UpdateCalculatedAttributeDefinitionResponse#last_updated_at #last_updated_at} => Time
+    #   * {Types::UpdateCalculatedAttributeDefinitionResponse#statistic #statistic} => String
+    #   * {Types::UpdateCalculatedAttributeDefinitionResponse#conditions #conditions} => Types::Conditions
+    #   * {Types::UpdateCalculatedAttributeDefinitionResponse#attribute_details #attribute_details} => Types::AttributeDetails
+    #   * {Types::UpdateCalculatedAttributeDefinitionResponse#tags #tags} => Hash&lt;String,String&gt;
+    #
+    # @example Request syntax with placeholder values
+    #
+    #   resp = client.update_calculated_attribute_definition({
+    #     domain_name: "name", # required
+    #     calculated_attribute_name: "typeName", # required
+    #     display_name: "displayName",
+    #     description: "text",
+    #     conditions: {
+    #       range: {
+    #         value: 1, # required
+    #         unit: "DAYS", # required, accepts DAYS
+    #       },
+    #       object_count: 1,
+    #       threshold: {
+    #         value: "string1To255", # required
+    #         operator: "EQUAL_TO", # required, accepts EQUAL_TO, GREATER_THAN, LESS_THAN, NOT_EQUAL_TO
+    #       },
+    #     },
+    #   })
+    #
+    # @example Response structure
+    #
+    #   resp.calculated_attribute_name #=> String
+    #   resp.display_name #=> String
+    #   resp.description #=> String
+    #   resp.created_at #=> Time
+    #   resp.last_updated_at #=> Time
+    #   resp.statistic #=> String, one of "FIRST_OCCURRENCE", "LAST_OCCURRENCE", "COUNT", "SUM", "MINIMUM", "MAXIMUM", "AVERAGE", "MAX_OCCURRENCE"
+    #   resp.conditions.range.value #=> Integer
+    #   resp.conditions.range.unit #=> String, one of "DAYS"
+    #   resp.conditions.object_count #=> Integer
+    #   resp.conditions.threshold.value #=> String
+    #   resp.conditions.threshold.operator #=> String, one of "EQUAL_TO", "GREATER_THAN", "LESS_THAN", "NOT_EQUAL_TO"
+    #   resp.attribute_details.attributes #=> Array
+    #   resp.attribute_details.attributes[0].name #=> String
+    #   resp.attribute_details.expression #=> String
+    #   resp.tags #=> Hash
+    #   resp.tags["TagKey"] #=> String
+    #
+    # @see http://docs.aws.amazon.com/goto/WebAPI/customer-profiles-2020-08-15/UpdateCalculatedAttributeDefinition AWS API Documentation
+    #
+    # @overload update_calculated_attribute_definition(params = {})
+    # @param [Hash] params ({})
+    def update_calculated_attribute_definition(params = {}, options = {})
+      req = build_request(:update_calculated_attribute_definition, params)
+      req.send_request(options)
+    end
+
     # Updates the properties of a domain, including creating or selecting a
     # dead letter queue or an encryption key.
     #
     # After a domain is created, the name can’t be changed.
+    #
+    # Use this API or [CreateDomain][1] to enable [identity resolution][2]:
+    # set `Matching` to true.
+    #
+    # To prevent cross-service impersonation when you call this API, see
+    # [Cross-service confused deputy prevention][3] for sample policies that
+    # you should apply.
+    #
+    # To add or remove tags on an existing Domain, see
+    # [TagResource][4]/[UntagResource][5].
+    #
+    #
+    #
+    # [1]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_CreateDomain.html
+    # [2]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_GetMatches.html
+    # [3]: https://docs.aws.amazon.com/connect/latest/adminguide/cross-service-confused-deputy-prevention.html
+    # [4]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_TagResource.html
+    # [5]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_UntagResource.html
     #
     # @option params [required, String] :domain_name
     #   The unique name of the domain.
@@ -2010,8 +3421,20 @@ module Aws::CustomerProfiles
     #   to the DeadLetterQueue.
     #
     # @option params [Types::MatchingRequest] :matching
-    #   The process of matching duplicate profiles. This process runs every
-    #   Saturday at 12AM.
+    #   The process of matching duplicate profiles. If `Matching` = `true`,
+    #   Amazon Connect Customer Profiles starts a weekly batch process called
+    #   Identity Resolution Job. If you do not specify a date and time for
+    #   Identity Resolution Job to run, by default it runs every Saturday at
+    #   12AM UTC to detect duplicate profiles in your domains.
+    #
+    #   After the Identity Resolution Job completes, use the [GetMatches][1]
+    #   API to return and review the results. Or, if you have configured
+    #   `ExportingConfig` in the `MatchingRequest`, you can download the
+    #   results from S3.
+    #
+    #
+    #
+    #   [1]: https://docs.aws.amazon.com/customerprofiles/latest/APIReference/API_GetMatches.html
     #
     # @option params [Hash<String,String>] :tags
     #   The tags used to organize, track, or control access for this resource.
@@ -2036,6 +3459,29 @@ module Aws::CustomerProfiles
     #     dead_letter_queue_url: "sqsQueueUrl",
     #     matching: {
     #       enabled: false, # required
+    #       job_schedule: {
+    #         day_of_the_week: "SUNDAY", # required, accepts SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
+    #         time: "JobScheduleTime", # required
+    #       },
+    #       auto_merging: {
+    #         enabled: false, # required
+    #         consolidation: {
+    #           matching_attributes_list: [ # required
+    #             ["string1To255"],
+    #           ],
+    #         },
+    #         conflict_resolution: {
+    #           conflict_resolving_model: "RECENCY", # required, accepts RECENCY, SOURCE
+    #           source_name: "string1To255",
+    #         },
+    #         min_allowed_confidence_score_for_merging: 1.0,
+    #       },
+    #       exporting_config: {
+    #         s3_exporting: {
+    #           s3_bucket_name: "s3BucketName", # required
+    #           s3_key_name: "s3KeyNameCustomerOutputConfig",
+    #         },
+    #       },
     #     },
     #     tags: {
     #       "TagKey" => "TagValue",
@@ -2049,6 +3495,17 @@ module Aws::CustomerProfiles
     #   resp.default_encryption_key #=> String
     #   resp.dead_letter_queue_url #=> String
     #   resp.matching.enabled #=> Boolean
+    #   resp.matching.job_schedule.day_of_the_week #=> String, one of "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
+    #   resp.matching.job_schedule.time #=> String
+    #   resp.matching.auto_merging.enabled #=> Boolean
+    #   resp.matching.auto_merging.consolidation.matching_attributes_list #=> Array
+    #   resp.matching.auto_merging.consolidation.matching_attributes_list[0] #=> Array
+    #   resp.matching.auto_merging.consolidation.matching_attributes_list[0][0] #=> String
+    #   resp.matching.auto_merging.conflict_resolution.conflict_resolving_model #=> String, one of "RECENCY", "SOURCE"
+    #   resp.matching.auto_merging.conflict_resolution.source_name #=> String
+    #   resp.matching.auto_merging.min_allowed_confidence_score_for_merging #=> Float
+    #   resp.matching.exporting_config.s3_exporting.s3_bucket_name #=> String
+    #   resp.matching.exporting_config.s3_exporting.s3_key_name #=> String
     #   resp.created_at #=> Time
     #   resp.last_updated_at #=> Time
     #   resp.tags #=> Hash
@@ -2142,6 +3599,12 @@ module Aws::CustomerProfiles
     # @option params [Hash<String,String>] :attributes
     #   A key value pair of attributes of a customer profile.
     #
+    # @option params [String] :party_type_string
+    #   An alternative to `PartyType` which accepts any string as input.
+    #
+    # @option params [String] :gender_string
+    #   An alternative to `Gender` which accepts any string as input.
+    #
     # @return [Types::UpdateProfileResponse] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::UpdateProfileResponse#profile_id #profile_id} => String
@@ -2218,6 +3681,8 @@ module Aws::CustomerProfiles
     #     attributes: {
     #       "string1To255" => "string0To255",
     #     },
+    #     party_type_string: "string0To255",
+    #     gender_string: "string0To255",
     #   })
     #
     # @example Response structure
@@ -2246,7 +3711,7 @@ module Aws::CustomerProfiles
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-customerprofiles'
-      context[:gem_version] = '1.7.0'
+      context[:gem_version] = '1.33.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

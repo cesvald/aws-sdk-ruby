@@ -27,7 +27,11 @@ require 'aws-sdk-core/plugins/client_metrics_plugin.rb'
 require 'aws-sdk-core/plugins/client_metrics_send_plugin.rb'
 require 'aws-sdk-core/plugins/transfer_encoding.rb'
 require 'aws-sdk-core/plugins/http_checksum.rb'
-require 'aws-sdk-core/plugins/signature_v4.rb'
+require 'aws-sdk-core/plugins/checksum_algorithm.rb'
+require 'aws-sdk-core/plugins/request_compression.rb'
+require 'aws-sdk-core/plugins/defaults_mode.rb'
+require 'aws-sdk-core/plugins/recursion_detection.rb'
+require 'aws-sdk-core/plugins/sign.rb'
 require 'aws-sdk-core/plugins/protocols/json_rpc.rb'
 require 'aws-sdk-swf/plugins/read_timeouts.rb'
 
@@ -74,9 +78,14 @@ module Aws::SWF
     add_plugin(Aws::Plugins::ClientMetricsSendPlugin)
     add_plugin(Aws::Plugins::TransferEncoding)
     add_plugin(Aws::Plugins::HttpChecksum)
-    add_plugin(Aws::Plugins::SignatureV4)
+    add_plugin(Aws::Plugins::ChecksumAlgorithm)
+    add_plugin(Aws::Plugins::RequestCompression)
+    add_plugin(Aws::Plugins::DefaultsMode)
+    add_plugin(Aws::Plugins::RecursionDetection)
+    add_plugin(Aws::Plugins::Sign)
     add_plugin(Aws::Plugins::Protocols::JsonRpc)
     add_plugin(Aws::SWF::Plugins::ReadTimeouts)
+    add_plugin(Aws::SWF::Plugins::Endpoints)
 
     # @overload initialize(options)
     #   @param [Hash] options
@@ -121,7 +130,9 @@ module Aws::SWF
     #     * EC2/ECS IMDS instance profile - When used by default, the timeouts
     #       are very aggressive. Construct and pass an instance of
     #       `Aws::InstanceProfileCredentails` or `Aws::ECSCredentials` to
-    #       enable retries and extended timeouts.
+    #       enable retries and extended timeouts. Instance profile credential
+    #       fetching can be disabled by setting ENV['AWS_EC2_METADATA_DISABLED']
+    #       to true.
     #
     #   @option options [required, String] :region
     #     The AWS region to connect to.  The configured `:region` is
@@ -175,9 +186,17 @@ module Aws::SWF
     #     Used only in `standard` and adaptive retry modes. Specifies whether to apply
     #     a clock skew correction and retry requests with skewed client clocks.
     #
+    #   @option options [String] :defaults_mode ("legacy")
+    #     See {Aws::DefaultsModeConfiguration} for a list of the
+    #     accepted modes and the configuration defaults that are included.
+    #
     #   @option options [Boolean] :disable_host_prefix_injection (false)
     #     Set to true to disable SDK automatically adding host prefix
     #     to default service endpoint when available.
+    #
+    #   @option options [Boolean] :disable_request_compression (false)
+    #     When set to 'true' the request body will not be compressed
+    #     for supported operations.
     #
     #   @option options [String] :endpoint
     #     The client endpoint is normally constructed from the `:region`
@@ -218,6 +237,11 @@ module Aws::SWF
     #   @option options [String] :profile ("default")
     #     Used when loading credentials from the shared credentials file
     #     at HOME/.aws/credentials.  When not specified, 'default' is used.
+    #
+    #   @option options [Integer] :request_min_compression_size_bytes (10240)
+    #     The minimum size in bytes that triggers compression for request
+    #     bodies. The value must be non-negative integer value between 0
+    #     and 10485780 bytes inclusive.
     #
     #   @option options [Proc] :retry_backoff
     #     A proc or lambda used for backoff. Defaults to 2**retries * retry_base_delay.
@@ -264,6 +288,11 @@ module Aws::SWF
     #       in the future.
     #
     #
+    #   @option options [String] :sdk_ua_app_id
+    #     A unique and opaque application ID that is appended to the
+    #     User-Agent header as app/<sdk_ua_app_id>. It should have a
+    #     maximum length of 50.
+    #
     #   @option options [String] :secret_access_key
     #
     #   @option options [String] :session_token
@@ -287,9 +316,34 @@ module Aws::SWF
     #     ** Please note ** When response stubbing is enabled, no HTTP
     #     requests are made, and retries are disabled.
     #
+    #   @option options [Aws::TokenProvider] :token_provider
+    #     A Bearer Token Provider. This can be an instance of any one of the
+    #     following classes:
+    #
+    #     * `Aws::StaticTokenProvider` - Used for configuring static, non-refreshing
+    #       tokens.
+    #
+    #     * `Aws::SSOTokenProvider` - Used for loading tokens from AWS SSO using an
+    #       access token generated from `aws login`.
+    #
+    #     When `:token_provider` is not configured directly, the `Aws::TokenProviderChain`
+    #     will be used to search for tokens configured for your profile in shared configuration files.
+    #
+    #   @option options [Boolean] :use_dualstack_endpoint
+    #     When set to `true`, dualstack enabled endpoints (with `.aws` TLD)
+    #     will be used if available.
+    #
+    #   @option options [Boolean] :use_fips_endpoint
+    #     When set to `true`, fips compatible endpoints will be used if available.
+    #     When a `fips` region is used, the region is normalized and this config
+    #     is set to `true`.
+    #
     #   @option options [Boolean] :validate_params (true)
     #     When `true`, request parameters are validated before
     #     sending the request.
+    #
+    #   @option options [Aws::SWF::EndpointProvider] :endpoint_provider
+    #     The endpoint provider used to resolve endpoints. Any object that responds to `#resolve_endpoint(parameters)` where `parameters` is a Struct similar to `Aws::SWF::EndpointParameters`
     #
     #   @option options [URI::HTTP,String] :http_proxy A proxy to send
     #     requests through.  Formatted like 'http://proxy.com:123'.
@@ -298,7 +352,7 @@ module Aws::SWF
     #     seconds to wait when opening a HTTP session before raising a
     #     `Timeout::Error`.
     #
-    #   @option options [Integer] :http_read_timeout (60) The default
+    #   @option options [Float] :http_read_timeout (60) The default
     #     number of seconds to wait for response data.  This value can
     #     safely be set per-request on the session.
     #
@@ -313,6 +367,9 @@ module Aws::SWF
     #     "Expect" header set to "100-continue".  Defaults to `nil` which
     #     disables this behaviour.  This value can safely be set per
     #     request on the session.
+    #
+    #   @option options [Float] :ssl_timeout (nil) Sets the SSL timeout
+    #     in seconds.
     #
     #   @option options [Boolean] :http_wire_trace (false) When `true`,
     #     HTTP debug output will be sent to the `:logger`.
@@ -361,13 +418,13 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `tagFilter.tag`\: String constraint. The key is
+    #   * `tagFilter.tag`: String constraint. The key is
     #     `swf:tagFilter.tag`.
     #
-    #   * `typeFilter.name`\: String constraint. The key is
+    #   * `typeFilter.name`: String constraint. The key is
     #     `swf:typeFilter.name`.
     #
-    #   * `typeFilter.version`\: String constraint. The key is
+    #   * `typeFilter.version`: String constraint. The key is
     #     `swf:typeFilter.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -509,13 +566,13 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `tagFilter.tag`\: String constraint. The key is
+    #   * `tagFilter.tag`: String constraint. The key is
     #     `swf:tagFilter.tag`.
     #
-    #   * `typeFilter.name`\: String constraint. The key is
+    #   * `typeFilter.name`: String constraint. The key is
     #     `swf:typeFilter.name`.
     #
-    #   * `typeFilter.version`\: String constraint. The key is
+    #   * `typeFilter.version`: String constraint. The key is
     #     `swf:typeFilter.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -749,10 +806,10 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `activityType.name`\: String constraint. The key is
+    #   * `activityType.name`: String constraint. The key is
     #     `swf:activityType.name`.
     #
-    #   * `activityType.version`\: String constraint. The key is
+    #   * `activityType.version`: String constraint. The key is
     #     `swf:activityType.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -870,10 +927,10 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `workflowType.name`\: String constraint. The key is
+    #   * `workflowType.name`: String constraint. The key is
     #     `swf:workflowType.name`.
     #
-    #   * `workflowType.version`\: String constraint. The key is
+    #   * `workflowType.version`: String constraint. The key is
     #     `swf:workflowType.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -930,10 +987,10 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `activityType.name`\: String constraint. The key is
+    #   * `activityType.name`: String constraint. The key is
     #     `swf:activityType.name`.
     #
-    #   * `activityType.version`\: String constraint. The key is
+    #   * `activityType.version`: String constraint. The key is
     #     `swf:activityType.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -1158,10 +1215,10 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `workflowType.name`\: String constraint. The key is
+    #   * `workflowType.name`: String constraint. The key is
     #     `swf:workflowType.name`.
     #
-    #   * `workflowType.version`\: String constraint. The key is
+    #   * `workflowType.version`: String constraint. The key is
     #     `swf:workflowType.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -1262,8 +1319,8 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
-    #   return a `400` error: "`Specified token has exceeded its maximum
+    #   expires after 24 hours. Using an expired pagination token will return
+    #   a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
     #   The configured `maximumPageSize` determines how many results can be
@@ -1601,8 +1658,8 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
-    #   return a `400` error: "`Specified token has exceeded its maximum
+    #   expires after 24 hours. Using an expired pagination token will return
+    #   a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
     #   The configured `maximumPageSize` determines how many results can be
@@ -1677,13 +1734,13 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `tagFilter.tag`\: String constraint. The key is
+    #   * `tagFilter.tag`: String constraint. The key is
     #     `swf:tagFilter.tag`.
     #
-    #   * `typeFilter.name`\: String constraint. The key is
+    #   * `typeFilter.name`: String constraint. The key is
     #     `swf:typeFilter.name`.
     #
-    #   * `typeFilter.version`\: String constraint. The key is
+    #   * `typeFilter.version`: String constraint. The key is
     #     `swf:typeFilter.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -1767,8 +1824,8 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
-    #   return a `400` error: "`Specified token has exceeded its maximum
+    #   expires after 24 hours. Using an expired pagination token will return
+    #   a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
     #   The configured `maximumPageSize` determines how many results can be
@@ -1885,8 +1942,8 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
-    #   return a `400` error: "`Specified token has exceeded its maximum
+    #   expires after 24 hours. Using an expired pagination token will return
+    #   a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
     #   The configured `maximumPageSize` determines how many results can be
@@ -1960,13 +2017,13 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `tagFilter.tag`\: String constraint. The key is
+    #   * `tagFilter.tag`: String constraint. The key is
     #     `swf:tagFilter.tag`.
     #
-    #   * `typeFilter.name`\: String constraint. The key is
+    #   * `typeFilter.name`: String constraint. The key is
     #     `swf:typeFilter.name`.
     #
-    #   * `typeFilter.version`\: String constraint. The key is
+    #   * `typeFilter.version`: String constraint. The key is
     #     `swf:typeFilter.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -2010,8 +2067,8 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
-    #   return a `400` error: "`Specified token has exceeded its maximum
+    #   expires after 24 hours. Using an expired pagination token will return
+    #   a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
     #   The configured `maximumPageSize` determines how many results can be
@@ -2161,8 +2218,8 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
-    #   return a `400` error: "`Specified token has exceeded its maximum
+    #   expires after 24 hours. Using an expired pagination token will return
+    #   a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
     #   The configured `maximumPageSize` determines how many results can be
@@ -2262,7 +2319,7 @@ module Aws::SWF
     #   The specified string must not start or end with whitespace. It must
     #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
     #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it must
-    #   not *be* the literal string `arn`.
+    #   *not* be the literal string `arn`.
     #
     # @option params [String] :identity
     #   Identity of the worker making the request, recorded in the
@@ -2364,10 +2421,9 @@ module Aws::SWF
     # @option params [required, Types::TaskList] :task_list
     #   Specifies the task list to poll for decision tasks.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it must
-    #   not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash), `|`
+    #   (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #
     # @option params [String] :identity
     #   Identity of the decider making the request, which is recorded in the
@@ -2380,8 +2436,8 @@ module Aws::SWF
     #   value of `NextPageToken` is a unique pagination token for each page.
     #   Make the call again using the returned token to retrieve the next
     #   page. Keep all other arguments unchanged. Each pagination token
-    #   expires after 60 seconds. Using an expired pagination token will
-    #   return a `400` error: "`Specified token has exceeded its maximum
+    #   expires after 24 hours. Using an expired pagination token will return
+    #   a `400` error: "`Specified token has exceeded its maximum
     #   lifetime`".
     #
     #   The configured `maximumPageSize` determines how many results can be
@@ -2407,6 +2463,12 @@ module Aws::SWF
     #   the results are returned in ascending order of the `eventTimestamp` of
     #   the events.
     #
+    # @option params [Boolean] :start_at_previous_started_event
+    #   When set to `true`, returns the events with `eventTimestamp` greater
+    #   than or equal to `eventTimestamp` of the most recent
+    #   `DecisionTaskStarted` event. By default, this parameter is set to
+    #   `false`.
+    #
     # @return [Types::DecisionTask] Returns a {Seahorse::Client::Response response} object which responds to the following methods:
     #
     #   * {Types::DecisionTask#task_token #task_token} => String
@@ -2430,6 +2492,7 @@ module Aws::SWF
     #     next_page_token: "PageToken",
     #     maximum_page_size: 1,
     #     reverse_order: false,
+    #     start_at_previous_started_event: false,
     #   })
     #
     # @example Response structure
@@ -2810,12 +2873,12 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `defaultTaskList.name`\: String constraint. The key is
+    #   * `defaultTaskList.name`: String constraint. The key is
     #     `swf:defaultTaskList.name`.
     #
-    #   * `name`\: String constraint. The key is `swf:name`.
+    #   * `name`: String constraint. The key is `swf:name`.
     #
-    #   * `version`\: String constraint. The key is `swf:version`.
+    #   * `version`: String constraint. The key is `swf:version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
     # action, or the parameter values fall outside the specified
@@ -2834,10 +2897,9 @@ module Aws::SWF
     # @option params [required, String] :name
     #   The name of the activity type within the domain.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it must
-    #   not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash), `|`
+    #   (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #
     # @option params [required, String] :version
     #   The version of the activity type.
@@ -2847,10 +2909,9 @@ module Aws::SWF
     #
     #    </note>
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it must
-    #   not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash), `|`
+    #   (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #
     # @option params [String] :description
     #   A textual description of the activity type.
@@ -2974,7 +3035,7 @@ module Aws::SWF
     #   The specified string must not start or end with whitespace. It must
     #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
     #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it must
-    #   not *be* the literal string `arn`.
+    #   *not* be the literal string `arn`.
     #
     # @option params [String] :description
     #   A text description of the domain.
@@ -3050,12 +3111,12 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `defaultTaskList.name`\: String constraint. The key is
+    #   * `defaultTaskList.name`: String constraint. The key is
     #     `swf:defaultTaskList.name`.
     #
-    #   * `name`\: String constraint. The key is `swf:name`.
+    #   * `name`: String constraint. The key is `swf:name`.
     #
-    #   * `version`\: String constraint. The key is `swf:version`.
+    #   * `version`: String constraint. The key is `swf:version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
     # action, or the parameter values fall outside the specified
@@ -3074,10 +3135,9 @@ module Aws::SWF
     # @option params [required, String] :name
     #   The name of the workflow type.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it must
-    #   not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash), `|`
+    #   (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #
     # @option params [required, String] :version
     #   The version of the workflow type.
@@ -3088,10 +3148,9 @@ module Aws::SWF
     #
     #    </note>
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it must
-    #   not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash), `|`
+    #   (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #
     # @option params [String] :description
     #   Textual description of the workflow type.
@@ -3724,22 +3783,22 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `tagList.member.0`\: The key is `swf:tagList.member.0`.
+    #   * `tagList.member.0`: The key is `swf:tagList.member.0`.
     #
-    #   * `tagList.member.1`\: The key is `swf:tagList.member.1`.
+    #   * `tagList.member.1`: The key is `swf:tagList.member.1`.
     #
-    #   * `tagList.member.2`\: The key is `swf:tagList.member.2`.
+    #   * `tagList.member.2`: The key is `swf:tagList.member.2`.
     #
-    #   * `tagList.member.3`\: The key is `swf:tagList.member.3`.
+    #   * `tagList.member.3`: The key is `swf:tagList.member.3`.
     #
-    #   * `tagList.member.4`\: The key is `swf:tagList.member.4`.
+    #   * `tagList.member.4`: The key is `swf:tagList.member.4`.
     #
-    #   * `taskList`\: String constraint. The key is `swf:taskList.name`.
+    #   * `taskList`: String constraint. The key is `swf:taskList.name`.
     #
-    #   * `workflowType.name`\: String constraint. The key is
+    #   * `workflowType.name`: String constraint. The key is
     #     `swf:workflowType.name`.
     #
-    #   * `workflowType.version`\: String constraint. The key is
+    #   * `workflowType.version`: String constraint. The key is
     #     `swf:workflowType.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -3756,6 +3815,10 @@ module Aws::SWF
     # @option params [required, String] :domain
     #   The name of the domain in which the workflow execution is created.
     #
+    #   The specified string must not contain a `:` (colon), `/` (slash), `|`
+    #   (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
+    #
     # @option params [required, String] :workflow_id
     #   The user defined identifier associated with the workflow execution.
     #   You can use this to associate a custom identifier with the workflow
@@ -3764,10 +3827,9 @@ module Aws::SWF
     #   open workflow executions with the same `workflowId` at the same time
     #   within the same domain.
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it must
-    #   not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash), `|`
+    #   (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #
     # @option params [required, Types::WorkflowType] :workflow_type
     #   The type of the workflow to start.
@@ -3784,10 +3846,9 @@ module Aws::SWF
     #
     #    </note>
     #
-    #   The specified string must not start or end with whitespace. It must
-    #   not contain a `:` (colon), `/` (slash), `|` (vertical bar), or any
-    #   control characters (`\u0000-\u001f` \| `\u007f-\u009f`). Also, it must
-    #   not *be* the literal string `arn`.
+    #   The specified string must not contain a `:` (colon), `/` (slash), `|`
+    #   (vertical bar), or any control characters (`\u0000-\u001f` \|
+    #   `\u007f-\u009f`). Also, it must *not* be the literal string `arn`.
     #
     # @option params [String] :task_priority
     #   The task priority to use for this workflow execution. This overrides
@@ -4093,10 +4154,10 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `activityType.name`\: String constraint. The key is
+    #   * `activityType.name`: String constraint. The key is
     #     `swf:activityType.name`.
     #
-    #   * `activityType.version`\: String constraint. The key is
+    #   * `activityType.version`: String constraint. The key is
     #     `swf:activityType.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -4209,10 +4270,10 @@ module Aws::SWF
     # * Constrain the following parameters by using a `Condition` element
     #   with the appropriate keys.
     #
-    #   * `workflowType.name`\: String constraint. The key is
+    #   * `workflowType.name`: String constraint. The key is
     #     `swf:workflowType.name`.
     #
-    #   * `workflowType.version`\: String constraint. The key is
+    #   * `workflowType.version`: String constraint. The key is
     #     `swf:workflowType.version`.
     #
     # If the caller doesn't have sufficient permissions to invoke the
@@ -4288,7 +4349,7 @@ module Aws::SWF
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-swf'
-      context[:gem_version] = '1.27.0'
+      context[:gem_version] = '1.44.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 
