@@ -1,6 +1,16 @@
 Unreleased Changes
 ------------------
 
+1.86.0 (2023-07-13)
+------------------
+
+* Feature - Documentation updates for AWS Identity and Access Management (IAM).
+
+1.85.0 (2023-07-11)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
 1.84.0 (2023-07-06)
 ------------------
 

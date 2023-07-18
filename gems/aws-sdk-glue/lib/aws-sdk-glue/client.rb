@@ -216,6 +216,10 @@ module Aws::Glue
     #   @option options [Boolean] :endpoint_discovery (false)
     #     When set to `true`, endpoint discovery will be enabled for operations when available.
     #
+    #   @option options [Boolean] :ignore_configured_endpoint_urls
+    #     Setting to true disables use of endpoint URLs provided via environment
+    #     variables and the shared configuration file.
+    #
     #   @option options [Aws::Log::Formatter] :log_formatter (Aws::Log::Formatter.default)
     #     The log formatter.
     #
@@ -10740,7 +10744,7 @@ module Aws::Glue
     #       requested_columns: ["ColumnNameString"],
     #       all_columns_requested: false,
     #     },
-    #     supported_permission_types: ["COLUMN_PERMISSION"], # required, accepts COLUMN_PERMISSION, CELL_FILTER_PERMISSION
+    #     supported_permission_types: ["COLUMN_PERMISSION"], # required, accepts COLUMN_PERMISSION, CELL_FILTER_PERMISSION, NESTED_PERMISSION, NESTED_CELL_PERMISSION
     #   })
     #
     # @example Response structure
@@ -10942,7 +10946,7 @@ module Aws::Glue
     #       requested_columns: ["ColumnNameString"],
     #       all_columns_requested: false,
     #     },
-    #     supported_permission_types: ["COLUMN_PERMISSION"], # required, accepts COLUMN_PERMISSION, CELL_FILTER_PERMISSION
+    #     supported_permission_types: ["COLUMN_PERMISSION"], # required, accepts COLUMN_PERMISSION, CELL_FILTER_PERMISSION, NESTED_PERMISSION, NESTED_CELL_PERMISSION
     #     next_token: "Token",
     #     segment: {
     #       segment_number: 1, # required
@@ -11054,7 +11058,7 @@ module Aws::Glue
     #       requested_columns: ["ColumnNameString"],
     #       all_columns_requested: false,
     #     },
-    #     supported_permission_types: ["COLUMN_PERMISSION"], # required, accepts COLUMN_PERMISSION, CELL_FILTER_PERMISSION
+    #     supported_permission_types: ["COLUMN_PERMISSION"], # required, accepts COLUMN_PERMISSION, CELL_FILTER_PERMISSION, NESTED_PERMISSION, NESTED_CELL_PERMISSION
     #   })
     #
     # @example Response structure
@@ -15950,7 +15954,7 @@ module Aws::Glue
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-glue'
-      context[:gem_version] = '1.147.0'
+      context[:gem_version] = '1.149.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

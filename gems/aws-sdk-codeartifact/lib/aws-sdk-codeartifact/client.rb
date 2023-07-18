@@ -216,6 +216,10 @@ module Aws::CodeArtifact
     #   @option options [Boolean] :endpoint_discovery (false)
     #     When set to `true`, endpoint discovery will be enabled for operations when available.
     #
+    #   @option options [Boolean] :ignore_configured_endpoint_urls
+    #     Setting to true disables use of endpoint URLs provided via environment
+    #     variables and the shared configuration file.
+    #
     #   @option options [Aws::Log::Formatter] :log_formatter (Aws::Log::Formatter.default)
     #     The log formatter.
     #
@@ -2544,6 +2548,8 @@ module Aws::CodeArtifact
     #   A format that specifies the type of the package version with the
     #   requested asset file.
     #
+    #   The only supported value is `generic`.
+    #
     # @option params [String] :namespace
     #   The namespace of the package version to publish.
     #
@@ -3086,7 +3092,7 @@ module Aws::CodeArtifact
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-codeartifact'
-      context[:gem_version] = '1.31.0'
+      context[:gem_version] = '1.33.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 

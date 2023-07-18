@@ -1,6 +1,16 @@
 Unreleased Changes
 ------------------
 
+1.33.0 (2023-07-17)
+------------------
+
+* Feature - Doc only update for AWS CodeArtifact
+
+1.32.0 (2023-07-11)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
 1.31.0 (2023-07-06)
 ------------------
 

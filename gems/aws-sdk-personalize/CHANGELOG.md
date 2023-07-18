@@ -1,6 +1,16 @@
 Unreleased Changes
 ------------------
 
+1.53.0 (2023-07-13)
+------------------
+
+* Feature - This release provides ability to customers to change schema associated with their datasets in Amazon Personalize
+
+1.52.0 (2023-07-11)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
 1.51.0 (2023-07-06)
 ------------------
 

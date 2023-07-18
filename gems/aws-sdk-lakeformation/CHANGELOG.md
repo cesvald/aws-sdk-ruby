@@ -1,6 +1,16 @@
 Unreleased Changes
 ------------------
 
+1.40.0 (2023-07-17)
+------------------
+
+* Feature - Adds supports for ReadOnlyAdmins and AllowFullTableExternalDataAccess. Adds NESTED_PERMISSION and NESTED_CELL_PERMISSION to SUPPORTED_PERMISSION_TYPES enum. Adds CREATE_LF_TAG on catalog resource and ALTER, DROP, and GRANT_WITH_LF_TAG_EXPRESSION on LF Tag resource.
+
+1.39.0 (2023-07-11)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
 1.38.0 (2023-07-06)
 ------------------
 

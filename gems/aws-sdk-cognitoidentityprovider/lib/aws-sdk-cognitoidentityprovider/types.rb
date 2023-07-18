@@ -995,7 +995,7 @@ module Aws::CognitoIdentityProvider
       :session,
       :challenge_parameters,
       :authentication_result)
-      SENSITIVE = []
+      SENSITIVE = [:session]
       include Aws::Structure
     end
 
@@ -1454,7 +1454,7 @@ module Aws::CognitoIdentityProvider
       :analytics_metadata,
       :context_data,
       :client_metadata)
-      SENSITIVE = [:client_id]
+      SENSITIVE = [:client_id, :challenge_responses, :session]
       include Aws::Structure
     end
 
@@ -1498,7 +1498,7 @@ module Aws::CognitoIdentityProvider
       :session,
       :challenge_parameters,
       :authentication_result)
-      SENSITIVE = []
+      SENSITIVE = [:session]
       include Aws::Structure
     end
 
@@ -1891,7 +1891,7 @@ module Aws::CognitoIdentityProvider
     class AssociateSoftwareTokenRequest < Struct.new(
       :access_token,
       :session)
-      SENSITIVE = [:access_token]
+      SENSITIVE = [:access_token, :session]
       include Aws::Structure
     end
 
@@ -1911,7 +1911,7 @@ module Aws::CognitoIdentityProvider
     class AssociateSoftwareTokenResponse < Struct.new(
       :secret_code,
       :session)
-      SENSITIVE = [:secret_code]
+      SENSITIVE = [:secret_code, :session]
       include Aws::Structure
     end
 
@@ -2320,7 +2320,7 @@ module Aws::CognitoIdentityProvider
       :analytics_metadata,
       :user_context_data,
       :client_metadata)
-      SENSITIVE = [:client_id, :secret_hash, :username, :password]
+      SENSITIVE = [:client_id, :secret_hash, :username, :password, :user_context_data]
       include Aws::Structure
     end
 
@@ -2424,7 +2424,7 @@ module Aws::CognitoIdentityProvider
       :analytics_metadata,
       :user_context_data,
       :client_metadata)
-      SENSITIVE = [:client_id, :secret_hash, :username]
+      SENSITIVE = [:client_id, :secret_hash, :username, :user_context_data]
       include Aws::Structure
     end
 
@@ -4332,7 +4332,7 @@ module Aws::CognitoIdentityProvider
       :username,
       :analytics_metadata,
       :client_metadata)
-      SENSITIVE = [:client_id, :secret_hash, :username]
+      SENSITIVE = [:client_id, :secret_hash, :user_context_data, :username]
       include Aws::Structure
     end
 
@@ -5091,7 +5091,7 @@ module Aws::CognitoIdentityProvider
       :client_id,
       :analytics_metadata,
       :user_context_data)
-      SENSITIVE = [:auth_parameters, :client_id]
+      SENSITIVE = [:auth_parameters, :client_id, :user_context_data]
       include Aws::Structure
     end
 
@@ -5195,7 +5195,7 @@ module Aws::CognitoIdentityProvider
       :session,
       :challenge_parameters,
       :authentication_result)
-      SENSITIVE = []
+      SENSITIVE = [:session]
       include Aws::Structure
     end
 
@@ -6370,7 +6370,7 @@ module Aws::CognitoIdentityProvider
       :username,
       :analytics_metadata,
       :client_metadata)
-      SENSITIVE = [:client_id, :secret_hash, :username]
+      SENSITIVE = [:client_id, :secret_hash, :user_context_data, :username]
       include Aws::Structure
     end
 
@@ -6593,7 +6593,7 @@ module Aws::CognitoIdentityProvider
       :analytics_metadata,
       :user_context_data,
       :client_metadata)
-      SENSITIVE = [:client_id]
+      SENSITIVE = [:client_id, :session, :challenge_responses, :user_context_data]
       include Aws::Structure
     end
 
@@ -6636,7 +6636,7 @@ module Aws::CognitoIdentityProvider
       :session,
       :challenge_parameters,
       :authentication_result)
-      SENSITIVE = []
+      SENSITIVE = [:session]
       include Aws::Structure
     end
 
@@ -7154,7 +7154,7 @@ module Aws::CognitoIdentityProvider
       :analytics_metadata,
       :user_context_data,
       :client_metadata)
-      SENSITIVE = [:client_id, :secret_hash, :username, :password]
+      SENSITIVE = [:client_id, :secret_hash, :username, :password, :user_context_data]
       include Aws::Structure
     end
 
@@ -9681,7 +9681,7 @@ module Aws::CognitoIdentityProvider
       :session,
       :user_code,
       :friendly_device_name)
-      SENSITIVE = [:access_token]
+      SENSITIVE = [:access_token, :session, :user_code]
       include Aws::Structure
     end
 
@@ -9699,7 +9699,7 @@ module Aws::CognitoIdentityProvider
     class VerifySoftwareTokenResponse < Struct.new(
       :status,
       :session)
-      SENSITIVE = []
+      SENSITIVE = [:session]
       include Aws::Structure
     end
 

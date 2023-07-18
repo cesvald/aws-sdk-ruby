@@ -1,6 +1,16 @@
 Unreleased Changes
 ------------------
 
+1.53.0 (2023-07-17)
+------------------
+
+* Feature - Added major version upgrade option in ModifyDBCluster API
+
+1.52.0 (2023-07-11)
+------------------
+
+* Feature - Code Generated Changes, see `./build_tools` or `aws-sdk-core`'s CHANGELOG.md for details.
+
 1.51.0 (2023-07-06)
 ------------------
 

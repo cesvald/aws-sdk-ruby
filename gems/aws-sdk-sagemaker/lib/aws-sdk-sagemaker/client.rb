@@ -216,6 +216,10 @@ module Aws::SageMaker
     #   @option options [Boolean] :endpoint_discovery (false)
     #     When set to `true`, endpoint discovery will be enabled for operations when available.
     #
+    #   @option options [Boolean] :ignore_configured_endpoint_urls
+    #     Setting to true disables use of endpoint URLs provided via environment
+    #     variables and the shared configuration file.
+    #
     #   @option options [Aws::Log::Formatter] :log_formatter (Aws::Log::Formatter.default)
     #     The log formatter.
     #
@@ -2336,6 +2340,10 @@ module Aws::SageMaker
     #         model_register_settings: {
     #           status: "ENABLED", # accepts ENABLED, DISABLED
     #           cross_account_model_register_role_arn: "RoleArn",
+    #         },
+    #         workspace_settings: {
+    #           s3_artifact_path: "S3Uri",
+    #           s3_kms_key_id: "KmsKeyId",
     #         },
     #       },
     #     },
@@ -8144,6 +8152,10 @@ module Aws::SageMaker
     #           status: "ENABLED", # accepts ENABLED, DISABLED
     #           cross_account_model_register_role_arn: "RoleArn",
     #         },
+    #         workspace_settings: {
+    #           s3_artifact_path: "S3Uri",
+    #           s3_kms_key_id: "KmsKeyId",
+    #         },
     #       },
     #     },
     #   })
@@ -10865,6 +10877,8 @@ module Aws::SageMaker
     #   resp.default_user_settings.canvas_app_settings.time_series_forecasting_settings.amazon_forecast_role_arn #=> String
     #   resp.default_user_settings.canvas_app_settings.model_register_settings.status #=> String, one of "ENABLED", "DISABLED"
     #   resp.default_user_settings.canvas_app_settings.model_register_settings.cross_account_model_register_role_arn #=> String
+    #   resp.default_user_settings.canvas_app_settings.workspace_settings.s3_artifact_path #=> String
+    #   resp.default_user_settings.canvas_app_settings.workspace_settings.s3_kms_key_id #=> String
     #   resp.app_network_access_type #=> String, one of "PublicInternetOnly", "VpcOnly"
     #   resp.home_efs_file_system_kms_key_id #=> String
     #   resp.subnet_ids #=> Array
@@ -14516,6 +14530,8 @@ module Aws::SageMaker
     #   resp.user_settings.canvas_app_settings.time_series_forecasting_settings.amazon_forecast_role_arn #=> String
     #   resp.user_settings.canvas_app_settings.model_register_settings.status #=> String, one of "ENABLED", "DISABLED"
     #   resp.user_settings.canvas_app_settings.model_register_settings.cross_account_model_register_role_arn #=> String
+    #   resp.user_settings.canvas_app_settings.workspace_settings.s3_artifact_path #=> String
+    #   resp.user_settings.canvas_app_settings.workspace_settings.s3_kms_key_id #=> String
     #
     # @see http://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeUserProfile AWS API Documentation
     #
@@ -21892,6 +21908,10 @@ module Aws::SageMaker
     #           status: "ENABLED", # accepts ENABLED, DISABLED
     #           cross_account_model_register_role_arn: "RoleArn",
     #         },
+    #         workspace_settings: {
+    #           s3_artifact_path: "S3Uri",
+    #           s3_kms_key_id: "KmsKeyId",
+    #         },
     #       },
     #     },
     #     domain_settings_for_update: {
@@ -23620,6 +23640,10 @@ module Aws::SageMaker
     #           status: "ENABLED", # accepts ENABLED, DISABLED
     #           cross_account_model_register_role_arn: "RoleArn",
     #         },
+    #         workspace_settings: {
+    #           s3_artifact_path: "S3Uri",
+    #           s3_kms_key_id: "KmsKeyId",
+    #         },
     #       },
     #     },
     #   })
@@ -23877,7 +23901,7 @@ module Aws::SageMaker
         params: params,
         config: config)
       context[:gem_name] = 'aws-sdk-sagemaker'
-      context[:gem_version] = '1.195.0'
+      context[:gem_version] = '1.197.0'
       Seahorse::Client::Request.new(handlers, context)
     end
 
